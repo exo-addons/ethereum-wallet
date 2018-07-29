@@ -1,0 +1,74 @@
+<template>
+  <v-dialog v-model="dialog" width="300px" max-width="100vh">
+    <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
+    <v-card class="elevation-12">
+      <v-toolbar dark color="primary">
+        <v-toolbar-title>Send Tokens</v-toolbar-title>
+      </v-toolbar>
+      <v-card-text>
+        <v-alert :value="error" type="error" class="v-content">
+          {{ error }}
+        </v-alert>
+        <v-form>
+          <v-text-field v-model="recipient" name="recipient" label="Recipient" type="text"></v-text-field>
+          <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
+        </v-form>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" @click="sendTokens">Send tokens</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script>
+export default {
+  props: {
+    contract: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    }
+  },
+  data () {
+    return {
+      recipient: null,
+      amount: null,
+      dialog: null,
+      error: null
+    };
+  },
+  methods: {
+    sendTokens() {
+      this.error = null;
+      if (!window.localWeb3.utils.isAddress(this.recipient)) {
+        this.error = "Invalid recipient address";
+        return;
+      }
+
+      if (!this.amount || isNaN(parseInt(this.amount)) || !isFinite(this.amount) || this.amount <= 0) {
+        this.error = "Invalid number";
+        return;
+      }
+
+      this.contract.transfer(this.recipient, this.amount.toString())
+        .then(resp => {
+          if (resp.tx) {
+            this.recipient = null;
+            this.amount = null;
+            this.dialog = false;
+          } else {
+            this.error = `Error while proceeding transaction`;
+            console.error(resp);
+          }
+        })
+        .catch (e => {
+          this.error = `Error while proceeding: ${e}`;
+        });
+    }
+  }
+};
+</script>
+
