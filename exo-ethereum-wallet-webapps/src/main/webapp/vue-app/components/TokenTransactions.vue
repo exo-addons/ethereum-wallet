@@ -1,16 +1,23 @@
 <template>
-  <v-flex xs12>
+  <v-flex v-if="transactions.length" xs12>
     <v-card class="card--flex-toolbar">
-      <v-data-table :headers="headers" :items="transactions" hide-actions class="elevation-1">
-        <template slot="items" slot-scope="props">
-          <td class="text-xs-left">{{ props.item.to }}</td>
-          <td class="text-xs-left">{{ props.item.from }}</td>
-          <td class="text-xs-left">{{ props.item.amount }}</td>
+      <v-list two-line>
+        <template v-for="(item) in transactions">
+          <v-list-tile :key="item.hash" avatar>
+            <v-list-tile-avatar>
+              <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title v-html="item.title"></v-list-tile-title>
+              <v-list-tile-sub-title v-html="item.amount"></v-list-tile-sub-title>
+            </v-list-tile-content>
+          </v-list-tile>
         </template>
-      </v-data-table>
+      </v-list>
     </v-card>
   </v-flex>
 </template>
+
 <script>
 
 export default {
@@ -30,11 +37,6 @@ export default {
   },
   data () {
     return {
-      headers: [
-        { align: 'left', text: 'To', value: 'to' },
-        { align: 'left', text: 'From', value: 'from' },
-        { align: 'left', text: 'Amount', value: 'amount' }
-      ],
       transactions: []
     };
   },
@@ -54,10 +56,12 @@ export default {
     init() {
       if (this.contract) {
         this.contract.Transfer({}, { fromBlock: 0, toBlock: 'pending' }, (err, res) => {
-          if (res.args._from === this.account || res.args._from === this.account) {
+          if (res.args._to === this.account || res.args._from === this.account) {
             this.transactions.push({
-              to: res.args._to === this.account ? 'Me' : res.args._to,
-              from: res.args._from === this.account ? 'Me' : res.args._from,
+              hash: res.transactionHash,
+              title: res.args._to === this.account ? `Received from ${res.args._from}`: `Sent to ${res.args._from}`,
+              color: res.args._to === this.account ? 'green' : 'red',
+              icon: 'fa-exchange-alt',
               amount: res.args._value.toNumber()
             });
           }

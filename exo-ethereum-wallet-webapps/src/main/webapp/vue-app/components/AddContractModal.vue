@@ -33,6 +33,12 @@ export default {
       default: function() {
         return {};
       }
+    },
+    netId: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
     }
   },
   data () {
@@ -50,7 +56,8 @@ export default {
         return;
       }
       try {
-        saveContractAddress(this.account, this.address);
+        saveContractAddress(this.account, this.address, this.netId);
+        this.$emit("added");
         this.dialog = false;
       } catch(e) {
         this.error = `Error encountered: ${e}`;

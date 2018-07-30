@@ -6,18 +6,19 @@
           <v-card>
             <v-toolbar color="pink" dark>
               <v-spacer></v-spacer>
-              <v-toolbar-title>Accounts</v-toolbar-title>
+              <v-toolbar-title>Accounts ({{ networkName }})</v-toolbar-title>
               <v-spacer></v-spacer>
-              <add-contract-modal :account="account"></add-contract-modal>
+              <add-contract-modal :net-id="networkId" :account="account"></add-contract-modal>
             </v-toolbar>
             <v-alert :value="error" type="error">
               {{ error }}
             </v-alert>
+            <create-account v-if="!account" @added="init"></create-account>
             <v-list two-line>
               <template v-for="(item, index) in accountsDetails">
                 <v-list-tile :key="index" avatar ripple @click="openAccountDetail(item)">
                   <v-list-tile-avatar>
-                    <v-icon>fa-ethereum</v-icon>
+                    <v-icon dark class="purple">{{ item.icon }}</v-icon>
                   </v-list-tile-avatar>
                   <v-list-tile-content>
                     <v-list-tile-title v-html="item.title"></v-list-tile-title>
@@ -37,6 +38,7 @@
 
 <script>
 import AddContractModal from './AddContractModal.vue';
+import CreateAccount from './CreateAccount.vue';
 import AccountDetail from './AccountDetail.vue';
 
 import TruffleContract from 'truffle-contract';
@@ -46,13 +48,17 @@ import {getContractsDetails} from '../WalletToken.js';
 
 export default {
   components: {
+    CreateAccount,
     AccountDetail,
     AddContractModal
   },
   data() {
     return {
       web3Provider: null,
+      networkId: null,
+      networkName: null,
       account: null,
+      lastCheckedAccount: null,
       selectedAccount: null,
       contracts: [],
       accountsDetails: {},
@@ -72,7 +78,7 @@ export default {
       } else if (!this.metamaskConnected) {
         return 'Please connect Metamask to the network';
       } else if (!this.account) {
-        return 'Please select an account using Metamask';
+        return 'Please select a valid account using Metamask';
       }
       return this.errorMessage;
     }
@@ -83,7 +89,6 @@ export default {
         return;
       }
       this.computeBalance();
-      this.computeNetwork();
     }
   },
   created(){
@@ -114,32 +119,35 @@ export default {
     initAccount() {
       window.localWeb3.eth.getCoinbase().then(account => {
         if (account && account.length) {
-          if (account !== this.account) {
-            window.localWeb3.eth.personal.unlockAccount(account)
+          if (account !== this.account && this.lastCheckedAccount !== account) {
+            account = account.toLowerCase();
+            this.lastCheckedAccount = account;
+            this.errorMessage = '';
+            this.account = null;
+            this.accountsDetails = {};
+            this.computeNetwork()
               .then(() => {
                 const accountDetails = this.accountsDetails[account] = {};
-
                 accountDetails.title = 'Account in ETH';
-                accountDetails.icon = 'fa-ethereum';
+                accountDetails.icon = 'fab fa-ethereum';
                 accountDetails.balance = 0;
                 accountDetails.symbol = 'ETH';
                 accountDetails.isContract = false;
 
-                getContractsDetails(account)
-                  .then(contractsDetails => {
-                    if (contractsDetails && contractsDetails.length) {
-                      contractsDetails.forEach(contractDetails => {
-                        this.accountsDetails[contractDetails.address] = contractDetails;
-                      });
-                      this.$forceUpdate();
-                    }
-                  })
-                  .catch((e) => this.errorMessage = `Error retrieving contracts ${e}`);
-
-                return window.localWeb3.eth.defaultAccount = this.account = account;
+                window.localWeb3.eth.defaultAccount = this.account = account.toLowerCase();
               })
-              .catch(e => {
-                this.errorMessage = `${e}`;
+              .then(() => getContractsDetails(account, this.networkId))
+              .then(contractsDetails => {
+                if (contractsDetails && contractsDetails.length) {
+                  contractsDetails.forEach(contractDetails => {
+                    this.accountsDetails[contractDetails.address] = contractDetails;
+                  });
+                  this.$forceUpdate();
+                }
+              })
+              .catch(err => {
+                this.errorMessage = err;
+                console.log("not unlocked", err);
               });
           }
         } else {
@@ -149,14 +157,11 @@ export default {
       });
     },
     computeNetwork() {
-      const thiss = this;
-      window.localWeb3.eth.net.getNetworkType((err, netType) => {
-        if(err) {
-          thiss.errorMessage = err;
-          return;
-        }
-        thiss.networkName = `${netType.toUpperCase()} Network`;
-      });
+      return window.localWeb3.eth.net.getId().then(netId => {
+        this.networkId = netId;
+        return window.localWeb3.eth.net.getNetworkType();
+      })
+      .then(netType => this.networkName = `${netType.toUpperCase()} Network`);
     },
     computeBalance() {
       window.localWeb3.eth.getCoinbase()

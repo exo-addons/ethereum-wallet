@@ -14,43 +14,41 @@
     <css-path>/css/wallet.css</css-path>
   </portlet-skin>
 
-  <portlet>
+  <module>
     <name>EthereumWallet</name>
-    <module>
-      <script>
-        <minify>false</minify>
-        <path>/js/wallet.bundle.js</path>
-      </script>
-      <depends>
-        <module>vue</module>
-      </depends>
-      <depends>
-        <module>jquery</module>
-        <as>$</as>
-      </depends>
-      <depends>
-        <module>suggester</module>
-      </depends>
-      <depends>
-        <module>fetchPolyfill</module>
-      </depends>
-      <depends>
-        <module>customEventPolyfill</module>
-      </depends>
-      <depends>
-        <module>iePolyfills</module>
-      </depends>
-      <depends>
-        <module>vuetify</module>
-      </depends>
-      <depends>
-        <module>truffle-contract</module>
-      </depends>
-      <depends>
-        <module>web3</module>
-      </depends>
-    </module>
-  </portlet>
+    <script>
+      <minify>false</minify>
+      <path>/js/wallet.bundle.js</path>
+    </script>
+    <depends>
+      <module>vue</module>
+    </depends>
+    <depends>
+      <module>jquery</module>
+      <as>$</as>
+    </depends>
+    <depends>
+      <module>suggester</module>
+    </depends>
+    <depends>
+      <module>fetchPolyfill</module>
+    </depends>
+    <depends>
+      <module>customEventPolyfill</module>
+    </depends>
+    <depends>
+      <module>iePolyfills</module>
+    </depends>
+    <depends>
+      <module>vuetify</module>
+    </depends>
+    <depends>
+      <module>truffle-contract</module>
+    </depends>
+    <depends>
+      <module>web3</module>
+    </depends>
+  </module>
 
   <module>
     <name>vuetify</name>

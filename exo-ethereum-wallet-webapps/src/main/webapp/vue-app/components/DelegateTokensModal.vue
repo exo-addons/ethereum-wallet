@@ -1,9 +1,9 @@
 <template>
   <v-dialog v-model="dialog" width="300px" max-width="100vh">
-    <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
+    <v-btn slot="activator" color="primary" dark ripple>Delegate Tokens</v-btn>
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
-        <v-toolbar-title>Send Tokens</v-toolbar-title>
+        <v-toolbar-title>Delegate Tokens</v-toolbar-title>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
@@ -53,7 +53,7 @@ export default {
         return;
       }
 
-      this.contract.transfer(this.recipient, this.amount.toString())
+      this.contract.approve(this.recipient, this.amount.toString())
         .then(resp => {
           if (resp.tx) {
             this.recipient = null;
