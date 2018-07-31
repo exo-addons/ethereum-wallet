@@ -1,9 +1,9 @@
 <template>
   <v-dialog v-model="dialog" width="300px" max-width="100vh">
-    <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
+    <v-btn slot="activator" color="primary" dark ripple>Send Ether</v-btn>
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
-        <v-toolbar-title>Send Tokens</v-toolbar-title>
+        <v-toolbar-title>Send Ether</v-toolbar-title>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
@@ -16,7 +16,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="sendTokens">Send</v-btn>
+        <v-btn color="primary" @click="sendEther">Send</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -25,8 +25,8 @@
 <script>
 export default {
   props: {
-    contract: {
-      type: Object,
+    account: {
+      type: String,
       default: function() {
         return {};
       }
@@ -41,7 +41,7 @@ export default {
     };
   },
   methods: {
-    sendTokens() {
+    sendEther() {
       this.error = null;
       if (!window.localWeb3.utils.isAddress(this.recipient)) {
         this.error = "Invalid recipient address";
@@ -53,23 +53,25 @@ export default {
         return;
       }
 
-      this.contract.transfer(this.recipient, this.amount.toString())
-        .then(resp => {
-          if (resp.tx) {
-            this.recipient = null;
-            this.amount = null;
-            this.dialog = false;
-            this.$emit("loading");
-          } else {
-            this.error = `Error while proceeding transaction`;
-            console.error(resp);
-            this.$emit("end-loading");
-          }
-        })
-        .catch (e => {
-          this.error = `Error while proceeding: ${e}`;
-          this.$emit("end-loading");
-        });
+      window.localWeb3.eth.sendTransaction({
+        from: this.account.toLowerCase(),
+        to: this.recipient,
+        value: window.localWeb3.utils.toWei(this.amount.toString(), "ether")
+      })
+      .on('transactionHash', hash => {
+        this.recipient = null;
+        this.amount = null;
+        this.dialog = false;
+        this.$emit("loading");
+      })
+      .on('confirmation', (confirmationNumber, receipt) => {
+        this.$emit("loaded");
+      })
+      .on('error', (error, receipt) => {
+        this.error = `Error sending ether: ${error}`;
+        console.error("Error sending ether", error, receipt);
+        this.$emit("end-loading");
+      });
     }
   }
 };

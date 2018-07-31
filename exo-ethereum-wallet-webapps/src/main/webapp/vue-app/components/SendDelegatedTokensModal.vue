@@ -1,15 +1,16 @@
 <template>
   <v-dialog v-model="dialog" width="300px" max-width="100vh">
-    <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
+    <v-btn slot="activator" color="primary" dark ripple>Send delegated Tokens</v-btn>
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
-        <v-toolbar-title>Send Tokens</v-toolbar-title>
+        <v-toolbar-title>Send delegated Tokens</v-toolbar-title>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
           {{ error }}
         </v-alert>
         <v-form>
+          <v-text-field v-model="from" name="from" label="On behalf of" type="text"></v-text-field>
           <v-text-field v-model="recipient" name="recipient" label="Recipient" type="text"></v-text-field>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
@@ -34,6 +35,7 @@ export default {
   },
   data () {
     return {
+      from: null,
       recipient: null,
       amount: null,
       dialog: null,
@@ -43,6 +45,11 @@ export default {
   methods: {
     sendTokens() {
       this.error = null;
+      if (!window.localWeb3.utils.isAddress(this.from)) {
+        this.error = "Invalid from address";
+        return;
+      }
+
       if (!window.localWeb3.utils.isAddress(this.recipient)) {
         this.error = "Invalid recipient address";
         return;
@@ -53,9 +60,10 @@ export default {
         return;
       }
 
-      this.contract.transfer(this.recipient, this.amount.toString())
+      this.contract.transferFrom(this.from, this.recipient, this.amount.toString())
         .then(resp => {
           if (resp.tx) {
+            this.from = null;
             this.recipient = null;
             this.amount = null;
             this.dialog = false;

@@ -11,17 +11,18 @@ export function getContractsDetails(account, netId) {
     contractDetails.icon = 'fa-file-contract';
     contractDetails.isContract = true;
     contractDetails.contract = getContractAtAddress(account, address);
-    contractsDetailsPromises.push(contractDetails.contract.symbol.call()
-      .then(symbol => contractDetails.symbol = symbol)
-      .then(symbol => contractDetails.title = `Account in Token  ${symbol}`)
-      .then(() => contractDetails.contract.balanceOf.call(account))
-      .then(balance => contractDetails.balance = `${balance}`)
-      .then(() => contractDetails)
-    );
+    contractsDetailsPromises.push(loadContractBalance(account, contractDetails));
   });
   return Promise.all(contractsDetailsPromises);
 }
-
+export function loadContractBalance(account, contractDetails) {
+  return contractDetails.contract.symbol.call()
+    .then(symbol => contractDetails.symbol = symbol)
+    .then(symbol => contractDetails.title = `Account in Token  ${symbol}`)
+    .then(() => contractDetails.contract.balanceOf.call(account))
+    .then(balance => contractDetails.balance = parseFloat(balance))
+    .then(() => contractDetails);
+}
 export function getContractsAddresses(netId) {
   const contractsAddressesString = localStorage.getItem(`wallet-contracts-${netId}`);
   let contractsAddresses = null;

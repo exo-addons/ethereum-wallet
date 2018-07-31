@@ -59,13 +59,16 @@ export default {
             this.recipient = null;
             this.amount = null;
             this.dialog = false;
+            this.$emit("loading");
           } else {
             this.error = `Error while proceeding transaction`;
             console.error(resp);
+            this.$emit("end-loading");
           }
         })
         .catch (e => {
           this.error = `Error while proceeding: ${e}`;
+          this.$emit("end-loading");
         });
     }
   }
