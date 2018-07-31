@@ -1,0 +1,87 @@
+<gatein-resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/gatein_resources_1_4 http://www.exoplatform.org/xml/ns/gatein_resources_1_4" xmlns="http://www.exoplatform.org/xml/ns/gatein_resources_1_4">
+
+  <portlet-skin>
+    <application-name>exo-ethereum-wallet</application-name>
+    <portlet-name>EthereumWallet</portlet-name>
+    <skin-name>Enterprise</skin-name>
+    <css-path>/css/wallet.css</css-path>
+  </portlet-skin>
+
+  <portlet-skin>
+    <application-name>exo-ethereum-wallet</application-name>
+    <portlet-name>EthereumWallet</portlet-name>
+    <skin-name>Default</skin-name>
+    <css-path>/css/wallet.css</css-path>
+  </portlet-skin>
+
+  <portlet>
+    <name>EthereumWallet</name>
+    <module>
+      <script>
+        <minify>false</minify>
+        <path>/js/wallet.bundle.js</path>
+      </script>
+      <depends>
+        <module>jquery</module>
+        <as>$</as>
+      </depends>
+      <depends>
+        <module>suggester</module>
+      </depends>
+      <depends>
+        <module>fetchPolyfill</module>
+      </depends>
+      <depends>
+        <module>customEventPolyfill</module>
+      </depends>
+      <depends>
+        <module>iePolyfills</module>
+      </depends>
+      <depends>
+        <module>vuetify</module>
+      </depends>
+      <depends>
+        <module>truffleContract</module>
+      </depends>
+      <depends>
+        <module>Web3</module>
+        <as>LocalWeb3</as>
+      </depends>
+    </module>
+  </portlet>
+
+  <module>
+    <name>vuetify</name>
+    <script>
+      <minify>false</minify>
+      <path>/js/lib/vuetify.min.js</path>
+    </script>
+    <depends>
+      <module>vue</module>
+    </depends>
+  </module>
+
+  <module>
+    <!-- should be truffleContract, but this JS isn't well integrated, 
+          thus we add it with different name (should be TruffleContract) -->
+    <name>truffleContract</name>
+    <script>
+      <minify>false</minify>
+      <path>/js/lib/truffle-contract.min.js</path>
+    </script>
+  </module>
+
+  <module>
+    <name>Web3</name>
+    <script>
+      <minify>false</minify>
+      <adapter>
+        (function() {
+          <include>/js/lib/web3.min.js</include>
+          return Web3;
+        })();
+      </adapter>
+    </script>
+  </module>
+
+</gatein-resources>

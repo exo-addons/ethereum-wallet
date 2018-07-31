@@ -61,6 +61,7 @@ export default {
         this.dialog = false;
       } catch(e) {
         this.error = `Error encountered: ${e}`;
+        console.error(e);
       }
     }
   }

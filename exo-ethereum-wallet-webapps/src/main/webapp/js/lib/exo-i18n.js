@@ -17,7 +17,7 @@ function loadLanguageAsync (lang) {
     lang = i18n.locale;
   }
   if (loadedLanguages.indexOf(lang) < 0) {
-    return fetch(`${eXo.env.portal.context}/${eXo.env.portal.rest}/i18n/bundle/locale.portlet.wallet.Resource-${lang}.json`, {
+    return fetch(`${eXo.env.portal.context}/${eXo.env.portal.rest}/i18n/bundle/locale.portlet.WalletPortlet-${lang}.json`, {
       credentials: 'include'
     })
     .then(resp => resp.json())

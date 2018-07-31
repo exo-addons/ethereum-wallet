@@ -15,7 +15,7 @@
   <name>eXo Add-on:: eXo Ethereum Wallet - Parent POM</name>
   <description>eXo Ethereum Wallet Addon</description>
   <modules>
-    <module>exo-ethereum-wallet-resources</module>
+    <module>exo-ethereum-wallet-services</module>
     <module>exo-ethereum-wallet-webapps</module>
     <!--module>exo-ethereum-wallet-packaging</module!-->
   </modules>

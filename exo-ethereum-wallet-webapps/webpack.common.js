@@ -3,9 +3,6 @@ const ExtractTextWebpackPlugin = require('extract-text-webpack-plugin');
 
 const config = {
   context: path.resolve(__dirname, '.'),
-  entry: {
-    wallet: './src/main/webapp/vue-app/main.js'
-  },
   module: {
     rules: [
       {
@@ -58,6 +55,10 @@ const config = {
         ]
       }
     ]
+  },
+  externals: {
+    vuetify: 'Vuetify',
+    vue: 'Vue'
   },
   plugins: [
     new ExtractTextWebpackPlugin('css/[name].css')

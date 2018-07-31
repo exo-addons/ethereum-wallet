@@ -9,7 +9,7 @@
   "scripts": {
     "start": "webpack --config webpack.dev.js --mode development",
     "dev": "webpack-dev-server --config webpack.dev.js --mode development --hot",
-    "watch": "webpack --config webpack.dev.js --progress --colors --watch -d",
+    "watch": "webpack --config webpack.watch.js --progress --colors --watch -d",
     "test": "jest",
     "test-coverage": "jest --coverage",
     "build": "webpack --config webpack.prod.js --mode production"

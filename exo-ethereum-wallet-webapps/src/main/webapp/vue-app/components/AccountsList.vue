@@ -8,7 +8,7 @@
               <v-spacer></v-spacer>
               <v-toolbar-title>Accounts ({{ networkName }})</v-toolbar-title>
               <v-spacer></v-spacer>
-              <add-contract-modal :net-id="networkId" :account="account"></add-contract-modal>
+              <add-contract-modal :net-id="networkId" :account="account" @added="reloadContracts()"></add-contract-modal>
             </v-toolbar>
             <v-alert :value="error" type="error">
               {{ error }}
@@ -41,8 +41,6 @@ import AddContractModal from './AddContractModal.vue';
 import CreateAccount from './CreateAccount.vue';
 import AccountDetail from './AccountDetail.vue';
 
-import TruffleContract from 'truffle-contract';
-import LocalWeb3 from 'web3';
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails} from '../WalletToken.js';
 
@@ -95,8 +93,9 @@ export default {
     if (this.metamaskEnabled && this.metamaskConnected) {
       this.init();
     } else {
+      const thiss = this;
       window.addEventListener('load', function() {
-        this.init();
+        thiss.init();
       });
     }
   },
@@ -136,18 +135,10 @@ export default {
 
                 window.localWeb3.eth.defaultAccount = this.account = account.toLowerCase();
               })
-              .then(() => getContractsDetails(account, this.networkId))
-              .then(contractsDetails => {
-                if (contractsDetails && contractsDetails.length) {
-                  contractsDetails.forEach(contractDetails => {
-                    this.accountsDetails[contractDetails.address] = contractDetails;
-                  });
-                  this.$forceUpdate();
-                }
-              })
+              .then(() => this.reloadContracts(account))
               .catch(err => {
-                this.errorMessage = err;
-                console.log("not unlocked", err);
+                this.errorMessage = `Error encountered: ${err}`;
+                console.error(err);
               });
           }
         } else {
@@ -168,6 +159,20 @@ export default {
         .then(window.localWeb3.eth.getBalance)
         .then(balance => this.accountsDetails[this.account].balance = window.localWeb3.utils.fromWei(balance, "ether"))
         .then(() => this.$forceUpdate());
+    },
+    reloadContracts(account) {
+      if(!account) {
+        account = this.account;
+      }
+      return getContractsDetails(account, this.networkId)
+        .then(contractsDetails => {
+          if (contractsDetails && contractsDetails.length) {
+            contractsDetails.forEach(contractDetails => {
+              this.accountsDetails[contractDetails.address] = contractDetails;
+            });
+            this.$forceUpdate();
+          }
+        });
     },
     openAccountDetail(accountDetails) {
       this.selectedAccount = accountDetails;

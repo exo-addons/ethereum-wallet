@@ -4,12 +4,12 @@ const apiMocker = require('connect-api-mocker');
 
 const webpackCommonConfig = require('./webpack.common.js');
 
-// change the server path to your server location path
-const exoServerPath = '';
-
 module.exports = merge(webpackCommonConfig, {
+  entry: {
+    wallet: './src/main/webapp/vue-app/main-dev.js'
+  },
   output: {
-    path: path.resolve(__dirname, `${exoServerPath}webapps/exo-ethereum-wallet/`),
+    path: '/exo-server/webapps/exo-ethereum-wallet/',
     filename: 'js/[name].bundle.js'
   },
   devServer: {

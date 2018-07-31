@@ -1,5 +1,4 @@
 import {ERC20_COMPLIANT_CONTRACT_ABI} from './WalletConstants.js';
-import TruffleContract from 'truffle-contract';
 
 export function getContractsDetails(account, netId) {
   const contractsAddresses = getContractsAddresses(netId);
@@ -48,6 +47,7 @@ export function saveContractAddress(account, address, netId) {
 }
 
 export function getContractAtAddress(account, address) {
+  console.log(TruffleContract);
   const ERC20_CONTRACT = TruffleContract({
     abi: ERC20_COMPLIANT_CONTRACT_ABI
   });

@@ -38,7 +38,7 @@
         <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
         <token-transactions v-if="contractDetail.isContract" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loaded="loaded" @error="loading = false;error = e"></token-transactions>
-        <general-transactions v-else ref="generalTransactions" :account="account" @error="loading = false;error = e"></general-transactions>
+        <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @error="loading = false;error = e"></general-transactions>
       </v-card>
     </v-flex>
   </v-layout>
@@ -53,8 +53,6 @@ import DelegateTokensModal from './DelegateTokensModal.vue';
 import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import TruffleContract from 'truffle-contract';
-import LocalWeb3 from 'web3';
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {loadContractBalance} from '../WalletToken.js';
 
