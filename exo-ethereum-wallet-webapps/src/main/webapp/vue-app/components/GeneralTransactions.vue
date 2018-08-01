@@ -8,7 +8,16 @@
               <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
             </v-list-tile-avatar>
             <v-list-tile-content>
-              <v-list-tile-title v-html="item.title"></v-list-tile-title>
+              <v-list-tile-title>
+                <span>{{ item.titlePrefix }}</span>
+                <v-chip v-if="item.avatar" :alt="item.name" class="mt-0 mb-0" small>
+                  <v-avatar size="23px !important">
+                    <img :src="item.avatar">
+                  </v-avatar>
+                  <span v-html="item.displayName"></span>
+                </v-chip>
+                <code v-else>{{ item.displayName }}</code>
+              </v-list-tile-title>
               <v-list-tile-sub-title>{{ item.amount }} (Fee: {{ item.fee }})</v-list-tile-sub-title>
             </v-list-tile-content>
             <v-list-tile-action>
@@ -23,6 +32,8 @@
 </template>
 
 <script>
+import {searchFullName, getContractFromStorage, getContactFromStorage} from '../WalletAddressRegistry.js';
+
 export default {
   props: {
     account: {
@@ -91,15 +102,52 @@ export default {
           if (transaction.to && transaction.from && (transaction.to.toLowerCase() === thiss.account.toLowerCase() || transaction.from && transaction.from.toLowerCase() === thiss.account.toLowerCase())) {
             const transactionFeeInWei = transaction.gas * transaction.gasPrice;
             const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
-            thiss.transactions.push({
+            const isReceiver = transaction.to && transaction.to.toLowerCase() === thiss.account.toLowerCase();
+            const displayedAddress = isReceiver ? transaction.from : transaction.to;
+            const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+            const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
+            const isFeeTransaction = parseInt(amount) === 0;
+            const transactionDetails = {
               hash: transaction.hash,
-              title: transaction.to && transaction.to.toLowerCase() === thiss.account.toLowerCase() ? `Received from ${transaction.from}`: `Sent to ${transaction.to}`,
-              color: transaction.to && transaction.to.toLowerCase() === thiss.account.toLowerCase() ? 'green' : 'red',
-              icon: 'fa-exchange-alt',
-              amount: window.localWeb3.utils.fromWei(transaction.value, 'ether'),
+              titlePrefix: isReceiver ? 'Received from': isFeeTransaction ? 'Transaction spent on' : 'Sent to',
+              displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+              avatar: contactDetails.avatar,
+              name: null,
+              color: isReceiver ? 'green' : 'red',
+              icon: isFeeTransaction ? 'fa-undo' : 'fa-exchange-alt',
+              amount: amount,
               fee: transactionFeeInEth,
               date: new Date(block.timestamp * 1000)
-            });
+            };
+            if (!contactDetails || !contactDetails.name) {
+              getContractFromStorage(this.account, displayedAddress)
+                .then(conractDetails => {
+                  if (conractDetails) {
+                    transactionDetails.displayName = `Contract ${conractDetails.name}`;
+                    transactionDetails.name = conractDetails.address;
+                    this.$forceUpdate();
+                    return false;
+                  } else {
+                    return true;
+                  }
+                })
+                .then(continueSearch => {
+                  if(continueSearch) {
+                    return searchFullName(displayedAddress);
+                  }
+                })
+                .then(item => {
+                  if (item && item.name && item.name.length) {
+                    transactionDetails.displayName = item.name;
+                    transactionDetails.avatar = item.avatar;
+                    transactionDetails.name = item.id;
+                    this.$forceUpdate();
+                    return true;
+                  }
+                  return false;
+                });
+            }
+            thiss.transactions.push(transactionDetails);
           }
         });
       }

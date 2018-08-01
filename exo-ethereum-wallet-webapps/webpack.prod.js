@@ -13,7 +13,7 @@ const config = merge(webpackCommonConfig, {
   },
   externals: {
     vue: 'Vue',
-    jquery: 'jQuery',
+    jquery: '$',
     vuetify: 'Vuetify',
     web3: 'Web3',
     TruffleContract: 'TruffleContract'

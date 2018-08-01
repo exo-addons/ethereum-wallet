@@ -10,7 +10,7 @@
           {{ error }}
         </v-alert>
         <v-form>
-          <v-text-field v-model="recipient" name="recipient" label="Recipient" type="text"></v-text-field>
+          <auto-complete input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
       </v-card-text>
@@ -23,7 +23,12 @@
 </template>
 
 <script>
+import AutoComplete from './AutoComplete.vue';
+
 export default {
+  components: {
+    AutoComplete
+  },
   props: {
     contract: {
       type: Object,

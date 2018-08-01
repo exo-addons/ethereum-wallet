@@ -58,7 +58,8 @@ const config = {
   },
   externals: {
     vuetify: 'Vuetify',
-    vue: 'Vue'
+    vue: 'Vue',
+    jquery: '$'
   },
   plugins: [
     new ExtractTextWebpackPlugin('css/[name].css')

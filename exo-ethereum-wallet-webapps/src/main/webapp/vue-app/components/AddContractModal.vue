@@ -56,12 +56,26 @@ export default {
         return;
       }
       try {
-        saveContractAddress(this.account, this.address, this.netId);
-        this.$emit("added");
-        this.dialog = false;
+        const contractBalanceOfPromise = saveContractAddress(this.account, this.address, this.netId);
+        if (contractBalanceOfPromise) {
+          contractBalanceOfPromise
+            .then((added) => {
+              if (added) {
+                this.$emit("added");
+                this.dialog = false;
+                this.address = null;
+              } else {
+                this.error = `Address is not recognized as contract's address`;
+              }
+            })
+            .catch(err => {
+              this.error = `Address is not recognized as contract's address ${err}`;
+            });
+        } else {
+          this.error = `Address is not recognized as contract's address`;
+        }
       } catch(e) {
         this.error = `Error encountered: ${e}`;
-        console.error(e);
       }
     }
   }

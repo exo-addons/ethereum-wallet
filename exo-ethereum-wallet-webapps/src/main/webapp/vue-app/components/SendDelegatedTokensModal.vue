@@ -10,8 +10,8 @@
           {{ error }}
         </v-alert>
         <v-form>
-          <v-text-field v-model="from" name="from" label="On behalf of" type="text"></v-text-field>
-          <v-text-field v-model="recipient" name="recipient" label="Recipient" type="text"></v-text-field>
+          <auto-complete input-label="From" @item-selected="from = $event.address"></auto-complete>
+          <auto-complete input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
       </v-card-text>
@@ -24,7 +24,12 @@
 </template>
 
 <script>
+import AutoComplete from './AutoComplete.vue';
+
 export default {
+  components: {
+    AutoComplete
+  },
   props: {
     contract: {
       type: Object,
@@ -67,16 +72,13 @@ export default {
             this.recipient = null;
             this.amount = null;
             this.dialog = false;
-            this.$emit("loading");
           } else {
             this.error = `Error while proceeding transaction`;
             console.error(resp);
-            this.$emit("end-loading");
           }
         })
         .catch (e => {
           this.error = `Error while proceeding: ${e}`;
-          this.$emit("end-loading");
         });
     }
   }

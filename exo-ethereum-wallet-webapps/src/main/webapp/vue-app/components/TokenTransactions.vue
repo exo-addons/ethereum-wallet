@@ -8,7 +8,16 @@
               <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
             </v-list-tile-avatar>
             <v-list-tile-content>
-              <v-list-tile-title v-html="item.title"></v-list-tile-title>
+              <v-list-tile-title>
+                <span>{{ item.titlePrefix }}</span>
+                <v-chip v-if="item.avatar" :alt="item.name" class="mt-0 mb-0" small>
+                  <v-avatar size="23px !important">
+                    <img :src="item.avatar">
+                  </v-avatar>
+                  <span v-html="item.displayName"></span>
+                </v-chip>
+                <code v-else>{{ item.displayName }}</code>
+              </v-list-tile-title>
               <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
             </v-list-tile-content>
             <v-list-tile-action>
@@ -23,6 +32,7 @@
 </template>
 
 <script>
+import {searchFullName, getContactFromStorage} from '../WalletAddressRegistry.js';
 
 export default {
   props: {
@@ -80,14 +90,32 @@ export default {
           window.localWeb3.eth.getBlock(res.blockHash, false)
           .then(block => block.timestamp)
           .then(timestamp => {
-            this.transactions.push({
+            const isReceiver = res.args._to === this.account;
+            const displayedAddress = isReceiver ? res.args._from : res.args._to;
+            const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+            const transactionDetails = {
               hash: res.transactionHash,
-              title: res.args._to === this.account ? `Received from ${res.args._from}`: `Sent to ${res.args._to}`,
-              color: res.args._to === this.account ? 'green' : 'red',
+              titlePrefix: isReceiver ? `Received from`: `Sent to`,
+              displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+              avatar: contactDetails.avatar,
+              name: null,
+              color: isReceiver ? 'green' : 'red',
               icon: 'fa-exchange-alt',
               amount: res.args._value.toNumber(),
               date: new Date(timestamp * 1000)
-            });
+            };
+            this.transactions.push(transactionDetails);
+            if (!contactDetails || !contactDetails.name) {
+              searchFullName(displayedAddress)
+                .then(item => {
+                  if (item && item.name && item.name.length) {
+                    transactionDetails.displayName = item.name;
+                    transactionDetails.avatar = item.avatar;
+                    transactionDetails.name = item.id;
+                    this.$forceUpdate();
+                  }
+                });
+            }
             this.$emit("loaded");
           })
           .catch(error => {
@@ -109,14 +137,32 @@ export default {
           window.localWeb3.eth.getBlock(res.blockHash, false)
             .then(block => block.timestamp)
             .then(timestamp => {
-              this.transactions.push({
+              const isReceiver = res.args._spender === this.account;
+              const displayedAddress = isReceiver ? res.args._owner : res.args._spender;
+              const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+              const transactionDetails = {
                 hash: res.transactionHash,
-                title: res.args._spender === this.account ? `Delegated from ${res.args._owner}`: `Delegated to ${res.args._spender}`,
-                color: res.args._spender === this.account ? 'green' : 'red',
+                titlePrefix: isReceiver ? `Delegated from`: `Delegated to`,
+                displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+                avatar: contactDetails.avatar,
+                name: null,
+                color: isReceiver ? 'green' : 'red',
                 icon: 'fa-users',
                 amount: res.args._value.toNumber(),
                 date: new Date(timestamp * 1000)
-              });
+              };
+              this.transactions.push(transactionDetails);
+              if (!contactDetails || !contactDetails.name) {
+                searchFullName(displayedAddress)
+                  .then(item => {
+                    if (item && item.name && item.name.length) {
+                      transactionDetails.displayName = item.name;
+                      transactionDetails.avatar = item.avatar;
+                      transactionDetails.name = item.id;
+                      this.$forceUpdate();
+                    }
+                  });
+              }
               this.$emit("loaded");
             })
             .catch(error => {

@@ -42,12 +42,9 @@ export default {
       this.error = null;
       this.creating = true;
 
-      console.log(JSON.stringify(newAccount));
-
       window.localWeb3.eth.personal.importRawKey(newAccount.privateKey, password)
         .then(address => window.localWeb3.eth.personal.unlockAccount(this.address, password, 9999))
         .then(address => {
-          console.log(address);
           this.creating = false;
           this.created = true;
         })

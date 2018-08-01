@@ -6,7 +6,7 @@
           <v-card>
             <v-toolbar color="pink" dark>
               <v-spacer></v-spacer>
-              <v-toolbar-title>Accounts ({{ networkName }})</v-toolbar-title>
+              <v-toolbar-title>Wallet ({{ networkName }})</v-toolbar-title>
               <v-spacer></v-spacer>
               <add-contract-modal :net-id="networkId" :account="account" @added="reloadContracts()"></add-contract-modal>
             </v-toolbar>
@@ -14,16 +14,23 @@
               {{ error }}
             </v-alert>
             <create-account v-if="!account" @added="init"></create-account>
-            <v-list two-line>
+            <v-list two-line subheader>
               <template v-for="(item, index) in accountsDetails">
-                <v-list-tile :key="index" avatar ripple @click="openAccountDetail(item)">
+                <v-list-tile :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
                   <v-list-tile-avatar>
-                    <v-icon dark class="purple">{{ item.icon }}</v-icon>
+                    <v-icon :class="item.error ? 'red':'purple'" dark>{{ item.icon }}</v-icon>
                   </v-list-tile-avatar>
                   <v-list-tile-content>
-                    <v-list-tile-title v-html="item.title"></v-list-tile-title>
-                    <v-list-tile-sub-title>{{ item.balance }} {{ item.symbol }}</v-list-tile-sub-title>
+                    <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
+                    <v-list-tile-title v-else v-html="item.title"></v-list-tile-title>
+                    <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
+                    <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }}</v-list-tile-sub-title>
                   </v-list-tile-content>
+                  <v-list-tile-action v-if="item.isContract">
+                    <v-btn icon ripple @click="deleteContract(item, $event)">
+                      <v-icon color="primary">delete</v-icon>
+                    </v-btn>
+                  </v-list-tile-action>
                 </v-list-tile>
                 <v-divider v-if="index + 1 < accountsDetails.length" :key="`divider-${index}`"></v-divider>
               </template>
@@ -42,7 +49,7 @@ import CreateAccount from './CreateAccount.vue';
 import AccountDetail from './AccountDetail.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
-import {getContractsDetails} from '../WalletToken.js';
+import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
 
 export default {
   components: {
@@ -101,6 +108,7 @@ export default {
   },
   methods: {
     init() {
+      this.initSettings();
       this.initWeb3();
       this.initAccount();
 
@@ -110,6 +118,21 @@ export default {
       setInterval(function() {
         thiss.initAccount();
       }, 1000);
+    },
+    initSettings() {
+      fetch('/portal/rest/wallet/api/global-settings')
+        .then(resp =>  {
+          if (resp.ok) {
+            return resp.json();
+          } else {
+            return null;
+          }
+        })
+        .then(settings => {
+          if (settings) {
+            window.walletSettings = settings;
+          }
+        });
     },
     initWeb3() {
       this.web3Provider = web3.currentProvider;
@@ -175,7 +198,17 @@ export default {
         });
     },
     openAccountDetail(accountDetails) {
-      this.selectedAccount = accountDetails;
+      if (!accountDetails.error) {
+        this.selectedAccount = accountDetails;
+      }
+    },
+    deleteContract(item, event) {
+      if(deleteContractFromStorage(this.account, this.networkId, item.address)) {
+        delete this.accountsDetails[item.address];
+        this.$forceUpdate();
+      }
+      event.preventDefault();
+      event.stopPropagation();
     }
   }
 };
