@@ -1,6 +1,14 @@
 <template>
   <v-dialog v-model="dialog" width="300px" max-width="100vh">
     <v-btn slot="activator" color="primary" dark ripple>Delegate Tokens</v-btn>
+    <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
+                   :args-names="['_spender', '_value']"
+                   :args-types="['address', 'uint256']"
+                   :args-values="[recipient, amount]"
+                   :open="showQRCodeModal"
+                   :gas="35000"
+                   function-name="transfer"
+                   @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Delegate Tokens</v-toolbar-title>
@@ -15,8 +23,9 @@
         </v-form>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn color="primary" @click="sendTokens">Save</v-btn>
+        <v-btn :disabled="!recipient || !amount" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -24,9 +33,11 @@
 
 <script>
 import AutoComplete from './AutoComplete.vue';
+import QrCodeModal from './QRCodeModal.vue';
 
 export default {
   components: {
+    QrCodeModal,
     AutoComplete
   },
   props: {
@@ -39,6 +50,7 @@ export default {
   },
   data () {
     return {
+      showQRCodeModal: false,
       recipient: null,
       amount: null,
       dialog: null,
@@ -58,6 +70,7 @@ export default {
         return;
       }
 
+      // Delegate an amount of tokens to the recipient 
       this.contract.approve(this.recipient, this.amount.toString())
         .then(resp => {
           if (resp.tx) {
@@ -67,7 +80,7 @@ export default {
             this.$emit("loading");
           } else {
             this.error = `Error while proceeding transaction`;
-            console.error(resp);
+            console.error('Error while proceeding transaction', resp);
             this.$emit("end-loading");
           }
         })

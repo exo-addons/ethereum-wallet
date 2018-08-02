@@ -1,7 +1,25 @@
 import {ERC20_COMPLIANT_CONTRACT_ABI} from './WalletConstants.js';
 
+/*
+ * Get the list of Contracts with details:
+ * {
+ *   name: name of conract,
+ *   symbol: symbol of Token currency,
+ *   balance: balance of current account in Tokens,
+ *   contract: truffle contract object,
+ *   icon: contract icon,
+ *   isContract: true,
+ *   isDefault: is default contract coming from configuration
+ * }
+ */
 export function getContractsDetails(account, netId) {
-  const contractsAddresses = getContractsAddresses(account, netId);
+  let contractsAddresses = getContractsAddresses(account, netId);
+  if(window.walletSettings.defaultNetworkId === netId
+      && window.walletSettings.defaultContractsToDisplay
+      && window.walletSettings.defaultContractsToDisplay.length) {
+    contractsAddresses = contractsAddresses.concat(window.walletSettings.defaultContractsToDisplay);
+  }
+
   const contractsDetailsPromises = [];
 
   contractsAddresses.forEach((address) => {
@@ -9,12 +27,18 @@ export function getContractsDetails(account, netId) {
     contractDetails.address = address;
     contractDetails.icon = 'fa-file-contract';
     contractDetails.isContract = true;
+    contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
+                                && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
     contractDetails.contract = getContractAtAddress(account, address);
     const contractDetailsPromise = loadContractBalance(account, contractDetails);
     contractsDetailsPromises.push(contractDetailsPromise);
   });
   return Promise.all(contractsDetailsPromises);
 }
+
+/*
+ * Loads contract balance and cache it in sessionStorage once loaded
+ */
 export function loadContractBalance(account, contractDetails) {
   return contractDetails.contract.symbol.call()
     .then(symbol => contractDetails.symbol = symbol)
@@ -24,15 +48,15 @@ export function loadContractBalance(account, contractDetails) {
     .then(() => contractDetails.contract.balanceOf.call(account))
     .then(balance => contractDetails.balance = parseFloat(balance))
     .then(() => {
-        return contractDetails;
+      return contractDetails;
     })
     .then(() => {
-        localStorage.setItem(`exo-wallet-contract-${account}-${contractDetails.address}`.toLowerCase(), JSON.stringify({
-          symbol: contractDetails.symbol,
-          name: contractDetails.name,
-          address: contractDetails.address
-        }));
-        return contractDetails;
+      localStorage.setItem(`exo-wallet-contract-${account}-${contractDetails.address}`.toLowerCase(), JSON.stringify({
+        symbol: contractDetails.symbol,
+        name: contractDetails.name,
+        address: contractDetails.address
+      }));
+      return contractDetails;
     })
     .catch((err) => {
       contractDetails.icon = 'warning';
@@ -41,6 +65,10 @@ export function loadContractBalance(account, contractDetails) {
       return contractDetails;
     });
 }
+
+/*
+ * Deletes contract from list on contracts displayed by the user in wallet application
+ */
 export function deleteContractFromStorage(account, netId, address) {
   address = address.toLowerCase();
   let contractAddresses = localStorage.getItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase());
@@ -54,6 +82,11 @@ export function deleteContractFromStorage(account, netId, address) {
   }
   return false;
 }
+
+/*
+ * Gets the list of contracts to display for current account on a chosen network.
+ * This information is retrieved from localStorage
+ */
 export function getContractsAddresses(account, netId) {
   const contractsAddressesString = localStorage.getItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase());
   let contractsAddresses = null;
@@ -65,6 +98,9 @@ export function getContractsAddresses(account, netId) {
   return contractsAddresses;
 }
 
+/*
+ * Validate Contract existence and save its address in localStorage
+ */
 export function saveContractAddress(account, address, netId) {
   if (getContractAtAddress(account, address)) {
     const contractsAddresses = getContractsAddresses(account, netId);
@@ -84,7 +120,7 @@ export function saveContractAddress(account, address, netId) {
             }
           });
       } catch (e) {
-        console.error(e);
+        console.warn('Error while saving contract', e);
       }
     } else {
       throw new Error('Contract already exists');
@@ -92,6 +128,9 @@ export function saveContractAddress(account, address, netId) {
   }
 }
 
+/*
+ * Construct an ERC20 contract instance using Truffle
+ */
 export function getContractAtAddress(account, address) {
   const ERC20_CONTRACT = TruffleContract({
     abi: ERC20_COMPLIANT_CONTRACT_ABI
@@ -102,14 +141,4 @@ export function getContractAtAddress(account, address) {
     gas: 300000
   });
   return ERC20_CONTRACT.at(address);
-}
-
-export function sendTokens(recipient, amount) {
-  return this.contract.transfer(recipient, amount)
-    .then(resp => {
-      if (!resp.tx) {
-        throw new Error('Error while proceeding transaction');
-      }
-      return resp;
-    });
 }

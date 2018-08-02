@@ -10,10 +10,10 @@
      <portlet-class>org.exoplatform.commons.api.portlet.GenericDispatchedViewPortlet</portlet-class>
      <init-param>
       <name>portlet-view-dispatched-file-path</name>
-      <value>/index.html</value>
+      <value>/wallet.html</value>
      </init-param>
-     <!--expiration-cache>-1</expiration-cache>
-     <cache-scope>PUBLIC</cache-scope-->
+     <expiration-cache>-1</expiration-cache>
+     <cache-scope>PUBLIC</cache-scope>
      <supports>
        <mime-type>text/html</mime-type>
      </supports>
@@ -21,6 +21,25 @@
      <portlet-info>
        <title>Ethereum Wallet Application</title>
        <keywords>Ethereum Wallet Application</keywords>
+     </portlet-info>
+   </portlet>
+   <portlet>
+     <portlet-name>EthereumSpaceWallet</portlet-name>
+     <display-name xml:lang="EN">Ethereum Space Wallet Application</display-name>
+     <portlet-class>org.exoplatform.commons.api.portlet.GenericDispatchedViewPortlet</portlet-class>
+     <init-param>
+      <name>portlet-view-dispatched-file-path</name>
+      <value>/spaceAccount.html</value>
+     </init-param>
+     <expiration-cache>-1</expiration-cache>
+     <cache-scope>PUBLIC</cache-scope>
+     <supports>
+       <mime-type>text/html</mime-type>
+     </supports>
+     <supported-locale>en</supported-locale>
+     <portlet-info>
+       <title>Ethereum Space Wallet Application</title>
+       <keywords>Ethereum Space Wallet Application</keywords>
      </portlet-info>
    </portlet>
 

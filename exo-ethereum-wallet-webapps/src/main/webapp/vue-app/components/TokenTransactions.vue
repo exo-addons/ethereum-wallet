@@ -88,39 +88,39 @@ export default {
         }
         if (res.args._to === this.account || res.args._from === this.account) {
           window.localWeb3.eth.getBlock(res.blockHash, false)
-          .then(block => block.timestamp)
-          .then(timestamp => {
-            const isReceiver = res.args._to === this.account;
-            const displayedAddress = isReceiver ? res.args._from : res.args._to;
-            const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
-            const transactionDetails = {
-              hash: res.transactionHash,
-              titlePrefix: isReceiver ? `Received from`: `Sent to`,
-              displayName: contactDetails.name ? contactDetails.name : displayedAddress,
-              avatar: contactDetails.avatar,
-              name: null,
-              color: isReceiver ? 'green' : 'red',
-              icon: 'fa-exchange-alt',
-              amount: res.args._value.toNumber(),
-              date: new Date(timestamp * 1000)
-            };
-            this.transactions.push(transactionDetails);
-            if (!contactDetails || !contactDetails.name) {
-              searchFullName(displayedAddress)
-                .then(item => {
-                  if (item && item.name && item.name.length) {
-                    transactionDetails.displayName = item.name;
-                    transactionDetails.avatar = item.avatar;
-                    transactionDetails.name = item.id;
-                    this.$forceUpdate();
-                  }
-                });
-            }
-            this.$emit("loaded");
-          })
-          .catch(error => {
-            this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
-          });
+            .then(block => block.timestamp)
+            .then(timestamp => {
+              const isReceiver = res.args._to === this.account;
+              const displayedAddress = isReceiver ? res.args._from : res.args._to;
+              const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+              const transactionDetails = {
+                hash: res.transactionHash,
+                titlePrefix: isReceiver ? `Received from`: `Sent to`,
+                displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+                avatar: contactDetails.avatar,
+                name: null,
+                color: isReceiver ? 'green' : 'red',
+                icon: 'fa-exchange-alt',
+                amount: res.args._value.toNumber(),
+                date: new Date(timestamp * 1000)
+              };
+              this.transactions.push(transactionDetails);
+              if (!contactDetails || !contactDetails.name) {
+                searchFullName(displayedAddress)
+                  .then(item => {
+                    if (item && item.name && item.name.length) {
+                      transactionDetails.displayName = item.name;
+                      transactionDetails.avatar = item.avatar;
+                      transactionDetails.name = item.id;
+                      this.$forceUpdate();
+                    }
+                  });
+              }
+              this.$emit("loaded");
+            })
+            .catch(error => {
+              this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
+            });
         }
       });
 

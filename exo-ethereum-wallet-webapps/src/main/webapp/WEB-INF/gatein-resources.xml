@@ -26,7 +26,41 @@
         <as>$</as>
       </depends>
       <depends>
-        <module>suggester</module>
+        <module>fetchPolyfill</module>
+      </depends>
+      <depends>
+        <module>customEventPolyfill</module>
+      </depends>
+      <depends>
+        <module>iePolyfills</module>
+      </depends>
+      <depends>
+        <module>vuetify</module>
+      </depends>
+      <depends>
+        <module>truffleContract</module>
+      </depends>
+      <depends>
+        <module>Web3</module>
+        <as>LocalWeb3</as>
+      </depends>
+      <depends>
+        <module>ethQRCode</module>
+        <as>EthereumQRPlugin</as>
+      </depends>
+    </module>
+  </portlet>
+
+  <portlet>
+    <name>EthereumSpaceWallet</name>
+    <module>
+      <script>
+        <minify>false</minify>
+        <path>/js/spaceWallet.bundle.js</path>
+      </script>
+      <depends>
+        <module>jquery</module>
+        <as>$</as>
       </depends>
       <depends>
         <module>fetchPolyfill</module>
@@ -47,6 +81,10 @@
         <module>Web3</module>
         <as>LocalWeb3</as>
       </depends>
+      <depends>
+        <module>ethQRCode</module>
+        <as>EthereumQRPlugin</as>
+      </depends>
     </module>
   </portlet>
 
@@ -55,6 +93,17 @@
     <script>
       <minify>false</minify>
       <path>/js/lib/vuetify.min.js</path>
+    </script>
+    <depends>
+      <module>vue</module>
+    </depends>
+  </module>
+
+  <module>
+    <name>ethQRCode</name>
+    <script>
+      <minify>false</minify>
+      <path>/js/lib/ethereum-qr-code.min.js</path>
     </script>
     <depends>
       <module>vue</module>

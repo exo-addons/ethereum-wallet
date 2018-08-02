@@ -1,6 +1,12 @@
 <template>
   <v-dialog v-model="dialog" width="300px" max-width="100vh">
     <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
+    <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
+                   :args-names="['_to', '_value']" :args-types="['address', 'uint256']" :args-values="[recipient, amount]"
+                   :open="showQRCodeModal"
+                   :gas="35000"
+                   function-name="transfer"
+                   @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Send Tokens</v-toolbar-title>
@@ -15,8 +21,9 @@
         </v-form>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn color="primary" @click="sendTokens">Send</v-btn>
+        <v-btn :disabled="!recipient || !amount" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -24,9 +31,11 @@
 
 <script>
 import AutoComplete from './AutoComplete.vue';
+import QrCodeModal from './QRCodeModal.vue';
 
 export default {
   components: {
+    QrCodeModal,
     AutoComplete
   },
   props: {
@@ -39,6 +48,7 @@ export default {
   },
   data () {
     return {
+      showQRCodeModal: false,
       recipient: null,
       amount: null,
       dialog: null,
@@ -66,8 +76,8 @@ export default {
             this.dialog = false;
             this.$emit("loading");
           } else {
-            this.error = `Error while proceeding transaction`;
-            console.error(resp);
+            this.error = 'Error while proceeding transaction';
+            console.error('Error while proceeding transaction', resp);
             this.$emit("end-loading");
           }
         })

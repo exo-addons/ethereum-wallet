@@ -83,7 +83,6 @@ export default {
       if (this.selectedValue) {
         const type = this.selectedValue.substring(0, this.selectedValue.indexOf('_'));
         const id = this.selectedValue.substring(this.selectedValue.indexOf('_') + 1);
-        console.log("id_type", id, type);
         searchAddress(id, type)
           .then( address => {
             if (address && address.length) {

@@ -9,25 +9,25 @@
                 <v-icon>arrow_back</v-icon>
               </v-btn>
 
-              <v-spacer></v-spacer>
+              <v-spacer />
               <div class="title">{{ contractDetail.title }}</div>
-              <v-spacer></v-spacer>
+              <v-spacer />
             </v-card-title>
 
             <v-card-title class="white--text pl-5 pt-5">
-              <v-spacer></v-spacer>
+              <v-spacer />
               <div class="display-1">{{ contractDetail.balance }} {{ contractDetail.symbol }}</div>
-              <v-spacer></v-spacer>
+              <v-spacer />
             </v-card-title>
           </v-layout>
         </v-card-media>
 
-        <div v-if="contractDetail.isContract && (contractDetail.balance > 0 || hasDelegatedTokens)" class="text-xs-center">
+        <div v-if="!isSpace && contractDetail.isContract && (contractDetail.balance > 0 || hasDelegatedTokens)" class="text-xs-center">
           <send-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true" @end-loading="loading = false"></send-tokens-modal>
           <delegate-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true"></delegate-tokens-modal>
-          <send-delegated-tokens-modal v-if="hasDelegatedTokens" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true"></send-delegated-tokens-modal>
+          <send-delegated-tokens-modal v-if="hasDelegatedTokens" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true"></send-delegated-tokens-modal>
         </div>
-        <div v-if="!contractDetail.isContract && contractDetail.balance > 0" class="text-xs-center">
+        <div v-if="!isSpace && !contractDetail.isContract && contractDetail.balance > 0" class="text-xs-center">
           <send-ether-modal v-if="contractDetail.balance > 0" :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @loaded="loaded"></send-ether-modal>
         </div>
         <v-divider></v-divider>
@@ -67,6 +67,12 @@ export default {
     TokenTransactions
   },
   props: {
+    isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     account: {
       type: String,
       default: function() {
@@ -111,44 +117,45 @@ export default {
   methods: {
     loaded() {
       if (this.contractDetail.isContract) {
+        // Refresh Contract balance and tranactions
         loadContractBalance(this.account, this.contractDetail)
           .then(() => this.loading = false)
           .catch(e => {
             this.loading = false;
             this.error = `Error: ${e}`;
           });
-      } else {
-        if (!this.refreshing) {
-          this.refreshing = true;
-          window.localWeb3.eth.getCoinbase()
-            .then(window.localWeb3.eth.getBalance)
-            .then(balance => {
-              balance = window.localWeb3.utils.fromWei(balance, "ether");
-              if(this.contractDetail.balance === balance) {
-                return false;
-              } else {
-                this.refreshed = true;
-                return this.contractDetail.balance = balance;
-              }
-            })
-            .then(refresh => {
-              if (refresh) {
-                return this.$refs.generalTransactions.init();
-              }
+      } else if (!this.refreshing) {
+        // Refresh Ether balance and tranactions
+        // And avoid parallel refresh with refreshing = true
+        this.refreshing = true;
+        const account = window.localWeb3.eth.defaultAccount;
+        window.getBalance(account)
+          .then(balance => {
+            balance = window.localWeb3.utils.fromWei(balance, "ether");
+            if(this.refreshed) {
+              return false;
+            } else if(this.contractDetail.balance === balance) {
               return true;
-            })
-            .then(continueLoading => {
-              // sometimes the balane gets refreshed,
-              // but the event 'confirmed' continues to be triggered,
-              // thus, loading is already finished and should stop
-              this.loading = continueLoading && !this.refreshed;
-            })
-            .then(() => this.refreshing = false)
-            .catch(e => {
-              this.loading = false;
-              this.error = `Error: ${e}`;
-            });
-          }
+            } else {
+              this.contractDetail.balance = balance;
+              return this.$refs.generalTransactions.init();
+            }
+          })
+          .then(continueLoading => {
+            // sometimes the balane gets refreshed, but the event 'confirmed' continues to be triggered,
+            // thus, loading is already finished and should stop
+            if (!continueLoading) {
+              this.refreshed = true;
+            }
+            return this.loading = continueLoading && !this.refreshed;
+          })
+          // Permit to refresh again once the above conditions finished
+          .then(() => this.refreshing = false)
+          .catch(e => {
+            this.refreshing = false;
+            this.loading = false;
+            this.error = `Error: ${e}`;
+          });
       }
     }
   }

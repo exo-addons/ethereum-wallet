@@ -20,13 +20,13 @@ function loadLanguageAsync (lang) {
     return fetch(`${eXo.env.portal.context}/${eXo.env.portal.rest}/i18n/bundle/locale.portlet.WalletPortlet-${lang}.json`, {
       credentials: 'include'
     })
-    .then(resp => resp.json())
-    .then(msgs => {
-      i18n.setLocaleMessage(lang, msgs);
-      loadedLanguages.push(lang);
-      i18n.locale = lang;
-      return i18n;
-    });
+      .then(resp => resp.json())
+      .then(msgs => {
+        i18n.setLocaleMessage(lang, msgs);
+        loadedLanguages.push(lang);
+        i18n.locale = lang;
+        return i18n;
+      });
   }
   return i18n;
 }

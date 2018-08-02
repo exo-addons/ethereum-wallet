@@ -1,6 +1,7 @@
 <template>
   <v-dialog v-model="dialog" width="300px" max-width="100vh">
     <v-btn slot="activator" color="primary" dark ripple>Send Ether</v-btn>
+    <qr-code-modal :from="account" :to="recipient" :amount="amount" :open="showQRCodeModal" @close="showQRCodeModal = false"></qr-code-modal>
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Send Ether</v-toolbar-title>
@@ -15,8 +16,9 @@
         </v-form>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn color="primary" @click="sendEther">Send</v-btn>
+        <v-btn :disabled="!recipient || !account || !amount" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -24,9 +26,11 @@
 
 <script>
 import AutoComplete from './AutoComplete.vue';
+import QrCodeModal from './QRCodeModal.vue';
 
 export default {
   components: {
+    QrCodeModal,
     AutoComplete
   },
   props: {
@@ -39,6 +43,7 @@ export default {
   },
   data () {
     return {
+      showQRCodeModal: false,
       recipient: null,
       amount: null,
       dialog: null,
@@ -58,25 +63,29 @@ export default {
         return;
       }
 
+      // Send an amount of ether to a third person
       window.localWeb3.eth.sendTransaction({
         from: this.account.toLowerCase(),
         to: this.recipient,
         value: window.localWeb3.utils.toWei(this.amount.toString(), "ether")
       })
-      .on('transactionHash', hash => {
-        this.recipient = null;
-        this.amount = null;
-        this.dialog = false;
-        this.$emit("loading");
-      })
-      .on('confirmation', (confirmationNumber, receipt) => {
-        this.$emit("loaded");
-      })
-      .on('error', (error, receipt) => {
-        this.error = `Error sending ether: ${error}`;
-        console.error("Error sending ether", error, receipt);
-        this.$emit("end-loading");
-      });
+        .on('transactionHash', hash => {
+          // The transaction has been hashed and will be sent
+          this.$emit("loading");
+          this.recipient = null;
+          this.amount = null;
+          this.dialog = false;
+        })
+        .on('confirmation', (confirmationNumber, receipt) => {
+          // The transaction has been mined and confirmed
+          this.$emit("loaded");
+        })
+        .on('error', (error, receipt) => {
+          // The transaction has failed
+          this.error = `Error sending ether: ${error}`;
+          console.error("Error sending ether", error, receipt);
+          this.$emit("end-loading");
+        });
     }
   }
 };

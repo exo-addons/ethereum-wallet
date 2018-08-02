@@ -1,8 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vh">
-    <v-btn slot="activator" icon title="Add token">
-      <v-icon>add</v-icon>
-    </v-btn>
+  <v-dialog v-model="show" width="300px" max-width="100vh">
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Add ERC20 Token Contract</v-toolbar-title>
@@ -16,7 +13,7 @@
         </v-form>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn color="primary" @click="addToken">Save</v-btn>
       </v-card-actions>
     </v-card>
@@ -28,6 +25,12 @@ import {saveContractAddress} from '../WalletToken.js';
 
 export default {
   props: {
+    open: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     account: {
       type: String,
       default: function() {
@@ -43,10 +46,22 @@ export default {
   },
   data () {
     return {
-      dialog: null,
+      show: false,
       error: null,
       address: null
     };
+  },
+  watch: {
+    open() {
+      if (this.open) {
+        this.show = true;
+      }
+    },
+    show() {
+      if(!this.show) {
+        this.$emit("close");
+      }
+    }
   },
   methods: {
     addToken() {
@@ -62,7 +77,7 @@ export default {
             .then((added) => {
               if (added) {
                 this.$emit("added");
-                this.dialog = false;
+                this.show = false;
                 this.address = null;
               } else {
                 this.error = `Address is not recognized as contract's address`;

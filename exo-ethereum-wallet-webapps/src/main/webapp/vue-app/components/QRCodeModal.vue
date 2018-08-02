@@ -1,0 +1,156 @@
+<template>
+  <v-dialog v-model="show" width="300px" max-width="100vh">
+    <v-card class="elevation-12">
+      <v-toolbar dark color="primary">
+        <v-toolbar-title>Address QR Code</v-toolbar-title>
+      </v-toolbar>
+      <v-card-text>
+        <div id="addressQRCode" class="text-xs-center"></div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script>
+export default {
+  props: {
+    open: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    gas: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
+    amount: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
+    from: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    to: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+
+    isContract: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    functionName: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    functionPayable: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    argsNames: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    },
+    argsTypes: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    },
+    argsValues: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    }
+  },
+  data () {
+    return {
+      show: false,
+      netId: null
+    };
+  },
+  watch: {
+    open() {
+      if (this.open) {
+        this.show = true;
+      }
+    },
+    show() {
+      if(!this.show) {
+        this.$emit("close");
+      }
+    }
+  },
+  updated() {
+    window.localWeb3.eth.net.getId()
+      .then(netId => {
+        if (this.to && netId !== this.netId) {
+          // This promise is triggered multiple times
+          this.netId = netId;
+          const qr = new EthereumQRPlugin();
+          const options = {
+            chainId: netId,
+            to: this.to
+          };
+
+          if(this.from) {
+            options.from = this.from;
+          }
+
+          if(this.amount && !this.isContract) {
+            options.value = this.amount;
+          }
+
+          if(this.gas) {
+            options.gas = this.gas;
+          }
+
+          if(this.isContract) {
+            options.mode = "contract_function";
+            options.functionSignature = {};
+            options.functionSignature.name = this.functionName;
+            options.functionSignature.payable = this.functionPayable;
+            if (this.argsNames.length === this.argsTypes.length && this.argsTypes.length === this.argsValues.length) {
+              options.functionSignature.args = [];
+              options.argsDefaults = [];
+              this.argsNames.forEach((element, index) => {
+                options.functionSignature.args.push({
+                  "name": element,
+                  "type": this.argsTypes[index]
+                });
+                options.argsDefaults.push({
+                  "name": element,
+                  "value": this.argsValues[index]
+                });
+              });
+            }
+          }
+
+          const qrCode = qr.toCanvas(options, {
+            selector: '#addressQRCode'
+          });
+        }
+      });
+  }
+};
+</script>
+
