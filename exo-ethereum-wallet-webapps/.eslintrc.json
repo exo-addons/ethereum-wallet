@@ -19,7 +19,8 @@
         "TruffleContract": true,
         "LocalWeb3": true,
         "EthereumQRPlugin": true,
-        "web3": true
+        "web3": true,
+        "Web3": true
     },
     "parserOptions": {
         "sourceType": "module",

@@ -58,7 +58,7 @@ export function loadContractBalance(account, contractDetails) {
       }));
       return contractDetails;
     })
-    .catch((err) => {
+    .catch(err => {
       contractDetails.icon = 'warning';
       contractDetails.title = contractDetails.address;
       contractDetails.error = 'Error retrieving contract at specified address';
@@ -135,7 +135,12 @@ export function getContractAtAddress(account, address) {
   const ERC20_CONTRACT = TruffleContract({
     abi: ERC20_COMPLIANT_CONTRACT_ABI
   });
-  ERC20_CONTRACT.setProvider(window.localWeb3.currentProvider);
+  // Use Old version of Web3 (from Metamask) providersince TruffleContract is not compatible with new Web3 version
+  if (window.localWeb3.currentProvider.host && window.localWeb3.currentProvider.host.indexOf("http") === 0) {
+    ERC20_CONTRACT.setProvider(new Web3.providers.HttpProvider(window.localWeb3.currentProvider.host));
+  } else {
+    ERC20_CONTRACT.setProvider(window.localWeb3.currentProvider);
+  }
   ERC20_CONTRACT.defaults({
     from: account,
     gas: 300000
