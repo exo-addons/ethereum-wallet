@@ -1,11 +1,15 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vh">
+  <v-dialog v-model="dialog" width="300px" max-width="100vw">
     <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
-    <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
-                   :args-names="['_to', '_value']" :args-types="['address', 'uint256']" :args-values="[recipient, amount]"
+    <qr-code-modal :to="recipient"
+                   :is-contract="true"
+                   :args-names="['_to', '_value']"
+                   :args-types="['address', 'uint256']"
+                   :args-values="[recipient, amount]"
                    :open="showQRCodeModal"
-                   :gas="35000"
+                   :function-payable="false"
                    function-name="transfer"
+                   title="Send Tokens QR Code"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">

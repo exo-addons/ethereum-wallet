@@ -1,7 +1,12 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vh">
+  <v-dialog v-model="dialog" width="300px" max-width="100vw">
     <v-btn slot="activator" color="primary" dark ripple>Send Ether</v-btn>
-    <qr-code-modal :from="account" :to="recipient" :amount="amount" :open="showQRCodeModal" @close="showQRCodeModal = false"></qr-code-modal>
+    <qr-code-modal :from="account"
+                   :to="recipient"
+                   :amount="amount"
+                   :open="showQRCodeModal"
+                   title="Send Ether QR Code"
+                   @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Send Ether</v-toolbar-title>

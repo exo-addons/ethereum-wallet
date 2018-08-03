@@ -1,8 +1,8 @@
 <template>
-  <v-dialog v-model="show" width="300px" max-width="100vh">
+  <v-dialog v-model="show" width="300px" max-width="100vw">
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
-        <v-toolbar-title>Address QR Code</v-toolbar-title>
+        <v-toolbar-title>{{ title }}</v-toolbar-title>
       </v-toolbar>
       <v-card-text>
         <div id="addressQRCode" class="text-xs-center"></div>
@@ -14,16 +14,16 @@
 <script>
 export default {
   props: {
+    title: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     open: {
       type: Boolean,
       default: function() {
         return false;
-      }
-    },
-    gas: {
-      type: Number,
-      default: function() {
-        return 0;
       }
     },
     amount: {
@@ -103,8 +103,8 @@ export default {
   updated() {
     window.localWeb3.eth.net.getId()
       .then(netId => {
+        // This promise is triggered multiple times
         if (this.to && netId !== this.netId) {
-          // This promise is triggered multiple times
           this.netId = netId;
           const qr = new EthereumQRPlugin();
           const options = {
@@ -112,19 +112,19 @@ export default {
             to: this.to
           };
 
-          if(this.from) {
+          if (this.from) {
             options.from = this.from;
           }
 
-          if(this.amount && !this.isContract) {
+          if (this.amount && !this.isContract) {
             options.value = this.amount;
           }
 
-          if(this.gas) {
-            options.gas = this.gas;
+          if (window.walletSettings.defaultGas) {
+            options.gas = window.walletSettings.defaultGas;
           }
 
-          if(this.isContract) {
+          if (this.isContract) {
             options.mode = "contract_function";
             options.functionSignature = {};
             options.functionSignature.name = this.functionName;

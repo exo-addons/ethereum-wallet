@@ -1,12 +1,12 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vh">
+  <v-dialog v-model="dialog" width="300px" max-width="100vw">
     <v-btn slot="activator" color="primary" dark ripple>Delegate Tokens</v-btn>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_spender', '_value']"
                    :args-types="['address', 'uint256']"
                    :args-values="[recipient, amount]"
                    :open="showQRCodeModal"
-                   :gas="35000"
+                   title="Delegate Token QR Code"
                    function-name="transfer"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">

@@ -143,7 +143,7 @@ export function getContractAtAddress(account, address) {
   }
   ERC20_CONTRACT.defaults({
     from: account,
-    gas: 300000
+    gas: window.walletSettings.defaultGas
   });
   return ERC20_CONTRACT.at(address);
 }

@@ -7,18 +7,42 @@
             <v-toolbar >
               <v-toolbar-title>Wallet ({{ networkName }})</v-toolbar-title>
               <v-spacer />
-              <add-contract-modal v-if="!isSpace" :net-id="networkId" :account="account" :open="showAddContractModal" @added="reloadContracts()" @close="showAddContractModal = false"></add-contract-modal>
-              <qr-code-modal :to="account" :open="showQRCodeModal" @close="showQRCodeModal = false"></qr-code-modal>
+              <add-contract-modal v-if="!isSpace"
+                                  :net-id="networkId"
+                                  :account="account"
+                                  :open="showAddContractModal"
+                                  @added="reloadContracts()"
+                                  @close="showAddContractModal = false" />
+              <qr-code-modal :to="account"
+                             :open="showQRCodeModal"
+                             title="Wallet Address QR Code"
+                             @close="showQRCodeModal = false" />
+              <user-settings-modal :account="account"
+                                   :open="showSettingsModal"
+                                   @close="showSettingsModal = false"
+                                   @settings-changed="applySettings" />
               <v-menu offset-y left>
                 <v-btn slot="activator" icon>
                   <v-icon>more_vert</v-icon>
                 </v-btn>
                 <v-list>
                   <v-list-tile v-if="!isSpace" @click="showAddContractModal = true">
-                    <v-list-tile-title>Add contract</v-list-tile-title>
+                    <v-list-tile-avatar>
+                      <v-icon>add</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-title>Add Token</v-list-tile-title>
                   </v-list-tile>
                   <v-list-tile @click="showQRCodeModal = true">
+                    <v-list-tile-avatar>
+                      <v-icon>fa-qrcode</v-icon>
+                    </v-list-tile-avatar>
                     <v-list-tile-title>QR Code</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile v-if="!isSpace" @click="showSettingsModal = true">
+                    <v-list-tile-avatar>
+                      <v-icon>fa-cog</v-icon>
+                    </v-list-tile-avatar>
+                    <v-list-tile-title>Settings</v-list-tile-title>
                   </v-list-tile>
                 </v-list>
               </v-menu>
@@ -37,8 +61,9 @@
                   <v-list-tile-content>
                     <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
                     <v-list-tile-title v-else v-html="item.title"></v-list-tile-title>
+
                     <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
-                    <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }}</v-list-tile-sub-title>
+                    <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }} {{ item.balanceUSD ? `(${item.balanceUSD} \$)`:'' }}</v-list-tile-sub-title>
                   </v-list-tile-content>
                   <v-list-tile-action v-if="!isSpace && item.isContract && !item.isDefault">
                     <v-btn icon ripple @click="deleteContract(item, $event)">
@@ -62,14 +87,17 @@ import AddContractModal from './AddContractModal.vue';
 import CreateAccount from './CreateAccount.vue';
 import AccountDetail from './AccountDetail.vue';
 import QrCodeModal from './QRCodeModal.vue';
+import UserSettingsModal from './UserSettingsModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
+import {retrieveUSDExchangeRate, etherToUSD} from '../WalletUtils.js';
 
 export default {
   components: {
     CreateAccount,
+    UserSettingsModal,
     QrCodeModal,
     AccountDetail,
     AddContractModal
@@ -86,6 +114,7 @@ export default {
     return {
       loading: true,
       showQRCodeModal: false,
+      showSettingsModal: false,
       showAddContractModal: false,
       networkId: null,
       networkName: null,
@@ -147,6 +176,7 @@ export default {
       this.errorMessage = null;
       this.initSettings()
         .then(this.initWeb3)
+        .then(retrieveUSDExchangeRate)
         .then(this.getAccount)
         .then(this.initAccount)
         .then(() => this.loading = false)
@@ -177,12 +207,13 @@ export default {
           if (settings) {
             window.walletSettings = settings;
           }
-        });
+        })
+        .catch(console.warn);
     },
     initWeb3() {
       if (this.isSpace) {
-        if (!window.walletSettings.spaceWeb3ProviderURL) {
-          throw new Error("Please configure a default space provider URL for Web3");
+        if (!window.walletSettings || !window.walletSettings.spaceWeb3ProviderURL) {
+          return Promise.reject(new Error("Please configure a default space provider URL for Web3"));
         }
         if (window.walletSettings.spaceWeb3ProviderURL.indexOf("ws") === 0) {
           window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.spaceWeb3ProviderURL));
@@ -193,6 +224,7 @@ export default {
         // Metamask provider
         window.localWeb3 = new LocalWeb3(web3.currentProvider);
       }
+      return Promise.resolve(window.localWeb3);
     },
     getAccount() {
       if(this.isSpace) {
@@ -260,6 +292,7 @@ export default {
     computeBalance() {
       window.localWeb3.eth.getBalance(window.localWeb3.eth.defaultAccount)
         .then(balance => this.accountsDetails[this.account].balance = window.localWeb3.utils.fromWei(balance, "ether"))
+        .then(balance => this.accountsDetails[this.account].balanceUSD = etherToUSD(balance))
         .then(() => this.$forceUpdate());
     },
     reloadContracts(account) {
@@ -289,6 +322,9 @@ export default {
       }
       event.preventDefault();
       event.stopPropagation();
+    },
+    applySettings(newSettings) {
+      console.log(newSettings);
     }
   }
 };

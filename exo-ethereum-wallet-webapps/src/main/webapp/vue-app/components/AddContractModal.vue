@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show" width="300px" max-width="100vh">
+  <v-dialog v-model="show" width="300px" max-width="100vw">
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Add ERC20 Token Contract</v-toolbar-title>

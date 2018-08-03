@@ -2,10 +2,10 @@
   <v-layout row>
     <v-flex xs12 sm6 offset-sm3>
       <v-card class="text-xs-center">
-        <v-card-media class="purple white--text" height="200px">
+        <v-card-media class="purple white--text" height="120px">
           <v-layout column fill-height>
             <v-card-title>
-              <v-btn dark icon @click="$emit('back')">
+              <v-btn absolute dark icon @click="$emit('back')">
                 <v-icon>arrow_back</v-icon>
               </v-btn>
 
@@ -13,10 +13,16 @@
               <div class="title">{{ contractDetail.title }}</div>
               <v-spacer />
             </v-card-title>
-
-            <v-card-title class="white--text pl-5 pt-5">
+            <v-card-title>
               <v-spacer />
-              <div class="display-1">{{ contractDetail.balance }} {{ contractDetail.symbol }}</div>
+              <v-list :two-line="contractDetail.balanceUSD > 0" class="transparent" dark>
+                <v-list-tile>
+                  <v-list-tile-content>
+                    <v-list-tile-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-title>
+                    <v-list-tile-sub-title v-if="contractDetail.balanceUSD">{{ contractDetail.balanceUSD }} $</v-list-tile-sub-title>
+                  </v-list-tile-content>
+                </v-list-tile>
+              </v-list>
               <v-spacer />
             </v-card-title>
           </v-layout>
@@ -55,6 +61,7 @@ import SendEtherModal from './SendEtherModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {loadContractBalance} from '../WalletToken.js';
+import {etherToUSD} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -108,7 +115,7 @@ export default {
         this.contractDetail.contract.Transfer({}, {
           fromBlock: 0,
           toBlock: 'latest',
-        }).watch(function(error, event) {
+        }).watch(() => {
           this.$forceUpdate();
         });
       }
@@ -132,6 +139,7 @@ export default {
         window.getBalance(account)
           .then(balance => {
             balance = window.localWeb3.utils.fromWei(balance, "ether");
+            this.contractDetail.balanceUSD = etherToUSD(balance);
             if(this.refreshed) {
               return false;
             } else if(this.contractDetail.balance === balance) {
