@@ -92,7 +92,7 @@ import UserSettingsModal from './UserSettingsModal.vue';
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
-import {retrieveUSDExchangeRate, etherToUSD} from '../WalletUtils.js';
+import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -174,8 +174,8 @@ export default {
   methods: {
     init() {
       this.errorMessage = null;
-      this.initSettings()
-        .then(this.initWeb3)
+      initSettings()
+        .then(() => initWeb3(this.isSpace))
         .then(retrieveUSDExchangeRate)
         .then(this.getAccount)
         .then(this.initAccount)
@@ -193,38 +193,6 @@ export default {
           thiss.initAccount();
         }, 1000);
       }
-    },
-    initSettings() {
-      return fetch('/portal/rest/wallet/api/global-settings')
-        .then(resp =>  {
-          if (resp && resp.ok) {
-            return resp.json();
-          } else {
-            return null;
-          }
-        })
-        .then(settings => {
-          if (settings) {
-            window.walletSettings = settings;
-          }
-        })
-        .catch(console.warn);
-    },
-    initWeb3() {
-      if (this.isSpace) {
-        if (!window.walletSettings || !window.walletSettings.spaceWeb3ProviderURL) {
-          return Promise.reject(new Error("Please configure a default space provider URL for Web3"));
-        }
-        if (window.walletSettings.spaceWeb3ProviderURL.indexOf("ws") === 0) {
-          window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.spaceWeb3ProviderURL));
-        } else {
-          window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.spaceWeb3ProviderURL));
-        }
-      } else {
-        // Metamask provider
-        window.localWeb3 = new LocalWeb3(web3.currentProvider);
-      }
-      return Promise.resolve(window.localWeb3);
     },
     getAccount() {
       if(this.isSpace) {

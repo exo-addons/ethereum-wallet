@@ -44,3 +44,37 @@ export function retrieveUSDExchangeRate() {
     .then(usdPriceRetrieved => {return usdPriceRetrieved ? window.localWeb3.eth.getGasPrice(): null;})
     .then(gasPrice => {window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;});
 }
+
+export function initWeb3(isSpace) {
+  if (isSpace) {
+    if (!window.walletSettings || !window.walletSettings.spaceWeb3ProviderURL) {
+      return Promise.reject(new Error("Please configure a default space provider URL for Web3"));
+    }
+    if (window.walletSettings.spaceWeb3ProviderURL.indexOf("ws") === 0) {
+      window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.spaceWeb3ProviderURL));
+    } else {
+      window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.spaceWeb3ProviderURL));
+    }
+  } else {
+    // Metamask provider
+    window.localWeb3 = new LocalWeb3(web3.currentProvider);
+  }
+  return Promise.resolve(window.localWeb3);
+}
+
+export function initSettings() {
+  return fetch('/portal/rest/wallet/api/global-settings')
+    .then(resp =>  {
+      if (resp && resp.ok) {
+        return resp.json();
+      } else {
+        return null;
+      }
+    })
+    .then(settings => {
+      if (settings) {
+        window.walletSettings = settings;
+      }
+    })
+    .catch(console.warn);
+}

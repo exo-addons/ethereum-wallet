@@ -4,6 +4,6 @@
 	"spaceWeb3ProviderURL": "http://localhost:8545",
 	"defaultBlocksToRetrieve": 1000,
 	"defaultContractsToDisplay": ["0xb0f04c95967a8005e271db5060ec4a0c2d551fca"],
-	"defaultNetworkId": 1533231324753,
+	"defaultNetworkId": 654635655115,
 	"defaultGas": 35000
 }

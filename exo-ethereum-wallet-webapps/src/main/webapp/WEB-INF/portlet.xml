@@ -42,5 +42,24 @@
        <keywords>Ethereum Space Wallet Application</keywords>
      </portlet-info>
    </portlet>
+   <portlet>
+     <portlet-name>EthereumWalletAdmin</portlet-name>
+     <display-name xml:lang="EN">Ethereum Wallet Application Administration</display-name>
+     <portlet-class>org.exoplatform.commons.api.portlet.GenericDispatchedViewPortlet</portlet-class>
+     <init-param>
+      <name>portlet-view-dispatched-file-path</name>
+      <value>/walletAdmin.html</value>
+     </init-param>
+     <expiration-cache>-1</expiration-cache>
+     <cache-scope>PUBLIC</cache-scope>
+     <supports>
+       <mime-type>text/html</mime-type>
+     </supports>
+     <supported-locale>en</supported-locale>
+     <portlet-info>
+       <title>Ethereum Wallet Application Administration</title>
+       <keywords>Ethereum Wallet Application Administration</keywords>
+     </portlet-info>
+   </portlet>
 
 </portlet-app>

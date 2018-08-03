@@ -6,7 +6,8 @@ const config = merge(webpackCommonConfig, {
   mode: 'production',
   entry: {
     wallet: './src/main/webapp/vue-app/wallet.js',
-    spaceWallet: './src/main/webapp/vue-app/spaceWallet.js'
+    spaceWallet: './src/main/webapp/vue-app/spaceWallet.js',
+    walletAdmin: './src/main/webapp/vue-app/walletAdmin.js'
   },
   output: {
     path: path.join(__dirname, 'target/exo-ethereum-wallet/'),
