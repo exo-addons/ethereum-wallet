@@ -48,10 +48,28 @@
               </v-menu>
             </v-toolbar>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
+            <v-alert :value="oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
+              <div>
+                Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
+              </div>
+              <v-btn>
+                <v-icon color="success" @click="saveNewAddressInWallet">fa-check</v-icon>
+              </v-btn>
+            </v-alert>
+            <v-alert :value="!oldAccountAddress && newAccountAddress" type="info" dismissible>
+              <div v-if="isSpace">
+                Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
+              </div>
+              <div v-else>
+                Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
+              </div>
+              <v-btn>
+                <v-icon color="success" @click="saveNewAddressInWallet">fa-check</v-icon>
+              </v-btn>
+            </v-alert>
             <v-alert :value="error" type="error">
               {{ error }}
             </v-alert>
-            <create-account v-if="!account && !isSpace" @added="init"></create-account>
             <v-list two-line subheader>
               <template v-for="(item, index) in accountsDetails">
                 <v-list-tile :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
@@ -84,19 +102,17 @@
 
 <script>
 import AddContractModal from './AddContractModal.vue';
-import CreateAccount from './CreateAccount.vue';
 import AccountDetail from './AccountDetail.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {searchAddress} from '../WalletAddressRegistry.js';
+import {searchAddress, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
 import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings} from '../WalletUtils.js';
 
 export default {
   components: {
-    CreateAccount,
     UserSettingsModal,
     QrCodeModal,
     AccountDetail,
@@ -113,6 +129,9 @@ export default {
   data() {
     return {
       loading: true,
+      oldAccountAddressNotFound: null,
+      oldAccountAddress: null,
+      newAccountAddress: null,
       showQRCodeModal: false,
       showSettingsModal: false,
       showAddContractModal: false,
@@ -142,7 +161,7 @@ export default {
         return 'Please install or Enable Metamask';
       } else if (!this.metamaskConnected) {
         return 'Please connect Metamask to the network';
-      } else if (!this.account) {
+      } else if (!this.account && !this.isSpace) {
         return 'Please select a valid account using Metamask';
       }
       return null;
@@ -177,14 +196,17 @@ export default {
       initSettings()
         .then(() => initWeb3(this.isSpace))
         .then(retrieveUSDExchangeRate)
-        .then(this.refreshList);
+        .then(this.refreshList)
+        .then(this.retrieveDefaultUserAccount);
 
       if (!this.isSpace) {
         const thiss = this;
         // In case account switched in Metamars
         // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
         setInterval(function() {
-          thiss.getAccount().then(thiss.initAccount);
+          thiss.getAccount()
+            .then(thiss.initAccount)
+            .then(thiss.retrieveDefaultUserAccount);
         }, 1000);
       }
     },
@@ -214,7 +236,10 @@ export default {
     initAccount(account, forceRefresh) {
       if (this.isSpace) {
         if (!account || !account.length) {
-          throw new Error("Current space doesn't have an address yet");
+          // Display information to allo administrator to associate
+          // This new address with wallet
+          return window.localWeb3.eth.getCoinbase()
+            .then((account) => this.oldAccountAddress = this.newAccountAddress = account);
         } else {
           account = account.toLowerCase();
           window.localWeb3.eth.defaultAccount = account;
@@ -307,6 +332,58 @@ export default {
     },
     applySettings(newSettings) {
       this.refreshList(this.account, true);
+    },
+    retrieveDefaultUserAccount() {
+      if (this.isSpace) {
+        searchUserOrSpaceObject(eXo.env.portal.spaceGroup, 'space')
+          .then(spaceObject => {
+            if(spaceObject
+                && spaceObject.creator && spaceObject.creator === eXo.env.portal.userName
+                && (!spaceObject.address || !spaceObject.address.length)) {
+              // Display wallet association to space for creator only
+              this.oldAccountAddress = null;
+            }
+          });
+      } else if(!this.oldAccountAddressNotFound) {
+        searchAddress(eXo.env.portal.userName, 'user')
+          .then(address => {
+            this.newAccountAddress = this.account;
+            if(address && address.length) {
+              this.oldAccountAddress = address.toLowerCase();
+            } else {
+              this.oldAccountAddressNotFound = true;
+            }
+          })
+          .catch(e => {
+            this.oldAccountAddressNotFound = true;
+          });
+      }
+    },
+    saveNewAddressInWallet() {
+      this.loading = true;
+      fetch('/portal/rest/wallet/api/account/saveAddress', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: this.isSpace ? 'space' : 'user',
+          id: this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
+          address: this.newAccountAddress
+        })
+      }).then(resp => {
+        if (resp && resp.ok) {
+          if (this.isSpace) {
+            this.init();
+          } else {
+            this.oldAccountAddress = this.newAccountAddress;
+          }
+        } else {
+          this.errorMessage = 'Error saving new Wallet address';
+        }
+        this.loading = false;
+      });
     }
   }
 };

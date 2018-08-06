@@ -128,7 +128,6 @@ export default {
   },
   methods: {
     loaded() {
-      console.log(this.contractDetail);
       if (this.contractDetail.isContract) {
         // Refresh Contract balance and tranactions
         loadContractBalance(this.account, this.contractDetail)

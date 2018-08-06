@@ -1,5 +1,5 @@
 /*
- * Return an Array of Objects of type:
+ * Return an Array of users and spaces that matches the filter (used in suggestion) :
  * {
  *  name: Full name,
  *  id: id,
@@ -16,28 +16,14 @@ export function searchContact(filter) {
 }
 
 /*
- * Return a JSON of format:
- * {
- *  "name": display name of space of user,
- *  "id": Id of space of user,
- *  "address": Ethereum account address,
- *  "avatar": avatar URL/URI,
- *  "type": 'user' or 'space'
- * }
+ * Return the address of a user or space
  */
 export function searchAddress(id, type) {
   const address = sessionStorage.getItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
   if (address) {
     return Promise.resolve(address);
   }
-  return fetch(`/portal/rest/wallet/api/account?name=${id}&type=${type}`.toLowerCase())
-    .then(resp =>  {
-      if (resp.ok) {
-        return resp.json();
-      } else {
-        return null;
-      }
-    })
+  return searchUserOrSpaceObject(id, type)
     .then(data => {
       if(data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
         if (sessionStorage) {
@@ -46,6 +32,32 @@ export function searchAddress(id, type) {
         return data.address;
       } else {
         sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
+        return null;
+      }
+    });
+}
+
+/*
+ * Return the user or space object
+ * {
+ *  "name": display name of space of user,
+ *  "id": Id of space of user,
+ *  "address": Ethereum account address,
+ *  "avatar": avatar URL/URI,
+ *  "type": 'user' or 'space',
+ *  "creator": space creator username for space type
+ * }
+ */
+export function searchUserOrSpaceObject(id, type) {
+  const address = sessionStorage.getItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
+  if (address) {
+    return Promise.resolve(address);
+  }
+  return fetch(`/portal/rest/wallet/api/account/detailsById?name=${id}&type=${type}`.toLowerCase())
+    .then(resp =>  {
+      if (resp.ok) {
+        return resp.json();
+      } else {
         return null;
       }
     });
@@ -62,7 +74,7 @@ export function searchAddress(id, type) {
  * }
  */
 export function searchFullName(address) {
-  return fetch(`/portal/rest/wallet/api/account?address=${address}`.toLowerCase())
+  return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`.toLowerCase())
     .then(resp =>  {
       if (resp.ok) {
         return resp.json();
