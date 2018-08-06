@@ -27,6 +27,7 @@ export function getContractsDetails(account, netId) {
     contractDetails.address = address;
     contractDetails.icon = 'fa-file-contract';
     contractDetails.isContract = true;
+    contractDetails.address = address;
     contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
                                 && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
     contractDetails.contract = getContractAtAddress(account, address);

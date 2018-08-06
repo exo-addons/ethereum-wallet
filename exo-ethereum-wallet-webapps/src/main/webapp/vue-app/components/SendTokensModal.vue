@@ -19,6 +19,9 @@
         <v-alert :value="error" type="error" class="v-content">
           {{ error }}
         </v-alert>
+        <v-alert v-show="!error && warning && warning.length" :value="warning" type="warning" class="v-content">
+          {{ warning }}
+        </v-alert>
         <v-form>
           <auto-complete input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
@@ -56,12 +59,25 @@ export default {
       recipient: null,
       amount: null,
       dialog: null,
+      warning: null,
       error: null
     };
+  },
+  watch: {
+    dialog() {
+      if (this.dialog) {
+        this.showQRCodeModal = false;
+        this.recipient = null;
+        this.amount = null;
+        this.warning = null;
+        this.error = null;
+      }
+    }
   },
   methods: {
     sendTokens() {
       this.error = null;
+      this.warning = null;
       if (!window.localWeb3.utils.isAddress(this.recipient)) {
         this.error = "Invalid recipient address";
         return;
@@ -72,7 +88,15 @@ export default {
         return;
       }
 
-      this.contract.transfer(this.recipient, this.amount.toString())
+      this.contract.transfer.estimateGas(this.recipient, this.amount.toString(), {gas: 300000})
+        .then(result => {
+          if (result <= window.walletSettings.defaultGas) {
+            return this.contract.transfer(this.recipient, this.amount.toString());
+          } else {
+            this.warning = `You have set a low gas ${window.walletSettings.defaultGas} while the estimation of necessary gas is ${result}`;
+            return this.contract.transfer(this.recipient, this.amount.toString());
+          }
+        })
         .then(resp => {
           if (resp.tx) {
             this.recipient = null;

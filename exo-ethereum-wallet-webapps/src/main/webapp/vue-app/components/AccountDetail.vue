@@ -15,6 +15,11 @@
             </v-card-title>
             <v-card-title>
               <v-spacer />
+              <code>{{ contractDetail.address }}</code>
+              <v-spacer />
+            </v-card-title>
+            <v-card-title>
+              <v-spacer />
               <v-list :two-line="contractDetail.balanceUSD > 0" class="transparent" dark>
                 <v-list-tile>
                   <v-list-tile-content>
@@ -123,6 +128,7 @@ export default {
   },
   methods: {
     loaded() {
+      console.log(this.contractDetail);
       if (this.contractDetail.isContract) {
         // Refresh Contract balance and tranactions
         loadContractBalance(this.account, this.contractDetail)
@@ -136,7 +142,7 @@ export default {
         // And avoid parallel refresh with refreshing = true
         this.refreshing = true;
         const account = window.localWeb3.eth.defaultAccount;
-        window.getBalance(account)
+        window.localWeb3.eth.getBalance(account)
           .then(balance => {
             balance = window.localWeb3.utils.fromWei(balance, "ether");
             this.contractDetail.balanceUSD = etherToUSD(balance);

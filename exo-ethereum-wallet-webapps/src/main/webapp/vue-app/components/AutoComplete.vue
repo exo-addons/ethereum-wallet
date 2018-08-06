@@ -4,6 +4,7 @@
                   :loading="isLoadingSuggestions"
                   :search-input.sync="searchTerm"
                   :label="inputLabel"
+                  max-width="100%"
                   item-text="name"
                   item-value="id_type"
                   hide-details hide-selected chips clearable cache-items>
@@ -17,18 +18,21 @@
     </template>
 
     <template slot="selection" slot-scope="{ item, selected }">
-      <v-chip :selected="selected" :disabled="addressLoad === 'error'" :title="addressLoad === 'error' ? 'Contact haven\'t a valid wallet account yet' : ''" color="blue-grey" class="white--text" @input="selectItem(item)">
+      <v-chip v-if="item.avatar" :selected="selected" :disabled="addressLoad === 'error'" :title="addressLoad === 'error' ? 'Contact haven\'t a valid wallet account yet' : ''" color="blue-grey" class="white--text" @input="selectItem(item)">
         <v-progress-circular v-if="addressLoad === 'loading'" indeterminate color="white" class="mr-2"></v-progress-circular>
         <v-icon v-else-if="addressLoad === 'error'" alt="Invalid address" class="mr-2" color="red">warning</v-icon>
-        <v-avatar v-else dark>
+        <v-avatar v-else-if="item.avatar" dark>
           <img :src="item.avatar">
         </v-avatar>
-        <span v-text="item.name"></span>
+        <span>{{ item.name }}</span>
       </v-chip>
+      <v-label v-else :selected="selected" class="black--text" solo @input="selectItem(item)">
+        {{ item.name }}
+      </v-label>
     </template>
 
     <template slot="item" slot-scope="{ item, tile }">
-      <v-list-tile-avatar>
+      <v-list-tile-avatar v-if="item.avatar">
         <img :src="item.avatar">
       </v-list-tile-avatar>
       <v-list-tile-content>
@@ -64,7 +68,13 @@ export default {
   },
   watch: {
     searchTerm(value) {
-      if (value && value.length) {
+      if(window.localWeb3.utils.isAddress(value)) {
+        this.items = [{
+          address: value,
+          name: value,
+          id: value
+        }];
+      } else if (value && value.length) {
         this.isLoadingSuggestions = true;
         try {
           searchContact(value)
@@ -81,20 +91,26 @@ export default {
     selectedValue() {
       this.addressLoad = 'loading';
       if (this.selectedValue) {
-        const type = this.selectedValue.substring(0, this.selectedValue.indexOf('_'));
-        const id = this.selectedValue.substring(this.selectedValue.indexOf('_') + 1);
-        searchAddress(id, type)
-          .then( address => {
-            if (address && address.length) {
-              this.addressLoad = 'success';
-              this.$emit("item-selected", {id: id, type: type, address: address});
-            } else {
+        const isAddress = this.selectedValue.indexOf('_') < 0;
+        const type = isAddress ? null : this.selectedValue.substring(0, this.selectedValue.indexOf('_'));
+        const id = isAddress ? this.selectedValue : this.selectedValue.substring(this.selectedValue.indexOf('_') + 1);
+        if (isAddress) {
+          this.addressLoad = 'success';
+          this.$emit("item-selected", {id: id, type: null, address: id});
+        } else {
+          searchAddress(id, type)
+            .then( address => {
+              if (address && address.length) {
+                this.addressLoad = 'success';
+                this.$emit("item-selected", {id: id, type: type, address: address});
+              } else {
+                this.addressLoad = 'error';
+              }
+            })
+            .catch(error => {
               this.addressLoad = 'error';
-            }
-          })
-          .catch(error => {
-            this.addressLoad = 'error';
-          });
+            });
+        }
       }
     }
   }

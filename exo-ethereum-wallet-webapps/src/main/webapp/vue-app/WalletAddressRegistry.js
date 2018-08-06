@@ -48,8 +48,7 @@ export function searchAddress(id, type) {
         sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
         return null;
       }
-    })
-    .catch(() => null);
+    });
 }
 
 /*
@@ -76,7 +75,8 @@ export function searchFullName(address) {
         sessionStorage.setItem(`exo-wallet-address-${item.type}-${address}`.toLowerCase(), JSON.stringify(item));
         return item;
       }
-    });
+    })
+    .catch(() => null);
 }
 
 /*

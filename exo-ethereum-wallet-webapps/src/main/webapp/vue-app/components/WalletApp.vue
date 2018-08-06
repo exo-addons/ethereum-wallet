@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app id="WalletApp">
     <main>
       <v-layout row>
         <v-flex v-if="!selectedAccount" xs12 sm6 offset-sm3>
@@ -76,7 +76,7 @@
             </v-list>
           </v-card>
         </v-flex>
-        <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="selectedAccount = null"></account-detail>
+        <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true)"></account-detail>
       </v-layout>
     </main>
   </v-app>
@@ -177,22 +177,29 @@ export default {
       initSettings()
         .then(() => initWeb3(this.isSpace))
         .then(retrieveUSDExchangeRate)
-        .then(this.getAccount)
-        .then(this.initAccount)
-        .then(() => this.loading = false)
-        .catch((e) => {
-          this.errorMessage = `${e}`;
-          this.loading = false;
-        });
+        .then(this.refreshList);
 
       if (!this.isSpace) {
         const thiss = this;
         // In case account switched in Metamars
         // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
         setInterval(function() {
-          thiss.initAccount();
+          thiss.getAccount().then(thiss.initAccount);
         }, 1000);
       }
+    },
+    refreshList(forceRefresh) {
+      this.loading = true;
+      this.errorMessage = null;
+      this.selectedAccount = null;
+
+      return this.getAccount()
+        .then(account => this.initAccount(account, forceRefresh))
+        .then(() => this.loading = false)
+        .catch((e) => {
+          this.errorMessage = `${e}`;
+          this.loading = false;
+        });
     },
     getAccount() {
       if(this.isSpace) {
@@ -200,54 +207,61 @@ export default {
           throw new Error("Space identifier is empty");
         }
         return searchAddress(eXo.env.portal.spaceGroup, 'space');
+      } else {
+        return window.localWeb3.eth.getCoinbase();
       }
     },
-    initAccount(account) {
+    initAccount(account, forceRefresh) {
       if (this.isSpace) {
         if (!account || !account.length) {
           throw new Error("Current space doesn't have an address yet");
         } else {
+          account = account.toLowerCase();
           window.localWeb3.eth.defaultAccount = account;
         }
       } else {
-        account = window.localWeb3.eth.defaultAccount;
+        if (!account || !account.length) {
+          throw new Error("Please make sure that you are connected using Metamask with a valid account");
+        }
+        account = account.toLowerCase();
+        if (!forceRefresh && window.localWeb3.eth.defaultAccount === account) {
+          return account;
+        }
       }
-      window.localWeb3.eth.getCoinbase()
-        .then((metamaskAccount) => {
-          if (!this.isSpace) {
-            account = metamaskAccount;
-          }
-          if ((window.localWeb3.currentProvider.connected
-            || window.localWeb3.currentProvider.isConnected && window.localWeb3.currentProvider.isConnected())
-            && account && account.length) {
-            if (account !== this.account && this.lastCheckedAccount !== account) {
-              account = account.toLowerCase();
-              this.lastCheckedAccount = account;
-              this.errorMessage = '';
-              this.account = null;
-              this.accountsDetails = {};
-              return this.computeNetwork()
-                .then(() => {
-                  const accountDetails = this.accountsDetails[account] = {};
-                  accountDetails.title = 'Account in ETH';
-                  accountDetails.icon = 'fab fa-ethereum';
-                  accountDetails.balance = 0;
-                  accountDetails.symbol = 'ETH';
-                  accountDetails.isContract = false;
-    
-                  window.localWeb3.eth.defaultAccount = this.account = account.toLowerCase();
-                })
-                .then(() => this.reloadContracts(account))
-                .catch(err => {
-                  this.errorMessage = `Error encountered while loading contracts: ${err}`;
-                  console.error('Error encountered while loading contracts', err);
-                });
-            }
-          } else {
-            this.account = null;
-            this.errorMessage = 'Please make sure that you are connected using Metamask with a valid account';
-          }
-        });
+
+      if ((window.localWeb3.currentProvider.connected
+        || window.localWeb3.currentProvider.isConnected && window.localWeb3.currentProvider.isConnected())
+        && account && account.length) {
+
+        if (forceRefresh || account !== this.account && this.lastCheckedAccount !== account) {
+          this.lastCheckedAccount = account;
+          this.errorMessage = '';
+          this.account = null;
+          this.accountsDetails = {};
+          return this.computeNetwork()
+            .then(() => {
+              const accountDetails = this.accountsDetails[account] = {};
+              accountDetails.title = 'Account in ETH';
+              accountDetails.icon = 'fab fa-ethereum';
+              accountDetails.balance = 0;
+              accountDetails.symbol = 'ETH';
+              accountDetails.isContract = false;
+              accountDetails.address = account;
+
+              this.account = window.localWeb3.eth.defaultAccount = account;
+            })
+            .then(() => this.reloadContracts(account))
+            .catch(err => {
+              this.errorMessage = `Error encountered while loading contracts: ${err}`;
+              console.error('Error encountered while loading contracts', err);
+            });
+        }
+      } else {
+        if (this.isSpace) {
+          this.account = null;
+          this.errorMessage = 'Please make sure that you are connected using Metamask with a valid account';
+        }
+      }
     },
     computeNetwork() {
       return window.localWeb3.eth.net.getId()
@@ -292,7 +306,7 @@ export default {
       event.stopPropagation();
     },
     applySettings(newSettings) {
-      console.log(newSettings);
+      this.refreshList(this.account, true);
     }
   }
 };

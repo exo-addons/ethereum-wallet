@@ -5,16 +5,21 @@ export function etherToUSD(amount) {
   return 0;
 }
 
-export function gasToUSD(amount) {
-  if (window.walletSettings.usdPrice && window.walletSettings.gasPriceInEther && amount)  {
-    return (window.walletSettings.gasPriceInEther * window.walletSettings.usdPrice * amount).toFixed(2);
+export function gasToUSD(amount, gasPriceInEther) {
+  if (!gasPriceInEther) {
+    gasPriceInEther = window.walletSettings.gasPriceInEther;
+  }
+  if (window.walletSettings.usdPrice && gasPriceInEther && amount)  {
+    return (gasPriceInEther * window.walletSettings.usdPrice * amount).toFixed(2);
   }
   return 0;
 }
 
 export function retrieveUSDExchangeRate() {
   // Retrieve USD <=> Ether exchange rate
-  return Promise.resolve(sessionStorage.getItem('exo-wallet-exchange-rate'))
+  return window.localWeb3.eth.getGasPrice()
+    .then(gasPrice => window.walletSettings.gasPrice = gasPrice)
+    .then(() => sessionStorage.getItem('exo-wallet-exchange-rate'))
     .then(exchangeRate => {
       return exchangeRate ? exchangeRate : fetch('https://api.coinmarketcap.com/v1/ticker/ethereum/', {
         referrerPolicy: "no-referrer",
@@ -35,13 +40,13 @@ export function retrieveUSDExchangeRate() {
     .then(content => {
       if (content && content.length && content[0].price_usd) {
         sessionStorage.setItem('exo-wallet-exchange-rate', JSON.stringify(content));
-  
+
         window.walletSettings.usdPrice = parseFloat(content[0].price_usd);
         window.walletSettings.usdPriceLastUpdated = new Date(parseInt(content[0].last_updated) * 1000);
         return true;
       }
     })
-    .then(usdPriceRetrieved => {return usdPriceRetrieved ? window.localWeb3.eth.getGasPrice(): null;})
+    .then(usdPriceRetrieved => {return usdPriceRetrieved ? window.walletSettings.gasPrice: null;})
     .then(gasPrice => {window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;});
 }
 
@@ -58,6 +63,7 @@ export function initWeb3(isSpace) {
   } else {
     // Metamask provider
     window.localWeb3 = new LocalWeb3(web3.currentProvider);
+    window.localWeb3.eth.defaultAccount = web3.eth.defaultAccount;
   }
   return Promise.resolve(window.localWeb3);
 }
