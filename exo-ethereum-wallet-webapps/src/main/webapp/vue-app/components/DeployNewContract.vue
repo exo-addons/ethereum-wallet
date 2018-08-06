@@ -1,16 +1,20 @@
 <template>
   <v-card>
-    <div class="text-xs-center">
-      <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-    </div>
-    <v-alert :value="newTokenAddress" type="success" class="v-content">
-      Contract created under address: 
-      <code>{{ newTokenAddress }}</code>
-    </v-alert>
-    <v-alert :value="error" type="error" class="v-content">
-      {{ error }}
-    </v-alert>
-    <v-form v-if="createnewToken" ref="form" v-model="valid" class="pl-5 pr-5 pt-3">
+    <v-subheader v-if="createNewToken">Deploy new contract</v-subheader>
+    <v-form v-if="createNewToken" ref="form" v-model="valid" class="pl-5 pr-5 pt-3">
+      <div class="text-xs-center">
+        <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
+      </div>
+      <v-alert :value="newTokenAddress" type="success" class="v-content">
+        Contract created under address: 
+        <code>{{ newTokenAddress }}</code>
+      </v-alert>
+      <v-alert :value="error" type="error" class="v-content">
+        {{ error }}
+      </v-alert>
+      <v-alert v-show="!error && warning && warning.length" :value="warning" type="warning" class="v-content">
+        {{ warning }}
+      </v-alert>
       <v-text-field v-model="newTokenName" :rules="mandatoryRule" label="Token name" required></v-text-field>
       <v-text-field v-model="newTokenSymbol" :rules="mandatoryRule" label="Token symbol" required></v-text-field>
       <span>Default gas to spend on transactions (Maximum fee per transaction)</span>
@@ -47,26 +51,16 @@
         <v-btn :disabled="!valid" color="primary" @click="saveContract">
           Deploy
         </v-btn>
-        <v-btn @click="createnewToken = false">
-          Cancel
+        <v-btn @click="createNewToken = false">
+          Close
         </v-btn>
       </div>
     </v-form>
     <div class="text-xs-center">
-      <v-btn v-if="!error && !createnewToken" color="primary" class="mt-3" @click="createnewToken = true">
+      <v-btn v-if="!createNewToken" color="primary" class="mt-3" @click="createNewToken = true">
         Deploy new Token
       </v-btn>
     </div>
-    <v-list v-if="!error" two-lines>
-      <template v-for="(contract) in contracts">
-        <v-list-tile :key="contract.symbol">
-          <v-list-tile-content>
-            <v-list-tile-title v-html="contract.name"></v-list-tile-title>
-            <v-list-tile-sub-title v-html="contract.symbol"></v-list-tile-sub-title>
-          </v-list-tile-content>
-        </v-list-tile>
-      </template>
-    </v-list>
   </v-card>
 </template>
 
@@ -77,10 +71,25 @@ import {searchAddress} from '../WalletAddressRegistry.js';
 import {gasToUSD,initWeb3,initSettings,retrieveUSDExchangeRate} from '../WalletUtils.js';
 
 export default {
+  props: {
+    account: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    networkId: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    }
+  },
   data () {
     return {
       loading: false,
       errorMessage: '',
+      warning: null,
       newTokenName: '',
       newTokenSymbol: '',
       newTokenGas: 700000,
@@ -91,34 +100,19 @@ export default {
       newTokenInitialCoins: 10000,
       newTokenSetAsDefault: true,
       newTokenAddress: '',
-      networkId: null,
-      createnewToken: false,
-      account: false,
+      createNewToken: false,
       mandatoryRule: [
         (v) => !!v || 'Name is required'
       ],
-      valid: false,
-      contracts: []
+      valid: false
     };
   },
   computed: {
-    metamaskEnabled () {
-      return web3 && web3.currentProvider && web3.currentProvider.isMetaMask;
-    },
-    metamaskConnected () {
-      return this.metamaskEnabled && web3.currentProvider.isConnected();
-    },
     error() {
       if(this.loading) {
         return null;
       } else if (this.errorMessage) {
         return this.errorMessage;
-      } else if (!this.metamaskEnabled) {
-        return 'Please install or Enable Metamask';
-      } else if (!this.metamaskConnected) {
-        return 'Please connect Metamask to a network';
-      } else if (!this.account) {
-        return 'Please select a valid account using Metamask';
       }
       return null;
     }
@@ -130,47 +124,28 @@ export default {
     newTokenGasPrice() {
       this.calculateGasPriceInUSD();
       this.newTokenGasPriceGWEI = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'gwei');
-    }
-  },
-  created() {
-    try {
-      initSettings()
-        .then(initWeb3)
-        .then(account => this.account = window.localWeb3.eth.defaultAccount)
-        .then(this.computeNetwork)
-        .then(retrieveUSDExchangeRate)
-        .then(() => this.newTokenGasInUSD = gasToUSD(this.newTokenGas))
-        .catch(e => this.errorMessage = `Error encountered: ${e}`);
-
-      fetch('/portal/rest/wallet/api/contract', {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      })
-        .then(resp => {
-          if (resp && resp.ok) {
-            return resp.json();
-          } else {
-            this.errorMessage = 'Error getting contracts';
-          }
-        })
-        .then(contracts => this.contracts = contracts);
-    } catch(e) {
-      this.errorMessage = `An error encouterd: ${e}`;
+    },
+    createNewToken() {
+      this.resetContractForm();
     }
   },
   methods: {
-    computeNetwork() {
-      return window.localWeb3.eth.net.getId()
-        .then(netId => this.networkId = netId);
-    },
     resetContractForm() {
+      this.loading = false;
+      this.errorMessage = '';
+      this.warning = null;
       this.newTokenName = '';
       this.newTokenSymbol = '';
-      this.newTokenGas = 21000;
-      this.newTokenGasPrice = window.walletSettings.gasPrice;
+      this.newTokenGas = 700000;
+      this.newTokenGasPrice = 20000000000;
+      this.newTokenGasPriceGWEI = 20;
+      this.newTokenGasInUSD = 0;
+      this.newTokenDecimals = 8;
+      this.newTokenInitialCoins = 10000;
       this.newTokenSetAsDefault = true;
+      this.newTokenAddress = '';
+      this.valid = false;
+      this.contracts = [];
     },
     calculateGasPriceInUSD() {
       if (this.newTokenGas && this.newTokenGasPrice) {
@@ -181,28 +156,37 @@ export default {
       }      
     },
     saveContract() {
+      this.errorMessage = null;
+      this.warning = null;
+
       if(!this.$refs.form.validate()) {
         return;
       }
-      this.errorMessage = null;
 
-      const newTokenInstance = TruffleContract({
+      const CONTRACT_DATA = {
         contractName: 'Standard ERC20 Token',
         abi: ERC20_COMPLIANT_CONTRACT_ABI,
         bytecode: ERC20_COMPLIANT_CONTRACT_BYTECODE
-      });
+      };
+      const NEW_TOKEN = TruffleContract(CONTRACT_DATA);
 
-      newTokenInstance.defaults({
+      NEW_TOKEN.defaults({
         from: this.account,
         gas: `${this.newTokenGas}`,
         gasPrice: `${this.newTokenGasPrice}`
       });
 
-      newTokenInstance.setProvider(window.localWeb3.currentProvider);
+      NEW_TOKEN.setProvider(window.localWeb3.currentProvider);
 
       this.loading = true;
 
-      newTokenInstance.new(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
+      window.localWeb3.eth.estimateGas({data: ERC20_COMPLIANT_CONTRACT_BYTECODE})
+        .then(result => {
+          if (result > this.newTokenGas) {
+            this.warning = `You have set a low gas ${this.newTokenGas} while the estimation of necessary gas is ${result}`;
+          }
+        })
+        .then(() =>  NEW_TOKEN.new(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol))
         .then((newTokenInstance) => {
           this.newTokenAddress = newTokenInstance.address;
           if (this.newTokenSetAsDefault && this.newTokenAddress && !this.error) {
@@ -217,13 +201,15 @@ export default {
               })
             }).then(resp => {
               if (resp && resp.ok) {
-                saveContractAddress(this.account, this.newTokenAddress, this.networkId);
+                window.walletSettings.defaultContractsToDisplay.push(this.newTokenAddress);
+                this.$emit("list-updated");
               } else {
                 this.errorMessage = 'Error saving contract as default';
               }
               this.loading = false;
             });
           } else {
+            saveContractAddress(this.account, this.newTokenAddress, this.networkId);
             this.loading = false;
           }
         })
