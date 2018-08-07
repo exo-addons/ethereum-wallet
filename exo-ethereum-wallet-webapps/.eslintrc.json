@@ -20,7 +20,8 @@
         "LocalWeb3": true,
         "EthereumQRPlugin": true,
         "web3": true,
-        "Web3": true
+        "Web3": true,
+        "isMaximized": true
     },
     "parserOptions": {
         "sourceType": "module",

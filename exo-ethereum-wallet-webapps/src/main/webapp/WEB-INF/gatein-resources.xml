@@ -1,4 +1,7 @@
 <gatein-resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/gatein_resources_1_4 http://www.exoplatform.org/xml/ns/gatein_resources_1_4" xmlns="http://www.exoplatform.org/xml/ns/gatein_resources_1_4">
+<!-- 
+  We can't use this due to:
+  https://jira.exoplatform.org/browse/PLF-8100
 
   <portlet-skin>
     <application-name>exo-ethereum-wallet</application-name>
@@ -41,6 +44,7 @@
     <skin-name>Default</skin-name>
     <css-path>/css/wallet.css</css-path>
   </portlet-skin>
+-->
 
   <portlet>
     <name>EthereumWallet</name>
@@ -111,7 +115,6 @@
       </depends>
       <depends>
         <module>ethQRCode</module>
-        <as>EthereumQRPlugin</as>
       </depends>
     </module>
   </portlet>
@@ -173,7 +176,14 @@
     <name>truffleContract</name>
     <script>
       <minify>false</minify>
-      <path>/js/lib/truffle-contract.min.js</path>
+      <adapter>
+        (function() {
+          try {
+            <include>/js/lib/truffle-contract.min.js</include>
+            return TruffleContract;
+          } catch(e) {}
+        })();
+      </adapter>
     </script>
   </module>
 

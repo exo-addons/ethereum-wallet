@@ -52,24 +52,26 @@ export function retrieveUSDExchangeRate() {
 
 export function initWeb3(isSpace) {
   if (isSpace) {
-    if (!window.walletSettings || !window.walletSettings.spaceWeb3ProviderURL) {
+    if (!window.walletSettings || !window.walletSettings.providerURL) {
       return Promise.reject(new Error("Please configure a default space provider URL for Web3"));
     }
-    if (window.walletSettings.spaceWeb3ProviderURL.indexOf("ws") === 0) {
-      window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.spaceWeb3ProviderURL));
+    if (window.walletSettings.providerURL.indexOf("ws") === 0) {
+      window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.providerURL));
     } else {
-      window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.spaceWeb3ProviderURL));
+      window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
     }
-  } else {
+  } else if(window.web3) {
     // Metamask provider
-    window.localWeb3 = new LocalWeb3(web3.currentProvider);
-    window.localWeb3.eth.defaultAccount = web3.eth.defaultAccount;
+    window.localWeb3 = new LocalWeb3(window.web3.currentProvider);
+    window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount;
+  } else {
+    throw new Error("Please install/enable metamask to create/access your wallet");
   }
   return Promise.resolve(window.localWeb3);
 }
 
 export function initSettings() {
-  return fetch('/portal/rest/wallet/api/global-settings')
+  return fetch('/portal/rest/wallet/api/global-settings', {credentials: 'include'})
     .then(resp =>  {
       if (resp && resp.ok) {
         return resp.json();
@@ -80,6 +82,12 @@ export function initSettings() {
     .then(settings => {
       if (settings) {
         window.walletSettings = settings;
+        if (!window.walletSettings.defaultGas) {
+          window.walletSettings.defaultGas = 21000;
+        }
+        if (!window.walletSettings.userDefaultGas) {
+          window.walletSettings.userDefaultGas = window.walletSettings.defaultGas;
+        }
       }
     })
     .catch(console.warn);

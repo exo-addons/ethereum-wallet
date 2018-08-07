@@ -1,59 +1,71 @@
 <template>
-  <v-app id="WalletApp">
+  <v-app id="WalletApp" :class="isMaximized ? 'maximized': 'minimized'" color="transaprent" flat>
     <main>
-      <v-layout row>
-        <v-flex v-if="!selectedAccount" xs12 sm6 offset-sm3>
-          <v-card class="text-xs-center">
-            <v-toolbar >
-              <v-toolbar-title>Wallet ({{ networkName }})</v-toolbar-title>
-              <v-spacer />
-              <add-contract-modal v-if="!isSpace"
-                                  :net-id="networkId"
-                                  :account="account"
-                                  :open="showAddContractModal"
-                                  @added="reloadContracts()"
-                                  @close="showAddContractModal = false" />
-              <qr-code-modal :to="account"
-                             :open="showQRCodeModal"
-                             title="Wallet Address QR Code"
-                             @close="showQRCodeModal = false" />
-              <user-settings-modal :account="account"
-                                   :open="showSettingsModal"
-                                   @close="showSettingsModal = false"
-                                   @settings-changed="applySettings" />
-              <v-menu offset-y left>
-                <v-btn slot="activator" icon>
-                  <v-icon>more_vert</v-icon>
-                </v-btn>
-                <v-list>
-                  <v-list-tile v-if="!isSpace" @click="showAddContractModal = true">
-                    <v-list-tile-avatar>
-                      <v-icon>add</v-icon>
-                    </v-list-tile-avatar>
-                    <v-list-tile-title>Add Token</v-list-tile-title>
-                  </v-list-tile>
-                  <v-list-tile @click="showQRCodeModal = true">
-                    <v-list-tile-avatar>
-                      <v-icon>fa-qrcode</v-icon>
-                    </v-list-tile-avatar>
-                    <v-list-tile-title>QR Code</v-list-tile-title>
-                  </v-list-tile>
-                  <v-list-tile v-if="!isSpace" @click="showSettingsModal = true">
-                    <v-list-tile-avatar>
-                      <v-icon>fa-cog</v-icon>
-                    </v-list-tile-avatar>
-                    <v-list-tile-title>Settings</v-list-tile-title>
-                  </v-list-tile>
-                </v-list>
-              </v-menu>
-            </v-toolbar>
+      <v-layout>
+        <v-flex>
+          <v-toolbar v-if="isMaximized" color="grey lighten-2" flat dense>
+            <v-toolbar-title>Wallet{{ networkName && networkName.length ? ` (${networkName})` : '' }}</v-toolbar-title>
+            <v-spacer />
+            <add-contract-modal v-if="!isSpace && isDefaultNetwork"
+                                :net-id="networkId"
+                                :account="account"
+                                :open="showAddContractModal"
+                                @added="reloadContracts()"
+                                @close="showAddContractModal = false" />
+            <qr-code-modal :to="account"
+                           :open="showQRCodeModal"
+                           title="Wallet Address QR Code"
+                           @close="showQRCodeModal = false" />
+            <user-settings-modal :account="account"
+                                 :open="showSettingsModal"
+                                 @close="showSettingsModal = false"
+                                 @settings-changed="applySettings" />
+            <v-menu v-if="isMaximized" offset-y left>
+              <v-btn slot="activator" icon>
+                <v-icon>more_vert</v-icon>
+              </v-btn>
+              <v-list>
+                <v-list-tile v-if="!isSpace && !selectedAccount" @click="showAddContractModal = true">
+                  <v-list-tile-avatar>
+                    <v-icon>add</v-icon>
+                  </v-list-tile-avatar>
+                  <v-list-tile-title>Add Token</v-list-tile-title>
+                </v-list-tile>
+                <v-list-tile @click="showQRCodeModal = true">
+                  <v-list-tile-avatar>
+                    <v-icon>fa-qrcode</v-icon>
+                  </v-list-tile-avatar>
+                  <v-list-tile-title>QR Code</v-list-tile-title>
+                </v-list-tile>
+                <v-list-tile v-if="!isSpace" @click="showSettingsModal = true">
+                  <v-list-tile-avatar>
+                    <v-icon>fa-cog</v-icon>
+                  </v-list-tile-avatar>
+                  <v-list-tile-title>Settings</v-list-tile-title>
+                </v-list-tile>
+              </v-list>
+            </v-menu>
+            <v-btn v-else icon title="Maximize" @click="maximize">
+              <v-icon color="blue-grey">fa-window-maximize</v-icon>
+            </v-btn>
+          </v-toolbar>
+          <h4 v-else class="head-container">Wallet</h4>
+          <v-card v-if="!selectedAccount" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
+            <v-alert :value="displaySpaceAccountCreationHelp" type="info" dismissible>
+              <div>
+                Current space doesn't have an account yet ? If you are manager of the space, you can create a new account using Metamask.
+              </div>
+              <div v-if="currentAccountAlreadyInUse">
+                Currently selected account in Metamask is already in use, you can't set it for this space.
+              </div>
+            </v-alert>
             <v-alert :value="oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
               <div>
                 Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
               </div>
-              <v-btn>
-                <v-icon color="success" @click="saveNewAddressInWallet">fa-check</v-icon>
+              <v-btn @click="saveNewAddressInWallet">
+                <v-icon color="success">fa-check</v-icon>
               </v-btn>
             </v-alert>
             <v-alert :value="!oldAccountAddress && newAccountAddress" type="info" dismissible>
@@ -63,14 +75,14 @@
               <div v-else>
                 Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
               </div>
-              <v-btn>
-                <v-icon color="success" @click="saveNewAddressInWallet">fa-check</v-icon>
+              <v-btn @click="saveNewAddressInWallet">
+                <v-icon color="success">fa-check</v-icon>
               </v-btn>
             </v-alert>
-            <v-alert :value="error" type="error">
+            <v-alert :value="error && !displaySpaceAccountCreationHelp" type="error">
               {{ error }}
             </v-alert>
-            <v-list two-line subheader>
+            <v-list class="pb-0" two-line subheader>
               <template v-for="(item, index) in accountsDetails">
                 <v-list-tile :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
                   <v-list-tile-avatar>
@@ -83,7 +95,7 @@
                     <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
                     <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }} {{ item.balanceUSD ? `(${item.balanceUSD} \$)`:'' }}</v-list-tile-sub-title>
                   </v-list-tile-content>
-                  <v-list-tile-action v-if="!isSpace && item.isContract && !item.isDefault">
+                  <v-list-tile-action v-if="isMaximize && !isSpace && item.isContract && !item.isDefault">
                     <v-btn icon ripple @click="deleteContract(item, $event)">
                       <v-icon color="primary">delete</v-icon>
                     </v-btn>
@@ -93,8 +105,8 @@
               </template>
             </v-list>
           </v-card>
+          <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true)"></account-detail>
         </v-flex>
-        <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true)"></account-detail>
       </v-layout>
     </main>
   </v-app>
@@ -108,7 +120,7 @@ import UserSettingsModal from './UserSettingsModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {searchAddress, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
+import {searchAddress, searchUserOrSpaceObject, searchFullName} from '../WalletAddressRegistry.js';
 import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings} from '../WalletUtils.js';
 
 export default {
@@ -129,6 +141,8 @@ export default {
   data() {
     return {
       loading: true,
+      currentAccountAlreadyInUse: false,
+      displaySpaceAccountCreationHelp: false,
       oldAccountAddressNotFound: null,
       oldAccountAddress: null,
       newAccountAddress: null,
@@ -147,24 +161,27 @@ export default {
   },
   computed: {
     metamaskEnabled () {
-      return web3 && web3.currentProvider && web3.currentProvider.isMetaMask;
+      return window.web3 && window.web3.currentProvider && window.web3.currentProvider.isMetaMask;
     },
     metamaskConnected () {
-      return this.metamaskEnabled && web3.currentProvider.isConnected();
+      return this.metamaskEnabled && window.web3.currentProvider.isConnected();
     },
     error() {
       if(this.loading) {
         return null;
       } else if (this.errorMessage) {
         return this.errorMessage;
-      } else if (!this.metamaskEnabled) {
+      } else if (!this.isSpace && !this.metamaskEnabled) {
         return 'Please install or Enable Metamask';
-      } else if (!this.metamaskConnected) {
+      } else if (!this.isSpace && !this.metamaskConnected) {
         return 'Please connect Metamask to the network';
-      } else if (!this.account && !this.isSpace) {
+      } else if (!this.isSpace && !this.account) {
         return 'Please select a valid account using Metamask';
       }
       return null;
+    },
+    isDefaultNetwork() {
+      return !window.walletSettings || !window.walletSettings.defaultNetworkId || window.walletSettings.defaultNetworkId === this.networkId;
     }
   },
   watch: {
@@ -182,6 +199,7 @@ export default {
   },
   created() {
     if (this.isSpace || this.metamaskEnabled && this.metamaskConnected) {
+      this.loading = true;
       this.init();
     } else {
       const thiss = this;
@@ -197,18 +215,27 @@ export default {
         .then(() => initWeb3(this.isSpace))
         .then(retrieveUSDExchangeRate)
         .then(this.refreshList)
-        .then(this.retrieveDefaultUserAccount);
-
-      if (!this.isSpace) {
-        const thiss = this;
-        // In case account switched in Metamars
-        // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
-        setInterval(function() {
-          thiss.getAccount()
-            .then(thiss.initAccount)
-            .then(thiss.retrieveDefaultUserAccount);
-        }, 1000);
-      }
+        .then(this.retrieveDefaultUserAccount)
+        .then(() => this.loading = false)
+        .then(() => {
+          if (!this.isSpace) {
+            const thiss = this;
+            // In case account switched in Metamars
+            // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
+            setInterval(function() {
+              thiss.getAccount()
+                .then(thiss.initAccount)
+                .then(thiss.retrieveDefaultUserAccount)
+                .catch((e) => {
+                  this.errorMessage = `${e}`;
+                });
+            }, 1000);
+          }
+        })
+        .catch(e => {
+          this.loading = false;
+          this.errorMessage = `${e}`;
+        });
     },
     refreshList(forceRefresh) {
       this.loading = true;
@@ -236,10 +263,13 @@ export default {
     initAccount(account, forceRefresh) {
       if (this.isSpace) {
         if (!account || !account.length) {
-          // Display information to allo administrator to associate
-          // This new address with wallet
-          return window.localWeb3.eth.getCoinbase()
-            .then((account) => this.oldAccountAddress = this.newAccountAddress = account);
+          if (window.web3 && window.web3.eth.defaultAccount) {
+            // Display information to allow administrator to associate
+            // This new address with wallet
+            return this.oldAccountAddress = this.newAccountAddress = window.web3.eth.defaultAccount;
+          } else {
+            this.displaySpaceAccountCreationHelp = true;
+          }
         } else {
           account = account.toLowerCase();
           window.localWeb3.eth.defaultAccount = account;
@@ -292,9 +322,17 @@ export default {
       return window.localWeb3.eth.net.getId()
         .then(netId => {
           this.networkId = netId;
-          return window.localWeb3.eth.net.getNetworkType();
+          if (netId) {
+            return window.localWeb3.eth.net.getNetworkType();
+          } else {
+            return null;
+          }
         })
-        .then(netType => this.networkName = `${netType.toUpperCase()} Network`);
+        .then(netType => {
+          if (netType) {
+            this.networkName = `${netType.toUpperCase()} Network`;
+          }
+        });
     },
     computeBalance() {
       window.localWeb3.eth.getBalance(window.localWeb3.eth.defaultAccount)
@@ -318,7 +356,9 @@ export default {
         });
     },
     openAccountDetail(accountDetails) {
-      if (!accountDetails.error) {
+      if (!this.isMaximized) {
+        this.maximize();
+      } else if (!accountDetails.error) {
         this.selectedAccount = accountDetails;
       }
     },
@@ -338,10 +378,21 @@ export default {
         searchUserOrSpaceObject(eXo.env.portal.spaceGroup, 'space')
           .then(spaceObject => {
             if(spaceObject
-                && spaceObject.creator && spaceObject.creator === eXo.env.portal.userName
+                && spaceObject.managers && spaceObject.managers.length && spaceObject.managers.indexOf(eXo.env.portal.userName) > -1
                 && (!spaceObject.address || !spaceObject.address.length)) {
-              // Display wallet association to space for creator only
-              this.oldAccountAddress = null;
+              if (this.newAccountAddress) {
+                searchFullName(this.newAccountAddress)
+                  .then(item => {
+                    
+                    if (!item || !item.id || !item.id.length) {
+                      // Display wallet association to space for creator only
+                      this.oldAccountAddress = null;
+                    } else {
+                      this.displaySpaceAccountCreationHelp = true;
+                      this.currentAccountAlreadyInUse = true;
+                    }
+                  });
+              }
             }
           });
       } else if(!this.oldAccountAddressNotFound) {
@@ -363,6 +414,7 @@ export default {
       this.loading = true;
       fetch('/portal/rest/wallet/api/account/saveAddress', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -374,16 +426,19 @@ export default {
         })
       }).then(resp => {
         if (resp && resp.ok) {
+          this.oldAccountAddress = this.newAccountAddress;
+          this.displaySpaceAccountCreationHelp = false;
           if (this.isSpace) {
             this.init();
-          } else {
-            this.oldAccountAddress = this.newAccountAddress;
           }
         } else {
           this.errorMessage = 'Error saving new Wallet address';
         }
         this.loading = false;
       });
+    },
+    maximize() {
+      window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`; 
     }
   }
 };

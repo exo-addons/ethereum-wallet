@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_3.xsd http://www.exoplatform.org/xml/ns/kernel_1_3.xsd" xmlns="http://www.exoplatform.org/xml/ns/kernel_1_3.xsd">
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.SetupApplicationRegistryService</type>
+  </component>
+  <external-component-plugins>
+    <target-component>org.exoplatform.application.registry.ApplicationRegistryService</target-component>
+    <component-plugin>
+      <name>addon.wallet.portlets.registry</name>
+      <set-method>initListener</set-method>
+      <type>org.exoplatform.application.registry.ApplicationCategoriesPlugins</type>
+      <description>this listener registers EthereumSpaceWallet with access permissions Everyone to let space managers add it in their spaces easily</description>
+      <init-params>
+        <object-param>
+          <name>Wallet</name>
+          <description>Ethereum Space Wallet</description>
+          <object type="org.exoplatform.application.registry.ApplicationCategory">
+            <field name="name">
+              <string>EthereumWallet</string>
+            </field>
+            <field name="displayName">
+              <string>Ethereum Wallet</string>
+            </field>
+            <field name="accessPermissions">
+              <collection type="java.util.ArrayList">
+                <value>
+                  <string>Everyone</string>
+                </value>
+              </collection>
+            </field>
+            <field name="applications">
+              <collection type="java.util.ArrayList">
+                <value>
+                  <object type="org.exoplatform.application.registry.Application">
+                    <field name="displayName">
+                      <string>Ethereum Space Wallet</string>
+                    </field>
+                    <field name="accessPermissions">
+                      <collection type="java.util.ArrayList">
+                        <value>
+                          <string>Everyone</string>
+                        </value>
+                      </collection>
+                    </field>
+                    <field name="contentId">
+                      <string>exo-ethereum-wallet/EthereumSpaceWallet</string>
+                    </field>
+                    <field name="description">
+                      <string>Ethereum Space Wallet</string>
+                    </field>
+                    <field name="type">
+                      <string>portlet</string>
+                    </field>
+                    <field name="categoryName">
+                      <string>Wallet</string>
+                    </field>
+                    <field name="applicationName">
+                      <string>EthereumSpaceWallet</string>
+                    </field>
+                  </object>
+                </value>
+              </collection>
+            </field>
+          </object>
+        </object-param>
+      </init-params>
+    </component-plugin>
+  </external-component-plugins>
+</configuration>

@@ -10,7 +10,7 @@
      <portlet-class>org.exoplatform.commons.api.portlet.GenericDispatchedViewPortlet</portlet-class>
      <init-param>
       <name>portlet-view-dispatched-file-path</name>
-      <value>/wallet.html</value>
+      <value>/wallet.jsp</value>
      </init-param>
      <expiration-cache>-1</expiration-cache>
      <cache-scope>PUBLIC</cache-scope>
@@ -60,6 +60,10 @@
        <title>Ethereum Wallet Application Administration</title>
        <keywords>Ethereum Wallet Application Administration</keywords>
      </portlet-info>
+      <security-role-ref>
+        <role-name>admin</role-name>
+        <role-link>admin</role-link>
+      </security-role-ref>
    </portlet>
 
 </portlet-app>

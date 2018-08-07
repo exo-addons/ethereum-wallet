@@ -1,7 +1,7 @@
 <template>
-  <v-flex v-if="transactions.length" xs12>
+  <v-flex v-if="transactions.length">
     <v-card class="card--flex-toolbar">
-      <v-list two-line>
+      <v-list two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
             <v-list-tile-avatar>

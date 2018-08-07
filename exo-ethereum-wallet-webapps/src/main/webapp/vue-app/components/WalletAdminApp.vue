@@ -1,21 +1,59 @@
 <template>
-  <v-app id="WalletAdminApp">
+  <v-app id="WalletAdminApp" color="transaprent">
     <main>
-      <v-layout row>
-        <v-flex xs12 sm6 offset-sm3>
-          <v-toolbar dark color="primary">
-            <v-toolbar-title>Wallet application administration</v-toolbar-title>
-          </v-toolbar>
+      <v-layout class="mr-3 ml-3">
+        <v-flex>
           <v-alert :value="error" type="error" class="v-content">
             {{ error }}
           </v-alert>
+          <v-card class="text-xs-center pt-3">
+            <v-form class="mr-3 ml-3">
+              <v-text-field
+                v-model="providerURL"
+                :rules="mandatoryRule"
+                type="text"
+                name="providerURL"
+                label="Ethereum Network URL" />
+              <v-text-field
+                v-model="accessPermission"
+                type="text"
+                name="accessPermission"
+                label="Wallet access permission" />
+              <v-slider
+                v-model="defaultGas"
+                :label="`Default Gas for transactions: ${defaultGas}`"
+                :min="21000"
+                :max="100000"
+                :step="1000"
+                type="number"
+                required />
+              <v-slider
+                v-model="defaultBlocksToRetrieve"
+                :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
+                :min="100"
+                :max="10000"
+                :step="100"
+                type="number"
+                required />
+              <v-text-field
+                v-model="defaultNetworkId"
+                :rules="mandatoryRule"
+                :label="`Ethereum Network ID (current id: ${networkId})`"
+                type="text"
+                name="defaultNetworkId" />
+
+              <v-btn color="primary" @click="saveGlobalSettings">
+                Save
+              </v-btn>
+            </v-form>
+          </v-card>
           <v-card>
-            <v-subheader>Default contracts</v-subheader>
+            <v-subheader class="text-xs-center">Default contracts</v-subheader>
             <div class="text-xs-center">
               <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
             </div>
             <v-divider />
-            <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1" hide-actions>
+            <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
               <template slot="items" slot-scope="props">
                 <td>{{ props.item.name }}</td>
                 <td class="text-xs-right">{{ props.item.address }}</td>
@@ -48,9 +86,16 @@ export default {
   data () {
     return {
       loading: false,
-      errorMessage: '',
+      accessPermission: '',
+      providerURL: 'http://localhost:8545',
+      defaultBlocksToRetrieve: 1000,
+      defaultNetworkId: 0,
+      defaultGas: 50000,
       account: null,
       networkId: null,
+      mandatoryRule: [
+        (v) => !!v || 'Field is required'
+      ],
       headers: [
         {
           text: 'Token name',
@@ -76,10 +121,10 @@ export default {
   },
   computed: {
     metamaskEnabled () {
-      return web3 && web3.currentProvider && web3.currentProvider.isMetaMask;
+      return window.web3 && window.web3.currentProvider && window.web3.currentProvider.isMetaMask;
     },
     metamaskConnected () {
-      return this.metamaskEnabled && web3.currentProvider.isConnected();
+      return this.metamaskEnabled && window.web3.currentProvider.isConnected();
     },
     error() {
       if(this.loading) {
@@ -104,16 +149,35 @@ export default {
     init() {
       this.loading = true;
       return initSettings()
+        .then(this.setDefaultValues)
         .then(initWeb3)
         .then(account => this.account = window.localWeb3.eth.defaultAccount)
         .then(() => window.localWeb3.eth.net.getId())
         .then(netId => this.networkId = netId)
+        .then(netId => this.defaultNetworkId = this.defaultNetworkId ? this.defaultNetworkId : netId)
         .then(retrieveUSDExchangeRate)
         .then(this.refreshContractsList)
         .catch(e => {
           this.loading = false;
           this.errorMessage = `Error encountered: ${e}`;
         });
+    },
+    setDefaultValues() {
+      if (window.walletSettings.accessPermission) {
+        this.accessPermission = window.walletSettings.accessPermission;
+      }
+      if (window.walletSettings.providerURL) {
+        this.providerURL = window.walletSettings.providerURL;
+      }
+      if (window.walletSettings.defaultBlocksToRetrieve) {
+        this.defaultBlocksToRetrieve = window.walletSettings.defaultBlocksToRetrieve;
+      }
+      if (window.walletSettings.defaultNetworkId) {
+        this.defaultNetworkId = window.walletSettings.defaultNetworkId;
+      }
+      if (window.walletSettings.defaultGas) {
+        this.defaultGas = window.walletSettings.defaultGas;
+      }
     },
     refreshContractsList() {
       this.loading = true;
@@ -125,17 +189,47 @@ export default {
           this.errorMessage = `Error encountered: ${e}`;
         });
     },
-    deleteContract(item, event) {
+    saveGlobalSettings() {
       this.loading = true;
-      fetch('/portal/rest/wallet/api/contract/remove', {
+      fetch('/portal/rest/wallet/api/global-settings/save', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          address: item.address
+          accessPermission: this.accessPermission,
+          providerURL: this.providerURL,
+          defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
+          defaultNetworkId: this.defaultNetworkId,
+          defaultGas: this.defaultGas
         })
+      }).then(resp => {
+        if (resp && resp.ok) {
+          window.walletSettings.accessPermission = this.accessPermission;
+          window.walletSettings.providerURL = this.providerURL;
+          window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
+          window.walletSettings.defaultNetworkId = this.defaultNetworkId;
+          window.walletSettings.defaultGas = this.defaultGas;
+        } else {
+          this.errorMessage = 'Error saving global settings';
+        }
+        this.loading = false;
+      }).catch(e => {
+        this.errorMessage = 'Error saving global settings';
+      });
+    },
+    deleteContract(item, event) {
+      this.loading = true;
+      fetch('/portal/rest/wallet/api/contract/remove', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: `address=${item.address}`
       }).then(resp => {
         if (resp && resp.ok) {
           window.walletSettings.defaultContractsToDisplay.splice(window.walletSettings.defaultContractsToDisplay.indexOf(item.address), 1);

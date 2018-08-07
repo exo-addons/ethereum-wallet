@@ -14,7 +14,7 @@ import {ERC20_COMPLIANT_CONTRACT_ABI} from './WalletConstants.js';
  */
 export function getContractsDetails(account, netId) {
   let contractsAddresses = getContractsAddresses(account, netId);
-  if(window.walletSettings.defaultNetworkId === netId
+  if((!window.walletSettings.defaultNetworkId || window.walletSettings.defaultNetworkId === netId)
       && window.walletSettings.defaultContractsToDisplay
       && window.walletSettings.defaultContractsToDisplay.length) {
     contractsAddresses = contractsAddresses.concat(window.walletSettings.defaultContractsToDisplay);
@@ -133,7 +133,7 @@ export function saveContractAddress(account, address, netId) {
  * Construct an ERC20 contract instance using Truffle
  */
 export function getContractAtAddress(account, address) {
-  const ERC20_CONTRACT = TruffleContract({
+  const ERC20_CONTRACT = window.TruffleContract({
     abi: ERC20_COMPLIANT_CONTRACT_ABI
   });
   // Use Old version of Web3 (from Metamask) providersince TruffleContract is not compatible with new Web3 version
@@ -144,7 +144,7 @@ export function getContractAtAddress(account, address) {
   }
   ERC20_CONTRACT.defaults({
     from: account,
-    gas: window.walletSettings.defaultGas
+    gas: window.walletSettings.userDefaultGas
   });
   return ERC20_CONTRACT.at(address);
 }

@@ -27,13 +27,15 @@ const config = {
             {
               loader: 'css-loader',
               options: {
-                sourceMap: true
+                sourceMap: true,
+                minimize: true
               }
             },
             {
               loader: 'less-loader',
               options: {
-                sourceMap: true
+                sourceMap: true,
+                minimize: true
               }
             }
           ]
@@ -62,7 +64,7 @@ const config = {
     jquery: '$'
   },
   plugins: [
-    new ExtractTextWebpackPlugin('css/[name].css')
+    new ExtractTextWebpackPlugin('css/wallet.css')
   ]
 };
 

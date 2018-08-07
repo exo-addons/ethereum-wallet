@@ -102,7 +102,7 @@ export default {
       newTokenAddress: '',
       createNewToken: false,
       mandatoryRule: [
-        (v) => !!v || 'Name is required'
+        (v) => !!v || 'Field is required'
       ],
       valid: false
     };
@@ -168,7 +168,7 @@ export default {
         abi: ERC20_COMPLIANT_CONTRACT_ABI,
         bytecode: ERC20_COMPLIANT_CONTRACT_BYTECODE
       };
-      const NEW_TOKEN = TruffleContract(CONTRACT_DATA);
+      const NEW_TOKEN = window.TruffleContract(CONTRACT_DATA);
 
       NEW_TOKEN.defaults({
         from: this.account,
@@ -192,13 +192,12 @@ export default {
           if (this.newTokenSetAsDefault && this.newTokenAddress && !this.error) {
             fetch('/portal/rest/wallet/api/contract/save', {
               method: 'POST',
+              credentials: 'include',
               headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                address: this.address
-              })
+              body: `address=${this.address}`
             }).then(resp => {
               if (resp && resp.ok) {
                 window.walletSettings.defaultContractsToDisplay.push(this.newTokenAddress);

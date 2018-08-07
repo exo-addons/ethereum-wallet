@@ -1,9 +1,53 @@
+@import './lib/fontawesome.css';
+@import './lib/solid.css';
+@import './lib/brands.css';
+@import './lib/vuetify.css';
+@import './lib/materialdesign.css';
+
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
+  background: transparent;
+
   .v-alert > div {
     max-width: 100%;
     word-break: break-all;
   }
   .v-select__selections {
     max-width: 80%;
+  }
+  .v-divider {
+    margin: 0;
+  }
+  .layout {
+    max-width: 100%;
+  }
+  .v-input input {
+    margin-bottom: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  .application--wrap {
+    min-height: auto;
+  }
+  code {
+    padding: 0;
+  }
+  #accountDetail .v-list__tile__title {
+    height: 29px;
+  }
+  .v-autocomplete label {
+    z-index: 100;
+  }
+  .v-btn {
+    border: 0;
+  }
+  .v-card__text {
+    box-sizing: border-box;
+  }
+}
+
+#WalletApp {
+  &.minimized {
+    max-width: 250px;
+    padding: 10px;
   }
 }

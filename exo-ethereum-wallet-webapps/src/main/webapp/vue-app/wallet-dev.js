@@ -14,6 +14,8 @@ window.TruffleContract = TruffleContract;
 window.EthereumQRPlugin = EthereumQRPlugin;
 window.$ = $;
 
+Vue.prototype.isMaximized=true;
+
 exoi18n.loadLanguageAsync(lang).then(i18n => {
   Vue.use(Vuetify);
   new Vue({

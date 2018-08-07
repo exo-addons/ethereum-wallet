@@ -106,7 +106,7 @@ export default {
         // This promise is triggered multiple times
         if (this.to && netId !== this.netId) {
           this.netId = netId;
-          const qr = new EthereumQRPlugin();
+          const qr = new window.EthereumQRPlugin();
           const options = {
             chainId: netId,
             to: this.to
@@ -120,8 +120,8 @@ export default {
             options.value = this.amount;
           }
 
-          if (window.walletSettings.defaultGas) {
-            options.gas = window.walletSettings.defaultGas;
+          if (window.walletSettings.userDefaultGas) {
+            options.gas = window.walletSettings.userDefaultGas;
           }
 
           if (this.isContract) {

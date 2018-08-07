@@ -4,6 +4,8 @@ import './../css/main.less';
 
 const lang = eXo && eXo.env && eXo.env.portal && eXo.env.portal.language ? eXo.env.portal.language : 'en';
 
+Vue.prototype.isMaximized = "true";
+
 exoi18n.loadLanguageAsync(lang).then(i18n => {
   Vue.use(Vuetify);
   new Vue({

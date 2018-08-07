@@ -1,58 +1,48 @@
 <template>
-  <v-layout row>
-    <v-flex xs12 sm6 offset-sm3>
-      <v-card class="text-xs-center">
-        <v-card-media class="purple white--text" height="120px">
-          <v-layout column fill-height>
-            <v-card-title>
-              <v-btn absolute dark icon @click="$emit('back')">
-                <v-icon>arrow_back</v-icon>
-              </v-btn>
+  <v-card id="accountDetail" class="text-xs-center">
+    <v-card-media height="80px">
+      <v-layout column fill-height>
+        <v-card-title>
+          <v-btn absolute icon @click="$emit('back')">
+            <v-icon>arrow_back</v-icon>
+          </v-btn>
+          <v-spacer />
+          <div class="title">{{ contractDetail.title }}</div>
+          <v-spacer />
+        </v-card-title>
+        <v-card-title>
+          <v-spacer />
+          <v-list class="transparent">
+            <v-list-tile>
+              <v-list-tile-content class="text-xs-center">
+                <v-list-tile-sub-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-sub-title>
+                <v-list-tile-sub-title v-if="contractDetail.balanceUSD">{{ contractDetail.balanceUSD }} $</v-list-tile-sub-title>
+              </v-list-tile-content>
+            </v-list-tile>
+          </v-list>
+          <v-spacer />
+        </v-card-title>
+      </v-layout>
+    </v-card-media>
 
-              <v-spacer />
-              <div class="title">{{ contractDetail.title }}</div>
-              <v-spacer />
-            </v-card-title>
-            <v-card-title>
-              <v-spacer />
-              <code>{{ contractDetail.address }}</code>
-              <v-spacer />
-            </v-card-title>
-            <v-card-title>
-              <v-spacer />
-              <v-list :two-line="contractDetail.balanceUSD > 0" class="transparent" dark>
-                <v-list-tile>
-                  <v-list-tile-content>
-                    <v-list-tile-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-title>
-                    <v-list-tile-sub-title v-if="contractDetail.balanceUSD">{{ contractDetail.balanceUSD }} $</v-list-tile-sub-title>
-                  </v-list-tile-content>
-                </v-list-tile>
-              </v-list>
-              <v-spacer />
-            </v-card-title>
-          </v-layout>
-        </v-card-media>
+    <div v-if="!isSpace && contractDetail.isContract && (contractDetail.balance > 0 || hasDelegatedTokens)" class="text-xs-center grey lighten-4">
+      <send-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true" @end-loading="loading = false"></send-tokens-modal>
+      <delegate-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true"></delegate-tokens-modal>
+      <send-delegated-tokens-modal v-if="hasDelegatedTokens" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true"></send-delegated-tokens-modal>
+    </div>
+    <div v-else-if="!isSpace && !contractDetail.isContract && contractDetail.balance > 0" class="text-xs-center grey lighten-4">
+      <send-ether-modal :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @loaded="loaded"></send-ether-modal>
+    </div>
+    <v-divider v-else />
 
-        <div v-if="!isSpace && contractDetail.isContract && (contractDetail.balance > 0 || hasDelegatedTokens)" class="text-xs-center">
-          <send-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true" @end-loading="loading = false"></send-tokens-modal>
-          <delegate-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true"></delegate-tokens-modal>
-          <send-delegated-tokens-modal v-if="hasDelegatedTokens" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true"></send-delegated-tokens-modal>
-        </div>
-        <div v-if="!isSpace && !contractDetail.isContract && contractDetail.balance > 0" class="text-xs-center">
-          <send-ether-modal v-if="contractDetail.balance > 0" :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @loaded="loaded"></send-ether-modal>
-        </div>
-        <v-divider></v-divider>
+    <v-alert :value="error" type="error">
+      {{ error }}
+    </v-alert>
+    <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
-        <v-alert :value="error" type="error">
-          {{ error }}
-        </v-alert>
-        <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-
-        <token-transactions v-if="contractDetail.isContract" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loaded="loaded" @error="loading = false;error = e"></token-transactions>
-        <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @error="loading = false;error = e"></general-transactions>
-      </v-card>
-    </v-flex>
-  </v-layout>
+    <token-transactions v-if="contractDetail.isContract" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loaded="loaded" @error="loading = false;error = e"></token-transactions>
+    <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @error="loading = false;error = e"></general-transactions>
+  </v-card>
 </template>
 
 <script>
@@ -134,7 +124,7 @@ export default {
           .then(() => this.loading = false)
           .catch(e => {
             this.loading = false;
-            this.error = `Error: ${e}`;
+            this.error = `${e}`;
           });
       } else if (!this.refreshing) {
         // Refresh Ether balance and tranactions
@@ -167,7 +157,7 @@ export default {
           .catch(e => {
             this.refreshing = false;
             this.loading = false;
-            this.error = `Error: ${e}`;
+            this.error = `${e}`;
           });
       }
     }

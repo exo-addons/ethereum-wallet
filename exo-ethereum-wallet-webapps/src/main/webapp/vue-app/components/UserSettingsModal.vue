@@ -63,7 +63,7 @@ export default {
   watch: {
     open() {
       if (this.open) {
-        this.defaultGas = window.walletSettings.defaultGas;
+        this.defaultGas = window.walletSettings.userDefaultGas ? window.walletSettings.userDefaultGas : 21000;
         this.defaulGasPriceUsd = gasToUSD(this.defaultGas);
         this.show = true;
       }
@@ -85,12 +85,13 @@ export default {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           defaultGas: this.defaultGas
         })
       }).then(resp => {
         if (resp && resp.ok) {
-          window.walletSettings.defaultGas = this.defaultGas;
+          window.walletSettings.userDefaultGas = this.defaultGas;
           this.$emit('settings-changed', {
             defaultGas: this.defaultGas
           });

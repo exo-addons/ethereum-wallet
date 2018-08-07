@@ -53,7 +53,7 @@ export function searchUserOrSpaceObject(id, type) {
   if (address) {
     return Promise.resolve(address);
   }
-  return fetch(`/portal/rest/wallet/api/account/detailsById?name=${id}&type=${type}`.toLowerCase())
+  return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp.ok) {
         return resp.json();
@@ -74,7 +74,7 @@ export function searchUserOrSpaceObject(id, type) {
  * }
  */
 export function searchFullName(address) {
-  return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`.toLowerCase())
+  return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp.ok) {
         return resp.json();
@@ -127,7 +127,7 @@ export function getContactFromStorage(id, ...types) {
  * }
  */
 export function getContractFromStorage(account, address) {
-  let contractDetails = localStorage.getItem(`exo-wallet-contract-${account}-${address}`.toLowerCase().toLowerCase());
+  let contractDetails = localStorage.getItem(`exo-wallet-contract-${account}-${address}`.toLowerCase());
   if (contractDetails) {
     contractDetails = JSON.parse(contractDetails);
     return Promise.resolve(contractDetails);
@@ -140,8 +140,8 @@ export function getContractFromStorage(account, address) {
  */
 function searchUsers(filter) {
   if (isOnlySpaceMembers()) {
-    const params = $.param({nameToSearch: filter, typeOfRelation: 'member_of_space', spaceURL: getSpaceURL()});
-    return fetch(`/portal/rest/social/people/suggest.json?${params}`)
+    const params = $.param({nameToSearch: filter, typeOfRelation: 'member_of_space', spaceURL: getAccessPermission()});
+    return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})
       .then(resp =>  {
         if (resp.ok) {
           return resp.json();
@@ -160,7 +160,7 @@ function searchUsers(filter) {
       });
   } else {
     const params = $.param({nameToSearch: filter, typeOfRelation: 'mention_activity_stream'});
-    return fetch(`/portal/rest/social/people/suggest.json?${params}`)
+    return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})
       .then(resp =>  {
         if (resp.ok) {
           return resp.json();
@@ -185,7 +185,7 @@ function searchUsers(filter) {
  */
 function searchSpaces(filter) {
   const params = $.param({fields: ["id","prettyName","displayName","avatarUrl"], keyword: filter});
-  return fetch(`/portal/rest/space/user/searchSpace?${params}`)
+  return fetch(`/portal/rest/space/user/searchSpace?${params}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp.ok) {
         return resp.json();
@@ -211,12 +211,12 @@ function searchSpaces(filter) {
  * Determins whether the suggested users should belong to a specific space or not
  */
 function isOnlySpaceMembers() {
-  return window.walletSettings.spaceURL && window.walletSettings.spaceURL.length;
+  return window.walletSettings.accessPermission && window.walletSettings.accessPermission.length;
 }
 
 /*
  * Determins the specific space from where the users could be suggested
  */
-function getSpaceURL() {
-  return window.walletSettings.spaceURL;
+function getAccessPermission() {
+  return window.walletSettings.accessPermission;
 }
