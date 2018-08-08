@@ -5,4 +5,5 @@
 <script type="text/javascript">
   window.walletAppMaximize = '<%=request.getAttribute("walletAppMaximize") == null || ((String[])request.getAttribute("walletAppMaximize")).length == 0 ? "false" : ((String[])request.getAttribute("walletAppMaximize"))[0]%>';
 </script>
+
 <div id="WalletApp"></div>

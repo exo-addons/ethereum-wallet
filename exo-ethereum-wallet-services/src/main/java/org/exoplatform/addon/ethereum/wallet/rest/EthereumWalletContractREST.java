@@ -85,9 +85,9 @@ public class EthereumWalletContractREST implements ResourceContainer {
                                                                         WALLET_DEFAULT_CONTRACTS_NAME);
     if (defaultContractsAddressesValue != null) {
       String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
-      List<String> contractAddressList = Arrays.stream(contractAddresses)
-                                               .filter(contractAddress -> contractAddress.equals(address))
-                                               .collect(Collectors.toList());
+      Set<String> contractAddressList = Arrays.stream(contractAddresses)
+                                               .filter(contractAddress -> !contractAddress.equalsIgnoreCase(address))
+                                               .collect(Collectors.toSet());
       String contractAddressValue = StringUtils.join(contractAddressList, ",");
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, WALLET_DEFAULT_CONTRACTS_NAME, SettingValue.create(contractAddressValue));
     }

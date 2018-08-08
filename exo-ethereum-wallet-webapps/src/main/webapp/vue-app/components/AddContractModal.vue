@@ -42,6 +42,12 @@ export default {
       default: function() {
         return 0;
       }
+    },
+    isDefaultContract: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
     }
   },
   data () {
@@ -71,26 +77,26 @@ export default {
         return;
       }
       try {
-        const contractBalanceOfPromise = saveContractAddress(this.account, this.address, this.netId);
+        const contractBalanceOfPromise = saveContractAddress(this.account, this.address.toLowerCase(), this.netId, this.isDefaultContract);
         if (contractBalanceOfPromise) {
           contractBalanceOfPromise
             .then((added) => {
               if (added) {
-                this.$emit("added");
+                this.$emit("added", this.address);
                 this.show = false;
                 this.address = null;
               } else {
-                this.error = `Address is not recognized as contract's address`;
+                this.error = `Address is not recognized as ERC20 Token contract's address`;
               }
             })
             .catch(err => {
-              this.error = `Address is not recognized as contract's address ${err}`;
+              this.error = `Address is not recognized as a contract's address ${err}`;
             });
         } else {
-          this.error = `Address is not recognized as contract's address`;
+          this.error = `Address is not recognized as a contract's address`;
         }
       } catch(e) {
-        this.error = `Error encountered: ${e}`;
+        this.error = `${e}`;
       }
     }
   }

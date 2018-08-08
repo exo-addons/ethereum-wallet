@@ -3,6 +3,20 @@
     <main>
       <v-layout>
         <v-flex>
+
+          <!-- This is a workaround to avoid having a script error caused by the fact that we don't have a selected element in menu -->
+          <div class="FakeMenu uiProfileMenu hidden">
+            <ul class="nav nav-tabs userNavigation" style="visibility: hidden;">
+              <li id="myWalletTad" class="item active">
+                <a href="/portal/intranet/wallet">
+                  <div class="uiIconDefaultApp uiIconWallet"></div>
+                  <span class="tabName">My Wallet</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <!-- End workaround -->
+
           <v-toolbar v-if="isMaximized" color="grey lighten-2" flat dense>
             <v-toolbar-title>Wallet{{ networkName && networkName.length ? ` (${networkName})` : '' }}</v-toolbar-title>
             <v-spacer />
@@ -198,6 +212,7 @@ export default {
     }
   },
   created() {
+    // Init application
     if (this.isSpace || this.metamaskEnabled && this.metamaskConnected) {
       this.loading = true;
       this.init();

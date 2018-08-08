@@ -127,6 +127,10 @@
         <path>/js/walletAdmin.bundle.js</path>
       </script>
       <depends>
+        <module>jquery</module>
+        <as>$</as>
+      </depends>
+      <depends>
         <module>fetchPolyfill</module>
       </depends>
       <depends>

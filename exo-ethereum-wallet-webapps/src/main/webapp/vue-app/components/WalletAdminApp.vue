@@ -48,11 +48,16 @@
             </v-form>
           </v-card>
           <v-card>
+            <v-divider />
             <v-subheader class="text-xs-center">Default contracts</v-subheader>
+            <v-divider />
             <div class="text-xs-center">
               <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
             </div>
-            <v-divider />
+            <v-alert :value="newTokenAddress" type="success" class="v-content" dismissible>
+              Contract created under address: 
+              <code>{{ newTokenAddress }}</code>
+            </v-alert>
             <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
               <template slot="items" slot-scope="props">
                 <td>{{ props.item.name }}</td>
@@ -65,7 +70,18 @@
               </template>
             </v-data-table>
             <v-divider />
-            <deploy-new-contract v-show="!error" :account="account" :network-id="networkId" @list-updated="refreshContractsList"/>
+            <div class="text-xs-center">
+              <v-btn class="primary mt-3" @click="showAddContractModal = true">
+                Add Existing contract Address
+              </v-btn>
+              <deploy-new-contract v-show="!error" :account="account" :network-id="networkId" @list-updated="newTokenAddress = $event;refreshContractsList();"/>
+              <add-contract-modal :net-id="networkId"
+                                  :account="account"
+                                  :open="showAddContractModal"
+                                  :is-default-contract="true"
+                                  @added="addContractAddressAsDefault"
+                                  @close="showAddContractModal = false" />
+            </div>
           </v-card>
         </v-flex>
       </v-layout>
@@ -75,13 +91,15 @@
 
 <script>
 import DeployNewContract from './DeployNewContract.vue';
+import AddContractModal from './AddContractModal.vue';
 
-import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
+import {getContractsDetails, deleteContractFromStorage, saveContractAddressAsDefault} from '../WalletToken.js';
 import {initWeb3,initSettings,retrieveUSDExchangeRate} from '../WalletUtils.js';
 
 export default {
   components: {
-    DeployNewContract
+    DeployNewContract,
+    AddContractModal
   },
   data () {
     return {
@@ -93,6 +111,8 @@ export default {
       defaultGas: 50000,
       account: null,
       networkId: null,
+      newTokenAddress: null,
+      showAddContractModal: false,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ],
@@ -181,13 +201,19 @@ export default {
     },
     refreshContractsList() {
       this.loading = true;
-      getContractsDetails(this.account, this.networkId)
-        .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
-        .then(() => this.loading = false)
-        .catch(e => {
-          this.loading = false;
-          this.errorMessage = `Error encountered: ${e}`;
-        });
+      try {
+        getContractsDetails(this.account, this.networkId)
+          .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
+          .then(console.log)
+          .then(() => this.loading = false)
+          .catch(e => {
+            this.loading = false;
+            this.errorMessage = `Error encountered: ${e}`;
+          });
+      } catch (e) {
+        this.loading = false;
+        this.errorMessage = `Error encountered: ${e}`;
+      }
     },
     saveGlobalSettings() {
       this.loading = true;
@@ -220,16 +246,27 @@ export default {
         this.errorMessage = 'Error saving global settings';
       });
     },
+    addContractAddressAsDefault(address) {
+      this.loading = true;
+      saveContractAddressAsDefault(address)
+        .then(this.refreshContractsList)
+        .catch(e => {
+          this.loading = false;
+          this.errorMessage = `Error adding new contract address: ${e}`;
+        });
+    },
     deleteContract(item, event) {
+      if (!item || !item.address) {
+        this.errorMessage = 'Contract doesn\'t have an address';
+      }
       this.loading = true;
       fetch('/portal/rest/wallet/api/contract/remove', {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: `address=${item.address}`
+        body: $.param({address:item.address})
       }).then(resp => {
         if (resp && resp.ok) {
           window.walletSettings.defaultContractsToDisplay.splice(window.walletSettings.defaultContractsToDisplay.indexOf(item.address), 1);
