@@ -17,7 +17,7 @@
   <modules>
     <module>exo-ethereum-wallet-services</module>
     <module>exo-ethereum-wallet-webapps</module>
-    <!--module>exo-ethereum-wallet-packaging</module!-->
+    <module>exo-ethereum-wallet-packaging</module>
   </modules>
   <scm>
     <connection>scm:git:git://github.com/exoplatform/exo-ethereum-wallet.git</connection>
@@ -57,6 +57,11 @@
         <artifactId>exo-ethereum-wallet-webapps</artifactId>
         <version>${project.version}</version>
         <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.exoplatform.addons.wallet</groupId>
+        <artifactId>exo-ethereum-wallet-services</artifactId>
+        <version>${project.version}</version>
       </dependency>
 
       <dependency>
