@@ -1,5 +1,5 @@
 <template>
-  <v-app id="WalletAdminApp" color="transaprent">
+  <v-app v-if="isWalletEnabled" id="WalletAdminApp" color="transaprent">
     <main>
       <v-layout class="mr-3 ml-3">
         <v-flex>
@@ -9,16 +9,59 @@
           <v-card class="text-xs-center pt-3">
             <v-form class="mr-3 ml-3">
               <v-text-field
+                ref="providerURL"
                 v-model="providerURL"
                 :rules="mandatoryRule"
                 type="text"
                 name="providerURL"
-                label="Ethereum Network URL" />
-              <v-text-field
+                label="Ethereum Network URL"
+                autofocus />
+
+              <v-autocomplete
+                ref="accessPermissionAutoComplete"
                 v-model="accessPermission"
-                type="text"
-                name="accessPermission"
-                label="Wallet access permission" />
+                :items="accessPermissionOptions"
+                :loading="isLoadingSuggestions"
+                :search-input.sync="accessPermissionSearchTerm"
+                :open-on-click="false"
+                :open-on-hover="false"
+                :open-on-clear="false"
+                :no-filter="true"
+                counter="1"
+                max-width="100%"
+                item-text="name"
+                item-value="id"
+                label="Wallet access permission (Spaces only)"
+                placeholder="Start typing to Search a space"
+                hide-no-data hide-details hide-selected chips>
+
+                <template slot="no-data">
+                  <v-list-tile>
+                    <v-list-tile-title>
+                      Search for a <strong>Space</strong>
+                    </v-list-tile-title>
+                  </v-list-tile>
+                </template>
+
+                <template slot="selection" slot-scope="{ item, selected }">
+                  <v-chip :selected="selected" color="blue-grey" class="white--text">
+                    <v-avatar dark>
+                      <img :src="item.avatar">
+                    </v-avatar>
+                    <span>{{ item.name }}</span>
+                  </v-chip>
+                </template>
+            
+                <template slot="item" slot-scope="{ item, tile }">
+                  <v-list-tile-avatar>
+                    <img :src="item.avatar">
+                  </v-list-tile-avatar>
+                  <v-list-tile-content>
+                    <v-list-tile-title v-text="item.name"></v-list-tile-title>
+                  </v-list-tile-content>
+                </template>
+              </v-autocomplete>
+
               <v-slider
                 v-model="defaultGas"
                 :label="`Default Gas for transactions: ${defaultGas}`"
@@ -26,6 +69,7 @@
                 :max="100000"
                 :step="1000"
                 type="number"
+                class="mt-4"
                 required />
               <v-slider
                 v-model="defaultBlocksToRetrieve"
@@ -93,6 +137,7 @@
 import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
 
+import {searchSpaces} from '../WalletAddressRegistry.js';
 import {getContractsDetails, deleteContractFromStorage, saveContractAddressAsDefault} from '../WalletToken.js';
 import {initWeb3,initSettings,retrieveUSDExchangeRate} from '../WalletUtils.js';
 
@@ -103,8 +148,12 @@ export default {
   },
   data () {
     return {
+      isWalletEnabled: false,
       loading: false,
       accessPermission: '',
+      accessPermissionOptions: [],
+      accessPermissionSearchTerm: null,
+      isLoadingSuggestions: false,
       providerURL: 'http://localhost:8545',
       defaultBlocksToRetrieve: 1000,
       defaultNetworkId: 0,
@@ -161,6 +210,29 @@ export default {
       return null;
     }
   },
+  watch: {
+    accessPermissionSearchTerm() {
+      this.isLoadingSuggestions = true;
+      searchSpaces(this.accessPermissionSearchTerm)
+        .then(items => {
+          if (items) {
+            this.accessPermissionOptions = items;
+          } else {
+            this.accessPermissionOptions = [];
+          }
+          this.isLoadingSuggestions = false;
+        })
+        .catch(() => this.isLoadingSuggestions = false);
+    },
+    accessPermission(newValue, oldValue) {
+      if (oldValue) {
+        this.accessPermissionSearchTerm = null;
+        // A hack to close on select
+        // See https://www.reddit.com/r/vuetifyjs/comments/819h8u/how_to_close_a_multiple_autocomplete_vselect/
+        this.$refs.accessPermissionAutoComplete.isFocused = false;
+      }
+    }
+  },
   created() {
     this.init()
       .then(this.refreshContractsList);
@@ -169,6 +241,16 @@ export default {
     init() {
       this.loading = true;
       return initSettings()
+        .then(() => {
+          if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
+            this.isWalletEnabled = false;
+            this.$forceUpdate();
+            throw new Error("Wallet disabled for current user");
+          } else {
+            this.$forceUpdate();
+            this.isWalletEnabled = true;
+          }
+        })
         .then(this.setDefaultValues)
         .then(initWeb3)
         .then(account => this.account = window.localWeb3.eth.defaultAccount)
@@ -185,6 +267,14 @@ export default {
     setDefaultValues() {
       if (window.walletSettings.accessPermission) {
         this.accessPermission = window.walletSettings.accessPermission;
+        searchSpaces(this.accessPermission)
+          .then(items => {
+            if (items) {
+              this.accessPermissionOptions = items;
+            } else {
+              this.accessPermissionOptions = [];
+            }
+          });
       }
       if (window.walletSettings.providerURL) {
         this.providerURL = window.walletSettings.providerURL;
@@ -204,7 +294,6 @@ export default {
       try {
         getContractsDetails(this.account, this.networkId)
           .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
-          .then(console.log)
           .then(() => this.loading = false)
           .catch(e => {
             this.loading = false;

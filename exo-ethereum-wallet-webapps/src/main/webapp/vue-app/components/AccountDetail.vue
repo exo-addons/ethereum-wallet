@@ -1,8 +1,8 @@
 <template>
   <v-card id="accountDetail" class="text-xs-center">
-    <v-card-media height="80px">
+    <v-card-media min-height="80px">
       <v-layout column fill-height>
-        <v-card-title>
+        <v-card-title class="pb-0">
           <v-btn absolute icon @click="$emit('back')">
             <v-icon>arrow_back</v-icon>
           </v-btn>
@@ -10,7 +10,7 @@
           <div class="title">{{ contractDetail.title }}</div>
           <v-spacer />
         </v-card-title>
-        <v-card-title>
+        <v-card-title class="pt-0">
           <v-spacer />
           <v-list class="transparent">
             <v-list-tile>

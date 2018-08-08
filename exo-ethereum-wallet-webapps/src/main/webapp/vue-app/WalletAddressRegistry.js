@@ -11,8 +11,33 @@ export function searchContact(filter) {
   return searchUsers(filter)
     .then(users => items = users && users.length ? users : [])
     .then(() => searchSpaces(filter))
-    .then(spaces => items.concat(spaces))
+    .then(spaces => items = items.concat(spaces))
     .catch(() => null);
+}
+
+/*
+ * Return the address of a user or space
+ */
+export function saveNewAddress(id, type, address) {
+  return fetch('/portal/rest/wallet/api/account/saveAddress', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      type: type,
+      id: id,
+      address: address
+    })
+  })
+    .then(resp => {
+      if (resp && resp.ok) {
+        sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), address);
+      }
+      return resp;
+    });
 }
 
 /*
@@ -88,7 +113,9 @@ export function searchFullName(address) {
         return item;
       }
     })
-    .catch(() => null);
+    .catch((e) => {
+      console.warn(e);
+    });
 }
 
 /*
@@ -138,52 +165,46 @@ export function getContractFromStorage(account, address) {
 /*
  * Search users from eXo Platform, used for suggester
  */
-function searchUsers(filter) {
-  if (isOnlySpaceMembers()) {
-    const params = $.param({nameToSearch: filter, typeOfRelation: 'member_of_space', spaceURL: getAccessPermission()});
-    return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})
-      .then(resp =>  {
-        if (resp.ok) {
-          return resp.json();
-        } else {
-          return null;
+export function searchUsers(filter) {
+  const params = $.param({
+    nameToSearch: filter,
+    typeOfRelation: 'mention_activity_stream',
+    currentUser: eXo.env.portal.userName,
+    spaceURL: isOnlySpaceMembers() ? getAccessPermission() : null
+  });
+  return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})
+    .then(resp =>  {
+      if (resp.ok) {
+        return resp.json();
+      } else {
+        return null;
+      }
+    })
+    .then(items => {
+      if (items) {
+        if (items.options) {
+          items = items.options;
         }
-      })
-      .then(items => {
         items.forEach((item) => {
           if (item.id && item.id.indexOf('@') === 0) {
             item.id = item.id.substring(1);
             item.id_type = `user_${item.id}`;
+            if (!item.avatar) {
+              item.avatar = item.avatarUrl ? item.avatarUrl : `/rest/v1/social/users/${item.id}/avatar`;
+            }
           }
         });
-        return items;
-      });
-  } else {
-    const params = $.param({nameToSearch: filter, typeOfRelation: 'mention_activity_stream'});
-    return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})
-      .then(resp =>  {
-        if (resp.ok) {
-          return resp.json();
-        } else {
-          return null;
-        }
-      })
-      .then(items => {
-        items.forEach((item) => {
-          if (item.id && item.id.indexOf('@') === 0) {
-            item.id = item.id.substring(1);
-            item.id_type = `user_${item.id}`;
-          }
-        });
-        return items;
-      });
-  }
+      } else {
+        items = [];
+      }
+      return items;
+    });
 }
 
 /*
  * Search spaces from eXo Platform, used for suggester
  */
-function searchSpaces(filter) {
+export function searchSpaces(filter) {
   const params = $.param({fields: ["id","prettyName","displayName","avatarUrl"], keyword: filter});
   return fetch(`/portal/rest/space/user/searchSpace?${params}`, {credentials: 'include'})
     .then(resp =>  {

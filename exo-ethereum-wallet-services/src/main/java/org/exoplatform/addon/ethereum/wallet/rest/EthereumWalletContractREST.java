@@ -15,6 +15,8 @@ import org.json.JSONArray;
 
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
 
 /**
@@ -24,6 +26,8 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @Path("/wallet/api/contract")
 @RolesAllowed("administrators")
 public class EthereumWalletContractREST implements ResourceContainer {
+
+  public static final Log LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
 
   private SettingService settingService;
 
@@ -56,6 +60,11 @@ public class EthereumWalletContractREST implements ResourceContainer {
   @POST
   @Path("save")
   public Response saveContract(@FormParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Can't save empty address for contract");
+      return Response.status(400).build();
+    }
+    address= address.toLowerCase();
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
                                                                         WALLET_SCOPE,
                                                                         WALLET_DEFAULT_CONTRACTS_NAME);
@@ -80,6 +89,10 @@ public class EthereumWalletContractREST implements ResourceContainer {
   @POST
   @Path("remove")
   public Response removeContract(@FormParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Can't remove empty address for contract");
+      return Response.status(400).build();
+    }
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
                                                                         WALLET_SCOPE,
                                                                         WALLET_DEFAULT_CONTRACTS_NAME);
@@ -106,7 +119,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
                                                                         WALLET_DEFAULT_CONTRACTS_NAME);
     if (defaultContractsAddressesValue != null) {
       String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
-      contractAddressList = Arrays.stream(contractAddresses).collect(Collectors.toList());
+      contractAddressList = Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toList());
     } else {
       contractAddressList = Collections.emptyList();
     }

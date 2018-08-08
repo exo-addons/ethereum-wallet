@@ -1,24 +1,24 @@
 <template>
   <v-app id="WalletApp" :class="isMaximized ? 'maximized': 'minimized'" color="transaprent" flat>
-    <main>
+    <!-- This is a workaround to avoid having a script error caused by User Profile Menu
+
+    <div v-if="isMaximized" class="FakeMenu uiProfileMenu hidden">
+      <ul class="nav nav-tabs userNavigation" style="visibility: hidden;">
+        <li id="myWalletTad" class="item active">
+          <a href="/portal/intranet/wallet">
+            <div class="uiIconDefaultApp uiIconWallet"></div>
+            <span class="tabName">My Wallet</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    End workaround -->
+    <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
-
-          <!-- This is a workaround to avoid having a script error caused by the fact that we don't have a selected element in menu -->
-          <div class="FakeMenu uiProfileMenu hidden">
-            <ul class="nav nav-tabs userNavigation" style="visibility: hidden;">
-              <li id="myWalletTad" class="item active">
-                <a href="/portal/intranet/wallet">
-                  <div class="uiIconDefaultApp uiIconWallet"></div>
-                  <span class="tabName">My Wallet</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          <!-- End workaround -->
-
           <v-toolbar v-if="isMaximized" color="grey lighten-2" flat dense>
-            <v-toolbar-title>Wallet{{ networkName && networkName.length ? ` (${networkName})` : '' }}</v-toolbar-title>
+            <v-toolbar-title v-if="isSpace">Space Wallet</v-toolbar-title>
+            <v-toolbar-title v-else>My Wallet</v-toolbar-title>
             <v-spacer />
             <add-contract-modal v-if="!isSpace && isDefaultNetwork"
                                 :net-id="networkId"
@@ -43,13 +43,13 @@
                   <v-list-tile-avatar>
                     <v-icon>add</v-icon>
                   </v-list-tile-avatar>
-                  <v-list-tile-title>Add Token</v-list-tile-title>
+                  <v-list-tile-title>Add Token address</v-list-tile-title>
                 </v-list-tile>
                 <v-list-tile @click="showQRCodeModal = true">
                   <v-list-tile-avatar>
                     <v-icon>fa-qrcode</v-icon>
                   </v-list-tile-avatar>
-                  <v-list-tile-title>QR Code</v-list-tile-title>
+                  <v-list-tile-title>Wallet QR Code</v-list-tile-title>
                 </v-list-tile>
                 <v-list-tile v-if="!isSpace" @click="showSettingsModal = true">
                   <v-list-tile-avatar>
@@ -97,29 +97,27 @@
               {{ error }}
             </v-alert>
             <v-list class="pb-0" two-line subheader>
-              <template v-for="(item, index) in accountsDetails">
-                <v-list-tile :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
-                  <v-list-tile-avatar>
-                    <v-icon :class="item.error ? 'red':'purple'" dark>{{ item.icon }}</v-icon>
-                  </v-list-tile-avatar>
-                  <v-list-tile-content>
-                    <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
-                    <v-list-tile-title v-else v-html="item.title"></v-list-tile-title>
+              <v-list-tile v-for="(item, index) in accountsDetails" :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
+                <v-list-tile-avatar>
+                  <v-icon :class="item.error ? 'red':'purple'" dark>{{ item.icon }}</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                  <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
+                  <v-list-tile-title v-else v-html="item.title"></v-list-tile-title>
 
-                    <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
-                    <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }} {{ item.balanceUSD ? `(${item.balanceUSD} \$)`:'' }}</v-list-tile-sub-title>
-                  </v-list-tile-content>
-                  <v-list-tile-action v-if="isMaximize && !isSpace && item.isContract && !item.isDefault">
-                    <v-btn icon ripple @click="deleteContract(item, $event)">
-                      <v-icon color="primary">delete</v-icon>
-                    </v-btn>
-                  </v-list-tile-action>
-                </v-list-tile>
-                <v-divider v-if="index + 1 < accountsDetails.length" :key="`divider-${index}`"></v-divider>
-              </template>
+                  <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
+                  <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }} {{ item.balanceUSD ? `(${item.balanceUSD} \$)`:'' }}</v-list-tile-sub-title>
+                </v-list-tile-content>
+                <v-list-tile-action v-if="isMaximized && !isSpace && item.isContract && !item.isDefault">
+                  <v-btn icon ripple @click="deleteContract(item, $event)">
+                    <v-icon color="primary">delete</v-icon>
+                  </v-btn>
+                </v-list-tile-action>
+              </v-list-tile>
+              <v-divider v-if="index + 1 < accountsDetails.length" :key="`divider-${index}`"></v-divider>
             </v-list>
           </v-card>
-          <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true)"></account-detail>
+          <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true)" />
         </v-flex>
       </v-layout>
     </main>
@@ -134,7 +132,7 @@ import UserSettingsModal from './UserSettingsModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {searchAddress, searchUserOrSpaceObject, searchFullName} from '../WalletAddressRegistry.js';
+import {searchAddress, searchUserOrSpaceObject, searchFullName, saveNewAddress} from '../WalletAddressRegistry.js';
 import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings} from '../WalletUtils.js';
 
 export default {
@@ -154,6 +152,7 @@ export default {
   },
   data() {
     return {
+      isWalletEnabled: false,
       loading: true,
       currentAccountAlreadyInUse: false,
       displaySpaceAccountCreationHelp: false,
@@ -213,20 +212,39 @@ export default {
   },
   created() {
     // Init application
-    if (this.isSpace || this.metamaskEnabled && this.metamaskConnected) {
+    if (this.isSpace || (this.metamaskEnabled && this.metamaskConnected)) {
       this.loading = true;
       this.init();
     } else {
-      const thiss = this;
-      window.addEventListener('load', function() {
-        thiss.init();
-      });
+      try {
+        this.init()
+          .then(() => {
+            const thiss = this;
+            window.addEventListener('load', function() {
+              if (window && window.localWeb3 && window.localWeb3.eth && window.localWeb3.eth.defaultAccount !== this.account) {
+                thiss.init();
+              }
+            });
+          });
+      } catch (e) {
+        console.error(e);
+      }
     }
   },
   methods: {
     init() {
       this.errorMessage = null;
-      initSettings()
+      return initSettings()
+        .then(() => {
+          if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
+            this.isWalletEnabled = false;
+            this.$forceUpdate();
+            throw new Error("Wallet disabled for current user");
+          } else {
+            this.$forceUpdate();
+            this.isWalletEnabled = true;
+          }
+        })
         .then(() => initWeb3(this.isSpace))
         .then(retrieveUSDExchangeRate)
         .then(this.refreshList)
@@ -281,7 +299,7 @@ export default {
           if (window.web3 && window.web3.eth.defaultAccount) {
             // Display information to allow administrator to associate
             // This new address with wallet
-            return this.oldAccountAddress = this.newAccountAddress = window.web3.eth.defaultAccount;
+            return this.oldAccountAddress = this.account = this.newAccountAddress = window.web3.eth.defaultAccount;
           } else {
             this.displaySpaceAccountCreationHelp = true;
           }
@@ -300,10 +318,10 @@ export default {
       }
 
       if ((window.localWeb3.currentProvider.connected
-        || window.localWeb3.currentProvider.isConnected && window.localWeb3.currentProvider.isConnected())
+        || (window.localWeb3.currentProvider.isConnected && window.localWeb3.currentProvider.isConnected()))
         && account && account.length) {
 
-        if (forceRefresh || account !== this.account && this.lastCheckedAccount !== account) {
+        if (forceRefresh || (account !== this.account && this.lastCheckedAccount !== account)) {
           this.lastCheckedAccount = account;
           this.errorMessage = '';
           this.account = null;
@@ -364,7 +382,9 @@ export default {
         .then(contractsDetails => {
           if (contractsDetails && contractsDetails.length) {
             contractsDetails.forEach(contractDetails => {
-              this.accountsDetails[contractDetails.address] = contractDetails;
+              if (contractDetails && contractDetails.address) {
+                this.accountsDetails[contractDetails.address] = contractDetails;
+              }
             });
             this.$forceUpdate();
           }
@@ -427,30 +447,21 @@ export default {
     },
     saveNewAddressInWallet() {
       this.loading = true;
-      fetch('/portal/rest/wallet/api/account/saveAddress', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: this.isSpace ? 'space' : 'user',
-          id: this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
-          address: this.newAccountAddress
-        })
-      }).then(resp => {
-        if (resp && resp.ok) {
-          this.oldAccountAddress = this.newAccountAddress;
-          this.displaySpaceAccountCreationHelp = false;
-          if (this.isSpace) {
-            this.init();
+      saveNewAddress(this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
+        this.isSpace ? 'space' : 'user',
+        this.newAccountAddress)
+        .then(resp => {
+          if (resp && resp.ok) {
+            this.oldAccountAddress = this.newAccountAddress;
+            this.displaySpaceAccountCreationHelp = false;
+            if (this.isSpace) {
+              this.init();
+            }
+          } else {
+            this.errorMessage = 'Error saving new Wallet address';
           }
-        } else {
-          this.errorMessage = 'Error saving new Wallet address';
-        }
-        this.loading = false;
-      });
+          this.loading = false;
+        });
     },
     maximize() {
       window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`; 

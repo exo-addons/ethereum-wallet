@@ -25,6 +25,7 @@
     <title>Wallet</title>
     <access-permissions>*:/platform/users</access-permissions>
     <edit-permission>*:/platform/administrators</edit-permission>
+    <!-- Disabled because of JS infinite loop in UI Navigation
     <container id="UIUserNavigationPortlet" template="system:/groovy/portal/webui/container/UIContainer.gtmpl">
       <access-permissions>*:/platform/users</access-permissions>
       <portlet-application>
@@ -38,6 +39,7 @@
         <show-application-state>true</show-application-state>
       </portlet-application>
     </container>
+     -->
     <container id="EthereumWalletParentContainer" template="system:/groovy/portal/webui/container/UIContainer.gtmpl">
       <access-permissions>*:/platform/users</access-permissions>
       <container id="top-wallet-container" template="system:/groovy/portal/webui/container/UIAddOnContainer.gtmpl">

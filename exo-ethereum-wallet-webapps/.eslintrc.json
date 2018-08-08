@@ -43,7 +43,7 @@
         "no-eval": ["error"],
         "no-extra-label": ["error"],
         "no-extend-native": ["error"],
-        "no-extra-parens": ["warn"],
+        "no-extra-parens": ["off"],
         "no-floating-decimal": ["warn"],
         "no-implied-eval": ["error"],
         "no-iterator": ["error"],

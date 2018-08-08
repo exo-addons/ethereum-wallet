@@ -17,6 +17,8 @@ import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 
 /**
  * This class provide a REST endpoint to save/delete a contract as default
@@ -31,9 +33,12 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
 
   private EthereumWalletContractREST ethereumWalletContract;
 
-  public EthereumWalletGlobalSettingsREST(EthereumWalletContractREST ethereumWalletContract, SettingService settingService) {
+  private SpaceService spaceService;
+
+  public EthereumWalletGlobalSettingsREST(EthereumWalletContractREST ethereumWalletContract, SpaceService spaceService,SettingService settingService) {
     this.settingService = settingService;
     this.ethereumWalletContract = ethereumWalletContract;
+    this.spaceService = spaceService;
   }
 
   /**
@@ -51,17 +56,33 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
     GlobalSettings globalSettings = null;
     if (globalSettingsValue == null || globalSettingsValue.getValue() == null) {
       globalSettings = new GlobalSettings();
-
     } else {
       globalSettings = GlobalSettings.parseStringToObject(globalSettingsValue.getValue().toString());
+      if (StringUtils.isNotBlank(globalSettings.getAccessPermission())) {
+        Space space = spaceService.getSpaceByPrettyName(globalSettings.getAccessPermission());
+        if (space == null) {
+          space = spaceService.getSpaceByUrl(globalSettings.getAccessPermission());
+          if (space == null) {
+            space = spaceService.getSpaceByGroupId("/spaces/" + globalSettings.getAccessPermission());
+          }
+        }
+        // Disable wallet for users not member of the space
+        if (space != null && !spaceService.isMember(space, getCurrentUserId())) {
+          globalSettings = new GlobalSettings();
+          globalSettings.setWalletEnabled(false);
+        }
+      }
     }
-    globalSettings.setDefaultContractsToDisplay(ethereumWalletContract.getContractAddresses());
 
-    // Append user preferences
-    SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(getCurrentUserId()), WALLET_SCOPE, SETTINGS_KEY_NAME);
-    if (userSettingsValue != null && userSettingsValue.getValue() != null) {
-      UserPreferences userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
-      globalSettings.setUserDefaultGas(userSettings.getDefaultGas());
+    if (globalSettings.isWalletEnabled()) {
+      globalSettings.setDefaultContractsToDisplay(ethereumWalletContract.getContractAddresses());
+
+      // Append user preferences
+      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(getCurrentUserId()), WALLET_SCOPE, SETTINGS_KEY_NAME);
+      if (userSettingsValue != null && userSettingsValue.getValue() != null) {
+        UserPreferences userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
+        globalSettings.setUserDefaultGas(userSettings.getDefaultGas());
+      }
     }
 
     return Response.ok(globalSettings.toJSONString()).build();

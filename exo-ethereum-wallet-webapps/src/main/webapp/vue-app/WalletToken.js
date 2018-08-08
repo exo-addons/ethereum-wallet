@@ -33,8 +33,21 @@ export function getContractsDetails(account, netId) {
       contractDetails.address = address;
       contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
                                   && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
-      contractDetails.contract = getContractAtAddress(account, address);
-      const contractDetailsPromise = loadContractBalance(account, contractDetails);
+      
+      const contractDetailsPromise = getContractAtAddress(account, address)
+        .then((loadedContract, error) => {
+          if (error) {
+            throw error;
+          }
+          return contractDetails.contract = loadedContract;
+        })
+        .then(loadedContract => loadContractBalance(account, contractDetails, loadedContract))
+        .catch((e) => {
+          contractDetails.icon = 'warning';
+          contractDetails.title = contractDetails.address;
+          contractDetails.error = 'Error retrieving contract at specified address';
+          return contractDetails;
+        });
       contractsDetailsPromises.push(contractDetailsPromise);
     }
   });
@@ -44,13 +57,19 @@ export function getContractsDetails(account, netId) {
 /*
  * Loads contract balance and cache it in sessionStorage once loaded
  */
-export function loadContractBalance(account, contractDetails) {
-  return contractDetails.contract.symbol.call()
+export function loadContractBalance(account, contractDetails, contract) {
+  if (!contractDetails || (!contract && !contractDetails.contract)) {
+    return null;
+  }
+  if (!contract) {
+    contract = contractDetails.contract;
+  }
+  return contract.symbol.call()
     .then(symbol => contractDetails.symbol = symbol)
     .then(symbol => contractDetails.title = `Account in Token ${symbol}`)
-    .then(() => contractDetails.contract.name.call())
+    .then(() => contract.name.call())
     .then(name => contractDetails.name = name)
-    .then(() => contractDetails.contract.balanceOf.call(account))
+    .then(() => contract.balanceOf.call(account))
     .then(balance => contractDetails.balance = parseFloat(balance))
     .then(() => {
       return contractDetails;
@@ -128,76 +147,86 @@ export function saveContractAddressAsDefault(address) {
  * Validate Contract existence and save its address in localStorage
  */
 export function saveContractAddress(account, address, netId, isDefaultContract) {
-  if (getContractAtAddress(account, address)) {
-    if (isDefaultContract && window.walletSettings && window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.indexOf(address) >= 0) {
-      throw new Error('Contract already exists in the list');
-    }
-
-    const contractsAddresses = getContractsAddresses(account, netId);
-
-    if (isDefaultContract || contractsAddresses.indexOf(address) < 0) {
-      let contract = null;
-      try {
-        contract = getContractAtAddress(account, address);
-        return contract.balanceOf.call(account)
-          .then((balance) => {
-            if (balance === 0 || balance) {
-              address = address.toLowerCase();
-              if(contractsAddresses.indexOf(address) < 0) {
-                contractsAddresses.push(address);
-                localStorage.setItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase(), JSON.stringify(contractsAddresses));
-              }
-              return true;
-            } else {
-              return false;
-            }
-          });
-      } catch (e) {
-        console.warn('Error while saving contract', e);
+  return getContractAtAddress(account, address)
+    .then((foundContract, error) => {
+      if (error) {
+        throw error;
       }
-    } else if (!isDefaultContract) {
-      throw new Error('Contract already exists');
-    }
-  }
+      if (foundContract && foundContract.balanceOf) {
+        if (isDefaultContract && window.walletSettings && window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.indexOf(address) >= 0) {
+          throw new Error('Contract already exists in the list');
+        }
+
+        const contractsAddresses = getContractsAddresses(account, netId);
+
+        if (isDefaultContract || contractsAddresses.indexOf(address) < 0) {
+          return foundContract.balanceOf.call(account)
+            .then((balance) => {
+              if (balance === 0 || balance) {
+                address = address.toLowerCase();
+                if(contractsAddresses.indexOf(address) < 0) {
+                  contractsAddresses.push(address);
+                  localStorage.setItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase(), JSON.stringify(contractsAddresses));
+                }
+                return true;
+              } else {
+                return false;
+              }
+            });
+        } else if (!isDefaultContract) {
+          throw new Error('Contract already exists');
+        }
+      } else {
+        throw new Error('Invalid contract address');
+      }
+    });
 }
 
 /*
  * Create new instance of ERC20 compliant contract ready to deploy
  */
 export function createNewERC20TokenContract(account, newTokenGas, newTokenGasPrice) {
-  const CONTRACT_DATA = {
-    contractName: 'Standard ERC20 Token',
-    abi: ERC20_COMPLIANT_CONTRACT_ABI,
-    bytecode: ERC20_COMPLIANT_CONTRACT_BYTECODE
-  };
-  const NEW_TOKEN = window.TruffleContract(CONTRACT_DATA);
-
-  NEW_TOKEN.defaults({
-    from: account,
-    gas: newTokenGas.toString(),
-    gasPrice: newTokenGasPrice.toString()
-  });
-
-  NEW_TOKEN.setProvider(window.localWeb3.currentProvider);
-  return NEW_TOKEN;
+  try {
+    const CONTRACT_DATA = {
+      contractName: 'Standard ERC20 Token',
+      abi: ERC20_COMPLIANT_CONTRACT_ABI,
+      bytecode: ERC20_COMPLIANT_CONTRACT_BYTECODE
+    };
+    const NEW_TOKEN = window.TruffleContract(CONTRACT_DATA);
+  
+    NEW_TOKEN.defaults({
+      from: account,
+      gas: newTokenGas.toString(),
+      gasPrice: newTokenGasPrice.toString()
+    });
+  
+    NEW_TOKEN.setProvider(window.localWeb3.currentProvider);
+    return Promise.resolve(NEW_TOKEN);
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
 /*
  * Retrieve an ERC20 contract instance at specified address
  */
 export function getContractAtAddress(account, address) {
-  const ERC20_CONTRACT = window.TruffleContract({
-    abi: ERC20_COMPLIANT_CONTRACT_ABI
-  });
-  // Use Old version of Web3 (from Metamask) providersince TruffleContract is not compatible with new Web3 version
-  if (window.localWeb3.currentProvider.host && window.localWeb3.currentProvider.host.indexOf("http") === 0) {
-    ERC20_CONTRACT.setProvider(new Web3.providers.HttpProvider(window.localWeb3.currentProvider.host));
-  } else {
-    ERC20_CONTRACT.setProvider(window.localWeb3.currentProvider);
+  try {
+    const ERC20_CONTRACT = window.TruffleContract({
+      abi: ERC20_COMPLIANT_CONTRACT_ABI
+    });
+    // Use Old version of Web3 (from Metamask) providersince TruffleContract is not compatible with new Web3 version
+    if (window.localWeb3.currentProvider.host && window.localWeb3.currentProvider.host.indexOf("http") === 0) {
+      ERC20_CONTRACT.setProvider(new Web3.providers.HttpProvider(window.localWeb3.currentProvider.host));
+    } else {
+      ERC20_CONTRACT.setProvider(window.localWeb3.currentProvider);
+    }
+    ERC20_CONTRACT.defaults({
+      from: account,
+      gas: window.walletSettings.userDefaultGas
+    });
+    return ERC20_CONTRACT.at(address);
+  } catch (e) {
+    return Promise.reject(e);
   }
-  ERC20_CONTRACT.defaults({
-    from: account,
-    gas: window.walletSettings.userDefaultGas
-  });
-  return ERC20_CONTRACT.at(address);
 }

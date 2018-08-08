@@ -1,9 +1,14 @@
 <template>
-  <v-autocomplete v-model="selectedValue"
+  <v-autocomplete ref="selectAutoComplete"
+                  v-model="selectedValue"
                   :items="items"
                   :loading="isLoadingSuggestions"
                   :search-input.sync="searchTerm"
                   :label="inputLabel"
+                  :open-on-click="false"
+                  :open-on-hover="false"
+                  :open-on-clear="false"
+                  :no-filter="true"
                   max-width="100%"
                   item-text="name"
                   item-value="id_type"
@@ -89,6 +94,7 @@ export default {
       }
     },
     selectedValue() {
+      this.$refs.selectAutoComplete.isFocused = false;
       this.addressLoad = 'loading';
       if (this.selectedValue) {
         const isAddress = this.selectedValue.indexOf('_') < 0;

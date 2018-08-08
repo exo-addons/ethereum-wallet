@@ -13,6 +13,8 @@ public class GlobalSettings implements Serializable {
 
   private static final long      serialVersionUID        = -4672745644323864680L;
 
+  private boolean                walletEnabled           = true;
+
   private String                 accessPermission;
 
   private String                 providerURL;
@@ -37,6 +39,7 @@ public class GlobalSettings implements Serializable {
   public JSONObject toJSONObject() {
     JSONObject jsonObject = new JSONObject();
     try {
+      jsonObject.put("isWalletEnabled", walletEnabled);
       jsonObject.put("accessPermission", accessPermission);
       jsonObject.put("providerURL", providerURL);
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);

@@ -53,7 +53,7 @@ export function retrieveUSDExchangeRate() {
 export function initWeb3(isSpace) {
   if (isSpace) {
     if (!window.walletSettings || !window.walletSettings.providerURL) {
-      return Promise.reject(new Error("Please configure a default space provider URL for Web3"));
+      new Error("Please configure a default space provider URL for Web3");
     }
     if (window.walletSettings.providerURL.indexOf("ws") === 0) {
       window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.providerURL));
@@ -80,7 +80,7 @@ export function initSettings() {
       }
     })
     .then(settings => {
-      if (settings) {
+      if (settings && settings.isWalletEnabled) {
         window.walletSettings = settings;
         if (!window.walletSettings.defaultGas) {
           window.walletSettings.defaultGas = 21000;

@@ -96,26 +96,10 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    SettingValue<?> walletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address);
-    if (walletAddressValue != null && walletAddressValue.getValue() != null) {
-      String idAndType = walletAddressValue.getValue().toString();
-      String id = null;
-      AccountDetail accountDetail = null;
-      if (idAndType.startsWith("user")) {
-        id = idAndType.replace("user", "");
-        accountDetail = getUserDetails(id);
-      } else if (idAndType.startsWith("space")) {
-        id = idAndType.replace("space", "");
-        accountDetail = getSpaceDetails(id);
-      }
-      if (accountDetail == null) {
-        return Response.status(400).build();
-      }
-      accountDetail.setAddress(address);
-      return Response.ok(accountDetail).build();
-    }
+    address = address.toLowerCase();
+    AccountDetail accountDetail = getUserDetailsByAddress(address);
 
-    return Response.ok("{}").build();
+    return Response.ok(accountDetail == null ? "{}" : accountDetail).build();
   }
 
   /**
@@ -136,6 +120,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     String id = accountDetail.getId();
     String type = accountDetail.getType();
     String address = accountDetail.getAddress();
+    address = address.toLowerCase();
 
     if (StringUtils.isBlank(id) || StringUtils.isBlank(type)
         || !(StringUtils.equals(type, "user") || StringUtils.equals(type, "space"))) {
@@ -152,6 +137,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       String oldAddress = getUserAddress(id);
       if (oldAddress != null) {
+        AccountDetail userDetailsByOldAddress = getUserDetailsByAddress(oldAddress);
+        if (userDetailsByOldAddress != null) {
+          LOG.warn("The address {} was assigned to user {} and changed to user {}", oldAddress, userDetailsByOldAddress.getId(), currentUserId);
+          settingService.remove(Context.USER.id(userDetailsByOldAddress.getId()), WALLET_SCOPE, ADDRESS_KEY_NAME);
+        }
         // Remove old address mapping
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
@@ -248,11 +238,34 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     return accountDetail;
   }
 
+  private AccountDetail getUserDetailsByAddress(String address) {
+    AccountDetail accountDetail = null;
+
+    SettingValue<?> walletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address);
+    if (walletAddressValue != null && walletAddressValue.getValue() != null) {
+      String idAndType = walletAddressValue.getValue().toString();
+      String id = null;
+      if (idAndType.startsWith("user")) {
+        id = idAndType.replaceFirst("user", "");
+        accountDetail = getUserDetails(id);
+      } else if (idAndType.startsWith("space")) {
+        id = idAndType.replaceFirst("space", "");
+        accountDetail = getSpaceDetails(id);
+      }
+      if (accountDetail == null) {
+        LOG.info("Can't find the user/space with id {} associated to address {}", id, address);
+      } else {
+        accountDetail.setAddress(address);
+      }
+    }
+    return accountDetail;
+  }
+
   private String getSpaceAddress(String id) {
     SettingValue<?> spaceWalletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, id);
     String address = null;
     if (spaceWalletAddressValue != null && spaceWalletAddressValue.getValue() != null) {
-      address = spaceWalletAddressValue.getValue().toString();
+      address = spaceWalletAddressValue.getValue().toString().toLowerCase();
     }
     return address;
   }
@@ -261,7 +274,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     SettingValue<?> userWalletAddressValue = settingService.get(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME);
     String address = null;
     if (userWalletAddressValue != null && userWalletAddressValue.getValue() != null) {
-      address = userWalletAddressValue.getValue().toString();
+      address = userWalletAddressValue.getValue().toString().toLowerCase();
     }
     return address;
   }

@@ -29,38 +29,58 @@
         <v-alert v-show="!error && warning && warning.length" :value="warning" type="warning" class="v-content">
           {{ warning }}
         </v-alert>
-        <v-text-field v-model="newTokenName" :rules="mandatoryRule" label="Token name" required></v-text-field>
+
+        <h4>ERC20 Token contract details</h4>
+        <v-divider class="mb-4"/>
+        <v-text-field v-model="newTokenName" :rules="mandatoryRule" label="Token name" required />
         <v-text-field v-model="newTokenSymbol" :rules="mandatoryRule" label="Token symbol" required></v-text-field>
-        <span>Default gas to spend on transactions (Maximum fee per transaction)</span>
-        <v-slider v-model="newTokenGas"
-                  :label="`Contract deployment Gas: ${newTokenGas}${newTokenGasInUSD ? ' (' + newTokenGasInUSD + ' \$)' : ''}`"
-                  :min="50000"
-                  :max="800000"
-                  :step="1000"
-                  type="number"
-                  required />
-        <v-slider v-model="newTokenGasPrice"
-                  :label="`Contract deployment Gas Price (GWei): ${newTokenGasPriceGWEI}`"
-                  :min="10000000000"
-                  :max="60000000000"
-                  :step="1000000000"
-                  type="number"
-                  required />
         <v-slider v-model="newTokenInitialCoins"
-                  :label="`Initial total tokens: ${newTokenInitialCoins}`"
+                  :label="`Token coins supply: ${newTokenInitialCoins}`"
                   :min="0"
                   :max="1000000"
                   :step="10000"
                   type="number"
                   required />
         <v-slider v-model="newTokenDecimals"
-                  :label="`Token decimals: ${newTokenDecimals}`"
+                  :label="`Token coins decimals: ${newTokenDecimals}`"
                   :min="0"
                   :max="10"
                   :step="1"
                   type="number"
                   required />
-        <v-checkbox v-model="newTokenSetAsDefault" label="Install contract as default one for all wallets?"></v-checkbox>
+
+        <h4>Contract creation transaction fee</h4>
+        <v-divider class="mb-4"/>
+        <v-slider v-model="newTokenGas"
+                  :label="`Gas limit: ${newTokenGas}${newTokenGasInUSD ? ' (' + newTokenGasInUSD + ' \$)' : ''}`"
+                  :min="50000"
+                  :max="800000"
+                  :step="1000"
+                  type="number"
+                  required />
+        <v-slider v-model="newTokenGasPrice"
+                  :label="`Gas price (Gwei): ${newTokenGasPriceGWEI}`"
+                  :min="10000000000"
+                  :max="60000000000"
+                  :step="1000000000"
+                  type="number"
+                  required />
+
+        <h4>Contract address management</h4>
+        <v-divider />
+        <v-list three-line>
+          <v-list-tile avatar>
+            <v-list-tile-action>
+              <v-checkbox v-model="newTokenSetAsDefault" />
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Install contract as default one for all wallets</v-list-tile-title>
+              <v-list-tile-sub-title>
+                This will display the contract in all users wallet by default without any additional action from users. Else, the contract will be added to the current user's wallet only.
+              </v-list-tile-sub-title>
+            </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
       </v-form>
     </v-card>
   </v-dialog>
@@ -165,11 +185,17 @@ export default {
         return;
       }
 
-      const NEW_TOKEN = createNewERC20TokenContract(this.account, this.newTokenGas, this.newTokenGasPrice);
+      let NEW_TOKEN = null;
 
-      this.loading = true;
-
-      window.localWeb3.eth.estimateGas({data: ERC20_COMPLIANT_CONTRACT_BYTECODE})
+      createNewERC20TokenContract(this.account, this.newTokenGas, this.newTokenGasPrice)
+        .then((contract, error) => {
+          if (error) {
+            throw error;
+          }
+          return NEW_TOKEN = contract;
+        })
+        .then(() => this.loading = true)
+        .then(() => window.localWeb3.eth.estimateGas({data: ERC20_COMPLIANT_CONTRACT_BYTECODE}))
         .then(result => {
           if (result > this.newTokenGas) {
             this.warning = `You have set a low gas ${this.newTokenGas} while the estimation of necessary gas is ${result}`;
@@ -200,10 +226,23 @@ export default {
                 this.newTokenAddress = newTokenInstance.address;
               });
           } else {
-            // Save conract address to display for current user only
-            saveContractAddress(this.account, newTokenInstance.address, this.networkId);
-            this.newTokenAddress = newTokenInstance.address;
-            this.loading = false;
+            // Save contract address to display for current user only
+            saveContractAddress(this.account, newTokenInstance.address, this.networkId)
+              .then((added, error) => {
+                if (error) {
+                  throw error;
+                }
+                this.loading = false;
+                if (added) {
+                  this.newTokenAddress = newTokenInstance.address;
+                } else {
+                  this.errorMessage = `Error during contract address saving for all users`;
+                }
+              })
+              .catch(e => {
+                this.loading = false;
+                this.errorMessage = `Error during contract address saving for all users: ${e}`;
+              });
           }
         })
         .catch(e => {
