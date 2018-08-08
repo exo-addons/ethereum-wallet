@@ -216,11 +216,12 @@ export function getContractAtAddress(account, address) {
       abi: ERC20_COMPLIANT_CONTRACT_ABI
     });
     // Use Old version of Web3 (from Metamask) providersince TruffleContract is not compatible with new Web3 version
-    if (window.localWeb3.currentProvider.host && window.localWeb3.currentProvider.host.indexOf("http") === 0) {
-      ERC20_CONTRACT.setProvider(new Web3.providers.HttpProvider(window.localWeb3.currentProvider.host));
-    } else {
+    if (typeof window.web3v20 === 'undefined' || !window.web3v20) {
       ERC20_CONTRACT.setProvider(window.localWeb3.currentProvider);
+    } else {
+      ERC20_CONTRACT.setProvider(window.web3v20.currentProvider);
     }
+
     ERC20_CONTRACT.defaults({
       from: account,
       gas: window.walletSettings.userDefaultGas

@@ -21,6 +21,8 @@
         "EthereumQRPlugin": true,
         "web3": true,
         "Web3": true,
+        "Web3v20": true,
+        "web3v20": true,
         "isMaximized": true
     },
     "parserOptions": {

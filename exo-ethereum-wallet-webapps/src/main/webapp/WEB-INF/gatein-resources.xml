@@ -113,6 +113,11 @@
         <module>Web3</module>
         <as>LocalWeb3</as>
       </depends>
+      <!-- Used for Truffle -->
+      <depends>
+        <module>Web3v20</module>
+        <as>Web3v20</as>
+      </depends>
       <depends>
         <module>ethQRCode</module>
       </depends>
@@ -198,6 +203,19 @@
       <adapter>
         (function() {
           <include>/js/lib/web3.min.js</include>
+          return Web3;
+        })();
+      </adapter>
+    </script>
+  </module>
+
+  <module>
+    <name>Web3v20</name>
+    <script>
+      <minify>false</minify>
+      <adapter>
+        (function() {
+          <include>/js/lib/web3.v0.20.6.min.js</include>
           return Web3;
         })();
       </adapter>

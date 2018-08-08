@@ -57,8 +57,16 @@ export function initWeb3(isSpace) {
     }
     if (window.walletSettings.providerURL.indexOf("ws") === 0) {
       window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.providerURL));
+      // Used for truffle
+      window.web3v20 = new Web3v20(new Web3v20.providers.WebsocketProvider(window.walletSettings.providerURL));
     } else {
       window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
+      // Used for truffle
+      window.web3v20 = new Web3v20(new Web3v20.providers.HttpProvider(window.walletSettings.providerURL));
+    }
+    if (typeof window.web3 === 'undefined' || !window.web3) {
+      window.web3 = window.web3v20;
+      window.Web3 = window.Web3v20;
     }
   } else if(window.web3) {
     // Metamask provider
