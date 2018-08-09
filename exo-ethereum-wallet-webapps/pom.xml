@@ -35,7 +35,7 @@
               <goal>npm</goal>
             </goals>
             <configuration>
-              <arguments>config set python "/usr/bin/python3"</arguments>
+              <arguments>config set python "/usr/bin/python2.7"</arguments>
             </configuration>
           </execution>
           <execution>
