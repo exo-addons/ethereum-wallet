@@ -5,6 +5,16 @@ export function etherToUSD(amount) {
   return 0;
 }
 
+export function gasToEther(amount, gasPriceInEther) {
+  if (!gasPriceInEther) {
+    gasPriceInEther = window.walletSettings.gasPriceInEther;
+  }
+  if (gasPriceInEther && amount)  {
+    return (gasPriceInEther * amount);
+  }
+  return 0;
+}
+
 export function gasToUSD(amount, gasPriceInEther) {
   if (!gasPriceInEther) {
     gasPriceInEther = window.walletSettings.gasPriceInEther;

@@ -36,6 +36,7 @@
 <script>
 import AutoComplete from './AutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
+import {gasToEther} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -47,6 +48,12 @@ export default {
       type: String,
       default: function() {
         return {};
+      }
+    },
+    balance: {
+      type: Number,
+      default: function() {
+        return 0;
       }
     }
   },
@@ -72,11 +79,18 @@ export default {
         return;
       }
 
+      const gas = window.walletSettings.userDefaultGas ? window.walletSettings.userDefaultGas : 35000;
+      if (this.amount + gasToEther(gas) >= this.balance) {
+        this.error = "Unsufficient ethers";
+        return;
+      }
+
       // Send an amount of ether to a third person
       window.localWeb3.eth.sendTransaction({
         from: this.account.toLowerCase(),
         to: this.recipient,
-        value: window.localWeb3.utils.toWei(this.amount.toString(), "ether")
+        value: window.localWeb3.utils.toWei(this.amount.toString(), "ether"),
+        gas: gas
       })
         .on('transactionHash', hash => {
           // The transaction has been hashed and will be sent

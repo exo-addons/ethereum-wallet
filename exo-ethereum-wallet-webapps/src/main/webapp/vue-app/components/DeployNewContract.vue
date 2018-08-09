@@ -47,6 +47,7 @@
                   :max="10"
                   :step="1"
                   type="number"
+                  disabled
                   required />
 
         <h4>Contract creation transaction fee</h4>
@@ -118,7 +119,7 @@ export default {
       newTokenGasPrice: 20000000000,
       newTokenGasPriceGWEI: 20,
       newTokenGasInUSD: 0,
-      newTokenDecimals: 8,
+      newTokenDecimals: 0,
       newTokenInitialCoins: 10000,
       newTokenSetAsDefault: true,
       newTokenAddress: '',
@@ -162,7 +163,7 @@ export default {
       this.newTokenGasPrice = 20000000000;
       this.newTokenGasPriceGWEI = 20;
       this.newTokenGasInUSD = 0;
-      this.newTokenDecimals = 8;
+      this.newTokenDecimals = 0;
       this.newTokenInitialCoins = 10000;
       this.newTokenSetAsDefault = true;
       this.newTokenAddress = '';

@@ -26,12 +26,12 @@
     </v-card-media>
 
     <div v-if="!isSpace && contractDetail.isContract && (contractDetail.balance > 0 || hasDelegatedTokens)" class="text-xs-center grey lighten-4">
-      <send-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true" @end-loading="loading = false"></send-tokens-modal>
-      <delegate-tokens-modal v-if="contractDetail.balance > 0" :contract="contractDetail.contract" @loading="loading = true"></delegate-tokens-modal>
-      <send-delegated-tokens-modal v-if="hasDelegatedTokens" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true"></send-delegated-tokens-modal>
+      <send-tokens-modal v-if="contractDetail.balance > 0" :balance="contractDetail.balance" :ether-balance="contractDetail.etherBalance" :contract="contractDetail.contract" @loading="loading = true" @end-loading="loading = false"></send-tokens-modal>
+      <delegate-tokens-modal v-if="contractDetail.balance > 0" :balance="contractDetail.balance" :ether-balance="contractDetail.etherBalance" :contract="contractDetail.contract" @loading="loading = true"></delegate-tokens-modal>
+      <send-delegated-tokens-modal v-if="hasDelegatedTokens" :balance="contractDetail.balance" :ether-balance="contractDetail.etherBalance" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true"></send-delegated-tokens-modal>
     </div>
     <div v-else-if="!isSpace && !contractDetail.isContract && contractDetail.balance > 0" class="text-xs-center grey lighten-4">
-      <send-ether-modal :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @loaded="loaded"></send-ether-modal>
+      <send-ether-modal :account="account" :balance="contractDetail.balance" @loading="loading = true; refreshed = false" @end-loading="loading = false" @loaded="loaded"></send-ether-modal>
     </div>
     <v-divider v-else />
 

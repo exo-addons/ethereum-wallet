@@ -23,7 +23,7 @@
     </template>
 
     <template slot="selection" slot-scope="{ item, selected }">
-      <v-chip v-if="item.avatar" :selected="selected" :disabled="addressLoad === 'error'" :title="addressLoad === 'error' ? 'Contact haven\'t a valid wallet account yet' : ''" color="blue-grey" class="white--text" @input="selectItem(item)">
+      <v-chip v-if="item.avatar" :selected="selected" :disabled="addressLoad === 'error'" :class="addressLoad === 'error' ? 'red--text':''" :title="addressLoad === 'error' ? 'the recipient doesn\'t have a valid wallet account yet' : ''" color="blue-grey" class="white--text" @input="selectItem(item)">
         <v-progress-circular v-if="addressLoad === 'loading'" indeterminate color="white" class="mr-2"></v-progress-circular>
         <v-icon v-else-if="addressLoad === 'error'" alt="Invalid address" class="mr-2" color="red">warning</v-icon>
         <v-avatar v-else-if="item.avatar" dark>

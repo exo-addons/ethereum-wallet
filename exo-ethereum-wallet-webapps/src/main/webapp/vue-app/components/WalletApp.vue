@@ -34,7 +34,7 @@
                                  :open="showSettingsModal"
                                  @close="showSettingsModal = false"
                                  @settings-changed="reload" />
-            <v-menu v-if="isMaximized" offset-y left>
+            <v-menu v-if="!error" offset-y left>
               <v-btn slot="activator" icon>
                 <v-icon>more_vert</v-icon>
               </v-btn>
@@ -59,9 +59,10 @@
                 </v-list-tile>
               </v-list>
             </v-menu>
-            <v-btn v-else icon title="Maximize" @click="maximize">
+            <!-- Disabled for now
+            <v-btn v-if="!isMaximized" icon title="Maximize" @click="maximize">
               <v-icon color="blue-grey">fa-window-maximize</v-icon>
-            </v-btn>
+            </v-btn> -->
           </v-toolbar>
           <h4 v-else class="head-container">Wallet</h4>
           <v-card v-if="!selectedAccount" class="text-xs-center" flat>

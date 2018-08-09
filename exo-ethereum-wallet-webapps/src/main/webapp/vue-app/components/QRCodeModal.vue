@@ -96,6 +96,7 @@ export default {
     open() {
       if (this.open) {
         this.show = true;
+        this.computeCanvas();
       }
     },
     show() {
@@ -104,56 +105,68 @@ export default {
       }
     }
   },
-  updated() {
-    window.localWeb3.eth.net.getId()
-      .then(netId => {
-        // This promise is triggered multiple times
-        if (this.to && netId !== this.netId) {
-          this.netId = netId;
-          const qr = new window.EthereumQRPlugin();
-          const options = {
-            chainId: netId,
-            to: this.to
-          };
-
-          if (this.from) {
-            options.from = this.from;
-          }
-
-          if (this.amount && !this.isContract) {
-            options.value = this.amount;
-          }
-
-          if (window.walletSettings.userDefaultGas) {
-            options.gas = window.walletSettings.userDefaultGas;
-          }
-
-          if (this.isContract) {
-            options.mode = "contract_function";
-            options.functionSignature = {};
-            options.functionSignature.name = this.functionName;
-            options.functionSignature.payable = this.functionPayable;
-            if (this.argsNames.length === this.argsTypes.length && this.argsTypes.length === this.argsValues.length) {
-              options.functionSignature.args = [];
-              options.argsDefaults = [];
-              this.argsNames.forEach((element, index) => {
-                options.functionSignature.args.push({
-                  "name": element,
-                  "type": this.argsTypes[index]
-                });
-                options.argsDefaults.push({
-                  "name": element,
-                  "value": this.argsValues[index]
-                });
-              });
+  methods: {
+    computeCanvas() {
+      window.localWeb3.eth.net.getId()
+        .then(netId => {
+          // This promise is triggered multiple times
+          if (this.to && netId !== this.netId) {
+            this.netId = netId;
+            const qr = new window.EthereumQRPlugin();
+            const options = {
+              chainId: netId,
+              to: this.to
+            };
+  
+            if (this.from) {
+              options.from = this.from;
             }
-          }
+  
+            if (this.amount && !this.isContract) {
+              options.value = window.localWeb3.utils.toWei(this.amount.toString(), 'ether');
+            }
+  
+            if (window.walletSettings.userDefaultGas) {
+              options.gas = window.walletSettings.userDefaultGas;
+            }
+  
+            if (this.isContract) {
+              options.mode = "contract_function";
+              options.functionSignature = {};
+              options.functionSignature.name = this.functionName;
+              options.functionSignature.payable = this.functionPayable;
+              if (this.argsNames.length === this.argsTypes.length && this.argsTypes.length === this.argsValues.length) {
+                options.functionSignature.args = [];
+                options.argsDefaults = [];
+  
+                
+                for (let i = 0; i < this.argsNames.length; i++) {
+                  const argsName = this.argsNames[i];
+                  const argsType = this.argsTypes[i];
+                  const argsValue = this.argsValues[i];
 
-          const qrCode = qr.toCanvas(options, {
-            selector: '#addressQRCode'
-          });
-        }
-      });
+                  console.log(argsName);
+                  console.log(argsType);
+                  console.log(argsValue);
+
+                  options.functionSignature.args.push({
+                    "name": argsName,
+                    "type": argsType
+                  });
+                  options.argsDefaults.push({
+                    "name": argsName,
+                    "value": argsValue
+                  });
+                }
+              }
+            }
+  
+            const qrCode = qr.toCanvas(options, {
+              selector: '#addressQRCode'
+            });
+          }
+        });
+    }
   }
 };
 </script>
