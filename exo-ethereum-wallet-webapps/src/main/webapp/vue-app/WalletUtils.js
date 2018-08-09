@@ -113,3 +113,47 @@ export function initSettings() {
     })
     .catch(console.warn);
 }
+
+export function computeNetwork() {
+  let netId = null;
+  return window.localWeb3.eth.net.getId()
+    .then((networkId, error) => {
+      if (error) {
+        throw error;
+      }
+      if (networkId) {
+        netId = networkId;
+        return window.localWeb3.eth.net.getNetworkType();
+      } else {
+        throw new Error("Network is disconnected");
+      }
+    })
+    .then((netType, error) => {
+      if (error) {
+        throw error;
+      }
+      return {
+        netId: netId,
+        netType: netType
+      };
+    });
+}
+
+export function computeBalance() {
+  return window.localWeb3.eth.getBalance(window.localWeb3.eth.defaultAccount)
+    .then((retrievedBalance, error) => {
+      if (error) {
+        throw error;
+      }
+      return retrievedBalance = window.localWeb3.utils.fromWei(retrievedBalance, "ether");
+    })
+    .then((retrievedBalance, error) => {
+      if (error) {
+        throw error;
+      }
+      return {
+        balance: retrievedBalance,
+        balanceUSD: etherToUSD(retrievedBalance)
+      };
+    });
+}

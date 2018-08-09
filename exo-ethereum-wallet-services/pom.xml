@@ -59,6 +59,16 @@
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok-maven-plugin</artifactId>
       </plugin>
+      <!-- we need to overide the enforcer rules here because lombok doesn't match it -->
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>check-java-compat</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

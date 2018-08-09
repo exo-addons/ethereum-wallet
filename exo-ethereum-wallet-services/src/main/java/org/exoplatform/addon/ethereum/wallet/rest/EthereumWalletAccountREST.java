@@ -48,7 +48,10 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Retrieves the user or space details by username or spacePrettyName
    * 
+   * @param id
+   * @param type
    * @return
+   * 
    * @throws Exception
    */
   @Path("detailsById")
@@ -84,6 +87,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Retrieves the user or space details associated to an address
    * 
+   * @param address
    * @return
    * @throws Exception
    */
@@ -105,7 +109,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Save address a user or space associated address
    * 
-   * @param address
+   * @param accountDetail
    * @return
    */
   @POST
@@ -170,7 +174,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Save user preferences of Wallet
    * 
-   * @param defaultGas default gas limit to use in transactions
+   * @param userPreferences
    * @return
    * @throws Exception
    */

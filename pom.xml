@@ -20,9 +20,9 @@
     <module>exo-ethereum-wallet-packaging</module>
   </modules>
   <scm>
-    <connection>scm:git:git://github.com/exoplatform/exo-ethereum-wallet.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/exoplatform/exo-ethereum-wallet.git</developerConnection>
-    <url>https://github.com/exoplatform/exo-ethereum-wallet</url>
+    <connection>scm:git:git://github.com/exo-addons/ethereum-wallet.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/exo-addons/ethereum-wallet.git</developerConnection>
+    <url>https://github.com/exo-addons/ethereum-wallet</url>
     <tag>HEAD</tag>
   </scm>
   <properties>
@@ -37,7 +37,7 @@
     <com.github.eirslett.frontend.version>1.6</com.github.eirslett.frontend.version>
     <!-- **************************************** -->
     <!-- Jenkins Settings -->
-    <jenkins.job.name>exo-ethereum-wallet-develop-ci</jenkins.job.name>
+    <jenkins.job.name>addon-ethereum-wallet-master-ci</jenkins.job.name>
     <!-- **************************************** -->
   </properties>
   <dependencyManagement>

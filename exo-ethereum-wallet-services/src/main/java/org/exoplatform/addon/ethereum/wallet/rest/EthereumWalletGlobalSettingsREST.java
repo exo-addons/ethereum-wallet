@@ -89,13 +89,9 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   }
 
   /**
-   * Save global preferences
+   * Save global settings
    * 
-   * @param accessPermissions
-   * @param providerURL
-   * @param defaultBlocksToRetrieve
-   * @param defaultNetworkId
-   * @param defaultGas
+   * @param globalSettings
    * @return
    * @throws Exception
    */
