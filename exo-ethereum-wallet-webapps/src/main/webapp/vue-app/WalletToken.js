@@ -224,7 +224,8 @@ export function getContractAtAddress(account, address) {
 
     ERC20_CONTRACT.defaults({
       from: account,
-      gas: window.walletSettings.userDefaultGas
+      gas: window.walletSettings.userDefaultGas,
+      gasPrice: window.walletSettings.gasPrice
     });
     return ERC20_CONTRACT.at(address);
   } catch (e) {

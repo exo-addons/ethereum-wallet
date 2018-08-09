@@ -92,14 +92,12 @@ export default {
         return;
       }
 
-      this.contract.transfer.estimateGas(this.recipient, this.amount.toString(), {gas: 300000})
+      this.contract.transfer.estimateGas(this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
         .then(result => {
-          if (result <= window.walletSettings.userDefaultGas) {
-            return this.contract.transfer(this.recipient, this.amount.toString());
-          } else {
+          if (result > window.walletSettings.userDefaultGas) {
             this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
-            return this.contract.transfer(this.recipient, this.amount.toString());
           }
+          return this.contract.transfer(this.recipient, this.amount.toString());
         })
         .then(resp => {
           if (resp.tx) {

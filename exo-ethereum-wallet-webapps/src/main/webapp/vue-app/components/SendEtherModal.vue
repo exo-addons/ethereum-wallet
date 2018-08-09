@@ -90,7 +90,8 @@ export default {
         from: this.account.toLowerCase(),
         to: this.recipient,
         value: window.localWeb3.utils.toWei(this.amount.toString(), "ether"),
-        gas: gas
+        gas: gas,
+        gasPrice: window.walletSettings.gasPrice
       })
         .on('transactionHash', hash => {
           // The transaction has been hashed and will be sent
