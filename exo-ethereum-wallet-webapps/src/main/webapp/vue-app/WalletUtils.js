@@ -68,12 +68,25 @@ export function initWeb3(isSpace) {
       window.web3 = window.web3v20;
       window.Web3 = window.Web3v20;
     }
-  } else if(window.web3) {
-    // Metamask provider
-    window.localWeb3 = new LocalWeb3(window.web3.currentProvider);
-    window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount;
+  } else if (window.web3) {
+    if (!window.web3.isConnected || !window.web3.isConnected()) {
+      throw new Error("Please connect to Metamask");
+    } else {
+      window.localWeb3 = new LocalWeb3(window.web3.currentProvider);
+      window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount;
+
+      let isListening = false;
+      window.localWeb3.eth.net.isListening()
+        .then(listening => isListening = listening);
+      return new Promise((resolve) => setTimeout(resolve, 1000))
+        .then(() => {
+          if (!isListening) {
+            throw new Error("Metamask is disconnected from network");
+          }
+        });
+    }
   } else {
-    throw new Error("Please install/enable metamask to create/access your wallet");
+    throw new Error("Please install/enable Metamask to create/access your wallet");
   }
   return Promise.resolve(window.localWeb3);
 }

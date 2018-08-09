@@ -117,7 +117,7 @@
               <v-divider v-if="index + 1 < accountsDetails.length" :key="`divider-${index}`"></v-divider>
             </v-list>
           </v-card>
-          <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true)" />
+          <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="refreshList(account, true).then(() => loading = false)" />
         </v-flex>
       </v-layout>
     </main>
@@ -198,44 +198,50 @@ export default {
     }
   },
   watch: {
-    account(value) {
+    account(value, oldValue) {
       if (!value) {
         return;
       }
       this.computeBalance();
-    },
-    errorMessage() {
-      if (this.errorMessage && this.errorMessage.length) {
-        this.loading = false;
-      }
     }
   },
   created() {
     // Init application
-    if (this.isSpace || (this.metamaskEnabled && this.metamaskConnected)) {
-      this.loading = true;
-      this.init();
-    } else {
-      try {
+    try {
+      if (this.isSpace || (this.metamaskEnabled && this.metamaskConnected)) {
+        this.loading = true;
+        this.init();
+      } else {
         this.init()
-          .then(() => {
+          .then((result, error) => {
+            if (error) {
+              throw error;
+            }
             const thiss = this;
             window.addEventListener('load', function() {
               if (window && window.localWeb3 && window.localWeb3.eth && window.localWeb3.eth.defaultAccount !== this.account) {
                 thiss.init();
               }
             });
+          })
+          .catch(e => {
+            this.errorMessage = `${e}`;
+            this.loading = false;
           });
-      } catch (e) {
-        console.error(e);
       }
+    } catch (e) {
+      this.errorMessage = `${e}`;
+      this.loading = false;
     }
   },
   methods: {
     init() {
       this.errorMessage = null;
       return initSettings()
-        .then(() => {
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
             this.isWalletEnabled = false;
             this.$forceUpdate();
@@ -245,29 +251,74 @@ export default {
             this.isWalletEnabled = true;
           }
         })
-        .then(() => initWeb3(this.isSpace))
-        .then(retrieveUSDExchangeRate)
-        .then(this.refreshList)
-        .then(this.retrieveDefaultUserAccount)
-        .then(() => this.loading = false)
-        .then(() => {
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
+          return initWeb3(this.isSpace);
+        })
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
+          return retrieveUSDExchangeRate();
+        })
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
+          return this.refreshList(result);
+        })
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
+          this.retrieveDefaultUserAccount();
+        })
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
           if (!this.isSpace) {
             const thiss = this;
             // In case account switched in Metamars
             // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
             setInterval(function() {
               thiss.getAccount()
-                .then(thiss.initAccount)
-                .then(thiss.retrieveDefaultUserAccount)
-                .catch((e) => {
+                .then((account, error) => {
+                  if (error) {
+                    throw error;
+                  }
+                  return thiss.initAccount(account);
+                })
+                .then((result, error) => {
+                  if (error) {
+                    throw error;
+                  }
+                  thiss.retrieveDefaultUserAccount();
+                })
+                .then((result, error) => {
+                  if (error) {
+                    throw error;
+                  }
+                  this.loading = false;
+                })
+                .catch(e => {
                   this.errorMessage = `${e}`;
+                  this.loading = false;
                 });
             }, 1000);
           }
         })
-        .catch(e => {
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
           this.loading = false;
+        })
+        .catch(e => {
           this.errorMessage = `${e}`;
+          this.loading = false;
         });
     },
     refreshList(forceRefresh) {
@@ -276,9 +327,13 @@ export default {
       this.selectedAccount = null;
 
       return this.getAccount()
-        .then(account => this.initAccount(account, forceRefresh))
-        .then(() => this.loading = false)
-        .catch((e) => {
+        .then((account, error) => {
+          if (error) {
+            throw error;
+          }
+          return this.initAccount(account, forceRefresh);
+        })
+        .catch(e => {
           this.errorMessage = `${e}`;
           this.loading = false;
         });
@@ -323,11 +378,13 @@ export default {
 
         if (forceRefresh || (account !== this.account && this.lastCheckedAccount !== account)) {
           this.lastCheckedAccount = account;
-          this.errorMessage = '';
-          this.account = null;
+          this.errorMessage = null;
           this.accountsDetails = {};
           return this.computeNetwork()
-            .then(() => {
+            .then((result, error) => {
+              if (error) {
+                throw error;
+              }
               const accountDetails = this.accountsDetails[account] = {};
               accountDetails.title = 'Account in ETH';
               accountDetails.icon = 'fab fa-ethereum';
@@ -336,24 +393,31 @@ export default {
               accountDetails.isContract = false;
               accountDetails.address = account;
 
-              this.account = window.localWeb3.eth.defaultAccount = account;
+              return this.account = window.localWeb3.eth.defaultAccount = account;
             })
-            .then(() => this.reloadContracts(account))
-            .catch(err => {
-              this.errorMessage = `Error encountered while loading contracts: ${err}`;
-              console.error('Error encountered while loading contracts', err);
+            .then((account, error) => {
+              if (error) {
+                throw error;
+              }
+              this.reloadContracts(account);
+            })
+            .catch(e => {
+              throw new Error(`Error encountered while loading contracts: ${e}`);
             });
         }
       } else {
         if (this.isSpace) {
           this.account = null;
-          this.errorMessage = 'Please make sure that you are connected using Metamask with a valid account';
+          throw new Error('Please make sure that you are connected using Metamask with a valid account');
         }
       }
     },
     computeNetwork() {
       return window.localWeb3.eth.net.getId()
-        .then(netId => {
+        .then((netId, error) => {
+          if (error) {
+            throw error;
+          }
           this.networkId = netId;
           if (netId) {
             return window.localWeb3.eth.net.getNetworkType();
@@ -361,7 +425,10 @@ export default {
             return null;
           }
         })
-        .then(netType => {
+        .then((netType, error) => {
+          if (error) {
+            throw error;
+          }
           if (netType) {
             this.networkName = `${netType.toUpperCase()} Network`;
           }
@@ -369,9 +436,24 @@ export default {
     },
     computeBalance() {
       window.localWeb3.eth.getBalance(window.localWeb3.eth.defaultAccount)
-        .then(balance => this.accountsDetails[this.account].balance = window.localWeb3.utils.fromWei(balance, "ether"))
-        .then(balance => this.accountsDetails[this.account].balanceUSD = etherToUSD(balance))
-        .then(() => this.$forceUpdate());
+        .then((balance, error) => {
+          if (error) {
+            throw error;
+          }
+          return this.accountsDetails[this.account].balance = window.localWeb3.utils.fromWei(balance, "ether");
+        })
+        .then((balance, error) => {
+          if (error) {
+            throw error;
+          }
+          return this.accountsDetails[this.account].balanceUSD = etherToUSD(balance);
+        })
+        .then((result, error) => {
+          if (error) {
+            throw error;
+          }
+          this.$forceUpdate();
+        });
     },
     reloadContracts(account) {
       this.showAddContractModal = false;
@@ -379,7 +461,10 @@ export default {
         account = this.account;
       }
       return getContractsDetails(account, this.networkId)
-        .then(contractsDetails => {
+        .then((contractsDetails, error) => {
+          if (error) {
+            throw error;
+          }
           if (contractsDetails && contractsDetails.length) {
             contractsDetails.forEach(contractDetails => {
               if (contractDetails && contractDetails.address) {
@@ -411,14 +496,19 @@ export default {
     retrieveDefaultUserAccount() {
       if (this.isSpace) {
         searchUserOrSpaceObject(eXo.env.portal.spaceGroup, 'space')
-          .then(spaceObject => {
+          .then((spaceObject, error) => {
+            if (error) {
+              throw error;
+            }
             if(spaceObject
                 && spaceObject.managers && spaceObject.managers.length && spaceObject.managers.indexOf(eXo.env.portal.userName) > -1
                 && (!spaceObject.address || !spaceObject.address.length)) {
               if (this.newAccountAddress) {
                 searchFullName(this.newAccountAddress)
-                  .then(item => {
-                    
+                  .then((item, error) => {
+                    if (error) {
+                      throw error;
+                    }
                     if (!item || !item.id || !item.id.length) {
                       // Display wallet association to space for creator only
                       this.oldAccountAddress = null;
@@ -432,7 +522,10 @@ export default {
           });
       } else if(!this.oldAccountAddressNotFound) {
         searchAddress(eXo.env.portal.userName, 'user')
-          .then(address => {
+          .then((address, error) => {
+            if (error) {
+              throw error;
+            }
             this.newAccountAddress = this.account;
             if(address && address.length) {
               this.oldAccountAddress = address.toLowerCase();
@@ -447,10 +540,14 @@ export default {
     },
     saveNewAddressInWallet() {
       this.loading = true;
-      saveNewAddress(this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
+      saveNewAddress(
+        this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
         this.isSpace ? 'space' : 'user',
         this.newAccountAddress)
-        .then(resp => {
+        .then((resp, error) => {
+          if (error) {
+            throw error;
+          }
           if (resp && resp.ok) {
             this.oldAccountAddress = this.newAccountAddress;
             this.displaySpaceAccountCreationHelp = false;
@@ -460,6 +557,10 @@ export default {
           } else {
             this.errorMessage = 'Error saving new Wallet address';
           }
+          this.loading = false;
+        })
+        .catch(e => {
+          this.errorMessage = 'Error saving new Wallet address';
           this.loading = false;
         });
     },
