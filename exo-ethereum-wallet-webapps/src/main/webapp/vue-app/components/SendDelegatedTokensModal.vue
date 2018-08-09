@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vw">
+  <v-dialog v-model="dialog" width="340px" max-width="100vw">
     <v-btn slot="activator" color="primary" dark ripple>Send delegated Tokens</v-btn>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_from', '_to', '_value']"
@@ -12,6 +12,10 @@
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Send delegated Tokens</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon dark @click.native="dialog = false">
+          <v-icon>close</v-icon>
+        </v-btn>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">

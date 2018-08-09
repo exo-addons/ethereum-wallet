@@ -3,6 +3,10 @@
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>User Preferences</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon dark @click.native="show = false">
+          <v-icon>close</v-icon>
+        </v-btn>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">

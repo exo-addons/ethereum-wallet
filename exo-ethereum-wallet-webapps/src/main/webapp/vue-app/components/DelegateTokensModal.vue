@@ -12,6 +12,10 @@
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>Delegate Tokens</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon dark @click.native="dialog = false">
+          <v-icon>close</v-icon>
+        </v-btn>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">

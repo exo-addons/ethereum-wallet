@@ -2,7 +2,11 @@
   <v-dialog v-model="show" width="300px" max-width="100vw">
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
-        <v-toolbar-title>Add ERC20 Token Contract</v-toolbar-title>
+        <v-toolbar-title>Add Token address</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon dark @click.native="show = false">
+          <v-icon>close</v-icon>
+        </v-btn>
       </v-toolbar>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">

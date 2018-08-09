@@ -28,7 +28,7 @@
                                 @close="showAddContractModal = false" />
             <qr-code-modal :to="account"
                            :open="showQRCodeModal"
-                           title="Wallet Address QR Code"
+                           title="Address QR Code"
                            @close="showQRCodeModal = false" />
             <user-settings-modal :account="account"
                                  :open="showSettingsModal"
