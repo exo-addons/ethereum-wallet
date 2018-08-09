@@ -16,7 +16,7 @@
   },
   "author": "eXo",
   "license": "LGPL",
-  "devDependencies": {
+  "dependencies": {
     "babel-core": "^6.26.3",
     "babel-jest": "^22.4.4",
     "babel-loader": "^7.1.4",
@@ -27,7 +27,9 @@
     "eslint-loader": "^2.0.0",
     "eslint-plugin-jest": "^21.17.0",
     "eslint-plugin-vue": "^4.5.0",
+    "ethereum-qr-code": "^0.3.0",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "file-loader": "^1.1.11",
     "jest": "^22.4.4",
     "jest-fetch-mock": "^1.6.5",
     "jest-localstorage-mock": "^2.2.0",
@@ -51,9 +53,5 @@
     "webpack-cli": "^2.1.5",
     "webpack-dev-server": "^3.1.4",
     "webpack-merge": "^4.1.3"
-  },
-  "dependencies": {
-    "ethereum-qr-code": "^0.3.0",
-    "file-loader": "^1.1.11"
   }
 }

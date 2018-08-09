@@ -30,12 +30,21 @@
             </configuration>
           </execution>
           <execution>
+            <id>npm config</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>config set python "/usr/bin/python3"</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm install</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <configuration>
-              <arguments>install</arguments>
+              <arguments>--add-python-to-path='true' --debug install --global</arguments>
             </configuration>
           </execution>
           <execution>
