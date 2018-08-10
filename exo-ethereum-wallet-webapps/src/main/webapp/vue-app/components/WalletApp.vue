@@ -34,6 +34,20 @@
                                  :open="showSettingsModal"
                                  @close="showSettingsModal = false"
                                  @settings-changed="reload" />
+            <v-dialog v-model="showWalletAddress" width="400px" max-width="100vw">
+              <v-card class="elevation-12">
+                <v-toolbar dark color="primary">
+                  <v-toolbar-title>Wallet address</v-toolbar-title>
+                  <v-spacer />
+                  <v-btn icon dark @click.native="showWalletAddress = false">
+                    <v-icon>close</v-icon>
+                  </v-btn>
+                </v-toolbar>
+                <v-card-text class="text-xs-center">
+                  <code>{{ account }}</code>
+                </v-card-text>
+              </v-card>
+            </v-dialog>
             <v-menu v-if="!error" offset-y left>
               <v-btn slot="activator" icon>
                 <v-icon>more_vert</v-icon>
@@ -44,6 +58,12 @@
                     <v-icon>add</v-icon>
                   </v-list-tile-avatar>
                   <v-list-tile-title>Add Token address</v-list-tile-title>
+                </v-list-tile>
+                <v-list-tile @click="showWalletAddress = true">
+                  <v-list-tile-avatar>
+                    <v-icon>fa-address-card</v-icon>
+                  </v-list-tile-avatar>
+                  <v-list-tile-title>Wallet address</v-list-tile-title>
                 </v-list-tile>
                 <v-list-tile @click="showQRCodeModal = true">
                   <v-list-tile-avatar>
@@ -169,6 +189,7 @@ export default {
       oldAccountAddressNotFound: null,
       oldAccountAddress: null,
       newAccountAddress: null,
+      showWalletAddress: false,
       showQRCodeModal: false,
       showSettingsModal: false,
       showAddContractModal: false,
