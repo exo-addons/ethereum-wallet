@@ -46,6 +46,20 @@
   </portlet-skin>
 -->
 
+  <portal-skin>
+    <skin-name>Default</skin-name>
+    <skin-module>wallet</skin-module>
+    <css-path>/css/platform.css</css-path>
+    <css-priority>0</css-priority>
+  </portal-skin>
+
+  <portal-skin>
+    <skin-name>Enterprise</skin-name>
+    <skin-module>wallet</skin-module>
+    <css-path>/css/platform.css</css-path>
+    <css-priority>0</css-priority>
+  </portal-skin>
+
   <portlet>
     <name>EthereumWallet</name>
     <module>
