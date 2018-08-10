@@ -121,7 +121,9 @@ export function initSettings() {
         }
       }
     })
-    .catch(console.warn);
+    .catch(e => {
+      throw e;
+    });
 }
 
 export function computeNetwork() {

@@ -114,7 +114,7 @@ export function searchFullName(address) {
       }
     })
     .catch((e) => {
-      console.warn(e);
+      //console.warn(e);
     });
 }
 

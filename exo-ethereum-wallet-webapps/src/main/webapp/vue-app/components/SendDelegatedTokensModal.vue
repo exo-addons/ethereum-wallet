@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="dialog" width="340px" max-width="100vw">
-    <v-btn slot="activator" color="primary" dark ripple>Send delegated Tokens</v-btn>
+  <v-dialog v-model="dialog" :disabled="disabled" width="340px" max-width="100vw" persistent>
+    <v-btn slot="activator" :disabled="disabled" :dark="!disabled" color="primary" ripple>Send delegated Tokens</v-btn>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_from', '_to', '_value']"
                    :args-types="['address', 'address', 'uint256']"
@@ -25,8 +25,8 @@
           {{ warning }}
         </v-alert>
         <v-form>
-          <auto-complete input-label="From" @item-selected="from = $event.address"></auto-complete>
-          <auto-complete input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
+          <auto-complete ref="autocompleteFrom" input-label="From" @item-selected="from = $event.address"></auto-complete>
+          <auto-complete ref="autocompleteRecipient" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
       </v-card-text>
@@ -54,6 +54,12 @@ export default {
       default: function() {
         return {};
       }
+    },
+    etherBalance: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
     }
   },
   data () {
@@ -68,9 +74,19 @@ export default {
       error: null
     };
   },
+  computed: {
+    disabled() {
+      return !this.etherBalance
+             || this.etherBalance === 0
+             || (typeof this.etherBalance === "string" 
+                 && (!this.etherBalance.length || this.etherBalance.trim() === "0"));
+    }
+  },
   watch: {
     dialog() {
       if (this.dialog) {
+        this.$refs.autocompleteFrom.clear();
+        this.$refs.autocompleteRecipient.clear();
         this.showQRCodeModal = false;
         this.from = null;
         this.recipient = null;

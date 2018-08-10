@@ -116,6 +116,17 @@ export default {
         }
       }
     }
+  },
+  methods: {
+    clear() {
+      this.items = [];
+      this.selectedValue = null;
+      this.searchTerm = null;
+      this.address = null;
+      this.isLoadingSuggestions = false;
+      this.addressLoad = '';
+      this.error = null;
+    }
   }
 };
 </script>

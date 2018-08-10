@@ -67,7 +67,7 @@
           <h4 v-else class="head-container">Wallet</h4>
           <v-card v-if="!selectedAccount" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-            <v-alert :value="displaySpaceAccountCreationHelp" type="info" dismissible>
+            <v-alert :value="!loading && displaySpaceAccountCreationHelp" type="info" dismissible>
               <div>
                 Current space doesn't have an account yet ? If you are manager of the space, you can create a new account using Metamask.
               </div>
@@ -75,7 +75,7 @@
                 Currently selected account in Metamask is already in use, you can't set it for this space.
               </div>
             </v-alert>
-            <v-alert :value="oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
+            <v-alert :value="!loading && oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
               <div>
                 Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
               </div>
@@ -83,7 +83,7 @@
                 <v-icon color="success">fa-check</v-icon>
               </v-btn>
             </v-alert>
-            <v-alert :value="!oldAccountAddress && newAccountAddress" type="info" dismissible>
+            <v-alert :value="!loading && !oldAccountAddress && newAccountAddress" type="info" dismissible>
               <div v-if="isSpace">
                 Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
               </div>
@@ -379,8 +379,12 @@ export default {
 
         if (forceRefresh || (account !== this.account && this.lastCheckedAccount !== account)) {
           this.lastCheckedAccount = account;
+          this.loading = true;
+          this.displaySpaceAccountCreationHelp = false;
+          this.currentAccountAlreadyInUse = false;
           this.errorMessage = null;
           this.accountsDetails = {};
+          this.selectedAccount = null;
           return computeNetwork()
             .then((networkDetails, error) => {
               if (error) {
@@ -395,14 +399,6 @@ export default {
               if (error) {
                 throw error;
               }
-              const accountDetails = this.accountsDetails[account] = {};
-              accountDetails.title = 'Account in ETH';
-              accountDetails.icon = 'fab fa-ethereum';
-              accountDetails.balance = 0;
-              accountDetails.symbol = 'ETH';
-              accountDetails.isContract = false;
-              accountDetails.address = account;
-
               this.account = window.localWeb3.eth.defaultAccount = account;
 
               return this.refreshBalance();
@@ -428,12 +424,39 @@ export default {
       return computeBalance()
         .then((balanceDetails, error) => {
           if (error) {
+            this.accountsDetails[this.account] = {
+              title : 'Account in ETH',
+              icon : 'warning',
+              balance : 0,
+              symbol : 'ETH',
+              isContract : false,
+              address : this.account,
+              error : `Error retrieving balance of account ${error}`
+            };
             throw error;
           }
-          if (balanceDetails && balanceDetails.balance) {
-            this.accountsDetails[this.account].balance = balanceDetails.balance;
-            this.accountsDetails[this.account].balanceUSD = balanceDetails.balanceUSD;
-          }
+          const accountDetails = {
+            title : 'Account in ETH',
+            icon : 'fab fa-ethereum',
+            symbol : 'ETH',
+            isContract : false,
+            address : this.account,
+            balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
+            balanceUSD : balanceDetails && balanceDetails.balanceUSD ? balanceDetails.balanceUSD : 0
+          };
+          return this.accountsDetails[this.account] = accountDetails;
+        })
+        .catch(e => {
+          this.accountsDetails[this.account] = {
+            title : 'Account in ETH',
+            icon : 'warning',
+            balance : 0,
+            symbol : 'ETH',
+            isContract : false,
+            address : this.account,
+            error : `Error retrieving balance of account ${e}`,
+          };
+          throw e;
         });
     },
     reloadContracts(account) {
@@ -449,6 +472,9 @@ export default {
           if (contractsDetails && contractsDetails.length) {
             contractsDetails.forEach(contractDetails => {
               if (contractDetails && contractDetails.address) {
+                if (this.accountsDetails[this.account]) {
+                  contractDetails.etherBalance = this.accountsDetails[this.account].balance;
+                }
                 this.accountsDetails[contractDetails.address] = contractDetails;
               }
             });
@@ -548,7 +574,7 @@ export default {
     },
     saveNewAddressInWallet() {
       this.loading = true;
-      saveNewAddress(
+      return saveNewAddress(
         this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
         this.isSpace ? 'space' : 'user',
         this.newAccountAddress)

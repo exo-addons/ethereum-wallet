@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition">
+  <v-dialog v-model="createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent>
     <v-btn slot="activator" dark class="mt-3 primary" @click="createNewToken = true">
       Deploy new Token
     </v-btn>

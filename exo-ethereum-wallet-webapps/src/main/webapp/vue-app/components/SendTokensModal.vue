@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vw">
-    <v-btn slot="activator" color="primary" dark ripple>Send Tokens</v-btn>
+  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw">
+    <v-btn slot="activator" :disabled="disabled" :dark="!disabled" color="primary" ripple>Send Tokens</v-btn>
     <qr-code-modal :to="recipient"
                    :is-contract="true"
                    :args-names="['_to', '_value']"
@@ -27,7 +27,7 @@
           {{ warning }}
         </v-alert>
         <v-form>
-          <auto-complete input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
+          <auto-complete ref="autocomplete" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
       </v-card-text>
@@ -55,6 +55,18 @@ export default {
       default: function() {
         return {};
       }
+    },
+    balance: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
+    etherBalance: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
     }
   },
   data () {
@@ -68,9 +80,22 @@ export default {
       error: null
     };
   },
+  computed: {
+    disabled() {
+      return !this.balance
+        || this.balance === 0
+        || (typeof this.balance === "string" 
+            && (!this.balance.length || this.balance.trim() === "0"))
+        || !this.etherBalance
+        || this.etherBalance === 0
+        || (typeof this.etherBalance === "string" 
+            && (!this.etherBalance.length || this.etherBalance.trim() === "0"));
+    }
+  },
   watch: {
     dialog() {
       if (this.dialog) {
+        this.$refs.autocomplete.clear();
         this.showQRCodeModal = false;
         this.recipient = null;
         this.amount = null;

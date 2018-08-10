@@ -1,6 +1,13 @@
 <template>
-  <v-dialog v-model="dialog" width="300px" max-width="100vw">
-    <v-btn slot="activator" color="primary" dark ripple>Send Ether</v-btn>
+  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw" persistent>
+    <v-btn 
+      slot="activator"
+      :disabled="disabled"
+      :dark="!disabled"
+      color="primary"
+      ripple>
+      Send Ether
+    </v-btn>
     <qr-code-modal :from="account"
                    :to="recipient"
                    :amount="amount"
@@ -20,7 +27,7 @@
           {{ error }}
         </v-alert>
         <v-form>
-          <auto-complete input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
+          <auto-complete ref="autocomplete" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
       </v-card-text>
@@ -67,6 +74,27 @@ export default {
       error: null
     };
   },
+  computed: {
+    disabled() {
+      return !this.balance
+             || this.balance === 0
+             || (typeof this.balance === "string" 
+                 && (!this.balance.length || this.balance.trim() === "0"));
+    }
+  },
+  watch: {
+    dialog() {
+      if (this.dialog) {
+        this.$refs.autocomplete.clear();
+      } else {
+        // Reset form
+        this.loading = false;
+        this.recipient = null;
+        this.amount = null;
+        this.error = null;
+      }
+    }
+  },
   methods: {
     sendEther() {
       this.error = null;
@@ -101,10 +129,12 @@ export default {
             this.$emit("loading");
             this.recipient = null;
             this.amount = null;
-            this.dialog = false;
           })
           .on('confirmation', (confirmationNumber, receipt) => {
-            this.loading = false;
+            if (this.loading) {
+              this.dialog = false;
+              this.loading = false;
+            }
             // The transaction has been mined and confirmed
             this.$emit("loaded");
           })
