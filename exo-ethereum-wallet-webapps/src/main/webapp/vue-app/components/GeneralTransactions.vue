@@ -1,6 +1,7 @@
 <template>
   <v-flex v-if="transactions.length">
     <v-card class="card--flex-toolbar">
+      <v-subheader>Transactions list retrieved from latest {{ maxBlocksToLoad }} blocks</v-subheader>
       <v-list two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
