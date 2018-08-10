@@ -223,6 +223,7 @@ export default {
                   }
                 })
                 .catch(e => {
+                  console.debug("saveContractAddressAsDefault method - error", e);
                   this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users: ${e}`;
                   this.loading = false;
                   this.newTokenAddress = newTokenInstance.address;
@@ -242,16 +243,19 @@ export default {
                   }
                 })
                 .catch(e => {
+                  console.debug("saveContractAddress method - error", e);
                   this.loading = false;
                   this.errorMessage = `Error during contract address saving for all users: ${e}`;
                 });
             }
           })
           .catch(e => {
+            console.debug("saveContractAddress method - error", e);
             this.loading = false;
             this.errorMessage = `Error during contract deployment: ${e}`;
           });
       } catch(e) {
+        console.debug("saveContractAddress method - error", e);
         this.loading = false;
         this.errorMessage = `Error during contract deployment: ${e}`;
       }

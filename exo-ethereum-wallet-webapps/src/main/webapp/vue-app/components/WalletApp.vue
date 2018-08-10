@@ -211,6 +211,7 @@ export default {
       }
       this.refreshBalance()
         .catch(e => {
+          console.debug("refreshBalance method - error", e);
           this.errorMessage = `Error while retrieving user balance ${e}`;
         });
     }
@@ -235,11 +236,13 @@ export default {
             });
           })
           .catch(e => {
+            console.debug("init method - error", e);
             this.errorMessage = `${e}`;
             this.loading = false;
           });
       }
     } catch (e) {
+      console.debug("init method - error", e);
       this.errorMessage = `${e}`;
       this.loading = false;
     }
@@ -314,6 +317,7 @@ export default {
                   thiss.loading = false;
                 })
                 .catch(e => {
+                  console.debug("setInterval getAccount method - error", e);
                   thiss.errorMessage = `${e}`;
                   thiss.loading = false;
                 });
@@ -327,6 +331,7 @@ export default {
           this.loading = false;
         })
         .catch(e => {
+          console.debug("init method - error", e);
           this.errorMessage = `${e}`;
           this.loading = false;
         });
@@ -344,6 +349,7 @@ export default {
           return this.initAccount(account, forceRefresh);
         })
         .catch(e => {
+          console.debug("refreshList method - error", e);
           this.errorMessage = `${e}`;
           this.loading = false;
         });
@@ -420,6 +426,7 @@ export default {
               return this.reloadContracts(this.account);
             })
             .catch(e => {
+              console.debug("initAccount method - error", e);
               throw new Error(`Error encountered while loading contracts: ${e}`);
             });
         }
@@ -457,6 +464,7 @@ export default {
           return this.accountsDetails[this.account] = accountDetails;
         })
         .catch(e => {
+          console.debug("refreshBalance method - error", e);
           this.accountsDetails[this.account] = {
             title : 'Account in ETH',
             icon : 'warning',
@@ -511,6 +519,7 @@ export default {
       this.refreshList(this.account, true)
         .then(() => this.loading = false)
         .catch(e => {
+          console.debug("refreshList method - error", e);
           this.errorMessage = `Error reloading Wallet application: ${e}`;
           this.loading = false;
         });
@@ -572,6 +581,7 @@ export default {
           }
         })
         .catch(e => {
+          console.debug("searchAddress method - error", e);
           this.oldAccountAddressNotFound = true;
         });
     },
@@ -604,6 +614,7 @@ export default {
           this.loading = false;
         })
         .catch(e => {
+          console.debug("saveNewAddress method - error", e);
           this.errorMessage = 'Error saving new Wallet address';
           this.loading = false;
         });

@@ -141,6 +141,7 @@ export default {
             this.$emit("end-loading");
           });
       } catch(e) {
+        console.debug("Web3.eth.sendTransaction method - error", e);
         this.loading = false;
         this.error = `Error sending ether: ${e}`;
         this.$emit("end-loading");

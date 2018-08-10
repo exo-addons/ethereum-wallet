@@ -119,6 +119,7 @@ export default {
               this.$emit("loaded");
             })
             .catch(error => {
+              console.debug("Web3 eth.getBlock method - error", error);
               this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
             });
         }
@@ -166,6 +167,7 @@ export default {
               this.$emit("loaded");
             })
             .catch(error => {
+              console.debug("Web3 eth.getBlock method - error", error);
               this.$emit("error", `Error listing Approval transactions of contract: ${error}`);
             });
         }

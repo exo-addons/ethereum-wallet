@@ -233,7 +233,10 @@ export default {
           }
           this.isLoadingSuggestions = false;
         })
-        .catch(() => this.isLoadingSuggestions = false);
+        .catch((e) => {
+          console.debug("searchSpaces method - error", e);
+          this.isLoadingSuggestions = false;
+        });
     },
     accessPermission(newValue, oldValue) {
       if (oldValue) {
@@ -272,6 +275,7 @@ export default {
         .then(this.refreshContractsList)
         .then(() => this.loading = false)
         .catch(e => {
+          console.debug("init method - error", e);
           this.loading = false;
           this.errorMessage = `Error encountered: ${e}`;
         });
@@ -309,6 +313,7 @@ export default {
       this.refreshContractsList()
         .then(() => this.loading = false)
         .catch(e => {
+          console.debug("refreshContractsList method - error", e);
           this.loading = false;
           this.errorMessage = `Error encountered: ${e}`;
         });
@@ -348,6 +353,7 @@ export default {
         }
         this.loading = false;
       }).catch(e => {
+        console.debug("fetch global-settings - error", e);
         this.errorMessage = 'Error saving global settings';
       });
     },
@@ -356,6 +362,7 @@ export default {
       saveContractAddressAsDefault(address)
         .then(this.refreshContractsList)
         .catch(e => {
+          console.debug("saveContractAddressAsDefault method - error", e);
           this.loading = false;
           this.errorMessage = `Error adding new contract address: ${e}`;
         });
@@ -374,6 +381,7 @@ export default {
           }
           this.loading = false;
         }).catch(e => {
+          console.debug("removeContractAddressFromDefault method - error", e);
           this.loading = false;
           this.errorMessage = 'Error deleting contract as default';
         });

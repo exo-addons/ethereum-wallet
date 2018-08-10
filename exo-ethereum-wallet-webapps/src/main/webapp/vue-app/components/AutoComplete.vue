@@ -111,6 +111,7 @@ export default {
               }
             })
             .catch(error => {
+              console.debug("searchAddress method - error", error);
               this.addressLoad = 'error';
             });
         }

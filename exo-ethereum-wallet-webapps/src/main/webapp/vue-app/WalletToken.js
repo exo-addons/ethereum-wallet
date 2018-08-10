@@ -42,6 +42,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
         })
         .then(loadedContract => loadContractDetails(account, contractDetails, loadedContract, address))
         .catch(e => {
+          console.debug("loadContractDetails method - error", e);
           return transformContracDetailsToFailed(contractDetails, e);
         });
       contractsDetailsPromises.push(contractDetailsPromise);
@@ -79,9 +80,11 @@ export function loadContractDetails(account, contractDetails, contract, address)
       return contractDetails;
     })
     .catch((e) => {
+      console.debug("loadContractDetails method - error", e);
       if(address) {
         return getContractDetailsAtAddressUsingNewWeb3(account, contractDetails, address)
           .catch(error => {
+            console.debug("getContractDetailsAtAddressUsingNewWeb3 method - error", error);
             return transformContracDetailsToFailed(contractDetails, error);
           });
       } else {
@@ -235,6 +238,7 @@ export function createNewERC20TokenContract(account, newTokenGas, newTokenGasPri
     NEW_TOKEN.setProvider(window.localWeb3.currentProvider);
     return Promise.resolve(NEW_TOKEN);
   } catch (e) {
+    console.debug("createNewERC20TokenContract method - error", e);
     return Promise.reject(e);
   }
 }
@@ -275,10 +279,11 @@ export function getContractDetailsAtAddressUsingNewWeb3(account, contractDetails
       }));
       return contractDetails;
     })
-    .catch(err => {
+    .catch(e => {
+      console.debug("getContractDetailsAtAddressUsingNewWeb3 method - error", e);
       contractDetails.icon = 'warning';
       contractDetails.title = contractDetails.address;
-      contractDetails.error = `Error retrieving contract at specified address ${err}`;
+      contractDetails.error = `Error retrieving contract at specified address ${e}`;
       return contractDetails;
     });
 }
@@ -305,6 +310,7 @@ export function getContractAtAddress(account, address) {
     });
     return ERC20_CONTRACT.at(address);
   } catch (e) {
+    console.debug("getContractAtAddress method - error", e);
     return Promise.reject(e);
   }
 }

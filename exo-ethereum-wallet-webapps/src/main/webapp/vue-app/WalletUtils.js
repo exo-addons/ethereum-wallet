@@ -123,6 +123,7 @@ export function initSettings() {
       }
     })
     .catch(e => {
+      console.debug("initSettings method - error", e);
       throw e;
     });
 }

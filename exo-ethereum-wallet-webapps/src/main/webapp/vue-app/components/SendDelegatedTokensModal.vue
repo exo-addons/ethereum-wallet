@@ -135,10 +135,12 @@ export default {
             }
           })
           .catch (e => {
+            console.debug("web3 contract.transferFrom method - error", e);
             this.error = `Error while proceeding: ${e}`;
             this.loading = false;
           });
       } catch(e) {
+        console.debug("web3 contract.transferFrom method - error", e);
         this.error = `Error while proceeding: ${e}`;
         this.loading = false;
       }

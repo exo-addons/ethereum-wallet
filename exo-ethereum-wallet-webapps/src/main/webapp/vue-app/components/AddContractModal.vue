@@ -98,10 +98,12 @@ export default {
             this.loading = false;
           })
           .catch(err => {
+            console.debug("saveContractAddress method - error", err);
             this.loading = false;
             this.error = `${err}`;
           });
       } catch (e) {
+        console.debug("saveContractAddress method - error", e);
         this.loading = false;
         this.error = `${e}`;
       }

@@ -139,11 +139,13 @@ export default {
             this.loading = false;
           })
           .catch (e => {
+            console.debug("Web3 contract.transfer method - error", e);
             this.error = `Error while proceeding: ${e}`;
             this.loading = false;
             this.$emit("end-loading");
           });
       } catch(e) {
+        console.debug("Web3 contract.transfer method - error", e);
         this.loading = false;
         this.error = `Error while proceeding: ${e}`;
         this.$emit("end-loading");

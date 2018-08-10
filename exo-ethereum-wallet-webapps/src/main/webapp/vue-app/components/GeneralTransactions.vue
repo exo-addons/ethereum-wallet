@@ -94,6 +94,7 @@ export default {
         this.init()
           .then(() => this.$emit("end-loading"))
           .catch(error => {
+            console.debug("account field change event - error", error);
             this.$emit("error", error);
           });
       }
@@ -105,6 +106,7 @@ export default {
       this.init()
         .then(() => this.finishedLoading = true)
         .catch(error => {
+          console.debug("init method - error", error);
           this.finishedLoading = true;
           this.$emit("error", error);
         });

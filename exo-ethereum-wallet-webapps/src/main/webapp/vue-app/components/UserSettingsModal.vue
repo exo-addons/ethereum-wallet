@@ -107,12 +107,13 @@ export default {
             this.error = 'Error saving preferences';
           }
           this.loading = false;
-        })
-          .catch (e => {
-            this.error = `Error while proceeding: ${e}`;
-            this.loading = false;
-          });
+        }).catch (e => {
+          console.debug("savePreferences method - error", e);
+          this.error = `Error while proceeding: ${e}`;
+          this.loading = false;
+        });
       } catch(e) {
+        console.debug("savePreferences method - error", e);
         this.loading = false;
         this.error = `Error while proceeding: ${e}`;
         this.$emit("end-loading");

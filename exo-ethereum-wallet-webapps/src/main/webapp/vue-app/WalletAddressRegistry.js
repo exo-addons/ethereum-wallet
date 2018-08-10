@@ -12,7 +12,9 @@ export function searchContact(filter) {
     .then(users => items = users && users.length ? users : [])
     .then(() => searchSpaces(filter))
     .then(spaces => items = items.concat(spaces))
-    .catch(() => null);
+    .catch((e) => {
+      console.debug("searchContact method - error", e);
+    });
 }
 
 /*
@@ -114,7 +116,7 @@ export function searchFullName(address) {
       }
     })
     .catch((e) => {
-      //console.warn(e);
+      console.debug("searchFullName method - error", e);
     });
 }
 

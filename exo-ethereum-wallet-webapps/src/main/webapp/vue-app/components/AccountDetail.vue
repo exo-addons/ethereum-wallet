@@ -7,7 +7,15 @@
             <v-icon>arrow_back</v-icon>
           </v-btn>
           <v-spacer />
-          <div class="title">{{ contractDetail.title }}</div>
+          <div class="title">
+            <span>{{ contractDetail.title }}</span>
+            <div v-if="contractDetail.isContract" class="title">
+              Contract address: <code>{{ contractDetail.address }}</code>
+            </div>
+            <div v-else class="title">
+              Wallet address: <code>{{ account }}</code>
+            </div>
+          </div>
           <v-spacer />
         </v-card-title>
         <v-card-title class="pt-0">
@@ -146,6 +154,7 @@ export default {
         loadContractDetails(this.account, this.contractDetail)
           .then(() => this.loading = false)
           .catch(e => {
+            console.debug("loadContractDetails method - error", e);
             this.loading = false;
             this.error = `${e}`;
           });
@@ -178,6 +187,7 @@ export default {
           // Permit to refresh again once the above conditions finished
           .then(() => this.refreshing = false)
           .catch(e => {
+            console.debug("Web3.eth.getBalance method - error", e);
             this.refreshing = false;
             this.loading = false;
             this.error = `${e}`;
