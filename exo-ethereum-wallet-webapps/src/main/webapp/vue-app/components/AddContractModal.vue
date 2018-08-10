@@ -18,7 +18,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" @click="addToken">Save</v-btn>
+        <v-btn :disabled="loading" :loading="loading" color="primary" @click="addToken">Save</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -57,6 +57,7 @@ export default {
   data () {
     return {
       show: false,
+      loading: null,
       error: null,
       address: null
     };
@@ -80,6 +81,7 @@ export default {
         this.error = "Invalid address";
         return;
       }
+      this.loading = true;
       try {
         saveContractAddress(this.account, this.address.toLowerCase(), this.netId, this.isDefaultContract)
           .then((added, error) => {
@@ -93,11 +95,14 @@ export default {
             } else {
               this.error = `Address is not recognized as ERC20 Token contract's address`;
             }
+            this.loading = false;
           })
           .catch(err => {
+            this.loading = false;
             this.error = `${err}`;
           });
       } catch (e) {
+        this.loading = false;
         this.error = `${e}`;
       }
     }

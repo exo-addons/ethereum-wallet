@@ -86,7 +86,7 @@
                 type="text"
                 name="defaultNetworkId" />
 
-              <v-btn color="primary" @click="saveGlobalSettings">
+              <v-btn :disabled="loading" :loading="loading" color="primary" @click="saveGlobalSettings">
                 Save
               </v-btn>
             </v-form>

@@ -32,7 +32,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" @click="sendTokens">Send</v-btn>
+        <v-btn :disabled="loading" :loading="loading" color="primary" @click="sendTokens">Send</v-btn>
         <v-btn :disabled="!recipient || !amount || !from" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
       </v-card-actions>
     </v-card>
@@ -59,6 +59,7 @@ export default {
   data () {
     return {
       showQRCodeModal: false,
+      loading: false,
       from: null,
       recipient: null,
       amount: null,
@@ -98,29 +99,36 @@ export default {
         return;
       }
 
-      // Send delegated amount of tokens to the recipient on behalf of a third person
-      // (if he already delegated a certain amount to recipient)
-      this.contract.transferFrom.estimateGas(this.from, this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
-        .then(result => {
-          if (result > window.walletSettings.userDefaultGas) {
-            this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
-          }
-          return this.contract.transferFrom(this.from, this.recipient, this.amount.toString());
-        })
-        .then(resp => {
-          if (resp.tx) {
-            this.from = null;
-            this.recipient = null;
-            this.amount = null;
-            this.dialog = false;
-          } else {
-            this.error = `Error while proceeding transaction`;
-            console.error('Error while proceeding transaction', resp);
-          }
-        })
-        .catch (e => {
-          this.error = `Error while proceeding: ${e}`;
-        });
+      this.loading = true;
+      try {
+        // Send delegated amount of tokens to the recipient on behalf of a third person
+        // (if he already delegated a certain amount to recipient)
+        this.contract.transferFrom.estimateGas(this.from, this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+          .then(result => {
+            if (result > window.walletSettings.userDefaultGas) {
+              this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
+            }
+            return this.contract.transferFrom(this.from, this.recipient, this.amount.toString());
+          })
+          .then(resp => {
+            if (resp.tx) {
+              this.from = null;
+              this.recipient = null;
+              this.amount = null;
+              this.dialog = false;
+            } else {
+              this.error = `Error while proceeding transaction`;
+              this.loading = false;
+            }
+          })
+          .catch (e => {
+            this.error = `Error while proceeding: ${e}`;
+            this.loading = false;
+          });
+      } catch(e) {
+        this.error = `Error while proceeding: ${e}`;
+        this.loading = false;
+      }
     }
   }
 };

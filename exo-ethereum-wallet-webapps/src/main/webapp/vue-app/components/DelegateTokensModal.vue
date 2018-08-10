@@ -31,7 +31,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" @click="sendTokens">Save</v-btn>
+        <v-btn :disabled="loading" :loading="loading" color="primary" @click="sendTokens">Save</v-btn>
         <v-btn :disabled="!recipient || !amount" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
       </v-card-actions>
     </v-card>
@@ -59,6 +59,7 @@ export default {
     return {
       showQRCodeModal: false,
       recipient: null,
+      loading: false,
       amount: null,
       dialog: null,
       warning: null,
@@ -90,30 +91,39 @@ export default {
         return;
       }
 
-      // Delegate an amount of tokens to the recipient 
-      this.contract.approve.estimateGas(this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
-        .then(result => {
-          if (result > window.walletSettings.userDefaultGas) {
-            this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
-          }
-          return this.contract.approve(this.recipient, this.amount.toString());
-        })
-        .then(resp => {
-          if (resp.tx) {
-            this.recipient = null;
-            this.amount = null;
-            this.dialog = false;
-            this.$emit("loading");
-          } else {
-            this.error = `Error while proceeding transaction`;
-            console.error('Error while proceeding transaction', resp);
+      this.loading = true;
+      try {
+        // Delegate an amount of tokens to the recipient 
+        this.contract.approve.estimateGas(this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+          .then(result => {
+            if (result > window.walletSettings.userDefaultGas) {
+              this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
+            }
+            return this.contract.approve(this.recipient, this.amount.toString());
+          })
+          .then(resp => {
+            if (resp.tx) {
+              this.recipient = null;
+              this.amount = null;
+              this.dialog = false;
+              this.$emit("loading");
+            } else {
+              this.error = `Error while proceeding transaction`;
+              console.error('Error while proceeding transaction', resp);
+              this.$emit("end-loading");
+            }
+            this.loading = false;
+          })
+          .catch (e => {
+            this.error = `Error while proceeding: ${e}`;
+            this.loading = false;
             this.$emit("end-loading");
-          }
-        })
-        .catch (e => {
-          this.error = `Error while proceeding: ${e}`;
-          this.$emit("end-loading");
-        });
+          });
+      } catch(e) {
+        this.loading = false;
+        this.error = `Error while proceeding: ${e}`;
+        this.$emit("end-loading");
+      }
     }
   }
 };

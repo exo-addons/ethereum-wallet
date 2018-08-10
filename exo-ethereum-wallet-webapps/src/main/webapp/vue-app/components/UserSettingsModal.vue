@@ -26,7 +26,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" @click="savePreferences">Save</v-btn>
+        <v-btn :disabled="loading" :loading="loading" color="primary" @click="savePreferences">Save</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -58,6 +58,7 @@ export default {
   },
   data () {
     return {
+      loading: false,
       show: false,
       error: null,
       defaultGas: 0,
@@ -83,27 +84,39 @@ export default {
   },
   methods: {
     savePreferences() {
-      fetch('/portal/rest/wallet/api/account/savePreferences', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          defaultGas: this.defaultGas
-        })
-      }).then(resp => {
-        if (resp && resp.ok) {
-          window.walletSettings.userDefaultGas = this.defaultGas;
-          this.$emit('settings-changed', {
+      this.loading = true;
+      try {
+        fetch('/portal/rest/wallet/api/account/savePreferences', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
             defaultGas: this.defaultGas
+          })
+        }).then(resp => {
+          if (resp && resp.ok) {
+            window.walletSettings.userDefaultGas = this.defaultGas;
+            this.$emit('settings-changed', {
+              defaultGas: this.defaultGas
+            });
+            this.show = false;
+          } else {
+            this.error = 'Error saving preferences';
+          }
+          this.loading = false;
+        })
+          .catch (e => {
+            this.error = `Error while proceeding: ${e}`;
+            this.loading = false;
           });
-          this.show = false;
-        } else {
-          this.error = 'Error saving preferences';
-        }
-      });
+      } catch(e) {
+        this.loading = false;
+        this.error = `Error while proceeding: ${e}`;
+        this.$emit("end-loading");
+      }
     }
   }
 };

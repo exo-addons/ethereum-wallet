@@ -11,7 +11,7 @@
         <v-toolbar-title>Deploy new ERC20 Token contract</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-toolbar-items>
-          <v-btn dark flat class="primary" @click.native="saveContract">Deploy</v-btn>
+          <v-btn :disabled="loading" dark flat class="primary" @click.native="saveContract">Deploy</v-btn>
         </v-toolbar-items>
       </v-toolbar>
 
@@ -187,69 +187,74 @@ export default {
       }
 
       let NEW_TOKEN = null;
-
-      createNewERC20TokenContract(this.account, this.newTokenGas, this.newTokenGasPrice)
-        .then((contract, error) => {
-          if (error) {
-            throw error;
-          }
-          return NEW_TOKEN = contract;
-        })
-        .then(() => this.loading = true)
-        .then(() => window.localWeb3.eth.estimateGas({data: ERC20_COMPLIANT_CONTRACT_BYTECODE}))
-        .then(result => {
-          if (result > this.newTokenGas) {
-            this.warning = `You have set a low gas ${this.newTokenGas} while the estimation of necessary gas is ${result}`;
-          }
-        })
-        .then(() =>  NEW_TOKEN.new(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol))
-        .then((newTokenInstance) => {
-          if (this.newTokenSetAsDefault && newTokenInstance.address && !this.error) {
-            if (!newTokenInstance || !newTokenInstance.address) {
-              throw new Error("Contract deployed without a returned address");
+      this.loading = true;
+      try {
+        createNewERC20TokenContract(this.account, this.newTokenGas, this.newTokenGasPrice)
+          .then((contract, error) => {
+            if (error) {
+              throw error;
             }
-            newTokenInstance.address = newTokenInstance.address.toLowerCase();
-            // Save conract address to display for all users
-            saveContractAddressAsDefault(newTokenInstance.address)
-              .then(resp => {
-                if (resp && resp.ok) {
-                  this.$emit("list-updated", newTokenInstance.address);
-                  this.createNewToken = false;
-                } else {
+            return NEW_TOKEN = contract;
+          })
+          .then(() => this.loading = true)
+          .then(() => window.localWeb3.eth.estimateGas({data: ERC20_COMPLIANT_CONTRACT_BYTECODE}))
+          .then(result => {
+            if (result > this.newTokenGas) {
+              this.warning = `You have set a low gas ${this.newTokenGas} while the estimation of necessary gas is ${result}`;
+            }
+          })
+          .then(() =>  NEW_TOKEN.new(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol))
+          .then((newTokenInstance) => {
+            if (this.newTokenSetAsDefault && newTokenInstance.address && !this.error) {
+              if (!newTokenInstance || !newTokenInstance.address) {
+                throw new Error("Contract deployed without a returned address");
+              }
+              newTokenInstance.address = newTokenInstance.address.toLowerCase();
+              // Save conract address to display for all users
+              saveContractAddressAsDefault(newTokenInstance.address)
+                .then(resp => {
+                  if (resp && resp.ok) {
+                    this.$emit("list-updated", newTokenInstance.address);
+                    this.createNewToken = false;
+                  } else {
+                    this.loading = false;
+                    this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
+                    this.newTokenAddress = newTokenInstance.address;
+                  }
+                })
+                .catch(e => {
+                  this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users: ${e}`;
                   this.loading = false;
-                  this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
                   this.newTokenAddress = newTokenInstance.address;
-                }
-              })
-              .catch(e => {
-                this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users: ${e}`;
-                this.loading = false;
-                this.newTokenAddress = newTokenInstance.address;
-              });
-          } else {
-            // Save contract address to display for current user only
-            saveContractAddress(this.account, newTokenInstance.address, this.networkId)
-              .then((added, error) => {
-                if (error) {
-                  throw error;
-                }
-                this.loading = false;
-                if (added) {
-                  this.newTokenAddress = newTokenInstance.address;
-                } else {
-                  this.errorMessage = `Error during contract address saving for all users`;
-                }
-              })
-              .catch(e => {
-                this.loading = false;
-                this.errorMessage = `Error during contract address saving for all users: ${e}`;
-              });
-          }
-        })
-        .catch(e => {
-          this.loading = false;
-          this.errorMessage = `Error during contract deployment: ${e}`;
-        });
+                });
+            } else {
+              // Save contract address to display for current user only
+              saveContractAddress(this.account, newTokenInstance.address, this.networkId)
+                .then((added, error) => {
+                  if (error) {
+                    throw error;
+                  }
+                  this.loading = false;
+                  if (added) {
+                    this.newTokenAddress = newTokenInstance.address;
+                  } else {
+                    this.errorMessage = `Error during contract address saving for all users`;
+                  }
+                })
+                .catch(e => {
+                  this.loading = false;
+                  this.errorMessage = `Error during contract address saving for all users: ${e}`;
+                });
+            }
+          })
+          .catch(e => {
+            this.loading = false;
+            this.errorMessage = `Error during contract deployment: ${e}`;
+          });
+      } catch(e) {
+        this.loading = false;
+        this.errorMessage = `Error during contract deployment: ${e}`;
+      }
     }
   }
 };
