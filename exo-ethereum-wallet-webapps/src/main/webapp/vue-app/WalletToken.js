@@ -41,6 +41,12 @@ export function getContractsDetails(account, netId, onlyDefault) {
           return contractDetails.contract = loadedContract;
         })
         .then(loadedContract => loadContractDetails(account, contractDetails, loadedContract, address))
+        .then(() => {
+          if (!contractDetails.newWeb3Contract) {
+            contractDetails.newWeb3Contract = getNewWeb3ContractInstance(account, address);
+          }
+          return contractDetails;
+        })
         .catch(e => {
           console.debug("loadContractDetails method - error", e);
           return transformContracDetailsToFailed(contractDetails, e);
@@ -243,10 +249,8 @@ export function createNewERC20TokenContract(account, newTokenGas, newTokenGasPri
   }
 }
 
-/*
- * Retrieve an ERC20 contract instance at specified address
- */
-export function getContractDetailsAtAddressUsingNewWeb3(account, contractDetails, address) {
+
+export function getNewWeb3ContractInstance(account, address) {
   const ERC20_CONTRACT = new window.localWeb3.eth.Contract(
     ERC20_COMPLIANT_CONTRACT_ABI, 
     address, 
@@ -257,10 +261,14 @@ export function getContractDetailsAtAddressUsingNewWeb3(account, contractDetails
       data: ERC20_COMPLIANT_CONTRACT_BYTECODE
     }
   );
-  if (!contractDetails) {
-    contractDetails = {};
-    contractDetails.contract = ERC20_CONTRACT;
-  }
+  return ERC20_CONTRACT;
+}
+/*
+ * Retrieve an ERC20 contract instance at specified address
+ */
+export function getContractDetailsAtAddressUsingNewWeb3(account, contractDetails, address) {
+  const ERC20_CONTRACT = getNewWeb3ContractInstance(account, address);
+  contractDetails.newWeb3Contract = ERC20_CONTRACT;
   return ERC20_CONTRACT.methods.symbol().call()
     .then(symbol => contractDetails.symbol = symbol)
     .then(symbol => contractDetails.title = `Account in Token ${symbol}`)

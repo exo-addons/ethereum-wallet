@@ -42,6 +42,12 @@ export default {
         return null;
       }
     },
+    newWeb3Contract: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     contract: {
       type: Object,
       default: function() {
@@ -51,7 +57,8 @@ export default {
   },
   data () {
     return {
-      transactions: []
+      transactions: [],
+      loading: false
     };
   },
   computed: {
@@ -80,98 +87,137 @@ export default {
     },
     refreshList() {
       this.transactions = [];
-      this.contract.Transfer({}, { fromBlock: 0, toBlock: 'latest' }, (error, res) => {
-        if (error) {
-          console.error("Error listing Transfer transactions of contract", error);
-          this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
-          return;
+
+      this.loading = true;
+
+      this.newWeb3Contract.getPastEvents("Transfer", {
+        fromBlock: 0,
+        toBlock: 'latest'
+      }).then((events) => {
+        if (events && events.length) {
+          for (let i = 0; i < events.length; i++) {
+            const event = events[i];
+            if (event.returnValues && event.returnValues._from && event.returnValues._to) {
+              this.addTransactionToList(
+                event.returnValues._from.toLowerCase(),
+                event.returnValues._to.toLowerCase(),
+                parseFloat(event.returnValues._value),
+                event.transactionHash,
+                event.blockHash,
+                'Received from',
+                'Sent to',
+                'fa-exchange-alt');
+            }
+          }
         }
-        if (res.args._to === this.account || res.args._from === this.account) {
-          window.localWeb3.eth.getBlock(res.blockHash, false)
-            .then(block => block.timestamp)
-            .then(timestamp => {
-              const isReceiver = res.args._to === this.account;
-              const displayedAddress = isReceiver ? res.args._from : res.args._to;
-              const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
-              const transactionDetails = {
-                hash: res.transactionHash,
-                titlePrefix: isReceiver ? `Received from`: `Sent to`,
-                displayName: contactDetails.name ? contactDetails.name : displayedAddress,
-                avatar: contactDetails.avatar,
-                name: null,
-                color: isReceiver ? 'green' : 'red',
-                icon: 'fa-exchange-alt',
-                amount: res.args._value.toNumber(),
-                date: new Date(timestamp * 1000)
-              };
-              this.transactions.push(transactionDetails);
-              if (!contactDetails || !contactDetails.name) {
-                searchFullName(displayedAddress)
-                  .then(item => {
-                    if (item && item.name && item.name.length) {
-                      transactionDetails.displayName = item.name;
-                      transactionDetails.avatar = item.avatar;
-                      transactionDetails.name = item.id;
-                      this.$forceUpdate();
-                    }
-                  });
-              }
-              this.$emit("loaded");
-            })
-            .catch(error => {
-              console.debug("Web3 eth.getBlock method - error", error);
-              this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
-            });
-        }
+      }).catch(e => {
+        console.debug("Error loading contract transactions using new Web3", e);
+
+        // Fallback to use Truffle
+        this.contract.Transfer({}, { fromBlock: 0, toBlock: 'latest' }, (error, res) => {
+          if (error) {
+            console.error("Error listing Transfer transactions of contract", error);
+            this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
+            return;
+          }
+          this.addTransactionToList(
+            res.args._from.toLowerCase(), 
+            res.args._to.toLowerCase(), 
+            res.args._value.toNumber(), 
+            res.transactionHash,
+            res.blockHash,
+            'Received from',
+            'Sent to',
+            'fa-exchange-alt');
+        });
       });
 
-      this.contract.Approval({}, { fromBlock: 0, toBlock: 'latest' }, (error, res) => {
-        if (error) {
-          console.error("Error listing Approval transactions of contract", error);
-          this.$emit("error", `Error listing Approval transactions of contract: ${error}`);
-          return;
-        }
-        if (res.args._spender === this.account || res.args._owner === this.account) {
-          if (res.args._spender === this.account) {
-            this.$emit("has-delegated-tokens");
+      this.newWeb3Contract.getPastEvents("Approval", {
+        fromBlock: 0,
+        toBlock: 'latest'
+      }).then((events) => {
+        if (events && events.length) {
+          for (let i = 0; i < events.length; i++) {
+            const event = events[i];
+            
+            if (event.returnValues && event.returnValues._spender && event.returnValues._owner) {
+              this.addTransactionToList(
+                event.returnValues._spender.toLowerCase(),
+                event.returnValues._owner.toLowerCase(),
+                parseFloat(event.returnValues._value),
+                event.transactionHash,
+                event.blockHash,
+                'Delegated from',
+                'Delegated to',
+                'fa-users');
+            }
           }
-          window.localWeb3.eth.getBlock(res.blockHash, false)
-            .then(block => block.timestamp)
-            .then(timestamp => {
-              const isReceiver = res.args._spender === this.account;
-              const displayedAddress = isReceiver ? res.args._owner : res.args._spender;
-              const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
-              const transactionDetails = {
-                hash: res.transactionHash,
-                titlePrefix: isReceiver ? `Delegated from`: `Delegated to`,
-                displayName: contactDetails.name ? contactDetails.name : displayedAddress,
-                avatar: contactDetails.avatar,
-                name: null,
-                color: isReceiver ? 'green' : 'red',
-                icon: 'fa-users',
-                amount: res.args._value.toNumber(),
-                date: new Date(timestamp * 1000)
-              };
-              this.transactions.push(transactionDetails);
-              if (!contactDetails || !contactDetails.name) {
-                searchFullName(displayedAddress)
-                  .then(item => {
-                    if (item && item.name && item.name.length) {
-                      transactionDetails.displayName = item.name;
-                      transactionDetails.avatar = item.avatar;
-                      transactionDetails.name = item.id;
-                      this.$forceUpdate();
-                    }
-                  });
-              }
-              this.$emit("loaded");
-            })
-            .catch(error => {
-              console.debug("Web3 eth.getBlock method - error", error);
-              this.$emit("error", `Error listing Approval transactions of contract: ${error}`);
-            });
         }
+      }).catch(e => {
+        // Can't intercept event when all events are loaded with Truffle
+        this.loading = false;
+
+        console.debug("Error loading contract transactions using new Web3", e);
+        // Fallback to use Truffle
+        this.contract.Approval({}, { fromBlock: 0, toBlock: 'latest' }, (error, res) => {
+          if (error) {
+            console.error("Error listing Approval transactions of contract", error);
+            this.$emit("error", `Error listing Approval transactions of contract: ${error}`);
+            return;
+          }
+          this.addTransactionToList(
+            res.args._spender.toLowerCase(), 
+            res.args._owner.toLowerCase(), 
+            res.args._value.toNumber(), 
+            res.transactionHash,
+            res.blockHash,
+            'Delegated from',
+            'Delegated to',
+            'fa-exchange-alt');
+        });
       });
+    },
+    addTransactionToList(from, to, amount, transactionHash, blockHash, labelFrom, labelTo, icon) {
+      if (to === this.account || from === this.account) {
+        const isReceiver = to === this.account;
+        const displayedAddress = isReceiver ? from : to;
+        const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+        const transactionDetails = {
+          hash: transactionHash,
+          titlePrefix: isReceiver ? labelFrom: labelTo,
+          displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+          avatar: contactDetails.avatar,
+          name: null,
+          color: isReceiver ? 'green' : 'red',
+          icon: icon,
+          amount: amount
+        };
+        this.transactions.push(transactionDetails);
+
+        return window.localWeb3.eth.getBlock(blockHash, false)
+          .then(block => block.timestamp)
+          .then(timestamp => {
+            transactionDetails.date = new Date(timestamp * 1000);
+            if (!contactDetails || !contactDetails.name) {
+              return searchFullName(displayedAddress)
+                .then(item => {
+                  if (item && item.name && item.name.length) {
+                    transactionDetails.displayName = item.name;
+                    transactionDetails.avatar = item.avatar;
+                    transactionDetails.name = item.id;
+                    this.$forceUpdate();
+                  }
+                  return transactionDetails;
+                });
+            }
+            this.$emit("loaded");
+          })
+          .catch(error => {
+            console.debug("Web3 eth.getBlock method - error", error);
+            this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
+            return transactionDetails;
+          });
+      }
     }
   }
 };
