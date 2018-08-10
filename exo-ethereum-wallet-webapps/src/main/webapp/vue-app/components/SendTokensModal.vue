@@ -129,8 +129,6 @@ export default {
           })
           .then(resp => {
             if (resp.tx) {
-              this.recipient = null;
-              this.amount = null;
               this.dialog = false;
               this.$emit("loading");
             } else {

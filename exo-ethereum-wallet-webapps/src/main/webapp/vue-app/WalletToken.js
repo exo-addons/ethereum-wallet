@@ -136,7 +136,10 @@ export function saveContractAddressAsDefault(address) {
     body: $.param({address: address})
   })
     .then(resp => {
-      if (resp && resp.ok && window.walletSettings && window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.indexOf(address) < 0) {
+      if (!window.walletSettings.defaultContractsToDisplay) {
+        window.walletSettings.defaultContractsToDisplay = [];
+      }
+      if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(address) < 0) {
         window.walletSettings.defaultContractsToDisplay.push(address);
       }
       return resp;

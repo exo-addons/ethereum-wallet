@@ -1,8 +1,8 @@
 <template>
-  <v-flex v-if="transactions.length">
+  <v-flex>
     <v-card class="card--flex-toolbar">
-      <v-subheader>Transactions list retrieved from latest {{ maxBlocksToLoad }} blocks</v-subheader>
-      <v-list two-line class="pt-0 pb-0">
+      <v-subheader>Transactions list retrieved from {{ loadedBlocks }} / {{ maxBlocksToLoad }} latest blocks. {{ transactions.length }} tranactions are loaded (maximum {{ transactionsToLoad }})</v-subheader>
+      <v-list v-if="transactions.length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
             <v-list-tile-avatar>
@@ -37,6 +37,11 @@
           <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
         </template>
       </v-list>
+      <v-flex v-else-if="loadedBlocks == maxBlocksToLoad" class="text-xs-center">
+        <v-chip color="white">
+          <span>No transactions</span>
+        </v-chip>
+      </v-flex>
     </v-card>
   </v-flex>
 </template>
@@ -113,7 +118,7 @@ export default {
       // then stop searching
       if (block.number === 0
           || this.transactionsToLoad <= this.transactions.length
-          || this.loadedBlocks > this.maxBlocksToLoad) {
+          || this.loadedBlocks >= this.maxBlocksToLoad) {
         return false;
       }
       if (block.transactions && block.transactions.length) {

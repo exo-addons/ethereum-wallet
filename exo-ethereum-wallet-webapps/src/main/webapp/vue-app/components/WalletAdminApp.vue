@@ -118,13 +118,18 @@
               <v-btn class="primary mt-3" @click="showAddContractModal = true">
                 Add Existing contract Address
               </v-btn>
-              <deploy-new-contract v-show="!error" :account="account" :network-id="networkId" @list-updated="newTokenAddress = $event;refreshContractsList();"/>
-              <add-contract-modal :net-id="networkId"
-                                  :account="account"
-                                  :open="showAddContractModal"
-                                  :is-default-contract="true"
-                                  @added="addContractAddressAsDefault"
-                                  @close="showAddContractModal = false" />
+              <deploy-new-contract 
+                v-show="!error"
+                :account="account"
+                :network-id="networkId"
+                @list-updated="updateList($event)"/>
+              <add-contract-modal
+                :net-id="networkId"
+                :account="account"
+                :open="showAddContractModal"
+                :is-default-contract="true"
+                @added="addContractAddressAsDefault"
+                @close="showAddContractModal = false" />
             </div>
           </v-card>
         </v-flex>
@@ -289,10 +294,17 @@ export default {
         this.defaultGas = window.walletSettings.defaultGas;
       }
     },
+    updateList(address) {
+      this.loading = true;
+      if (address) {
+        this.newTokenAddress = address;
+      }
+      this.refreshContractsList();
+    },
     refreshContractsList() {
       this.loading = true;
       try {
-        getContractsDetails(this.account, this.networkId)
+        return getContractsDetails(this.account, this.networkId)
           .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
           .then(() => this.loading = false)
           .catch(e => {

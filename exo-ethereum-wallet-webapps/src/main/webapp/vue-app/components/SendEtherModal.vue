@@ -86,8 +86,6 @@ export default {
     dialog() {
       if (this.dialog) {
         this.$refs.autocomplete.clear();
-      } else {
-        // Reset form
         this.loading = false;
         this.recipient = null;
         this.amount = null;
@@ -127,8 +125,6 @@ export default {
           .on('transactionHash', hash => {
             // The transaction has been hashed and will be sent
             this.$emit("loading");
-            this.recipient = null;
-            this.amount = null;
           })
           .on('confirmation', (confirmationNumber, receipt) => {
             if (this.loading) {

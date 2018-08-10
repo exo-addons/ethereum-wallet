@@ -128,9 +128,6 @@ export default {
           })
           .then(resp => {
             if (resp.tx) {
-              this.from = null;
-              this.recipient = null;
-              this.amount = null;
               this.dialog = false;
             } else {
               this.error = `Error while proceeding transaction`;

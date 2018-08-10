@@ -128,13 +128,10 @@ export default {
           })
           .then(resp => {
             if (resp.tx) {
-              this.recipient = null;
-              this.amount = null;
               this.dialog = false;
               this.$emit("loading");
             } else {
               this.error = `Error while proceeding transaction`;
-              console.error('Error while proceeding transaction', resp);
               this.$emit("end-loading");
             }
             this.loading = false;
