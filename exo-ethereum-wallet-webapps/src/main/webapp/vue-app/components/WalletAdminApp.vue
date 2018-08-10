@@ -6,15 +6,25 @@
           <v-alert :value="error" type="error" class="v-content">
             {{ error }}
           </v-alert>
+          <v-alert :value="!sameConfiguredNetwork" type="warning" dismissible>
+            Current selected network on Metamask is different from configured network to use with the platform.
+          </v-alert>
           <v-card class="text-xs-center pt-3">
             <v-form class="mr-3 ml-3">
+              <v-text-field
+                v-model="defaultNetworkId"
+                :rules="mandatoryRule"
+                :label="`Ethereum Network ID (current id: ${networkId})`"
+                type="text"
+                name="defaultNetworkId" />
+
               <v-text-field
                 ref="providerURL"
                 v-model="providerURL"
                 :rules="mandatoryRule"
                 type="text"
                 name="providerURL"
-                label="Ethereum Network URL"
+                label="Ethereum Network URL used for static displaying spaces wallets (without Metamask)"
                 autofocus />
 
               <v-autocomplete
@@ -79,12 +89,6 @@
                 :step="100"
                 type="number"
                 required />
-              <v-text-field
-                v-model="defaultNetworkId"
-                :rules="mandatoryRule"
-                :label="`Ethereum Network ID (current id: ${networkId})`"
-                type="text"
-                name="defaultNetworkId" />
 
               <v-btn :disabled="loading" :loading="loading" color="primary" @click="saveGlobalSettings">
                 Save
@@ -104,8 +108,9 @@
             </v-alert>
             <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
               <template slot="items" slot-scope="props">
-                <td>{{ props.item.name }}</td>
-                <td class="text-xs-right">{{ props.item.address }}</td>
+                <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>
+                <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
+                <td v-else class="text-xs-right">{{ props.item.address }}</td>
                 <td class="text-xs-right">
                   <v-btn icon ripple @click="deleteContract(props.item, $event)">
                     <v-icon color="primary">delete</v-icon>
@@ -143,8 +148,8 @@ import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import {searchSpaces} from '../WalletAddressRegistry.js';
-import {getContractsDetails, deleteContractFromStorage, saveContractAddressAsDefault} from '../WalletToken.js';
-import {initWeb3,initSettings,retrieveUSDExchangeRate} from '../WalletUtils.js';
+import {getContractsDetails, deleteContractFromStorage, saveContractAddressAsDefault, removeContractAddressFromDefault} from '../WalletToken.js';
+import {initWeb3,initSettings, retrieveUSDExchangeRate, computeNetwork} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -155,6 +160,7 @@ export default {
     return {
       isWalletEnabled: false,
       loading: false,
+      sameConfiguredNetwork: '',
       accessPermission: '',
       accessPermissionOptions: [],
       accessPermissionSearchTerm: null,
@@ -239,8 +245,7 @@ export default {
     }
   },
   created() {
-    this.init()
-      .then(this.refreshContractsList);
+    this.init();
   },
   methods: {
     init() {
@@ -259,11 +264,13 @@ export default {
         .then(this.setDefaultValues)
         .then(initWeb3)
         .then(account => this.account = window.localWeb3.eth.defaultAccount)
-        .then(() => window.localWeb3.eth.net.getId())
-        .then(netId => this.networkId = netId)
+        .then(computeNetwork)
+        .then(netDetails => this.networkId = netDetails.netId)
         .then(netId => this.defaultNetworkId = this.defaultNetworkId ? this.defaultNetworkId : netId)
+        .then(() => this.sameConfiguredNetwork = this.networkId === this.defaultNetworkId)
         .then(retrieveUSDExchangeRate)
         .then(this.refreshContractsList)
+        .then(() => this.loading = false)
         .catch(e => {
           this.loading = false;
           this.errorMessage = `Error encountered: ${e}`;
@@ -299,22 +306,19 @@ export default {
       if (address) {
         this.newTokenAddress = address;
       }
-      this.refreshContractsList();
+      this.refreshContractsList()
+        .then(() => this.loading = false)
+        .catch(e => {
+          this.loading = false;
+          this.errorMessage = `Error encountered: ${e}`;
+        });
     },
     refreshContractsList() {
-      this.loading = true;
-      try {
-        return getContractsDetails(this.account, this.networkId)
-          .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
-          .then(() => this.loading = false)
-          .catch(e => {
-            this.loading = false;
-            this.errorMessage = `Error encountered: ${e}`;
-          });
-      } catch (e) {
-        this.loading = false;
-        this.errorMessage = `Error encountered: ${e}`;
-      }
+      return getContractsDetails(this.account, this.networkId, true)
+        .then(contracts => {
+          return contracts;
+        })
+        .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : []);
     },
     saveGlobalSettings() {
       this.loading = true;
@@ -361,24 +365,18 @@ export default {
         this.errorMessage = 'Contract doesn\'t have an address';
       }
       this.loading = true;
-      fetch('/portal/rest/wallet/api/contract/remove', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: $.param({address:item.address})
-      }).then(resp => {
-        if (resp && resp.ok) {
-          window.walletSettings.defaultContractsToDisplay.splice(window.walletSettings.defaultContractsToDisplay.indexOf(item.address), 1);
-          this.refreshContractsList();
-        } else {
+      removeContractAddressFromDefault(item.address)
+        .then((resp, error) => {
+          if (error) {
+            this.errorMessage = 'Error deleting contract as default';
+          } else {
+            this.refreshContractsList();
+          }
+          this.loading = false;
+        }).catch(e => {
+          this.loading = false;
           this.errorMessage = 'Error deleting contract as default';
-        }
-        this.loading = false;
-      }).catch(e => {
-        this.errorMessage = 'Error deleting contract as default';
-      });
+        });
       event.preventDefault();
       event.stopPropagation();
     }

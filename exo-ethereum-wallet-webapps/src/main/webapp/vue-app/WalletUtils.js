@@ -102,7 +102,8 @@ export function initWeb3(isSpace) {
 }
 
 export function initSettings() {
-  return fetch('/portal/rest/wallet/api/global-settings', {credentials: 'include'})
+  return getMetamaskCurrentNetworkId()
+    .then(networkId => fetch(`/portal/rest/wallet/api/global-settings?networkId=${networkId}`, {credentials: 'include'}))
     .then(resp =>  {
       if (resp && resp.ok) {
         return resp.json();
@@ -126,6 +127,18 @@ export function initSettings() {
     });
 }
 
+function getMetamaskCurrentNetworkId() {
+  let currentNetworkId = 0;
+  if (window.web3) {
+    window.web3.version.getNetwork((e, netId) => currentNetworkId = netId);
+    return new Promise((resolve) => setTimeout(resolve, 500))
+      .then(() => {
+        return currentNetworkId;
+      });
+  }
+  return currentNetworkId;
+}
+
 export function computeNetwork() {
   let netId = null;
   return window.localWeb3.eth.net.getId()
@@ -134,7 +147,11 @@ export function computeNetwork() {
         throw error;
       }
       if (networkId) {
-        netId = networkId;
+        if (window.walletSettings) {
+          window.walletSettings.currentNetworkId = netId = networkId;
+        } else {
+          window.currentMetamaskNetworkId = netId = networkId;
+        }
         return window.localWeb3.eth.net.getNetworkType();
       } else {
         throw new Error("Network is disconnected");

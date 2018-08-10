@@ -67,10 +67,13 @@
           <h4 v-else class="head-container">Wallet</h4>
           <v-card v-if="!selectedAccount" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-            <v-alert :value="!isSpace && !sameConfiguredNetwork" type="warning" dismissible>
+            <v-alert :value="!isSpace && !sameConfiguredNetwork && isMaximized" type="warning" dismissible>
               Current selected network on Metamask is different from configured network to use with the platform.
               If you are an administrator, you can set network id in wallet administration application.
               (Contracts will nt get loaded and you can't associate your wallet to an ethereum account)
+            </v-alert>
+            <v-alert :value="!isSpace && !sameConfiguredNetwork && !isMaximized" type="warning" dismissible>
+              Not default network!
             </v-alert>
             <v-alert :value="sameConfiguredNetwork && !loading && displaySpaceAccountCreationHelp" type="info" dismissible>
               <div>

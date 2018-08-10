@@ -2,6 +2,16 @@
   <v-flex>
     <v-card class="card--flex-toolbar">
       <v-subheader>Transactions list retrieved from {{ loadedBlocks }} / {{ maxBlocksToLoad }} latest blocks. {{ transactions.length }} tranactions are loaded (maximum {{ transactionsToLoad }})</v-subheader>
+      <v-progress-circular
+        v-if="!finishedLoading"
+        :rotate="-90"
+        :size="80"
+        :width="15"
+        :value="loadingPercentage"
+        color="primary"
+        buffer>
+        {{ loadingPercentage }}%
+      </v-progress-circular>
       <v-list v-if="transactions.length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
@@ -61,6 +71,7 @@ export default {
   },
   data () {
     return {
+      finishedLoading: false,
       transactionsPerPage: 10,
       transactionsToLoad: 10,
       maxBlocksToLoad: 1000,
@@ -71,6 +82,9 @@ export default {
   computed: {
     sortedTransaction() {
       return this.transactions.slice(0).sort((t1, t2) => t2.date - t1.date);
+    },
+    loadingPercentage() {
+      return parseInt(this.loadedBlocks * 100 / this.maxBlocksToLoad);
     }
   },
   watch: {
@@ -88,10 +102,10 @@ export default {
   created() {
     if (this.account) {
       this.maxBlocksToLoad = window.walletSettings.defaultBlocksToRetrieve;
-      this.$emit("loading");
       this.init()
-        .then(() => this.$emit("end-loading"))
+        .then(() => this.finishedLoading = true)
         .catch(error => {
+          this.finishedLoading = true;
           this.$emit("error", error);
         });
     }

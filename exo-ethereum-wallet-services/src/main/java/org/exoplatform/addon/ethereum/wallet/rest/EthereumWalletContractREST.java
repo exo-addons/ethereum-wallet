@@ -36,45 +36,35 @@ public class EthereumWalletContractREST implements ResourceContainer {
   }
 
   /**
-   * Retrieves the list of default contracts displayed in all users wallet
-   * 
-   * @return
-   */
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response getContracts() {
-    List<String> contractAddressList = getContractAddresses();
-    if (contractAddressList == null) {
-      return Response.ok("{}").build();
-    } else {
-      return Response.ok(new JSONArray(contractAddressList).toString()).build();
-    }
-  }
-
-  /**
    * Save a new contract address to display it in wallet of all users
    * 
    * @param address
+   * @param networkId
    * @return
    */
   @POST
   @Path("save")
-  public Response saveContract(@FormParam("address") String address) {
+  public Response saveContract(@FormParam("address") String address, @FormParam("networkId") Long networkId) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Can't save empty address for contract");
       return Response.status(400).build();
     }
+    if (networkId == null || networkId == 0) {
+      LOG.warn("Can't remove empty network id for contract");
+      return Response.status(400).build();
+    }
+    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
     address= address.toLowerCase();
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
                                                                         WALLET_SCOPE,
-                                                                        WALLET_DEFAULT_CONTRACTS_NAME);
+                                                                        defaultContractsParamKey);
     String defaultContractsAddresses =
                                      defaultContractsAddressesValue == null ? address
                                                                             : defaultContractsAddressesValue.getValue().toString()
                                                                                 + "," + address;
     settingService.set(WALLET_CONTEXT,
                        WALLET_SCOPE,
-                       WALLET_DEFAULT_CONTRACTS_NAME,
+                       defaultContractsParamKey,
                        SettingValue.create(defaultContractsAddresses));
     return Response.ok().build();
   }
@@ -84,25 +74,32 @@ public class EthereumWalletContractREST implements ResourceContainer {
    * all users
    * 
    * @param address
+   * @param networkId
    * @return
    */
   @POST
   @Path("remove")
-  public Response removeContract(@FormParam("address") String address) {
+  public Response removeContract(@FormParam("address") String address, @FormParam("networkId") Long networkId) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Can't remove empty address for contract");
       return Response.status(400).build();
     }
+    if (networkId == null || networkId == 0) {
+      LOG.warn("Can't remove empty network id for contract");
+      return Response.status(400).build();
+    }
+    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
+    final String defaultAddressToSave = address.toLowerCase();
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
                                                                         WALLET_SCOPE,
-                                                                        WALLET_DEFAULT_CONTRACTS_NAME);
+                                                                        defaultContractsParamKey);
     if (defaultContractsAddressesValue != null) {
       String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
       Set<String> contractAddressList = Arrays.stream(contractAddresses)
-                                               .filter(contractAddress -> !contractAddress.equalsIgnoreCase(address))
+                                               .filter(contractAddress -> !contractAddress.equalsIgnoreCase(defaultAddressToSave))
                                                .collect(Collectors.toSet());
       String contractAddressValue = StringUtils.join(contractAddressList, ",");
-      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, WALLET_DEFAULT_CONTRACTS_NAME, SettingValue.create(contractAddressValue));
+      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(contractAddressValue));
     }
     return Response.ok().build();
   }
@@ -110,13 +107,18 @@ public class EthereumWalletContractREST implements ResourceContainer {
   /**
    * Retrieves the list of default contract addreses
    * 
+   * @param networkId
    * @return
    */
-  public List<String> getContractAddresses() {
+  public List<String> getContractAddresses(Long networkId) {
+    if (networkId == null || networkId == 0) {
+      return Collections.emptyList();
+    }
     List<String> contractAddressList = null;
+    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
                                                                         WALLET_SCOPE,
-                                                                        WALLET_DEFAULT_CONTRACTS_NAME);
+                                                                        defaultContractsParamKey);
     if (defaultContractsAddressesValue != null) {
       String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
       contractAddressList = Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toList());

@@ -33,9 +33,11 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
 
   private EthereumWalletContractREST ethereumWalletContract;
 
-  private SpaceService spaceService;
+  private SpaceService               spaceService;
 
-  public EthereumWalletGlobalSettingsREST(EthereumWalletContractREST ethereumWalletContract, SpaceService spaceService,SettingService settingService) {
+  public EthereumWalletGlobalSettingsREST(EthereumWalletContractREST ethereumWalletContract,
+                                          SpaceService spaceService,
+                                          SettingService settingService) {
     this.settingService = settingService;
     this.ethereumWalletContract = ethereumWalletContract;
     this.spaceService = spaceService;
@@ -44,13 +46,14 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   /**
    * Get global settings of aplication
    * 
+   * @param networkId
    * @return
    * @throws Exception
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("users")
-  public Response getSettings() throws Exception {
+  public Response getSettings(@QueryParam("networkId") Long networkId) throws Exception {
     SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
 
     GlobalSettings globalSettings = null;
@@ -75,10 +78,14 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
     }
 
     if (globalSettings.isWalletEnabled()) {
-      globalSettings.setDefaultContractsToDisplay(ethereumWalletContract.getContractAddresses());
+      if ((networkId == null || networkId == 0) && globalSettings.getDefaultNetworkId() != null) {
+        networkId = globalSettings.getDefaultNetworkId();
+      }
+      globalSettings.setDefaultContractsToDisplay(ethereumWalletContract.getContractAddresses(networkId));
 
       // Append user preferences
-      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(getCurrentUserId()), WALLET_SCOPE, SETTINGS_KEY_NAME);
+      SettingValue<?> userSettingsValue =
+                                        settingService.get(Context.USER.id(getCurrentUserId()), WALLET_SCOPE, SETTINGS_KEY_NAME);
       if (userSettingsValue != null && userSettingsValue.getValue() != null) {
         UserPreferences userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
         globalSettings.setUserDefaultGas(userSettings.getDefaultGas());

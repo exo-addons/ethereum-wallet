@@ -78,7 +78,7 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
-import {loadContractBalance} from '../WalletToken.js';
+import {loadContractDetails} from '../WalletToken.js';
 import {etherToUSD} from '../WalletUtils.js';
 
 export default {
@@ -143,7 +143,7 @@ export default {
     loaded() {
       if (this.contractDetail.isContract) {
         // Refresh Contract balance and tranactions
-        loadContractBalance(this.account, this.contractDetail)
+        loadContractDetails(this.account, this.contractDetail)
           .then(() => this.loading = false)
           .catch(e => {
             this.loading = false;

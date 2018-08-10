@@ -12,11 +12,9 @@ import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '.
  *   isDefault: is default contract coming from configuration
  * }
  */
-export function getContractsDetails(account, netId) {
-  let contractsAddresses = getContractsAddresses(account, netId);
-  if((!window.walletSettings.defaultNetworkId || window.walletSettings.defaultNetworkId === netId)
-      && window.walletSettings.defaultContractsToDisplay
-      && window.walletSettings.defaultContractsToDisplay.length) {
+export function getContractsDetails(account, netId, onlyDefault) {
+  let contractsAddresses = onlyDefault ? [] : getContractsAddresses(account, netId);
+  if(window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.length) {
     contractsAddresses = contractsAddresses.concat(window.walletSettings.defaultContractsToDisplay);
   }
   // Remove duplicates and empty strings if existing
@@ -24,7 +22,8 @@ export function getContractsDetails(account, netId) {
 
   const contractsDetailsPromises = [];
 
-  contractsAddresses.forEach((address) => {
+  for (let i = 0; i < contractsAddresses.length; i++) {
+    const address = contractsAddresses[i];
     if (address && address.trim().length) {
       const contractDetails = {};
       contractDetails.address = address;
@@ -33,7 +32,7 @@ export function getContractsDetails(account, netId) {
       contractDetails.address = address;
       contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
                                   && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
-      
+
       const contractDetailsPromise = getContractAtAddress(account, address)
         .then((loadedContract, error) => {
           if (error) {
@@ -41,23 +40,20 @@ export function getContractsDetails(account, netId) {
           }
           return contractDetails.contract = loadedContract;
         })
-        .then(loadedContract => loadContractBalance(account, contractDetails, loadedContract))
-        .catch((e) => {
-          contractDetails.icon = 'warning';
-          contractDetails.title = contractDetails.address;
-          contractDetails.error = 'Error retrieving contract at specified address';
-          return contractDetails;
+        .then(loadedContract => loadContractDetails(account, contractDetails, loadedContract, address))
+        .catch(e => {
+          return transformContracDetailsToFailed(contractDetails, e);
         });
       contractsDetailsPromises.push(contractDetailsPromise);
     }
-  });
+  }
   return Promise.all(contractsDetailsPromises);
 }
 
 /*
- * Loads contract balance and cache it in sessionStorage once loaded
+ * Loads contract balance, symbol and name and cache it in sessionStorage once loaded
  */
-export function loadContractBalance(account, contractDetails, contract) {
+export function loadContractDetails(account, contractDetails, contract, address) {
   if (!contractDetails || (!contract && !contractDetails.contract)) {
     return null;
   }
@@ -70,7 +66,7 @@ export function loadContractBalance(account, contractDetails, contract) {
     .then(() => contract.name.call())
     .then(name => contractDetails.name = name)
     .then(() => contract.balanceOf.call(account))
-    .then(balance => contractDetails.balance = parseFloat(balance))
+    .then(balance => contractDetails.balance = parseFloat(`${balance}`))
     .then(() => {
       return contractDetails;
     })
@@ -82,11 +78,15 @@ export function loadContractBalance(account, contractDetails, contract) {
       }));
       return contractDetails;
     })
-    .catch(err => {
-      contractDetails.icon = 'warning';
-      contractDetails.title = contractDetails.address;
-      contractDetails.error = 'Error retrieving contract at specified address';
-      return contractDetails;
+    .catch((e) => {
+      if(address) {
+        return getContractDetailsAtAddressUsingNewWeb3(account, contractDetails, address)
+          .catch(error => {
+            return transformContracDetailsToFailed(contractDetails, error);
+          });
+      } else {
+        return transformContracDetailsToFailed(contractDetails, e);
+      }
     });
 }
 
@@ -125,6 +125,29 @@ export function getContractsAddresses(account, netId) {
 /*
  * Save a new Contract address as default contract to display for all users
  */
+export function removeContractAddressFromDefault(address) {
+  return fetch('/portal/rest/wallet/api/contract/remove', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: $.param({
+      address: address,
+      networkId: window.walletSettings.currentNetworkId
+    })
+  }).then(resp => {
+    if (resp && resp.ok) {
+      window.walletSettings.defaultContractsToDisplay.splice(window.walletSettings.defaultContractsToDisplay.indexOf(address), 1);
+    } else {
+      throw new Error('Error deleting contract as default');
+    }
+  });
+}
+  
+/*
+ * Save a new Contract address as default contract to display for all users
+ */
 export function saveContractAddressAsDefault(address) {
   address = address.toLowerCase();
   return fetch('/portal/rest/wallet/api/contract/save', {
@@ -133,7 +156,10 @@ export function saveContractAddressAsDefault(address) {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: $.param({address: address})
+    body: $.param({
+      address: address,
+      networkId: window.walletSettings.currentNetworkId
+    })
   })
     .then(resp => {
       if (!window.walletSettings.defaultContractsToDisplay) {
@@ -163,9 +189,12 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
         const contractsAddresses = getContractsAddresses(account, netId);
 
         if (isDefaultContract || contractsAddresses.indexOf(address) < 0) {
-          return foundContract.balanceOf.call(account)
-            .then((balance) => {
-              if (balance === 0 || balance) {
+          return loadContractDetails(account, {}, foundContract)
+            .then((contractDetails, error) => {
+              if (error) {
+                throw error;
+              }
+              if (contractDetails && !contractDetails.error) {
                 address = address.toLowerCase();
                 if(contractsAddresses.indexOf(address) < 0) {
                   contractsAddresses.push(address);
@@ -213,6 +242,50 @@ export function createNewERC20TokenContract(account, newTokenGas, newTokenGasPri
 /*
  * Retrieve an ERC20 contract instance at specified address
  */
+export function getContractDetailsAtAddressUsingNewWeb3(account, contractDetails, address) {
+  const ERC20_CONTRACT = new window.localWeb3.eth.Contract(
+    ERC20_COMPLIANT_CONTRACT_ABI, 
+    address, 
+    {
+      from: account, 
+      gas: window.walletSettings.userDefaultGas,
+      gasPrice: window.walletSettings.gasPrice,
+      data: ERC20_COMPLIANT_CONTRACT_BYTECODE
+    }
+  );
+  if (!contractDetails) {
+    contractDetails = {};
+    contractDetails.contract = ERC20_CONTRACT;
+  }
+  return ERC20_CONTRACT.methods.symbol().call()
+    .then(symbol => contractDetails.symbol = symbol)
+    .then(symbol => contractDetails.title = `Account in Token ${symbol}`)
+    .then(() => ERC20_CONTRACT.methods.name().call())
+    .then(name => contractDetails.name = name)
+    .then(() => ERC20_CONTRACT.methods.balanceOf(account).call())
+    .then(balance => contractDetails.balance = parseFloat(`${balance}`))
+    .then(() => {
+      return contractDetails;
+    })
+    .then(() => {
+      localStorage.setItem(`exo-wallet-contract-${account}-${contractDetails.address}`.toLowerCase(), JSON.stringify({
+        symbol: contractDetails.symbol,
+        name: contractDetails.name,
+        address: contractDetails.address
+      }));
+      return contractDetails;
+    })
+    .catch(err => {
+      contractDetails.icon = 'warning';
+      contractDetails.title = contractDetails.address;
+      contractDetails.error = `Error retrieving contract at specified address ${err}`;
+      return contractDetails;
+    });
+}
+
+/*
+ * Retrieve an ERC20 contract instance at specified address
+ */
 export function getContractAtAddress(account, address) {
   try {
     const ERC20_CONTRACT = window.TruffleContract({
@@ -234,4 +307,11 @@ export function getContractAtAddress(account, address) {
   } catch (e) {
     return Promise.reject(e);
   }
+}
+
+function transformContracDetailsToFailed(contractDetails, e) {
+  contractDetails.icon = 'warning';
+  contractDetails.title = contractDetails.address;
+  contractDetails.error = `Error retrieving contract at specified address ${e}`;
+  return contractDetails;
 }

@@ -5,7 +5,7 @@
     </v-btn>
     <v-card>
       <v-toolbar dark color="primary">
-        <v-btn icon dark @click.native="createNewToken = false">
+        <v-btn :disabled="loading" icon dark @click.native="createNewToken = false">
           <v-icon>close</v-icon>
         </v-btn>
         <v-toolbar-title>Deploy new ERC20 Token contract</v-toolbar-title>
@@ -91,7 +91,7 @@
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
 import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, createNewERC20TokenContract} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
-import {gasToUSD,initWeb3,initSettings,retrieveUSDExchangeRate} from '../WalletUtils.js';
+import {gasToUSD} from '../WalletUtils.js';
 
 export default {
   props: {
