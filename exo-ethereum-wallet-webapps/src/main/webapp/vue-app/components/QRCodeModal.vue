@@ -145,10 +145,6 @@ export default {
                   const argsType = this.argsTypes[i];
                   const argsValue = this.argsValues[i];
 
-                  console.log(argsName);
-                  console.log(argsType);
-                  console.log(argsValue);
-
                   options.functionSignature.args.push({
                     "name": argsName,
                     "type": argsType

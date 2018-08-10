@@ -67,7 +67,12 @@
           <h4 v-else class="head-container">Wallet</h4>
           <v-card v-if="!selectedAccount" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-            <v-alert :value="!loading && displaySpaceAccountCreationHelp" type="info" dismissible>
+            <v-alert :value="!isSpace && !sameConfiguredNetwork" type="warning" dismissible>
+              Current selected network on Metamask is different from configured network to use with the platform.
+              If you are an administrator, you can set network id in wallet administration application.
+              (Contracts will nt get loaded and you can't associate your wallet to an ethereum account)
+            </v-alert>
+            <v-alert :value="sameConfiguredNetwork && !loading && displaySpaceAccountCreationHelp" type="info" dismissible>
               <div>
                 Current space doesn't have an account yet ? If you are manager of the space, you can create a new account using Metamask.
               </div>
@@ -75,7 +80,7 @@
                 Currently selected account in Metamask is already in use, you can't set it for this space.
               </div>
             </v-alert>
-            <v-alert :value="!loading && oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
+            <v-alert :value="sameConfiguredNetwork && !loading && oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
               <div>
                 Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
               </div>
@@ -83,7 +88,7 @@
                 <v-icon color="success">fa-check</v-icon>
               </v-btn>
             </v-alert>
-            <v-alert :value="!loading && !oldAccountAddress && newAccountAddress" type="info" dismissible>
+            <v-alert :value="sameConfiguredNetwork && !loading && !oldAccountAddress && newAccountAddress" type="info" dismissible>
               <div v-if="isSpace">
                 Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
               </div>
@@ -154,6 +159,7 @@ export default {
   data() {
     return {
       isWalletEnabled: false,
+      sameConfiguredNetwork: true,
       loading: true,
       currentAccountAlreadyInUse: false,
       displaySpaceAccountCreationHelp: false,
@@ -392,6 +398,7 @@ export default {
               }
               if (networkDetails && networkDetails.netId && networkDetails.netType) {
                 this.networkId = networkDetails.netId;
+                this.sameConfiguredNetwork = window.walletSettings.defaultNetworkId === this.networkId;
                 this.networkName = `${networkDetails.netType.toUpperCase()} Network`;
               }
             })
