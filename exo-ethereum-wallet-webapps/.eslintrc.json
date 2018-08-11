@@ -1,13 +1,11 @@
 {
     "env": {
         "browser": true,
-        "es6": true,
-        "jest": true
+        "es6": true
     },
     "extends": [
         "eslint:recommended",
-        "plugin:vue/recommended",
-        "plugin:jest/recommended"
+        "plugin:vue/recommended"
     ],
     "globals": {
         "$": true,
@@ -89,6 +87,7 @@
     },
     "overrides": [{
         "files": [ "src/test/**/*" ],
+        "excludedFiles": "src/main/webapp/js/lib/*",
         "rules": {
             "no-empty-function": "off",
             "no-magic-numbers": "off"

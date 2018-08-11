@@ -32,14 +32,6 @@ const config = {
         })
       },
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: [
-          'babel-loader',
-          'eslint-loader',
-        ]
-      },
-      {
         test: /\.vue$/,
         use: [
           'vue-loader',
