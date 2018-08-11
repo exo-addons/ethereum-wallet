@@ -21,7 +21,7 @@
               <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
             </v-list-tile-content>
             <v-list-tile-action>
-              <v-list-tile-action-text>{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
+              <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleDateString() : '' }}</v-list-tile-action-text>
             </v-list-tile-action>
           </v-list-tile>
           <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
@@ -142,8 +142,8 @@ export default {
             
             if (event.returnValues && event.returnValues._spender && event.returnValues._owner) {
               this.addTransactionToList(
-                event.returnValues._spender.toLowerCase(),
                 event.returnValues._owner.toLowerCase(),
+                event.returnValues._spender.toLowerCase(),
                 parseFloat(event.returnValues._value),
                 event.transactionHash,
                 event.blockHash,
@@ -166,8 +166,8 @@ export default {
             return;
           }
           this.addTransactionToList(
-            res.args._spender.toLowerCase(), 
             res.args._owner.toLowerCase(), 
+            res.args._spender.toLowerCase(), 
             res.args._value.toNumber(), 
             res.transactionHash,
             res.blockHash,
@@ -192,12 +192,15 @@ export default {
           icon: icon,
           amount: amount
         };
-        this.transactions.push(transactionDetails);
 
         return window.localWeb3.eth.getBlock(blockHash, false)
           .then(block => block.timestamp)
           .then(timestamp => {
             transactionDetails.date = new Date(timestamp * 1000);
+            // Push transactions here in Promise to apply order after adding date
+            // (Vue will not trigger computed values when changing attribute of an object inside an array)
+            this.transactions.push(transactionDetails);
+            this.$forceUpdate();
             if (!contactDetails || !contactDetails.name) {
               return searchFullName(displayedAddress)
                 .then(item => {
