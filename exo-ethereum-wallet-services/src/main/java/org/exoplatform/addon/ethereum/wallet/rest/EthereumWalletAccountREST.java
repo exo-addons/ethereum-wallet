@@ -31,7 +31,7 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 @RolesAllowed("users")
 public class EthereumWalletAccountREST implements ResourceContainer {
 
-  public static final Log LOG = ExoLogger.getLogger(EthereumWalletAccountREST.class);
+  private static final Log LOG = ExoLogger.getLogger(EthereumWalletAccountREST.class);
 
   private SettingService  settingService;
 
@@ -51,13 +51,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
    * @param id
    * @param type
    * @return
-   * 
-   * @throws Exception
    */
   @Path("detailsById")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAccountByTypeAndID(@QueryParam("id") String id, @QueryParam("type") String type) throws Exception {
+  public Response getAccountByTypeAndID(@QueryParam("id") String id, @QueryParam("type") String type) {
     if (StringUtils.isBlank(id) || StringUtils.isBlank(type)
         || !(StringUtils.equals(type, "user") || StringUtils.equals(type, "space"))) {
       LOG.warn("Bad request sent to server with id '{}' and type '{}'", id, type);
@@ -89,12 +87,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
    * 
    * @param address
    * @return
-   * @throws Exception
    */
   @Path("detailsByAddress")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAccountByAddress(@QueryParam("address") String address) throws Exception {
+  public Response getAccountByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Bad request sent to server with empty address", address);
       return Response.status(400).build();
@@ -176,12 +173,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
    * 
    * @param userPreferences
    * @return
-   * @throws Exception
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("savePreferences")
-  public Response savePreferences(UserPreferences userPreferences) throws Exception {
+  public Response savePreferences(UserPreferences userPreferences) {
     if (userPreferences == null) {
       LOG.warn("Bad request sent to server with empty preferenes");
       return Response.status(400).build();

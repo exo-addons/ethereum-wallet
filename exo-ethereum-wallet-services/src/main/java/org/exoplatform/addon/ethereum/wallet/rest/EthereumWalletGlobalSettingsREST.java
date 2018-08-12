@@ -27,7 +27,7 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 @Path("/wallet/api/global-settings")
 public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
 
-  public static final Log            LOG = ExoLogger.getLogger(EthereumWalletGlobalSettingsREST.class);
+  private static final Log            LOG = ExoLogger.getLogger(EthereumWalletGlobalSettingsREST.class);
 
   private SettingService             settingService;
 
@@ -48,12 +48,11 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
    * 
    * @param networkId
    * @return
-   * @throws Exception
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("users")
-  public Response getSettings(@QueryParam("networkId") Long networkId) throws Exception {
+  public Response getSettings(@QueryParam("networkId") Long networkId) {
     SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
 
     GlobalSettings globalSettings = null;
@@ -100,13 +99,12 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
    * 
    * @param globalSettings
    * @return
-   * @throws Exception
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("save")
   @RolesAllowed("administrators")
-  public Response saveSettings(GlobalSettings globalSettings) throws Exception {
+  public Response saveSettings(GlobalSettings globalSettings) {
     if (globalSettings == null) {
       LOG.warn("Bad request sent to server with empty settings");
       return Response.status(400).build();

@@ -9,7 +9,7 @@
         </v-btn>
       </v-toolbar>
       <v-card-text>
-        <div id="addressQRCode" class="text-xs-center"></div>
+        <div :id="id" class="text-xs-center"></div>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -89,6 +89,7 @@ export default {
   data () {
     return {
       show: false,
+      id: `QRCode${parseInt(Math.random() * 10000).toString().toString()}`,
       netId: null
     };
   },
@@ -101,10 +102,12 @@ export default {
     },
     show() {
       if(!this.show) {
+        this.netId = null;
         this.$emit("close");
       }
     }
   },
+  
   methods: {
     computeCanvas() {
       window.localWeb3.eth.net.getId()
@@ -115,17 +118,14 @@ export default {
             const qr = new window.EthereumQRPlugin();
             const options = {
               chainId: netId,
-              to: this.to
+              to: this.to,
+              value: parseInt(window.localWeb3.utils.toWei(this.amount.toString(), 'ether'))
             };
-  
+
             if (this.from) {
               options.from = this.from;
             }
-  
-            if (this.amount && !this.isContract) {
-              options.value = window.localWeb3.utils.toWei(this.amount.toString(), 'ether');
-            }
-  
+
             if (window.walletSettings.userDefaultGas) {
               options.gas = window.walletSettings.userDefaultGas;
             }
@@ -156,11 +156,17 @@ export default {
                 }
               }
             }
-  
-            const qrCode = qr.toCanvas(options, {
-              selector: '#addressQRCode'
+
+            return qr.toCanvas(options, {
+              selector: `#${this.id}`
+            }).then((res, err) => {
+              if (err) {
+                console.error("qrCode", err);
+              }
             });
           }
+        }).catch(error => {
+          console.debug("Error while generating qr code", error);
         });
     }
   }

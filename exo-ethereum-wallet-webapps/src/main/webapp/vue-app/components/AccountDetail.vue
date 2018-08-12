@@ -41,6 +41,7 @@
         :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
         :balance="contractDetail.balance"
         :ether-balance="contractDetail.etherBalance"
+        :account="account"
         :contract="contractDetail.contract"
         @loading="loading = true"
         @end-loading="loading = false" />

@@ -27,7 +27,7 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("administrators")
 public class EthereumWalletContractREST implements ResourceContainer {
 
-  public static final Log LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
+  private static final Log LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
 
   private SettingService settingService;
 

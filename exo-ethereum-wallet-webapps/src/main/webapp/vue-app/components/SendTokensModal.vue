@@ -2,6 +2,8 @@
   <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw">
     <v-btn slot="activator" :disabled="disabled" :dark="!disabled" color="primary" ripple>Send Tokens</v-btn>
     <qr-code-modal :to="recipient"
+                   :from="account"
+                   :amount="0"
                    :is-contract="true"
                    :args-names="['_to', '_value']"
                    :args-types="['address', 'uint256']"
@@ -50,6 +52,12 @@ export default {
     AutoComplete
   },
   props: {
+    account: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     contract: {
       type: Object,
       default: function() {
