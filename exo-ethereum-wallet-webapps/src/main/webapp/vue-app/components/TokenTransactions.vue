@@ -57,6 +57,8 @@ export default {
   },
   data () {
     return {
+      latestBlockNumber: 0,
+      latestDelegatedBlockNumber: 0,
       transactions: [],
       loading: false
     };
@@ -81,22 +83,26 @@ export default {
   methods: {
     init() {
       if (this.contract) {
-        this.refreshList();
-        const thiss = this;
+        this.refreshNewwestTransactions();
       }
     },
-    refreshList() {
-      this.transactions = [];
-
+    refreshNewwestTransactions() {
       this.loading = true;
-
-      this.newWeb3Contract.getPastEvents("Transfer", {
-        fromBlock: 0,
+      return this.refreshTransferList()
+        .then(() => this.refreshApprovalList())
+        .then(() => this.$emit("end-loading"))
+        .finally(() => this.loading = false);
+    },
+    refreshTransferList() {
+      return this.newWeb3Contract.getPastEvents("Transfer", {
+        fromBlock: this.latestBlockNumber + 1,
         toBlock: 'latest'
       }).then((events) => {
         if (events && events.length) {
           for (let i = 0; i < events.length; i++) {
             const event = events[i];
+
+            this.latestBlockNumber = Math.max(this.latestBlockNumber, event.blockNumber);
             if (event.returnValues && event.returnValues._from && event.returnValues._to) {
               this.addTransactionToList(
                 event.returnValues._from.toLowerCase(),
@@ -110,6 +116,7 @@ export default {
             }
           }
         }
+        return this.transactions;
       }).catch(e => {
         console.debug("Error loading contract transactions using new Web3", e);
 
@@ -130,16 +137,19 @@ export default {
             'Sent to',
             'fa-exchange-alt');
         });
+        return this.transactions;
       });
-
-      this.newWeb3Contract.getPastEvents("Approval", {
-        fromBlock: 0,
+    },
+    refreshApprovalList() {
+      return this.newWeb3Contract.getPastEvents("Approval", {
+        fromBlock: this.latestDelegatedBlockNumber + 1,
         toBlock: 'latest'
       }).then((events) => {
         if (events && events.length) {
           for (let i = 0; i < events.length; i++) {
             const event = events[i];
-            
+
+            this.latestDelegatedBlockNumber = Math.max(this.latestDelegatedBlockNumber, event.blockNumber);
             if (event.returnValues && event.returnValues._spender && event.returnValues._owner) {
               this.addTransactionToList(
                 event.returnValues._owner.toLowerCase(),
@@ -153,9 +163,9 @@ export default {
             }
           }
         }
+        return this.transactions;
       }).catch(e => {
         // Can't intercept event when all events are loaded with Truffle
-        this.loading = false;
 
         console.debug("Error loading contract transactions using new Web3", e);
         // Fallback to use Truffle
@@ -175,14 +185,16 @@ export default {
             'Delegated to',
             'fa-exchange-alt');
         });
+        return this.transactions;
       });
     },
     addTransactionToList(from, to, amount, transactionHash, blockHash, labelFrom, labelTo, icon) {
+      let transactionDetails = null;
       if (to === this.account || from === this.account) {
         const isReceiver = to === this.account;
         const displayedAddress = isReceiver ? from : to;
         const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
-        const transactionDetails = {
+        transactionDetails = {
           hash: transactionHash,
           titlePrefix: isReceiver ? labelFrom: labelTo,
           displayName: contactDetails.name ? contactDetails.name : displayedAddress,
@@ -213,7 +225,7 @@ export default {
                   return transactionDetails;
                 });
             }
-            this.$emit("loaded");
+            return transactionDetails;
           })
           .catch(error => {
             console.debug("Web3 eth.getBlock method - error", error);

@@ -7,7 +7,7 @@
                    :args-values="[recipient, amount]"
                    :open="showQRCodeModal"
                    title="Delegate Token QR Code"
-                   function-name="transfer"
+                   function-name="approve"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
@@ -49,6 +49,12 @@ export default {
   },
   props: {
     contract: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
+    newWeb3Contract: {
       type: Object,
       default: function() {
         return {};
@@ -116,34 +122,41 @@ export default {
         return;
       }
 
+
       this.loading = true;
       try {
-        // Delegate an amount of tokens to the recipient 
-        this.contract.approve.estimateGas(this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.newWeb3Contract.methods.approve(this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
+            console.log("result gas estimation", result);
             if (result > window.walletSettings.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
-            return this.contract.approve(this.recipient, this.amount.toString());
-          })
-          .then(resp => {
-            if (resp.tx) {
-              this.dialog = false;
-              this.$emit("loading");
-            } else {
-              this.error = `Error while proceeding transaction`;
-              this.$emit("end-loading");
-            }
-            this.loading = false;
+            this.$emit("loading");
+            return this.newWeb3Contract.methods.approve(this.recipient, this.amount.toString()).send({from: this.account})
+              .on('confirmation', (confirmationNumber, receipt) => {
+                console.debug("send transaction approve - confirmation", confirmationNumber, receipt);
+                if (this.loading) {
+                  this.dialog = false;
+                  this.loading = false;
+                }
+                // The transaction has been mined and confirmed
+                this.$emit("loaded");
+              })
+              .on('error', (error, receipt) => {
+                // The transaction has failed
+                this.error = `Error sending ether: ${error}`;
+                this.loading = false;
+                this.$emit("end-loading");
+              });
           })
           .catch (e => {
-            console.debug("web3 contract.approve - error", e);
+            console.debug("Web3 contract.approve method - error", e);
             this.error = `Error while proceeding: ${e}`;
             this.loading = false;
             this.$emit("end-loading");
           });
       } catch(e) {
-        console.debug("web3 contract.approve - error", e);
+        console.debug("Web3 contract.approve method - error", e);
         this.loading = false;
         this.error = `Error while proceeding: ${e}`;
         this.$emit("end-loading");

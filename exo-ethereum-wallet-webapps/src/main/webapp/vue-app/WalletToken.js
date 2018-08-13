@@ -62,7 +62,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
  */
 export function loadContractDetails(account, contractDetails, contract, address) {
   if (!contractDetails || (!contract && !contractDetails.contract)) {
-    return null;
+    throw new Error('Contract instance is mandatory');
   }
   if (!contract) {
     contract = contractDetails.contract;

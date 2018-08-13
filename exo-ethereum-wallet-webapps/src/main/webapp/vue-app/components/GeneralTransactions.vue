@@ -71,6 +71,7 @@ export default {
   },
   data () {
     return {
+      lastBlockNumber: 0,
       finishedLoading: false,
       transactionsPerPage: 10,
       transactionsToLoad: 10,
@@ -116,28 +117,49 @@ export default {
     init() {
       this.transactions = [];
       this.loadedBlocks = 0;
+
+      return this.refreshTransactions(0);
+    },
+    refreshNewwestTransactions() {
+      this.loading = true;
+      return this.refreshTransactions(this.lastBlockNumber)
+        .then(() => this.$emit("end-loading"))
+        .finally(() => this.loading = false);
+    },
+    refreshTransactions(untilPreviousBlock) {
+      let lastBlockNumberTmp = 0;
+
       // Retrive transactions from 1000 previous blocks (at maximum)
       // and display transactions sent/received by the current account
       return window.localWeb3.eth.getBlockNumber()
+        .then(lastBlockNumber => lastBlockNumberTmp = lastBlockNumber)
         .then(lastBlockNumber => window.localWeb3.eth.getBlock(lastBlockNumber, true))
-        .then(this.addBlockTransactions);
+        .then((lastBlock) => this.addBlockTransactions(lastBlock, untilPreviousBlock))
+        .then(() => this.lastBlockNumber = lastBlockNumberTmp);
     },
-    addBlockTransactions(block) {
+    addBlockTransactions(block, untilBlock) {
       if (!block) {
         throw new Error("Block not found");
       }
-      this.loadedBlocks++;
+
+      // Don't display additional loaded blocks when refreshing the list
+      if (!untilBlock) {
+        this.loadedBlocks++;
+      }
+
       // If we :
       //  * already searched inside 1000 block
       //  * or we reached the genesis block
       //  * or we already displayed 10 transactions
       // then stop searching
       if (block.number === 0
-          || this.transactionsToLoad <= this.transactions.length
-          || this.loadedBlocks >= this.maxBlocksToLoad) {
+          || block.number <= untilBlock
+          || (!untilBlock && this.transactionsToLoad <= this.transactions.length)
+          || (!untilBlock && this.loadedBlocks >= this.maxBlocksToLoad)) {
         return false;
       }
       if (block.transactions && block.transactions.length) {
+
         const thiss = this;
         // Iterate over transactions from retrieved from block
         block.transactions.forEach(transaction => {
@@ -157,7 +179,7 @@ export default {
                 const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
                 const amountUSD = etherToUSD(amount);
     
-                const isFeeTransaction = parseInt(amount) === 0;
+                const isFeeTransaction = parseFloat(amount) === 0;
 
                 let displayedAddress = isReceiver ? transaction.from : transaction.to;
 

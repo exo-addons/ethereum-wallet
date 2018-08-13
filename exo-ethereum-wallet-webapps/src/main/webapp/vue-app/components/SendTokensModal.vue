@@ -64,6 +64,12 @@ export default {
         return {};
       }
     },
+    newWeb3Contract: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     balance: {
       type: Number,
       default: function() {
@@ -128,23 +134,29 @@ export default {
 
       this.loading = true;
       try {
-        this.contract.transfer.estimateGas(this.recipient, this.amount.toString(), {gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.newWeb3Contract.methods.transfer(this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
+            console.log("result gas estimation", result);
             if (result > window.walletSettings.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
-            return this.contract.transfer(this.recipient, this.amount.toString());
-          })
-          .then(resp => {
-            if (resp.tx) {
-              this.dialog = false;
-              this.$emit("loading");
-            } else {
-              this.error = 'Error while proceeding transaction';
-              console.error('Error while proceeding transaction', resp);
-              this.$emit("end-loading");
-            }
-            this.loading = false;
+            this.$emit("loading");
+            return this.newWeb3Contract.methods.transfer(this.recipient, this.amount.toString()).send({from: this.account})
+              .on('confirmation', (confirmationNumber, receipt) => {
+                // console.debug("send transaction transfer - confirmation", confirmationNumber, receipt);
+                if (this.loading) {
+                  this.dialog = false;
+                  this.loading = false;
+                }
+                // The transaction has been mined and confirmed
+                this.$emit("loaded");
+              })
+              .on('error', (error, receipt) => {
+                // The transaction has failed
+                this.error = `Error sending ether: ${error}`;
+                this.loading = false;
+                this.$emit("end-loading");
+              });
           })
           .catch (e => {
             console.debug("Web3 contract.transfer method - error", e);

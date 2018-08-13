@@ -43,6 +43,8 @@
         :ether-balance="contractDetail.etherBalance"
         :account="account"
         :contract="contractDetail.contract"
+        :new-web3-contract="contractDetail.newWeb3Contract"
+        @loaded="loaded"
         @loading="loading = true"
         @end-loading="loading = false" />
       <delegate-tokens-modal
@@ -51,20 +53,27 @@
         :balance="contractDetail.balance"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
-        @loading="loading = true" />
+        :new-web3-contract="contractDetail.newWeb3Contract"
+        @loaded="loaded"
+        @loading="loading = true"
+        @end-loading="loading = false" />
       <send-delegated-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="!hasDelegatedTokens || contractDetail.etherBalance === 0"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
-        @has-delegated-tokens="hasDelegatedTokens = true" />
+        :new-web3-contract="contractDetail.newWeb3Contract"
+        @has-delegated-tokens="hasDelegatedTokens = true"
+        @loaded="loaded"
+        @loading="loading = true"
+        @end-loading="loading = false" />
       <send-ether-modal
         v-if="!contractDetail.isContract"
         :account="account"
         :balance="contractDetail.balance"
-        @loading="loading = true; refreshed = false"
-        @end-loading="loading = false"
-        @loaded="loaded" />
+        @loading="loading = true"
+        @loaded="loaded"
+        @end-loading="loading = false" />
     </div>
 
     <v-alert :value="error" type="error">
@@ -72,8 +81,8 @@
     </v-alert>
     <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
-    <token-transactions v-if="contractDetail.isContract" :account="account" :contract="contractDetail.contract" :new-web3-contract="contractDetail.newWeb3Contract" @has-delegated-tokens="hasDelegatedTokens = true" @loaded="loaded" @error="loading = false;error = e"></token-transactions>
-    <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true; refreshed = false" @end-loading="loading = false" @error="loading = false;error = e"></general-transactions>
+    <token-transactions v-if="contractDetail.isContract" ref="contractTransactions" :account="account" :contract="contractDetail.contract" :new-web3-contract="contractDetail.newWeb3Contract" @has-delegated-tokens="hasDelegatedTokens = true" @end-loading="loading = false" @error="loading = false;error = e" />
+    <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
   </v-card>
 </template>
 
@@ -123,9 +132,6 @@ export default {
   data() {
     return {
       loading: false,
-      // Avoid displaying loading ison when the refresh is already made 
-      // and the event 'confirmed' continues to be triggered
-      refreshed: false,
       // Avoid refreshing list and balance twice
       refreshing: false,
       error: null,
@@ -138,6 +144,7 @@ export default {
     },
     contractDetail() {
       this.error = null;
+      console.debug("Display account details", this.contractDetail);
       if (this.contractDetail && this.contractDetail.isContract && this.contractDetail.contract) {
         this.contractDetail.contract.Transfer({}, {
           fromBlock: 0,
@@ -150,50 +157,57 @@ export default {
   },
   methods: {
     loaded() {
-      if (this.contractDetail.isContract) {
-        // Refresh Contract balance and tranactions
-        loadContractDetails(this.account, this.contractDetail)
-          .then(() => this.loading = false)
-          .catch(e => {
-            console.debug("loadContractDetails method - error", e);
-            this.loading = false;
-            this.error = `${e}`;
-          });
-      } else if (!this.refreshing) {
+      if (this.loading && !this.refreshing) {
         // Refresh Ether balance and tranactions
         // And avoid parallel refresh with refreshing = true
         this.refreshing = true;
         const account = window.localWeb3.eth.defaultAccount;
-        window.localWeb3.eth.getBalance(account)
+        return window.localWeb3.eth.getBalance(account)
           .then(balance => {
             balance = window.localWeb3.utils.fromWei(balance, "ether");
-            this.contractDetail.balanceUSD = etherToUSD(balance);
-            if(this.refreshed) {
+            if(!this.loading) {
               return false;
-            } else if(this.contractDetail.balance === balance) {
+            } else if(this.isEtherBalanceSame(balance)) {
               return true;
             } else {
-              this.contractDetail.balance = balance;
-              return this.$refs.generalTransactions.init();
+              return this.refreshList(balance)
+                .then(false); // Stop loading
             }
           })
           .then(continueLoading => {
-            // sometimes the balane gets refreshed, but the event 'confirmed' continues to be triggered,
-            // thus, loading is already finished and should stop
             if (!continueLoading) {
-              this.refreshed = true;
+              this.loading = false;
+              this.$forceUpdate();
             }
-            return this.loading = continueLoading && !this.refreshed;
+            return this.loading;
           })
-          // Permit to refresh again once the above conditions finished
-          .then(() => this.refreshing = false)
           .catch(e => {
             console.debug("Web3.eth.getBalance method - error", e);
-            this.refreshing = false;
+            // Stop loading on error
             this.loading = false;
             this.error = `${e}`;
-          });
+          })
+          // Permit to refresh again once the above conditions finished
+          .finally(() => this.refreshing = false);
       }
+    },
+    refreshList(balance) {
+      console.debug("Account details - refreshList after balance modified");
+      if (this.contractDetail.isContract) {
+        this.contractDetail.etherBalance = balance;
+        // Refresh Contract balance and tranactions
+        return loadContractDetails(this.account, this.contractDetail)
+          .then(() => this.$refs.contractTransactions.refreshNewwestTransactions());
+      } else {
+        this.contractDetail.balanceUSD = etherToUSD(balance);
+        this.contractDetail.balance = balance;
+        return this.$refs.generalTransactions.refreshNewwestTransactions();
+      }
+    },
+    isEtherBalanceSame(balance) {
+      return this.contractDetail.isContract ?
+        this.contractDetail.etherBalance === balance :
+        this.contractDetail.balance === balance;
     }
   }
 };
