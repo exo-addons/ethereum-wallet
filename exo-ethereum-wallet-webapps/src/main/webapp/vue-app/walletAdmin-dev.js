@@ -2,7 +2,7 @@ import NodeWeb3 from 'web3';
 import TruffleContract from 'truffle-contract';
 import $ from 'jquery';
 
-import exoi18n from '../js/lib/exo-i18n';
+import vuei18nCustomConfig from './vue-i18n-config';
 import WalletAdminApp from './components/WalletAdminApp.vue';
 import './../css/main.less';
 
@@ -12,11 +12,11 @@ window.LocalWeb3 = NodeWeb3;
 window.TruffleContract = TruffleContract;
 window.$ = $;
 
-exoi18n.loadLanguageAsync(lang).then(i18n => {
+vuei18nCustomConfig.loadLanguageAsync(lang).then(messages => {
   Vue.use(Vuetify);
-  new Vue({
+  const vueInstance = new Vue({
     el: '#WalletAdminApp',
-    render: h => h(WalletAdminApp),
-    i18n
+    render: h => h(WalletAdminApp)
   });
+  vueInstance.$i18nMessages = messages;
 });

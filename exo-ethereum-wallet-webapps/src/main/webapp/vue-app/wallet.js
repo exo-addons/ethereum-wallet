@@ -1,4 +1,4 @@
-import exoi18n from '../js/lib/exo-i18n';
+import vuei18nCustomConfig from './vue-i18n-config';
 import WalletApp from './components/WalletApp.vue';
 import './../css/main.less';
 
@@ -6,11 +6,11 @@ const lang = eXo && eXo.env && eXo.env.portal && eXo.env.portal.language ? eXo.e
 
 Vue.prototype.isMaximized = window.walletAppMaximize === "true";
 
-exoi18n.loadLanguageAsync(lang).then(i18n => {
+vuei18nCustomConfig.loadLanguageAsync(lang).then(messages => {
   Vue.use(Vuetify);
-  new Vue({
+  const vueInstance = new Vue({
     el: '#WalletApp',
-    render: h => h(WalletApp),
-    i18n
+    render: h => h(WalletApp)
   });
+  vueInstance.$i18nMessages = messages;
 });

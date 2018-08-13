@@ -3,7 +3,7 @@ import TruffleContract from 'truffle-contract';
 import EthereumQRPlugin from 'ethereum-qr-code';
 import $ from 'jquery';
 
-import exoi18n from '../js/lib/exo-i18n';
+import vuei18nCustomConfig from './vue-i18n-config';
 import SpaceWalletApp from './components/SpaceWalletApp.vue';
 import './../css/main.less';
 
@@ -16,11 +16,11 @@ window.$ = $;
 
 Vue.prototype.isMaximized = "true";
 
-exoi18n.loadLanguageAsync(lang).then(i18n => {
+vuei18nCustomConfig.loadLanguageAsync(lang).then(messages => {
   Vue.use(Vuetify);
-  new Vue({
+  const vueInstance = new Vue({
     el: '#SpaceWalletApp',
-    render: h => h(SpaceWalletApp),
-    i18n
+    render: h => h(SpaceWalletApp)
   });
+  vueInstance.$i18nMessages = messages;
 });
