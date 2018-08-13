@@ -11,16 +11,11 @@
         "$": true,
         "global": true,
         "eXo": true,
+        "LocalWeb3": true,
         "localWeb3": true,
         "Vue": true,
         "Vuetify": true,
-        "TruffleContract": true,
-        "LocalWeb3": true,
         "EthereumQRPlugin": true,
-        "web3": true,
-        "Web3": true,
-        "Web3v20": true,
-        "web3v20": true,
         "isMaximized": true
     },
     "parserOptions": {

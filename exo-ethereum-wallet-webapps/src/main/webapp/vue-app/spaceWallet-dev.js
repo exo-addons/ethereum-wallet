@@ -1,5 +1,4 @@
 import NodeWeb3 from 'web3';
-import TruffleContract from 'truffle-contract';
 import EthereumQRPlugin from 'ethereum-qr-code';
 import $ from 'jquery';
 
@@ -10,7 +9,6 @@ import './../css/main.less';
 const lang = eXo && eXo.env && eXo.env.portal && eXo.env.portal.language ? eXo.env.portal.language : 'en';
 
 window.LocalWeb3 = NodeWeb3;
-window.TruffleContract = TruffleContract;
 window.EthereumQRPlugin = EthereumQRPlugin;
 window.$ = $;
 

@@ -90,7 +90,7 @@
                 type="number"
                 required />
 
-              <v-btn :disabled="loading" :loading="loading" color="primary" @click="saveGlobalSettings">
+              <v-btn color="primary" @click="saveGlobalSettings">
                 Save
               </v-btn>
             </v-form>
@@ -133,7 +133,7 @@
                 :account="account"
                 :open="showAddContractModal"
                 :is-default-contract="true"
-                @added="addContractAddressAsDefault"
+                @added="contractAdded"
                 @close="showAddContractModal = false" />
             </div>
           </v-card>
@@ -148,7 +148,7 @@ import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import {searchSpaces} from '../WalletAddressRegistry.js';
-import {getContractsDetails, deleteContractFromStorage, saveContractAddressAsDefault, removeContractAddressFromDefault} from '../WalletToken.js';
+import {getContractsDetails, removeContractAddressFromDefault} from '../WalletToken.js';
 import {initWeb3,initSettings, retrieveUSDExchangeRate, computeNetwork} from '../WalletUtils.js';
 
 export default {
@@ -160,7 +160,7 @@ export default {
     return {
       isWalletEnabled: false,
       loading: false,
-      sameConfiguredNetwork: '',
+      sameConfiguredNetwork: true,
       accessPermission: '',
       accessPermissionOptions: [],
       accessPermissionSearchTerm: null,
@@ -348,6 +348,7 @@ export default {
           window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
           window.walletSettings.defaultNetworkId = this.defaultNetworkId;
           window.walletSettings.defaultGas = this.defaultGas;
+          this.sameConfiguredNetwork = this.networkId === this.defaultNetworkId;
         } else {
           this.errorMessage = 'Error saving global settings';
         }
@@ -357,10 +358,9 @@ export default {
         this.errorMessage = 'Error saving global settings';
       });
     },
-    addContractAddressAsDefault(address) {
-      this.loading = true;
-      saveContractAddressAsDefault(address)
-        .then(this.refreshContractsList)
+    contractAdded() {
+      this.refreshContractsList()
+        .then(() => this.loading = false)
         .catch(e => {
           console.debug("saveContractAddressAsDefault method - error", e);
           this.loading = false;

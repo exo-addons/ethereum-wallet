@@ -83,7 +83,7 @@ export default {
       }
       this.loading = true;
       try {
-        saveContractAddress(this.account, this.address.toLowerCase(), this.netId, this.isDefaultContract)
+        return saveContractAddress(this.account, this.address.toLowerCase(), this.netId, this.isDefaultContract)
           .then((added, error) => {
             if (error) {
               throw error;

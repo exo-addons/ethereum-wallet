@@ -84,9 +84,6 @@
         <module>vuetify</module>
       </depends>
       <depends>
-        <module>truffleContract</module>
-      </depends>
-      <depends>
         <module>Web3</module>
         <as>LocalWeb3</as>
       </depends>
@@ -121,16 +118,8 @@
         <module>vuetify</module>
       </depends>
       <depends>
-        <module>truffleContract</module>
-      </depends>
-      <depends>
         <module>Web3</module>
         <as>LocalWeb3</as>
-      </depends>
-      <!-- Used for Truffle -->
-      <depends>
-        <module>Web3v20</module>
-        <as>Web3v20</as>
       </depends>
       <depends>
         <module>ethQRCode</module>
@@ -162,9 +151,6 @@
         <module>vuetify</module>
       </depends>
       <depends>
-        <module>truffleContract</module>
-      </depends>
-      <depends>
         <module>Web3</module>
         <as>LocalWeb3</as>
       </depends>
@@ -194,42 +180,12 @@
   </module>
 
   <module>
-    <!-- should be truffleContract, but this JS isn't well integrated, 
-          thus we add it with different name (should be TruffleContract) -->
-    <name>truffleContract</name>
-    <script>
-      <minify>false</minify>
-      <adapter>
-        (function() {
-          try {
-            <include>/js/lib/truffle-contract.min.js</include>
-            return TruffleContract;
-          } catch(e) {}
-        })();
-      </adapter>
-    </script>
-  </module>
-
-  <module>
     <name>Web3</name>
     <script>
       <minify>false</minify>
       <adapter>
         (function() {
           <include>/js/lib/web3.min.js</include>
-          return Web3;
-        })();
-      </adapter>
-    </script>
-  </module>
-
-  <module>
-    <name>Web3v20</name>
-    <script>
-      <minify>false</minify>
-      <adapter>
-        (function() {
-          <include>/js/lib/web3.v0.20.6.min.js</include>
           return Web3;
         })();
       </adapter>

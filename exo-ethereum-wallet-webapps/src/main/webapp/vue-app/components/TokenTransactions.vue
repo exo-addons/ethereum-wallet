@@ -42,12 +42,6 @@ export default {
         return null;
       }
     },
-    newWeb3Contract: {
-      type: Object,
-      default: function() {
-        return {};
-      }
-    },
     contract: {
       type: Object,
       default: function() {
@@ -60,7 +54,7 @@ export default {
       latestBlockNumber: 0,
       latestDelegatedBlockNumber: 0,
       transactions: [],
-      loading: false
+      loading: true
     };
   },
   computed: {
@@ -88,13 +82,14 @@ export default {
     },
     refreshNewwestTransactions() {
       this.loading = true;
+      this.$emit("loading");
       return this.refreshTransferList()
         .then(() => this.refreshApprovalList())
         .then(() => this.$emit("end-loading"))
         .finally(() => this.loading = false);
     },
     refreshTransferList() {
-      return this.newWeb3Contract.getPastEvents("Transfer", {
+      return this.contract.getPastEvents("Transfer", {
         fromBlock: this.latestBlockNumber + 1,
         toBlock: 'latest'
       }).then((events) => {
@@ -118,30 +113,12 @@ export default {
         }
         return this.transactions;
       }).catch(e => {
-        console.debug("Error loading contract transactions using new Web3", e);
-
-        // Fallback to use Truffle
-        this.contract.Transfer({}, { fromBlock: 0, toBlock: 'latest' }, (error, res) => {
-          if (error) {
-            console.error("Error listing Transfer transactions of contract", error);
-            this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
-            return;
-          }
-          this.addTransactionToList(
-            res.args._from.toLowerCase(), 
-            res.args._to.toLowerCase(), 
-            res.args._value.toNumber(), 
-            res.transactionHash,
-            res.blockHash,
-            'Received from',
-            'Sent to',
-            'fa-exchange-alt');
-        });
+        this.$emit("error", `Error loading contract transactions using new Web3: ${e}`);
         return this.transactions;
       });
     },
     refreshApprovalList() {
-      return this.newWeb3Contract.getPastEvents("Approval", {
+      return this.contract.getPastEvents("Approval", {
         fromBlock: this.latestDelegatedBlockNumber + 1,
         toBlock: 'latest'
       }).then((events) => {
@@ -165,26 +142,7 @@ export default {
         }
         return this.transactions;
       }).catch(e => {
-        // Can't intercept event when all events are loaded with Truffle
-
-        console.debug("Error loading contract transactions using new Web3", e);
-        // Fallback to use Truffle
-        this.contract.Approval({}, { fromBlock: 0, toBlock: 'latest' }, (error, res) => {
-          if (error) {
-            console.error("Error listing Approval transactions of contract", error);
-            this.$emit("error", `Error listing Approval transactions of contract: ${error}`);
-            return;
-          }
-          this.addTransactionToList(
-            res.args._owner.toLowerCase(), 
-            res.args._spender.toLowerCase(), 
-            res.args._value.toNumber(), 
-            res.transactionHash,
-            res.blockHash,
-            'Delegated from',
-            'Delegated to',
-            'fa-exchange-alt');
-        });
+        this.$emit("error", `Error loading contract transactions using new Web3: ${e}`);
         return this.transactions;
       });
     },

@@ -43,7 +43,6 @@
         :ether-balance="contractDetail.etherBalance"
         :account="account"
         :contract="contractDetail.contract"
-        :new-web3-contract="contractDetail.newWeb3Contract"
         @loaded="loaded"
         @loading="loading = true"
         @end-loading="loading = false" />
@@ -53,7 +52,6 @@
         :balance="contractDetail.balance"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
-        :new-web3-contract="contractDetail.newWeb3Contract"
         @loaded="loaded"
         @loading="loading = true"
         @end-loading="loading = false" />
@@ -62,7 +60,6 @@
         :disabled="!hasDelegatedTokens || contractDetail.etherBalance === 0"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
-        :new-web3-contract="contractDetail.newWeb3Contract"
         @has-delegated-tokens="hasDelegatedTokens = true"
         @loaded="loaded"
         @loading="loading = true"
@@ -81,7 +78,7 @@
     </v-alert>
     <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
-    <token-transactions v-if="contractDetail.isContract" ref="contractTransactions" :account="account" :contract="contractDetail.contract" :new-web3-contract="contractDetail.newWeb3Contract" @has-delegated-tokens="hasDelegatedTokens = true" @end-loading="loading = false" @error="loading = false;error = e" />
+    <token-transactions v-if="contractDetail.isContract" ref="contractTransactions" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
     <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
   </v-card>
 </template>
@@ -96,7 +93,7 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
-import {loadContractDetails} from '../WalletToken.js';
+import {retrieveContractDetails} from '../WalletToken.js';
 import {etherToUSD} from '../WalletUtils.js';
 
 export default {
@@ -196,7 +193,7 @@ export default {
       if (this.contractDetail.isContract) {
         this.contractDetail.etherBalance = balance;
         // Refresh Contract balance and tranactions
-        return loadContractDetails(this.account, this.contractDetail)
+        return retrieveContractDetails(this.account, this.contractDetail)
           .then(() => this.$refs.contractTransactions.refreshNewwestTransactions());
       } else {
         this.contractDetail.balanceUSD = etherToUSD(balance);

@@ -89,7 +89,7 @@
 
 <script>
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
-import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, createNewERC20TokenContract} from '../WalletToken.js';
+import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, deployContractInstance} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
 import {gasToUSD} from '../WalletUtils.js';
 
@@ -186,58 +186,68 @@ export default {
         return;
       }
 
-      let NEW_TOKEN = null;
       this.loading = true;
       try {
-        createNewERC20TokenContract(this.account, this.newTokenGas, this.newTokenGasPrice)
-          .then((contract, error) => {
+        const NEW_TOKEN_DEPLOYMENT_TX = deployContractInstance(
+          this.newTokenInitialCoins,
+          this.newTokenName,
+          this.newTokenDecimals,
+          this.newTokenSymbol);
+
+        NEW_TOKEN_DEPLOYMENT_TX
+          .estimateGas((error, gas) => {
             if (error) {
-              throw error;
+              throw new Error(`Error while estimating contract deployment gas ${error}`);
             }
-            return NEW_TOKEN = contract;
+            return gas;
           })
-          .then(() => this.loading = true)
-          .then(() => window.localWeb3.eth.estimateGas({data: ERC20_COMPLIANT_CONTRACT_BYTECODE}))
           .then(result => {
             if (result > this.newTokenGas) {
               this.warning = `You have set a low gas ${this.newTokenGas} while the estimation of necessary gas is ${result}`;
             }
           })
-          .then(() =>  NEW_TOKEN.new(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol))
-          .then((newTokenInstance) => {
-            if (this.newTokenSetAsDefault && newTokenInstance.address && !this.error) {
-              if (!newTokenInstance || !newTokenInstance.address) {
+          .then(() =>  NEW_TOKEN_DEPLOYMENT_TX.send({
+            from: this.account, 
+            gas: this.newTokenGas,
+            gasPrice: this.newTokenGasPrice
+          }))
+          .then((newTokenInstance, error) => {
+            if (error) {
+              throw error;
+            }
+            if (this.newTokenSetAsDefault && newTokenInstance.options.address && !this.error) {
+              if (!newTokenInstance || !newTokenInstance.options || !newTokenInstance.options.address) {
                 throw new Error("Contract deployed without a returned address");
               }
-              newTokenInstance.address = newTokenInstance.address.toLowerCase();
+              newTokenInstance.options.address = newTokenInstance.options.address.toLowerCase();
               // Save conract address to display for all users
-              saveContractAddressAsDefault(newTokenInstance.address)
+              return saveContractAddressAsDefault(newTokenInstance.options.address)
                 .then(resp => {
                   if (resp && resp.ok) {
-                    this.$emit("list-updated", newTokenInstance.address);
+                    this.$emit("list-updated", newTokenInstance.options.address);
                     this.createNewToken = false;
                   } else {
                     this.loading = false;
                     this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
-                    this.newTokenAddress = newTokenInstance.address;
+                    this.newTokenAddress = newTokenInstance.options.address;
                   }
                 })
                 .catch(e => {
                   console.debug("saveContractAddressAsDefault method - error", e);
                   this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users: ${e}`;
                   this.loading = false;
-                  this.newTokenAddress = newTokenInstance.address;
+                  this.newTokenAddress = newTokenInstance.options.address;
                 });
             } else {
               // Save contract address to display for current user only
-              saveContractAddress(this.account, newTokenInstance.address, this.networkId)
+              return saveContractAddress(this.account, newTokenInstance.options.address, this.networkId)
                 .then((added, error) => {
                   if (error) {
                     throw error;
                   }
                   this.loading = false;
                   if (added) {
-                    this.newTokenAddress = newTokenInstance.address;
+                    this.newTokenAddress = newTokenInstance.options.address;
                   } else {
                     this.errorMessage = `Error during contract address saving for all users`;
                   }

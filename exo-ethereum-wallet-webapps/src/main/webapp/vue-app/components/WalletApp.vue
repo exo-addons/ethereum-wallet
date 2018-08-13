@@ -271,7 +271,7 @@ export default {
   methods: {
     init() {
       this.errorMessage = null;
-      return initSettings()
+      return initSettings(this.isSpace)
         .then((result, error) => {
           if (error) {
             throw error;

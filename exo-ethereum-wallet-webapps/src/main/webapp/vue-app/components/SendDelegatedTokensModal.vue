@@ -55,12 +55,6 @@ export default {
         return {};
       }
     },
-    newWeb3Contract: {
-      type: Object,
-      default: function() {
-        return {};
-      }
-    },
     etherBalance: {
       type: Number,
       default: function() {
@@ -123,14 +117,13 @@ export default {
 
       this.loading = true;
       try {
-        this.newWeb3Contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
-            console.log("result gas estimation", result);
             if (result > window.walletSettings.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
             this.$emit("loading");
-            return this.newWeb3Contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.account})
+            return this.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.account})
               .on('confirmation', (confirmationNumber, receipt) => {
                 console.debug("send transaction transferFrom - confirmation", confirmationNumber, receipt);
                 if (this.loading) {

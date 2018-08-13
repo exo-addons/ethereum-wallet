@@ -28,6 +28,7 @@ export function gasToUSD(amount, gasPriceInEther) {
 export function retrieveUSDExchangeRate() {
   // Retrieve USD <=> Ether exchange rate
   return window.localWeb3.eth.getGasPrice()
+    // gas price returned 1 in space context (strange behavior)
     .then(gasPrice => window.walletSettings.gasPrice = gasPrice)
     .then(() => sessionStorage.getItem('exo-wallet-exchange-rate'))
     .then(exchangeRate => {
@@ -67,16 +68,8 @@ export function initWeb3(isSpace) {
     }
     if (window.walletSettings.providerURL.indexOf("ws") === 0) {
       window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.WebsocketProvider(window.walletSettings.providerURL));
-      // Used for truffle
-      window.web3v20 = new Web3v20(new Web3v20.providers.WebsocketProvider(window.walletSettings.providerURL));
     } else {
       window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
-      // Used for truffle
-      window.web3v20 = new Web3v20(new Web3v20.providers.HttpProvider(window.walletSettings.providerURL));
-    }
-    if (typeof window.web3 === 'undefined' || !window.web3) {
-      window.web3 = window.web3v20;
-      window.Web3 = window.Web3v20;
     }
   } else if (window.web3) {
     if (!window.web3.isConnected || !window.web3.isConnected()) {
@@ -84,25 +77,25 @@ export function initWeb3(isSpace) {
     } else {
       window.localWeb3 = new LocalWeb3(window.web3.currentProvider);
       window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount;
-
-      let isListening = false;
-      window.localWeb3.eth.net.isListening()
-        .then(listening => isListening = listening);
-      return new Promise((resolve) => setTimeout(resolve, 1000))
-        .then(() => {
-          if (!isListening) {
-            throw new Error("Metamask is disconnected from network");
-          }
-        });
     }
   } else {
     throw new Error("Please install/enable Metamask to create/access your wallet");
   }
-  return Promise.resolve(window.localWeb3);
+
+  // Test if network is connected
+  let isListening = false;
+  window.localWeb3.eth.net.isListening()
+    .then(listening => isListening = listening);
+  return new Promise((resolve) => setTimeout(resolve, 1000))
+    .then(() => {
+      if (!isListening) {
+        throw new Error("Metamask is disconnected from network");
+      }
+    });
 }
 
-export function initSettings() {
-  return getMetamaskCurrentNetworkId()
+export function initSettings(isSpace) {
+  return getMetamaskCurrentNetworkId(isSpace)
     .then(networkId => fetch(`/portal/rest/wallet/api/global-settings?networkId=${networkId}`, {credentials: 'include'}))
     .then(resp =>  {
       if (resp && resp.ok) {
@@ -128,16 +121,16 @@ export function initSettings() {
     });
 }
 
-function getMetamaskCurrentNetworkId() {
+function getMetamaskCurrentNetworkId(isSpace) {
   let currentNetworkId = 0;
-  if (window.web3) {
+  if (!isSpace && typeof window.web3 !== 'undefined') {
     window.web3.version.getNetwork((e, netId) => currentNetworkId = netId);
     return new Promise((resolve) => setTimeout(resolve, 500))
       .then(() => {
         return currentNetworkId;
       });
   }
-  return currentNetworkId;
+  return Promise.resolve(currentNetworkId);
 }
 
 export function computeNetwork() {
