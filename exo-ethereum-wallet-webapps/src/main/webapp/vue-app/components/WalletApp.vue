@@ -324,6 +324,10 @@ export default {
       this.isWalletEnabled = false;
       return;
     }
+    if(this.isSpace && !(eXo && eXo.env && eXo.env.portal && eXo.env.portal.spaceGroup && eXo.env.portal.spaceGroup.length)) {
+      this.isWalletEnabled = false;
+      return;
+    }
     $(document).on("click", () => {
       this.walletConfigurationMenu = false;
     });
