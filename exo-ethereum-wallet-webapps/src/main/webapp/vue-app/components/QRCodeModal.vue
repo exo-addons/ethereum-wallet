@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show" width="300px" max-width="100vw">
+  <v-dialog v-model="show" width="300px" max-width="100vw" @keydown.esc="show = false">
     <v-card class="elevation-12">
       <v-toolbar dark color="primary">
         <v-toolbar-title>{{ title }}</v-toolbar-title>

@@ -16,9 +16,10 @@
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
-          <v-toolbar v-if="isMaximized" color="grey lighten-2" flat dense>
-            <v-toolbar-title v-if="isSpace">Space Wallet</v-toolbar-title>
-            <v-toolbar-title v-else>My Wallet</v-toolbar-title>
+          <v-toolbar :color="isMaximized ? 'grey lighten-2':'transparent'" :class="isMaximized ? '':'no-padding'" flat dense>
+            <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
+            <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
+            <h4 v-else class="head-container">Wallet</h4>
             <v-spacer />
             <add-contract-modal v-if="!isSpace"
                                 :net-id="networkId"
@@ -34,7 +35,7 @@
                                  :open="showSettingsModal"
                                  @close="showSettingsModal = false"
                                  @settings-changed="reload" />
-            <v-dialog v-model="showWalletAddress" width="400px" max-width="100vw">
+            <v-dialog v-model="showWalletAddress" width="400px" max-width="100vw" @keydown.esc="showWalletAddress = false">
               <v-card class="elevation-12">
                 <v-toolbar dark color="primary">
                   <v-toolbar-title>Wallet address</v-toolbar-title>
@@ -48,7 +49,7 @@
                 </v-card-text>
               </v-card>
             </v-dialog>
-            <v-menu v-if="!error" offset-y left>
+            <v-menu v-if="!error && !loading" v-model="walletConfigurationMenu" offset-y left>
               <v-btn slot="activator" icon>
                 <v-icon>more_vert</v-icon>
               </v-btn>
@@ -84,22 +85,24 @@
               <v-icon color="blue-grey">fa-window-maximize</v-icon>
             </v-btn> -->
           </v-toolbar>
-          <h4 v-else class="head-container">Wallet</h4>
 
           <!-- Body -->
           <v-card class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-            <v-alert :value="!isSpace && !sameConfiguredNetwork && networkLabel && networkLabel.length" type="warning">
+            <v-alert :value="!loading && !isSpace && !sameConfiguredNetwork && networkLabel && networkLabel.length" type="warning">
               Please switch Metamask to network <strong>{{ networkLabel }}</strong>
             </v-alert>
 
             <!-- Ethereum address association -->
-            <v-alert :value="newAddressDetected" type="info">
-              A new address has been detected!
+            <v-alert v-if="!loading && isSpace && !oldAccountAddress && !newAccountAddress && !account" :value="!loading && isSpace && !oldAccountAddress && !newAccountAddress" type="info">
+              Please enable/install Metamask to be able to add a new space account
+            </v-alert>
+            <v-alert v-else-if="!loading && newAddressDetected" :value="newAddressDetected" type="info">
+              A new wallet has been detected!
               <v-btn color="primary" dark flat @click.stop="addressAssociationDialog = true">
                 See details
               </v-btn>
-              <v-dialog v-model="addressAssociationDialog" width="400" max-width="100wv">
+              <v-dialog v-model="addressAssociationDialog" width="400" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
                 <v-card>
                   <v-toolbar dark color="primary">
                     <v-btn icon dark @click.native="addressAssociationDialog = false">
@@ -110,24 +113,24 @@
                   </v-toolbar>
                   <v-card-text>
                     <div v-if="displaySpaceAccountCreationHelp">
-                      <div>
-                        Current space doesn't have an account yet ? If you are manager of the space, you can create a new account using Metamask.
-                      </div>
-                      <div v-if="currentAccountAlreadyInUse">
-                        Currently selected account in Metamask is already in use, you can't set it for this space.
-                      </div>
+                      Current space doesn't have a wallet yet ? If you are manager of the space, you can create a new account using Metamask.
                     </div>
-                    <div v-if="isSpace && !currentAccountAlreadyInUse && !oldAccountAddress">
+
+                    <div v-if="currentAccountAlreadyInUse">
+                      Currently selected account in Metamask is already in use, you can't use it in this wallet.
+                    </div>
+                    <div v-else-if="isSpace && !oldAccountAddress && newAccountAddress">
                       Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
                     </div>
                     <div v-else-if="!isSpace && !oldAccountAddress">
                       Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
                     </div>
-                    <div v-elseif="!isSpace">
+                    <div v-else-if="!isSpace">
                       Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
                     </div>
+
                   </v-card-text>
-                  <v-card-actions v-if="!displaySpaceAccountCreationHelp" class="text-xs-center">
+                  <v-card-actions v-if="!displaySpaceAccountCreationHelp && !currentAccountAlreadyInUse" class="text-xs-center">
                     <v-spacer></v-spacer>
                     <v-btn color="primary" @click="saveNewAddressInWallet">
                       Yes
@@ -148,7 +151,7 @@
                 <v-btn color="primary" dark flat @click.stop="installInstructionDialog = true">
                   See help
                 </v-btn>
-                <v-dialog v-model="installInstructionDialog" width="400" max-width="100wv">
+                <v-dialog v-model="installInstructionDialog" width="400" max-width="100wv" @keydown.esc="installInstructionDialog = false">
                   <v-card>
                     <v-toolbar dark color="primary">
                       <v-btn icon dark @click.native="installInstructionDialog = false">
@@ -212,8 +215,8 @@
           </v-card>
 
           <!-- The selected account detail -->
-          <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right width="700" max-width="100vw" class="mt-2" z-index="1000">
-            <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back" />
+          <v-navigation-drawer v-if="seeAccountDetails" id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right permanent width="700" max-width="100vw">
+            <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
         </v-flex>
       </v-layout>
@@ -249,6 +252,7 @@ export default {
   },
   data() {
     return {
+      walletConfigurationMenu: false,
       seeAccountDetails: false,
       addressAssociationDialog: false,
       installInstructionDialog: false,
@@ -305,7 +309,7 @@ export default {
   },
   watch: {
     account(value, oldValue) {
-      if (!value) {
+      if (!this.account || !this.account.length) {
         return;
       }
       this.refreshBalance()
@@ -320,6 +324,9 @@ export default {
       this.isWalletEnabled = false;
       return;
     }
+    $(document).on("click", () => {
+      this.walletConfigurationMenu = false;
+    });
     // Init application
     try {
       if (this.isSpace || (this.metamaskEnabled && this.metamaskConnected)) {
@@ -501,7 +508,7 @@ export default {
           if (window.web3 && window.web3.eth.defaultAccount) {
             // Display information to allow administrator to associate
             // This new address with wallet
-            return this.oldAccountAddress = this.newAccountAddress = this.account = window.web3.eth.defaultAccount;
+            return this.oldAccountAddress = this.newAccountAddress = window.web3.eth.defaultAccount;
           } else {
             this.displaySpaceAccountCreationHelp = true;
           }
@@ -568,7 +575,7 @@ export default {
       }
     },
     refreshBalance() {
-      return computeBalance()
+      return computeBalance(this.account)
         .then((balanceDetails, error) => {
           if (error) {
             this.accountsDetails[this.account] = {
@@ -713,6 +720,20 @@ export default {
             this.oldAccountAddress = address.toLowerCase();
           } else {
             this.oldAccountAddressNotFound = true;
+          }
+          if (this.newAddressDetected) {
+            return searchFullName(this.newAccountAddress);
+          } else {
+            // The user is not administrator, so don't propose him
+            // to associate the current address with space
+            return {ignore: true};
+          }
+        }).then((item, error) => {
+          if (error) {
+            throw error;
+          }
+          if (item && item.id && item.id.length) {
+            this.currentAccountAlreadyInUse = true;
           }
         })
         .catch(e => {

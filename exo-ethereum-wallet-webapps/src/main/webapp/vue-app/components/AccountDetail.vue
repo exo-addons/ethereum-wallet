@@ -9,11 +9,8 @@
           <v-spacer />
           <div class="title">
             <span>{{ contractDetail.title }}</span>
-            <div v-if="contractDetail.isContract" class="title">
+            <div v-if="contractDetail.isContract" class="title mt-2">
               Contract address: <code>{{ contractDetail.address }}</code>
-            </div>
-            <div v-else class="title">
-              Wallet address: <code>{{ account }}</code>
             </div>
           </div>
           <v-spacer />
@@ -35,7 +32,7 @@
 
     <v-divider v-if="isSpace" />
     <div v-else class="text-xs-center grey lighten-4">
-      <!--  -->
+      <!-- Contract actions -->
       <send-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
@@ -57,13 +54,15 @@
         @end-loading="loading = false" />
       <send-delegated-tokens-modal
         v-if="contractDetail.isContract"
-        :disabled="!hasDelegatedTokens || contractDetail.etherBalance === 0"
+        :disabled="!hasDelegatedTokens || contractDetail.balance === 0 || contractDetail.etherBalance === 0"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
-        @has-delegated-tokens="hasDelegatedTokens = true"
+        :has-delegated-tokens="hasDelegatedTokens"
         @loaded="loaded"
         @loading="loading = true"
         @end-loading="loading = false" />
+
+      <!-- Ether account actions -->
       <send-ether-modal
         v-if="!contractDetail.isContract"
         :account="account"
@@ -78,8 +77,10 @@
     </v-alert>
     <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
-    <token-transactions v-if="contractDetail.isContract" ref="contractTransactions" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
-    <general-transactions v-else ref="generalTransactions" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
+    <v-divider />
+
+    <token-transactions v-if="contractDetail.isContract" id="contractTransactionsContent" ref="contractTransactions" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
+    <general-transactions v-else id="generalTransactionsContent" ref="generalTransactions" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false;error = e" />
   </v-card>
 </template>
 

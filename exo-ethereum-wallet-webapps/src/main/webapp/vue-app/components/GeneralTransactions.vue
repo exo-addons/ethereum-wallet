@@ -1,7 +1,7 @@
 <template>
   <v-flex>
     <v-card class="card--flex-toolbar">
-      <v-subheader>Transactions list retrieved from {{ loadedBlocks }} / {{ maxBlocksToLoad }} latest blocks. {{ transactions.length }} tranactions are loaded (maximum {{ transactionsToLoad }})</v-subheader>
+      <v-subheader>Transactions list retrieved from {{ loadedBlocks }} / {{ maxBlocksToLoad }} latest blocks. Total loaded transactions: {{ transactions.length }}.</v-subheader>
       <v-progress-circular
         v-if="!finishedLoading"
         :rotate="-90"
@@ -74,7 +74,6 @@ export default {
       lastBlockNumber: 0,
       finishedLoading: false,
       transactionsPerPage: 10,
-      transactionsToLoad: 10,
       maxBlocksToLoad: 1000,
       loadedBlocks: 0,
       transactions: []
@@ -154,7 +153,6 @@ export default {
       // then stop searching
       if (block.number === 0
           || block.number <= untilBlock
-          || (!untilBlock && this.transactionsToLoad <= this.transactions.length)
           || (!untilBlock && this.loadedBlocks >= this.maxBlocksToLoad)) {
         return false;
       }

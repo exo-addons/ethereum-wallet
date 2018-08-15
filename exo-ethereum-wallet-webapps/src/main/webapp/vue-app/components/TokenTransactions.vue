@@ -136,7 +136,12 @@ export default {
                 event.blockHash,
                 'Delegated from',
                 'Delegated to',
-                'fa-users');
+                'fa-users')
+                .then(transactionDetails => {
+                  if (transactionDetails && transactionDetails.isReceiver) {
+                    this.$emit('has-delegated-tokens');
+                  }
+                });
             }
           }
         }
@@ -158,6 +163,7 @@ export default {
           displayName: contactDetails.name ? contactDetails.name : displayedAddress,
           avatar: contactDetails.avatar,
           name: null,
+          isReceiver: isReceiver,
           color: isReceiver ? 'green' : 'red',
           icon: icon,
           amount: amount

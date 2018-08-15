@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw" persistent>
+  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <v-btn 
       slot="activator"
       :disabled="disabled"

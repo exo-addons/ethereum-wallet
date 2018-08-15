@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw">
+  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw" @keydown.esc="dialog = false">
     <v-btn slot="activator" :disabled="disabled" :dark="!disabled" color="primary" ripple>Send Tokens</v-btn>
     <qr-code-modal :to="recipient"
                    :from="account"

@@ -162,8 +162,8 @@ export function computeNetwork() {
     });
 }
 
-export function computeBalance() {
-  return window.localWeb3.eth.getBalance(window.localWeb3.eth.defaultAccount)
+export function computeBalance(account) {
+  return window.localWeb3.eth.getBalance(account)
     .then((retrievedBalance, error) => {
       if (error) {
         throw error;
