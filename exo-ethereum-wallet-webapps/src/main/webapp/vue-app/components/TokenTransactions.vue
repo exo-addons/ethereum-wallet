@@ -113,7 +113,7 @@ export default {
         }
         return this.transactions;
       }).catch(e => {
-        this.$emit("error", `Error loading contract transactions using new Web3: ${e}`);
+        this.$emit("error", `Error loading contract transactions: ${e}`);
         return this.transactions;
       });
     },
@@ -147,7 +147,8 @@ export default {
         }
         return this.transactions;
       }).catch(e => {
-        this.$emit("error", `Error loading contract transactions using new Web3: ${e}`);
+        console.debug("Error occurred while retrieving contract transactions", e);
+        this.$emit("error", `Error loading contract transactions: ${e}`);
         return this.transactions;
       });
     },
@@ -197,6 +198,7 @@ export default {
             return transactionDetails;
           });
       }
+      return Promise.resolve(null);
     }
   }
 };

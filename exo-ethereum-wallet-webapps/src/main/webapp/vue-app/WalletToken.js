@@ -111,7 +111,7 @@ export function getContractsAddresses(account, netId) {
 }
 
 /*
- * Creates new Web3 conract deployment transaction
+ * Creates Web3 conract deployment transaction
  */
 export function deployContractInstance(...args) {
   return new window.localWeb3.eth.Contract(ERC20_COMPLIANT_CONTRACT_ABI).deploy({
