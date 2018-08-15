@@ -87,7 +87,7 @@
           <h4 v-else class="head-container">Wallet</h4>
 
           <!-- Body -->
-          <v-card v-if="!selectedAccount" class="text-xs-center" flat>
+          <v-card class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
             <v-alert :value="!isSpace && !sameConfiguredNetwork && networkLabel && networkLabel.length" type="warning">
               Please switch Metamask to network <strong>{{ networkLabel }}</strong>
@@ -212,7 +212,9 @@
           </v-card>
 
           <!-- The selected account detail -->
-          <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="reload" />
+          <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right width="700" max-width="100vw" class="mt-2" z-index="1000">
+            <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back" />
+          </v-navigation-drawer>
         </v-flex>
       </v-layout>
     </main>
@@ -247,6 +249,7 @@ export default {
   },
   data() {
     return {
+      seeAccountDetails: false,
       addressAssociationDialog: false,
       installInstructionDialog: false,
       isWalletEnabled: false,
@@ -313,6 +316,10 @@ export default {
     }
   },
   created() {
+    if(eXo.env.portal.profileOwner && eXo.env.portal.profileOwner !== eXo.env.portal.userName) {
+      this.isWalletEnabled = false;
+      return;
+    }
     // Init application
     try {
       if (this.isSpace || (this.metamaskEnabled && this.metamaskConnected)) {
@@ -461,6 +468,7 @@ export default {
     },
     refreshList(forceRefresh) {
       this.loading = true;
+      this.seeAccountDetails = false;
       this.errorMessage = null;
       this.selectedAccount = null;
 
@@ -623,10 +631,11 @@ export default {
         });
     },
     openAccountDetail(accountDetails) {
-      if (!this.isMaximized) {
-        this.maximize();
-      } else if (!accountDetails.error) {
+      if (!accountDetails.error) {
         this.selectedAccount = accountDetails;
+      }
+      if (!this.isMaximized) {
+        this.seeAccountDetails = true;
       }
     },
     deleteContract(item, event) {
@@ -637,7 +646,10 @@ export default {
       event.preventDefault();
       event.stopPropagation();
     },
-    reload() {
+    back() {
+      this.seeAccountDetails = false;
+      this.selectedAccount = null;
+      /*
       this.refreshList(this.account, true)
         .then(() => this.loading = false)
         .catch(e => {
@@ -645,6 +657,7 @@ export default {
           this.errorMessage = `Error reloading Wallet application: ${e}`;
           this.loading = false;
         });
+      */
     },
     initSpaceAccount() {
       return searchUserOrSpaceObject(eXo.env.portal.spaceGroup, 'space')
