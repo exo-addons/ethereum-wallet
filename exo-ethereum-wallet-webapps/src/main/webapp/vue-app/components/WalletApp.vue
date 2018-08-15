@@ -85,46 +85,110 @@
             </v-btn> -->
           </v-toolbar>
           <h4 v-else class="head-container">Wallet</h4>
+
+          <!-- Body -->
           <v-card v-if="!selectedAccount" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-            <v-alert :value="!isSpace && !sameConfiguredNetwork && isMaximized" type="warning" dismissible>
-              Current selected network on Metamask is different from configured network to use with the platform.
-              If you are an administrator, you can set network id in wallet administration application.
-              (Contracts will nt get loaded and you can't associate your wallet to an ethereum account)
+            <v-alert :value="!isSpace && !sameConfiguredNetwork && networkLabel && networkLabel.length" type="warning">
+              Please switch Metamask to network <strong>{{ networkLabel }}</strong>
             </v-alert>
-            <v-alert :value="!isSpace && !sameConfiguredNetwork && !isMaximized" type="warning" dismissible>
-              Not default network!
-            </v-alert>
-            <v-alert :value="sameConfiguredNetwork && !loading && displaySpaceAccountCreationHelp" type="info" dismissible>
-              <div>
-                Current space doesn't have an account yet ? If you are manager of the space, you can create a new account using Metamask.
-              </div>
-              <div v-if="currentAccountAlreadyInUse">
-                Currently selected account in Metamask is already in use, you can't set it for this space.
-              </div>
-            </v-alert>
-            <v-alert :value="sameConfiguredNetwork && !loading && oldAccountAddress && newAccountAddress && oldAccountAddress !== newAccountAddress" type="info" dismissible>
-              <div>
-                Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
-              </div>
-              <v-btn @click="saveNewAddressInWallet">
-                <v-icon color="success">fa-check</v-icon>
+
+            <!-- Ethereum address association -->
+            <v-alert :value="newAddressDetected" type="info">
+              A new address has been detected!
+              <v-btn color="primary" dark flat @click.stop="addressAssociationDialog = true">
+                See details
               </v-btn>
+              <v-dialog v-model="addressAssociationDialog" width="400" max-width="100wv">
+                <v-card>
+                  <v-toolbar dark color="primary">
+                    <v-btn icon dark @click.native="addressAssociationDialog = false">
+                      <v-icon>close</v-icon>
+                    </v-btn>
+                    <v-toolbar-title>Configure my wallet address</v-toolbar-title>
+                    <v-spacer></v-spacer>
+                  </v-toolbar>
+                  <v-card-text>
+                    <div v-if="displaySpaceAccountCreationHelp">
+                      <div>
+                        Current space doesn't have an account yet ? If you are manager of the space, you can create a new account using Metamask.
+                      </div>
+                      <div v-if="currentAccountAlreadyInUse">
+                        Currently selected account in Metamask is already in use, you can't set it for this space.
+                      </div>
+                    </div>
+                    <div v-if="isSpace && !currentAccountAlreadyInUse && !oldAccountAddress">
+                      Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
+                    </div>
+                    <div v-else-if="!isSpace && !oldAccountAddress">
+                      Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
+                    </div>
+                    <div v-elseif="!isSpace">
+                      Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
+                    </div>
+                  </v-card-text>
+                  <v-card-actions v-if="!displaySpaceAccountCreationHelp" class="text-xs-center">
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" @click="saveNewAddressInWallet">
+                      Yes
+                    </v-btn>
+                    <v-btn color="primary" @click="addressAssociationDialog = false">
+                      No
+                    </v-btn>
+                    <v-spacer></v-spacer>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
             </v-alert>
-            <v-alert :value="sameConfiguredNetwork && !loading && !oldAccountAddress && newAccountAddress" type="info" dismissible>
-              <div v-if="isSpace">
-                Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
-              </div>
-              <div v-else>
-                Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
-              </div>
-              <v-btn @click="saveNewAddressInWallet">
-                <v-icon color="success">fa-check</v-icon>
-              </v-btn>
-            </v-alert>
-            <v-alert :value="error && !displaySpaceAccountCreationHelp" type="error">
-              {{ error }}
-            </v-alert>
+
+            <!-- error alerts -->
+            <div v-if="error && !loading && !displaySpaceAccountCreationHelp">
+              <v-alert v-if="!metamaskEnabled" :value="!metamaskEnabled" type="info">
+                Please install Metamask in your browser
+                <v-btn color="primary" dark flat @click.stop="installInstructionDialog = true">
+                  See help
+                </v-btn>
+                <v-dialog v-model="installInstructionDialog" width="400" max-width="100wv">
+                  <v-card>
+                    <v-toolbar dark color="primary">
+                      <v-btn icon dark @click.native="installInstructionDialog = false">
+                        <v-icon>close</v-icon>
+                      </v-btn>
+                      <v-toolbar-title>Enable wallet application</v-toolbar-title>
+                      <v-spacer></v-spacer>
+                    </v-toolbar>
+                    <v-card-text>
+                      To access yopur wallet you 'll need to:
+                      <ol type="1">
+                        <li>Install/enable <a target="about:blank" href="https://metamask.io/">Metamask</a> in your browser</li>
+                        <li>Follow setup instructions on Metamask browser plugin</li>
+                        <li>Connect to Metamask account</li>
+                        <li v-if="networkLabel && networkLabel.length">Switch Metamask network to <strong>{{ networkLabel }}</strong></li>
+                        <li>Associate the automatically generated account address from Metamask to your profile (a box will be displayed automaticatty once you enable Metamask on browser)</li>
+                      </ol>
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="primary" @click="installInstructionDialog = false">
+                        Close
+                      </v-btn>
+                      <v-spacer></v-spacer>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
+              </v-alert>
+              <v-alert v-else-if="!metamaskConnected" :value="!metamaskConnected" type="warning">
+                Please connect Metamask to {{ networkLabel && networkLabel.length ? networkLabel : 'an online network' }}
+              </v-alert>
+              <v-alert v-else-if="!account || !account.length" :value="!account" type="warning">
+                Please select a valid account using Metamask
+              </v-alert>
+              <v-alert v-else :value="error && metamaskEnabled && metamaskConnected && account && account.length" type="error">
+                {{ error }}
+              </v-alert>
+            </div>
+
+            <!-- list of contracts and ETH account -->
             <v-list class="pb-0" two-line subheader>
               <v-list-tile v-for="(item, index) in accountsDetails" :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
                 <v-list-tile-avatar>
@@ -146,6 +210,8 @@
               <v-divider v-if="index + 1 < accountsDetails.length" :key="`divider-${index}`"></v-divider>
             </v-list>
           </v-card>
+
+          <!-- The selected account detail -->
           <account-detail v-else :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="reload" />
         </v-flex>
       </v-layout>
@@ -181,8 +247,11 @@ export default {
   },
   data() {
     return {
+      addressAssociationDialog: false,
+      installInstructionDialog: false,
       isWalletEnabled: false,
       sameConfiguredNetwork: true,
+      networkLabel: '',
       loading: true,
       currentAccountAlreadyInUse: false,
       displaySpaceAccountCreationHelp: false,
@@ -223,6 +292,12 @@ export default {
         return 'Please select a valid account using Metamask';
       }
       return null;
+    },
+    newAddressDetected() {
+      return this.sameConfiguredNetwork
+        && !this.loading
+        && (this.displaySpaceAccountCreationHelp
+            || (this.newAccountAddress && (!this.oldAccountAddress || this.oldAccountAddress !== this.newAccountAddress)));
     }
   },
   watch: {
@@ -250,6 +325,7 @@ export default {
               throw error;
             }
             const thiss = this;
+            // Refresh application when Metamask address changes
             window.addEventListener('load', function() {
               if (window && window.localWeb3 && window.localWeb3.eth && window.localWeb3.eth.defaultAccount !== this.account) {
                 thiss.init();
@@ -313,9 +389,9 @@ export default {
           if (error) {
             throw error;
           }
-          if (!this.isSpace) {
+          if (!this.isSpace && this.metamaskEnabled && this.metamaskConnected) {
             const thiss = this;
-            // In case account switched in Metamars
+            // In case account switched in Metamask
             // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
             setInterval(function() {
               thiss.getAccount()
@@ -355,6 +431,32 @@ export default {
           console.debug("init method - error", e);
           this.errorMessage = `${e}`;
           this.loading = false;
+        })
+        .finally(() => {
+          if (window.walletSettings && window.walletSettings.defaultNetworkId) {
+            switch (window.walletSettings.defaultNetworkId) {
+            case 0:
+              this.networkLabel = '';
+              break;
+            case 1:
+              this.networkLabel = 'Main network';
+              break;
+            case 2:
+              this.networkLabel = 'Ethereum Classic main network';
+              break;
+            case 3:
+              this.networkLabel = 'Ropsten network';
+              break;
+            case 4:
+              this.networkLabel = 'Rinkeby network';
+              break;
+            case 42:
+              this.networkLabel = 'Kovan network';
+              break;
+            default:
+              this.networkLabel = 'custom network';
+            }
+          }
         });
     },
     refreshList(forceRefresh) {
@@ -437,7 +539,6 @@ export default {
                 throw error;
               }
               this.account = window.localWeb3.eth.defaultAccount = account;
-
               return this.refreshBalance();
             })
             .then((result, error) => {
@@ -614,6 +715,7 @@ export default {
       }
     },
     saveNewAddressInWallet() {
+      this.addressAssociationDialog = false;
       this.loading = true;
       return saveNewAddress(
         this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
