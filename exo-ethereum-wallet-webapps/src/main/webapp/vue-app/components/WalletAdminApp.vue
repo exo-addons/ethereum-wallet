@@ -1,7 +1,7 @@
 <template>
   <v-app v-if="isWalletEnabled" id="WalletAdminApp" color="transaprent">
     <main>
-      <v-layout class="mr-3 ml-3">
+      <v-layout>
         <v-flex>
           <v-alert :value="error" type="error" class="v-content">
             {{ error }}
