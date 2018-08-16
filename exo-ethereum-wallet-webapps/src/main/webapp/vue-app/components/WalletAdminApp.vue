@@ -8,6 +8,7 @@
           </v-alert>
           <v-alert :value="!sameConfiguredNetwork" type="warning" dismissible>
             Current selected network on Metamask is different from configured network to use with the platform.
+            (The deployed contracts on default network aren't displayed)
           </v-alert>
           <v-card class="text-xs-center pt-3">
             <v-form class="mr-3 ml-3">
@@ -120,11 +121,11 @@
             </v-data-table>
             <v-divider />
             <div class="text-xs-center">
-              <v-btn class="primary mt-3" @click="showAddContractModal = true">
+              <v-btn v-show="sameConfiguredNetwork" class="primary mt-3" @click="showAddContractModal = true">
                 Add Existing contract Address
               </v-btn>
               <deploy-new-contract 
-                v-show="!error"
+                v-show="sameConfiguredNetwork"
                 :account="account"
                 :network-id="networkId"
                 @list-updated="updateList($event)"/>

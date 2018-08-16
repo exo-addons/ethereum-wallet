@@ -1,18 +1,5 @@
 <template>
   <v-app id="WalletApp" :class="isMaximized ? 'maximized': 'minimized'" color="transaprent" flat>
-    <!-- This is a workaround to avoid having a script error caused by User Profile Menu
-
-    <div v-if="isMaximized" class="FakeMenu uiProfileMenu hidden">
-      <ul class="nav nav-tabs userNavigation" style="visibility: hidden;">
-        <li id="myWalletTad" class="item active">
-          <a href="/portal/intranet/wallet">
-            <div class="uiIconDefaultApp uiIconWallet"></div>
-            <span class="tabName">My Wallet</span>
-          </a>
-        </li>
-      </ul>
-    </div>
-    End workaround -->
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
@@ -21,12 +8,16 @@
             <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
             <h4 v-else class="head-container">Wallet</h4>
             <v-spacer />
+
             <add-contract-modal v-if="!isSpace"
                                 :net-id="networkId"
                                 :account="account"
                                 :open="showAddContractModal"
                                 @added="reloadContracts()"
                                 @close="showAddContractModal = false" />
+            <wallet-address-modal :address="account"
+                                  :open="showWalletAddress"
+                                  @close="showWalletAddress = false" />
             <qr-code-modal :to="account"
                            :open="showQRCodeModal"
                            title="Address QR Code"
@@ -34,26 +25,19 @@
             <user-settings-modal :account="account"
                                  :open="showSettingsModal"
                                  @close="showSettingsModal = false"
-                                 @settings-changed="reload" />
-            <v-dialog v-model="showWalletAddress" width="400px" max-width="100vw" @keydown.esc="showWalletAddress = false">
-              <v-card class="elevation-12">
-                <v-toolbar dark color="primary">
-                  <v-toolbar-title>Wallet address</v-toolbar-title>
-                  <v-spacer />
-                  <v-btn icon dark @click.native="showWalletAddress = false">
-                    <v-icon>close</v-icon>
-                  </v-btn>
-                </v-toolbar>
-                <v-card-text class="text-xs-center">
-                  <code>{{ account }}</code>
-                </v-card-text>
-              </v-card>
-            </v-dialog>
-            <v-menu v-if="!error && !loading" v-model="walletConfigurationMenu" offset-y left>
+                                 @settings-changed="refreshList(true)" />
+
+            <v-menu v-if="!hasError && !loading" v-model="walletConfigurationMenu" offset-y left>
               <v-btn slot="activator" icon>
                 <v-icon>more_vert</v-icon>
               </v-btn>
               <v-list>
+                <v-list-tile @click="refreshList(true)">
+                  <v-list-tile-avatar>
+                    <v-icon>refresh</v-icon>
+                  </v-list-tile-avatar>
+                  <v-list-tile-title>Refresh</v-list-tile-title>
+                </v-list-tile>
                 <v-list-tile v-if="!isSpace && !selectedAccount" @click="showAddContractModal = true">
                   <v-list-tile-avatar>
                     <v-icon>add</v-icon>
@@ -72,7 +56,7 @@
                   </v-list-tile-avatar>
                   <v-list-tile-title>Wallet QR Code</v-list-tile-title>
                 </v-list-tile>
-                <v-list-tile v-if="!isSpace" @click="showSettingsModal = true">
+                <v-list-tile v-if="!isSpace && account" @click="showSettingsModal = true">
                   <v-list-tile-avatar>
                     <v-icon>fa-cog</v-icon>
                   </v-list-tile-avatar>
@@ -87,124 +71,42 @@
           </v-toolbar>
 
           <!-- Body -->
-          <v-card v-if="!isMaximized || !selectedAccount" class="text-xs-center" flat>
+          <v-card v-if="displayAccountsList" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-            <v-alert :value="!loading && !isSpace && !sameConfiguredNetwork && networkLabel && networkLabel.length" type="warning">
-              Please switch Metamask to <strong>{{ networkLabel }}</strong>
-            </v-alert>
 
-            <!-- Ethereum address association -->
-            <v-alert v-if="!loading && isSpace && !oldAccountAddress && !newAccountAddress && !account" :value="!loading && isSpace && !oldAccountAddress && !newAccountAddress" type="info">
-              Please enable/install Metamask to be able to add a new space account
-            </v-alert>
-            <v-alert v-else-if="!loading && newAddressDetected" :value="newAddressDetected" type="info">
-              A new wallet has been detected!
-              <v-btn color="primary" dark flat @click.stop="addressAssociationDialog = true">
-                See details
-              </v-btn>
-              <v-dialog v-model="addressAssociationDialog" width="400" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
-                <v-card>
-                  <v-toolbar dark color="primary">
-                    <v-btn icon dark @click.native="addressAssociationDialog = false">
-                      <v-icon>close</v-icon>
-                    </v-btn>
-                    <v-toolbar-title>Configure my wallet address</v-toolbar-title>
-                    <v-spacer></v-spacer>
-                  </v-toolbar>
-                  <v-card-text>
-                    <div v-if="displaySpaceAccountCreationHelp">
-                      Current space doesn't have a wallet yet ? If you are manager of the space, you can create a new account using Metamask.
-                    </div>
-
-                    <div v-if="currentAccountAlreadyInUse">
-                      Currently selected account in Metamask is already in use, you can't use it in this wallet.
-                    </div>
-                    <div v-else-if="isSpace && !oldAccountAddress && newAccountAddress">
-                      Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
-                    </div>
-                    <div v-else-if="!isSpace && !oldAccountAddress">
-                      Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
-                    </div>
-                    <div v-else-if="!isSpace">
-                      Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
-                    </div>
-
-                  </v-card-text>
-                  <v-card-actions v-if="!displaySpaceAccountCreationHelp && !currentAccountAlreadyInUse" class="text-xs-center">
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" @click="saveNewAddressInWallet">
-                      Yes
-                    </v-btn>
-                    <v-btn color="primary" @click="addressAssociationDialog = false">
-                      No
-                    </v-btn>
-                    <v-spacer></v-spacer>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
-            </v-alert>
-
-            <!-- error alerts -->
-            <div v-if="error && !loading && !displaySpaceAccountCreationHelp">
-              <v-alert v-if="!metamaskEnabled" :value="!metamaskEnabled" type="info">
-                Please install Metamask in your browser
-                <v-btn color="primary" dark flat @click.stop="installInstructionDialog = true">
-                  See help
-                </v-btn>
-                <v-dialog v-model="installInstructionDialog" width="400" max-width="100wv" @keydown.esc="installInstructionDialog = false">
-                  <v-card>
-                    <v-toolbar dark color="primary">
-                      <v-btn icon dark @click.native="installInstructionDialog = false">
-                        <v-icon>close</v-icon>
-                      </v-btn>
-                      <v-toolbar-title>Enable wallet application</v-toolbar-title>
-                      <v-spacer></v-spacer>
-                    </v-toolbar>
-                    <v-card-text>
-                      To access your wallet you 'll need to:
-                      <ol type="1">
-                        <li>Install/enable <a target="about:blank" href="https://metamask.io/">Metamask</a> in your browser</li>
-                        <li>Follow setup instructions on Metamask browser plugin</li>
-                        <li>Connect to Metamask account</li>
-                        <li v-if="networkLabel && networkLabel.length">Switch Metamask network to <strong>{{ networkLabel }}</strong></li>
-                        <li>Associate the automatically generated account address from Metamask to your profile (a box will be displayed automaticatty once you enable Metamask on browser)</li>
-                      </ol>
-                    </v-card-text>
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn color="primary" @click="installInstructionDialog = false">
-                        Close
-                      </v-btn>
-                      <v-spacer></v-spacer>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
-              </v-alert>
-              <v-alert v-else-if="!metamaskConnected" :value="!metamaskConnected" type="warning">
-                Please connect Metamask to {{ networkLabel && networkLabel.length ? networkLabel : 'an online network' }}
-              </v-alert>
-              <v-alert v-else-if="!account || !account.length" :value="!account" type="warning">
-                Please select a valid account using Metamask
-              </v-alert>
-              <v-alert v-else :value="error && metamaskEnabled && metamaskConnected && account && account.length" type="error">
-                {{ error }}
-              </v-alert>
-            </div>
+            <wallet-app-alerts :display-not-same-network-warning="displayNotSameNetworkWarning"
+                               :network-label="networkLabel"
+                               :display-space-metamask-enable-help="displaySpaceMetamaskEnableHelp"
+                               :new-address-detected="newAddressDetected"
+                               :display-space-account-creation-help="displaySpaceAccountCreationHelp"
+                               :current-account-already-in-use="currentAccountAlreadyInUse"
+                               :display-space-account-association-help="displaySpaceAccountAssociationHelp"
+                               :display-user-account-association-help="displayUserAccountAssociationHelp"
+                               :display-user-account-change-help="displayUserAccountChangeHelp"
+                               :display-account-help-actions="displayAccountHelpActions"
+                               :display-errors="displayErrors"
+                               :metamask-enabled="metamaskEnabled"
+                               :metamask-connected="metamaskConnected"
+                               :account="account"
+                               :old-account-address="oldAccountAddress"
+                               :new-account-address="newAccountAddress"
+                               :error-message="errorMessage"
+                               @save-address-to-account="saveNewAddressInWallet" />
 
             <!-- list of contracts and ETH account -->
             <v-list class="pb-0" two-line subheader>
-              <v-list-tile v-for="(item, index) in accountsDetails" :key="index" :color="item.error ? 'red': ''" avatar ripple @click="openAccountDetail(item)">
+              <v-list-tile v-for="(item, index) in accountsDetails" :key="index" :color="item.error ? 'red': ''" :title="item.title" avatar ripple @click="openAccountDetail(item)">
                 <v-list-tile-avatar>
                   <v-icon :class="item.error ? 'red':'purple'" dark>{{ item.icon }}</v-icon>
                 </v-list-tile-avatar>
                 <v-list-tile-content>
                   <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
-                  <v-list-tile-title v-else v-html="item.title"></v-list-tile-title>
+                  <v-list-tile-title v-else>{{ item.title }}</v-list-tile-title>
 
                   <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
                   <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }} {{ item.balanceUSD ? `(${item.balanceUSD} \$)`:'' }}</v-list-tile-sub-title>
                 </v-list-tile-content>
-                <v-list-tile-action v-if="isMaximized && !isSpace && item.isContract && !item.isDefault">
+                <v-list-tile-action v-if="!isSpace && item.isContract && !item.isDefault">
                   <v-btn icon ripple @click="deleteContract(item, $event)">
                     <v-icon color="primary">delete</v-icon>
                   </v-btn>
@@ -226,9 +128,11 @@
 </template>
 
 <script>
+import WalletAppAlerts from './WalletAppAlerts.vue';
 import AddContractModal from './AddContractModal.vue';
 import AccountDetail from './AccountDetail.vue';
 import QrCodeModal from './QRCodeModal.vue';
+import WalletAddressModal from './WalletAddressModal.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
@@ -239,6 +143,8 @@ import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings, computeNetw
 export default {
   components: {
     UserSettingsModal,
+    WalletAddressModal,
+    WalletAppAlerts,
     QrCodeModal,
     AccountDetail,
     AddContractModal
@@ -287,19 +193,32 @@ export default {
     metamaskConnected () {
       return this.metamaskEnabled && window.web3.currentProvider.isConnected();
     },
-    error() {
-      if(this.loading) {
-        return null;
-      } else if (this.errorMessage) {
-        return this.errorMessage;
-      } else if (!this.isSpace && !this.metamaskEnabled) {
-        return 'Please install or Enable Metamask';
-      } else if (!this.isSpace && !this.metamaskConnected) {
-        return 'Please connect Metamask to the network';
-      } else if (!this.isSpace && !this.account) {
-        return 'Please select a valid account using Metamask';
-      }
-      return null;
+    displayAccountsList() {
+      return !this.isMaximized || !this.selectedAccount;
+    },
+    displayErrors() {
+      return this.hasErrors && !this.loading && !this.displaySpaceAccountCreationHelp && !this.displaySpaceMetamaskEnableHelp;
+    },
+    displayNotSameNetworkWarning() {
+      return !this.loading && !this.isSpace && !this.sameConfiguredNetwork && this.networkLabel && this.networkLabel.length;
+    },
+    displayAccountHelpActions() {
+      return !this.currentAccountAlreadyInUse && this.displayUserAccountChangeHelp || this.displayUserAccountAssociationHelp || this.displaySpaceAccountAssociationHelp;
+    },
+    displayUserAccountChangeHelp() {
+      return !this.isSpace && this.oldAccountAddress && this.newAccountAddress;
+    },
+    displayUserAccountAssociationHelp() {
+      return !this.isSpace && !this.oldAccountAddress && this.newAccountAddress;
+    },
+    displaySpaceAccountAssociationHelp() {
+      return this.isSpace && !this.oldAccountAddress && this.newAccountAddress && this.newAccountAddress.length;
+    },
+    displaySpaceMetamaskEnableHelp() {
+      return this.isSpace && !this.loading && !this.oldAccountAddress && !this.newAccountAddress && !this.account;
+    },
+    hasErrors() {
+      return !this.loading && (this.errorMessage || (!this.isSpace && (!this.metamaskEnabled || !this.metamaskConnected || !this.account)));
     },
     newAddressDetected() {
       return this.sameConfiguredNetwork
@@ -584,7 +503,7 @@ export default {
         .then((balanceDetails, error) => {
           if (error) {
             this.accountsDetails[this.account] = {
-              title : 'Account in ETH',
+              title : 'ETH',
               icon : 'warning',
               balance : 0,
               symbol : 'ETH',
@@ -595,7 +514,7 @@ export default {
             throw error;
           }
           const accountDetails = {
-            title : 'Account in ETH',
+            title : 'ETH',
             icon : 'fab fa-ethereum',
             symbol : 'ETH',
             isContract : false,
@@ -608,7 +527,7 @@ export default {
         .catch(e => {
           console.debug("refreshBalance method - error", e);
           this.accountsDetails[this.account] = {
-            title : 'Account in ETH',
+            title : 'ETH',
             icon : 'warning',
             balance : 0,
             symbol : 'ETH',
@@ -712,6 +631,7 @@ export default {
               this.currentAccountAlreadyInUse = true;
             }
           }
+          return item;
         });
     },
     initUserAccount() {
@@ -740,6 +660,7 @@ export default {
           if (item && item.id && item.id.length) {
             this.currentAccountAlreadyInUse = true;
           }
+          return item;
         })
         .catch(e => {
           console.debug("searchAddress method - error", e);

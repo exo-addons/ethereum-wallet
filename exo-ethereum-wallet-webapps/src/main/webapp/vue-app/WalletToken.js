@@ -54,7 +54,7 @@ export function retrieveContractDetails(account, contractDetails) {
     })
     .then(() => contractDetails.contract.methods.symbol().call())
     .then(symbol => contractDetails.symbol = symbol)
-    .then(symbol => contractDetails.title = `Account in Token ${symbol}`)
+    .then(symbol => contractDetails.title = `Token ${symbol}`)
     .then(() => contractDetails.contract.methods.name().call())
     .then(name => contractDetails.name = name)
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
