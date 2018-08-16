@@ -42,6 +42,7 @@
         :contract="contractDetail.contract"
         @loaded="loaded"
         @loading="loading = true"
+        @error="loading = false; error = $event"
         @end-loading="loading = false" />
       <delegate-tokens-modal
         v-if="contractDetail.isContract"
@@ -51,6 +52,7 @@
         :contract="contractDetail.contract"
         @loaded="loaded"
         @loading="loading = true"
+        @error="loading = false; error = $event"
         @end-loading="loading = false" />
       <send-delegated-tokens-modal
         v-if="contractDetail.isContract"
@@ -60,6 +62,7 @@
         :has-delegated-tokens="hasDelegatedTokens"
         @loaded="loaded"
         @loading="loading = true"
+        @error="loading = false; error = $event"
         @end-loading="loading = false" />
 
       <!-- Ether account actions -->

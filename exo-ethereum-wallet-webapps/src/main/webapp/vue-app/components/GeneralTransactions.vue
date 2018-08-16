@@ -134,7 +134,8 @@ export default {
         .then(lastBlockNumber => lastBlockNumberTmp = lastBlockNumber)
         .then(lastBlockNumber => window.localWeb3.eth.getBlock(lastBlockNumber, true))
         .then((lastBlock) => this.addBlockTransactions(lastBlock, untilPreviousBlock))
-        .then(() => this.lastBlockNumber = lastBlockNumberTmp);
+        .then(() => this.lastBlockNumber = lastBlockNumberTmp)
+        .catch(e => this.$emit("error", e));
     },
     addBlockTransactions(block, untilBlock) {
       if (!block) {

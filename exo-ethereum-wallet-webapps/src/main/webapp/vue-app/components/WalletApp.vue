@@ -87,10 +87,10 @@
           </v-toolbar>
 
           <!-- Body -->
-          <v-card class="text-xs-center" flat>
+          <v-card v-if="!isMaximized || !selectedAccount" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
             <v-alert :value="!loading && !isSpace && !sameConfiguredNetwork && networkLabel && networkLabel.length" type="warning">
-              Please switch Metamask to network <strong>{{ networkLabel }}</strong>
+              Please switch Metamask to <strong>{{ networkLabel }}</strong>
             </v-alert>
 
             <!-- Ethereum address association -->
@@ -161,7 +161,7 @@
                       <v-spacer></v-spacer>
                     </v-toolbar>
                     <v-card-text>
-                      To access yopur wallet you 'll need to:
+                      To access your wallet you 'll need to:
                       <ol type="1">
                         <li>Install/enable <a target="about:blank" href="https://metamask.io/">Metamask</a> in your browser</li>
                         <li>Follow setup instructions on Metamask browser plugin</li>
@@ -215,9 +215,10 @@
           </v-card>
 
           <!-- The selected account detail -->
-          <v-navigation-drawer v-if="seeAccountDetails" id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right permanent width="700" max-width="100vw">
+          <v-navigation-drawer v-if="seeAccountDetails && (!isMaximized || !selectedAccount)" id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right permanent width="700" max-width="100vw">
             <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
+          <account-detail v-else-if="isMaximized && selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
         </v-flex>
       </v-layout>
     </main>
