@@ -5,7 +5,6 @@
                   :loading="isLoadingSuggestions"
                   :search-input.sync="searchTerm"
                   :label="inputLabel"
-                  :no-filter="true"
                   max-width="100%"
                   item-text="name"
                   item-value="id_type"
@@ -107,6 +106,7 @@ export default {
                 this.addressLoad = 'success';
                 this.$emit("item-selected", {id: id, type: type, address: address});
               } else {
+                this.$emit("item-selected", {id: id, type: type, address: null});
                 this.addressLoad = 'error';
               }
             })
