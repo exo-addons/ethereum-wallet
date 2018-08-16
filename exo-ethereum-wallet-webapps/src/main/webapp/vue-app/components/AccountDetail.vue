@@ -72,10 +72,11 @@
         :balance="contractDetail.balance"
         @loading="loading = true"
         @loaded="loaded"
+        @error="loading = false; error = $event"
         @end-loading="loading = false" />
     </div>
 
-    <v-alert :value="error" type="error">
+    <v-alert :value="error" type="error" dismissible>
       {{ error }}
     </v-alert>
 

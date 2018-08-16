@@ -113,6 +113,7 @@ export default {
       }
 
       this.loading = true;
+      this.$emit("loading");
       try {
         // Send an amount of ether to a third person
         window.localWeb3.eth.sendTransaction({
@@ -138,7 +139,7 @@ export default {
             // The transaction has failed
             this.error = `Error sending ether: ${error}`;
             this.loading = false;
-            this.$emit("error", error);
+            this.$emit("error", this.error);
           });
       } catch(e) {
         console.debug("Web3.eth.sendTransaction method - error", e);

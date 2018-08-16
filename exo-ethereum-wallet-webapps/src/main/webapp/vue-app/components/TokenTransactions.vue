@@ -10,7 +10,7 @@
             <v-list-tile-content>
               <v-list-tile-title>
                 <span>{{ item.titlePrefix }}</span>
-                <v-chip v-if="item.avatar" :alt="item.name" class="mt-0 mb-0" small>
+                <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
                   <v-avatar size="23px !important">
                     <img :src="item.avatar">
                   </v-avatar>

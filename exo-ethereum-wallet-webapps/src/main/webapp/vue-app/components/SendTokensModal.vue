@@ -148,7 +148,7 @@ export default {
                 // The transaction has failed
                 this.error = `Error sending ether: ${error}`;
                 this.loading = false;
-                this.$emit("error", error);
+                this.$emit("error", this.error);
               });
           })
           .catch (e => {

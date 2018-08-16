@@ -21,7 +21,7 @@
             <v-list-tile-content>
               <v-list-tile-title>
                 <span>{{ item.titlePrefix }}</span>
-                <v-chip v-if="item.avatar" :alt="item.name" class="mt-0 mb-0" small>
+                <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
                   <v-avatar size="23px !important">
                     <img :src="item.avatar">
                   </v-avatar>
@@ -95,7 +95,7 @@ export default {
           .then(() => this.$emit("end-loading"))
           .catch(error => {
             console.debug("account field change event - error", error);
-            this.$emit("error", error);
+            this.$emit("error", `Account loading error: ${error}`);
           });
       }
     }
@@ -108,7 +108,7 @@ export default {
         .catch(error => {
           console.debug("init method - error", error);
           this.finishedLoading = true;
-          this.$emit("error", error);
+          this.$emit("error", `Account initialization error: ${error}`);
         });
     }
   },
@@ -135,7 +135,7 @@ export default {
         .then(lastBlockNumber => window.localWeb3.eth.getBlock(lastBlockNumber, true))
         .then((lastBlock) => this.addBlockTransactions(lastBlock, untilPreviousBlock))
         .then(() => this.lastBlockNumber = lastBlockNumberTmp)
-        .catch(e => this.$emit("error", e));
+        .catch(e => this.$emit("error", `${e}`));
     },
     addBlockTransactions(block, untilBlock) {
       if (!block) {
@@ -180,22 +180,23 @@ export default {
     
                 const isFeeTransaction = parseFloat(amount) === 0;
 
-                let displayedAddress = isReceiver ? transaction.from : transaction.to;
+                let displayAddress = isReceiver ? transaction.from : transaction.to;
 
                 let isContractCreationTransaction = false;
 
-                if (!displayedAddress) {
-                  displayedAddress = receipt.contractAddress;
+                if (!displayAddress) {
+                  displayAddress = receipt.contractAddress;
                   isContractCreationTransaction = true;
                 }
 
                 // Retrieve user or space display name, avatar and id from sessionStorage
-                const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+                const contactDetails = getContactFromStorage(displayAddress, 'user', 'space');
 
                 const transactionDetails = {
                   hash: transaction.hash,
                   titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
-                  displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+                  displayAddress: displayAddress,
+                  displayName: contactDetails.name ? contactDetails.name : displayAddress,
                   avatar: contactDetails.avatar,
                   name: null,
                   status: receipt.status,
@@ -219,7 +220,7 @@ export default {
 
                 if (!contactDetails || !contactDetails.name) {
                   // Test if address corresponds to a contract
-                  getContractFromStorage(this.account, displayedAddress)
+                  getContractFromStorage(this.account, displayAddress)
                     .then(contractDetails => {
                       if (contractDetails) {
                         transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
@@ -233,7 +234,7 @@ export default {
                     .then(continueSearch => {
                       if(continueSearch) {
                         // The address is not of type contract, so search correspondin user/space display name
-                        return searchFullName(displayedAddress);
+                        return searchFullName(displayAddress);
                       }
                     })
                     .then(item => {
