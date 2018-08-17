@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center">
+  <v-flex v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center">
     <v-card-media min-height="80px">
       <v-layout column fill-height>
         <v-card-title class="pb-0">
@@ -82,11 +82,9 @@
 
     <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
-    <v-divider />
-
     <token-transactions v-if="contractDetail.isContract" id="contractTransactionsContent" ref="contractTransactions" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" />
     <general-transactions v-else id="generalTransactionsContent" ref="generalTransactions" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" />
-  </v-card>
+  </v-flex>
 </template>
 
 <script>

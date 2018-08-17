@@ -1,33 +1,31 @@
 <template>
   <v-flex v-if="transactions.length">
-    <v-card class="card--flex-toolbar">
-      <v-list two-line class="pt-0 pb-0">
-        <template v-for="(item, index) in sortedTransaction">
-          <v-list-tile :key="item.hash" avatar>
-            <v-list-tile-avatar>
-              <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
-            </v-list-tile-avatar>
-            <v-list-tile-content>
-              <v-list-tile-title>
-                <span>{{ item.titlePrefix }}</span>
-                <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
-                  <v-avatar size="23px !important">
-                    <img :src="item.avatar">
-                  </v-avatar>
-                  <span v-html="item.displayName"></span>
-                </v-chip>
-                <code v-else>{{ item.displayName }}</code>
-              </v-list-tile-title>
-              <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
-            </v-list-tile-content>
-            <v-list-tile-action>
-              <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleDateString() : '' }}</v-list-tile-action-text>
-            </v-list-tile-action>
-          </v-list-tile>
-          <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
-        </template>
-      </v-list>
-    </v-card>
+    <v-list two-line class="pt-0 pb-0">
+      <template v-for="(item, index) in sortedTransaction">
+        <v-list-tile :key="item.hash" avatar>
+          <v-list-tile-avatar>
+            <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
+          </v-list-tile-avatar>
+          <v-list-tile-content>
+            <v-list-tile-title>
+              <span>{{ item.titlePrefix }}</span>
+              <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
+                <v-avatar size="23px !important">
+                  <img :src="item.avatar">
+                </v-avatar>
+                <span v-html="item.displayName"></span>
+              </v-chip>
+              <code v-else>{{ item.displayName }}</code>
+            </v-list-tile-title>
+            <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
+          </v-list-tile-content>
+          <v-list-tile-action>
+            <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleDateString() : '' }}</v-list-tile-action-text>
+          </v-list-tile-action>
+        </v-list-tile>
+        <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
+      </template>
+    </v-list>
   </v-flex>
 </template>
 
