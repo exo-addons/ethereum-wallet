@@ -23,7 +23,7 @@
           {{ warning }}
         </v-alert>
         <v-form>
-          <auto-complete ref="autocomplete" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
+          <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" name="amount" label="Amount"></v-text-field>
         </v-form>
       </v-card-text>

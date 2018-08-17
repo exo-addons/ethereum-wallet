@@ -117,7 +117,7 @@
           </v-card>
 
           <!-- The selected account detail -->
-          <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right width="700" max-width="100vw">
+          <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
             <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
           <account-detail v-if="isMaximized && selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
@@ -161,6 +161,7 @@ export default {
     return {
       walletConfigurationMenu: false,
       seeAccountDetails: false,
+      seeAccountDetailsPermanent: false,
       addressAssociationDialog: false,
       installInstructionDialog: false,
       isWalletEnabled: false,
@@ -237,6 +238,16 @@ export default {
           console.debug("refreshBalance method - error", e);
           this.errorMessage = `Error while retrieving user balance ${e}`;
         });
+    },
+    seeAccountDetails() {
+      if (this.seeAccountDetails) {
+        const thiss = this;
+        setTimeout(() => {
+          thiss.seeAccountDetailsPermanent = true;
+        }, 200);
+      } else {
+        this.seeAccountDetailsPermanent = false;
+      }
     }
   },
   created() {

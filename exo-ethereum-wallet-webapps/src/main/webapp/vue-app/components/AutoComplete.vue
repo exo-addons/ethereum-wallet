@@ -7,6 +7,7 @@
                   :search-input.sync="searchTerm"
                   :label="inputLabel"
                   :attach="`#${id}`"
+                  :disabled="disabled"
                   class="contactAutoComplete"
                   content-class=""
                   max-width="100%"
@@ -57,6 +58,12 @@ export default {
       type: String,
       default: function() {
         return {};
+      }
+    },
+    disabled: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     }
   },
