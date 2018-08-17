@@ -1,20 +1,13 @@
 <template>
-  <v-dialog v-model="createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent @keydown.esc="createNewToken = false">
+  <v-dialog v-model="createNewToken" content-class="uiPopup createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent @keydown.esc="createNewToken = false">
     <button slot="activator" class="btn btn-primary mt-3" @click="createNewToken = true">
       Deploy new Token
     </button>
     <v-card>
-      <v-toolbar dark color="primary">
-        <v-btn :disabled="loading" icon dark @click.native="createNewToken = false">
-          <v-icon>close</v-icon>
-        </v-btn>
-        <v-toolbar-title>Deploy new ERC20 Token contract</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-toolbar-items>
-          <v-btn :disabled="loading" dark flat class="primary" @click.native="saveContract">Deploy</v-btn>
-        </v-toolbar-items>
-      </v-toolbar>
-
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="createNewToken = false"></a>
+        <span class="PopupTitle popupTitle">Deploy new ERC20 Token contract</span>
+      </div>
       <v-form ref="form" v-model="valid" class="pl-5 pr-5 pt-3">
         <div class="text-xs-center">
           <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
@@ -80,6 +73,15 @@
                 This will display the contract in all users wallet by default without any additional action from users. Else, the contract will be added to the current user's wallet only.
               </v-list-tile-sub-title>
             </v-list-tile-content>
+          </v-list-tile>
+        </v-list>
+        <v-list>
+          <v-list-tile>
+            <v-spacer />
+            <v-list-tile-action>
+              <button :disabled="loading" class="btn btn-primary" @click="saveContract">Deploy</button>
+            </v-list-tile-action>
+            <v-spacer />
           </v-list-tile>
         </v-list>
       </v-form>

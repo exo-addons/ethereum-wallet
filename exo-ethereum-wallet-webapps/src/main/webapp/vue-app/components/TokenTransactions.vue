@@ -27,6 +27,11 @@
       </template>
     </v-list>
   </v-flex>
+  <v-flex v-else-if="!loading" class="text-xs-center">
+    <v-chip color="white">
+      <span>No transactions</span>
+    </v-chip>
+  </v-flex>
 </template>
 
 <script>

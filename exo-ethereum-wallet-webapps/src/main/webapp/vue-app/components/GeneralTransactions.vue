@@ -47,7 +47,7 @@
           <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
         </template>
       </v-list>
-      <v-flex v-else-if="loadedBlocks == maxBlocksToLoad" class="text-xs-center">
+      <v-flex v-else-if="!loading" class="text-xs-center">
         <v-chip color="white">
           <span>No transactions</span>
         </v-chip>
