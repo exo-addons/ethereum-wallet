@@ -46,7 +46,7 @@ const config = {
     jquery: '$'
   },
   plugins: [
-    new ExtractTextWebpackPlugin('css/wallet.css')
+    new ExtractTextWebpackPlugin('css/v0.01/wallet.css')
   ]
 };
 
