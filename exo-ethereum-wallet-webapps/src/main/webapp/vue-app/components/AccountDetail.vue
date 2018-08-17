@@ -1,5 +1,5 @@
 <template>
-  <v-flex v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center">
+  <v-flex v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center white">
     <v-card-media min-height="80px">
       <v-layout column fill-height>
         <v-card-title class="pb-0">
