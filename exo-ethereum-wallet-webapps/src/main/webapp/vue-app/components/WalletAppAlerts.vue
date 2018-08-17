@@ -10,7 +10,7 @@
     <!-- Ethereum address association -->
     <v-alert v-else-if="newAddressDetected" :value="newAddressDetected" type="info">
       A new wallet has been detected!
-      <button class="btn btn-primary" @click.stop="addressAssociationDialog = true">
+      <button class="btn" @click.stop="addressAssociationDialog = true">
         See details
       </button>
       <v-dialog v-model="addressAssociationDialog" content-class="uiPopup" width="400" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
@@ -23,7 +23,8 @@
             <div v-if="displaySpaceAccountCreationHelp">
               Current space doesn't have a wallet yet ? If you are manager of the space, you can create a new account using Metamask.
             </div>
-    
+            <span class="hidden">{{ currentAccountAlreadyInUse }}</span>
+
             <div v-if="currentAccountAlreadyInUse">
               Currently selected account in Metamask is already in use, you can't use it in this wallet.
             </div>
@@ -34,16 +35,13 @@
               Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
             </div>
             <div v-else-if="displayUserAccountChangeHelp">
-              <!-- A workaround for a UI glitch -->
-              {{ currentAccountAlreadyInUse ? '' : '' }}
-
               Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
             </div>
           </v-card-text>
     
           <v-card-actions v-if="displayAccountHelpActions" class="text-xs-center">
             <v-spacer></v-spacer>
-            <button class="btn btn-primary" @click="$emit('save-address-to-account')">
+            <button class="btn btn-primary mr-2" @click="$emit('save-address-to-account')">
               Yes
             </button>
             <button class="btn" @click="addressAssociationDialog = false">
@@ -59,7 +57,7 @@
     <div v-if="displayErrors">
       <v-alert v-if="!metamaskEnabled" :value="!metamaskEnabled" type="info">
         Please install Metamask in your browser
-        <button class="btn btn-primary" @click.stop="installInstructionDialog = true">
+        <button class="btn" @click.stop="installInstructionDialog = true">
           See help
         </button>
         <v-dialog v-model="installInstructionDialog" content-class="uiPopup" width="400" max-width="100wv" @keydown.esc="installInstructionDialog = false">
