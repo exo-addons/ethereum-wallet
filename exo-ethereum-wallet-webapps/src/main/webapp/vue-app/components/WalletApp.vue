@@ -27,7 +27,7 @@
                                  @close="showSettingsModal = false"
                                  @settings-changed="refreshList(true)" />
 
-            <v-menu v-if="!hasError && !loading" v-model="walletConfigurationMenu" offset-y left>
+            <v-menu v-if="!hasError && !loading" v-model="walletConfigurationMenu">
               <v-btn slot="activator" icon>
                 <v-icon>more_vert</v-icon>
               </v-btn>
@@ -117,10 +117,10 @@
           </v-card>
 
           <!-- The selected account detail -->
-          <v-navigation-drawer v-if="seeAccountDetails && (!isMaximized || !selectedAccount)" id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right permanent width="700" max-width="100vw">
+          <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right width="700" max-width="100vw">
             <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
-          <account-detail v-else-if="isMaximized && selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
+          <account-detail v-if="isMaximized && selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
         </v-flex>
       </v-layout>
     </main>

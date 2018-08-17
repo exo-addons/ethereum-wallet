@@ -100,7 +100,7 @@
       <v-alert v-else-if="!account || !account.length" :value="!account" type="warning">
         Please select a valid account using Metamask
       </v-alert>
-      <v-alert v-else :value="errorMessage" type="error">
+      <v-alert v-else-if="errorMessage" :value="errorMessage" type="error">
         {{ errorMessage }}
       </v-alert>
     </div>

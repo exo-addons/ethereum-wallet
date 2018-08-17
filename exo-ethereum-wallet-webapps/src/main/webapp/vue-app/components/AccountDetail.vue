@@ -147,15 +147,6 @@ export default {
     },
     contractDetail() {
       this.error = null;
-      console.debug("Display account details", this.contractDetail);
-      if (this.contractDetail && this.contractDetail.isContract && this.contractDetail.contract) {
-        this.contractDetail.contract.Transfer({}, {
-          fromBlock: 0,
-          toBlock: 'latest',
-        }).watch(() => {
-          this.$forceUpdate();
-        });
-      }
     }
   },
   methods: {

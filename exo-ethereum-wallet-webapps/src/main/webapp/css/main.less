@@ -3,9 +3,11 @@
 @import './lib/brands.css';
 @import './lib/vuetify.css';
 @import './lib/materialdesign.css';
+@import "customVariables.less";
 
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
   background: transparent;
+  position: relative;
 
   .v-alert > div {
     max-width: 100%;
@@ -54,7 +56,9 @@
   }
 
   > .v-menu__content {
-    position: fixed;
+    top: 40px!important;
+    right: 20px!important;
+    left: auto!important;
   }
 
   #contractTransactionsContent {
@@ -65,6 +69,8 @@
     max-height: calc(100vh - 166px);
     overflow: auto;
   }
+
+  
 }
 
 #WalletAdminApp {
@@ -75,9 +81,13 @@
   }
 }
 
-#WalletApp {
+#WalletApp, #WalletSpaceApp {
   &.minimized {
     max-width: 250px;
     padding: 10px;
+
+    > .v-menu__content {
+      top: 50px!important;
+    }
   }
 }
