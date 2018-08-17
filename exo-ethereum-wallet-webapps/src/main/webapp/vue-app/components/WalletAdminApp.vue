@@ -91,9 +91,9 @@
                 type="number"
                 required />
 
-              <v-btn color="primary" @click="saveGlobalSettings">
+              <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
                 Save
-              </v-btn>
+              </button>
             </v-form>
           </v-card>
           <v-card>
@@ -114,16 +114,16 @@
                 <td v-else class="text-xs-right">{{ props.item.address }}</td>
                 <td class="text-xs-right">
                   <v-btn icon ripple @click="deleteContract(props.item, $event)">
-                    <v-icon color="primary">delete</v-icon>
+                    <i class="uiIconTrash uiIconBlue" />
                   </v-btn>
                 </td>
               </template>
             </v-data-table>
             <v-divider />
-            <div class="text-xs-center">
-              <v-btn v-show="sameConfiguredNetwork" class="primary mt-3" @click="showAddContractModal = true">
+            <div class="text-xs-center pt-2 pb-2">
+              <button v-show="sameConfiguredNetwork" class="btn btn-primary mt-3" @click="showAddContractModal = true">
                 Add Existing contract Address
-              </v-btn>
+              </button>
               <deploy-new-contract 
                 v-show="sameConfiguredNetwork"
                 :account="account"

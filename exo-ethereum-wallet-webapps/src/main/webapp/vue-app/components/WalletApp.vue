@@ -27,7 +27,7 @@
                                  @close="showSettingsModal = false"
                                  @settings-changed="refreshList(true)" />
 
-            <v-menu v-if="!hasError && !loading" v-model="walletConfigurationMenu">
+            <v-menu v-if="!hasError && !loading" v-model="walletConfigurationMenu" content-class="walletConfigurationMenu">
               <v-btn slot="activator" icon>
                 <v-icon>more_vert</v-icon>
               </v-btn>
@@ -97,7 +97,7 @@
             <v-list class="pb-0" two-line subheader>
               <v-list-tile v-for="(item, index) in accountsDetails" :key="index" :color="item.error ? 'red': ''" :title="item.title" avatar ripple @click="openAccountDetail(item)">
                 <v-list-tile-avatar>
-                  <v-icon :class="item.error ? 'red':'purple'" dark>{{ item.icon }}</v-icon>
+                  <v-icon :class="item.error ? 'red--text':'uiIconBlue'" dark>{{ item.icon }}</v-icon>
                 </v-list-tile-avatar>
                 <v-list-tile-content>
                   <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
@@ -108,7 +108,7 @@
                 </v-list-tile-content>
                 <v-list-tile-action v-if="!isSpace && item.isContract && !item.isDefault">
                   <v-btn icon ripple @click="deleteContract(item, $event)">
-                    <v-icon color="primary">delete</v-icon>
+                    <i class="uiIconTrash uiIconBlue" />
                   </v-btn>
                 </v-list-tile-action>
               </v-list-tile>

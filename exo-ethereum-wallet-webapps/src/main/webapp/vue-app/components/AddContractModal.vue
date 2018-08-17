@@ -1,13 +1,10 @@
 <template>
-  <v-dialog v-model="show" width="300px" max-width="100vw" @keydown.esc="show = false">
+  <v-dialog v-model="show" content-class="uiPopup" width="300px" max-width="100vw" @keydown.esc="show = false">
     <v-card class="elevation-12">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title>Add Token address</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon dark @click.native="show = false">
-          <v-icon>close</v-icon>
-        </v-btn>
-      </v-toolbar>
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>
+        <span class="PopupTitle popupTitle">Add Token address</span>
+      </div>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
           {{ error }}
@@ -18,7 +15,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="loading" :loading="loading" color="primary" @click="addToken">Save</v-btn>
+        <button :disabled="loading" :loading="loading" class="btn btn-primary" @click="addToken">Save</button>
       </v-card-actions>
     </v-card>
   </v-dialog>

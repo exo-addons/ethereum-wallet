@@ -10,18 +10,15 @@
     <!-- Ethereum address association -->
     <v-alert v-else-if="newAddressDetected" :value="newAddressDetected" type="info">
       A new wallet has been detected!
-      <v-btn color="primary" dark flat @click.stop="addressAssociationDialog = true">
+      <button class="btn btn-primary" @click.stop="addressAssociationDialog = true">
         See details
-      </v-btn>
-      <v-dialog v-model="addressAssociationDialog" width="400" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
+      </button>
+      <v-dialog v-model="addressAssociationDialog" content-class="uiPopup" width="400" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
         <v-card>
-          <v-toolbar dark color="primary">
-            <v-btn icon dark @click.native="addressAssociationDialog = false">
-              <v-icon>close</v-icon>
-            </v-btn>
-            <v-toolbar-title>Configure my wallet address</v-toolbar-title>
-            <v-spacer></v-spacer>
-          </v-toolbar>
+          <div class="popupHeader ClearFix">
+            <a class="uiIconClose pull-right" aria-hidden="true" @click="addressAssociationDialog = false"></a>
+            <span class="PopupTitle popupTitle">Configure my wallet address</span>
+          </div>
           <v-card-text>
             <div v-if="displaySpaceAccountCreationHelp">
               Current space doesn't have a wallet yet ? If you are manager of the space, you can create a new account using Metamask.
@@ -46,12 +43,12 @@
     
           <v-card-actions v-if="displayAccountHelpActions" class="text-xs-center">
             <v-spacer></v-spacer>
-            <v-btn color="primary" @click="$emit('save-address-to-account')">
+            <button class="btn btn-primary" @click="$emit('save-address-to-account')">
               Yes
-            </v-btn>
-            <v-btn color="primary" @click="addressAssociationDialog = false">
+            </button>
+            <button class="btn" @click="addressAssociationDialog = false">
               No
-            </v-btn>
+            </button>
             <v-spacer></v-spacer>
           </v-card-actions>
         </v-card>
@@ -62,18 +59,15 @@
     <div v-if="displayErrors">
       <v-alert v-if="!metamaskEnabled" :value="!metamaskEnabled" type="info">
         Please install Metamask in your browser
-        <v-btn color="primary" dark flat @click.stop="installInstructionDialog = true">
+        <button class="btn btn-primary" @click.stop="installInstructionDialog = true">
           See help
-        </v-btn>
-        <v-dialog v-model="installInstructionDialog" width="400" max-width="100wv" @keydown.esc="installInstructionDialog = false">
+        </button>
+        <v-dialog v-model="installInstructionDialog" content-class="uiPopup" width="400" max-width="100wv" @keydown.esc="installInstructionDialog = false">
           <v-card>
-            <v-toolbar dark color="primary">
-              <v-btn icon dark @click.native="installInstructionDialog = false">
-                <v-icon>close</v-icon>
-              </v-btn>
-              <v-toolbar-title>Enable wallet application</v-toolbar-title>
-              <v-spacer></v-spacer>
-            </v-toolbar>
+            <div class="popupHeader ClearFix">
+              <a class="uiIconClose pull-right" aria-hidden="true" @click="installInstructionDialog = false"></a>
+              <span class="PopupTitle popupTitle">Enable wallet application</span>
+            </div>
             <v-card-text>
               To access your wallet you 'll need to:
               <ol type="1">
@@ -86,9 +80,9 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="primary" @click="installInstructionDialog = false">
+              <button class="btn" @click="installInstructionDialog = false">
                 Close
-              </v-btn>
+              </button>
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>

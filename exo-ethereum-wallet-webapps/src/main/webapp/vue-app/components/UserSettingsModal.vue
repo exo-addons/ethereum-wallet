@@ -1,13 +1,10 @@
 <template>
-  <v-dialog v-model="show" width="500px" max-width="100vw" persistent @keydown.esc="show = false">
+  <v-dialog v-model="show" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="show = false">
     <v-card class="elevation-12">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title>User Preferences</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon dark @click.native="show = false">
-          <v-icon>close</v-icon>
-        </v-btn>
-      </v-toolbar>
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>
+        <span class="PopupTitle popupTitle">User Preferences</span>
+      </div>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
           {{ error }}
@@ -26,7 +23,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="loading" :loading="loading" color="primary" @click="savePreferences">Save</v-btn>
+        <button :disabled="loading" :loading="loading" class="btn btn-primary" @click="savePreferences">Save</button>
       </v-card-actions>
     </v-card>
   </v-dialog>

@@ -1,7 +1,7 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw" persistent>
-    <v-btn slot="activator" :disabled="disabled" :dark="!disabled" color="primary" ripple
-           @keydown.esc="dialog = false">Delegate Tokens</v-btn>
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent>
+    <button slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1"
+            @keydown.esc="dialog = false">Delegate Tokens</button>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_spender', '_value']"
                    :args-types="['address', 'uint256']"
@@ -11,13 +11,10 @@
                    function-name="approve"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title>Delegate Tokens</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon dark @click.native="dialog = false">
-          <v-icon>close</v-icon>
-        </v-btn>
-      </v-toolbar>
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
+        <span class="PopupTitle popupTitle">Delegate Tokens</span>
+      </div>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
           {{ error }}
@@ -32,8 +29,8 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="loading" :loading="loading" color="primary" @click="sendTokens">Save</v-btn>
-        <v-btn :disabled="!recipient || !amount" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
+        <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Save</button>
+        <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       </v-card-actions>
     </v-card>
   </v-dialog>

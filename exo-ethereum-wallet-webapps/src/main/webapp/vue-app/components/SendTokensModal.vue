@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-btn slot="activator" :disabled="disabled" :dark="!disabled" color="primary" ripple>Send Tokens</v-btn>
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
+    <button slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">Send Tokens</button>
     <qr-code-modal :to="recipient"
                    :from="account"
                    :amount="0"
@@ -14,13 +14,10 @@
                    title="Send Tokens QR Code"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title>Send Tokens</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon dark @click.native="dialog = false">
-          <v-icon>close</v-icon>
-        </v-btn>
-      </v-toolbar>
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
+        <span class="PopupTitle popupTitle">Send Tokens</span>
+      </div>
       <v-card-text>
         <v-alert :value="error" type="error" class="v-content">
           {{ error }}
@@ -35,8 +32,8 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="loading" :loading="loading" color="primary" @click="sendTokens">Send</v-btn>
-        <v-btn :disabled="!recipient || !amount" color="secondary" @click="showQRCodeModal = true">QRCode</v-btn>
+        <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
+        <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       </v-card-actions>
     </v-card>
   </v-dialog>

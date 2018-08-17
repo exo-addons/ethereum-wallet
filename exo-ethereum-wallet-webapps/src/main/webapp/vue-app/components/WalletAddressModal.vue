@@ -1,13 +1,10 @@
 <template>
-  <v-dialog v-model="show" width="400px" max-width="100vw" @keydown.esc="show = false">
+  <v-dialog v-model="show" content-class="uiPopup" width="400px" max-width="100vw" @keydown.esc="show = false">
     <v-card class="elevation-12">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title>Wallet address</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon dark @click.native="show = false">
-          <v-icon>close</v-icon>
-        </v-btn>
-      </v-toolbar>
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>
+        <span class="PopupTitle popupTitle">Wallet address</span>
+      </div>
       <v-card-text>
         <code>{{ address }}</code>
       </v-card-text>

@@ -1,10 +1,14 @@
 <template>
   <v-autocomplete ref="selectAutoComplete"
                   v-model="selectedValue"
+                  :id="`#${id}`"
                   :items="items"
                   :loading="isLoadingSuggestions"
                   :search-input.sync="searchTerm"
                   :label="inputLabel"
+                  :attach="`#${id}`"
+                  class="contactAutoComplete"
+                  content-class=""
                   max-width="100%"
                   item-text="name"
                   item-value="id_type"
@@ -59,6 +63,7 @@ export default {
   data () {
     return {
       items: [],
+      id: `AutoComplete${parseInt(Math.random() * 10000).toString().toString()}`,
       selectedValue: null,
       searchTerm: null,
       address: null,

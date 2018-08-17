@@ -1,8 +1,8 @@
 <template>
   <v-dialog v-model="createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent @keydown.esc="createNewToken = false">
-    <v-btn slot="activator" dark class="mt-3 primary" @click="createNewToken = true">
+    <button slot="activator" class="btn btn-primary mt-3" @click="createNewToken = true">
       Deploy new Token
-    </v-btn>
+    </button>
     <v-card>
       <v-toolbar dark color="primary">
         <v-btn :disabled="loading" icon dark @click.native="createNewToken = false">
