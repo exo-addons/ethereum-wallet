@@ -15,12 +15,12 @@
         <span class="PopupTitle popupTitle">Send delegated Tokens</span>
       </div>
       <v-card-text>
-        <v-alert :value="error" type="error" class="v-content">
-          {{ error }}
-        </v-alert>
-        <v-alert v-show="!error && warning && warning.length" :value="warning" type="warning" class="v-content">
-          {{ warning }}
-        </v-alert>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
+        <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
+          <i class="uiIconWarning"></i>{{ warning }}
+        </div>
         <v-form>
           <auto-complete ref="autocompleteFrom" :disabled="loading" input-label="From" @item-selected="from = $event.address"></auto-complete>
           <auto-complete ref="autocompleteRecipient" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>

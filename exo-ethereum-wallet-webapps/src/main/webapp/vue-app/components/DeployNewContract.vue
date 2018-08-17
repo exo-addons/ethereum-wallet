@@ -12,16 +12,18 @@
         <div class="text-xs-center">
           <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
         </div>
-        <v-alert :value="newTokenAddress" type="success" class="v-content" dismissible>
+
+        <div v-if="newTokenAddress" class="alert alert-success v-content">
+          <i class="uiIconSuccess"></i>
           Contract created under address: 
           <code>{{ newTokenAddress }}</code>
-        </v-alert>
-        <v-alert :value="error" type="error" class="v-content">
-          {{ error }}
-        </v-alert>
-        <v-alert v-show="!error && warning && warning.length" :value="warning" type="warning" class="v-content">
-          {{ warning }}
-        </v-alert>
+        </div>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
+        <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
+          <i class="uiIconWarning"></i>{{ warning }}
+        </div>
 
         <h4>ERC20 Token contract details</h4>
         <v-divider class="mb-4"/>

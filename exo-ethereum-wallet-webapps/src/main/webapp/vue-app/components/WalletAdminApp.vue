@@ -3,13 +3,14 @@
     <main>
       <v-layout>
         <v-flex>
-          <v-alert :value="error" type="error" class="v-content">
-            {{ error }}
-          </v-alert>
-          <v-alert :value="!sameConfiguredNetwork" type="warning" dismissible>
+          <div v-if="error && !loading" class="alert alert-error v-content">
+            <i class="uiIconError"></i>{{ error }}
+          </div>
+          <div v-if="!sameConfiguredNetwork" class="alert alert-warning v-content">
+            <i class="uiIconWarning"></i>
             Current selected network on Metamask is different from configured network to use with the platform.
             (The deployed contracts on default network aren't displayed)
-          </v-alert>
+          </div>
           <v-card class="text-xs-center pt-3">
             <v-form class="mr-3 ml-3">
               <v-text-field
@@ -103,10 +104,12 @@
             <div class="text-xs-center">
               <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
             </div>
-            <v-alert :value="newTokenAddress" type="success" class="v-content" dismissible>
+
+            <div v-if="newTokenAddress" class="alert alert-success v-content">
+              <i class="uiIconSuccess"></i>
               Contract created under address: 
               <code>{{ newTokenAddress }}</code>
-            </v-alert>
+            </div>
             <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
               <template slot="items" slot-scope="props">
                 <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>

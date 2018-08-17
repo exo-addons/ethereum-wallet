@@ -6,9 +6,9 @@
         <span class="PopupTitle popupTitle">User Preferences</span>
       </div>
       <v-card-text>
-        <v-alert :value="error" type="error" class="v-content">
-          {{ error }}
-        </v-alert>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
         <v-form>
           <v-flex>
             <span>Default gas to spend on transactions (Maximum fee per transaction)</span>

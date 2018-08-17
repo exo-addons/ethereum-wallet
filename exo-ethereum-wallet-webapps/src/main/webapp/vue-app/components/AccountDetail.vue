@@ -76,9 +76,9 @@
         @end-loading="loading = false" />
     </div>
 
-    <v-alert :value="error && !loading" type="error" dismissible>
-      {{ error }}
-    </v-alert>
+    <div v-if="error && !loading" class="alert alert-error">
+      <i class="uiIconError"></i>{{ error }}
+    </div>
 
     <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 

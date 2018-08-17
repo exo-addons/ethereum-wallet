@@ -15,9 +15,9 @@
         <span class="PopupTitle popupTitle">Send Ether</span>
       </div>
       <v-card-text>
-        <v-alert :value="error" type="error" class="v-content">
-          {{ error }}
-        </v-alert>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
         <v-form>
           <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
           <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount"></v-text-field>

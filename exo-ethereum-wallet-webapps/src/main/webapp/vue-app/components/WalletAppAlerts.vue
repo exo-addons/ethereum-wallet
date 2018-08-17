@@ -1,15 +1,20 @@
 <template>
   <v-flex width="100%">
-    <v-alert :value="displayNotSameNetworkWarning" type="warning">
+    <div v-if="displayNotSameNetworkWarning" class="alert alert-warning">
+      <i class="uiIconWarning"></i>
       Please switch Metamask to <strong>{{ networkLabel }}</strong>
-    </v-alert>
-    
-    <v-alert v-if="displaySpaceMetamaskEnableHelp" :value="displaySpaceMetamaskEnableHelp" type="info">
+    </div>
+
+    <div v-if="displaySpaceMetamaskEnableHelp" class="alert alert-info">
+      <i class="uiIconInfo"></i>
       Please enable/install Metamask to be able to add a new space account
-    </v-alert>
+    </div>
+
     <!-- Ethereum address association -->
-    <v-alert v-else-if="newAddressDetected" :value="newAddressDetected" type="info">
-      A new wallet has been detected!
+    <div v-else-if="newAddressDetected" class="alert alert-info">
+      <i class="uiIconInfo"></i>
+      <span>A new wallet has been detected!</span>
+      <br />
       <button class="btn" @click.stop="addressAssociationDialog = true">
         See details
       </button>
@@ -51,12 +56,14 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-    </v-alert>
+    </div>
     
     <!-- error alerts -->
     <div v-if="displayErrors">
-      <v-alert v-if="!metamaskEnabled" :value="!metamaskEnabled" type="info">
-        Please install Metamask in your browser
+      <div v-if="!metamaskEnabled" class="alert alert-info">
+        <i class="uiIconInfo"></i>
+        <span>Please install Metamask in your browser</span>
+        <br />
         <button class="btn" @click.stop="installInstructionDialog = true">
           See help
         </button>
@@ -85,16 +92,20 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-      </v-alert>
-      <v-alert v-else-if="!metamaskConnected" :value="!metamaskConnected" type="warning">
+      </div>
+
+      <div v-else-if="!metamaskConnected" class="alert alert-warning">
+        <i class="uiIconWarning"></i>
         Please connect Metamask to {{ networkLabel && networkLabel.length ? networkLabel : 'an online network' }}
-      </v-alert>
-      <v-alert v-else-if="!account || !account.length" :value="!account" type="warning">
+      </div>
+      <div v-else-if="!account || !account.length" class="alert alert-warning">
+        <i class="uiIconWarning"></i>
         Please select a valid account using Metamask
-      </v-alert>
-      <v-alert v-else-if="errorMessage" :value="errorMessage" type="error">
+      </div>
+      <div v-else-if="errorMessage" class="alert alert-error">
+        <i class="uiIconError"></i>
         {{ errorMessage }}
-      </v-alert>
+      </div>
     </div>
   </v-flex>
 </template>

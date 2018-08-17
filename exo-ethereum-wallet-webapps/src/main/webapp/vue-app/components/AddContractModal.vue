@@ -6,9 +6,9 @@
         <span class="PopupTitle popupTitle">Add Token address</span>
       </div>
       <v-card-text>
-        <v-alert :value="error" type="error" class="v-content">
-          {{ error }}
-        </v-alert>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
         <v-form>
           <v-text-field v-model="address" name="address" label="Address" type="text"></v-text-field>
         </v-form>
