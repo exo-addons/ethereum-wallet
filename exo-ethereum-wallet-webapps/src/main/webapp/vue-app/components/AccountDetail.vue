@@ -76,7 +76,7 @@
         @end-loading="loading = false" />
     </div>
 
-    <v-alert :value="error" type="error" dismissible>
+    <v-alert :value="error && !loading" type="error" dismissible>
       {{ error }}
     </v-alert>
 
@@ -145,6 +145,11 @@ export default {
     },
     contractDetail() {
       this.error = null;
+    },
+    loading() {
+      if(this.loading) {
+        this.error = null;
+      }
     }
   },
   methods: {
