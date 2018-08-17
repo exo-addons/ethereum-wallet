@@ -15,17 +15,17 @@ public class GlobalSettings implements Serializable {
 
   private boolean                walletEnabled           = true;
 
-  private String                 accessPermission;
+  private String                 accessPermission        = null;
 
-  private String                 providerURL;
+  private String                 providerURL             = "https://ropsten.infura.io";
 
-  private Integer                defaultBlocksToRetrieve = 1000;
+  private Integer                defaultBlocksToRetrieve = 100;
 
-  private Long                   defaultNetworkId        = 0L;
+  private Long                   defaultNetworkId        = 3L;
 
-  private Integer                defaultGas              = 35000;
+  private Integer                defaultGas              = 65000;
 
-  private Integer                userDefaultGas          = 35000;
+  private Integer                userDefaultGas;
 
   /**
    * Managed in other storage location
@@ -57,21 +57,47 @@ public class GlobalSettings implements Serializable {
     return toJSONString();
   }
 
-  public static final GlobalSettings parseStringToObject(String jsonString) {
+  public static final GlobalSettings parseStringToObject(GlobalSettings defaultSettings, String jsonString) {
+    if (defaultSettings == null) {
+      defaultSettings = new GlobalSettings();
+    }
     if (StringUtils.isBlank(jsonString)) {
-      return null;
+      try {
+        return (GlobalSettings) defaultSettings.clone();
+      } catch (CloneNotSupportedException e) {
+        return null;
+      }
     }
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
-      GlobalSettings globaalSettings = new GlobalSettings();
-      globaalSettings.setAccessPermission(jsonObject.getString("accessPermission"));
-      globaalSettings.setProviderURL(jsonObject.getString("providerURL"));
-      globaalSettings.setDefaultBlocksToRetrieve(jsonObject.getInt("defaultBlocksToRetrieve"));
-      globaalSettings.setDefaultNetworkId(jsonObject.getLong("defaultNetworkId"));
-      globaalSettings.setDefaultGas(jsonObject.getInt("defaultGas"));
-      return globaalSettings;
+      GlobalSettings globalSettings = new GlobalSettings();
+
+      String storedAccessPermission = jsonObject.getString("accessPermission");
+      globalSettings.setAccessPermission(storedAccessPermission == null
+          || storedAccessPermission.isEmpty() ? defaultSettings.getAccessPermission() : storedAccessPermission);
+
+      String storedProviderURL = jsonObject.getString("providerURL");
+      globalSettings.setProviderURL(storedProviderURL == null || storedProviderURL.isEmpty() ? defaultSettings.getProviderURL()
+                                                                                             : storedProviderURL);
+
+      int storedDefaultBlocksToRetrieve = jsonObject.getInt("defaultBlocksToRetrieve");
+      globalSettings.setDefaultBlocksToRetrieve(storedDefaultBlocksToRetrieve == 0 ? defaultSettings.getDefaultBlocksToRetrieve()
+                                                                                   : storedDefaultBlocksToRetrieve);
+
+      long storedDefaultNetworkId = jsonObject.getLong("defaultNetworkId");
+      globalSettings.setDefaultNetworkId(storedDefaultNetworkId == 0L ? defaultSettings.getDefaultBlocksToRetrieve()
+                                                                      : storedDefaultNetworkId);
+
+      int storedDefaultGas = jsonObject.getInt("defaultGas");
+      globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
+
+      return globalSettings;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);
     }
+  }
+
+  public static final GlobalSettings parseStringToObject(String jsonString) {
+    return parseStringToObject(null, jsonString);
   }
 }

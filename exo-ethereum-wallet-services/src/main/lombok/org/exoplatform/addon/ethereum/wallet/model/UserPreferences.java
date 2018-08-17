@@ -13,7 +13,7 @@ public class UserPreferences implements Serializable {
 
   private static final long serialVersionUID = -5725443183560646198L;
 
-  private Integer           defaultGas       = 35000;
+  private Integer           defaultGas       = 0;
 
   public String toJSONString() {
     return toJSONObject().toString();
