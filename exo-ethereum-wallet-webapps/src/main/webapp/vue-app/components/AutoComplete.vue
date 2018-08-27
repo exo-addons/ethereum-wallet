@@ -1,12 +1,11 @@
 <template>
   <v-autocomplete ref="selectAutoComplete"
                   v-model="selectedValue"
-                  :id="`#${id}`"
+                  :id="`${id}`"
                   :items="items"
                   :loading="isLoadingSuggestions"
                   :search-input.sync="searchTerm"
                   :label="inputLabel"
-                  :attach="`#${id}`"
                   :disabled="disabled"
                   class="contactAutoComplete"
                   content-class=""

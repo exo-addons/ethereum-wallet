@@ -9,70 +9,40 @@
             <h4 v-else class="head-container">Wallet</h4>
             <v-spacer />
 
+            <wallet-app-menu v-if="!hasError && !loading && account"
+                             :is-space="isSpace"
+                             :is-account-details="selectedAccount !== null"
+                             @refresh="refreshList(true)"
+                             @add-contract="showAddContractModal = true"
+                             @show-wallet-address="showWalletAddress = true"
+                             @show-qr-code="showQRCodeModal = true"
+                             @modify-settings="showSettingsModal = true" />
+
             <add-contract-modal v-if="!isSpace"
                                 :net-id="networkId"
                                 :account="account"
                                 :open="showAddContractModal"
                                 @added="reloadContracts()"
                                 @close="showAddContractModal = false" />
+
             <wallet-address-modal :address="account"
                                   :open="showWalletAddress"
                                   @close="showWalletAddress = false" />
+
             <qr-code-modal :to="account"
                            :open="showQRCodeModal"
                            title="Address QR Code"
                            @close="showQRCodeModal = false" />
+
             <user-settings-modal :account="account"
                                  :open="showSettingsModal"
                                  @close="showSettingsModal = false"
                                  @settings-changed="refreshList(true)" />
-
-            <v-menu v-if="!hasError && !loading" v-model="walletConfigurationMenu" content-class="walletConfigurationMenu">
-              <v-btn slot="activator" icon>
-                <v-icon>more_vert</v-icon>
-              </v-btn>
-              <v-list>
-                <v-list-tile @click="refreshList(true)">
-                  <v-list-tile-avatar>
-                    <v-icon>refresh</v-icon>
-                  </v-list-tile-avatar>
-                  <v-list-tile-title>Refresh</v-list-tile-title>
-                </v-list-tile>
-                <v-list-tile v-if="!isSpace && !selectedAccount" @click="showAddContractModal = true">
-                  <v-list-tile-avatar>
-                    <v-icon>add</v-icon>
-                  </v-list-tile-avatar>
-                  <v-list-tile-title>Add Token address</v-list-tile-title>
-                </v-list-tile>
-                <v-list-tile @click="showWalletAddress = true">
-                  <v-list-tile-avatar>
-                    <v-icon>fa-address-card</v-icon>
-                  </v-list-tile-avatar>
-                  <v-list-tile-title>Wallet address</v-list-tile-title>
-                </v-list-tile>
-                <v-list-tile @click="showQRCodeModal = true">
-                  <v-list-tile-avatar>
-                    <v-icon>fa-qrcode</v-icon>
-                  </v-list-tile-avatar>
-                  <v-list-tile-title>Wallet QR Code</v-list-tile-title>
-                </v-list-tile>
-                <v-list-tile v-if="!isSpace && account" @click="showSettingsModal = true">
-                  <v-list-tile-avatar>
-                    <v-icon>fa-cog</v-icon>
-                  </v-list-tile-avatar>
-                  <v-list-tile-title>Settings</v-list-tile-title>
-                </v-list-tile>
-              </v-list>
-            </v-menu>
-            <!-- Disabled for now
-            <v-btn v-if="!isMaximized" icon title="Maximize" @click="maximize">
-              <v-icon color="blue-grey">fa-window-maximize</v-icon>
-            </v-btn> -->
           </v-toolbar>
 
           <!-- Body -->
           <v-card v-if="displayAccountsList" class="text-xs-center" flat>
-            <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
+            <v-progress-circular v-show="loading" color="primary" indeterminate></v-progress-circular>
 
             <wallet-app-alerts :display-not-same-network-warning="displayNotSameNetworkWarning"
                                :network-label="networkLabel"
@@ -108,7 +78,7 @@
                 </v-list-tile-content>
                 <v-list-tile-action v-if="!isSpace && item.isContract && !item.isDefault">
                   <v-btn icon ripple @click="deleteContract(item, $event)">
-                    <i class="uiIconTrash uiIconBlue" />
+                    <i class="uiIconTrash uiIconBlue"></i>
                   </v-btn>
                 </v-list-tile-action>
               </v-list-tile>
@@ -117,10 +87,10 @@
           </v-card>
 
           <!-- The selected account detail -->
-          <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
+          <v-navigation-drawer v-if="!isMaximized" id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
             <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
-          <account-detail v-if="isMaximized && selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
+          <account-detail v-else-if="selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
         </v-flex>
       </v-layout>
     </main>
@@ -128,6 +98,7 @@
 </template>
 
 <script>
+import WalletAppMenu from './WalletAppMenu.vue';
 import WalletAppAlerts from './WalletAppAlerts.vue';
 import AddContractModal from './AddContractModal.vue';
 import AccountDetail from './AccountDetail.vue';
@@ -144,6 +115,7 @@ export default {
   components: {
     UserSettingsModal,
     WalletAddressModal,
+    WalletAppMenu,
     WalletAppAlerts,
     QrCodeModal,
     AccountDetail,

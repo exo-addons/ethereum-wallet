@@ -111,11 +111,18 @@
 
 #WalletApp, #WalletSpaceApp {
   &.minimized {
-    max-width: 250px;
     padding: 10px;
 
     > .walletConfigurationMenu {
       top: 50px!important;
+    }
+  }
+}
+
+@media (min-device-width : 1024px) {
+  #WalletApp, #WalletSpaceApp {
+    &.minimized {
+      max-width: 250px;
     }
   }
 }
