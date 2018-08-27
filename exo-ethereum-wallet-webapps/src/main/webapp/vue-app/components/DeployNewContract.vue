@@ -182,7 +182,10 @@ export default {
         this.newTokenGasInUSD = 0;
       }      
     },
-    saveContract() {
+    saveContract(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
       this.errorMessage = null;
       this.warning = null;
 
