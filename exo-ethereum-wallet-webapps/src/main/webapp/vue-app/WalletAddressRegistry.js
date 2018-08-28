@@ -171,8 +171,7 @@ export function searchUsers(filter) {
   const params = $.param({
     nameToSearch: filter,
     typeOfRelation: 'mention_activity_stream',
-    // disable this parameter to allow user send tokens to himself (from his space to his own account for example)
-    // currentUser: eXo.env.portal.userName,
+    currentUser: eXo.env.portal.userName,
     spaceURL: isOnlySpaceMembers() ? getAccessPermission() : null
   });
   return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})

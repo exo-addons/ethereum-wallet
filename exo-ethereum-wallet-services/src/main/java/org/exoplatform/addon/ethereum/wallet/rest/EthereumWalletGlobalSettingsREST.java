@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.rest.Utils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.service.Utils.getCurrentUserId;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;

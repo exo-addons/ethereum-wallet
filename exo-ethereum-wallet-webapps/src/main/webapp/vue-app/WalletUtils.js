@@ -96,7 +96,12 @@ export function initWeb3(isSpace) {
 
 export function initSettings(isSpace) {
   return getMetamaskCurrentNetworkId(isSpace)
-    .then(networkId => fetch(`/portal/rest/wallet/api/global-settings?networkId=${networkId}`, {credentials: 'include'}))
+    .then(networkId => {
+      if (!networkId) {
+        networkId = 0;
+      }
+      return fetch(`/portal/rest/wallet/api/global-settings?networkId=${networkId}`, {credentials: 'include'});
+    })
     .then(resp =>  {
       if (resp && resp.ok) {
         return resp.json();

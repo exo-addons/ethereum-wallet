@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.rest.Utils.GLOAL_SETTINGS_CHANGED_EVENT;
+import static org.exoplatform.addon.ethereum.wallet.service.Utils.GLOAL_SETTINGS_CHANGED_EVENT;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,6 +73,8 @@ public class EthereumWalletStorage implements Startable {
   private ListenerService     listenerService;
 
   private GlobalSettings      defaultSettings                    = new GlobalSettings();
+
+  private GlobalSettings      storedSettings;
 
   public EthereumWalletStorage(SettingService settingService,
                                SpaceService spaceService,
@@ -174,6 +176,9 @@ public class EthereumWalletStorage implements Startable {
                        GLOBAL_SETTINGS_KEY_NAME,
                        SettingValue.create(globalSettings.toJSONString()));
 
+    // Clear cached in memory stored settings
+    this.storedSettings = null;
+
     try {
       this.listenerService.broadcast(GLOAL_SETTINGS_CHANGED_EVENT, this, globalSettings);
     } catch (Exception e) {
@@ -191,6 +196,11 @@ public class EthereumWalletStorage implements Startable {
    * @return
    */
   public GlobalSettings getSettings(Long networkId, String username) {
+    if (username != null && storedSettings != null) {
+      // Retrieve stored global settings from memory
+      return storedSettings;
+    }
+
     SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
 
     GlobalSettings globalSettings = defaultSettings;
@@ -231,6 +241,10 @@ public class EthereumWalletStorage implements Startable {
             || userSettings.getDefaultGas() == 0 ? globalSettings.getDefaultGas() : userSettings.getDefaultGas());
       }
     }
+
+    if (username == null) {
+      storedSettings = globalSettings;
+    }
     return globalSettings;
   }
 
@@ -247,6 +261,7 @@ public class EthereumWalletStorage implements Startable {
     if (networkId == null || networkId == 0) {
       throw new IllegalArgumentException("networkId parameter is mandatory");
     }
+
     String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
     address = address.toLowerCase();
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
@@ -255,6 +270,9 @@ public class EthereumWalletStorage implements Startable {
                                                                             : defaultContractsAddressesValue.getValue().toString()
                                                                                 + "," + address;
     settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(defaultContractsAddresses));
+
+    // Clear cached in memory stored settings
+    this.storedSettings = null;
   }
 
   /**
@@ -274,6 +292,7 @@ public class EthereumWalletStorage implements Startable {
       LOG.warn("Can't remove empty network id for contract");
       return false;
     }
+
     String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
     final String defaultAddressToSave = address.toLowerCase();
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
@@ -285,6 +304,10 @@ public class EthereumWalletStorage implements Startable {
       String contractAddressValue = StringUtils.join(contractAddressList, ",");
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(contractAddressValue));
     }
+
+    // Clear cached in memory stored settings
+    this.storedSettings = null;
+
     return true;
   }
 
@@ -323,6 +346,9 @@ public class EthereumWalletStorage implements Startable {
                        WALLET_SCOPE,
                        SETTINGS_KEY_NAME,
                        SettingValue.create(userPreferences.toJSONString()));
+
+    // Clear cached in memory stored settings
+    this.storedSettings = null;
   }
 
   /**
@@ -332,6 +358,10 @@ public class EthereumWalletStorage implements Startable {
    * @return {@link AccountDetail}
    */
   public AccountDetail getSpaceDetails(String id) {
+    if (id == null) {
+      throw new IllegalArgumentException("id parameter is mandatory");
+    }
+
     Space space = getSpace(id);
     if (space == null) {
       return null;
@@ -352,6 +382,10 @@ public class EthereumWalletStorage implements Startable {
    * @return
    */
   public AccountDetail getUserDetails(String id) {
+    if (id == null) {
+      throw new IllegalArgumentException("id parameter is mandatory");
+    }
+
     Identity identity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, id, true);
     if (identity == null || identity.getProfile() == null) {
       return null;
@@ -366,12 +400,16 @@ public class EthereumWalletStorage implements Startable {
   }
 
   /**
-   * Retrieve User account details DTO by wallet address
+   * Retrieve User or Space account details DTO by wallet address
    * 
    * @param address
    * @return
    */
-  public AccountDetail getUserDetailsByAddress(String address) {
+  public AccountDetail getAccountDetailsByAddress(String address) {
+    if (address == null) {
+      throw new IllegalArgumentException("address parameter is mandatory");
+    }
+
     AccountDetail accountDetail = null;
 
     SettingValue<?> walletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address);
@@ -452,7 +490,7 @@ public class EthereumWalletStorage implements Startable {
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       String oldAddress = getUserAddress(id);
       if (oldAddress != null) {
-        AccountDetail userDetailsByOldAddress = getUserDetailsByAddress(oldAddress);
+        AccountDetail userDetailsByOldAddress = getAccountDetailsByAddress(oldAddress);
         if (userDetailsByOldAddress != null) {
           LOG.warn("The address {} was assigned to user {} and changed to user {}",
                    oldAddress,

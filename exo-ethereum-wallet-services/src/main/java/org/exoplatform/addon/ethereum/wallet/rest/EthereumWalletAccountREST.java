@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.rest.Utils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.service.Utils.getCurrentUserId;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -85,7 +85,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     address = address.toLowerCase();
-    AccountDetail accountDetail = ethereumWalletStorage.getUserDetailsByAddress(address);
+    AccountDetail accountDetail = ethereumWalletStorage.getAccountDetailsByAddress(address);
 
     return Response.ok(accountDetail == null ? "{}" : accountDetail).build();
   }
