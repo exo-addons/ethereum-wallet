@@ -26,8 +26,16 @@
                 :rules="mandatoryRule"
                 type="text"
                 name="providerURL"
-                label="Ethereum Network URL used for static displaying spaces wallets (without Metamask)"
+                label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
                 autofocus />
+
+              <v-text-field
+                ref="websocketProviderURL"
+                v-model="websocketProviderURL"
+                :rules="mandatoryRule"
+                type="text"
+                name="websocketProviderURL"
+                label="Ethereum Network Websocket URL used for notifications" />
 
               <v-autocomplete
                 ref="accessPermissionAutoComplete"
@@ -169,7 +177,8 @@ export default {
       accessPermissionOptions: [],
       accessPermissionSearchTerm: null,
       isLoadingSuggestions: false,
-      providerURL: 'http://localhost:8545',
+      websocketProviderURL: '',
+      providerURL: '',
       defaultBlocksToRetrieve: 1000,
       defaultNetworkId: 0,
       defaultGas: 50000,
@@ -299,6 +308,9 @@ export default {
       if (window.walletSettings.providerURL) {
         this.providerURL = window.walletSettings.providerURL;
       }
+      if (window.walletSettings.websocketProviderURL) {
+        this.websocketProviderURL = window.walletSettings.websocketProviderURL;
+      }
       if (window.walletSettings.defaultBlocksToRetrieve) {
         this.defaultBlocksToRetrieve = window.walletSettings.defaultBlocksToRetrieve;
       }
@@ -341,6 +353,7 @@ export default {
         body: JSON.stringify({
           accessPermission: this.accessPermission,
           providerURL: this.providerURL,
+          websocketProviderURL: this.websocketProviderURL,
           defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
           defaultNetworkId: this.defaultNetworkId,
           defaultGas: this.defaultGas
@@ -349,6 +362,7 @@ export default {
         if (resp && resp.ok) {
           window.walletSettings.accessPermission = this.accessPermission;
           window.walletSettings.providerURL = this.providerURL;
+          window.walletSettings.websocketProviderURL = this.websocketProviderURL;
           window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
           window.walletSettings.defaultNetworkId = this.defaultNetworkId;
           window.walletSettings.defaultGas = this.defaultGas;

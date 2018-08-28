@@ -19,6 +19,8 @@ public class GlobalSettings implements Serializable {
 
   private String                 providerURL             = "https://ropsten.infura.io";
 
+  private String                 websocketProviderURL    = "wss://ropsten.infura.io/ws";
+
   private Integer                defaultBlocksToRetrieve = 100;
 
   private Long                   defaultNetworkId        = 3L;
@@ -42,6 +44,7 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("isWalletEnabled", walletEnabled);
       jsonObject.put("accessPermission", accessPermission);
       jsonObject.put("providerURL", providerURL);
+      jsonObject.put("websocketProviderURL", websocketProviderURL);
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);

@@ -1,18 +1,12 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.rest.Utils.*;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.exoplatform.commons.api.settings.SettingService;
-import org.exoplatform.commons.api.settings.SettingValue;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -25,12 +19,12 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("administrators")
 public class EthereumWalletContractREST implements ResourceContainer {
 
-  private static final Log LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
+  private static final Log      LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
 
-  private SettingService settingService;
+  private EthereumWalletStorage ethereumWalletStorage;
 
-  public EthereumWalletContractREST(SettingService settingService) {
-    this.settingService = settingService;
+  public EthereumWalletContractREST(EthereumWalletStorage ethereumWalletStorage) {
+    this.ethereumWalletStorage = ethereumWalletStorage;
   }
 
   /**
@@ -51,19 +45,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
-    address= address.toLowerCase();
-    SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
-                                                                        WALLET_SCOPE,
-                                                                        defaultContractsParamKey);
-    String defaultContractsAddresses =
-                                     defaultContractsAddressesValue == null ? address
-                                                                            : defaultContractsAddressesValue.getValue().toString()
-                                                                                + "," + address;
-    settingService.set(WALLET_CONTEXT,
-                       WALLET_SCOPE,
-                       defaultContractsParamKey,
-                       SettingValue.create(defaultContractsAddresses));
+    ethereumWalletStorage.saveDefaultContract(address, networkId);
     return Response.ok().build();
   }
 
@@ -86,43 +68,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
-    final String defaultAddressToSave = address.toLowerCase();
-    SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
-                                                                        WALLET_SCOPE,
-                                                                        defaultContractsParamKey);
-    if (defaultContractsAddressesValue != null) {
-      String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
-      Set<String> contractAddressList = Arrays.stream(contractAddresses)
-                                               .filter(contractAddress -> !contractAddress.equalsIgnoreCase(defaultAddressToSave))
-                                               .collect(Collectors.toSet());
-      String contractAddressValue = StringUtils.join(contractAddressList, ",");
-      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(contractAddressValue));
-    }
+    ethereumWalletStorage.removeDefaultContract(address, networkId);
     return Response.ok().build();
-  }
-
-  /**
-   * Retrieves the list of default contract addreses
-   * 
-   * @param networkId
-   * @return
-   */
-  public List<String> getContractAddresses(Long networkId) {
-    if (networkId == null || networkId == 0) {
-      return Collections.emptyList();
-    }
-    List<String> contractAddressList = null;
-    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
-    SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT,
-                                                                        WALLET_SCOPE,
-                                                                        defaultContractsParamKey);
-    if (defaultContractsAddressesValue != null) {
-      String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
-      contractAddressList = Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toList());
-    } else {
-      contractAddressList = Collections.emptyList();
-    }
-    return contractAddressList;
   }
 }

@@ -231,7 +231,7 @@ export default {
               return saveContractAddressAsDefault(newTokenInstance.options.address)
                 .then(resp => {
                   if (resp && resp.ok) {
-                    this.$emit("list-updated", newTokenInstance.options.address);
+                    // this.$emit("list-updated", newTokenInstance.options.address);
                     this.createNewToken = false;
                   } else {
                     this.loading = false;
