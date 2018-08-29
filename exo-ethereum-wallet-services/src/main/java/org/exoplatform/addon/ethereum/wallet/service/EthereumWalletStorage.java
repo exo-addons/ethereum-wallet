@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.GLOAL_SETTINGS_CHANGED_EVENT;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.GLOAL_SETTINGS_CHANGED_EVENT;
 
 import java.util.*;
 import java.util.stream.Collectors;

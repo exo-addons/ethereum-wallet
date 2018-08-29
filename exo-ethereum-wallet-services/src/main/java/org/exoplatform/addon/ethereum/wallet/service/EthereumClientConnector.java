@@ -16,8 +16,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.NEW_TRANSACTION_EVENT;
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.setTimeout;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.NEW_TRANSACTION_EVENT;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.setTimeout;
 
 import java.io.IOException;
 import java.net.URI;

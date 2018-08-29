@@ -16,8 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.notification.plugin;
 
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.ACCOUNT_DETAIL_PARAMETER;
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.AMOUNT_PARAMETER;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.Collections;
 
@@ -51,9 +50,9 @@ public class EtherSenderNotificationPlugin extends BaseNotificationPlugin {
 
     return NotificationInfo.instance()
                            .to(Collections.singletonList(accountDetail.getId()))
-                           .with("amount", String.valueOf(amount))
-                           .with("avatar", accountDetail.getAvatar())
-                           .with("user", accountDetail.getName())
+                           .with(AMOUNT, String.valueOf(amount))
+                           .with(AVATAR, accountDetail.getAvatar())
+                           .with(USER, accountDetail.getName())
                            .key(getKey())
                            .end();
   }

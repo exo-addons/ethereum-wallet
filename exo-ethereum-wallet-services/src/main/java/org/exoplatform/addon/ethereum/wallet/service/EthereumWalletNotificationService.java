@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;

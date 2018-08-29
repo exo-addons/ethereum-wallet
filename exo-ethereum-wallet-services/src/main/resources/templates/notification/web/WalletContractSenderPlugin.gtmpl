@@ -4,7 +4,7 @@
       <img src="$AVATAR" alt="$USER" />
     </div> 
     <div class="media-body">
-      <div class="contentSmall" data-link="$URL">
+      <div class="contentSmall">
         <div class="content">
           You have received $AMOUNT from contract
         </div>

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.addon.ethereum.wallet.service;
+package org.exoplatform.addon.ethereum.wallet.service.utils;
 
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
@@ -22,7 +22,7 @@ import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
 import org.exoplatform.services.security.ConversationState;
 
 /**
- * Utils class to provide common tools
+ * Utils class to provide common tools and constants
  */
 public class Utils {
   public static final String                       GLOAL_SETTINGS_CHANGED_EVENT                  =
@@ -43,6 +43,12 @@ public class Utils {
   public static final String                       TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID =
                                                                                                  "ContractReceiverNotificationPlugin";
 
+  public static String                             AMOUNT                                        = "amount";
+
+  public static String                             AVATAR                                        = "avatar";
+
+  public static String                             USER                                          = "user";
+
   public static ArgumentLiteral<AccountDetail>     ACCOUNT_DETAIL_PARAMETER                      =
                                                                             new ArgumentLiteral<AccountDetail>(AccountDetail.class,
                                                                                                                "accountDetail");
@@ -52,7 +58,7 @@ public class Utils {
                                                                                                                        "transactionStatus");
 
   public static ArgumentLiteral<Integer>           AMOUNT_PARAMETER                              =
-                                                                    new ArgumentLiteral<Integer>(Integer.class, "amount");
+                                                                    new ArgumentLiteral<Integer>(Integer.class, AMOUNT);
 
   public static final String getCurrentUserId() {
     if (ConversationState.getCurrent() != null && ConversationState.getCurrent().getIdentity() != null) {

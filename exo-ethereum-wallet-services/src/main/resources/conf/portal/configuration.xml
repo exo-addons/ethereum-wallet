@@ -39,10 +39,10 @@
       <value-param>
         <name>defaultContractAddresses</name>
         <description>
-                Default list of contract addresses to display in user wallets when using default network.
-                Once configured, it will be stored on DB and can't be changed.
-             </description>
-        <value>${exo.addon.wallet.defaultContractAddresses:0xf423038aae7310d547871ff714b4687ee2ecb37d}</value>
+            Default list of contract addresses to display in user wallets when using default network.
+            Once configured, it will be stored on DB and can't be changed.
+         </description>
+        <value>${exo.addon.wallet.defaultContractAddresses:}</value>
       </value-param>
     </init-params>
   </component>
