@@ -45,14 +45,18 @@ public class ContractSenderNotificationPlugin extends BaseNotificationPlugin {
 
   @Override
   protected NotificationInfo makeNotification(NotificationContext ctx) {
-    AccountDetail accountDetail = ctx.value(ACCOUNT_DETAIL_PARAMETER);
-    int amount = ctx.value(AMOUNT_PARAMETER);
+    AccountDetail senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
+    AccountDetail receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
+    String contract = ctx.value(CONTRACT_PARAMETER);
+    double amount = ctx.value(AMOUNT_PARAMETER);
 
     return NotificationInfo.instance()
-                           .to(Collections.singletonList(accountDetail.getId()))
+                           .to(Collections.singletonList(senderAccountDetail.getId()))
                            .with(AMOUNT, String.valueOf(amount))
-                           .with(AVATAR, accountDetail.getAvatar())
-                           .with(USER, accountDetail.getName())
+                           .with(CONTRACT, contract)
+                           .with(AVATAR, receiverAccountDetail.getAvatar())
+                           .with(SENDER, senderAccountDetail.getName())
+                           .with(RECEIVER, receiverAccountDetail.getName())
                            .key(getKey())
                            .end();
   }

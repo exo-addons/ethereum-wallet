@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.StringUtils;
 import org.picocontainer.Startable;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.websocket.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -107,8 +107,11 @@ public class EthereumClientConnector implements Startable {
       Transaction transaction = queue.poll();
       while (transaction != null) {
         try {
-          listenerService.broadcast(NEW_TRANSACTION_EVENT, null, transaction);
-        } catch (Exception e) {
+          EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transaction.getHash()).sendAsync().get();
+          TransactionReceipt transactionReceipt = ethGetTransactionReceipt.getTransactionReceipt().get();
+
+          listenerService.broadcast(NEW_TRANSACTION_EVENT, transaction, transactionReceipt);
+        } catch (Throwable e) {
           LOG.error("Error while handling transaction", e);
         }
         transaction = queue.poll();

@@ -49,3 +49,4 @@ rebel-remote.xml
 build
 npm-debug.log
 node_modules
+hotswap-agent.properties

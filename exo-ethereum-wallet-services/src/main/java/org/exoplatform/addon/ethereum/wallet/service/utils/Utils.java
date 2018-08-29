@@ -16,6 +16,13 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service.utils;
 
+import java.util.Arrays;
+
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.generated.Uint256;
+
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
 import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
@@ -25,40 +32,69 @@ import org.exoplatform.services.security.ConversationState;
  * Utils class to provide common tools and constants
  */
 public class Utils {
-  public static final String                       GLOAL_SETTINGS_CHANGED_EVENT                  =
-                                                                                "exo.addon.wallet.settings.changed";
+  public static final String                             GLOAL_SETTINGS_CHANGED_EVENT                  =
+                                                                                      "exo.addon.wallet.settings.changed";
 
-  public static final String                       NEW_TRANSACTION_EVENT                         =
-                                                                         "exo.addon.wallet.transaction.loaded";
+  public static final String                             NEW_TRANSACTION_EVENT                         =
+                                                                               "exo.addon.wallet.transaction.loaded";
 
-  public static final String                       TRANSACTION_SENDER_NOTIFICATION_ID            =
-                                                                                      "EtherSenderNotificationPlugin";
+  public static final String                             TRANSACTION_SENDER_NOTIFICATION_ID            =
+                                                                                            "EtherSenderNotificationPlugin";
 
-  public static final String                       TRANSACTION_RECEIVER_NOTIFICATION_ID          =
-                                                                                        "EtherReceiverNotificationPlugin";
+  public static final String                             TRANSACTION_RECEIVER_NOTIFICATION_ID          =
+                                                                                              "EtherReceiverNotificationPlugin";
 
-  public static final String                       TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID   =
-                                                                                               "ContractSenderNotificationPlugin";
+  public static final String                             TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID   =
+                                                                                                     "ContractSenderNotificationPlugin";
 
-  public static final String                       TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID =
-                                                                                                 "ContractReceiverNotificationPlugin";
+  public static final String                             TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID =
+                                                                                                       "ContractReceiverNotificationPlugin";
 
-  public static String                             AMOUNT                                        = "amount";
+  public static final String                             AMOUNT                                        = "amount";
 
-  public static String                             AVATAR                                        = "avatar";
+  public static final String                             AVATAR                                        = "avatar";
 
-  public static String                             USER                                          = "user";
+  public static final String                             CONTRACT                                      = "contract";
 
-  public static ArgumentLiteral<AccountDetail>     ACCOUNT_DETAIL_PARAMETER                      =
-                                                                            new ArgumentLiteral<AccountDetail>(AccountDetail.class,
-                                                                                                               "accountDetail");
+  public static final String                             SENDER                                        = "sender";
 
-  public static ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER                  =
-                                                                                new ArgumentLiteral<TransactionStatus>(TransactionStatus.class,
-                                                                                                                       "transactionStatus");
+  public static final String                             RECEIVER                                      = "receiver";
 
-  public static ArgumentLiteral<Integer>           AMOUNT_PARAMETER                              =
-                                                                    new ArgumentLiteral<Integer>(Integer.class, AMOUNT);
+  public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER               =
+                                                                                         new ArgumentLiteral<AccountDetail>(AccountDetail.class,
+                                                                                                                            "senderAccountDetail");
+
+  public static final ArgumentLiteral<AccountDetail>     RECEIVER_ACCOUNT_DETAIL_PARAMETER             =
+                                                                                           new ArgumentLiteral<AccountDetail>(AccountDetail.class,
+                                                                                                                              "receiverAccountDetail");
+
+  public static final ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER                  =
+                                                                                      new ArgumentLiteral<TransactionStatus>(TransactionStatus.class,
+                                                                                                                             "transactionStatus");
+
+  public static final ArgumentLiteral<String>            CONTRACT_PARAMETER                            =
+                                                                            new ArgumentLiteral<String>(String.class, CONTRACT);
+
+  public static final ArgumentLiteral<Double>            AMOUNT_PARAMETER                              =
+                                                                          new ArgumentLiteral<Double>(Double.class, AMOUNT);
+
+  public static final Event                              CONTRACT_TRANSFER_EVENT                       =
+                                                                                 new Event("Transfer",
+                                                                                           Arrays.asList(new TypeReference<Address>(true) {
+                                                                                                                                                                                                },
+                                                                                                         new TypeReference<Address>(true) {
+                                                                                                         },
+                                                                                                         new TypeReference<Uint256>() {
+                                                                                                         }));
+
+  public static final Event                              CONTRACT_APPROVE_EVENT                        =
+                                                                                new Event("Approval",
+                                                                                          Arrays.asList(new TypeReference<Address>(true) {
+                                                                                                                                                                                               },
+                                                                                                        new TypeReference<Address>(true) {
+                                                                                                        },
+                                                                                                        new TypeReference<Uint256>() {
+                                                                                                        }));
 
   public static final String getCurrentUserId() {
     if (ConversationState.getCurrent() != null && ConversationState.getCurrent().getIdentity() != null) {
@@ -76,5 +112,12 @@ public class Utils {
         System.err.println(e);
       }
     }).start();
+  }
+
+  public static Event approvalEvent() {
+    return new Event("Approval", Arrays.asList(new TypeReference<Address>(true) {
+    }, new TypeReference<Address>(true) {
+    }, new TypeReference<Uint256>() {
+    }));
   }
 }

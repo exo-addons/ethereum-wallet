@@ -1,12 +1,12 @@
 <li class="$READ clearfix" data-id="$NOTIFICATION_ID">
   <div class="media">
     <div class="avatarXSmall pull-left">
-      <img src="$AVATAR" alt="$USER" />
+      <img src="$AVATAR" alt="$SENDER" />
     </div> 
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
-          You have received $AMOUNT from contract
+          You have received $AMOUNT from $SENDER using contract $CONTRACT
         </div>
         <div class="lastUpdatedTime">
             $LAST_UPDATED_TIME

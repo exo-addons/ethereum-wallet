@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
-import static org.exoplatform.addon.ethereum.wallet.service.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 public enum TransactionStatus {
   RECEIVER(TRANSACTION_RECEIVER_NOTIFICATION_ID), SENDER(TRANSACTION_SENDER_NOTIFICATION_ID), CONTRACT_RECEIVER(

@@ -59,13 +59,19 @@ public class WebTemplateProvider extends TemplateProvider {
       String language = getLanguage(notification);
       TemplateContext templateContext = TemplateContext.newChannelInstance(getChannelKey(), pluginId, language);
 
-      String amount = notification.getValueOwnerParameter("amount");
-      String avatar = notification.getValueOwnerParameter("avatar");
-      String fullName = notification.getValueOwnerParameter("user");
+      String amount = notification.getValueOwnerParameter(AMOUNT);
+      String avatar = notification.getValueOwnerParameter(AVATAR);
+      String receiver = notification.getValueOwnerParameter(RECEIVER);
+      String sender = notification.getValueOwnerParameter(SENDER);
+      String contract = notification.getValueOwnerParameter(CONTRACT);
 
       templateContext.put("AMOUNT", amount);
-      templateContext.put("USER", fullName);
+      templateContext.put("SENDER", sender);
+      templateContext.put("RECEIVER", receiver);
       templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
+      if (contract != null) {
+        templateContext.put("CONTRACT", contract);
+      }
       templateContext.put("NOTIFICATION_ID", notification.getId());
       templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
       templateContext.put("READ",

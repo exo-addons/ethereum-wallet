@@ -48,10 +48,6 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletNotificationService</type>
-  </component>
-
-  <component>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector</type>
   </component>
 
@@ -115,7 +111,7 @@
     <component-plugin>
       <name>notification.plugins</name>
       <set-method>addPlugin</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.ContractReceiverNotificationPlugin</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.plugin.ContractReceiverNotificationPlugin</type>
       <init-params>
         <object-param>
           <name>template.ContractReceiverNotificationPlugin</name>
@@ -150,7 +146,7 @@
     <component-plugin>
       <name>notification.plugins</name>
       <set-method>addPlugin</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.ContractSenderNotificationPlugin</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.plugin.ContractSenderNotificationPlugin</type>
       <init-params>
         <object-param>
           <name>template.ContractSenderNotificationPlugin</name>
@@ -185,7 +181,7 @@
     <component-plugin>
       <name>notification.plugins</name>
       <set-method>addPlugin</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.EtherReceiverNotificationPlugin</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.plugin.EtherReceiverNotificationPlugin</type>
       <init-params>
         <object-param>
           <name>template.EtherReceiverNotificationPlugin</name>
@@ -220,7 +216,7 @@
     <component-plugin>
       <name>notification.plugins</name>
       <set-method>addPlugin</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.EtherSenderNotificationPlugin</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.plugin.EtherSenderNotificationPlugin</type>
       <init-params>
         <object-param>
           <name>template.EtherSenderNotificationPlugin</name>
@@ -259,7 +255,7 @@
     <component-plugin>
       <name>web.channel.wallet.template</name>
       <set-method>registerTemplateProvider</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.WebTemplateProvider</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.provider.WebTemplateProvider</type>
       <init-params>
         <value-param>
           <name>channel-id</name>
@@ -270,7 +266,7 @@
     <component-plugin>
       <name>mail.channel.wallet.template</name>
       <set-method>registerTemplateProvider</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.MailTemplateProvider</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.provider.MailTemplateProvider</type>
       <init-params>
         <value-param>
           <name>channel-id</name>
@@ -281,7 +277,7 @@
     <component-plugin>
       <name>push.channel.wallet.template</name>
       <set-method>registerTemplateProvider</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.notification.MobilePushTemplateProvider</type>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.provider.MobilePushTemplateProvider</type>
       <init-params>
         <value-param>
           <name>channel-id</name>
