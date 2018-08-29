@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2015 eXo Platform SAS.
+ * Copyright (C) 2003-2018 eXo Platform SAS.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.addon.ethereum.wallet.notification;
+package org.exoplatform.addon.ethereum.wallet.notification.provider;
 
 import static org.exoplatform.addon.ethereum.wallet.service.Utils.*;
 
@@ -40,9 +40,9 @@ import org.exoplatform.webui.utils.TimeConvertUtils;
     @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletReceiverPlugin.gtmpl"),
     @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletContractSenderPlugin.gtmpl"),
     @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletContractReceiverPlugin.gtmpl") })
-public class WebTemplateProvider extends TemplateProvider {
+public class MobilePushTemplateProvider extends TemplateProvider {
 
-  public WebTemplateProvider(InitParams initParams) {
+  public MobilePushTemplateProvider(InitParams initParams) {
     super(initParams);
     this.templateBuilders.put(PluginKey.key(TRANSACTION_SENDER_NOTIFICATION_ID), new TemplateBuilder());
     this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder());

@@ -9,14 +9,16 @@
         <set-method>addResourceBundle</set-method>
         <type>org.exoplatform.services.resources.impl.BaseResourceBundlePlugin</type>
         <init-params>
-            <values-param>
+          <values-param>
             <name>classpath.resources</name>
-            <value>locale.portlet.WalletPortlet</value>          
-            </values-param>
-            <values-param>
+            <value>locale.portlet.WalletPortlet</value>
+            <value>locale.notification.WalletNotification</value>
+          </values-param>
+          <values-param>
             <name>portal.resource.names</name>
             <value>locale.portlet.WalletPortlet</value>
-            </values-param>
+            <value>locale.notification.WalletNotification</value>
+          </values-param>
         </init-params>
         </component-plugin>
     </external-component-plugins>

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2003-2018 eXo Platform SAS.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.exoplatform.addon.ethereum.wallet.service;
 
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
@@ -16,16 +32,16 @@ public class Utils {
                                                                          "exo.addon.wallet.transaction.loaded";
 
   public static final String                       TRANSACTION_SENDER_NOTIFICATION_ID            =
-                                                                                      "exo.addon.wallet.transaction.notification.sender";
+                                                                                      "EtherSenderNotificationPlugin";
 
   public static final String                       TRANSACTION_RECEIVER_NOTIFICATION_ID          =
-                                                                                        "exo.addon.wallet.transaction.notification.receiver";
+                                                                                        "EtherReceiverNotificationPlugin";
 
   public static final String                       TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID   =
-                                                                                               "exo.addon.wallet.transaction.notification.contract.sender";
+                                                                                               "ContractSenderNotificationPlugin";
 
   public static final String                       TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID =
-                                                                                                 "exo.addon.wallet.transaction.notification.contract.receiver";
+                                                                                                 "ContractReceiverNotificationPlugin";
 
   public static ArgumentLiteral<AccountDetail>     ACCOUNT_DETAIL_PARAMETER                      =
                                                                             new ArgumentLiteral<AccountDetail>(AccountDetail.class,

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.addon.ethereum.wallet.notification;
+package org.exoplatform.addon.ethereum.wallet.notification.plugin;
 
 import static org.exoplatform.addon.ethereum.wallet.service.Utils.ACCOUNT_DETAIL_PARAMETER;
 import static org.exoplatform.addon.ethereum.wallet.service.Utils.AMOUNT_PARAMETER;
@@ -41,7 +41,7 @@ public class ContractReceiverNotificationPlugin extends BaseNotificationPlugin {
 
   @Override
   public boolean isValid(NotificationContext ctx) {
-    return ctx != null && ctx.getException() == null;
+    return true;
   }
 
   @Override
