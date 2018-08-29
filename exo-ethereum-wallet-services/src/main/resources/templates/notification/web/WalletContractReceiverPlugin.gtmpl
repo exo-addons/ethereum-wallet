@@ -6,7 +6,7 @@
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
-          You have sent $AMOUNT to $RECEIVER using contract $CONTRACT
+          You have received $AMOUNT from $SENDER using contract $CONTRACT
         </div>
         <div class="lastUpdatedTime">
             $LAST_UPDATED_TIME

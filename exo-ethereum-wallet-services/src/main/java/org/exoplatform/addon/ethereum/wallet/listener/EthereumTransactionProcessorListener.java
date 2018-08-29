@@ -22,13 +22,15 @@ import java.math.BigInteger;
 import java.util.List;
 
 import org.web3j.abi.EventValues;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.tx.Contract;
 import org.web3j.utils.Convert;
 
+import org.exoplatform.addon.ethereum.wallet.fork.ContractUtils;
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.PluginKey;
@@ -44,18 +46,21 @@ import org.exoplatform.social.core.service.LinkProvider;
  * network
  */
 public class EthereumTransactionProcessorListener extends Listener<Transaction, TransactionReceipt> {
-  private static final Log      LOG = ExoLogger.getLogger(EthereumTransactionProcessorListener.class);
+  private static final Log        LOG = ExoLogger.getLogger(EthereumTransactionProcessorListener.class);
 
-  private EthereumWalletStorage ethereumWalletStorage;
+  private EthereumWalletStorage   ethereumWalletStorage;
 
-  public EthereumTransactionProcessorListener(EthereumWalletStorage ethereumWalletStorage) {
+  private EthereumClientConnector ethereumClientConnector;
+
+  public EthereumTransactionProcessorListener(EthereumWalletStorage ethereumWalletStorage,
+                                              EthereumClientConnector ethereumClientConnector) {
     this.ethereumWalletStorage = ethereumWalletStorage;
+    this.ethereumClientConnector = ethereumClientConnector;
   }
 
   @Override
   public void onEvent(Event<Transaction, TransactionReceipt> event) throws Exception {
     Transaction transaction = event.getSource();
-    TransactionReceipt transactionReceipt = event.getData();
     if (transaction == null) {
       return;
     }
@@ -79,12 +84,12 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         // Contract address not found
         return;
       }
-      if (transactionReceipt == null) {
-        // Transaction may have failed
+
+      ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(transaction);
+      if (contractTransactionDetail == null) {
+        // The contract information couldn't be parsed
         return;
       }
-
-      ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(transaction, transactionReceipt);
       amount = contractTransactionDetail.getAmount();
       receiverAddress = contractTransactionDetail.getReceiver();
     } else {
@@ -147,10 +152,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(transactionStatus.getNotificationId()))).execute(ctx);
   }
 
-  private ContractTransactionDetail getReceiverAddressFromContractData(Transaction transaction,
-                                                                       TransactionReceipt transactionReceipt) {
-    if (transaction == null || transaction.getTo() == null || transactionReceipt == null || transactionReceipt.getLogs() == null
-        || transactionReceipt.getLogs().size() == 0) {
+  private ContractTransactionDetail getReceiverAddressFromContractData(Transaction transaction) throws Exception {
+    if (transaction == null || transaction.getTo() == null) {
       // Contract Transaction type is not considered for notifications
       return null;
     }
@@ -162,29 +165,30 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       // Default contract transaction, need to check receiver address if
       // he's recognized
       if (transaction.getInput() != null && !transaction.getInput().equals("0x")) {
-        // TODO **** compute receiverAddress, receiverAccountDetails and
-        // amount from contract data
-        // receiverAddress =
-        // getContractReceiverAddress(transaction.getInput())
-        // amount = getContractTokenAmount(transaction.getInput())
+        TransactionReceipt transactionReceipt = ethereumClientConnector.getTransactionReceipt(transaction.getHash());
+        if (transactionReceipt == null || transactionReceipt.getLogs() == null || transactionReceipt.getLogs().size() == 0) {
+          // Transaction may have failed
+          return null;
+        }
 
         if (transactionReceipt.getLogs().size() > 1) {
           LOG.info("Transaction logs count is more than expected: {}", transactionReceipt.getLogs().size());
         }
 
         try {
-          EventValues eventValues = Contract.staticExtractEventParameters(CONTRACT_TRANSFER_EVENT,
-                                                                          transactionReceipt.getLogs().get(0));
+          EventValues eventValues = ContractUtils.staticExtractEventParameters(CONTRACT_TRANSFER_EVENT,
+                                                                               transactionReceipt.getLogs().get(0));
 
-          if (eventValues.getIndexedValues() != null && eventValues.getIndexedValues().size() == 3) {
-            Type amountType = eventValues.getIndexedValues().get(0);
-            Type senderType = eventValues.getIndexedValues().get(1);
-            Type receiverType = eventValues.getIndexedValues().get(2);
+          if (eventValues.getIndexedValues() != null && eventValues.getNonIndexedValues() != null
+              && eventValues.getIndexedValues().size() == 2 && eventValues.getNonIndexedValues().size() == 1) {
+            String senderAddress = eventValues.getIndexedValues().get(0).getValue().toString();
+            String receiverAddress = eventValues.getIndexedValues().get(1).getValue().toString();
+            String amountBigInteger = eventValues.getNonIndexedValues().get(0).getValue().toString();
 
-            // return new ContractTransactionDetail(contractAddress, sender, receiver, amount);
+            return new ContractTransactionDetail(contractAddress, senderAddress, receiverAddress, Double.parseDouble(amountBigInteger));
           }
         } catch (Throwable e) {
-          LOG.warn("Error occurred while parsing ");
+          LOG.warn("Error occurred while parsing transaction", e);
         }
       }
     }

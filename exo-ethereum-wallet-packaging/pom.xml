@@ -30,6 +30,18 @@
     </dependency>
 
     <dependency>
+      <groupId>org.web3j</groupId>
+      <artifactId>abi</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.java-websocket</groupId>
       <artifactId>Java-WebSocket</artifactId>
       <scope>provided</scope>

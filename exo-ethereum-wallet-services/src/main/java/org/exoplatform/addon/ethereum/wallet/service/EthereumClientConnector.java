@@ -107,12 +107,9 @@ public class EthereumClientConnector implements Startable {
       Transaction transaction = queue.poll();
       while (transaction != null) {
         try {
-          EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transaction.getHash()).sendAsync().get();
-          TransactionReceipt transactionReceipt = ethGetTransactionReceipt.getTransactionReceipt().get();
-
-          listenerService.broadcast(NEW_TRANSACTION_EVENT, transaction, transactionReceipt);
+          listenerService.broadcast(NEW_TRANSACTION_EVENT, transaction, null);
         } catch (Throwable e) {
-          LOG.error("Error while handling transaction", e);
+          LOG.warn("Error while handling transaction", e);
         }
         transaction = queue.poll();
       }
@@ -153,6 +150,22 @@ public class EthereumClientConnector implements Startable {
       }
       this.transactionSubscription = null;
     }
+  }
+
+  /**
+   * Get transaction receipt
+   * 
+   * @param transactionHash
+   * @return
+   * @throws ExecutionException 
+   * @throws InterruptedException 
+   */
+  public TransactionReceipt getTransactionReceipt(String transactionHash) throws Exception {
+    EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
+    if (ethGetTransactionReceipt != null && ethGetTransactionReceipt.getResult() != null) {
+      return ethGetTransactionReceipt.getResult();
+    }
+    return null;
   }
 
   /**

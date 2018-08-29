@@ -203,12 +203,11 @@ public class EthereumWalletStorage implements Startable {
   }
 
   /**
-   * Retrieves global stored settings. if includePersonalInformation is true,
-   * the currently connected user personal information will be checked and
-   * included.
+   * Retrieves global stored settings. if username is not null,
+   * the personal settings will be included.
    * 
    * @param networkId
-   * @param includePersonalInformation
+   * @param username
    * @return
    */
   public GlobalSettings getSettings(Long networkId, String username) {
