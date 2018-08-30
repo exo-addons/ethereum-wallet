@@ -227,8 +227,14 @@ export default {
                 throw new Error("Contract deployed without a returned address");
               }
               newTokenInstance.options.address = newTokenInstance.options.address.toLowerCase();
+              const contractDetails = {
+                networkId: this.networkId,
+                address: newTokenInstance.options.address,
+                name: this.newTokenName,
+                symbol: this.newTokenSymbol
+              };
               // Save conract address to display for all users
-              return saveContractAddressAsDefault(newTokenInstance.options.address)
+              return saveContractAddressAsDefault(contractDetails)
                 .then(resp => {
                   if (resp && resp.ok) {
                     // this.$emit("list-updated", newTokenInstance.options.address);

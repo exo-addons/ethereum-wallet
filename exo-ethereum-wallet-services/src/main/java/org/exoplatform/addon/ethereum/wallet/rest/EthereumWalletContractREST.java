@@ -18,10 +18,12 @@ package org.exoplatform.addon.ethereum.wallet.rest;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.model.ContractDetail;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -44,24 +46,29 @@ public class EthereumWalletContractREST implements ResourceContainer {
   }
 
   /**
-   * Save a new contract address to display it in wallet of all users
+   * Save a new contract address to display it in wallet of all users and save
+   * contract name and symbol
    * 
-   * @param address
-   * @param networkId
+   * @param contractDetail
    * @return
    */
   @POST
+  @Consumes(MediaType.APPLICATION_JSON)
   @Path("save")
-  public Response saveContract(@FormParam("address") String address, @FormParam("networkId") Long networkId) {
-    if (StringUtils.isBlank(address)) {
+  public Response saveContract(ContractDetail contractDetail) {
+    if (contractDetail == null) {
+      LOG.warn("Can't save empty contract");
+      return Response.status(400).build();
+    }
+    if (contractDetail.getAddress() == null) {
       LOG.warn("Can't save empty address for contract");
       return Response.status(400).build();
     }
-    if (networkId == null || networkId == 0) {
+    if (contractDetail.getNetworkId() == null || contractDetail.getNetworkId() == 0) {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    ethereumWalletStorage.saveDefaultContract(address, networkId);
+    ethereumWalletStorage.saveDefaultContract(contractDetail);
     return Response.ok().build();
   }
 

@@ -22,15 +22,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.picocontainer.Startable;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.api.settings.data.Scope;
-import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
@@ -44,41 +41,37 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 /**
  * A storage service to save/load information used by users and spaces wallets
  */
-public class EthereumWalletStorage implements Startable {
+public class EthereumWalletStorage {
 
-  private static final Log    LOG                                = ExoLogger.getLogger(EthereumWalletStorage.class);
+  private static final Log    LOG                           = ExoLogger.getLogger(EthereumWalletStorage.class);
 
-  public static final String  DEFAULT_NETWORK_ID                 = "defaultNetworkId";
+  public static final String  DEFAULT_NETWORK_ID            = "defaultNetworkId";
 
-  public static final String  DEFAULT_NETWORK_URL                = "defaultNetworkURL";
+  public static final String  DEFAULT_NETWORK_URL           = "defaultNetworkURL";
 
-  public static final String  DEFAULT_NETWORK_WS_URL             = "defaultNetworkWSURL";
+  public static final String  DEFAULT_NETWORK_WS_URL        = "defaultNetworkWSURL";
 
-  public static final String  DEFAULT_ACCESS_PERMISSION          = "defaultAccessPermission";
+  public static final String  DEFAULT_ACCESS_PERMISSION     = "defaultAccessPermission";
 
-  public static final String  DEFAULT_GAS                        = "defaultGas";
+  public static final String  DEFAULT_GAS                   = "defaultGas";
 
-  public static final String  DEFAULT_BLOCKS_TO_RETRIEVE         = "defaultBlocksToRetrieve";
+  public static final String  DEFAULT_BLOCKS_TO_RETRIEVE    = "defaultBlocksToRetrieve";
 
-  public static final String  DEFAULT_CONTRACTS_ADDRESSES        = "defaultContractAddresses";
+  public static final String  DEFAULT_CONTRACTS_ADDRESSES   = "defaultContractAddresses";
 
-  public static final String  DEFAULT_CONTRACTS_ADDRESSES_STORED = "DEFAULT_CONTRACTS_ADDRESSES_STORED";
+  public static final String  SCOPE_NAME                    = "ADDONS_ETHEREUM_WALLET";
 
-  public static final String  SCOPE_NAME                         = "ADDONS_ETHEREUM_WALLET";
+  public static final String  GLOBAL_SETTINGS_KEY_NAME      = "GLOBAL_SETTINGS";
 
-  public static final String  GLOBAL_SETTINGS_KEY_NAME           = "GLOBAL_SETTINGS";
+  public static final String  ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
-  public static final String  ADDRESS_KEY_NAME                   = "ADDONS_ETHEREUM_WALLET_ADDRESS";
+  public static final String  SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
 
-  public static final String  SETTINGS_KEY_NAME                  = "ADDONS_ETHEREUM_WALLET_SETTINGS";
+  public static final Context WALLET_CONTEXT                = Context.GLOBAL;
 
-  public static final Context WALLET_CONTEXT                     = Context.GLOBAL;
+  public static final Scope   WALLET_SCOPE                  = Scope.APPLICATION.id(SCOPE_NAME);
 
-  public static final Scope   WALLET_SCOPE                       = Scope.APPLICATION.id(SCOPE_NAME);
-
-  public static final String  WALLET_DEFAULT_CONTRACTS_NAME      = "WALLET_DEFAULT_CONTRACTS";
-
-  private ExoContainer        container;
+  public static final String  WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
 
   private SettingService      settingService;
 
@@ -88,7 +81,7 @@ public class EthereumWalletStorage implements Startable {
 
   private ListenerService     listenerService;
 
-  private GlobalSettings      defaultSettings                    = new GlobalSettings();
+  private GlobalSettings      defaultSettings               = new GlobalSettings();
 
   private GlobalSettings      storedSettings;
 
@@ -96,9 +89,7 @@ public class EthereumWalletStorage implements Startable {
                                SpaceService spaceService,
                                IdentityManager identityManager,
                                ListenerService listenerService,
-                               ExoContainer container,
                                InitParams params) {
-    this.container = container;
     this.settingService = settingService;
     this.identityManager = identityManager;
     this.spaceService = spaceService;
@@ -145,39 +136,6 @@ public class EthereumWalletStorage implements Startable {
   }
 
   /**
-   * Store default contract addresses
-   */
-  @Override
-  public void start() {
-    if (defaultSettings == null || defaultSettings.getDefaultContractsToDisplay() == null
-        || defaultSettings.getDefaultContractsToDisplay().isEmpty()) {
-      // No default contracts to store on DB
-      return;
-    }
-    RequestLifeCycle.begin(this.container);
-    try {
-      SettingValue<?> settingValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, DEFAULT_CONTRACTS_ADDRESSES_STORED);
-      if (settingValue != null && settingValue.getValue() != null) {
-        // Default addresses has been stored in DB
-        return;
-      }
-      List<String> contractAddresses = defaultSettings.getDefaultContractsToDisplay();
-      for (String contractAddress : contractAddresses) {
-        saveDefaultContract(contractAddress, defaultSettings.getDefaultNetworkId());
-      }
-      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, DEFAULT_CONTRACTS_ADDRESSES_STORED, SettingValue.create("true"));
-    } catch (Exception e) {
-      LOG.error("Error starting EthereumWalletGlobalSettingsREST", e);
-    } finally {
-      RequestLifeCycle.end();
-    }
-  }
-
-  @Override
-  public void stop() {
-  }
-
-  /**
    * Save global settings
    * 
    * @param globalSettings
@@ -203,8 +161,8 @@ public class EthereumWalletStorage implements Startable {
   }
 
   /**
-   * Retrieves global stored settings. if username is not null,
-   * the personal settings will be included.
+   * Retrieves global stored settings. if username is not null, the personal
+   * settings will be included.
    * 
    * @param networkId
    * @param username
@@ -264,21 +222,29 @@ public class EthereumWalletStorage implements Startable {
   }
 
   /**
-   * Save a new contract address to display it in wallet of all users
+   * Save a new contract address to display it in wallet of all users and save
+   * contract name and symbol
    * 
-   * @param address
-   * @param networkId
+   * @param contractDetail
    */
-  public void saveDefaultContract(String address, Long networkId) {
-    if (StringUtils.isBlank(address)) {
+  public void saveDefaultContract(ContractDetail contractDetail) {
+    if (StringUtils.isBlank(contractDetail.getAddress())) {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
-    if (networkId == null || networkId == 0) {
+    if (contractDetail.getNetworkId() == null || contractDetail.getNetworkId() == 0) {
       throw new IllegalArgumentException("networkId parameter is mandatory");
     }
 
-    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
-    address = address.toLowerCase();
+    String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + contractDetail.getNetworkId();
+
+    String address = contractDetail.getAddress().toLowerCase();
+
+    settingService.set(WALLET_CONTEXT,
+                       WALLET_SCOPE,
+                       address + contractDetail.getNetworkId(),
+                       SettingValue.create(contractDetail.toJSONString()));
+
+    // Save the contract address in the list of default contract addreses
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
     String defaultContractsAddresses =
                                      defaultContractsAddressesValue == null ? address
@@ -317,6 +283,8 @@ public class EthereumWalletStorage implements Startable {
                                               .filter(contractAddress -> !contractAddress.equalsIgnoreCase(defaultAddressToSave))
                                               .collect(Collectors.toSet());
       String contractAddressValue = StringUtils.join(contractAddressList, ",");
+
+      settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, address + networkId);
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(contractAddressValue));
     }
 
@@ -324,6 +292,30 @@ public class EthereumWalletStorage implements Startable {
     this.storedSettings = null;
 
     return true;
+  }
+
+  /**
+   * Get default contract detail
+   * 
+   * @param address
+   * @param networkId
+   * @return
+   */
+  public ContractDetail getDefaultContractDetail(String address, Long networkId) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Can't remove empty address for contract");
+      return null;
+    }
+    if (networkId == null || networkId == 0) {
+      LOG.warn("Can't remove empty network id for contract");
+      return null;
+    }
+
+    SettingValue<?> contractDetailValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address + networkId);
+    if (contractDetailValue != null) {
+      return ContractDetail.parseStringToObject((String) contractDetailValue.getValue());
+    }
+    return null;
   }
 
   /**

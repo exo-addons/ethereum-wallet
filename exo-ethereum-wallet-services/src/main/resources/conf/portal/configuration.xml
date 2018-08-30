@@ -36,14 +36,6 @@
         <description>Default number of blocks to retrieve to list user's ether transactions</description>
         <value>${exo.addon.wallet.defaultBlocksToRetrieve:100}</value>
       </value-param>
-      <value-param>
-        <name>defaultContractAddresses</name>
-        <description>
-            Default list of contract addresses to display in user wallets when using default network.
-            Once configured, it will be stored on DB and can't be changed.
-         </description>
-        <value>${exo.addon.wallet.defaultContractAddresses:}</value>
-      </value-param>
     </init-params>
   </component>
 

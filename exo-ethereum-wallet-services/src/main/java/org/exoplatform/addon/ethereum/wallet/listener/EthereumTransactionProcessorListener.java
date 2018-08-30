@@ -22,8 +22,6 @@ import java.math.BigInteger;
 import java.util.List;
 
 import org.web3j.abi.EventValues;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
@@ -72,6 +70,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     AccountDetail senderAccountDetails = null;
     AccountDetail receiverAccountDetails = null;
+    ContractDetail contractDetails = null;
 
     BigInteger amountBigInteger = transaction.getValue();
     double amount = Convert.fromWei(amountBigInteger.toString(), Convert.Unit.ETHER).doubleValue();
@@ -103,6 +102,13 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     if (receiverAddress != null) {
       receiverAccountDetails = getAccountDetail(receiverAddress);
     }
+    if (contractAddress != null) {
+      GlobalSettings settings = ethereumWalletStorage.getSettings(null, null);
+      contractDetails = ethereumWalletStorage.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
+      if (contractDetails == null) {
+        contractDetails = new ContractDetail(settings.getDefaultNetworkId(), contractAddress, contractAddress, contractAddress);
+      }
+    }
 
     if (senderAddress != null && receiverAddress != null
         && (senderAccountDetails.getId() != null || receiverAccountDetails.getId() != null)) {
@@ -123,27 +129,27 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     // Send notification to sender if the address is recognized
     if (senderAccountDetails != null && senderAccountDetails.getId() != null) {
       TransactionStatus transactionStatus = isContractTransaction ? TransactionStatus.CONTRACT_SENDER : TransactionStatus.SENDER;
-      sendNotification(senderAccountDetails, receiverAccountDetails, contractAddress, transactionStatus, amount);
+      sendNotification(senderAccountDetails, receiverAccountDetails, contractDetails, transactionStatus, amount);
     }
 
     // Send notification to receiver if the address is recognized
     if (receiverAccountDetails != null && receiverAccountDetails.getId() != null) {
       TransactionStatus transactionStatus = isContractTransaction ? TransactionStatus.CONTRACT_RECEIVER
                                                                   : TransactionStatus.RECEIVER;
-      sendNotification(senderAccountDetails, receiverAccountDetails, contractAddress, transactionStatus, amount);
+      sendNotification(senderAccountDetails, receiverAccountDetails, contractDetails, transactionStatus, amount);
     }
   }
 
   private void sendNotification(AccountDetail senderAccountDetails,
                                 AccountDetail receiverAccountDetails,
-                                String contractAddress,
+                                ContractDetail contractDetails,
                                 TransactionStatus transactionStatus,
                                 double amount) {
     NotificationContext ctx = NotificationContextImpl.cloneInstance();
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, senderAccountDetails);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, receiverAccountDetails);
-    if (contractAddress != null) {
-      ctx.append(CONTRACT_PARAMETER, contractAddress);
+    if (contractDetails != null) {
+      ctx.append(CONTRACT_PARAMETER, contractDetails.getName());
     }
     ctx.append(AMOUNT_PARAMETER, amount);
 
@@ -185,7 +191,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
             String receiverAddress = eventValues.getIndexedValues().get(1).getValue().toString();
             String amountBigInteger = eventValues.getNonIndexedValues().get(0).getValue().toString();
 
-            return new ContractTransactionDetail(contractAddress, senderAddress, receiverAddress, Double.parseDouble(amountBigInteger));
+            return new ContractTransactionDetail(contractAddress,
+                                                 senderAddress,
+                                                 receiverAddress,
+                                                 Double.parseDouble(amountBigInteger));
           }
         } catch (Throwable e) {
           LOG.warn("Error occurred while parsing transaction", e);

@@ -146,25 +146,23 @@ export function removeContractAddressFromDefault(address) {
 /*
  * Save a new Contract address as default contract to display for all users
  */
-export function saveContractAddressAsDefault(address) {
-  address = address.toLowerCase();
+export function saveContractAddressAsDefault(contractDetails) {
+  contractDetails.address = contractDetails.address.toLowerCase();
   return fetch('/portal/rest/wallet/api/contract/save', {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
     },
-    body: $.param({
-      address: address,
-      networkId: window.walletSettings.currentNetworkId
-    })
+    body: JSON.stringify(contractDetails)
   })
     .then(resp => {
       if (!window.walletSettings.defaultContractsToDisplay) {
         window.walletSettings.defaultContractsToDisplay = [];
       }
-      if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(address) < 0) {
-        window.walletSettings.defaultContractsToDisplay.push(address);
+      if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
+        window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
       }
       return resp;
     });
@@ -201,7 +199,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
                 contractsAddresses.push(address);
                 localStorage.setItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase(), JSON.stringify(contractsAddresses));
               }
-              return true;
+              return contractDetails;
             } else {
               return false;
             }
@@ -209,12 +207,16 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       } else if (!isDefaultContract) {
         throw new Error('Contract already exists');
       }
-    }).then(saved => {
-      if (saved && isDefaultContract) {
-        return saveContractAddressAsDefault(address)
-          .then(() => saved);
+    }).then(contractDetails => {
+      if (contractDetails && isDefaultContract) {
+        return saveContractAddressAsDefault({
+                 name: contractDetails.name,
+                 symbol: contractDetails.symbol,
+                 address: contractDetails.address,
+                 networkId: netId
+               }).then(() => contractDetails);
       }
-      return saved;
+      return contractDetails;
     })
 }
 
