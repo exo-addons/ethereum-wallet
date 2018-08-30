@@ -16,12 +16,28 @@
  */
 package org.exoplatform.addon.ethereum.wallet.notification.provider;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+
+import org.exoplatform.addon.ethereum.wallet.notification.builder.TemplateBuilder;
+import org.exoplatform.commons.api.notification.annotation.TemplateConfig;
+import org.exoplatform.commons.api.notification.annotation.TemplateConfigs;
+import org.exoplatform.commons.api.notification.channel.template.TemplateProvider;
+import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.container.xml.InitParams;
 
-public class MobilePushTemplateProvider extends WebTemplateProvider {
+@TemplateConfigs(templates = {
+    @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/push/WalletSenderPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/push/WalletReceiverPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/push/WalletContractSenderPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/push/WalletContractReceiverPlugin.gtmpl") })
+public class MobilePushTemplateProvider extends TemplateProvider {
 
   public MobilePushTemplateProvider(InitParams initParams) {
     super(initParams);
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
   }
 
 }

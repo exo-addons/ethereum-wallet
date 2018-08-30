@@ -1,0 +1,1 @@
+<%= _ctx.appRes("Notification.message.EtherReceiverNotificationPlugin", AMOUNT, SENDER) %>

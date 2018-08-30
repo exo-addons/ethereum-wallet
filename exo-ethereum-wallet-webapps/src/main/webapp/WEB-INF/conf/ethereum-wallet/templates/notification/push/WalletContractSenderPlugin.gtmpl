@@ -1,0 +1,1 @@
+<%= _ctx.appRes("Notification.message.ContractSenderNotificationPlugin", AMOUNT, RECEIVER, CONTRACT) %>
