@@ -18,88 +18,26 @@ package org.exoplatform.addon.ethereum.wallet.notification.provider;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
-import java.io.Writer;
-import java.util.Calendar;
-import java.util.Locale;
-
-import org.exoplatform.commons.api.notification.NotificationContext;
-import org.exoplatform.commons.api.notification.NotificationMessageUtils;
+import org.exoplatform.addon.ethereum.wallet.notification.builder.TemplateBuilder;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfig;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfigs;
-import org.exoplatform.commons.api.notification.channel.template.AbstractTemplateBuilder;
 import org.exoplatform.commons.api.notification.channel.template.TemplateProvider;
-import org.exoplatform.commons.api.notification.model.*;
-import org.exoplatform.commons.api.notification.service.template.TemplateContext;
-import org.exoplatform.commons.notification.template.TemplateUtils;
+import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.container.xml.InitParams;
-import org.exoplatform.social.core.service.LinkProvider;
-import org.exoplatform.webui.utils.TimeConvertUtils;
 
 @TemplateConfigs(templates = {
-    @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletSenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletReceiverPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletContractSenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "jar:/templates/notification/web/WalletContractReceiverPlugin.gtmpl") })
+    @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletSenderPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletReceiverPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletContractSenderPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletContractReceiverPlugin.gtmpl") })
 public class WebTemplateProvider extends TemplateProvider {
 
   public WebTemplateProvider(InitParams initParams) {
     super(initParams);
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_SENDER_NOTIFICATION_ID), new TemplateBuilder());
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder());
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID), new TemplateBuilder());
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID), new TemplateBuilder());
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
   }
-
-  private class TemplateBuilder extends AbstractTemplateBuilder {
-    @Override
-    protected MessageInfo makeMessage(NotificationContext ctx) {
-      NotificationInfo notification = ctx.getNotificationInfo();
-      String pluginId = notification.getKey().getId();
-
-      String language = getLanguage(notification);
-      TemplateContext templateContext = TemplateContext.newChannelInstance(getChannelKey(), pluginId, language);
-
-      String amount = notification.getValueOwnerParameter(AMOUNT);
-      String avatar = notification.getValueOwnerParameter(AVATAR);
-      String receiver = notification.getValueOwnerParameter(RECEIVER);
-      String sender = notification.getValueOwnerParameter(SENDER);
-      String contract = notification.getValueOwnerParameter(CONTRACT);
-
-      templateContext.put("AMOUNT", amount);
-      templateContext.put("SENDER", sender);
-      templateContext.put("RECEIVER", receiver);
-      templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
-      if (contract != null) {
-        templateContext.put("CONTRACT", contract);
-      }
-      templateContext.put("NOTIFICATION_ID", notification.getId());
-      templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
-      templateContext.put("READ",
-                          Boolean.valueOf(notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey())) ? "read"
-                                                                                                                                : "unread");
-
-      String body = TemplateUtils.processGroovy(templateContext);
-      // binding the exception throws by processing template
-      ctx.setException(templateContext.getException());
-      MessageInfo messageInfo = new MessageInfo();
-      return messageInfo.body(body).end();
-    }
-
-    private String getLastModifiedDate(NotificationInfo notification, String language) {
-      Calendar lastModified = Calendar.getInstance();
-      lastModified.setTimeInMillis(notification.getLastModifiedDate());
-      String date = TimeConvertUtils.convertXTimeAgoByTimeServer(lastModified.getTime(),
-                                                                 "EE, dd yyyy",
-                                                                 new Locale(language),
-                                                                 TimeConvertUtils.YEAR);
-      return date;
-    }
-
-    @Override
-    protected boolean makeDigest(NotificationContext ctx, Writer writer) {
-      return false;
-    }
-
-  };
 
 }

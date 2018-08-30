@@ -58,6 +58,8 @@ public class Utils {
 
   public static final String                             SENDER                                        = "sender";
 
+  public static final String                             PROFILE_URL                                   = "profileURL";
+
   public static final String                             RECEIVER                                      = "receiver";
 
   public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER               =

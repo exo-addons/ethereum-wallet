@@ -25,7 +25,9 @@ import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
 import org.exoplatform.commons.api.notification.plugin.BaseNotificationPlugin;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.social.core.service.LinkProvider;
 
 public class ContractReceiverNotificationPlugin extends BaseNotificationPlugin {
 
@@ -50,11 +52,15 @@ public class ContractReceiverNotificationPlugin extends BaseNotificationPlugin {
     String contract = ctx.value(CONTRACT_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
 
+    String profileLink = senderAccountDetail.getId() == null ? senderAccountDetail.getName()
+                                                             : LinkProvider.getProfileLink(senderAccountDetail.getId());
+
     return NotificationInfo.instance()
                            .to(Collections.singletonList(receiverAccountDetail.getId()))
                            .with(AMOUNT, String.valueOf(amount))
                            .with(CONTRACT, contract)
-                           .with(AVATAR, senderAccountDetail.getAvatar())
+                           .with(AVATAR, CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar())
+                           .with(PROFILE_URL, profileLink)
                            .with(SENDER, senderAccountDetail.getName())
                            .with(RECEIVER, receiverAccountDetail.getName())
                            .key(getKey())

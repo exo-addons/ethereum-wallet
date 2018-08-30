@@ -20,7 +20,7 @@
             <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
           </v-list-tile-content>
           <v-list-tile-action>
-            <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleDateString() : '' }}</v-list-tile-action-text>
+            <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleTimeString() : '' }}</v-list-tile-action-text>
           </v-list-tile-action>
         </v-list-tile>
         <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>

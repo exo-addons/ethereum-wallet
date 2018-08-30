@@ -101,6 +101,7 @@ public class EthereumClientConnector implements Startable {
         initWeb3Connection();
       } catch (Throwable e) {
         LOG.error("Error while checking connection status to Etherreum Websocket endpoint", e);
+        closeConnection();
         return;
       }
 
@@ -119,10 +120,7 @@ public class EthereumClientConnector implements Startable {
   @Override
   public void stop() {
     scheduledExecutorService.shutdown();
-    stopListeninigToTransactions();
-    if (web3jService != null) {
-      web3jService.close();
-    }
+    closeConnection();
   }
 
   /**
@@ -186,6 +184,11 @@ public class EthereumClientConnector implements Startable {
    */
   public void changeWebsocketProviderURL(String websocketProviderURL) throws Exception {
     this.websocketProviderURL = websocketProviderURL;
+    closeConnection();
+    initWeb3Connection();
+  }
+
+  private void closeConnection() {
     stopListeninigToTransactions();
     if (web3jService != null) {
       if (webSocketClient != null && webSocketClient.isOpen()) {
@@ -199,7 +202,6 @@ public class EthereumClientConnector implements Startable {
       web3jService = null;
       webSocketClient = null;
     }
-    initWeb3Connection();
   }
 
   private void initWeb3Connection() throws Exception {

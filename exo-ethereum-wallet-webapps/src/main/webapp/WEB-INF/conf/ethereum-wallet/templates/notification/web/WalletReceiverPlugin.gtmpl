@@ -6,7 +6,7 @@
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
-          You have received $AMOUNT ether from $SENDER
+          <%= _ctx.appRes("Notification.message.EtherReceiverNotificationPlugin", AMOUNT, SENDER) %>
         </div>
         <div class="lastUpdatedTime">
             $LAST_UPDATED_TIME

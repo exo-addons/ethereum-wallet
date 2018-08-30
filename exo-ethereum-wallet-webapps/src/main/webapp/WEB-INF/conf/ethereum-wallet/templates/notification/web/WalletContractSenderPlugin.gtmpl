@@ -6,7 +6,7 @@
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
-          You have sent $AMOUNT to $RECEIVER using contract $CONTRACT
+          <%= _ctx.appRes("Notification.message.ContractSenderNotificationPlugin", AMOUNT, RECEIVER, CONTRACT) %>
         </div>
         <div class="lastUpdatedTime">
             $LAST_UPDATED_TIME
