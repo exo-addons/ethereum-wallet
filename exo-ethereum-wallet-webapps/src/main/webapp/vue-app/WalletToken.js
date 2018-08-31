@@ -113,11 +113,42 @@ export function getContractsAddresses(account, netId) {
 /*
  * Creates Web3 conract deployment transaction
  */
-export function deployContractInstance(...args) {
+export function newContractInstance(...args) {
   return new window.localWeb3.eth.Contract(ERC20_COMPLIANT_CONTRACT_ABI).deploy({
     data: ERC20_COMPLIANT_CONTRACT_BYTECODE,
     arguments: args
   });
+}
+
+/*
+ * Creates Web3 conract deployment transaction
+ */
+export function deployContract(contractInstance, networkId, tokenName, tokenSymbol, isDefault, account, gasLimit, gasPrice, transactionHashedCallback) {
+  return contractInstance
+    .estimateGas((error, estimatedGas) => {
+      if (error) {
+        throw new Error(`Error while estimating contract deployment gas ${error}`);
+      }
+      return estimatedGas;
+    })
+    .then(estimatedGas => {
+      if (estimatedGas > gasLimit) {
+        throw new Error(`You have set a low gas ${gasLimit} while the estimation of necessary gas is ${estimatedGas}. Please increase gas limit.`);
+      }
+    })
+    .then(() =>  contractInstance.send({
+      from: account, 
+      gas: gasLimit,
+      gasPrice: gasPrice
+    })
+      .on('error', function(error) {
+        throw error;
+      })
+      .on('transactionHash', transactionHash => {
+        saveContractDeploymentTransactionHash(networkId, tokenName, tokenSymbol, isDefault, transactionHash);
+        transactionHashedCallback(transactionHash);
+      })
+    );
 }
 
 /*
@@ -220,6 +251,31 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
     })
 }
 
+export function getContractDeploymentTransactionsInProgress(networkId) {
+  const STORAGE_KEY = `exo-wallet-contract-deployment-progress-${networkId}`;
+  let storageValue = localStorage.getItem(STORAGE_KEY);
+  if (storageValue === null) {
+    return {};
+  } else {
+    return JSON.parse(storageValue);
+  }
+}
+
+export function removeContractDeploymentTransactionsInProgress(networkId, transactionHash) {
+  const STORAGE_KEY = `exo-wallet-contract-deployment-progress-${networkId}`;
+  let storageValue = localStorage.getItem(STORAGE_KEY);
+  if (storageValue === null) {
+    return;
+  } else {
+    storageValue = JSON.parse(storageValue);
+  }
+
+  if (storageValue[transactionHash]) {
+    delete storageValue[transactionHash];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageValue));
+  }
+}
+
 function getContractInstance(account, address) {
   try {
     const contractInstance = new window.localWeb3.eth.Contract(
@@ -243,4 +299,24 @@ function transformContracDetailsToFailed(contractDetails, e) {
   contractDetails.title = contractDetails.address;
   contractDetails.error = `Error retrieving contract at specified address ${e}`;
   return contractDetails;
+}
+
+function saveContractDeploymentTransactionHash(networkId, tokenName, tokenSymbol, isDefault, transactionHash) {
+  const STORAGE_KEY = `exo-wallet-contract-deployment-progress-${networkId}`;
+  let storageValue = localStorage.getItem(STORAGE_KEY);
+  if (storageValue === null) {
+    storageValue = {};
+  } else {
+    storageValue = JSON.parse(storageValue);
+  }
+
+  if (!storageValue[transactionHash]) {
+    storageValue[transactionHash] = {
+      name: tokenName,
+      symbol: tokenSymbol,
+      hash: transactionHash,
+      isDefault: isDefault
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageValue));
+  }
 }

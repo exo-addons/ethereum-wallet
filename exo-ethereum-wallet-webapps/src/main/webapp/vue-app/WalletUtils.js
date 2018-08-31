@@ -126,16 +126,23 @@ export function initSettings(isSpace) {
     });
 }
 
-function getMetamaskCurrentNetworkId(isSpace) {
-  let currentNetworkId = 0;
-  if (!isSpace && typeof window.web3 !== 'undefined') {
-    window.web3.version.getNetwork((e, netId) => currentNetworkId = netId);
-    return new Promise((resolve) => setTimeout(resolve, 500))
-      .then(() => {
-        return currentNetworkId;
-      });
-  }
-  return Promise.resolve(currentNetworkId);
+export function watchTransactionStatus(hash, transactionFinishedcallback) {
+  // Because no websocket connection is allowed using metamask,
+  // we will watch the transaction status periodically
+  getTransactionReceipt(hash)
+    .then(receipt => {
+      if (receipt) {
+        transactionFinishedcallback(receipt);
+      } else {
+        setTimeout(() => {
+          watchTransactionStatus(hash, transactionFinishedcallback);
+        }, 2000);
+      }
+    });
+}
+
+export function getTransactionReceipt(hash) {
+  return window.localWeb3.eth.getTransactionReceipt(hash);
 }
 
 export function computeNetwork() {
@@ -184,4 +191,16 @@ export function computeBalance(account) {
         balanceUSD: etherToUSD(retrievedBalance)
       };
     });
+}
+
+function getMetamaskCurrentNetworkId(isSpace) {
+  let currentNetworkId = 0;
+  if (!isSpace && typeof window.web3 !== 'undefined') {
+    window.web3.version.getNetwork((e, netId) => currentNetworkId = netId);
+    return new Promise((resolve) => setTimeout(resolve, 500))
+      .then(() => {
+        return currentNetworkId;
+      });
+  }
+  return Promise.resolve(currentNetworkId);
 }

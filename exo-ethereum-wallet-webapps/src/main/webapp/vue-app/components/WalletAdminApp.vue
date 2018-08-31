@@ -110,7 +110,7 @@
             <v-subheader class="text-xs-center">Default contracts</v-subheader>
             <v-divider />
             <div class="text-xs-center">
-              <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
+              <v-progress-circular v-show="loading" indeterminate color="primary" />
             </div>
 
             <div v-if="newTokenAddress" class="alert alert-success v-content">
@@ -124,7 +124,8 @@
                 <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
                 <td v-else class="text-xs-right">{{ props.item.address }}</td>
                 <td class="text-xs-right">
-                  <v-btn icon ripple @click="deleteContract(props.item, $event)">
+                  <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
+                  <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
                     <i class="uiIconTrash uiIconBlue" />
                   </v-btn>
                 </td>
@@ -145,7 +146,7 @@
                 :account="account"
                 :open="showAddContractModal"
                 :is-default-contract="true"
-                @added="contractAdded"
+                @added="contractsModified"
                 @close="showAddContractModal = false" />
             </div>
           </v-card>
@@ -160,8 +161,8 @@ import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import {searchSpaces} from '../WalletAddressRegistry.js';
-import {getContractsDetails, removeContractAddressFromDefault} from '../WalletToken.js';
-import {initWeb3,initSettings, retrieveUSDExchangeRate, computeNetwork} from '../WalletUtils.js';
+import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
+import {initWeb3,initSettings, retrieveUSDExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -339,7 +340,72 @@ export default {
         .then(contracts => {
           return contracts;
         })
-        .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : []);
+        .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
+        .then(() => getContractDeploymentTransactionsInProgress(this.networkId))
+        .then(contractsInProgress => {
+          Object.keys(contractsInProgress).forEach(hash => {
+            const contractInProgress = contractsInProgress[hash];
+            getTransactionReceipt(contractInProgress.hash)
+              .then(receipt => {
+                if (!receipt) {
+                  // pending transaction
+                  this.contracts.push({
+                    name: contractInProgress.name,
+                    hash: contractInProgress.hash,
+                    address: 'Transaction in progress...',
+                    isPending: true
+                  });
+                  watchTransactionStatus(contractInProgress.hash, () => {
+                    this.refreshContractsList();
+                  });
+                } else if(receipt.status && receipt.contractAddress) {
+                  const contractAddress = receipt.contractAddress.toLowerCase();
+                  // success transaction
+                  // Add contract as default if not yet present
+                  if (contractInProgress.isDefault && !this.contracts.find(contract => contract.address === contractAddress)) {
+                    // This may happen when the contract is already added in //
+                    if (window.walletSettings.defaultContractsToDisplay.indexOf(contractAddress)) {
+                      this.newTokenAddress = contractAddress;
+                      removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
+                      this.contractsModified();
+                    } else {
+                      // Save newly created contract as default
+                      return saveContractAddress(this.account, contractAddress, this.networkId, contractInProgress.isDefault)
+                        .then((added, error) => {
+                          if (error) {
+                            throw error;
+                          }
+                          if (added) {
+                            this.newTokenAddress = contractAddress;
+                            removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
+                            this.contractsModified();
+                          } else {
+                            this.errorMessage = `Address ${contractAddress} is not recognized as ERC20 Token contract's address`;
+                          }
+                          this.loading = false;
+                        })
+                        .catch(err => {
+                          console.debug("saveContractAddress method - error", err);
+                          this.loading = false;
+                          this.errorMessage = `${err}`;
+                        });
+                    }
+                  } else {
+                    // The contract was already saved
+                    removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
+                  }
+                } else {
+                  // failed transaction
+                  this.contracts.push({
+                    name: contractInProgress.name,
+                    hash: contractInProgress.hash,
+                    address: '',
+                    error: `Transaction failed on contract ${contractInProgress.name}`
+                  });
+                }
+              });
+          });
+        });
     },
     saveGlobalSettings() {
       this.loading = true;
@@ -376,11 +442,11 @@ export default {
         this.errorMessage = 'Error saving global settings';
       });
     },
-    contractAdded() {
+    contractsModified() {
       this.refreshContractsList()
         .then(() => this.loading = false)
         .catch(e => {
-          console.debug("saveContractAddressAsDefault method - error", e);
+          console.debug("refreshContractsList method - error", e);
           this.loading = false;
           this.errorMessage = `Error adding new contract address: ${e}`;
         });
@@ -390,19 +456,24 @@ export default {
         this.errorMessage = 'Contract doesn\'t have an address';
       }
       this.loading = true;
-      removeContractAddressFromDefault(item.address)
-        .then((resp, error) => {
-          if (error) {
+      if (item.hash) {
+        removeContractDeploymentTransactionsInProgress(this.networkId, item.hash);
+        this.contractsModified();
+      } else {
+        removeContractAddressFromDefault(item.address)
+          .then((resp, error) => {
+            if (error) {
+              this.errorMessage = 'Error deleting contract as default';
+            } else {
+              this.refreshContractsList();
+            }
+            this.loading = false;
+          }).catch(e => {
+            console.debug("removeContractAddressFromDefault method - error", e);
+            this.loading = false;
             this.errorMessage = 'Error deleting contract as default';
-          } else {
-            this.refreshContractsList();
-          }
-          this.loading = false;
-        }).catch(e => {
-          console.debug("removeContractAddressFromDefault method - error", e);
-          this.loading = false;
-          this.errorMessage = 'Error deleting contract as default';
-        });
+          });
+      }
       event.preventDefault();
       event.stopPropagation();
     }
