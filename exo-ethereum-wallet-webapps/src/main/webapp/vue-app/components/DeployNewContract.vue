@@ -36,14 +36,6 @@
                   :step="10000"
                   type="number"
                   required />
-        <v-slider v-model="newTokenDecimals"
-                  :label="`Token coins decimals: ${newTokenDecimals}`"
-                  :min="0"
-                  :max="10"
-                  :step="1"
-                  type="number"
-                  disabled
-                  required />
 
         <h4>Contract creation transaction fee</h4>
         <v-divider class="mb-4"/>
