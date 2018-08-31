@@ -119,10 +119,21 @@
   }
 }
 
-@media (min-device-width : 1024px) {
+@media (min-width : 1024px) {
   #WalletApp, #WalletSpaceApp {
     &.minimized {
       max-width: 250px;
+    }
+  }
+}
+
+/* Override uiPopup !important attributes */
+@media (max-width : 1024px) {
+  #WalletAdminApp {
+    .createNewToken {
+      width: 100% !important;
+      margin: 0 !important;
+      transform: translate(0px,0px) !important;
     }
   }
 }
