@@ -6,6 +6,10 @@
         <span class="PopupTitle popupTitle">{{ title }}</span>
       </div>
       <v-card-text>
+        <div v-if="information" class="alert alert-info">
+          <i class="uiIconInfo"></i>
+          {{ information }}
+        </div>
         <div :id="id" class="text-xs-center"></div>
       </v-card-text>
     </v-card>
@@ -16,6 +20,12 @@
 export default {
   props: {
     title: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    information: {
       type: String,
       default: function() {
         return null;

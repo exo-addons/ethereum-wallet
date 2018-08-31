@@ -12,6 +12,7 @@
                    :function-payable="false"
                    function-name="transfer"
                    title="Send Tokens QR Code"
+                   information="You can scan this QR code by using a different application that supports QR code transaction generation to send tokens"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">

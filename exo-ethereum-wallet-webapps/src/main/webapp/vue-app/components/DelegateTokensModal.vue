@@ -8,6 +8,7 @@
                    :args-values="[recipient, amount]"
                    :open="showQRCodeModal"
                    title="Delegate Token QR Code"
+                   information="You can scan this QR code by using a different application that supports QR code transaction generation to delegate tokens"
                    function-name="approve"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">

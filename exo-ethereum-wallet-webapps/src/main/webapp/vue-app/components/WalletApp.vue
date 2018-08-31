@@ -32,6 +32,7 @@
             <qr-code-modal :to="account"
                            :open="showQRCodeModal"
                            title="Address QR Code"
+                           information="You can send this Wallet address QR code to other users to send you ether and tokens"
                            @close="showQRCodeModal = false" />
 
             <user-settings-modal :account="account"

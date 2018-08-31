@@ -8,6 +8,7 @@
                    :amount="amount"
                    :open="showQRCodeModal"
                    title="Send Ether QR Code"
+                   information="You can scan this QR code by using a different application that supports QR code transaction generation to send ethers"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">

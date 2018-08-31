@@ -7,6 +7,7 @@
                    :args-values="[from, recipient, amount]"
                    :open="showQRCodeModal"
                    title="Send delegated Token QR Code"
+                   information="You can scan this QR code by using a different application that supports QR code transaction generation to send delegated tokens"
                    function-name="transferFrom"
                    @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
