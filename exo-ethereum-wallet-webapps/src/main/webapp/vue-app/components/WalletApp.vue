@@ -382,18 +382,29 @@ export default {
         });
     },
     refreshList(forceRefresh) {
-      this.loading = true;
       this.seeAccountDetails = false;
       this.errorMessage = null;
       this.selectedAccount = null;
 
-      return this.getAccount(this.isSpace)
+      forceRefresh = forceRefresh ? true : false;
+
+      this.loading = true;
+      this.accountsDetails = {};
+
+      return Promise.resolve(forceRefresh)
+        .then(forceRefresh => {
+          if (forceRefresh) {
+            return initSettings(this.isSpace);
+          }
+        })
+        .then(() => this.getAccount(this.isSpace))
         .then((account, error) => {
           if (error) {
             throw error;
           }
           return this.initAccount(account, forceRefresh);
         })
+        .then(() => this.loading = false)
         .catch(e => {
           console.debug("refreshList method - error", e);
           this.errorMessage = `${e}`;

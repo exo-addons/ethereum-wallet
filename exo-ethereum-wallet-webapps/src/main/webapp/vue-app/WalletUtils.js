@@ -30,15 +30,14 @@ export function retrieveUSDExchangeRate() {
   return window.localWeb3.eth.getGasPrice()
     // gas price returned 1 in space context (strange behavior)
     .then(gasPrice => window.walletSettings.gasPrice = gasPrice)
-    .then(() => sessionStorage.getItem('exo-wallet-exchange-rate'))
-    .then(exchangeRate => {
-      return exchangeRate ? exchangeRate : fetch('https://api.coinmarketcap.com/v1/ticker/ethereum/', {
+    .then(() =>
+      fetch('https://api.coinmarketcap.com/v1/ticker/ethereum/', {
         referrerPolicy: "no-referrer",
         headers: {
           'Origin': ''
         }
-      });
-    })
+      })
+    )
     .then(resp => {
       if (resp && resp.ok) {
         return resp.json();
@@ -50,15 +49,18 @@ export function retrieveUSDExchangeRate() {
     })
     .then(content => {
       if (content && content.length && content[0].price_usd) {
-        sessionStorage.setItem('exo-wallet-exchange-rate', JSON.stringify(content));
-
         window.walletSettings.usdPrice = parseFloat(content[0].price_usd);
         window.walletSettings.usdPriceLastUpdated = new Date(parseInt(content[0].last_updated) * 1000);
         return true;
       }
     })
     .then(usdPriceRetrieved => {return usdPriceRetrieved ? window.walletSettings.gasPrice: null;})
-    .then(gasPrice => {window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;});
+    .then(gasPrice => {window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;})
+    .then(() => 
+      setTimeout(() => {
+        retrieveUSDExchangeRate();
+      }, 300000)
+    );
 }
 
 export function initWeb3(isSpace) {

@@ -465,10 +465,11 @@ export default {
             if (error) {
               this.errorMessage = 'Error deleting contract as default';
             } else {
-              this.refreshContractsList();
+              return this.refreshContractsList();
             }
-            this.loading = false;
-          }).catch(e => {
+          })
+          .then(() => this.loading = false)
+          .catch(e => {
             console.debug("removeContractAddressFromDefault method - error", e);
             this.loading = false;
             this.errorMessage = 'Error deleting contract as default';
