@@ -18,12 +18,12 @@
                              @show-qr-code="showQRCodeModal = true"
                              @modify-settings="showSettingsModal = true" />
 
-            <add-contract-modal v-if="!isSpace"
+            <!-- add-contract-modal v-if="!isSpace"
                                 :net-id="networkId"
                                 :account="account"
                                 :open="showAddContractModal"
                                 @added="reloadContracts()"
-                                @close="showAddContractModal = false" />
+                                @close="showAddContractModal = false" /-->
 
             <wallet-address-modal :address="account"
                                   :open="showWalletAddress"

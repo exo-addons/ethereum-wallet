@@ -1,5 +1,5 @@
 <template>
-  <v-flex v-if="transactions.length">
+  <v-flex v-if="Object.keys(transactions).length">
     <v-list two-line class="pt-0 pb-0">
       <template v-for="(item, index) in sortedTransaction">
         <v-list-tile :key="item.hash" avatar>
@@ -56,13 +56,22 @@ export default {
     return {
       latestBlockNumber: 0,
       latestDelegatedBlockNumber: 0,
-      transactions: [],
+      transactions: {},
       loading: true
     };
   },
   computed: {
     sortedTransaction() {
-      return this.transactions.slice(0).sort((t1, t2) => t2.date - t1.date);
+      // Freeze the list of keys to treat here while the transactions list
+      // is changed
+      const transactions = Object.assign({}, this.transactions);
+      const sortedTransactions = {};
+      Object.keys(transactions)
+        .sort((key1, key2) => transactions[key2].date - transactions[key1].date)
+        .forEach(key => {
+          sortedTransactions[key] = transactions[key];
+        });
+      return sortedTransactions;
     }
   },
   watch: {
@@ -114,10 +123,10 @@ export default {
             }
           }
         }
-        return this.transactions;
+        return true;
       }).catch(e => {
         this.$emit("error", `Error loading contract transactions: ${e}`);
-        return this.transactions;
+        return true;
       });
     },
     refreshApprovalList() {
@@ -148,11 +157,11 @@ export default {
             }
           }
         }
-        return this.transactions;
+        return true;
       }).catch(e => {
         console.debug("Error occurred while retrieving contract transactions", e);
         this.$emit("error", `Error loading contract transactions: ${e}`);
-        return this.transactions;
+        return true;
       });
     },
     addTransactionToList(from, to, amount, transactionHash, blockHash, labelFrom, labelTo, icon) {
@@ -179,8 +188,7 @@ export default {
             transactionDetails.date = new Date(timestamp * 1000);
             // Push transactions here in Promise to apply order after adding date
             // (Vue will not trigger computed values when changing attribute of an object inside an array)
-            this.transactions.push(transactionDetails);
-            this.$forceUpdate();
+            this.transactions[transactionDetails.hash] = transactionDetails;
             if (!contactDetails || !contactDetails.name) {
               return searchFullName(displayedAddress)
                 .then(item => {
@@ -188,10 +196,15 @@ export default {
                     transactionDetails.displayName = item.name;
                     transactionDetails.avatar = item.avatar;
                     transactionDetails.name = item.id;
-                    this.$forceUpdate();
+
+                    // Force update list
+                    this.transactions = Object.assign({}, this.transactions);
                   }
                   return transactionDetails;
                 });
+            } else {
+              // Force update list
+              this.transactions = Object.assign({}, this.transactions);
             }
             return transactionDetails;
           })

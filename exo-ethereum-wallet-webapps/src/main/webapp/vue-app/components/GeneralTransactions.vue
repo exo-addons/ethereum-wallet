@@ -12,7 +12,7 @@
         buffer>
         {{ loadingPercentage }}%
       </v-progress-circular>
-      <v-list v-if="transactions.length" two-line class="pt-0 pb-0">
+      <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
             <v-list-tile-avatar>
@@ -44,7 +44,7 @@
               <v-list-tile-action-text>{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
             </v-list-tile-action>
           </v-list-tile>
-          <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
+          <v-divider v-if="index + 1 < Object.keys(transactions).length" :key="index"></v-divider>
         </template>
       </v-list>
       <v-flex v-else-if="finishedLoading" class="text-xs-center">
@@ -76,12 +76,21 @@ export default {
       transactionsPerPage: 10,
       maxBlocksToLoad: 1000,
       loadedBlocks: 0,
-      transactions: []
+      transactions: {}
     };
   },
   computed: {
     sortedTransaction() {
-      return this.transactions.slice(0).sort((t1, t2) => t2.date - t1.date);
+      // Freeze the list of keys to treat here while the transactions list
+      // is changed
+      const transactions = Object.assign({}, this.transactions);
+      const sortedTransactions = {};
+      Object.keys(transactions)
+        .sort((key1, key2) => transactions[key2].date - transactions[key1].date)
+        .forEach(key => {
+          sortedTransactions[key] = transactions[key];
+        });
+      return sortedTransactions;
     },
     loadingPercentage() {
       return parseInt(this.loadedBlocks * 100 / this.maxBlocksToLoad);
@@ -114,7 +123,7 @@ export default {
   },
   methods: {
     init() {
-      this.transactions = [];
+      this.transactions = {};
       this.loadedBlocks = 0;
 
       return this.refreshTransactions(0);
@@ -216,7 +225,7 @@ export default {
                 // If user/space details wasn't found on sessionStorage,
                 // then display the transaction details and in // load name and avatar with a promise
                 // From eXo Platform Server
-                thiss.transactions.push(transactionDetails);
+                thiss.transactions[transactionDetails.hash] = transactionDetails;
 
                 if (!contactDetails || !contactDetails.name) {
                   // Test if address corresponds to a contract
@@ -225,7 +234,9 @@ export default {
                       if (contractDetails) {
                         transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
                         transactionDetails.name = contractDetails.address;
-                        this.$forceUpdate();
+
+                        // Force update list
+                        this.transactions = Object.assign({}, this.transactions);
                         return false;
                       } else {
                         return true;
@@ -242,13 +253,16 @@ export default {
                         transactionDetails.displayName = item.name;
                         transactionDetails.avatar = item.avatar;
                         transactionDetails.name = item.id;
-                        // Vue didn't refresh automatically the list of transactions
-                        // So this is used to re-read from transactions list the newly loaded details
-                        this.$forceUpdate();
+
+                        // Force update list
+                        this.transactions = Object.assign({}, this.transactions);
                         return true;
                       }
                       return false;
                     });
+                } else {
+                  // Force update list
+                  this.transactions = Object.assign({}, this.transactions);
                 }
               });
           }
