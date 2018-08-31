@@ -67,7 +67,7 @@
         v-if="!contractDetail.isContract"
         :account="account"
         :balance="contractDetail.balance"
-        @loading="loading = true"
+        @sent="newTransactionPending($event)"
         @loaded="loaded"
         @error="loading = false; error = $event"
         @end-loading="loading = false" />
@@ -202,6 +202,13 @@ export default {
       return this.contractDetail.isContract ?
         this.contractDetail.etherBalance === balance :
         this.contractDetail.balance === balance;
+    },
+    newTransactionPending(transaction) {
+      if (this.contractDetail.isContract) {
+        this.$refs.contractTransactions.addTransaction(transaction);
+      } else {
+        this.$refs.generalTransactions.addTransaction(transaction);
+      }
     }
   }
 };

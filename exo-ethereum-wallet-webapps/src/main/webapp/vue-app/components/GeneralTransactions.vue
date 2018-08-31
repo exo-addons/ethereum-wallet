@@ -15,7 +15,8 @@
       <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
-            <v-list-tile-avatar>
+            <v-progress-circular v-if="item.pending" indeterminate color="primary" />
+            <v-list-tile-avatar v-else>
               <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
             </v-list-tile-avatar>
             <v-list-tile-content>
@@ -40,7 +41,7 @@
                 </span>
               </v-list-tile-sub-title>
             </v-list-tile-content>
-            <v-list-tile-action>
+            <v-list-tile-action v-if="item.date && !item.pending">
               <v-list-tile-action-text>{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
             </v-list-tile-action>
           </v-list-tile>
@@ -58,7 +59,7 @@
 
 <script>
 import {searchFullName, getContractFromStorage, getContactFromStorage} from '../WalletAddressRegistry.js';
-import {etherToUSD} from '../WalletUtils.js';
+import {etherToUSD, watchTransactionStatus} from '../WalletUtils.js';
 
 export default {
   props: {
@@ -176,94 +177,7 @@ export default {
               || transaction.from && transaction.from.toLowerCase() === thiss.account.toLowerCase()) {
             window.localWeb3.eth.getTransactionReceipt(transaction.hash)
               .then(receipt => {
-                // Calculate Transaction fees
-                const transactionFeeInWei = receipt.gasUsed * transaction.gasPrice;
-                const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
-                const transactionFeeInUSD = etherToUSD(transactionFeeInEth);
-
-                const isReceiver = transaction.to && transaction.to.toLowerCase() === thiss.account.toLowerCase();
-
-                // Calculate sent/received amount
-                const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
-                const amountUSD = etherToUSD(amount);
-    
-                const isFeeTransaction = parseFloat(amount) === 0;
-
-                let displayAddress = isReceiver ? transaction.from : transaction.to;
-
-                let isContractCreationTransaction = false;
-
-                if (!displayAddress) {
-                  displayAddress = receipt.contractAddress;
-                  isContractCreationTransaction = true;
-                }
-
-                // Retrieve user or space display name, avatar and id from sessionStorage
-                const contactDetails = getContactFromStorage(displayAddress, 'user', 'space');
-
-                const transactionDetails = {
-                  hash: transaction.hash,
-                  titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
-                  displayAddress: displayAddress,
-                  displayName: contactDetails.name ? contactDetails.name : displayAddress,
-                  avatar: contactDetails.avatar,
-                  name: null,
-                  status: receipt.status,
-                  color: isReceiver ? 'green' : 'red',
-                  icon: isFeeTransaction ? 'fa-undo' : 'fa-exchange-alt',
-                  amount: amount,
-                  amountUSD: amountUSD,
-                  gas: transaction.gas,
-                  gasUsed: receipt.gasUsed,
-                  gasPrice: transaction.gasPrice,
-                  fee: transactionFeeInEth,
-                  feeUSD: transactionFeeInUSD,
-                  isContractCreation: receipt.contractAddress,
-                  date: new Date(block.timestamp * 1000)
-                };
-
-                // If user/space details wasn't found on sessionStorage,
-                // then display the transaction details and in // load name and avatar with a promise
-                // From eXo Platform Server
-                thiss.transactions[transactionDetails.hash] = transactionDetails;
-
-                if (!contactDetails || !contactDetails.name) {
-                  // Test if address corresponds to a contract
-                  getContractFromStorage(this.account, displayAddress)
-                    .then(contractDetails => {
-                      if (contractDetails) {
-                        transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
-                        transactionDetails.name = contractDetails.address;
-
-                        // Force update list
-                        this.transactions = Object.assign({}, this.transactions);
-                        return false;
-                      } else {
-                        return true;
-                      }
-                    })
-                    .then(continueSearch => {
-                      if(continueSearch) {
-                        // The address is not of type contract, so search correspondin user/space display name
-                        return searchFullName(displayAddress);
-                      }
-                    })
-                    .then(item => {
-                      if (item && item.name && item.name.length) {
-                        transactionDetails.displayName = item.name;
-                        transactionDetails.avatar = item.avatar;
-                        transactionDetails.name = item.id;
-
-                        // Force update list
-                        this.transactions = Object.assign({}, this.transactions);
-                        return true;
-                      }
-                      return false;
-                    });
-                } else {
-                  // Force update list
-                  this.transactions = Object.assign({}, this.transactions);
-                }
+                this.addTransaction(transaction, receipt, block.timestamp * 1000);
               });
           }
         });
@@ -271,6 +185,116 @@ export default {
       // Continue searching in previous block
       return window.localWeb3.eth.getBlock(block.parentHash, true)
         .then(this.addBlockTransactions);
+    },
+    addTransaction(transaction, receipt, timestamp) {
+      const gasUsed = receipt && receipt.gasUsed ? receipt.gasUsed : transaction.gas;
+
+      const status = receipt ? receipt.status : true;
+      // Calculate Transaction fees
+      const transactionFeeInWei = gasUsed * transaction.gasPrice;
+      const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
+      const transactionFeeInUSD = etherToUSD(transactionFeeInEth);
+
+      const isReceiver = transaction.to && transaction.to.toLowerCase() === this.account.toLowerCase();
+
+      // Calculate sent/received amount
+      const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
+      const amountUSD = etherToUSD(amount);
+
+      const isFeeTransaction = parseFloat(amount) === 0;
+
+      let displayAddress = isReceiver ? transaction.from : transaction.to;
+
+      let isContractCreationTransaction = false;
+
+      let contractAddress = null;
+      if (!displayAddress && receipt && receipt.contractAddress) {
+        contractAddress = displayAddress = receipt.contractAddress;
+        isContractCreationTransaction = true;
+      }
+
+      // Retrieve user or space display name, avatar and id from sessionStorage
+      const contactDetails = getContactFromStorage(displayAddress, 'user', 'space');
+
+      const transactionDetails = {
+        hash: transaction.hash,
+        titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
+        displayAddress: displayAddress,
+        displayName: contactDetails.name ? contactDetails.name : displayAddress,
+        avatar: contactDetails.avatar,
+        name: null,
+        status: status,
+        color: isReceiver ? 'green' : 'red',
+        icon: isFeeTransaction ? 'fa-undo' : 'fa-exchange-alt',
+        amount: amount,
+        amountUSD: amountUSD,
+        gas: transaction.gas,
+        gasUsed: gasUsed,
+        gasPrice: transaction.gasPrice,
+        fee: transactionFeeInEth,
+        feeUSD: transactionFeeInUSD,
+        isContractCreation: contractAddress,
+        date: timestamp ? new Date(timestamp) : transaction.timestamp,
+        pending: transaction.pending
+      };
+
+      // If user/space details wasn't found on sessionStorage,
+      // then display the transaction details and in // load name and avatar with a promise
+      // From eXo Platform Server
+      this.transactions[transactionDetails.hash] = transactionDetails;
+
+      if (transaction.pending) {
+        watchTransactionStatus(transaction.hash, receipt => {
+          window.localWeb3.eth.getTransaction(transaction.hash)
+            .then(tx => transaction = tx)
+            .then(tx => window.localWeb3.eth.getBlock(transaction.blockNumber))
+            .then(block => {
+              this.addTransaction(transaction, receipt, block.timestamp *1000);
+            })
+            .catch(error => {
+              console.debug("watchTransactionStatus method - error", error);
+              this.$emit("error", `Transaction loading error: ${error}`);
+            });
+        });
+      }
+
+      if (!contactDetails || !contactDetails.name) {
+        // Test if address corresponds to a contract
+        getContractFromStorage(this.account, displayAddress)
+          .then(contractDetails => {
+            if (contractDetails) {
+              transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
+              transactionDetails.name = contractDetails.address;
+
+              // Force update list
+              this.transactions = Object.assign({}, this.transactions);
+              return false;
+            } else {
+              return true;
+            }
+          })
+          .then(continueSearch => {
+            if(continueSearch) {
+              // The address is not of type contract, so search correspondin user/space display name
+              return searchFullName(displayAddress);
+            }
+          })
+          .then(item => {
+            if (item && item.name && item.name.length) {
+              transactionDetails.displayName = item.name;
+              transactionDetails.avatar = item.avatar;
+              transactionDetails.name = item.id;
+
+              // Force update list
+              this.transactions = Object.assign({}, this.transactions);
+              return true;
+            }
+            return false;
+          });
+      } else {
+        // Force update list
+        this.transactions = Object.assign({}, this.transactions);
+      }
     }
   }
 };

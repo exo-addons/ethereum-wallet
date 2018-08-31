@@ -106,19 +106,30 @@ export default {
       }
 
       this.loading = true;
-      this.$emit("loading");
       try {
-        // Send an amount of ether to a third person
-        window.localWeb3.eth.sendTransaction({
+        const amount = window.localWeb3.utils.toWei(this.amount.toString(), "ether");
+        const transaction = {
           from: this.account.toLowerCase(),
           to: this.recipient,
           value: window.localWeb3.utils.toWei(this.amount.toString(), "ether"),
           gas: gas,
           gasPrice: window.walletSettings.gasPrice
-        })
+        };
+        // Send an amount of ether to a third person
+        window.localWeb3.eth.sendTransaction(transaction)
           .on('transactionHash', hash => {
             // The transaction has been hashed and will be sent
-            this.$emit("loading");
+            this.$emit("sent", {
+              hash: hash,
+              from: transaction.from,
+              to: transaction.to,
+              value : transaction.value,
+              gas: transaction.gas,
+              gasPrice: transaction.gasPrice,
+              pending: true,
+              timestamp: Date.now()
+            });
+            this.dialog = false;
           })
           .on('confirmation', (confirmationNumber, receipt) => {
             if (this.loading) {
@@ -138,7 +149,6 @@ export default {
         console.debug("Web3.eth.sendTransaction method - error", e);
         this.loading = false;
         this.error = `Error sending ether: ${e}`;
-        this.$emit("end-loading");
       }
     }
   }
