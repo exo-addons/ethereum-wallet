@@ -9,9 +9,6 @@
           <v-spacer />
           <div class="title">
             <span>{{ contractDetail.title }}</span>
-            <div v-if="contractDetail.isContract" class="title mt-2">
-              Contract address: <code>{{ contractDetail.address }}</code>
-            </div>
           </div>
           <v-spacer />
         </v-card-title>
