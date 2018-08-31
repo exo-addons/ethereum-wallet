@@ -31,10 +31,10 @@
               </v-list-tile-title>
               <v-list-tile-sub-title>
                 <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
-                <span>{{ item.amount }} ETH</span>
+                <span>{{ item.amount }} ether</span>
                 <span v-if="item.amountUSD"> / {{ item.amountUSD }} $</span>
                 <span v-if="item.fee">
-                  ( Fee: {{ item.fee }} ETH
+                  ( Fee: {{ item.fee }} ether
                   <span v-if="item.feeUSD">/ {{ item.feeUSD }} $</span>
                   )
                 </span>

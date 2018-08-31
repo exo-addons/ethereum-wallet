@@ -63,7 +63,7 @@
                                :error-message="errorMessage"
                                @save-address-to-account="saveNewAddressInWallet" />
 
-            <!-- list of contracts and ETH account -->
+            <!-- list of contracts and ether account -->
             <v-list class="pb-0" two-line subheader>
               <v-list-tile v-for="(item, index) in accountsDetails" :key="index" :color="item.error ? 'red': ''" :title="item.title" avatar ripple @click="openAccountDetail(item)">
                 <v-list-tile-avatar>
@@ -486,10 +486,10 @@ export default {
         .then((balanceDetails, error) => {
           if (error) {
             this.accountsDetails[this.account] = {
-              title : 'ETH',
+              title : 'ether',
               icon : 'warning',
               balance : 0,
-              symbol : 'ETH',
+              symbol : 'ether',
               isContract : false,
               address : this.account,
               error : `Error retrieving balance of account ${error}`
@@ -497,9 +497,9 @@ export default {
             throw error;
           }
           const accountDetails = {
-            title : 'ETH',
+            title : 'ether',
             icon : 'fab fa-ethereum',
-            symbol : 'ETH',
+            symbol : 'ether',
             isContract : false,
             address : this.account,
             balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
@@ -510,10 +510,10 @@ export default {
         .catch(e => {
           console.debug("refreshBalance method - error", e);
           this.accountsDetails[this.account] = {
-            title : 'ETH',
+            title : 'ether',
             icon : 'warning',
             balance : 0,
-            symbol : 'ETH',
+            symbol : 'ether',
             isContract : false,
             address : this.account,
             error : `Error retrieving balance of account ${e}`,
