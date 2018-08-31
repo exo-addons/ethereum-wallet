@@ -10,24 +10,6 @@
         </v-list-tile-avatar>
         <v-list-tile-title>Refresh</v-list-tile-title>
       </v-list-tile>
-      <!-- v-list-tile v-if="!isSpace && !isAccountDetails" @click="$emit('add-contract')">
-        <v-list-tile-avatar>
-          <v-icon>add</v-icon>
-        </v-list-tile-avatar>
-        <v-list-tile-title>Add Token address</v-list-tile-title>
-      </v-list-tile -->
-      <v-list-tile @click="$emit('show-wallet-address')">
-        <v-list-tile-avatar>
-          <v-icon>fa-address-card</v-icon>
-        </v-list-tile-avatar>
-        <v-list-tile-title>Wallet address</v-list-tile-title>
-      </v-list-tile>
-      <v-list-tile @click="$emit('show-qr-code')">
-        <v-list-tile-avatar>
-          <v-icon>fa-qrcode</v-icon>
-        </v-list-tile-avatar>
-        <v-list-tile-title>Wallet QR Code</v-list-tile-title>
-      </v-list-tile>
       <v-list-tile v-if="!isSpace" @click="$emit('modify-settings')">
         <v-list-tile-avatar>
           <v-icon>fa-cog</v-icon>

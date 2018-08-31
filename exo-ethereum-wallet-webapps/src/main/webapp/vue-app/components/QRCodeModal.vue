@@ -6,18 +6,31 @@
         <span class="PopupTitle popupTitle">{{ title }}</span>
       </div>
       <v-card-text>
-        <div v-if="information" class="alert alert-info">
-          <i class="uiIconInfo"></i>
-          {{ information }}
-        </div>
-        <div :id="id" class="text-xs-center"></div>
+        <qr-code ref="qrCode"
+                 :net-id="netId"
+                 :from="from"
+                 :to="to"
+                 :is-contract="isContract"
+                 :function-payable="functionPayable"
+                 :function-name="functionName"
+                 :args-names="argsNames"
+                 :args-types="argsTypes"
+                 :args-values="argsValues"
+                 :amount="amount"
+                 :open="open"
+                 :information="information" />
       </v-card-text>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
+import QrCode from './QRCode.vue';
+
 export default {
+  components: {
+    QrCode
+  },
   props: {
     title: {
       type: String,
@@ -55,7 +68,6 @@ export default {
         return null;
       }
     },
-
     isContract: {
       type: Boolean,
       default: function() {
@@ -96,7 +108,6 @@ export default {
   data () {
     return {
       show: false,
-      id: `QRCode${parseInt(Math.random() * 10000).toString().toString()}`,
       netId: null
     };
   },
@@ -114,67 +125,9 @@ export default {
       }
     }
   },
-  
   methods: {
     computeCanvas() {
-      window.localWeb3.eth.net.getId()
-        .then(netId => {
-          // This promise is triggered multiple times
-          if (this.to && netId !== this.netId) {
-            this.netId = netId;
-            const qr = new window.EthereumQRPlugin();
-            const options = {
-              chainId: netId,
-              to: this.to,
-              value: parseInt(window.localWeb3.utils.toWei(this.amount.toString(), 'ether'))
-            };
-
-            if (this.from) {
-              options.from = this.from;
-            }
-
-            if (window.walletSettings.userDefaultGas) {
-              options.gas = window.walletSettings.userDefaultGas;
-            }
-  
-            if (this.isContract) {
-              options.mode = "contract_function";
-              options.functionSignature = {};
-              options.functionSignature.name = this.functionName;
-              options.functionSignature.payable = this.functionPayable;
-              if (this.argsNames.length === this.argsTypes.length && this.argsTypes.length === this.argsValues.length) {
-                options.functionSignature.args = [];
-                options.argsDefaults = [];
-  
-                
-                for (let i = 0; i < this.argsNames.length; i++) {
-                  const argsName = this.argsNames[i];
-                  const argsType = this.argsTypes[i];
-                  const argsValue = this.argsValues[i];
-
-                  options.functionSignature.args.push({
-                    "name": argsName,
-                    "type": argsType
-                  });
-                  options.argsDefaults.push({
-                    "name": argsName,
-                    "value": argsValue
-                  });
-                }
-              }
-            }
-
-            return qr.toCanvas(options, {
-              selector: `#${this.id}`
-            }).then((res, err) => {
-              if (err) {
-                console.error("qrCode", err);
-              }
-            });
-          }
-        }).catch(error => {
-          console.debug("Error while generating qr code", error);
-        });
+      this.$refs.qrCode.computeCanvas();
     }
   }
 };

@@ -13,27 +13,7 @@
                              :is-space="isSpace"
                              :is-account-details="selectedAccount !== null"
                              @refresh="refreshList(true)"
-                             @add-contract="showAddContractModal = true"
-                             @show-wallet-address="showWalletAddress = true"
-                             @show-qr-code="showQRCodeModal = true"
                              @modify-settings="showSettingsModal = true" />
-
-            <!-- add-contract-modal v-if="!isSpace"
-                                :net-id="networkId"
-                                :account="account"
-                                :open="showAddContractModal"
-                                @added="reloadContracts()"
-                                @close="showAddContractModal = false" /-->
-
-            <wallet-address-modal :address="account"
-                                  :open="showWalletAddress"
-                                  @close="showWalletAddress = false" />
-
-            <qr-code-modal :to="account"
-                           :open="showQRCodeModal"
-                           title="Address QR Code"
-                           information="You can send this Wallet address QR code to other users to send you ether and tokens"
-                           @close="showQRCodeModal = false" />
 
             <user-settings-modal :account="account"
                                  :open="showSettingsModal"
@@ -104,7 +84,6 @@ import WalletAppAlerts from './WalletAppAlerts.vue';
 import AddContractModal from './AddContractModal.vue';
 import AccountDetail from './AccountDetail.vue';
 import QrCodeModal from './QRCodeModal.vue';
-import WalletAddressModal from './WalletAddressModal.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
@@ -115,7 +94,6 @@ import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings, computeNetw
 export default {
   components: {
     UserSettingsModal,
-    WalletAddressModal,
     WalletAppMenu,
     WalletAppAlerts,
     QrCodeModal,
@@ -146,8 +124,6 @@ export default {
       oldAccountAddressNotFound: null,
       oldAccountAddress: null,
       newAccountAddress: null,
-      showWalletAddress: false,
-      showQRCodeModal: false,
       showSettingsModal: false,
       showAddContractModal: false,
       networkId: null,

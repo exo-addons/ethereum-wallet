@@ -9,17 +9,25 @@
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
         </div>
-        <v-form>
-          <v-flex>
-            <span>Default gas to spend on transactions (Maximum fee per transaction)</span>
-            <v-slider v-model="defaultGas"
-                      :label="`${defaultGas}${defaulGasPriceUsd ? ' (' + defaulGasPriceUsd + ' $)' : ''}`"
-                      :max="90000"
-                      :min="21000"
-                      :step="1000"
-                      type="number" />
-          </v-flex>
-        </v-form>
+        <v-flex>
+          <span>Default gas to spend on transactions (Maximum fee per transaction)</span>
+          <v-slider v-model="defaultGas"
+                    :label="`${defaultGas}${defaulGasPriceUsd ? ' (' + defaulGasPriceUsd + ' $)' : ''}`"
+                    :max="90000"
+                    :min="21000"
+                    :step="1000"
+                    type="number" />
+
+          <qr-code ref="qrCode"
+                   :to="account"
+                   :build="true"
+                   title="Address QR Code"
+                   information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
+
+          <div class="text-xs-center">
+            Wallet address: <code>{{ account }}</code>
+          </div>
+        </v-flex>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
@@ -30,9 +38,14 @@
 </template>
 
 <script>
+import QrCode from './QRCode.vue';
+
 import {gasToUSD} from '../WalletUtils.js';
 
 export default {
+  components: {
+    QrCode
+  },
   props: {
     title: {
       type: String,
@@ -67,6 +80,7 @@ export default {
       if (this.open) {
         this.defaultGas = window.walletSettings.userDefaultGas ? window.walletSettings.userDefaultGas : 21000;
         this.defaulGasPriceUsd = gasToUSD(this.defaultGas);
+        this.$refs.qrCode.computeCanvas();
         this.show = true;
       }
     },
