@@ -56,7 +56,7 @@
                   required />
         <v-slider v-model="newTokenGasPrice"
                   :label="`Gas price (Gwei): ${newTokenGasPriceGWEI}`"
-                  :min="10000000000"
+                  :min="0"
                   :max="60000000000"
                   :step="1000000000"
                   type="number"
@@ -119,12 +119,12 @@ export default {
       warning: null,
       newTokenName: '',
       newTokenSymbol: '',
-      newTokenGas: 700000,
-      newTokenGasPrice: 20000000000,
-      newTokenGasPriceGWEI: 20,
+      newTokenGas: 0,
+      newTokenGasPrice: 0,
+      newTokenGasPriceGWEI: 0,
       newTokenGasInUSD: 0,
       newTokenDecimals: 0,
-      newTokenInitialCoins: 10000,
+      newTokenInitialCoins: 0,
       newTokenSetAsDefault: true,
       newTokenAddress: '',
       createNewToken: false,
@@ -153,7 +153,9 @@ export default {
       this.newTokenGasPriceGWEI = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'gwei');
     },
     createNewToken() {
-      this.resetContractForm();
+      if (this.createNewToken) {
+        this.resetContractForm();
+      }
     }
   },
   methods: {
@@ -164,9 +166,7 @@ export default {
       this.newTokenName = '';
       this.newTokenSymbol = '';
       this.newTokenGas = 700000;
-      this.newTokenGasPrice = 20000000000;
-      this.newTokenGasPriceGWEI = 20;
-      this.newTokenGasInUSD = 0;
+      this.newTokenGasPrice = window.walletSettings.gasPrice;
       this.newTokenDecimals = 0;
       this.newTokenInitialCoins = 10000;
       this.newTokenSetAsDefault = true;
