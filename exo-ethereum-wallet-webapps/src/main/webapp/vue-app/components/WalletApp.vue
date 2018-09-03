@@ -69,9 +69,9 @@
 
           <!-- The selected account detail -->
           <v-navigation-drawer v-if="!isMaximized" id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
-            <account-detail :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
+            <account-detail :is-space="isSpace" :network-id="networkId" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
-          <account-detail v-else-if="selectedAccount" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
+          <account-detail v-else-if="selectedAccount" :network-id="networkId" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
         </v-flex>
       </v-layout>
     </main>

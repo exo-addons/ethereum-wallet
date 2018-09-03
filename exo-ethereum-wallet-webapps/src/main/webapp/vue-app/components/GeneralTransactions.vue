@@ -1,7 +1,6 @@
 <template>
   <v-flex>
     <v-card class="card--flex-toolbar">
-      <v-subheader>Transactions list retrieved from {{ loadedBlocks }} / {{ maxBlocksToLoad }} latest blocks. Total loaded transactions: {{ transactions.length }}.</v-subheader>
       <v-progress-circular
         v-if="!finishedLoading"
         :rotate="-90"
@@ -15,8 +14,8 @@
       <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
-            <v-progress-circular v-if="item.pending" indeterminate color="primary" />
-            <v-list-tile-avatar v-else>
+            <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
+            <v-list-tile-avatar v-else :title="item.error ? item.error : ''">
               <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
             </v-list-tile-avatar>
             <v-list-tile-content>
@@ -58,11 +57,16 @@
 </template>
 
 <script>
-import {searchFullName, getContractFromStorage, getContactFromStorage} from '../WalletAddressRegistry.js';
-import {etherToUSD, watchTransactionStatus} from '../WalletUtils.js';
+import {loadPendingTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
 
 export default {
   props: {
+    networkId: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
     account: {
       type: String,
       default: function() {
@@ -72,7 +76,11 @@ export default {
   },
   data () {
     return {
-      lastBlockNumber: 0,
+      // A trick to force update computed list
+      // since the attribute this.atransactions is modified outside the component
+      refreshIndex: 1,
+      newestBlockNumber: 0,
+      oldestBlockNumber: 0,
       finishedLoading: false,
       transactionsPerPage: 10,
       maxBlocksToLoad: 1000,
@@ -82,9 +90,12 @@ export default {
   },
   computed: {
     sortedTransaction() {
-      // Freeze the list of keys to treat here while the transactions list
-      // is changed
-      const transactions = Object.assign({}, this.transactions);
+      // A trick to force update computed list
+      // since the attribute this.atransactions is modified outside the component
+      if (!this.refreshIndex) {
+        return {};
+      }
+      const transactions = this.transactions;
       const sortedTransactions = {};
       Object.keys(transactions)
         .sort((key1, key2) => transactions[key2].date - transactions[key1].date)
@@ -127,174 +138,49 @@ export default {
       this.transactions = {};
       this.loadedBlocks = 0;
 
-      return this.refreshTransactions(0);
-    },
-    refreshNewwestTransactions() {
-      this.loading = true;
-      return this.refreshTransactions(this.lastBlockNumber)
-        .then(() => this.$emit("end-loading"))
-        .finally(() => this.loading = false);
-    },
-    refreshTransactions(untilPreviousBlock) {
-      let lastBlockNumberTmp = 0;
-
-      // Retrive transactions from 1000 previous blocks (at maximum)
-      // and display transactions sent/received by the current account
-      return window.localWeb3.eth.getBlockNumber()
-        .then(lastBlockNumber => lastBlockNumberTmp = lastBlockNumber)
-        .then(lastBlockNumber => window.localWeb3.eth.getBlock(lastBlockNumber, true))
-        .then((lastBlock) => this.addBlockTransactions(lastBlock, untilPreviousBlock))
-        .then(() => this.lastBlockNumber = lastBlockNumberTmp)
-        .catch(e => this.$emit("error", `${e}`));
-    },
-    addBlockTransactions(block, untilBlock) {
-      if (!block) {
-        throw new Error("Block not found");
-      }
-
-      // Don't display additional loaded blocks when refreshing the list
-      if (!untilBlock) {
-        this.loadedBlocks++;
-      }
-
-      // If we :
-      //  * already searched inside 1000 block
-      //  * or we reached the genesis block
-      //  * or we already displayed 10 transactions
-      // then stop searching
-      if (block.number === 0
-          || block.number <= untilBlock
-          || (!untilBlock && this.loadedBlocks >= this.maxBlocksToLoad)) {
-        return false;
-      }
-      if (block.transactions && block.transactions.length) {
-
-        const thiss = this;
-        // Iterate over transactions from retrieved from block
-        block.transactions.forEach(transaction => {
-          // Make sure to not display transaction that hasn't a 'to' or 'from' address
-          if (transaction.to && transaction.to.toLowerCase() === thiss.account.toLowerCase()
-              || transaction.from && transaction.from.toLowerCase() === thiss.account.toLowerCase()) {
-            window.localWeb3.eth.getTransactionReceipt(transaction.hash)
-              .then(receipt => {
-                this.addTransaction(transaction, receipt, block.timestamp * 1000);
-              });
-          }
+      // Get transactions to latest block with maxBlocks to load
+      return loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
+        this.$emit("refresh-balance");
+        this.forceUpdateList();
+      })
+        .then(() => loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
+          this.loadedBlocks = loadedBlocks;
+          this.forceUpdateList();
+        }))
+        .then(loadedBlocksDetails => {
+          this.forceUpdateList();
+          this.newestBlockNumber = loadedBlocksDetails.toBlock;
+          this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
+        })
+        .catch(e => {
+          console.debug("loadTransactions - method error", e);
+          this.$emit("error", `${e}`);
         });
-      }
-      // Continue searching in previous block
-      return window.localWeb3.eth.getBlock(block.parentHash, true)
-        .then(this.addBlockTransactions);
     },
-    addTransaction(transaction, receipt, timestamp) {
-      const gasUsed = receipt && receipt.gasUsed ? receipt.gasUsed : transaction.gas;
-
-      const status = receipt ? receipt.status : true;
-      // Calculate Transaction fees
-      const transactionFeeInWei = gasUsed * transaction.gasPrice;
-      const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
-      const transactionFeeInUSD = etherToUSD(transactionFeeInEth);
-
-      const isReceiver = transaction.to && transaction.to.toLowerCase() === this.account.toLowerCase();
-
-      // Calculate sent/received amount
-      const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
-      const amountUSD = etherToUSD(amount);
-
-      const isFeeTransaction = parseFloat(amount) === 0;
-
-      let displayAddress = isReceiver ? transaction.from : transaction.to;
-
-      let isContractCreationTransaction = false;
-
-      let contractAddress = null;
-      if (!displayAddress && receipt && receipt.contractAddress) {
-        contractAddress = displayAddress = receipt.contractAddress;
-        isContractCreationTransaction = true;
-      }
-
-      // Retrieve user or space display name, avatar and id from sessionStorage
-      const contactDetails = getContactFromStorage(displayAddress, 'user', 'space');
-
-      const transactionDetails = {
-        hash: transaction.hash,
-        titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
-        displayAddress: displayAddress,
-        displayName: contactDetails.name ? contactDetails.name : displayAddress,
-        avatar: contactDetails.avatar,
-        name: null,
-        status: status,
-        color: isReceiver ? 'green' : 'red',
-        icon: isFeeTransaction ? 'fa-undo' : 'fa-exchange-alt',
-        amount: amount,
-        amountUSD: amountUSD,
-        gas: transaction.gas,
-        gasUsed: gasUsed,
-        gasPrice: transaction.gasPrice,
-        fee: transactionFeeInEth,
-        feeUSD: transactionFeeInUSD,
-        isContractCreation: contractAddress,
-        date: timestamp ? new Date(timestamp) : transaction.timestamp,
-        pending: transaction.pending
-      };
-
-      // If user/space details wasn't found on sessionStorage,
-      // then display the transaction details and in // load name and avatar with a promise
-      // From eXo Platform Server
-      this.transactions[transactionDetails.hash] = transactionDetails;
-
-      if (transaction.pending) {
-        watchTransactionStatus(transaction.hash, receipt => {
-          window.localWeb3.eth.getTransaction(transaction.hash)
-            .then(tx => transaction = tx)
-            .then(tx => window.localWeb3.eth.getBlock(transaction.blockNumber))
-            .then(block => {
-              this.addTransaction(transaction, receipt, block.timestamp *1000);
-            })
-            .catch(error => {
-              console.debug("watchTransactionStatus method - error", error);
-              this.$emit("error", `Transaction loading error: ${error}`);
-            });
+    addTransaction(transaction) {
+      this.transactions = addTransaction(this.networkId,
+        this.account,
+        this.transactions,
+        transaction,
+        null,
+        null,
+        () => {
+          console.log("refresh-balance transaction emitted successfully", this.transactions);
+          this.$emit("refresh-balance");
+          this.forceUpdateList();
+        },
+        error => {
+          transaction.icon = 'warning';
+          transaction.error = `Error loading transaction ${error}`;
+          this.forceUpdateList();
         });
-      }
-
-      if (!contactDetails || !contactDetails.name) {
-        // Test if address corresponds to a contract
-        getContractFromStorage(this.account, displayAddress)
-          .then(contractDetails => {
-            if (contractDetails) {
-              transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
-              transactionDetails.name = contractDetails.address;
-
-              // Force update list
-              this.transactions = Object.assign({}, this.transactions);
-              return false;
-            } else {
-              return true;
-            }
-          })
-          .then(continueSearch => {
-            if(continueSearch) {
-              // The address is not of type contract, so search correspondin user/space display name
-              return searchFullName(displayAddress);
-            }
-          })
-          .then(item => {
-            if (item && item.name && item.name.length) {
-              transactionDetails.displayName = item.name;
-              transactionDetails.avatar = item.avatar;
-              transactionDetails.name = item.id;
-
-              // Force update list
-              this.transactions = Object.assign({}, this.transactions);
-              return true;
-            }
-            return false;
-          });
-      } else {
-        // Force update list
-        this.transactions = Object.assign({}, this.transactions);
-      }
+      this.forceUpdateList();
+    },
+    forceUpdateList() {
+      // A trick to force update computed list
+      // since the attribute this.atransactions is modified outside the component
+      this.refreshIndex ++;
+      this.$forceUpdate();
     }
   }
 };

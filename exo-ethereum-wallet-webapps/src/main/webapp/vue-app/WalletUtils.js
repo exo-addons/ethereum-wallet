@@ -134,7 +134,16 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
   getTransactionReceipt(hash)
     .then(receipt => {
       if (receipt) {
-        transactionFinishedcallback(receipt);
+        window.localWeb3.eth.getBlock(receipt.blockNumber)
+          .then(block => {
+            if (block) {
+              transactionFinishedcallback(receipt, block);
+            } else {
+              setTimeout(() => {
+                watchTransactionStatus(hash, transactionFinishedcallback);
+              }, 2000);
+            }
+          });
       } else {
         setTimeout(() => {
           watchTransactionStatus(hash, transactionFinishedcallback);

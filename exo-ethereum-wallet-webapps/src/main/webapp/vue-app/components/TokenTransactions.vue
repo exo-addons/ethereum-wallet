@@ -39,6 +39,12 @@ import {searchFullName, getContactFromStorage} from '../WalletAddressRegistry.js
 
 export default {
   props: {
+    networkId: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
     account: {
       type: String,
       default: function() {

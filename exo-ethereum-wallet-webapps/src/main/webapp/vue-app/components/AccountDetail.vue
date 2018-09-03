@@ -79,8 +79,8 @@
 
     <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
 
-    <token-transactions v-if="contractDetail.isContract" id="contractTransactionsContent" ref="contractTransactions" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" />
-    <general-transactions v-else id="generalTransactionsContent" ref="generalTransactions" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" />
+    <token-transactions v-if="contractDetail.isContract" id="contractTransactionsContent" ref="contractTransactions" :network-id="networkId" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" @refresh-balance="refreshBalance" />
+    <general-transactions v-else id="generalTransactionsContent" ref="generalTransactions" :network-id="networkId" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" @refresh-balance="refreshBalance" />
   </v-flex>
 </template>
 
@@ -108,6 +108,12 @@ export default {
     TokenTransactions
   },
   props: {
+    networkId: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
     isSpace: {
       type: Boolean,
       default: function() {
@@ -184,6 +190,23 @@ export default {
           // Permit to refresh again once the above conditions finished
           .finally(() => this.refreshing = false);
       }
+    },
+    refreshBalance() {
+      return window.localWeb3.eth.getBalance(this.account)
+        .then(balance => {
+          balance = window.localWeb3.utils.fromWei(balance, "ether");
+          if (this.contractDetail.isContract) {
+            this.contractDetail.etherBalance = balance;
+            return retrieveContractDetails(this.account, this.contractDetail)
+              .then(() => {
+                this.$forceUpdate();
+              });
+          } else {
+            this.contractDetail.balance = balance;
+            this.contractDetail.balanceUSD = etherToUSD(balance);
+            this.$forceUpdate();
+          }
+        });
     },
     refreshList(balance) {
       console.debug("Account details - refreshList after balance modified");
