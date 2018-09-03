@@ -303,7 +303,9 @@ export default {
                   if (error) {
                     throw error;
                   }
-                  thiss.retrieveDefaultUserAccount();
+                  if (!result || !result.ignoreRefresh) {
+                    thiss.retrieveDefaultUserAccount();
+                  }
                 })
                 .then((result, error) => {
                   if (error) {
@@ -461,6 +463,8 @@ export default {
               console.debug("initAccount method - error", e);
               throw new Error(`Error encountered while loading contracts: ${e}`);
             });
+        } else {
+          return {ignoreRefresh: true};
         }
       } else {
         if (this.isSpace) {

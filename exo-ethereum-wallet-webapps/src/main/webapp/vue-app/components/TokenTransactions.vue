@@ -3,7 +3,8 @@
     <v-list two-line class="pt-0 pb-0">
       <template v-for="(item, index) in sortedTransaction">
         <v-list-tile :key="item.hash" avatar>
-          <v-list-tile-avatar>
+          <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
+          <v-list-tile-avatar v-else>
             <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
           </v-list-tile-avatar>
           <v-list-tile-content>
@@ -19,7 +20,7 @@
             </v-list-tile-title>
             <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
           </v-list-tile-content>
-          <v-list-tile-action>
+          <v-list-tile-action v-if="!item.pending && item.date">
             <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleTimeString() : '' }}</v-list-tile-action-text>
           </v-list-tile-action>
         </v-list-tile>
@@ -36,6 +37,8 @@
 
 <script>
 import {searchFullName, getContactFromStorage} from '../WalletAddressRegistry.js';
+import {watchTransactionStatus} from '../WalletUtils.js';
+import {addPendingTransactionToStorage, removePendingTransactionFromStorage, getPendingTransactionFromStorage} from '../WalletToken.js';
 
 export default {
   props: {
@@ -60,6 +63,7 @@ export default {
   },
   data () {
     return {
+      refreshIndex: 1,
       latestBlockNumber: 0,
       latestDelegatedBlockNumber: 0,
       transactions: {},
@@ -68,6 +72,10 @@ export default {
   },
   computed: {
     sortedTransaction() {
+      // A trick to force update computed list
+      if (!this.refreshIndex) {
+        return {};
+      }
       // Freeze the list of keys to treat here while the transactions list
       // is changed
       const transactions = Object.assign({}, this.transactions);
@@ -101,10 +109,38 @@ export default {
     refreshNewwestTransactions() {
       this.loading = true;
       this.$emit("loading");
-      return this.refreshTransferList()
+      return this.refreshPendingTransactions()
+        .then(() => this.refreshTransferList())
         .then(() => this.refreshApprovalList())
         .then(() => this.$emit("end-loading"))
         .finally(() => this.loading = false);
+    },
+    refreshPendingTransactions() {
+      const pendingTransactions = getPendingTransactionFromStorage(this.networkId, this.account, this.contract);
+      if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
+        return Promise.resolve({});
+      }
+      return Promise.resolve(pendingTransactions)
+        .then(pendingTransactions => {
+          Object.keys(pendingTransactions).forEach(transactionHash => {
+            const transaction = pendingTransactions[transactionHash]; 
+            this.addTransactionToList(
+              transaction.from,
+              transaction.to,
+              transaction.value,
+              transaction.hash,
+              transaction.timestamp,
+              transaction.labelFrom,
+              transaction.labelTo,
+              transaction.icon,
+              transaction.pending,
+              () => {
+                this.$emit('refresh-balance');
+              });
+          });
+          this.$forceUpdate();
+          return pendingTransactions;
+        });
     },
     refreshTransferList() {
       return this.contract.getPastEvents("Transfer", {
@@ -117,15 +153,23 @@ export default {
 
             this.latestBlockNumber = Math.max(this.latestBlockNumber, event.blockNumber);
             if (event.returnValues && event.returnValues._from && event.returnValues._to) {
-              this.addTransactionToList(
-                event.returnValues._from.toLowerCase(),
-                event.returnValues._to.toLowerCase(),
-                parseFloat(event.returnValues._value),
-                event.transactionHash,
-                event.blockHash,
-                'Received from',
-                'Sent to',
-                'fa-exchange-alt');
+              const from = event.returnValues._from.toLowerCase();
+              const to = event.returnValues._to.toLowerCase();
+
+              if (to === this.account || from === this.account) {
+                window.localWeb3.eth.getBlock(event.blockNumber, false)
+                  .then(block => {
+                    this.addTransactionToList(
+                      event.returnValues._from.toLowerCase(),
+                      event.returnValues._to.toLowerCase(),
+                      parseFloat(event.returnValues._value),
+                      event.transactionHash,
+                      block.timestamp * 1000,
+                      'Received from',
+                      'Sent to',
+                      'fa-exchange-alt');
+                  });
+              }
             }
           }
         }
@@ -146,20 +190,25 @@ export default {
 
             this.latestDelegatedBlockNumber = Math.max(this.latestDelegatedBlockNumber, event.blockNumber);
             if (event.returnValues && event.returnValues._spender && event.returnValues._owner) {
-              this.addTransactionToList(
-                event.returnValues._owner.toLowerCase(),
-                event.returnValues._spender.toLowerCase(),
-                parseFloat(event.returnValues._value),
-                event.transactionHash,
-                event.blockHash,
-                'Delegated from',
-                'Delegated to',
-                'fa-users')
-                .then(transactionDetails => {
-                  if (transactionDetails && transactionDetails.isReceiver) {
-                    this.$emit('has-delegated-tokens');
-                  }
-                });
+              const from = event.returnValues._owner.toLowerCase();
+              const to = event.returnValues._spender.toLowerCase();
+              if (to === this.account || from === this.account) {
+                window.localWeb3.eth.getBlock(event.blockNumber, false)
+                  .then(block => {
+                    const transactionDetails = this.addTransactionToList(
+                      event.returnValues._owner.toLowerCase(),
+                      event.returnValues._spender.toLowerCase(),
+                      parseFloat(event.returnValues._value),
+                      event.transactionHash,
+                      block.timestamp * 1000,
+                      'Delegated from',
+                      'Delegated to',
+                      'fa-users');
+                    if (transactionDetails && transactionDetails.isReceiver) {
+                      this.$emit('has-delegated-tokens');
+                    }
+                  });
+              }
             }
           }
         }
@@ -170,57 +219,99 @@ export default {
         return true;
       });
     },
-    addTransactionToList(from, to, amount, transactionHash, blockHash, labelFrom, labelTo, icon) {
-      let transactionDetails = null;
-      if (to === this.account || from === this.account) {
-        const isReceiver = to === this.account;
-        const displayedAddress = isReceiver ? from : to;
-        const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
-        transactionDetails = {
-          hash: transactionHash,
-          titlePrefix: isReceiver ? labelFrom: labelTo,
-          displayName: contactDetails.name ? contactDetails.name : displayedAddress,
-          avatar: contactDetails.avatar,
-          name: null,
-          isReceiver: isReceiver,
-          color: isReceiver ? 'green' : 'red',
-          icon: icon,
-          amount: amount
-        };
+    addDelegateTransaction(transaction) {
+      this.addTransactionToList(
+        transaction.from,
+        transaction.to,
+        transaction.value,
+        transaction.hash,
+        Date.now(),
+        'Delegated from',
+        'Delegated to',
+        'fa-users',
+        transaction.pending,
+        () => {
+          this.$emit('refresh-balance');
+        });
+      this.$forceUpdate();
+    },
+    addSendTransaction(transaction) {
+      this.addTransactionToList(
+        transaction.from,
+        transaction.to,
+        transaction.value,
+        transaction.hash,
+        Date.now(),
+        'Received from',
+        'Sent to',
+        'fa-exchange-alt',
+        transaction.pending,
+        () => {
+          this.$emit('refresh-balance');
+        });
+      this.$forceUpdate();
+    },
+    addTransactionToList(from, to, amount, transactionHash, timestamp, labelFrom, labelTo, icon, pending, pendingTransactionSuccess) {
+      const isReceiver = to === this.account;
+      const displayedAddress = isReceiver ? from : to;
+      const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
+      const transactionDetails = {
+        hash: transactionHash,
+        titlePrefix: isReceiver ? labelFrom: labelTo,
+        displayName: contactDetails.name ? contactDetails.name : displayedAddress,
+        avatar: contactDetails.avatar,
+        name: null,
+        isReceiver: isReceiver,
+        color: isReceiver ? 'green' : 'red',
+        icon: icon,
+        date: timestamp ? new Date(timestamp) : null,
+        pending: pending,
+        amount: amount
+      };
 
-        return window.localWeb3.eth.getBlock(blockHash, false)
-          .then(block => block.timestamp)
-          .then(timestamp => {
-            transactionDetails.date = new Date(timestamp * 1000);
-            // Push transactions here in Promise to apply order after adding date
-            // (Vue will not trigger computed values when changing attribute of an object inside an array)
-            this.transactions[transactionDetails.hash] = transactionDetails;
-            if (!contactDetails || !contactDetails.name) {
-              return searchFullName(displayedAddress)
-                .then(item => {
-                  if (item && item.name && item.name.length) {
-                    transactionDetails.displayName = item.name;
-                    transactionDetails.avatar = item.avatar;
-                    transactionDetails.name = item.id;
+      // Push transactions here in Promise to apply order after adding date
+      // (Vue will not trigger computed values when changing attribute of an object inside an array)
+      this.transactions[transactionDetails.hash] = transactionDetails;
+      this.refreshIndex++;
+      if (!contactDetails || !contactDetails.name) {
+        return searchFullName(displayedAddress)
+          .then(item => {
+            if (item && item.name && item.name.length) {
+              transactionDetails.displayName = item.name;
+              transactionDetails.avatar = item.avatar;
+              transactionDetails.name = item.id;
 
-                    // Force update list
-                    this.transactions = Object.assign({}, this.transactions);
-                  }
-                  return transactionDetails;
-                });
-            } else {
               // Force update list
-              this.transactions = Object.assign({}, this.transactions);
+              this.refreshIndex++;
             }
             return transactionDetails;
-          })
-          .catch(error => {
-            console.debug("Web3 eth.getBlock method - error", error);
-            this.$emit("error", `Error listing Transfer transactions of contract: ${error}`);
-            return transactionDetails;
           });
+      } else {
+        // Force update list
+        this.refreshIndex++;
       }
-      return Promise.resolve(null);
+      if (pending) {
+        addPendingTransactionToStorage(this.networkId, this.account, this.contract, {
+          from: from,
+          to: to,
+          value: amount,
+          hash: transactionHash,
+          timestamp: timestamp,
+          labelFrom: labelFrom,
+          labelTo: labelTo,
+          icon: icon,
+          pending: pending
+        });
+
+        watchTransactionStatus(transactionHash, (receipt, block) => {
+          this.addTransactionToList(from, to, amount, transactionHash, block.timestamp * 1000, labelFrom, labelTo, icon, false);
+          removePendingTransactionFromStorage(this.networkId, this.account, this.contract, transactionHash);
+          if (pendingTransactionSuccess) {
+            pendingTransactionSuccess();
+          }
+        });
+      }
+      return transactionDetails;
     }
   }
 };

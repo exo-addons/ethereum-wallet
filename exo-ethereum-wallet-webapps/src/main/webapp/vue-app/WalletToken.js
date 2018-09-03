@@ -320,3 +320,43 @@ function saveContractDeploymentTransactionHash(networkId, tokenName, tokenSymbol
     localStorage.setItem(STORAGE_KEY, JSON.stringify(storageValue));
   }
 }
+
+export function addPendingTransactionToStorage(networkId, account, contract, transaction) {
+  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contract}`;
+  let storageValue = localStorage.getItem(STORAGE_KEY);
+  if (storageValue === null) {
+    storageValue = {};
+  } else {
+    storageValue = JSON.parse(storageValue);
+  }
+
+  if (!storageValue[transaction.hash]) {
+    storageValue[transaction.hash] = transaction;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageValue));
+  }
+}
+
+export function removePendingTransactionFromStorage(networkId, account, contract, transactionHash) {
+  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contract}`;
+  let storageValue = localStorage.getItem(STORAGE_KEY);
+  if (storageValue === null) {
+    return;
+  } else {
+    storageValue = JSON.parse(storageValue);
+  }
+
+  if (storageValue[transactionHash]) {
+    delete storageValue[transactionHash];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageValue));
+  }
+}
+
+export function getPendingTransactionFromStorage(networkId, account, contract) {
+  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contract}`;
+  let storageValue = localStorage.getItem(STORAGE_KEY);
+  if (storageValue === null) {
+    return {};
+  } else {
+    return JSON.parse(storageValue);
+  }
+}

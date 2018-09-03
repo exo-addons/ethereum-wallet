@@ -37,30 +37,24 @@
         :ether-balance="contractDetail.etherBalance"
         :account="account"
         :contract="contractDetail.contract"
-        @loaded="loaded"
-        @loading="loading = true"
-        @error="loading = false; error = $event"
-        @end-loading="loading = false" />
+        @sent="newTransactionPending($event)"
+        @error="loading = false; error = $event" />
       <delegate-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
         :balance="contractDetail.balance"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
-        @loaded="loaded"
-        @loading="loading = true"
-        @error="loading = false; error = $event"
-        @end-loading="loading = false" />
+        @sent="newTransactionPending($event)"
+        @error="loading = false; error = $event" />
       <send-delegated-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="!hasDelegatedTokens || contractDetail.balance === 0 || contractDetail.etherBalance === 0"
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
         :has-delegated-tokens="hasDelegatedTokens"
-        @loaded="loaded"
-        @loading="loading = true"
-        @error="loading = false; error = $event"
-        @end-loading="loading = false" />
+        @sent="newTransactionPending($event)"
+        @error="loading = false; error = $event" />
 
       <!-- Ether account actions -->
       <send-ether-modal
@@ -68,19 +62,36 @@
         :account="account"
         :balance="contractDetail.balance"
         @sent="newTransactionPending($event)"
-        @loaded="loaded"
-        @error="loading = false; error = $event"
-        @end-loading="loading = false" />
+        @error="loading = false; error = $event" />
     </div>
 
     <div v-if="error && !loading" class="alert alert-error">
       <i class="uiIconError"></i>{{ error }}
     </div>
 
-    <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
+    <v-progress-circular v-show="loading" indeterminate color="primary" />
 
-    <token-transactions v-if="contractDetail.isContract" id="contractTransactionsContent" ref="contractTransactions" :network-id="networkId" :account="account" :contract="contractDetail.contract" @has-delegated-tokens="hasDelegatedTokens = true" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" @refresh-balance="refreshBalance" />
-    <general-transactions v-else id="generalTransactionsContent" ref="generalTransactions" :network-id="networkId" :account="account" @loading="loading = true" @end-loading="loading = false" @error="loading = false; error = $event" @refresh-balance="refreshBalance" />
+    <token-transactions
+      v-if="contractDetail.isContract"
+      id="contractTransactionsContent"
+      ref="contractTransactions"
+      :network-id="networkId"
+      :account="account"
+      :contract="contractDetail.contract"
+      @has-delegated-tokens="hasDelegatedTokens = true"
+      @loading="loading = true"
+      @end-loading="loading = false"
+      @error="loading = false; error = $event"
+      @refresh-balance="refreshBalance" />
+    <general-transactions
+      v-else id="generalTransactionsContent"
+      ref="generalTransactions"
+      :network-id="networkId"
+      :account="account"
+      @loading="loading = true"
+      @end-loading="loading = false"
+      @error="loading = false; error = $event"
+      @refresh-balance="refreshBalance" />
   </v-flex>
 </template>
 
@@ -156,41 +167,6 @@ export default {
     }
   },
   methods: {
-    loaded() {
-      if (this.loading && !this.refreshing) {
-        // Refresh Ether balance and tranactions
-        // And avoid parallel refresh with refreshing = true
-        this.refreshing = true;
-        const account = window.localWeb3.eth.defaultAccount;
-        return window.localWeb3.eth.getBalance(account)
-          .then(balance => {
-            balance = window.localWeb3.utils.fromWei(balance, "ether");
-            if(!this.loading) {
-              return false;
-            } else if(this.isEtherBalanceSame(balance)) {
-              return true;
-            } else {
-              return this.refreshList(balance)
-                .then(false); // Stop loading
-            }
-          })
-          .then(continueLoading => {
-            if (!continueLoading) {
-              this.loading = false;
-              this.$forceUpdate();
-            }
-            return this.loading;
-          })
-          .catch(e => {
-            console.debug("Web3.eth.getBalance method - error", e);
-            // Stop loading on error
-            this.loading = false;
-            this.error = `${e}`;
-          })
-          // Permit to refresh again once the above conditions finished
-          .finally(() => this.refreshing = false);
-      }
-    },
     refreshBalance() {
       return window.localWeb3.eth.getBalance(this.account)
         .then(balance => {
@@ -208,19 +184,6 @@ export default {
           }
         });
     },
-    refreshList(balance) {
-      console.debug("Account details - refreshList after balance modified");
-      if (this.contractDetail.isContract) {
-        this.contractDetail.etherBalance = balance;
-        // Refresh Contract balance and tranactions
-        return retrieveContractDetails(this.account, this.contractDetail)
-          .then(() => this.$refs.contractTransactions.refreshNewwestTransactions());
-      } else {
-        this.contractDetail.balanceUSD = etherToUSD(balance);
-        this.contractDetail.balance = balance;
-        return this.$refs.generalTransactions.refreshNewwestTransactions();
-      }
-    },
     isEtherBalanceSame(balance) {
       return this.contractDetail.isContract ?
         this.contractDetail.etherBalance === balance :
@@ -228,7 +191,13 @@ export default {
     },
     newTransactionPending(transaction) {
       if (this.contractDetail.isContract) {
-        this.$refs.contractTransactions.addTransaction(transaction);
+        if (transaction.type === 'sendToken') {
+          this.$refs.contractTransactions.addSendTransaction(transaction);
+        } else if (transaction.type === 'delegateToken') {
+          this.$refs.contractTransactions.addDelegateTransaction(transaction);
+        } else {
+          throw new Error("Transaction type is not recognized", transaction);
+        }
       } else {
         this.$refs.generalTransactions.addTransaction(transaction);
       }

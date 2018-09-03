@@ -131,14 +131,6 @@ export default {
             });
             this.dialog = false;
           })
-          .on('confirmation', (confirmationNumber, receipt) => {
-            if (this.loading) {
-              this.dialog = false;
-              this.loading = false;
-            }
-            // The transaction has been mined and confirmed
-            this.$emit("loaded");
-          })
           .on('error', (error, receipt) => {
             // The transaction has failed
             this.error = `Error sending ether: ${error}`;

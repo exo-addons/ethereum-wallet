@@ -131,16 +131,23 @@ export default {
             if (result > window.walletSettings.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
-            this.$emit("loading");
             return this.contract.methods.transfer(this.recipient, this.amount.toString()).send({from: this.account})
-              .on('confirmation', (confirmationNumber, receipt) => {
-                // console.debug("send transaction transfer - confirmation", confirmationNumber, receipt);
-                if (this.loading) {
-                  this.dialog = false;
-                  this.loading = false;
-                }
-                // The transaction has been mined and confirmed
-                this.$emit("loaded");
+              .on('transactionHash', hash => {
+                const gas = window.walletSettings.userDefaultGas ? window.walletSettings.userDefaultGas : 35000;
+
+                // The transaction has been hashed and will be sent
+                this.$emit("sent", {
+                  hash: hash,
+                  from: this.account,
+                  to: this.recipient,
+                  value : this.amount,
+                  gas: gas,
+                  gasPrice: window.walletSettings.gasPrice,
+                  pending: true,
+                  type: 'sendToken',
+                  timestamp: Date.now()
+                });
+                this.dialog = false;
               })
               .on('error', (error, receipt) => {
                 // The transaction has failed
@@ -153,13 +160,11 @@ export default {
             console.debug("Web3 contract.transfer method - error", e);
             this.error = `Error while proceeding: ${e}`;
             this.loading = false;
-            this.$emit("end-loading");
           });
       } catch(e) {
         console.debug("Web3 contract.transfer method - error", e);
         this.loading = false;
         this.error = `Error while proceeding: ${e}`;
-        this.$emit("end-loading");
       }
     }
   }
