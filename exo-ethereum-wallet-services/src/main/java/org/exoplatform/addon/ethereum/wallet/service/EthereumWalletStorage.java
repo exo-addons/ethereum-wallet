@@ -65,6 +65,8 @@ public class EthereumWalletStorage {
 
   public static final String  ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
+  public static final String  LAST_BLOCK_NUMBER_KEY_NAME    = "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
+
   public static final String  SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
 
   public static final Context WALLET_CONTEXT                = Context.GLOBAL;
@@ -529,6 +531,35 @@ public class EthereumWalletStorage {
     }
   }
 
+  /**
+   * Returns last watched block
+   * 
+   * @param networkId
+   * @return
+   */
+  public long getLastWatchedBlockNumber(long networkId) {
+    SettingValue<?> lastBlockNumberValue =
+                                         settingService.get(WALLET_CONTEXT, WALLET_SCOPE, LAST_BLOCK_NUMBER_KEY_NAME + networkId);
+    if (lastBlockNumberValue != null && lastBlockNumberValue.getValue() != null) {
+      return Long.valueOf(lastBlockNumberValue.getValue().toString());
+    }
+    return 0;
+  }
+
+  /**
+   * Save last watched block
+   * 
+   * @param networkId
+   * @param lastWatchedBlockNumber
+   */
+  public void saveLastWatchedBlockNumber(long networkId, long lastWatchedBlockNumber) {
+    LOG.debug("Save watched block number {} on network {}", lastWatchedBlockNumber, networkId);
+    settingService.set(WALLET_CONTEXT,
+                       WALLET_SCOPE,
+                       LAST_BLOCK_NUMBER_KEY_NAME + networkId,
+                       SettingValue.create(lastWatchedBlockNumber));
+  }
+
   private Space getSpace(String id) {
     Space space = spaceService.getSpaceByPrettyName(id);
     if (space == null) {
@@ -542,4 +573,5 @@ public class EthereumWalletStorage {
     }
     return space;
   }
+
 }
