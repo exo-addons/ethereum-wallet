@@ -5,7 +5,7 @@
         <v-list-tile :key="item.hash" avatar>
           <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
           <v-list-tile-avatar v-else>
-            <v-icon :class="item.color" dark>{{ item.icon }}</v-icon>
+            <v-icon :color="item.color ? item.color: 'black'">{{ item.icon }}</v-icon>
           </v-list-tile-avatar>
           <v-list-tile-content>
             <v-list-tile-title>
