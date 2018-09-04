@@ -203,6 +203,8 @@ export function getToBlock(fromBlock, toBlock, maxBlocks) {
   if (toBlock != null) {
     return Promise.resolve(toBlock);
   } else {
+    let lastReturnedBlock = 0;
+
     return window.localWeb3.eth.getBlockNumber()
       .then(lastBlock => {
         const toBlockTmp = fromBlock + maxBlocks;
@@ -212,6 +214,19 @@ export function getToBlock(fromBlock, toBlock, maxBlocks) {
           toBlock = lastBlock;
         }
         return toBlock;
+      })
+      .then(toBlock => {
+        lastReturnedBlock = toBlock;
+        return window.localWeb3.eth.getBlock(lastReturnedBlock, false);
+      })
+      .then(block => {
+        if (block) {
+          return lastReturnedBlock;
+        } else {
+          console.debug("Error getting last block, the block before will be used", lastReturnedBlock);
+          // Sometimes returned last block isn't yet readable, so return the block before
+          return lastReturnedBlock - 1;
+        }
       });
   }
 }
