@@ -171,7 +171,7 @@ public class EthereumWalletStorage {
    * @return
    */
   public GlobalSettings getSettings(Long networkId, String username) {
-    if (username != null && storedSettings != null) {
+    if (username != null && storedSettings != null && networkId == storedSettings.getDefaultNetworkId()) {
       // Retrieve stored global settings from memory
       return storedSettings;
     }
