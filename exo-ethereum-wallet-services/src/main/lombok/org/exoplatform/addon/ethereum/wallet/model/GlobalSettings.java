@@ -83,6 +83,10 @@ public class GlobalSettings implements Serializable {
       globalSettings.setProviderURL(storedProviderURL == null || storedProviderURL.isEmpty() ? defaultSettings.getProviderURL()
                                                                                              : storedProviderURL);
 
+      String storedWebsocketProviderURL = jsonObject.getString("websocketProviderURL");
+      globalSettings.setWebsocketProviderURL(storedWebsocketProviderURL == null
+          || storedWebsocketProviderURL.isEmpty() ? defaultSettings.getProviderURL() : storedWebsocketProviderURL);
+
       int storedDefaultBlocksToRetrieve = jsonObject.getInt("defaultBlocksToRetrieve");
       globalSettings.setDefaultBlocksToRetrieve(storedDefaultBlocksToRetrieve == 0 ? defaultSettings.getDefaultBlocksToRetrieve()
                                                                                    : storedDefaultBlocksToRetrieve);

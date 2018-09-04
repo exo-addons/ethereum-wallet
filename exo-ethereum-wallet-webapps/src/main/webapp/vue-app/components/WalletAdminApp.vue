@@ -99,11 +99,10 @@
                 :step="100"
                 type="number"
                 required />
-
-              <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
-                Save
-              </button>
             </v-form>
+            <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
+              Save
+            </button>
           </v-card>
           <v-card>
             <v-divider />

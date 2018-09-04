@@ -19,6 +19,7 @@ package org.exoplatform.addon.ethereum.wallet.listener;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
@@ -34,6 +35,10 @@ public class EthereumLastWatchedBlockListener extends Listener<Transaction, Tran
 
   private ExoContainer          container;
 
+  private long                  lastSavedBlockNumber = 0;
+
+  private long                  networkId            = 0;
+
   public EthereumLastWatchedBlockListener(ExoContainer container, EthereumWalletStorage ethereumWalletStorage) {
     this.ethereumWalletStorage = ethereumWalletStorage;
     this.container = container;
@@ -42,14 +47,23 @@ public class EthereumLastWatchedBlockListener extends Listener<Transaction, Tran
   @Override
   public void onEvent(Event<Transaction, TransactionReceipt> event) throws Exception {
     Transaction transaction = event.getSource();
-    if (transaction == null) {
+    if (transaction == null || transaction.getChainId() == null || transaction.getBlockNumber() == null) {
       return;
     }
     RequestLifeCycle.begin(this.container);
     try {
       long blockNumber = transaction.getBlockNumber().longValue();
-      long networkId = transaction.getChainId().longValue();
-      this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);
+      long networkId = 0;
+      if (transaction.getChainId() == null) {
+        GlobalSettings globalSettings = ethereumWalletStorage.getSettings(null, null);
+        networkId = globalSettings.getDefaultNetworkId();
+      } else {
+        networkId = transaction.getChainId().longValue();
+      }
+      if (networkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
+        this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);
+        this.lastSavedBlockNumber = blockNumber;
+      }
     } finally {
       RequestLifeCycle.end();
     }
