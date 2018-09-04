@@ -52,6 +52,9 @@
           <span>No transactions</span>
         </v-chip>
       </v-flex>
+      <div class="">
+        <a v-if="!loading && finishedLoading" href="#" @click="loadMore">Load more</a>
+      </div>
     </v-card>
   </v-flex>
 </template>
@@ -157,6 +160,25 @@ export default {
           this.$emit("error", `${e}`);
         });
     },
+    loadMore() {
+      this.loadedBlocks = 0;
+      this.finishedLoading = false;
+      return loadTransactions(this.networkId, this.account, this.transactions, null, this.oldestBlockNumber, this.maxBlocksToLoad, (loadedBlocks) => {
+        this.loadedBlocks = loadedBlocks;
+        this.forceUpdateList();
+      })
+        .then(loadedBlocksDetails => {
+          this.finishedLoading = true;
+          this.forceUpdateList();
+          this.newestBlockNumber = loadedBlocksDetails.toBlock;
+          this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
+        })
+        .catch(e => {
+          this.finishedLoading = true;
+          console.debug("loadTransactions - method error", e);
+          this.$emit("error", `${e}`);
+        });
+    },
     addTransaction(transaction) {
       this.transactions = addTransaction(this.networkId,
         this.account,
@@ -165,7 +187,6 @@ export default {
         null,
         null,
         () => {
-          console.log("refresh-balance transaction emitted successfully", this.transactions);
           this.$emit("refresh-balance");
           this.forceUpdateList();
         },
