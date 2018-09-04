@@ -1,6 +1,42 @@
 import {searchFullName, getContractFromStorage, getContactFromStorage} from './WalletAddressRegistry.js';
 import {etherToUSD, watchTransactionStatus} from './WalletUtils.js';
 
+export function loadStoredTransactions(networkId, account, transactions, refreshCallback) {
+  return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
+    .then(resp =>  {
+      if (resp && resp.ok) {
+        return resp.json();
+      } else {
+        return null;
+      }
+    })
+    .then(transactionHashes => {
+      if (transactionHashes && transactionHashes.length) {
+        transactionHashes.forEach(transactionHash => {
+          if (!transactionHash || !transactionHash.length) {
+            return;
+          }
+          let transaction,receipt;
+          window.localWeb3.eth.getTransaction(transactionHash)
+            .then(transactionTmp => {
+              transaction = transactionTmp;
+              return window.localWeb3.eth.getTransactionReceipt(transactionHash);
+            })
+            .then(receiptTmp => {
+              receipt = receiptTmp;
+              return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
+            })
+            .then(block => {
+              addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000);
+              if (refreshCallback) {
+                refreshCallback();
+              }
+            });
+        });
+      }
+    });
+}
+
 export function loadPendingTransactions(networkId, account, transactions, refreshCallback) {
   const pendingTransactions = getPendingTransactionFromStorage(networkId, account);
   if (!pendingTransactions || !Object.keys(pendingTransactions).length) {

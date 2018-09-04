@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import {loadPendingTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
+import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
 
 export default {
   props: {
@@ -142,10 +142,13 @@ export default {
       this.loadedBlocks = 0;
 
       // Get transactions to latest block with maxBlocks to load
-      return loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
-        this.$emit("refresh-balance");
+      return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
         this.forceUpdateList();
       })
+        .then(() => loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
+          this.$emit("refresh-balance");
+          this.forceUpdateList();
+        }))
         .then(() => loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
           this.loadedBlocks = loadedBlocks;
           this.forceUpdateList();

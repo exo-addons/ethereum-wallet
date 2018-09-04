@@ -18,12 +18,15 @@ package org.exoplatform.addon.ethereum.wallet.rest;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
 
+import java.util.List;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONArray;
 
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.UserPreferences;
@@ -96,7 +99,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAccountByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
-      LOG.warn("Bad request sent to server with empty address", address);
+      LOG.warn("Bad request sent to server with empty address {}", address);
       return Response.status(400).build();
     }
 
@@ -155,4 +158,29 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     return Response.ok().build();
   }
 
+  /**
+   * Get list of transactions of an address
+   * 
+   * @param networkId
+   * @param address
+   * @return
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("getTransactions")
+  public Response getTransactions(@QueryParam("networkId") long networkId, @QueryParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Bad request sent to server with empty address {}", address);
+      return Response.status(400).build();
+    }
+    if (networkId == 0) {
+      LOG.warn("Bad request sent to server with empty networkId {}", networkId);
+      return Response.status(400).build();
+    }
+
+    List<String> userTransactions = ethereumWalletStorage.getUserTransactions(networkId, address);
+    JSONArray array = new JSONArray(userTransactions);
+
+    return Response.ok(array.toString()).build();
+  }
 }

@@ -75,6 +75,8 @@ public class EthereumWalletStorage {
 
   public static final String  WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
 
+  public static final String  WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
+
   private SettingService      settingService;
 
   private IdentityManager     identityManager;
@@ -574,4 +576,49 @@ public class EthereumWalletStorage {
     return space;
   }
 
+  /**
+   * Save transaction hash for an account
+   * 
+   * @param networkId
+   * @param address
+   * @param hash
+   */
+  public void saveUserTransaction(Long networkId, String address, String hash) {
+    if (StringUtils.isBlank(address)) {
+      throw new IllegalArgumentException("address parameter is mandatory");
+    }
+    if (StringUtils.isBlank(hash)) {
+      throw new IllegalArgumentException("transaction hash parameter is mandatory");
+    }
+
+    String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
+
+    SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
+    String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
+    if (!addressTransactions.contains(hash)) {
+      String[] addressTransactionsArray = addressTransactions.split(",");
+      if (addressTransactionsArray.length >= 20) {
+        addressTransactionsArray[addressTransactionsArray.length - 1] = hash;
+        addressTransactions = StringUtils.join(addressTransactionsArray, ",");
+      } else {
+        addressTransactions = addressTransactions.isEmpty() ? hash : addressTransactions + "," + hash;
+      }
+      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName, SettingValue.create(addressTransactions));
+    }
+  }
+
+  /**
+   * Get list of transaction hashes per user
+   * 
+   * @param networkId
+   * @param address
+   * @return
+   */
+  public List<String> getUserTransactions(Long networkId, String address) {
+    String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
+    SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
+    String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
+    String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
+    return Arrays.asList(addressTransactionsArray);
+  }
 }
