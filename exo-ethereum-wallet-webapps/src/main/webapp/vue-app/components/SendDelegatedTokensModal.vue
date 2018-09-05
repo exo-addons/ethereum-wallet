@@ -1,6 +1,9 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="340px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">Send delegated Tokens</button>
+    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="mt-1 mb-1" fab dark small title="Send delegated tokens" color="primary" icon>
+      <v-avatar size="20">DT</v-avatar>
+    </v-btn>
+    <button v-else slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">Send delegated Tokens</button>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_from', '_to', '_value']"
                    :args-types="['address', 'address', 'uint256']"
@@ -51,6 +54,12 @@ export default {
       type: Object,
       default: function() {
         return {};
+      }
+    },
+    icon: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     },
     hasDelegatedTokens: {

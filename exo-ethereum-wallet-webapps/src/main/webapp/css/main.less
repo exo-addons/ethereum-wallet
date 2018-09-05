@@ -102,6 +102,16 @@
     max-width: 100%;
     word-break: break-word;
   }
+
+  .v-speed-dial {
+    i {
+      height: auto !important;
+    }
+    .v-btn--floating {
+      width: 28px;
+      height: 28px;
+    }
+  }
 }
 
 #WalletAdminApp {
@@ -113,6 +123,9 @@
 }
 
 #WalletApp, #WalletSpaceApp {
+  .accountItem {
+    cursor: pointer;
+  }
   &.minimized {
     padding: 10px;
 
@@ -126,6 +139,17 @@
   #WalletApp, #WalletSpaceApp {
     &.minimized {
       max-width: 250px;
+
+      .accountItem {
+        .v-speed-dial {
+          display: none;
+        }
+      }
+      .accountItem:hover {
+        .v-speed-dial {
+          display: block;
+        }
+      }
     }
   }
 }

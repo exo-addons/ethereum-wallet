@@ -116,7 +116,7 @@ export default {
         .finally(() => this.loading = false);
     },
     refreshPendingTransactions() {
-      const pendingTransactions = getPendingTransactionFromStorage(this.networkId, this.account, this.contract);
+      const pendingTransactions = getPendingTransactionFromStorage(this.networkId, this.account, this.contract._address.toLowerCase());
       if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
         return Promise.resolve({});
       }
@@ -164,7 +164,7 @@ export default {
                       event.returnValues._to.toLowerCase(),
                       parseFloat(event.returnValues._value),
                       event.transactionHash,
-                      block.timestamp * 1000,
+                      block ? block.timestamp * 1000 : null,
                       'Received from',
                       'Sent to',
                       'fa-exchange-alt');
@@ -200,7 +200,7 @@ export default {
                       event.returnValues._spender.toLowerCase(),
                       parseFloat(event.returnValues._value),
                       event.transactionHash,
-                      block.timestamp * 1000,
+                      block ? block.timestamp * 1000 : null,
                       'Delegated from',
                       'Delegated to',
                       'fa-users');
