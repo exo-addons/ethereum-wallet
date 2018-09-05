@@ -55,7 +55,7 @@
                   <v-list-tile-title v-else>{{ item.title }}</v-list-tile-title>
 
                   <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
-                  <v-list-tile-sub-title v-else>{{ item.balance }} {{ item.symbol }} {{ item.balanceUSD ? `(${item.balanceUSD} \$)`:'' }}</v-list-tile-sub-title>
+                  <v-list-tile-sub-title v-else>{{ item.balanceFiat ? `${item.balanceFiat} ${fiatSymbol}`: `${item.balance} ${item.symbol}` }}</v-list-tile-sub-title>
                 </v-list-tile-content>
                 <v-list-tile-action v-if="!isSpace && item.isContract && !item.isDefault">
                   <v-btn icon ripple @click="deleteContract(item, $event)">
@@ -89,7 +89,7 @@ import UserSettingsModal from './UserSettingsModal.vue';
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
 import {searchAddress, searchUserOrSpaceObject, searchFullName, saveNewAddress} from '../WalletAddressRegistry.js';
-import {retrieveUSDExchangeRate, etherToUSD, initWeb3, initSettings, computeNetwork, computeBalance} from '../WalletUtils.js';
+import {etherToFiat, initWeb3, initSettings, computeNetwork, computeBalance} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -131,6 +131,7 @@ export default {
       account: null,
       lastCheckedAccount: null,
       selectedAccount: null,
+      fiatSymbol: '$',
       contracts: [],
       accountsDetails: {},
       errorMessage: null
@@ -269,12 +270,6 @@ export default {
           if (error) {
             throw error;
           }
-          return retrieveUSDExchangeRate();
-        })
-        .then((result, error) => {
-          if (error) {
-            throw error;
-          }
           return this.refreshList(result);
         })
         .then((result, error) => {
@@ -287,6 +282,9 @@ export default {
           if (error) {
             throw error;
           }
+
+          this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
+
           if (!this.isSpace && this.metamaskEnabled && this.metamaskConnected) {
             const thiss = this;
             // In case account switched in Metamask
@@ -495,7 +493,7 @@ export default {
             isContract : false,
             address : this.account,
             balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
-            balanceUSD : balanceDetails && balanceDetails.balanceUSD ? balanceDetails.balanceUSD : 0
+            balanceFiat : balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0
           };
           return this.accountsDetails[this.account] = accountDetails;
         })

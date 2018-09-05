@@ -32,10 +32,10 @@
               <v-list-tile-sub-title>
                 <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
                 <span>{{ item.amount }} ether</span>
-                <span v-if="item.amountUSD"> / {{ item.amountUSD }} $</span>
+                <span v-if="item.amountFiat"> / {{ item.amountFiat }} {{ fiatSymbol }}</span>
                 <span v-if="item.fee">
                   ( Fee: {{ item.fee }} ether
-                  <span v-if="item.feeUSD">/ {{ item.feeUSD }} $</span>
+                  <span v-if="item.feeFiat">/ {{ item.feeFiat }} {{ fiatSymbol }}</span>
                   )
                 </span>
               </v-list-tile-sub-title>
@@ -82,6 +82,7 @@ export default {
       // A trick to force update computed list
       // since the attribute this.atransactions is modified outside the component
       refreshIndex: 1,
+      fiatSymbol: '$',
       newestBlockNumber: 0,
       oldestBlockNumber: 0,
       finishedLoading: false,
@@ -141,11 +142,14 @@ export default {
       this.transactions = {};
       this.loadedBlocks = 0;
 
+      this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
+
       // Get transactions to latest block with maxBlocks to load
       return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
         this.forceUpdateList();
       })
         .then(() => loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
+          this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
           this.$emit("refresh-balance");
           this.forceUpdateList();
         }))

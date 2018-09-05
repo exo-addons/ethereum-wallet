@@ -29,6 +29,8 @@ public class GlobalSettings implements Serializable {
 
   private Integer                userDefaultGas;
 
+  private String                 currency;
+
   /**
    * Managed in other storage location
    */
@@ -48,6 +50,12 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
+      if (userDefaultGas != null) {
+        jsonObject.put("userDefaultGas", userDefaultGas);
+      }
+      if (currency != null) {
+        jsonObject.put("currency", currency);
+      }
       jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
@@ -75,27 +83,29 @@ public class GlobalSettings implements Serializable {
       JSONObject jsonObject = new JSONObject(jsonString);
       GlobalSettings globalSettings = new GlobalSettings();
 
-      String storedAccessPermission = jsonObject.getString("accessPermission");
+      String storedAccessPermission = jsonObject.has("accessPermission") ? jsonObject.getString("accessPermission") : null;
       globalSettings.setAccessPermission(storedAccessPermission == null
           || storedAccessPermission.isEmpty() ? defaultSettings.getAccessPermission() : storedAccessPermission);
 
-      String storedProviderURL = jsonObject.getString("providerURL");
+      String storedProviderURL = jsonObject.has("providerURL") ? jsonObject.getString("providerURL") : null;
       globalSettings.setProviderURL(storedProviderURL == null || storedProviderURL.isEmpty() ? defaultSettings.getProviderURL()
                                                                                              : storedProviderURL);
 
-      String storedWebsocketProviderURL = jsonObject.getString("websocketProviderURL");
+      String storedWebsocketProviderURL = jsonObject.has("websocketProviderURL") ? jsonObject.getString("websocketProviderURL")
+                                                                                 : null;
       globalSettings.setWebsocketProviderURL(storedWebsocketProviderURL == null
           || storedWebsocketProviderURL.isEmpty() ? defaultSettings.getProviderURL() : storedWebsocketProviderURL);
 
-      int storedDefaultBlocksToRetrieve = jsonObject.getInt("defaultBlocksToRetrieve");
+      int storedDefaultBlocksToRetrieve = jsonObject.has("defaultBlocksToRetrieve") ? jsonObject.getInt("defaultBlocksToRetrieve")
+                                                                                    : 0;
       globalSettings.setDefaultBlocksToRetrieve(storedDefaultBlocksToRetrieve == 0 ? defaultSettings.getDefaultBlocksToRetrieve()
                                                                                    : storedDefaultBlocksToRetrieve);
 
-      long storedDefaultNetworkId = jsonObject.getLong("defaultNetworkId");
+      long storedDefaultNetworkId = jsonObject.has("defaultNetworkId") ? jsonObject.getLong("defaultNetworkId") : 0;
       globalSettings.setDefaultNetworkId(storedDefaultNetworkId == 0L ? defaultSettings.getDefaultBlocksToRetrieve()
                                                                       : storedDefaultNetworkId);
 
-      int storedDefaultGas = jsonObject.getInt("defaultGas");
+      int storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getInt("defaultGas") : 0;
       globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
 
       return globalSettings;

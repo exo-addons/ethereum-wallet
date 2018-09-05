@@ -16,9 +16,12 @@
           <v-spacer />
           <v-list class="transparent">
             <v-list-tile>
-              <v-list-tile-content class="text-xs-center">
+              <v-list-tile-content v-if="contractDetail.balanceFiat" class="text-xs-center">
+                <v-list-tile-title class="text-xs-center">{{ contractDetail.balanceFiat }} {{ fiatSymbol }}</v-list-tile-title>
                 <v-list-tile-sub-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-sub-title>
-                <v-list-tile-sub-title v-if="contractDetail.balanceUSD">{{ contractDetail.balanceUSD }} $</v-list-tile-sub-title>
+              </v-list-tile-content>
+              <v-list-tile-content v-else class="text-xs-center">
+                <v-list-tile-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-title>
               </v-list-tile-content>
             </v-list-tile>
           </v-list>
@@ -106,7 +109,7 @@ import SendEtherModal from './SendEtherModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {retrieveContractDetails} from '../WalletToken.js';
-import {etherToUSD} from '../WalletUtils.js';
+import {etherToFiat} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -149,13 +152,14 @@ export default {
       loading: false,
       // Avoid refreshing list and balance twice
       refreshing: false,
+      fiatSymbol: '$',
       error: null,
       hasDelegatedTokens: false
     };
   },
   watch: {
     account() {
-      this.$emit('back');
+      this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
     },
     contractDetail() {
       this.error = null;
@@ -179,7 +183,7 @@ export default {
               });
           } else {
             this.contractDetail.balance = balance;
-            this.contractDetail.balanceUSD = etherToUSD(balance);
+            this.contractDetail.balanceFiat = etherToFiat(balance);
             this.$forceUpdate();
           }
         });

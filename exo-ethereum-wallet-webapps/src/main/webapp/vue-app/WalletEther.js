@@ -1,5 +1,5 @@
 import {searchFullName, getContractFromStorage, getContactFromStorage} from './WalletAddressRegistry.js';
-import {etherToUSD, watchTransactionStatus} from './WalletUtils.js';
+import {etherToFiat, watchTransactionStatus} from './WalletUtils.js';
 
 export function loadStoredTransactions(networkId, account, transactions, refreshCallback) {
   return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
@@ -76,14 +76,13 @@ export function addTransaction(networkId, account, transactions, transaction, re
   // Calculate Transaction fees
   const transactionFeeInWei = gasUsed * transaction.gasPrice;
   const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
-  const transactionFeeInUSD = etherToUSD(transactionFeeInEth);
+  const transactionFeeInFiat = etherToFiat(transactionFeeInEth);
 
   const isReceiver = transaction.to && transaction.to.toLowerCase() === account.toLowerCase();
 
   // Calculate sent/received amount
   const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
-  const amountUSD = etherToUSD(amount);
-
+  const amountFiat = etherToFiat(amount);
   const isFeeTransaction = parseFloat(amount) === 0;
 
   let displayAddress = isReceiver ? transaction.from : transaction.to;
@@ -110,12 +109,12 @@ export function addTransaction(networkId, account, transactions, transaction, re
     color: isReceiver ? 'green' : 'red',
     icon: isFeeTransaction ? 'fa-undo' : 'fa-exchange-alt',
     amount: amount,
-    amountUSD: amountUSD,
+    amountFiat: amountFiat,
     gas: transaction.gas,
     gasUsed: gasUsed,
     gasPrice: transaction.gasPrice,
     fee: transactionFeeInEth,
-    feeUSD: transactionFeeInUSD,
+    feeFiat: transactionFeeInFiat,
     isContractCreation: contractAddress,
     date: timestamp ? new Date(timestamp) : transaction.timestamp,
     pending: transaction.pending

@@ -10,23 +10,50 @@
           <i class="uiIconError"></i>{{ error }}
         </div>
         <v-flex>
-          <span>Default gas to spend on transactions (Maximum fee per transaction)</span>
-          <v-slider v-model="defaultGas"
-                    :label="`${defaultGas}${defaulGasPriceUsd ? ' (' + defaulGasPriceUsd + ' $)' : ''}`"
-                    :max="90000"
-                    :min="21000"
-                    :step="1000"
-                    type="number" />
-
-          <qr-code ref="qrCode"
-                   :to="account"
-                   :build="true"
-                   title="Address QR Code"
-                   information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
-
-          <div class="text-xs-center">
-            Wallet address: <code>{{ account }}</code>
-          </div>
+          <v-expansion-panel>
+            <v-expansion-panel-content>
+              <div slot="header">Settings</div>
+              <v-card>
+                <v-card-text>
+                  <span>Currency</span>
+                  <v-combobox
+                    v-model="selectedCurrency"
+                    :items="currencies"
+                    label="Select fiat currency used to display ether amounts conversion" />
+                </v-card-text>
+              </v-card>
+            </v-expansion-panel-content>
+            <v-expansion-panel-content>
+              <div slot="header">Advanced settings</div>
+              <v-card>
+                <v-card-text>
+                  <span>Gas limit to spend on transactions (Maximum fee per transaction)</span>
+                  <v-slider v-model="defaultGas"
+                            :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
+                            :max="90000"
+                            :min="21000"
+                            :step="1000"
+                            type="number" />
+                </v-card-text>
+              </v-card>
+            </v-expansion-panel-content>
+            <v-expansion-panel-content>
+              <div slot="header">Wallet details</div>
+              <v-card>
+                <v-card-text>
+                  <qr-code ref="qrCode"
+                           :to="account"
+                           :build="true"
+                           title="Address QR Code"
+                           information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
+        
+                  <div class="text-xs-center">
+                    Wallet address: <code>{{ account }}</code>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
         </v-flex>
       </v-card-text>
       <v-card-actions>
@@ -40,7 +67,8 @@
 <script>
 import QrCode from './QRCode.vue';
 
-import {gasToUSD} from '../WalletUtils.js';
+import {gasToFiat} from '../WalletUtils.js';
+import {FIAT_CURRENCIES} from '../WalletConstants.js';
 
 export default {
   components: {
@@ -71,17 +99,24 @@ export default {
       loading: false,
       show: false,
       error: null,
+      fiatSymbol: '$',
+      selectedCurrency: FIAT_CURRENCIES['usd'],
+      currencies: [],
       defaultGas: 0,
-      defaulGasPriceUsd: 0
+      defaulGasPriceFiat: 0
     };
   },
   watch: {
     open() {
       if (this.open) {
         this.defaultGas = window.walletSettings.userDefaultGas ? window.walletSettings.userDefaultGas : 21000;
-        this.defaulGasPriceUsd = gasToUSD(this.defaultGas);
+        this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.$refs.qrCode.computeCanvas();
         this.show = true;
+        if (window.walletSettings.currency) {
+          this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.currency];
+        }
+        this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
       }
     },
     show() {
@@ -90,8 +125,11 @@ export default {
       }
     },
     defaultGas() {
-      this.defaulGasPriceUsd = gasToUSD(this.defaultGas);
+      this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
     }
+  },
+  created() {
+    Object.keys(FIAT_CURRENCIES).forEach(key => this.currencies.push(FIAT_CURRENCIES[key]));
   },
   methods: {
     savePreferences() {
@@ -105,13 +143,16 @@ export default {
           },
           credentials: 'include',
           body: JSON.stringify({
-            defaultGas: this.defaultGas
+            defaultGas: this.defaultGas,
+            currency: this.selectedCurrency.value
           })
         }).then(resp => {
           if (resp && resp.ok) {
             window.walletSettings.userDefaultGas = this.defaultGas;
+            window.walletSettings.currency = this.selectedCurrency.value;
             this.$emit('settings-changed', {
-              defaultGas: this.defaultGas
+              defaultGas: this.defaultGas,
+              currency: this.selectedCurrency.value
             });
             this.show = false;
           } else {

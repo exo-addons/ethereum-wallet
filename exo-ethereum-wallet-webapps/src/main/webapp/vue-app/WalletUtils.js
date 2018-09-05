@@ -1,6 +1,8 @@
-export function etherToUSD(amount) {
-  if (window.walletSettings.usdPrice && amount)  {
-    return (window.walletSettings.usdPrice * amount).toFixed(2);
+import {FIAT_CURRENCIES} from './WalletConstants.js';
+
+export function etherToFiat(amount) {
+  if (window.walletSettings.fiatPrice && amount)  {
+    return (window.walletSettings.fiatPrice * amount).toFixed(2);
   }
   return 0;
 }
@@ -15,29 +17,25 @@ export function gasToEther(amount, gasPriceInEther) {
   return 0;
 }
 
-export function gasToUSD(amount, gasPriceInEther) {
+export function gasToFiat(amount, gasPriceInEther) {
   if (!gasPriceInEther) {
     gasPriceInEther = window.walletSettings.gasPriceInEther;
   }
-  if (window.walletSettings.usdPrice && gasPriceInEther && amount)  {
-    return (gasPriceInEther * window.walletSettings.usdPrice * amount).toFixed(2);
+  if (window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
+    return (gasPriceInEther * window.walletSettings.fiatPrice * amount).toFixed(2);
   }
   return 0;
 }
 
-export function retrieveUSDExchangeRate() {
-  // Retrieve USD <=> Ether exchange rate
-  return window.localWeb3.eth.getGasPrice()
-    // gas price returned 1 in space context (strange behavior)
-    .then(gasPrice => window.walletSettings.gasPrice = gasPrice)
-    .then(() =>
-      fetch('https://api.coinmarketcap.com/v1/ticker/ethereum/', {
-        referrerPolicy: "no-referrer",
-        headers: {
-          'Origin': ''
-        }
-      })
-    )
+export function retrieveFiatExchangeRate() {
+  const currency = window.walletSettings && window.walletSettings.currency ? window.walletSettings.currency : 'usd';
+  // Retrieve Fiat <=> Ether exchange rate
+  return fetch(`https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=${currency}`, {
+      referrerPolicy: "no-referrer",
+      headers: {
+        'Origin': ''
+      }
+    })
     .then(resp => {
       if (resp && resp.ok) {
         return resp.json();
@@ -48,19 +46,35 @@ export function retrieveUSDExchangeRate() {
       }
     })
     .then(content => {
-      if (content && content.length && content[0].price_usd) {
+      if (content && content.length && content[0][`price_${currency}`]) {
         window.walletSettings.usdPrice = parseFloat(content[0].price_usd);
-        window.walletSettings.usdPriceLastUpdated = new Date(parseInt(content[0].last_updated) * 1000);
-        return true;
+        window.walletSettings.fiatPrice = parseFloat(content[0][`price_${currency}`]);
+        window.walletSettings.priceLastUpdated = new Date(parseInt(content[0].last_updated) * 1000);
+        window.walletSettings.fiatSymbol = window.walletSettings.currency && FIAT_CURRENCIES[window.walletSettings.currency] ? FIAT_CURRENCIES[window.walletSettings.currency].symbol : '$';
       }
     })
-    .then(usdPriceRetrieved => {return usdPriceRetrieved ? window.walletSettings.gasPrice: null;})
-    .then(gasPrice => {window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;})
-    .then(() => 
-      setTimeout(() => {
-        retrieveUSDExchangeRate();
-      }, 300000)
-    );
+    .then(() => {
+      if (window.retrieveFiatExchangeRateInterval) {
+        clearInterval(window.retrieveFiatExchangeRateInterval);
+      }
+      window.retrieveFiatExchangeRateInterval = setTimeout(() => {
+        retrieveFiatExchangeRate();
+      }, 300000);
+      return retrieveGasPrice();
+    });
+}
+
+export function retrieveGasPrice() {
+  if (!window.walletSettings) {
+    window.walletSettings = {};
+  }
+  if (window.localWeb3) {
+    return window.localWeb3.eth.getGasPrice()
+      .then(gasPrice => {
+        window.walletSettings.gasPrice = gasPrice;
+        window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
+      });
+  }
 }
 
 export function initWeb3(isSpace) {
@@ -93,7 +107,8 @@ export function initWeb3(isSpace) {
       if (!isListening) {
         throw new Error("Metamask is disconnected from network");
       }
-    });
+    })
+    .then(() => retrieveGasPrice());
 }
 
 export function initSettings(isSpace) {
@@ -113,13 +128,19 @@ export function initSettings(isSpace) {
     })
     .then(settings => {
       if (settings && settings.isWalletEnabled) {
-        window.walletSettings = settings;
+        if (!window.walletSettings) {
+          window.walletSettings = {};
+        }
+        Object.keys(settings).forEach(key => {
+          window.walletSettings[key] = settings[key];
+        });
         if (!window.walletSettings.defaultGas) {
           window.walletSettings.defaultGas = 21000;
         }
         if (!window.walletSettings.userDefaultGas) {
           window.walletSettings.userDefaultGas = window.walletSettings.defaultGas;
         }
+        return retrieveFiatExchangeRate();
       }
     })
     .catch(e => {
@@ -199,7 +220,7 @@ export function computeBalance(account) {
       }
       return {
         balance: retrievedBalance,
-        balanceUSD: etherToUSD(retrievedBalance)
+        balanceFiat: etherToFiat(retrievedBalance)
       };
     });
 }

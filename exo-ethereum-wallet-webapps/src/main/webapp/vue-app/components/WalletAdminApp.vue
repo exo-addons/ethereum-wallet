@@ -91,7 +91,7 @@
 
             <v-slider
               v-model="defaultGas"
-              :label="`Default Gas for transactions: ${defaultGas}`"
+              :label="`Default Gas for transactions: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
               :min="21000"
               :max="100000"
               :step="1000"
@@ -167,7 +167,7 @@ import AddContractModal from './AddContractModal.vue';
 
 import {searchSpaces} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
-import {initWeb3,initSettings, retrieveUSDExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus} from '../WalletUtils.js';
+import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -185,6 +185,8 @@ export default {
       isLoadingSuggestions: false,
       defaultBlocksToRetrieve: 1000,
       defaultGas: 50000,
+      defaultGasFiatPrice: 0,
+      fiatSymbol: '$',
       account: null,
       networkId: null,
       newTokenAddress: null,
@@ -212,7 +214,10 @@ export default {
           value: 'action'
         }
       ],
-      selectedNetwork: {},
+      selectedNetwork: {
+        text: '',
+        value: ''
+      },
       networks: [
         {
           text: 'Ethereum Main Network',
@@ -285,6 +290,9 @@ export default {
         // See https://www.reddit.com/r/vuetifyjs/comments/819h8u/how_to_close_a_multiple_autocomplete_vselect/
         this.$refs.accessPermissionAutoComplete.isFocused = false;
       }
+    },
+    defaultGas() {
+      this.defaultGasFiatPrice = gasToFiat(this.defaultGas);
     }
   },
   created() {
@@ -304,13 +312,14 @@ export default {
             this.isWalletEnabled = true;
           }
         })
-        .then(this.setDefaultValues)
         .then(initWeb3)
         .then(account => this.account = window.localWeb3.eth.defaultAccount)
         .then(computeNetwork)
         .then(netDetails => this.networkId = netDetails.netId)
+        .then(() => retrieveFiatExchangeRate())
+        .then(() => this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$')
+        .then(this.setDefaultValues)
         .then(() => this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value))
-        .then(retrieveUSDExchangeRate)
         .then(this.refreshContractsList)
         .then(() => this.loading = false)
         .catch(e => {

@@ -15,6 +15,8 @@ public class UserPreferences implements Serializable {
 
   private Integer           defaultGas       = 0;
 
+  private String            currency         = "usd";
+
   public String toJSONString() {
     return toJSONObject().toString();
   }
@@ -22,6 +24,7 @@ public class UserPreferences implements Serializable {
   public JSONObject toJSONObject() {
     JSONObject jsonObject = new JSONObject();
     try {
+      jsonObject.put("currency", currency);
       jsonObject.put("defaultGas", defaultGas);
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
@@ -36,7 +39,12 @@ public class UserPreferences implements Serializable {
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       UserPreferences userPreferences = new UserPreferences();
-      userPreferences.setDefaultGas(jsonObject.getInt("defaultGas"));
+      if (jsonObject.has("currency")) {
+        userPreferences.setCurrency(jsonObject.getString("currency"));
+      }
+      if (jsonObject.has("defaultGas")) {
+        userPreferences.setDefaultGas(jsonObject.getInt("defaultGas"));
+      }
       return userPreferences;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);

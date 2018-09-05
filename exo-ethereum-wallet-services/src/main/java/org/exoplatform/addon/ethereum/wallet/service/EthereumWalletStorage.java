@@ -173,7 +173,7 @@ public class EthereumWalletStorage {
    * @return
    */
   public GlobalSettings getSettings(Long networkId, String username) {
-    if (username != null && storedSettings != null && (networkId == null || networkId == storedSettings.getDefaultNetworkId())) {
+    if (username == null && storedSettings != null && (networkId == null || networkId == storedSettings.getDefaultNetworkId())) {
       // Retrieve stored global settings from memory
       return storedSettings;
     }
@@ -216,6 +216,8 @@ public class EthereumWalletStorage {
         }
         globalSettings.setUserDefaultGas(userSettings == null
             || userSettings.getDefaultGas() == 0 ? globalSettings.getDefaultGas() : userSettings.getDefaultGas());
+        globalSettings.setCurrency(userSettings == null || userSettings.getCurrency() == null ? "usd"
+                                                                                              : userSettings.getCurrency());
       }
     }
 

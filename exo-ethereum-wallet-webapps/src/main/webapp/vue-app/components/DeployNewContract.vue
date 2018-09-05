@@ -40,7 +40,7 @@
         <h4>Contract creation transaction fee</h4>
         <v-divider class="mb-4"/>
         <v-slider v-model="newTokenGas"
-                  :label="`Gas limit: ${newTokenGas}${newTokenGasInUSD ? ' (' + newTokenGasInUSD + ' \$)' : ''}`"
+                  :label="`Gas limit: ${newTokenGas}${newTokenGasInFiat ? ' (' + newTokenGasInFiat + ' ' + fiatSymbol + ')' : ''}`"
                   :min="50000"
                   :max="800000"
                   :step="1000"
@@ -87,7 +87,7 @@
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
 import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, newContractInstance, deployContract} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
-import {gasToUSD} from '../WalletUtils.js';
+import {gasToFiat} from '../WalletUtils.js';
 
 export default {
   props: {
@@ -114,7 +114,8 @@ export default {
       newTokenGas: 0,
       newTokenGasPrice: 0,
       newTokenGasPriceGWEI: 0,
-      newTokenGasInUSD: 0,
+      newTokenGasInFiat: 0,
+      fiatSymbol: '$',
       newTokenDecimals: 0,
       newTokenInitialCoins: 0,
       newTokenSetAsDefault: true,
@@ -138,11 +139,11 @@ export default {
   },
   watch: {
     newTokenGas() {
-      this.calculateGasPriceInUSD();
+      this.calculateGasPriceInFiat();
     },
     newTokenGasPrice() {
-      this.calculateGasPriceInUSD();
       this.newTokenGasPriceGWEI = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'gwei');
+      this.calculateGasPriceInFiat();
     },
     createNewToken() {
       if (this.createNewToken) {
@@ -165,13 +166,14 @@ export default {
       this.newTokenAddress = '';
       this.valid = false;
       this.contracts = [];
+      this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
     },
-    calculateGasPriceInUSD() {
+    calculateGasPriceInFiat() {
       if (this.newTokenGas && this.newTokenGasPrice) {
         const gasPriceInEther = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'ether');
-        this.newTokenGasInUSD = gasToUSD(this.newTokenGas, gasPriceInEther);
+        this.newTokenGasInFiat = gasToFiat(this.newTokenGas, gasPriceInEther);
       } else {
-        this.newTokenGasInUSD = 0;
+        this.newTokenGasInFiat = 0;
       }      
     },
     saveContract(event) {
