@@ -70,7 +70,7 @@
       <description>Listening to transactions coming from configured ethereum network</description>
     </component-plugin>
     <component-plugin>
-      <name>exo.addon.wallet.transaction.loaded</name>
+      <name>exo.addon.wallet.block.loaded</name>
       <set-method>addListener</set-method>
       <type>org.exoplatform.addon.ethereum.wallet.listener.EthereumLastWatchedBlockListener</type>
       <description>Save last watched block number</description>

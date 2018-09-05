@@ -16,8 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import org.web3j.protocol.core.methods.response.Transaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.EthBlock.Block;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
@@ -29,7 +28,7 @@ import org.exoplatform.services.listener.*;
  * A listener to asynchronously save last watched block number
  */
 @Asynchronous
-public class EthereumLastWatchedBlockListener extends Listener<Transaction, TransactionReceipt> {
+public class EthereumLastWatchedBlockListener extends Listener<Block, Object> {
 
   private EthereumWalletStorage ethereumWalletStorage;
 
@@ -45,21 +44,16 @@ public class EthereumLastWatchedBlockListener extends Listener<Transaction, Tran
   }
 
   @Override
-  public void onEvent(Event<Transaction, TransactionReceipt> event) throws Exception {
-    Transaction transaction = event.getSource();
-    if (transaction == null || transaction.getChainId() == null || transaction.getBlockNumber() == null) {
+  public void onEvent(Event<Block, Object> event) throws Exception {
+    Block block = event.getSource();
+    if (block == null || block.getNumber() == null) {
       return;
     }
     RequestLifeCycle.begin(this.container);
     try {
-      long blockNumber = transaction.getBlockNumber().longValue();
-      long networkId = 0;
-      if (transaction.getChainId() == null) {
-        GlobalSettings globalSettings = ethereumWalletStorage.getSettings(null, null);
-        networkId = globalSettings.getDefaultNetworkId();
-      } else {
-        networkId = transaction.getChainId().longValue();
-      }
+      long blockNumber = block.getNumber().longValue();
+      GlobalSettings globalSettings = ethereumWalletStorage.getSettings(null, null);
+      long networkId = globalSettings.getDefaultNetworkId();
       if (networkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
         this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);
         this.lastSavedBlockNumber = blockNumber;

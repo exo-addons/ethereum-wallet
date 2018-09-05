@@ -38,6 +38,9 @@ public class Utils {
   public static final String                             NEW_TRANSACTION_EVENT                         =
                                                                                "exo.addon.wallet.transaction.loaded";
 
+  public static final String                             NEW_BLOCK_EVENT                               =
+                                                                         "exo.addon.wallet.block.loaded";
+
   public static final String                             TRANSACTION_SENDER_NOTIFICATION_ID            =
                                                                                             "EtherSenderNotificationPlugin";
 
