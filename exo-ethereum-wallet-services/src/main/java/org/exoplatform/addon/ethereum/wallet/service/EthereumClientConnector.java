@@ -229,7 +229,6 @@ public class EthereumClientConnector implements Startable {
     if (newGlobalSettings.getWebsocketProviderURL() != null
         && !StringUtils.equals(newGlobalSettings.getWebsocketProviderURL(), oldGlobalSettings.getWebsocketProviderURL())) {
       closeConnection();
-      initWeb3Connection();
     }
   }
 
