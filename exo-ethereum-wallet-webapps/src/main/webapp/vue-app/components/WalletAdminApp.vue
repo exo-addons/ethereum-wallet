@@ -2,7 +2,7 @@
   <v-app v-if="isWalletEnabled" id="WalletAdminApp" color="transaprent">
     <main>
       <v-layout>
-        <v-flex>
+        <v-flex class="white">
           <div v-if="error && !loading" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ error }}
           </div>
@@ -11,100 +11,106 @@
             Current selected network on Metamask is different from configured network to use with the platform.
             (The deployed contracts on default network aren't displayed)
           </div>
-          <v-card class="text-xs-center pt-3">
-            <v-form class="mr-3 ml-3">
-              <v-text-field
-                v-model="defaultNetworkId"
-                :rules="mandatoryRule"
-                :label="`Ethereum Network ID (current id: ${networkId})`"
-                type="text"
-                name="defaultNetworkId" />
+          <v-card class="text-xs-center pr-3 pl-3">
+            <v-combobox
+              v-model="selectedNetwork"
+              :items="networks"
+              label="Select ethereum network" />
 
-              <v-text-field
-                ref="providerURL"
-                v-model="providerURL"
-                :rules="mandatoryRule"
-                type="text"
-                name="providerURL"
-                label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
-                autofocus />
+            <v-text-field
+              v-if="showSpecificNetworkFields"
+              v-model="selectedNetwork.value"
+              :rules="mandatoryRule"
+              :label="`Ethereum Network ID (current id: ${networkId})`"
+              type="number"
+              name="defaultNetworkId" />
 
-              <v-text-field
-                ref="websocketProviderURL"
-                v-model="websocketProviderURL"
-                :rules="mandatoryRule"
-                type="text"
-                name="websocketProviderURL"
-                label="Ethereum Network Websocket URL used for notifications" />
+            <v-text-field
+              v-if="showSpecificNetworkFields"
+              ref="providerURL"
+              v-model="selectedNetwork.httpLink"
+              :rules="mandatoryRule"
+              type="text"
+              name="providerURL"
+              label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
+              autofocus />
 
-              <v-autocomplete
-                ref="accessPermissionAutoComplete"
-                v-model="accessPermission"
-                :items="accessPermissionOptions"
-                :loading="isLoadingSuggestions"
-                :search-input.sync="accessPermissionSearchTerm"
-                :open-on-click="false"
-                :open-on-hover="false"
-                :open-on-clear="false"
-                :no-filter="true"
-                counter="1"
-                max-width="100%"
-                item-text="name"
-                item-value="id"
-                label="Wallet access permission (Spaces only)"
-                placeholder="Start typing to Search a space"
-                hide-no-data hide-details hide-selected chips>
+            <v-text-field
+              v-if="showSpecificNetworkFields"
+              ref="websocketProviderURL"
+              v-model="selectedNetwork.wsLink"
+              :rules="mandatoryRule"
+              type="text"
+              name="websocketProviderURL"
+              label="Ethereum Network Websocket URL used for notifications" />
 
-                <template slot="no-data">
-                  <v-list-tile>
-                    <v-list-tile-title>
-                      Search for a <strong>Space</strong>
-                    </v-list-tile-title>
-                  </v-list-tile>
-                </template>
+            <v-autocomplete
+              ref="accessPermissionAutoComplete"
+              v-model="accessPermission"
+              :items="accessPermissionOptions"
+              :loading="isLoadingSuggestions"
+              :search-input.sync="accessPermissionSearchTerm"
+              :open-on-click="false"
+              :open-on-hover="false"
+              :open-on-clear="false"
+              :no-filter="true"
+              counter="1"
+              max-width="100%"
+              item-text="name"
+              item-value="id"
+              label="Wallet access permission (Spaces only)"
+              placeholder="Start typing to Search a space"
+              hide-no-data hide-details hide-selected chips>
 
-                <template slot="selection" slot-scope="{ item, selected }">
-                  <v-chip :selected="selected" color="blue-grey" class="white--text">
-                    <v-avatar dark>
-                      <img :src="item.avatar">
-                    </v-avatar>
-                    <span>{{ item.name }}</span>
-                  </v-chip>
-                </template>
-            
-                <template slot="item" slot-scope="{ item, tile }">
-                  <v-list-tile-avatar>
+              <template slot="no-data">
+                <v-list-tile>
+                  <v-list-tile-title>
+                    Search for a <strong>Space</strong>
+                  </v-list-tile-title>
+                </v-list-tile>
+              </template>
+
+              <template slot="selection" slot-scope="{ item, selected }">
+                <v-chip :selected="selected" color="blue-grey" class="white--text">
+                  <v-avatar dark>
                     <img :src="item.avatar">
-                  </v-list-tile-avatar>
-                  <v-list-tile-content>
-                    <v-list-tile-title v-text="item.name"></v-list-tile-title>
-                  </v-list-tile-content>
-                </template>
-              </v-autocomplete>
+                  </v-avatar>
+                  <span>{{ item.name }}</span>
+                </v-chip>
+              </template>
+          
+              <template slot="item" slot-scope="{ item, tile }">
+                <v-list-tile-avatar>
+                  <img :src="item.avatar">
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                  <v-list-tile-title v-text="item.name"></v-list-tile-title>
+                </v-list-tile-content>
+              </template>
+            </v-autocomplete>
 
-              <v-slider
-                v-model="defaultGas"
-                :label="`Default Gas for transactions: ${defaultGas}`"
-                :min="21000"
-                :max="100000"
-                :step="1000"
-                type="number"
-                class="mt-4"
-                required />
-              <v-slider
-                v-model="defaultBlocksToRetrieve"
-                :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
-                :min="100"
-                :max="10000"
-                :step="100"
-                type="number"
-                required />
-            </v-form>
+            <v-slider
+              v-model="defaultGas"
+              :label="`Default Gas for transactions: ${defaultGas}`"
+              :min="21000"
+              :max="100000"
+              :step="1000"
+              type="number"
+              class="mt-4"
+              required />
+            <v-slider
+              v-model="defaultBlocksToRetrieve"
+              :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
+              :min="100"
+              :max="10000"
+              :step="100"
+              type="number"
+              required />
             <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
               Save
             </button>
           </v-card>
-          <v-card>
+          <v-card v-show="sameConfiguredNetwork">
             <v-divider />
             <v-subheader class="text-xs-center">Default contracts</v-subheader>
             <v-divider />
@@ -125,14 +131,14 @@
                 <td class="text-xs-right">
                   <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
                   <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
-                    <i class="uiIconTrash uiIconBlue" />
+                    <i class="uiIconTrash uiIconBlue"></i>
                   </v-btn>
                 </td>
               </template>
             </v-data-table>
             <v-divider />
             <div class="text-xs-center pt-2 pb-2">
-              <button v-show="sameConfiguredNetwork" class="btn btn-primary mt-3" @click="showAddContractModal = true">
+              <button class="btn btn-primary mt-3" @click="showAddContractModal = true">
                 Add Existing contract Address
               </button>
               <deploy-new-contract 
@@ -177,10 +183,7 @@ export default {
       accessPermissionOptions: [],
       accessPermissionSearchTerm: null,
       isLoadingSuggestions: false,
-      websocketProviderURL: '',
-      providerURL: '',
       defaultBlocksToRetrieve: 1000,
-      defaultNetworkId: 0,
       defaultGas: 50000,
       account: null,
       networkId: null,
@@ -209,6 +212,27 @@ export default {
           value: 'action'
         }
       ],
+      selectedNetwork: {},
+      networks: [
+        {
+          text: 'Ethereum Main Network',
+          value: 1,
+          wsLink: 'wss://mainnet.infura.io/ws',
+          httpLink: 'https://mainnet.infura.io'
+        },
+        {
+          text: 'Ropsten',
+          value: 3,
+          wsLink: 'wss://ropsten.infura.io/ws',
+          httpLink: 'https://ropsten.infura.io'
+        },
+        {
+          text: 'Other',
+          value: 0,
+          wsLink: 'ws://127.0.0.1:8546',
+          httpLink: 'http://127.0.0.1:8545'
+        }
+      ],
       contracts: []
     };
   },
@@ -232,6 +256,9 @@ export default {
         return 'Please select a valid account using Metamask';
       }
       return null;
+    },
+    showSpecificNetworkFields() {
+      return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
     }
   },
   watch: {
@@ -282,8 +309,7 @@ export default {
         .then(account => this.account = window.localWeb3.eth.defaultAccount)
         .then(computeNetwork)
         .then(netDetails => this.networkId = netDetails.netId)
-        .then(netId => this.defaultNetworkId = this.defaultNetworkId ? this.defaultNetworkId : netId)
-        .then(() => this.sameConfiguredNetwork = this.networkId === this.defaultNetworkId)
+        .then(() => this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value))
         .then(retrieveUSDExchangeRate)
         .then(this.refreshContractsList)
         .then(() => this.loading = false)
@@ -305,17 +331,18 @@ export default {
             }
           });
       }
-      if (window.walletSettings.providerURL) {
-        this.providerURL = window.walletSettings.providerURL;
-      }
-      if (window.walletSettings.websocketProviderURL) {
-        this.websocketProviderURL = window.walletSettings.websocketProviderURL;
+      if (window.walletSettings.defaultNetworkId === 1) {
+        this.selectedNetwork = this.networks[0];
+      } else if (window.walletSettings.defaultNetworkId === 3) {
+        this.selectedNetwork = this.networks[1];
+      } else {
+        this.networks[2].value = window.walletSettings.defaultNetworkId;
+        this.networks[2].wsLink = window.walletSettings.websocketProviderURL;
+        this.networks[2].httpLink = window.walletSettings.providerURL;
+        this.selectedNetwork = this.networks[2];
       }
       if (window.walletSettings.defaultBlocksToRetrieve) {
         this.defaultBlocksToRetrieve = window.walletSettings.defaultBlocksToRetrieve;
-      }
-      if (window.walletSettings.defaultNetworkId) {
-        this.defaultNetworkId = window.walletSettings.defaultNetworkId;
       }
       if (window.walletSettings.defaultGas) {
         this.defaultGas = window.walletSettings.defaultGas;
@@ -417,21 +444,27 @@ export default {
         },
         body: JSON.stringify({
           accessPermission: this.accessPermission,
-          providerURL: this.providerURL,
-          websocketProviderURL: this.websocketProviderURL,
+          providerURL: this.selectedNetwork.httpLink,
+          websocketProviderURL: this.selectedNetwork.wsLink,
           defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
-          defaultNetworkId: this.defaultNetworkId,
+          defaultNetworkId: this.selectedNetwork.value,
           defaultGas: this.defaultGas
         })
       }).then(resp => {
         if (resp && resp.ok) {
+          const reloadContract = window.walletSettings.defaultNetworkId !== this.selectedNetwork.value;
+
+          window.walletSettings.defaultNetworkId = this.selectedNetwork.value;
+          window.walletSettings.providerURL = this.selectedNetwork.httpLink;
+          window.walletSettings.websocketProviderURL = this.selectedNetwork.wsLink;
           window.walletSettings.accessPermission = this.accessPermission;
-          window.walletSettings.providerURL = this.providerURL;
-          window.walletSettings.websocketProviderURL = this.websocketProviderURL;
           window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
-          window.walletSettings.defaultNetworkId = this.defaultNetworkId;
           window.walletSettings.defaultGas = this.defaultGas;
-          this.sameConfiguredNetwork = this.networkId === this.defaultNetworkId;
+          this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
+
+          if (reloadContract) {
+            return this.contractsModified();
+          }
         } else {
           this.errorMessage = 'Error saving global settings';
         }
