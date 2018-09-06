@@ -260,10 +260,11 @@ public class EthereumClientConnector implements Startable {
       throw new IllegalStateException("No configured URL for Ethereum Websocket connection");
     }
 
-    if (web3j == null || webSocketClient.isClosed() || this.transactionSubscription == null
-        || this.transactionSubscription.isUnsubscribed() || this.blockSubscription == null
+    if (this.web3j == null || this.webSocketClient == null || this.webSocketClient.isClosed()
+        || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed() || this.blockSubscription == null
         || this.blockSubscription.isUnsubscribed()) {
-      boolean isReconnecting = web3j != null && webSocketClient.isClosed();
+
+      boolean isReconnecting = web3j != null;
 
       if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
         stopListeninigToTransactions();
