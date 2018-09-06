@@ -57,6 +57,7 @@
           :ether-balance="item.etherBalance"
           :contract="item.contract"
           icon
+          :has-delegated-tokens="true"
           @error="$emit('error', $event)" />
   
         <!-- Ether account actions -->
