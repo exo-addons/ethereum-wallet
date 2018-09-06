@@ -34,13 +34,13 @@
               Currently selected account in Metamask is already in use, you can't use it in this wallet.
             </div>
             <div v-else-if="displaySpaceAccountAssociationHelp">
-              Would you like to use the current address <code>{{ newAccountAddress }}</code> in Space Wallet ?
+              Would you like to use the current address <wallet-address :value="newAccountAddress" /> in Space Wallet ?
             </div>
             <div v-else-if="displayUserAccountAssociationHelp">
-              Would you like to use the current address <code>{{ newAccountAddress }}</code> in your Wallet ?
+              Would you like to use the current address <wallet-address :value="newAccountAddress" /> in your Wallet ?
             </div>
             <div v-else-if="displayUserAccountChangeHelp">
-              Would you like to replace your wallet address <code>{{ oldAccountAddress }}</code> by the current address <code>{{ newAccountAddress }}</code> ?
+              Would you like to replace your wallet address <wallet-address :value="oldAccountAddress" /> by the current address <wallet-address :value="newAccountAddress" /> ?
             </div>
           </v-card-text>
     
@@ -111,8 +111,12 @@
 </template>
 
 <script>
+import WalletAddress from './WalletAddress.vue';
 
 export default {
+  components: {
+    WalletAddress
+  },
   props: {
     displayNotSameNetworkWarning: {
       type: Boolean,

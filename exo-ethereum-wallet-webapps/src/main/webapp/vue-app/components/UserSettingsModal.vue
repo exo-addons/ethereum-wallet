@@ -48,7 +48,7 @@
                            information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
         
                   <div class="text-xs-center">
-                    Wallet address: <code>{{ account }}</code>
+                    <wallet-address :value="account" />
                   </div>
                 </v-card-text>
               </v-card>
@@ -66,13 +66,15 @@
 
 <script>
 import QrCode from './QRCode.vue';
+import WalletAddress from './WalletAddress.vue';
 
 import {gasToFiat} from '../WalletUtils.js';
 import {FIAT_CURRENCIES} from '../WalletConstants.js';
 
 export default {
   components: {
-    QrCode
+    QrCode,
+    WalletAddress
   },
   props: {
     title: {

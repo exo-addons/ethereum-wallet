@@ -121,7 +121,7 @@
             <div v-if="newTokenAddress" class="alert alert-success v-content">
               <i class="uiIconSuccess"></i>
               Contract created under address: 
-              <code>{{ newTokenAddress }}</code>
+              <wallet-address :value="newTokenAddress" />
             </div>
             <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
               <template slot="items" slot-scope="props">
@@ -164,6 +164,7 @@
 <script>
 import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
+import WalletAddress from './WalletAddress.vue';
 
 import {searchSpaces} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
@@ -172,7 +173,8 @@ import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTran
 export default {
   components: {
     DeployNewContract,
-    AddContractModal
+    AddContractModal,
+    WalletAddress
   },
   data () {
     return {

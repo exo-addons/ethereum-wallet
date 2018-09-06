@@ -16,7 +16,7 @@
                 </v-avatar>
                 <span v-html="item.displayName"></span>
               </v-chip>
-              <code v-else>{{ item.displayName }}</code>
+              <wallet-address v-else :value="item.displayName" />
             </v-list-tile-title>
             <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
           </v-list-tile-content>
@@ -36,11 +36,16 @@
 </template>
 
 <script>
+import WalletAddress from './WalletAddress.vue';
+
 import {searchFullName, getContactFromStorage} from '../WalletAddressRegistry.js';
 import {watchTransactionStatus} from '../WalletUtils.js';
 import {addPendingTransactionToStorage, removePendingTransactionFromStorage, getPendingTransactionFromStorage} from '../WalletToken.js';
 
 export default {
+  components: {
+    WalletAddress
+  },
   props: {
     networkId: {
       type: Number,

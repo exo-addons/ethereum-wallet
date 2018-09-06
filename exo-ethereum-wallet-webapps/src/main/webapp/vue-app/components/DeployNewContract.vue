@@ -16,7 +16,7 @@
         <div v-if="newTokenAddress" class="alert alert-success v-content">
           <i class="uiIconSuccess"></i>
           Contract created under address: 
-          <code>{{ newTokenAddress }}</code>
+          <wallet-address :value="newTokenAddress" />
         </div>
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
@@ -84,12 +84,17 @@
 </template>
 
 <script>
+import WalletAddress from './WalletAddress.vue';
+
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
 import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, newContractInstance, deployContract} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
 import {gasToFiat} from '../WalletUtils.js';
 
 export default {
+  components: {
+    WalletAddress
+  },
   props: {
     account: {
       type: String,

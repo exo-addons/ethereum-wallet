@@ -112,6 +112,25 @@
       height: 28px;
     }
   }
+
+  .copyToClipboard {
+    position:relative;
+    display: inline-block;
+    max-width: 100vw;
+
+    code {
+      height: 15px;
+    }
+    button {
+      right: 0;
+      top: 0;
+      border-radius: 0;
+    }
+    input {
+      position: absolute;
+      left:-9999px;
+    }
+  }
 }
 
 #WalletAdminApp {
