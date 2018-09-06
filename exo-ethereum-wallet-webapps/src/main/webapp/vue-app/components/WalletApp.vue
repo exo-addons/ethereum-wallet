@@ -44,83 +44,14 @@
                                :error-message="errorMessage"
                                @save-address-to-account="saveNewAddressInWallet" />
 
-            <!-- list of contracts and ether account -->
-            <v-list class="pb-0" two-line subheader>
-              <v-list-tile
-                v-for="(item, index) in accountsDetails"
-                :key="index"
-                :color="item.error ? 'red': ''"
-                :title="item.title"
-                class="accountItem"
-                avatar
-                ripple>
-
-                <v-list-tile-avatar @click="openAccountDetail(item)">
-                  <v-icon :class="item.error ? 'red--text':'uiIconBlue'" dark>{{ item.icon }}</v-icon>
-                </v-list-tile-avatar>
-                <v-list-tile-content @click="openAccountDetail(item)">
-                  <v-list-tile-title v-if="item.error"><strike>{{ item.title }}</strike></v-list-tile-title>
-                  <v-list-tile-title v-else>{{ item.title }}</v-list-tile-title>
-
-                  <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
-                  <v-list-tile-sub-title v-else>{{ item.balanceFiat ? `${item.balanceFiat} ${fiatSymbol}`: `${item.balance} ${item.symbol}` }}</v-list-tile-sub-title>
-                </v-list-tile-content>
-                <v-speed-dial v-model="item.openActions"
-                              direction="left"
-                              transition="slide-y-reverse-transition"
-                              right
-                              absolute>
-                  <v-btn slot="activator" icon fab color="blue-grey lighten-4">
-                    <v-icon size="20">more_horiz</v-icon>
-                  </v-btn>
-
-                  <!-- Contract actions -->
-                  <send-tokens-modal
-                    v-if="item.isContract"
-                    :disabled="item.balance === 0 || item.etherBalance === 0"
-                    :balance="item.balance"
-                    :ether-balance="item.etherBalance"
-                    :account="account"
-                    :contract="item.contract"
-                    icon
-                    @sent="addSendTokenTransaction($event, item)"
-                    @error="errorMessage = $event" />
-
-                  <delegate-tokens-modal
-                    v-if="item.isContract"
-                    :disabled="item.balance === 0 || item.etherBalance === 0"
-                    :balance="item.balance"
-                    :ether-balance="item.etherBalance"
-                    :contract="item.contract"
-                    icon
-                    @sent="addDelegateTokenTransaction($event, item)"
-                    @error="errorMessage = $event" />
-
-                  <send-delegated-tokens-modal
-                    v-if="item.isContract && hasDelegatedTokens"
-                    :disabled="!hasDelegatedTokens || item.balance === 0 || item.etherBalance === 0"
-                    :ether-balance="item.etherBalance"
-                    :contract="item.contract"
-                    :has-delegated-tokens="hasDelegatedTokens"
-                    icon
-                    @error="errorMessage = $event" />
-
-                  <!-- Ether account actions -->
-                  <send-ether-modal
-                    v-if="!item.isContract && item.balance"
-                    :account="account"
-                    :balance="item.balance"
-                    icon
-                    @sent="addSendEtherTransaction"
-                    @error="errorMessage = $event" />
-
-                  <v-btn v-if="!isSpace && item.isContract && !item.isDefault" icon ripple @click="deleteContract(item, $event)">
-                    <i class="uiIconTrash uiIconBlue"></i>
-                  </v-btn>
-                </v-speed-dial>
-              </v-list-tile>
-              <v-divider v-if="index + 1 < accountsDetails.length" :key="`divider-${index}`"></v-divider>
-            </v-list>
+            <wallet-accounts-list
+              ref="WalletAccountsList"
+              :accounts-details="accountsDetails"
+              :account="account"
+              :network-id="networkId"
+              :refresh-index="refreshIndex"
+              @account-details-selected="openAccountDetail"
+              @error="errorMessage = $event" />
           </v-card>
 
           <!-- The selected account detail -->
@@ -137,32 +68,25 @@
 <script>
 import WalletAppMenu from './WalletAppMenu.vue';
 import WalletAppAlerts from './WalletAppAlerts.vue';
+import WalletAccountsList from './WalletAccountsList.vue';
 import AddContractModal from './AddContractModal.vue';
 import AccountDetail from './AccountDetail.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
-import DelegateTokensModal from './DelegateTokensModal.vue';
-import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
-import SendTokensModal from './SendTokensModal.vue';
-import SendEtherModal from './SendEtherModal.vue';
 
 import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
-import {getContractsDetails, deleteContractFromStorage, addPendingTransactionToStorage, removePendingTransactionFromStorage} from '../WalletToken.js';
+import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
 import {searchAddress, searchUserOrSpaceObject, searchFullName, saveNewAddress} from '../WalletAddressRegistry.js';
-import {etherToFiat, initWeb3, initSettings, computeNetwork, computeBalance, watchTransactionStatus} from '../WalletUtils.js';
-import {addTransaction} from '../WalletEther.js';
+import {etherToFiat, initWeb3, initSettings, computeNetwork, computeBalance} from '../WalletUtils.js';
 
 export default {
   components: {
     UserSettingsModal,
     WalletAppMenu,
     WalletAppAlerts,
+    WalletAccountsList,
     QrCodeModal,
     AccountDetail,
-    DelegateTokensModal,
-    SendDelegatedTokensModal,
-    SendTokensModal,
-    SendEtherModal,
     AddContractModal
   },
   props: {
@@ -199,6 +123,7 @@ export default {
       fiatSymbol: '$',
       contracts: [],
       accountsDetails: {},
+      refreshIndex: 1,
       errorMessage: null
     };
   },
@@ -318,11 +243,11 @@ export default {
           }
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
             this.isWalletEnabled = false;
-            this.$forceUpdate();
+            this.forceUpdate();
             throw new Error("Wallet disabled for current user");
           } else {
             this.isWalletEnabled = true;
-            this.$forceUpdate();
+            this.forceUpdate();
           }
         })
         .then((result, error) => {
@@ -421,6 +346,10 @@ export default {
             }
           }
         });
+    },
+    forceUpdate() {
+      this.refreshIndex++;
+      this.$forceUpdate();
     },
     refreshList(forceRefresh) {
       this.seeAccountDetails = false;
@@ -595,7 +524,7 @@ export default {
                 this.accountsDetails[contractDetails.address] = contractDetails;
               }
             });
-            this.$forceUpdate();
+            this.forceUpdate();
           }
         });
     },
@@ -610,7 +539,7 @@ export default {
     deleteContract(item, event) {
       if(deleteContractFromStorage(this.account, this.networkId, item.address)) {
         delete this.accountsDetails[item.address];
-        this.$forceUpdate();
+        this.forceUpdate();
       }
       event.preventDefault();
       event.stopPropagation();
@@ -742,46 +671,6 @@ export default {
     },
     maximize() {
       window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`; 
-    },
-    addDelegateTokenTransaction(transaction, contract) {
-      addPendingTransactionToStorage(this.networkId, this.account, contract.address, {
-        from: transaction.from,
-        to: transaction.to,
-        value: transaction.value,
-        hash: transaction.hash,
-        timestamp: Date.now(),
-        labelFrom: 'Delegated from',
-        labelTo: 'Delegated to',
-        icon: 'fa-users',
-        pending: true
-      });
-
-      watchTransactionStatus(transaction.hash, (receipt, block) => {
-        removePendingTransactionFromStorage(this.networkId, this.account, contract.address, transaction.hash);
-      });
-    },
-    addSendTokenTransaction(transaction, contract) {
-      addPendingTransactionToStorage(this.networkId, this.account, contract.address, {
-        from: transaction.from,
-        to: transaction.to,
-        value: transaction.value,
-        hash: transaction.hash,
-        timestamp: Date.now(),
-        labelFrom: 'Received from',
-        labelTo: 'Sent to',
-        icon: 'fa-exchange-alt',
-        pending: true
-      });
-
-      watchTransactionStatus(transaction.hash, (receipt, block) => {
-        removePendingTransactionFromStorage(this.networkId, this.account, contract.address, transaction.hash);
-      });
-    },
-    addSendEtherTransaction(transaction) {
-      addTransaction(this.networkId,
-        this.account,
-        [],
-        transaction);
     }
   }
 };
