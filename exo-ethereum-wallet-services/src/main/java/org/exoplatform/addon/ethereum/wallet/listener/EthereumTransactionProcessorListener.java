@@ -68,8 +68,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     String contractAddress = null;
 
-    AccountDetail senderAccountDetails = null;
-    AccountDetail receiverAccountDetails = null;
+    AccountDetail sender = null;
+    AccountDetail receiver = null;
     ContractDetail contractDetails = null;
 
     BigInteger amountBigInteger = transaction.getValue();
@@ -86,25 +86,31 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         // Contract address not found
         sendNotification = false;
       } else {
-        ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(settings, transaction);
-        if (contractTransactionDetail == null) {
-          // The contract information couldn't be parsed
-          sendNotification = false;
-        } else {
-          amount = contractTransactionDetail.getAmount();
-          receiverAddress = contractTransactionDetail.getReceiver();
+        try {
+          ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(settings, transaction);
+          if (contractTransactionDetail == null) {
+            // The contract information couldn't be parsed
+            sendNotification = false;
+          } else {
+            amount = contractTransactionDetail.getAmount();
+            receiverAddress = contractTransactionDetail.getReceiver();
+          }
+        } catch (IllegalStateException e) {
+          isContractTransaction = false;
         }
       }
-    } else {
+    }
+
+    if (!isContractTransaction) {
       receiverAddress = transaction.getTo();
     }
 
     // Retrieve associated user/space names using addresses
     if (senderAddress != null) {
-      senderAccountDetails = getAccountDetail(senderAddress);
+      sender = getAccountDetail(senderAddress);
     }
     if (receiverAddress != null) {
-      receiverAccountDetails = getAccountDetail(receiverAddress);
+      receiver = getAccountDetail(receiverAddress);
     }
     if (contractAddress != null) {
       contractDetails = ethereumWalletStorage.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
@@ -114,7 +120,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     if (sendNotification && senderAddress != null && receiverAddress != null
-        && (senderAccountDetails.getId() != null || receiverAccountDetails.getId() != null)) {
+        && (sender.getId() != null || receiver.getId() != null)) {
       if (isContractTransaction) {
         LOG.info("Sending notification for contract {} transaction from {} to {} with amount {}",
                  contractAddress,
@@ -130,31 +136,28 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     // Send notification to sender if the address is recognized
-    if (senderAccountDetails != null && senderAccountDetails.getId() != null) {
+    if (sender != null && sender.getId() != null) {
       if (sendNotification) {
         TransactionStatus transactionStatus =
                                             isContractTransaction ? TransactionStatus.CONTRACT_SENDER : TransactionStatus.SENDER;
-        sendNotification(senderAccountDetails, receiverAccountDetails, contractDetails, transactionStatus, amount);
+        sendNotification(sender, receiver, contractDetails, transactionStatus, amount);
       }
 
       // Add user transaction
-      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(),
-                                                senderAccountDetails.getAddress(),
-                                                transaction.getHash());
+      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(), sender.getAddress(), transaction.getHash());
     }
 
     // Send notification to receiver if the address is recognized
-    if (receiverAccountDetails != null && receiverAccountDetails.getId() != null) {
+    if (receiver != null && receiver.getId() != null
+        && (sender == null || sender.getId() == null || !sender.getId().equals(receiver.getId()))) {
       if (sendNotification) {
         TransactionStatus transactionStatus = isContractTransaction ? TransactionStatus.CONTRACT_RECEIVER
                                                                     : TransactionStatus.RECEIVER;
-        sendNotification(senderAccountDetails, receiverAccountDetails, contractDetails, transactionStatus, amount);
+        sendNotification(sender, receiver, contractDetails, transactionStatus, amount);
       }
 
       // Add user transaction
-      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(),
-                                                receiverAccountDetails.getAddress(),
-                                                transaction.getHash());
+      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(), receiver.getAddress(), transaction.getHash());
     }
   }
 
@@ -190,7 +193,16 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       // he's recognized
       if (transaction.getInput() != null && !transaction.getInput().equals("0x")) {
         TransactionReceipt transactionReceipt = ethereumClientConnector.getTransactionReceipt(transaction.getHash());
-        if (transactionReceipt == null || transactionReceipt.getLogs() == null || transactionReceipt.getLogs().size() == 0) {
+        if (transactionReceipt == null) {
+          // Transaction may have failed
+          return null;
+        }
+
+        if (transactionReceipt.getContractAddress() == null) {
+          throw new IllegalStateException("Not a contract transaction");
+        }
+
+        if (transactionReceipt.getLogs() == null || transactionReceipt.getLogs().size() == 0) {
           // Transaction may have failed
           return null;
         }

@@ -1,12 +1,12 @@
 <li class="$READ clearfix" data-id="$NOTIFICATION_ID">
   <div class="media">
     <div class="avatarXSmall pull-left">
-      <img src="$AVATAR" alt="$SENDER" />
+      <img src="$AVATAR" alt="$RECEIVER" />
     </div> 
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
-          <%= _ctx.appRes("Notification.message.EtherSenderNotificationPlugin", AMOUNT, RECEIVER) %>
+          <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceEtherSenderNotificationPlugin", SENDER_URL, AMOUNT, RECEIVER_URL) : _ctx.appRes("Notification.message.EtherSenderNotificationPlugin", AMOUNT, RECEIVER_URL)%>
         </div>
         <div class="lastUpdatedTime">
           $LAST_UPDATED_TIME

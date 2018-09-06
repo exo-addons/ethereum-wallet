@@ -18,10 +18,14 @@ import org.exoplatform.commons.api.notification.template.Element;
 import org.exoplatform.commons.notification.NotificationUtils;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.notification.template.TemplateUtils;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.webui.utils.TimeConvertUtils;
 
 public class TemplateBuilder extends AbstractTemplateBuilder {
+
+  private static final Log LOG = ExoLogger.getLogger(TemplateBuilder.class);
 
   private TemplateProvider templateProvider;
 
@@ -39,32 +43,49 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
                                     TemplateContext.newChannelInstance(this.templateProvider.getChannelKey(), pluginId, language);
 
     String amount = notification.getValueOwnerParameter(AMOUNT);
+    String type = notification.getValueOwnerParameter(ACCOUNT_TYPE);
     String avatar = notification.getValueOwnerParameter(AVATAR);
     String receiver = notification.getValueOwnerParameter(RECEIVER);
     String sender = notification.getValueOwnerParameter(SENDER);
-    String profileURL = notification.getValueOwnerParameter(PROFILE_URL);
+    String receiverUrl = notification.getValueOwnerParameter(RECEIVER_URL);
+    String senderUrl = notification.getValueOwnerParameter(SENDER_URL);
     String contract = notification.getValueOwnerParameter(CONTRACT);
+    try {
+      templateContext.put("AMOUNT", amount);
+      templateContext.put("ACCOUNT_TYPE", type);
+      templateContext.put("SENDER", sender);
+      templateContext.put("RECEIVER", receiver);
+      templateContext.put("SENDER_URL", senderUrl);
+      templateContext.put("RECEIVER_URL", receiverUrl);
+      templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
+      if (contract != null) {
+        templateContext.put("CONTRACT", contract);
+      }
+      templateContext.put("NOTIFICATION_ID", notification.getId());
+      try {
+        templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
+      } catch (Exception e) {
+        templateContext.put("LAST_UPDATED_TIME", "");
+      }
+      templateContext.put("READ",
+                          Boolean.valueOf(notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey())) ? "read"
+                                                                                                                                : "unread");
 
-    templateContext.put("AMOUNT", amount);
-    templateContext.put("SENDER", sender);
-    templateContext.put("RECEIVER", receiver);
-    templateContext.put("PROFILE_URL", profileURL);
-    templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
-    if (contract != null) {
-      templateContext.put("CONTRACT", contract);
+      String body = TemplateUtils.processGroovy(templateContext);
+      // binding the exception throws by processing template
+      if (templateContext.getException() != null) {
+        throw new IllegalStateException("An error occurred while building message", templateContext.getException());
+      }
+      MessageInfo messageInfo = new MessageInfo();
+      messageInfo.to(notification.getTo());
+      messageInfo.from(notification.getFrom());
+      messageInfo.pluginId(pluginId);
+      addMessageSubject(messageInfo, templateContext, type);
+      return messageInfo.body(body).end();
+    } catch (Exception e) {
+      LOG.warn("An error occurred while building notification message", e);
+      throw e;
     }
-    templateContext.put("NOTIFICATION_ID", notification.getId());
-    templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
-    templateContext.put("READ",
-                        Boolean.valueOf(notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey())) ? "read"
-                                                                                                                              : "unread");
-
-    String body = TemplateUtils.processGroovy(templateContext);
-    // binding the exception throws by processing template
-    ctx.setException(templateContext.getException());
-    MessageInfo messageInfo = new MessageInfo();
-    addMessageSubject(messageInfo, templateContext);
-    return messageInfo.body(body).end();
   }
 
   @Override
@@ -72,11 +93,11 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
     return false;
   }
 
-  private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext) {
-    PluginConfig templateConfig = getPluginConfig(templateContext.getPluginId());
-    Element subjectElement = NotificationUtils.getSubject(templateConfig,
-                                                          templateContext.getPluginId(),
-                                                          templateContext.getLanguage());
+  private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext, String type) {
+    String pluginId = templateContext.getPluginId();
+    PluginConfig templateConfig = getPluginConfig(pluginId);
+    pluginId = SPACE_ACCOUNT_TYPE.equals(type) ? "Space" + pluginId : pluginId;
+    Element subjectElement = NotificationUtils.getSubject(templateConfig, pluginId, templateContext.getLanguage());
     if (subjectElement != null && subjectElement.getTemplate() != null) {
       messageInfo.subject(subjectElement.getTemplate());
     }

@@ -16,14 +16,13 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.NEW_BLOCK_EVENT;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.NEW_TRANSACTION_EVENT;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Queue;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
 import org.picocontainer.Startable;
@@ -101,7 +100,7 @@ public class EthereumClientConnector implements Startable {
     scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
 
     // Transactions Queue processing
-    scheduledExecutorService.scheduleAtFixedRate(() -> {
+    scheduledExecutorService.scheduleWithFixedDelay(() -> {
       try {
         initWeb3Connection();
       } catch (Throwable e) {
@@ -256,17 +255,15 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
-  private void initWeb3Connection() throws Exception {
+  private synchronized void initWeb3Connection() throws Exception {
     if (getWebsocketProviderURL() == null) {
       throw new IllegalStateException("No configured URL for Ethereum Websocket connection");
     }
 
-    if (web3j == null || webSocketClient.isClosed()) {
-      if (web3j != null && webSocketClient.isClosed()) {
-        LOG.info("Connection was interrupted, atempt to reconnect to Ethereum network endpoint {}", getWebsocketProviderURL());
-      } else {
-        LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
-      }
+    if (web3j == null || webSocketClient.isClosed() || this.transactionSubscription == null
+        || this.transactionSubscription.isUnsubscribed() || this.blockSubscription == null
+        || this.blockSubscription.isUnsubscribed()) {
+      boolean isReconnecting = web3j != null && webSocketClient.isClosed();
 
       if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
         stopListeninigToTransactions();
@@ -275,6 +272,12 @@ public class EthereumClientConnector implements Startable {
       } else {
         throw new IllegalStateException("Bad format for configured URL " + getWebsocketProviderURL()
             + " for Ethereum Websocket connection");
+      }
+
+      if (isReconnecting) {
+        LOG.info("Connection was interrupted, atempt to reconnect to Ethereum network endpoint {}", getWebsocketProviderURL());
+      } else {
+        LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
       }
     }
   }
@@ -285,16 +288,7 @@ public class EthereumClientConnector implements Startable {
       web3jService = null;
     }
 
-    testConnection();
-
-    webSocketClient = new WebSocketClient(new URI(getWebsocketProviderURL()));
-    web3jService = new WebSocketService(webSocketClient, true);
-
-    web3jService.connect();
-    if (!webSocketClient.isOpen()) {
-      throw new IllegalStateException("Error connecting to " + getWebsocketProviderURL());
-    }
-
+    web3jService = testConnection();
     web3j = Web3j.build(web3jService);
     LOG.info("Connection established to Ethereum network endpoint {}", getWebsocketProviderURL());
   }
@@ -303,31 +297,47 @@ public class EthereumClientConnector implements Startable {
    * Test to synchronously test connection, else, it will wait infinitely until
    * a connection is established
    */
-  private void testConnection() throws URISyntaxException {
-    WebSocketClient webSocketClient = new WebSocketClient(new URI(getWebsocketProviderURL()));
-    webSocketClient.setListener(new WebSocketListener() {
-      @Override
-      public void onMessage(String message) throws IOException {
-      }
+  private WebSocketService testConnection() throws Exception {
+    try {
+      this.webSocketClient = new WebSocketClient(new URI(getWebsocketProviderURL()));
+      this.webSocketClient.setConnectionLostTimeout(10);
+      this.web3jService = new WebSocketService(webSocketClient, true);
+      this.webSocketClient.setListener(new WebSocketListener() {
+        @Override
+        public void onMessage(String message) throws IOException {
+        }
 
-      @Override
-      public void onError(Exception e) {
-      }
+        @Override
+        public void onError(Exception e) {
+          LOG.error("Connection failed to " + getWebsocketProviderURL());
+        }
 
-      @Override
-      public void onClose() {
+        @Override
+        public void onClose() {
+        }
+      });
+      this.web3jService.connect();
+      Thread.sleep(10000);
+      if (!this.webSocketClient.isOpen()) {
+        closeConnectionAndThrowError(null);
       }
-    });
+    } catch (Throwable e) {
+      closeConnectionAndThrowError(e);
+    }
+    return this.web3jService;
+  }
 
-    AtomicBoolean connected = new AtomicBoolean(false);
-    // close connection after 10 seconds to not wait indefinitely
-    setTimeout(() -> {
-      connected.set(webSocketClient.isOpen());
-      webSocketClient.close();
-    }, 10000);
-    webSocketClient.run();
-    if (!connected.get()) {
+  private void closeConnectionAndThrowError(Throwable e) {
+    try {
+      this.web3jService.close();
+    } finally {
+      this.webSocketClient = null;
+      this.web3jService = null;
+    }
+    if (e == null) {
       throw new IllegalStateException("Connection failed to " + getWebsocketProviderURL());
+    } else {
+      throw new IllegalStateException("Connection failed to " + getWebsocketProviderURL(), e);
     }
   }
 }

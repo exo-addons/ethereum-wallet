@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.GLOAL_SETTINGS_CHANGED_EVENT;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -379,13 +379,11 @@ public class EthereumWalletStorage {
     if (space == null) {
       return null;
     }
-    AccountDetail accountDetail = new AccountDetail(id,
-                                                    "space",
-                                                    space.getDisplayName(),
-                                                    null,
-                                                    space.getManagers(),
-                                                    space.getAvatarUrl());
-    return accountDetail;
+    String avatarUrl = space.getAvatarUrl();
+    if (StringUtils.isBlank(avatarUrl)) {
+      avatarUrl = "/rest/v1/social/spaces/" + id + "/avatar";
+    }
+    return new AccountDetail(id, SPACE_ACCOUNT_TYPE, space.getDisplayName(), null, space.getManagers(), avatarUrl);
   }
 
   /**
@@ -408,8 +406,7 @@ public class EthereumWalletStorage {
     if (StringUtils.isBlank(avatarUrl)) {
       avatarUrl = "/rest/v1/social/users/" + id + "/avatar";
     }
-    AccountDetail accountDetail = new AccountDetail(id, "user", identity.getProfile().getFullName(), null, null, avatarUrl);
-    return accountDetail;
+    return new AccountDetail(id, USER_ACCOUNT_TYPE, identity.getProfile().getFullName(), null, null, avatarUrl);
   }
 
   /**
@@ -429,11 +426,11 @@ public class EthereumWalletStorage {
     if (walletAddressValue != null && walletAddressValue.getValue() != null) {
       String idAndType = walletAddressValue.getValue().toString();
       String id = null;
-      if (idAndType.startsWith("user")) {
-        id = idAndType.replaceFirst("user", "");
+      if (idAndType.startsWith(USER_ACCOUNT_TYPE)) {
+        id = idAndType.replaceFirst(USER_ACCOUNT_TYPE, "");
         accountDetail = getUserDetails(id);
-      } else if (idAndType.startsWith("space")) {
-        id = idAndType.replaceFirst("space", "");
+      } else if (idAndType.startsWith(SPACE_ACCOUNT_TYPE)) {
+        id = idAndType.replaceFirst(SPACE_ACCOUNT_TYPE, "");
         accountDetail = getSpaceDetails(id);
       }
       if (accountDetail == null) {
@@ -490,12 +487,12 @@ public class EthereumWalletStorage {
     address = address.toLowerCase();
 
     if (StringUtils.isBlank(id) || StringUtils.isBlank(type)
-        || !(StringUtils.equals(type, "user") || StringUtils.equals(type, "space"))) {
+        || !(StringUtils.equals(type, USER_ACCOUNT_TYPE) || StringUtils.equals(type, SPACE_ACCOUNT_TYPE))) {
       LOG.warn("Bad request sent to server with id '{}', type '{}' and address '{}'", id, type, address);
       throw new IllegalStateException();
     }
 
-    if (StringUtils.equals(type, "user")) {
+    if (StringUtils.equals(type, USER_ACCOUNT_TYPE)) {
       if (!StringUtils.equals(currentUserId, id)) {
         LOG.error("User '{}' attempts to modify wallet address of user '{}'", currentUserId, id);
         throw new IllegalAccessException();
@@ -515,7 +512,7 @@ public class EthereumWalletStorage {
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
       settingService.set(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME, SettingValue.create(address));
-    } else if (StringUtils.equals(type, "space")) {
+    } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
       Space space = getSpace(id);
       if (space == null) {
         LOG.warn("Space not found with id '{}'", id);
@@ -600,10 +597,12 @@ public class EthereumWalletStorage {
     if (!addressTransactions.contains(hash)) {
       String[] addressTransactionsArray = addressTransactions.split(",");
       if (addressTransactionsArray.length >= 20) {
-        addressTransactionsArray[addressTransactionsArray.length - 1] = hash;
-        addressTransactions = StringUtils.join(addressTransactionsArray, ",");
+        List<String> transactionsList = new ArrayList<>(Arrays.asList(addressTransactionsArray));
+        transactionsList.add(0, hash);
+        transactionsList = transactionsList.subList(0, 20);
+        addressTransactions = StringUtils.join(transactionsList, ",");
       } else {
-        addressTransactions = addressTransactions.isEmpty() ? hash : addressTransactions + "," + hash;
+        addressTransactions = addressTransactions.isEmpty() ? hash : hash + "," + addressTransactions;
       }
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName, SettingValue.create(addressTransactions));
     }

@@ -27,7 +27,7 @@
                                             <% } %>
                                             <td  valign="top">
                                                 <p style="margin:0 0 12px; color: #333333; font-family:HelveticaNeue,arial,tahoma,serif; font-size:13px; line-height: 20px;">
-                                                  <%= _ctx.appRes("Notification.message.ContractReceiverNotificationPlugin", AMOUNT, PROFILE_URL, CONTRACT) %>
+                                                  <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceContractReceiverNotificationPlugin", RECEIVER_URL, AMOUNT, SENDER, CONTRACT) : _ctx.appRes("Notification.message.ContractReceiverNotificationPlugin", AMOUNT, SENDER_URL, CONTRACT)%>
                                                 </p>
                                             </td>
                                         </tr>

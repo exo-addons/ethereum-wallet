@@ -27,7 +27,7 @@
                                             <% } %>
                                             <td  valign="top">
                                                 <p style="margin:0 0 12px; color: #333333; font-family:HelveticaNeue,arial,tahoma,serif; font-size:13px; line-height: 20px;">
-                                                  <%= _ctx.appRes("Notification.message.EtherSenderNotificationPlugin", AMOUNT, PROFILE_URL) %>
+                                                  <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceEtherSenderNotificationPlugin", SENDER_URL, AMOUNT, RECEIVER_URL) : _ctx.appRes("Notification.message.EtherSenderNotificationPlugin", AMOUNT, RECEIVER_URL)%>
                                                 </p>
                                             </td>
                                         </tr>

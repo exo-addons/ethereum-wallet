@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.List;
 
@@ -63,11 +63,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   public Response getAccountByTypeAndID(@QueryParam("id") String id, @QueryParam("type") String type) {
     if (StringUtils.isBlank(id) || StringUtils.isBlank(type)
-        || !(StringUtils.equals(type, "user") || StringUtils.equals(type, "space"))) {
+        || !(StringUtils.equals(type, USER_ACCOUNT_TYPE) || StringUtils.equals(type, SPACE_ACCOUNT_TYPE))) {
       LOG.warn("Bad request sent to server with id '{}' and type '{}'", id, type);
       return Response.status(400).build();
     }
-    if (StringUtils.equals(type, "user")) {
+    if (StringUtils.equals(type, USER_ACCOUNT_TYPE)) {
       AccountDetail accountDetail = ethereumWalletStorage.getUserDetails(id);
       if (accountDetail == null) {
         LOG.warn("User not found with id '{}'", id);
@@ -75,7 +75,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       }
       accountDetail.setAddress(ethereumWalletStorage.getUserAddress(id));
       return Response.ok(accountDetail).build();
-    } else if (StringUtils.equals(type, "space")) {
+    } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
       AccountDetail accountDetail = ethereumWalletStorage.getSpaceDetails(id);
       if (accountDetail == null) {
         LOG.warn("Space not found with id '{}'", id);

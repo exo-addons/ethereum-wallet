@@ -19,6 +19,7 @@ package org.exoplatform.addon.ethereum.wallet.service.utils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -29,14 +30,25 @@ import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
 import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.portal.application.PortalApplication;
+import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.web.ControllerContext;
+import org.exoplatform.web.WebAppController;
+import org.exoplatform.webui.application.WebuiRequestContext;
 
 /**
  * Utils class to provide common tools and constants
  */
 public class Utils {
+
+  public static final String                             SPACE_ACCOUNT_TYPE                            = "space";
+
+  public static final String                             USER_ACCOUNT_TYPE                             = "user";
+
   public static final String                             GLOAL_SETTINGS_CHANGED_EVENT                  =
                                                                                       "exo.addon.wallet.settings.changed";
 
@@ -60,15 +72,19 @@ public class Utils {
 
   public static final String                             AMOUNT                                        = "amount";
 
+  public static final String                             ACCOUNT_TYPE                                  = "account_type";
+
   public static final String                             AVATAR                                        = "avatar";
 
   public static final String                             CONTRACT                                      = "contract";
 
   public static final String                             SENDER                                        = "sender";
 
-  public static final String                             PROFILE_URL                                   = "profileURL";
+  public static final String                             SENDER_URL                                    = "sender_url";
 
   public static final String                             RECEIVER                                      = "receiver";
+
+  public static final String                             RECEIVER_URL                                  = "receiver_url";
 
   public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER               =
                                                                                          new ArgumentLiteral<AccountDetail>(AccountDetail.class,
@@ -113,17 +129,6 @@ public class Utils {
     return null;
   }
 
-  public static void setTimeout(Runnable runnable, int delay) {
-    new Thread(() -> {
-      try {
-        Thread.sleep(delay);
-        runnable.run();
-      } catch (Exception e) {
-        System.err.println(e);
-      }
-    }).start();
-  }
-
   public static Event approvalEvent() {
     return new Event("Approval", Arrays.asList(new TypeReference<Address>(true) {
     }, new TypeReference<Address>(true) {
@@ -132,7 +137,7 @@ public class Utils {
   }
 
   public static List<String> getNotificationReceiversUsers(AccountDetail toAccount, String excludedId) {
-    if ("space".equals(toAccount.getType())) {
+    if (SPACE_ACCOUNT_TYPE.equals(toAccount.getType())) {
       Space space = CommonsUtils.getService(SpaceService.class).getSpaceByPrettyName(toAccount.getId());
       String[] members = space.getMembers();
       if (members == null || members.length == 0) {
@@ -144,6 +149,47 @@ public class Utils {
       }
     } else {
       return Collections.singletonList(toAccount.getId());
+    }
+  }
+
+  public static String getPermanentLink(AccountDetail account) {
+    String profileLink = account.getId() == null
+        || account.getType() == null ? account.getName()
+                                     : USER_ACCOUNT_TYPE.equals(account.getType()) ? LinkProvider.getProfileLink(account.getId())
+                                                                                   : getPermanentLink(account.getId(),
+                                                                                                      account.getName());
+    return profileLink;
+  }
+
+  public static String getPermanentLink(String prettyName, String name) {
+    WebAppController webAppController = CommonsUtils.getService(WebAppController.class);
+    ControllerContext controllerContext = new ControllerContext(webAppController,
+                                                                webAppController.getRouter(),
+                                                                new FakeHTTPServletResponse(),
+                                                                new FakeHTTPServletRequest(),
+                                                                null);
+    PortalApplication application = webAppController.getApplication(PortalApplication.PORTAL_APPLICATION_ID);
+    PortalRequestContext requestContext = new PortalRequestContext(application,
+                                                                   controllerContext,
+                                                                   org.exoplatform.portal.mop.SiteType.PORTAL.toString(),
+                                                                   "",
+                                                                   "",
+                                                                   null);
+    WebuiRequestContext.setCurrentInstance(requestContext);
+    try {
+      String spaceUrl = LinkProvider.getSpaceUri(prettyName);
+      if (StringUtils.isBlank(spaceUrl)) {
+        return CommonsUtils.getCurrentDomain();
+      }
+
+      spaceUrl = CommonsUtils.getCurrentDomain() + spaceUrl;
+      return new StringBuilder("<a href=\"").append(spaceUrl)
+                                            .append("\" target=\"_parent\">")
+                                            .append(StringEscapeUtils.escapeHtml(name))
+                                            .append("</a>")
+                                            .toString();
+    } finally {
+      WebuiRequestContext.setCurrentInstance(null);
     }
   }
 }
