@@ -89,6 +89,12 @@ export default {
         return false;
       }
     },
+    fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     account: {
       type: String,
       default: function() {
@@ -101,7 +107,6 @@ export default {
       loading: false,
       show: false,
       error: null,
-      fiatSymbol: '$',
       selectedCurrency: FIAT_CURRENCIES['usd'],
       currencies: [],
       defaultGas: 0,
@@ -118,7 +123,6 @@ export default {
         if (window.walletSettings.currency) {
           this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.currency];
         }
-        this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
       }
     },
     show() {

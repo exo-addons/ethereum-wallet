@@ -140,6 +140,12 @@ export default {
         return {};
       }
     },
+    fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     contractDetail: {
       type: Object,
       default: function() {
@@ -152,15 +158,11 @@ export default {
       loading: false,
       // Avoid refreshing list and balance twice
       refreshing: false,
-      fiatSymbol: '$',
       error: null,
       hasDelegatedTokens: false
     };
   },
   watch: {
-    account() {
-      this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
-    },
     contractDetail() {
       this.error = null;
     },

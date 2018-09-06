@@ -102,6 +102,12 @@ export default {
         return null;
       }
     },
+    fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     networkId: {
       type: Number,
       default: function() {
@@ -120,7 +126,6 @@ export default {
       newTokenGasPrice: 0,
       newTokenGasPriceGWEI: 0,
       newTokenGasInFiat: 0,
-      fiatSymbol: '$',
       newTokenDecimals: 0,
       newTokenInitialCoins: 0,
       newTokenSetAsDefault: true,
@@ -171,7 +176,6 @@ export default {
       this.newTokenAddress = '';
       this.valid = false;
       this.contracts = [];
-      this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
     },
     calculateGasPriceInFiat() {
       if (this.newTokenGas && this.newTokenGasPrice) {

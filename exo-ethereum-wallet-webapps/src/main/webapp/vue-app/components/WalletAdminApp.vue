@@ -145,6 +145,7 @@
                 v-show="sameConfiguredNetwork"
                 :account="account"
                 :network-id="networkId"
+                :fiat-symbol="fiatSymbol"
                 @list-updated="updateList($event)"/>
               <add-contract-modal
                 :net-id="networkId"

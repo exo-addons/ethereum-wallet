@@ -21,6 +21,7 @@
 
             <user-settings-modal :account="account"
                                  :open="showSettingsModal"
+                                 :fiat-symbol="fiatSymbol"
                                  @close="showSettingsModal = false"
                                  @settings-changed="refreshList(true)" />
           </v-toolbar>
@@ -54,15 +55,16 @@
               :account="account"
               :network-id="networkId"
               :refresh-index="refreshIndex"
+              :fiat-symbol="fiatSymbol"
               @account-details-selected="openAccountDetail"
               @error="errorMessage = $event" />
           </v-card>
 
           <!-- The selected account detail -->
           <v-navigation-drawer v-if="!isMaximized" id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
-            <account-detail ref="accountDetail" :is-space="isSpace" :network-id="networkId" :account="account" :contract-detail="selectedAccount" @back="back"/>
+            <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :is-space="isSpace" :network-id="networkId" :account="account" :contract-detail="selectedAccount" @back="back"/>
           </v-navigation-drawer>
-          <account-detail v-else-if="selectedAccount" ref="accountDetail" :network-id="networkId" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
+          <account-detail v-else-if="selectedAccount" ref="accountDetail" :fiat-symbol="fiatSymbol" :network-id="networkId" :is-space="isSpace" :account="account" :contract-detail="selectedAccount" @back="back"/>
         </v-flex>
       </v-layout>
     </main>
@@ -381,6 +383,7 @@ export default {
         })
         .then(() => {
           this.loading = false;
+          this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
           $(window).trigger("resize");
         })
         .catch(e => {

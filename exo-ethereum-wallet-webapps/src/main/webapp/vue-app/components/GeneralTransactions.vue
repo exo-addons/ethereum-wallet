@@ -75,6 +75,12 @@ export default {
         return 0;
       }
     },
+    fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     account: {
       type: String,
       default: function() {
@@ -87,7 +93,6 @@ export default {
       // A trick to force update computed list
       // since the attribute this.atransactions is modified outside the component
       refreshIndex: 1,
-      fiatSymbol: '$',
       newestBlockNumber: 0,
       oldestBlockNumber: 0,
       finishedLoading: false,
@@ -147,14 +152,11 @@ export default {
       this.transactions = {};
       this.loadedBlocks = 0;
 
-      this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
-
       // Get transactions to latest block with maxBlocks to load
       return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
         this.forceUpdateList();
       })
         .then(() => loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
-          this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
           this.$emit("refresh-balance");
           this.forceUpdateList();
         }))

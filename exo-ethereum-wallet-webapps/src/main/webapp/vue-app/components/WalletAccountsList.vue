@@ -101,6 +101,12 @@ export default {
         return {};
       }
     },
+    fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     account: {
       type: String,
       default: function() {
