@@ -16,8 +16,10 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service.utils;
 
-import java.util.Arrays;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
@@ -26,7 +28,10 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
 import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 
 /**
  * Utils class to provide common tools and constants
@@ -124,5 +129,21 @@ public class Utils {
     }, new TypeReference<Address>(true) {
     }, new TypeReference<Uint256>() {
     }));
+  }
+
+  public static List<String> getNotificationReceiversUsers(AccountDetail toAccount, String excludedId) {
+    if ("space".equals(toAccount.getType())) {
+      Space space = CommonsUtils.getService(SpaceService.class).getSpaceByPrettyName(toAccount.getId());
+      String[] members = space.getMembers();
+      if (members == null || members.length == 0) {
+        return Collections.emptyList();
+      } else if (StringUtils.isBlank(excludedId)) {
+        return Arrays.asList(members);
+      } else {
+        return Arrays.stream(members).filter(member -> !excludedId.equals(member)).collect(Collectors.toList());
+      }
+    } else {
+      return Collections.singletonList(toAccount.getId());
+    }
   }
 }

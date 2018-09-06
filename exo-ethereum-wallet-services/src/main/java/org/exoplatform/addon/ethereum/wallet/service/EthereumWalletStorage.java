@@ -585,7 +585,7 @@ public class EthereumWalletStorage {
    * @param address
    * @param hash
    */
-  public void saveUserTransaction(Long networkId, String address, String hash) {
+  public void saveAccountTransaction(Long networkId, String address, String hash) {
     if (StringUtils.isBlank(address)) {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
@@ -616,7 +616,7 @@ public class EthereumWalletStorage {
    * @param address
    * @return
    */
-  public List<String> getUserTransactions(Long networkId, String address) {
+  public List<String> getAccountTransactions(Long networkId, String address) {
     String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();

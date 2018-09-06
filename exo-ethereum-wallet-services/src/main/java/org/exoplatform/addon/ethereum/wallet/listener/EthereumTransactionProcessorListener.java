@@ -138,7 +138,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       }
 
       // Add user transaction
-      ethereumWalletStorage.saveUserTransaction(settings.getDefaultNetworkId(),
+      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(),
                                                 senderAccountDetails.getAddress(),
                                                 transaction.getHash());
     }
@@ -152,7 +152,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       }
 
       // Add user transaction
-      ethereumWalletStorage.saveUserTransaction(settings.getDefaultNetworkId(),
+      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(),
                                                 receiverAccountDetails.getAddress(),
                                                 transaction.getHash());
     }

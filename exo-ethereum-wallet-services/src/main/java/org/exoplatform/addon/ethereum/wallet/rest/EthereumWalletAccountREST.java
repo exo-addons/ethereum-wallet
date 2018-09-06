@@ -178,7 +178,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    List<String> userTransactions = ethereumWalletStorage.getUserTransactions(networkId, address);
+    List<String> userTransactions = ethereumWalletStorage.getAccountTransactions(networkId, address);
     JSONArray array = new JSONArray(userTransactions);
 
     return Response.ok(array.toString()).build();

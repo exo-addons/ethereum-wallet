@@ -18,8 +18,6 @@ package org.exoplatform.addon.ethereum.wallet.notification.plugin;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
-import java.util.Collections;
-
 import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
 import org.exoplatform.commons.api.notification.NotificationContext;
@@ -56,7 +54,7 @@ public class ContractSenderNotificationPlugin extends BaseNotificationPlugin {
                                                                : LinkProvider.getProfileLink(receiverAccountDetail.getId());
 
     return NotificationInfo.instance()
-                           .to(Collections.singletonList(senderAccountDetail.getId()))
+                           .to(getNotificationReceiversUsers(receiverAccountDetail, senderAccountDetail.getId()))
                            .with(AMOUNT, String.valueOf(amount))
                            .with(CONTRACT, contract)
                            .with(AVATAR, CommonsUtils.getCurrentDomain() + receiverAccountDetail.getAvatar())
