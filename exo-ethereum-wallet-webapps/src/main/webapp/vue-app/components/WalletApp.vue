@@ -15,6 +15,10 @@
                              @refresh="refreshList(true)"
                              @modify-settings="showSettingsModal = true" />
 
+            <v-btn v-if="!isMaximized" icon class="maximizeIcon" @click="maximize">
+              <v-icon size="15px">fa-external-link-alt</v-icon>
+            </v-btn>
+
             <user-settings-modal :account="account"
                                  :open="showSettingsModal"
                                  @close="showSettingsModal = false"
@@ -247,6 +251,7 @@ export default {
             throw new Error("Wallet disabled for current user");
           } else {
             this.isWalletEnabled = true;
+            this.initMenuApp();
             this.forceUpdate();
           }
         })
@@ -374,7 +379,10 @@ export default {
           }
           return this.initAccount(account, forceRefresh);
         })
-        .then(() => this.loading = false)
+        .then(() => {
+          this.loading = false;
+          $(window).trigger("resize");
+        })
         .catch(e => {
           console.debug("refreshList method - error", e);
           this.errorMessage = `${e}`;
@@ -671,6 +679,24 @@ export default {
     },
     maximize() {
       window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`; 
+    },
+    initMenuApp() {
+      if (!this.isWalletEnabled || this.isSpace) {
+        return;
+      }
+      this.$nextTick(() => {
+        if ($("#myWalletTad").length) {
+          return;
+        }
+        $(".userNavigation").append(` \
+          <li id='myWalletTad' class='item${this.isMaximized ? " active" : ""}'> \
+            <a href='/portal/intranet/wallet'> \
+              <div class='uiIconAppWallet uiIconDefaultApp' /> \
+              <span class='tabName'>My Wallet</span> \
+            </a> \
+          </li>`);
+        $(window).trigger("resize");
+      });
     }
   }
 };
