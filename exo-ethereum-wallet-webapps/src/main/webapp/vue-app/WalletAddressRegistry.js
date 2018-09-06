@@ -101,6 +101,7 @@ export function searchUserOrSpaceObject(id, type) {
  * }
  */
 export function searchFullName(address) {
+  address = address.toLowerCase();
   return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp.ok) {
@@ -111,6 +112,9 @@ export function searchFullName(address) {
     })
     .then(item => {
       if (item && item.name && item.name.length) {
+        if (!item.avatar) {
+          item.avatar = item.type === 'user' ? `/rest/v1/social/users/${item.id}/avatar`: `/rest/v1/social/spaces/${item.id}/avatar`;
+        }
         sessionStorage.setItem(`exo-wallet-address-${item.type}-${address}`.toLowerCase(), JSON.stringify(item));
         return item;
       }

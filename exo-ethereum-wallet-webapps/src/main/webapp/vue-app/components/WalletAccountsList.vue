@@ -56,8 +56,8 @@
           :disabled="!hasDelegatedTokens || item.balance === 0 || item.etherBalance === 0"
           :ether-balance="item.etherBalance"
           :contract="item.contract"
-          icon
           :has-delegated-tokens="true"
+          icon
           @error="$emit('error', $event)" />
   
         <!-- Ether account actions -->

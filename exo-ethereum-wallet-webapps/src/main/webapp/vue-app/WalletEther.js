@@ -103,6 +103,7 @@ export function addTransaction(networkId, account, transactions, transaction, re
     titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
     displayAddress: displayAddress,
     displayName: contactDetails.name ? contactDetails.name : displayAddress,
+    isContractName: contactDetails.name ? true : false,
     avatar: contactDetails.avatar,
     name: null,
     status: status,
@@ -155,8 +156,14 @@ export function addTransaction(networkId, account, transactions, transaction, re
       .then(contractDetails => {
         if (contractDetails) {
           transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
+          transactionDetails.isContractName = true;
           transactionDetails.name = contractDetails.address;
+          transactionDetails.avatar = contractDetails.avatar;
+          // don't continue searching
+          return false;
         }
+        // continue searching
+        return true;
       })
       .then(continueSearch => {
         if(continueSearch) {
@@ -208,7 +215,10 @@ function addBlockTransactions(networkId, account, transactions, block, untilBloc
 
   // Continue searching in previous block
   return window.localWeb3.eth.getBlock(block.parentHash, true)
-    .then(blockTmp => addBlockTransactions(networkId, account, transactions, blockTmp, untilBlockNumber, loadedBlocks, progressionCallback));
+    .then(blockTmp => addBlockTransactions(networkId, account, transactions, blockTmp, untilBlockNumber, loadedBlocks, progressionCallback))
+    .catch(error => {
+      console.warn(`Error while retrieving bloc with hash ${block.parentHash}`, error);
+    });
 }
 
 export function getFromBlock(fromBlock, toBlock, maxBlocks) {

@@ -27,7 +27,7 @@
                   </v-avatar>
                   <span v-html="item.displayName"></span>
                 </v-chip>
-                <wallet-address v-else :value="item.displayName" />
+                <wallet-address v-else :allow-copy="!item.isContractName" :value="item.displayName" />
               </v-list-tile-title>
               <v-list-tile-sub-title>
                 <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
