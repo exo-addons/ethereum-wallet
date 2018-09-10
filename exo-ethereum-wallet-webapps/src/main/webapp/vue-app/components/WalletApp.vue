@@ -30,7 +30,8 @@
           <v-card v-if="displayAccountsList" class="text-xs-center" flat>
             <v-progress-circular v-show="loading" color="primary" indeterminate></v-progress-circular>
 
-            <wallet-app-alerts :display-not-same-network-warning="displayNotSameNetworkWarning"
+            <wallet-app-alerts v-if="!loading && walletAddressConfigured"
+                               :display-not-same-network-warning="displayNotSameNetworkWarning"
                                :network-label="networkLabel"
                                :display-space-metamask-enable-help="displaySpaceMetamaskEnableHelp"
                                :new-address-detected="newAddressDetected"
@@ -49,7 +50,14 @@
                                :error-message="errorMessage"
                                @save-address-to-account="saveNewAddressInWallet" />
 
+            <wallet-app-setup
+              v-else-if="!loading"
+              :error-code="errorCode"
+              :is-space="isSpace"
+              @configured="init" />
+
             <wallet-accounts-list
+              v-if="walletAddressConfigured"
               ref="WalletAccountsList"
               :accounts-details="accountsDetails"
               :account="account"
@@ -58,6 +66,7 @@
               :fiat-symbol="fiatSymbol"
               @account-details-selected="openAccountDetail"
               @error="errorMessage = $event" />
+
           </v-card>
 
           <!-- The selected account detail -->
@@ -79,8 +88,9 @@ import AddContractModal from './AddContractModal.vue';
 import AccountDetail from './AccountDetail.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
+import WalletAppSetup from './WalletAppSetup.vue';
 
-import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
+import * as constants from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
 import {searchAddress, searchUserOrSpaceObject, searchFullName, saveNewAddress} from '../WalletAddressRegistry.js';
 import {etherToFiat, initWeb3, initSettings, computeNetwork, computeBalance} from '../WalletUtils.js';
@@ -90,6 +100,7 @@ export default {
     UserSettingsModal,
     WalletAppMenu,
     WalletAppAlerts,
+    WalletAppSetup,
     WalletAccountsList,
     QrCodeModal,
     AccountDetail,
@@ -110,10 +121,12 @@ export default {
       seeAccountDetailsPermanent: false,
       addressAssociationDialog: false,
       installInstructionDialog: false,
+      metamaskWatchInterval: false,
       isWalletEnabled: false,
-      sameConfiguredNetwork: true,
       networkLabel: '',
       loading: true,
+      walletAddressConfigured: false,
+      sameConfiguredNetwork: true,
       currentAccountAlreadyInUse: false,
       displaySpaceAccountCreationHelp: false,
       oldAccountAddressNotFound: null,
@@ -130,6 +143,7 @@ export default {
       contracts: [],
       accountsDetails: {},
       refreshIndex: 1,
+      errorCode: null,
       errorMessage: null
     };
   },
@@ -144,7 +158,7 @@ export default {
       return !this.isMaximized || !this.selectedAccount;
     },
     displayErrors() {
-      return this.hasErrors && !this.loading && !this.displaySpaceAccountCreationHelp && !this.displaySpaceMetamaskEnableHelp;
+      return this.hasErrors && !this.loading;
     },
     displayNotSameNetworkWarning() {
       return !this.loading && !this.isSpace && !this.sameConfiguredNetwork && this.networkLabel && this.networkLabel.length;
@@ -165,7 +179,7 @@ export default {
       return this.isSpace && !this.loading && !this.oldAccountAddress && !this.newAccountAddress && !this.account;
     },
     hasErrors() {
-      return !this.loading && (this.errorMessage || (!this.isSpace && (!this.metamaskEnabled || !this.metamaskConnected || !this.account)));
+      return !this.loading && this.walletAddressConfigured && (this.errorMessage || (!this.isSpace && !this.account));
     },
     newAddressDetected() {
       return this.sameConfiguredNetwork
@@ -205,39 +219,27 @@ export default {
       this.isWalletEnabled = false;
       return;
     }
+
+    // Close wallet menu on click
     $(document).on("click", () => {
       this.walletConfigurationMenu = false;
     });
+
     // Init application
-    try {
-      if (this.isSpace || (this.metamaskEnabled && this.metamaskConnected)) {
-        this.loading = true;
-        this.init();
-      } else {
-        this.init()
-          .then((result, error) => {
-            if (error) {
-              throw error;
-            }
-            const thiss = this;
-            // Refresh application when Metamask address changes
-            window.addEventListener('load', function() {
-              if (window && window.localWeb3 && window.localWeb3.eth && window.localWeb3.eth.defaultAccount !== this.account) {
-                thiss.init();
-              }
-            });
-          })
-          .catch(e => {
-            console.debug("init method - error", e);
-            this.errorMessage = `${e}`;
-            this.loading = false;
-          });
-      }
-    } catch (e) {
-      console.debug("init method - error", e);
-      this.errorMessage = `${e}`;
-      this.loading = false;
-    }
+    this.loading = true;
+    this.init()
+      .then((result, error) => {
+        if (error) {
+          throw error;
+        }
+        const thiss = this;
+        // Refresh application when Metamask address changes
+        window.addEventListener('load', function() {
+          if (window && window.localWeb3 && window.localWeb3.eth && window.localWeb3.eth.defaultAccount !== this.account) {
+            thiss.init();
+          }
+        });
+      });
   },
   methods: {
     init() {
@@ -247,14 +249,19 @@ export default {
           if (error) {
             throw error;
           }
+
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
             this.isWalletEnabled = false;
             this.forceUpdate();
             throw new Error("Wallet disabled for current user");
           } else {
             this.isWalletEnabled = true;
-            this.initMenuApp();
-            this.forceUpdate();
+            if (window.walletSettings.userPreferences.walletAddress) {
+              this.initMenuApp();
+              this.forceUpdate();
+            } else {
+              throw new Error(constants.ERROR_WALLET_ADDRESS_NOT_CONFIGURED);
+            }
           }
         })
         .then((result, error) => {
@@ -267,13 +274,14 @@ export default {
           if (error) {
             throw error;
           }
-          return this.refreshList(result);
+          this.walletAddressConfigured = true;
+          return this.refreshList(false);
         })
         .then((result, error) => {
           if (error) {
             throw error;
           }
-          this.retrieveDefaultUserAccount();
+          return this.retrieveDefaultUserAccount();
         })
         .then((result, error) => {
           if (error) {
@@ -281,40 +289,13 @@ export default {
           }
 
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
-
-          if (!this.isSpace && this.metamaskEnabled && this.metamaskConnected) {
-            const thiss = this;
-            // In case account switched in Metamask
-            // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
-            setInterval(function() {
-              thiss.getAccount()
-                .then((account, error) => {
-                  if (error) {
-                    throw error;
-                  }
-                  return thiss.initAccount(account);
-                })
-                .then((result, error) => {
-                  if (error) {
-                    throw error;
-                  }
-                  if (!result || !result.ignoreRefresh) {
-                    thiss.retrieveDefaultUserAccount();
-                  }
-                })
-                .then((result, error) => {
-                  if (error) {
-                    throw error;
-                  }
-                  thiss.loading = false;
-                })
-                .catch(e => {
-                  console.debug("setInterval getAccount method - error", e);
-                  thiss.errorMessage = `${e}`;
-                  thiss.loading = false;
-                });
-            }, 1000);
+          return this.watchMetamaskAccount();
+        })
+        .then((result, error) => {
+          if (error) {
+            throw error;
           }
+
         })
         .then((result, error) => {
           if (error) {
@@ -324,32 +305,39 @@ export default {
         })
         .catch(e => {
           console.debug("init method - error", e);
+          const error = `${e}`;
+          if (error.indexOf(constants.ERROR_METAMASK_NOT_CONNECTED) >= 0) {
+            this.errorCode = constants.ERROR_METAMASK_NOT_CONNECTED;
+            // TODO
+          } else if (error.indexOf(constants.ERROR_WRONG_WALLET_SETTINGS) >= 0) {
+            this.errorCode = constants.ERROR_WRONG_WALLET_SETTINGS;
+            // TODO
+          } else if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
+            this.errorCode = constants.ERROR_WALLET_NOT_CONFIGURED;
+            // TODO
+          } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
+            this.errorCode = constants.ERROR_WALLET_SETTINGS_NOT_LOADED;
+            // TODO
+          } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
+            this.errorCode = constants.ERROR_WALLET_DISCONNECTED;
+            // TODO
+          } else if (error.indexOf(constants.ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND) >= 0) {
+            this.errorCode = constants.ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND;
+            // TODO
+          } else if (error.indexOf(constants.ERROR_WALLET_ADDRESS_NOT_CONFIGURED) >= 0) {
+            this.errorCode = constants.ERROR_WALLET_ADDRESS_NOT_CONFIGURED;
+            // TODO
+          } else {
+            this.walletAddressConfigured = true;
+          }
           this.errorMessage = `${e}`;
           this.loading = false;
         })
         .finally(() => {
           if (window.walletSettings && window.walletSettings.defaultNetworkId) {
-            switch (window.walletSettings.defaultNetworkId) {
-            case 0:
-              this.networkLabel = '';
-              break;
-            case 1:
-              this.networkLabel = 'Main network';
-              break;
-            case 2:
-              this.networkLabel = 'Ethereum Classic main network';
-              break;
-            case 3:
-              this.networkLabel = 'Ropsten network';
-              break;
-            case 4:
-              this.networkLabel = 'Rinkeby network';
-              break;
-            case 42:
-              this.networkLabel = 'Kovan network';
-              break;
-            default:
-              this.networkLabel = 'custom network';
+            this.networkLabel = constants.NETWORK_NAMES[window.walletSettings.defaultNetworkId];
+            if (!this.networkLabel) {
+              this.networkLabel = `Custom network with id ${window.walletSettings.defaultNetworkId}`;
             }
           }
         });
@@ -393,13 +381,17 @@ export default {
         });
     },
     getAccount(isSpace) {
-      if(isSpace) {
-        if (!eXo.env.portal.spaceGroup) {
-          throw new Error("Space identifier is empty");
+      if (window.walletSettings.userPreferences.useMetamask) {
+        if(isSpace) {
+          if (!eXo.env.portal.spaceGroup) {
+            throw new Error("Space identifier is empty");
+          }
+          return searchAddress(eXo.env.portal.spaceGroup, 'space');
+        } else {
+          return window.localWeb3.eth.getCoinbase();
         }
-        return searchAddress(eXo.env.portal.spaceGroup, 'space');
       } else {
-        return window.localWeb3.eth.getCoinbase();
+        return window.localWeb3.eth.defaultAccount;
       }
     },
     initAccount(account, forceRefresh) {
@@ -700,6 +692,44 @@ export default {
           </li>`);
         $(window).trigger("resize");
       });
+    },
+    watchMetamaskAccount() {
+      if (this.metamaskWatchInterval) {
+        clearInterval(this.metamaskWatchInterval);
+      }
+      if (window.walletSettings.userPreferences.useMetamask && this.metamaskEnabled && this.metamaskConnected) {
+        const thiss = this;
+        // In case account switched in Metamask
+        // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
+        this.metamaskWatchInterval = setInterval(function() {
+          thiss.getAccount()
+            .then((account, error) => {
+              if (error) {
+                throw error;
+              }
+              return thiss.initAccount(account);
+            })
+            .then((result, error) => {
+              if (error) {
+                throw error;
+              }
+              if (!result || !result.ignoreRefresh) {
+                thiss.retrieveDefaultUserAccount();
+              }
+            })
+            .then((result, error) => {
+              if (error) {
+                throw error;
+              }
+              thiss.loading = false;
+            })
+            .catch(e => {
+              console.debug("setInterval getAccount method - error", e);
+              thiss.errorMessage = `${e}`;
+              thiss.loading = false;
+            });
+        }, 1000);
+      }
     }
   }
 };

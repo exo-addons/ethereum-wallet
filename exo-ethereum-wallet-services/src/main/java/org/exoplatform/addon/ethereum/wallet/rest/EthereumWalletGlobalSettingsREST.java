@@ -55,8 +55,8 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("users")
-  public Response getSettings(@QueryParam("networkId") Long networkId) {
-    GlobalSettings globalSettings = ethereumWalletStorage.getSettings(networkId, getCurrentUserId());
+  public Response getSettings(@QueryParam("networkId") Long networkId, @QueryParam("spaceId") String spaceId) {
+    GlobalSettings globalSettings = ethereumWalletStorage.getSettings(networkId, getCurrentUserId(), spaceId);
 
     return Response.ok(globalSettings.toJSONString()).build();
   }

@@ -27,9 +27,7 @@ public class GlobalSettings implements Serializable {
 
   private Integer                defaultGas              = 65000;
 
-  private Integer                userDefaultGas;
-
-  private String                 currency;
+  private UserPreferences        userPreferences;
 
   /**
    * Managed in other storage location
@@ -50,11 +48,8 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
-      if (userDefaultGas != null) {
-        jsonObject.put("userDefaultGas", userDefaultGas);
-      }
-      if (currency != null) {
-        jsonObject.put("currency", currency);
+      if (userPreferences != null) {
+        jsonObject.put("userPreferences", userPreferences.toJSONObject());
       }
       jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
     } catch (JSONException e) {

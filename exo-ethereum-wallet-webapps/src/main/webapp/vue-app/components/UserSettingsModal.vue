@@ -116,12 +116,12 @@ export default {
   watch: {
     open() {
       if (this.open) {
-        this.defaultGas = window.walletSettings.userDefaultGas ? window.walletSettings.userDefaultGas : 21000;
+        this.defaultGas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 21000;
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.$refs.qrCode.computeCanvas();
         this.show = true;
-        if (window.walletSettings.currency) {
-          this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.currency];
+        if (window.walletSettings.userPreferences.currency) {
+          this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.userPreferences.currency];
         }
       }
     },
@@ -154,8 +154,8 @@ export default {
           })
         }).then(resp => {
           if (resp && resp.ok) {
-            window.walletSettings.userDefaultGas = this.defaultGas;
-            window.walletSettings.currency = this.selectedCurrency.value;
+            window.walletSettings.userPreferences.userDefaultGas = this.defaultGas;
+            window.walletSettings.userPreferences.currency = this.selectedCurrency.value;
             this.$emit('settings-changed', {
               defaultGas: this.defaultGas,
               currency: this.selectedCurrency.value

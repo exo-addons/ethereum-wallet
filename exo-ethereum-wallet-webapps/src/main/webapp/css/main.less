@@ -58,15 +58,6 @@
     left: auto!important;
   }
 
-  #contractTransactionsContent {
-    max-height: ~"calc(100vh - 165px)";
-    overflow: auto;
-  }
-  #generalTransactionsContent {
-    max-height: ~"calc(100vh - 165px)";
-    overflow: auto;
-  }
-
   .contactAutoComplete {
     position: relative;
 
@@ -113,6 +104,10 @@
     }
   }
 
+  .walletAddress {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
   .copyToClipboard {
     position:relative;
     display: inline-block;
@@ -132,6 +127,17 @@
       left:-9999px;
     }
   }
+  .alert{
+    line-height: 29px;
+
+    i {
+      margin-right: 0;
+    }
+
+    [class^="uiIcon"] {
+      margin-right: 15px;
+    }
+  }
 }
 
 #WalletAdminApp {
@@ -148,6 +154,15 @@
   }
   &.minimized {
     padding: 10px;
+
+    #contractTransactionsContent {
+      max-height: ~"calc(100vh - 165px)";
+      overflow: auto;
+    }
+    #generalTransactionsContent {
+      max-height: ~"calc(100vh - 165px)";
+      overflow: auto;
+    }
 
     > .walletConfigurationMenu {
       top: 50px!important;

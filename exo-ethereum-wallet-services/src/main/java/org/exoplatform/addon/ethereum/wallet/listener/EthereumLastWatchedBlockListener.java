@@ -52,7 +52,7 @@ public class EthereumLastWatchedBlockListener extends Listener<Block, Object> {
     RequestLifeCycle.begin(this.container);
     try {
       long blockNumber = block.getNumber().longValue();
-      GlobalSettings globalSettings = ethereumWalletStorage.getSettings(null, null);
+      GlobalSettings globalSettings = ethereumWalletStorage.getSettings();
       long networkId = globalSettings.getDefaultNetworkId();
       if (networkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
         this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);

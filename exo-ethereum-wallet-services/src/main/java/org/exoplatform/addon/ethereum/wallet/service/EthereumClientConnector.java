@@ -85,7 +85,7 @@ public class EthereumClientConnector implements Startable {
   public void start() {
     RequestLifeCycle.begin(container);
     try {
-      GlobalSettings storedSettings = this.ethereumWalletStorage.getSettings(null, null);
+      GlobalSettings storedSettings = this.ethereumWalletStorage.getSettings();
       if (storedSettings != null && StringUtils.isNotBlank(storedSettings.getWebsocketProviderURL())) {
         this.globalSettings = storedSettings;
         this.lastWatchedBlockNumber = this.ethereumWalletStorage.getLastWatchedBlockNumber(storedSettings.getDefaultNetworkId());

@@ -1,5 +1,5 @@
 <template>
-  <div class="copyToClipboard">
+  <div class="copyToClipboard walletAddress">
     <code :class="allowCopy && 'pr-4'" class="pt-2 pb-1">{{ value }}</code>
     <v-btn v-if="allowCopy" title="Copy to clipboard" icon ripple small absolute color="blue-grey lighten-4" class="mt-0 mb-0 mr-0 ml-0" @click="copyToClipboard">
       <v-icon size="12">fa-clipboard</v-icon>

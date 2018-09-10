@@ -77,7 +77,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     boolean isContractTransaction = amount == 0;
     boolean sendNotification = true;
 
-    GlobalSettings settings = ethereumWalletStorage.getSettings(null, null);
+    GlobalSettings settings = ethereumWalletStorage.getSettings();
 
     // Compute receiver address switch transaction type
     if (isContractTransaction) {

@@ -165,6 +165,19 @@ public class EthereumWalletStorage {
   }
 
   /**
+   * Retrieves global stored settings used for all users.
+   * 
+   * @return
+   */
+  public GlobalSettings getSettings() {
+    if (storedSettings != null) {
+      // Retrieve stored global settings from memory
+      return storedSettings;
+    }
+    return getSettings(null, null);
+  }
+
+  /**
    * Retrieves global stored settings. if username is not null, the personal
    * settings will be included.
    * 
@@ -173,11 +186,20 @@ public class EthereumWalletStorage {
    * @return
    */
   public GlobalSettings getSettings(Long networkId, String username) {
-    if (username == null && storedSettings != null && (networkId == null || networkId == storedSettings.getDefaultNetworkId())) {
-      // Retrieve stored global settings from memory
-      return storedSettings;
-    }
+    return getSettings(networkId, username, null);
+  }
 
+  /**
+   * Retrieves global stored settings. if username is not null, the personal
+   * settings will be included. if spaceId is not null wallet address will be
+   * retrieved
+   * 
+   * @param networkId
+   * @param username
+   * @param spaceId
+   * @return
+   */
+  public GlobalSettings getSettings(Long networkId, String username, String spaceId) {
     SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
 
     GlobalSettings globalSettings = defaultSettings;
@@ -213,11 +235,16 @@ public class EthereumWalletStorage {
         UserPreferences userSettings = null;
         if (userSettingsValue != null && userSettingsValue.getValue() != null) {
           userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
+        } else {
+          userSettings = new UserPreferences();
         }
-        globalSettings.setUserDefaultGas(userSettings == null
-            || userSettings.getDefaultGas() == 0 ? globalSettings.getDefaultGas() : userSettings.getDefaultGas());
-        globalSettings.setCurrency(userSettings == null || userSettings.getCurrency() == null ? "usd"
-                                                                                              : userSettings.getCurrency());
+        globalSettings.setUserPreferences(userSettings);
+
+        if (StringUtils.isNotBlank(spaceId)) {
+          userSettings.setWalletAddress(getSpaceAddress(spaceId));
+        } else {
+          userSettings.setWalletAddress(getUserAddress(username));
+        }
       }
     }
 
@@ -622,4 +649,5 @@ public class EthereumWalletStorage {
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
     return Arrays.asList(addressTransactionsArray);
   }
+
 }
