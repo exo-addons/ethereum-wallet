@@ -264,8 +264,6 @@ public class EthereumClientConnector implements Startable {
         || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed() || this.blockSubscription == null
         || this.blockSubscription.isUnsubscribed()) {
 
-      boolean isReconnecting = web3j != null;
-
       if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
         stopListeninigToTransactions();
         establishConnection();
@@ -274,12 +272,6 @@ public class EthereumClientConnector implements Startable {
         throw new IllegalStateException("Bad format for configured URL " + getWebsocketProviderURL()
             + " for Ethereum Websocket connection");
       }
-
-      if (isReconnecting) {
-        LOG.info("Connection was interrupted, atempt to reconnect to Ethereum network endpoint {}", getWebsocketProviderURL());
-      } else {
-        LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
-      }
     }
   }
 
@@ -287,6 +279,12 @@ public class EthereumClientConnector implements Startable {
     if (web3jService != null) {
       web3jService.close();
       web3jService = null;
+    }
+
+    if (web3j != null) {
+      LOG.info("Connection was interrupted, atempt to reconnect to Ethereum network endpoint {}", getWebsocketProviderURL());
+    } else {
+      LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
     }
 
     web3jService = testConnection();
