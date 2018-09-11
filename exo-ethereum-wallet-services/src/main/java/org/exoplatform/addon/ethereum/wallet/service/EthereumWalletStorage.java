@@ -449,6 +449,8 @@ public class EthereumWalletStorage {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
 
+    address = address.toLowerCase();
+
     AccountDetail accountDetail = null;
 
     SettingValue<?> walletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address);
@@ -527,12 +529,12 @@ public class EthereumWalletStorage {
         LOG.error("User '{}' attempts to modify wallet address of user '{}'", currentUserId, id);
         throw new IllegalAccessException();
       }
-      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
+
       String oldAddress = getUserAddress(id);
-      if (oldAddress != null) {
+      if (oldAddress != null && !StringUtils.equals(oldAddress, address)) {
         AccountDetail userDetailsByOldAddress = getAccountDetailsByAddress(oldAddress);
         if (userDetailsByOldAddress != null) {
-          LOG.warn("The address {} was assigned to user {} and changed to user {}",
+          LOG.info("The address {} was assigned to user {} and changed to user {}",
                    oldAddress,
                    userDetailsByOldAddress.getId(),
                    currentUserId);
@@ -541,16 +543,19 @@ public class EthereumWalletStorage {
         // Remove old address mapping
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
+
+      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       settingService.set(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME, SettingValue.create(address));
       return generateSecurityPhrase(accountDetail);
     } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
       checkCurrentUserIsSpaceManager(id);
-      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       String oldAddress = getSpaceAddress(id);
-      if (oldAddress != null) {
+      if (oldAddress != null && !StringUtils.equals(oldAddress, address)) {
         // Remove old address mapping
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
+
+      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, id, SettingValue.create(address));
       return generateSecurityPhrase(accountDetail);
     }
@@ -615,6 +620,7 @@ public class EthereumWalletStorage {
       throw new IllegalArgumentException("transaction hash parameter is mandatory");
     }
 
+    address = address.toLowerCase();
     String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
 
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
@@ -669,7 +675,7 @@ public class EthereumWalletStorage {
 
     SettingValue<?> browserWalletPhraseValue = settingService.get(context, WALLET_SCOPE, paramName);
     if (browserWalletPhraseValue != null && browserWalletPhraseValue.getValue() != null) {
-      return browserWalletPhraseValue.toString();
+      return browserWalletPhraseValue.getValue().toString();
     }
     String phrase = RandomStringUtils.random(20);
     settingService.set(context, WALLET_SCOPE, paramName, SettingValue.create(phrase));

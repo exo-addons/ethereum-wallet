@@ -296,7 +296,7 @@ export default {
         this.refreshIndex++;
       }
       if (pending) {
-        addPendingTransactionToStorage(this.networkId, this.account, this.contract, {
+        addPendingTransactionToStorage(this.networkId, this.account, this.contract._address.toLowerCase(), {
           from: from,
           to: to,
           value: amount,
@@ -310,7 +310,7 @@ export default {
 
         watchTransactionStatus(transactionHash, (receipt, block) => {
           this.addTransactionToList(from, to, amount, transactionHash, block.timestamp * 1000, labelFrom, labelTo, icon, false);
-          removePendingTransactionFromStorage(this.networkId, this.account, this.contract, transactionHash);
+          removePendingTransactionFromStorage(this.networkId, this.account, this.contract._address.toLowerCase(), transactionHash);
           if (pendingTransactionSuccess) {
             pendingTransactionSuccess();
           }

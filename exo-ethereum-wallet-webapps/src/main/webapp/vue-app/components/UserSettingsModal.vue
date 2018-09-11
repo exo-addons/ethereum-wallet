@@ -35,6 +35,9 @@
                             :step="1000"
                             type="number" />
                 </v-card-text>
+                <v-card-text>
+                  <v-switch v-model="useMetamaskChoice" label="Use metamask"></v-switch>
+                </v-card-text>
               </v-card>
             </v-expansion-panel-content>
             <v-expansion-panel-content>
@@ -68,7 +71,7 @@
 import QrCode from './QRCode.vue';
 import WalletAddress from './WalletAddress.vue';
 
-import {gasToFiat} from '../WalletUtils.js';
+import {gasToFiat, enableMetamask, disableMetamask} from '../WalletUtils.js';
 import {FIAT_CURRENCIES} from '../WalletConstants.js';
 
 export default {
@@ -110,6 +113,7 @@ export default {
       selectedCurrency: FIAT_CURRENCIES['usd'],
       currencies: [],
       defaultGas: 0,
+      useMetamaskChoice: false,
       defaulGasPriceFiat: 0
     };
   },
@@ -120,6 +124,7 @@ export default {
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.$refs.qrCode.computeCanvas();
         this.show = true;
+        this.useMetamaskChoice = window.walletSettings.userPreferences.useMetamask;
         if (window.walletSettings.userPreferences.currency) {
           this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.userPreferences.currency];
         }
@@ -154,6 +159,12 @@ export default {
           })
         }).then(resp => {
           if (resp && resp.ok) {
+            if (this.useMetamaskChoice) {
+              enableMetamask();
+            } else {
+              disableMetamask();
+            }
+
             window.walletSettings.userPreferences.userDefaultGas = this.defaultGas;
             window.walletSettings.userPreferences.currency = this.selectedCurrency.value;
             this.$emit('settings-changed', {

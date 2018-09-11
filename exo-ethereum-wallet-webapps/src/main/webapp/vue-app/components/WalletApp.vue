@@ -143,6 +143,7 @@ export default {
       contracts: [],
       accountsDetails: {},
       refreshIndex: 1,
+      watchMetamaskAccountInterval: null,
       errorCode: null,
       errorMessage: null
     };
@@ -185,6 +186,7 @@ export default {
       .then((result, error) => {
         const thiss = this;
         // Refresh application when Metamask address changes
+        this.watchMetamaskAccount();
         window.addEventListener('load', function() {
           if (!thiss.loading && thiss.useMetamask && window && window.web3 && window.web3.eth && window.web3.eth.defaultAccount
               && window.web3.eth.defaultAccount.toLowerCase() !== this.walletAddress) {
@@ -200,7 +202,9 @@ export default {
       this.seeAccountDetails = false;
       this.errorMessage = null;
       this.selectedAccount = null;
+      this.displayWalletSetup = false;
       this.accountsDetails = {};
+      this.walletAddress = null;
 
       return initSettings(this.isSpace)
         .then((result, error) => {
@@ -237,9 +241,9 @@ export default {
           this.networkId = window.walletSettings.currentNetworkId;
 
           if (this.useMetamask && window && window.web3 && window.web3.eth && window.web3.eth.defaultAccount) {
-            this.walletAddress = window.web3.eth.defaultAccount;
-          } else {
-            this.walletAddress = window.localWeb3.eth.defaultAccount;
+            this.walletAddress = window.web3.eth.defaultAccount.toLowerCase();
+          } else if (window.localWeb3.eth.defaultAccount) {
+            this.walletAddress = window.localWeb3.eth.defaultAccount.toLowerCase();
           }
 
           this.isReadOnly = window.walletSettings.isReadOnly;
@@ -395,6 +399,25 @@ export default {
     },
     openWalletSetup() {
       this.displayWalletSetup = true;
+    },
+    watchMetamaskAccount() {
+      const thiss = this;
+
+      if (this.watchMetamaskAccountInterval) {
+        clearInterval(this.watchMetamaskAccountInterval);
+      }
+      // In case account switched in Metamask
+      // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
+      this.watchMetamaskAccountInterval = setInterval(function() {
+        if (!thiss.useMetamask || !window || !window.web3 || !window.web3.eth.defaultAccount || !thiss.walletAddress) {
+          return;
+        }
+
+        if (window.web3.eth.defaultAccount.toLowerCase() !== thiss.walletAddress.toLowerCase()) {
+          thiss.init();
+          return;
+        }
+      }, 1000);
     }
   }
 };

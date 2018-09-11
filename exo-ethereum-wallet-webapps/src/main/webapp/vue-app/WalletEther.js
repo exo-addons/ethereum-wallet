@@ -31,13 +31,16 @@ export function loadStoredTransactions(networkId, account, transactions, refresh
               if (refreshCallback) {
                 refreshCallback();
               }
+            })
+            .catch(error => {
+              throw error;
             });
         });
       }
     })
     .catch(error => {
       if (`${error}`.indexOf('stopLoading') < 0) {
-        throw e;
+        throw error;
       }
     });
 }
@@ -56,7 +59,7 @@ export function loadPendingTransactions(networkId, account, transactions, refres
     })
     .catch(error => {
       if (`${error}`.indexOf('stopLoading') < 0) {
-        throw e;
+        throw error;
       }
     });
 }
@@ -79,7 +82,7 @@ export function loadTransactions(networkId, account, transactions, fromBlockNumb
     })
     .catch(error => {
       if (`${error}`.indexOf('stopLoading') < 0) {
-        throw e;
+        throw error;
       }
     });
 }
@@ -233,7 +236,7 @@ function addBlockTransactions(networkId, account, transactions, block, untilBloc
     .then(blockTmp => addBlockTransactions(networkId, account, transactions, blockTmp, untilBlockNumber, loadedBlocks, progressionCallback))
     .catch(error => {
       if (`${error}`.indexOf('stopLoading') < 0) {
-        throw e;
+        throw error;
       }
     });
 }

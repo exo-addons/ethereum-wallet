@@ -61,7 +61,7 @@
           <v-text-field
             v-model="walletPrivateKey"
             :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
-            :rules="[rules.required, rules.equals66]"
+            :rules="[rules.required, rules.priv]"
             :type="walletPrivateKeyShow ? 'text' : 'password'"
             name="walletPrivateKey"
             label="Wallet private key"
@@ -143,7 +143,7 @@ export default {
       rules: {
         required: value => !!value || 'Required.',
         min: v => v.length >= 8 || 'At least 8 characters',
-        equals66: v => v.length === 66 || 'Exactly 66 characters are required'
+        priv: v => v.length === 66 || v.length === 64 || 'Exactly 66 characters are required'
       }
     };
   },
@@ -194,6 +194,9 @@ export default {
       this.saveWallet(wallet[0]);
     },
     importWallet() {
+      if (this.walletPrivateKey.indexOf("0x") < 0) {
+        this.walletPrivateKey = `0x${this.walletPrivateKey}`;
+      }
       const wallet = window.localWeb3.eth.accounts.wallet.add(this.walletPrivateKey);
       if (!this.walletAddress || wallet.address.toLowerCase() === this.walletAddress.toLowerCase()) {
         this.saveWallet(wallet);
@@ -210,6 +213,16 @@ export default {
         this.isSpace ? 'space' : 'user',
         address,
         true)
+        .then((resp, error) => {
+          if (error) {
+            throw error;
+          }
+          if (resp && resp.ok) {
+            return resp.text();
+          } else {
+            throw new Error('Error saving new Wallet address');
+          }
+        })
         .then((phrase, error) => {
           // Create wallet with user password phrase and personal eXo Phrase generated
           // To avoid having the complete passphrase that allows to decrypt wallet in a single location
@@ -220,23 +233,18 @@ export default {
 
           disableMetamask();
 
+          this.createWalletDialog = false;
+          this.importWalletDialog = false;
+
           this.$emit("configured");
-        })
-        .then((resp, error) => {
-          if (error) {
-            throw error;
-          }
-          if (resp && resp.ok) {
-            this.walletAddress = address;
-            return resp.text();
-          } else {
-            this.errorMessage = 'Error saving new Wallet address';
-          }
+
+          this.walletAddress = address;
         })
         .catch(e => {
           console.debug("saveNewAddress method - error", e);
-          this.errorMessage = `Error saving new Wallet address`;
           window.localWeb3.eth.accounts.wallet.remove(address);
+          localStorage.removeItem(`exo-wallet-${address}-userp`);
+          this.errorMessage = `Error saving new Wallet address`;
         });
     },
     switchToMetamask() {

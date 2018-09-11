@@ -69,11 +69,14 @@ export function computeGasPrice() {
   if (!window.walletSettings) {
     window.walletSettings = {};
   }
-  if (window.localWeb3) {
+  if (window.localWeb3 && window.localWeb3.currentProvider) {
     return window.localWeb3.eth.getGasPrice()
       .then(gasPrice => {
         window.walletSettings.gasPrice = gasPrice;
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
+      })
+      .catch(error => {
+        console.debug("computeGasPrice method error: ", error);
       });
   }
 }
@@ -101,17 +104,17 @@ export function initWeb3(isSpace) {
           window.walletSettings.metamaskConnected = true;
         } else {
           window.walletSettings.metamaskConnected = false;
-          createLocalWeb3Instance(isSpace);
+          createLocalWeb3Instance(isSpace, true);
         }
         return checkNetworkStatus();
       })
       .catch(e => {
         window.walletSettings.metamaskConnected = false;
-        createLocalWeb3Instance(isSpace);
+        createLocalWeb3Instance(isSpace, true);
         return checkNetworkStatus();
       });
   } else {
-    createLocalWeb3Instance(isSpace);
+    createLocalWeb3Instance(isSpace, window.walletSettings.userPreferences.useMetamask);
     return checkNetworkStatus();
   }
 }
@@ -239,38 +242,39 @@ export function computeBalance(account) {
     });
 }
 
-function createLocalWeb3Instance(isSpace) {
+function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
-    window.localWeb3.eth.defaultAccount = window.walletSettings.userPreferences.walletAddress;
-
-    console.log("createLocalWeb3Instance", window.localWeb3);
+    window.localWeb3.eth.defaultAccount = window.walletSettings.userPreferences.walletAddress.toLowerCase();
 
     const accountId = isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
     const accountType = isSpace ? 'space' : 'user';
 
-    if (!window.walletSettings.userPreferences.userP
+    if (useMetamask
+        || !window.walletSettings.userPreferences.userP
         || !window.walletSettings.userPreferences.phrase
         || !isBrowserWallet(accountId, accountType, window.walletSettings.userPreferences.walletAddress)) {
       window.walletSettings.isReadOnly = true;
     } else {
-      window.localWeb3.eth.accounts.wallet.load(window.walletSettings.userPreferences.userP && window.walletSettings.userPreferences.phrase,
+      window.localWeb3.eth.accounts.wallet.load(window.walletSettings.userPreferences.userP + window.walletSettings.userPreferences.phrase,
           window.walletSettings.userPreferences.walletAddress);
-      window.walletSettings.isReadOnly = window.localWeb3.eth.accounts.wallet.length > 0 && window.localWeb3.eth.accounts.wallet[window.walletSettings.userPreferences.walletAddress];
+      window.walletSettings.isReadOnly = window.localWeb3.eth.accounts.wallet.length === 0 || !window.localWeb3.eth.accounts.wallet[window.walletSettings.userPreferences.walletAddress];
     }
-
   } else {
     // Wallet not configured
     throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
   }
 }
 
-function checkNetworkStatus() {
-  // Test if network is connected
+function checkNetworkStatus(waitTime) {
+  if (!waitTime) {
+    waitTime = 100;
+  }
+  // Test if network is connected: isListening operation can hang up forever
   let isListening = false;
   window.localWeb3.eth.net.isListening()
     .then(listening => isListening = listening);
-  return new Promise((resolve) => setTimeout(resolve, 1000))
+  return new Promise((resolve) => setTimeout(resolve, waitTime))
     .then(() => {
       if (!isListening) {
         throw new Error(constants.ERROR_WALLET_DISCONNECTED);
@@ -278,5 +282,11 @@ function checkNetworkStatus() {
     })
     .then(() => computeNetwork())
     .then(() => computeGasPrice())
-    .then(() => constants.OK);
+    .then(() => constants.OK)
+    .catch(error => {
+      if (waitTime >= 5000) {
+        throw error;
+      }
+      return checkNetworkStatus(waitTime * 2);
+    });
 }

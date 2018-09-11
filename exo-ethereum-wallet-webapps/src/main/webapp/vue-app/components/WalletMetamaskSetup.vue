@@ -170,9 +170,12 @@ export default {
         && this.associatedWalletAddress !== this.detectedMetamaskAccount;
     }
   },
+  created() {
+    this.init();
+  },
   methods: {
     init() {
-      this.metamaskEnabled = window.web3 && window.web3.currentProvider && window.web3.currentProvider.isMetaMask;
+      this.metamaskEnabled = window.web3 && window.web3.currentProvider;
       this.metamaskConnected = this.metamaskEnabled && window.walletSettings.metamaskConnected;
 
       if (window.walletSettings) {
