@@ -20,11 +20,15 @@
         <v-list-tile-sub-title v-if="item.error">{{ item.error }}</v-list-tile-sub-title>
         <v-list-tile-sub-title v-else>{{ item.balanceFiat ? `${item.balanceFiat} ${fiatSymbol}`: `${item.balance} ${item.symbol}` }}</v-list-tile-sub-title>
       </v-list-tile-content>
-      <v-speed-dial v-model="item.openActions"
-                    direction="left"
-                    transition="slide-y-reverse-transition"
-                    right
-                    absolute>
+
+      <v-speed-dial 
+        v-if="!isReadOnly"
+        v-model="item.openActions"
+        direction="left"
+        transition="slide-y-reverse-transition"
+        right
+        absolute>
+
         <v-btn slot="activator" icon fab color="blue-grey lighten-4">
           <v-icon size="20">more_horiz</v-icon>
         </v-btn>
@@ -96,6 +100,12 @@ export default {
     SendEtherModal
   },
   props: {
+    isReadOnly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     accountsDetails: {
       type: Object,
       default: function() {

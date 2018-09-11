@@ -1,22 +1,13 @@
 <template>
-  <v-flex>
-
-    <div v-if="errorCode === constants.ERROR_WALLET_ADDRESS_NOT_CONFIGURED || errorCode === constants.ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND">
-      <div v-if="errorCode === constants.ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND" class="alert alert-warning v-content">
-        <i class="uiIconWarning"></i>
-        Wallet address <wallet-address :value="walletAddress" /> was configured for your account but the private key wasn't found.
-        You can either use Metamask, import a private key or create new wallet.
-      </div>
-      <button class="btn btn-primary" @click="createWalletDialog = true">Create Wallet</button>
+  <v-flex class="text-xs-center">
+    <div class="walletAppSetup">
+      <button class="btn btn-primary" @click="createWalletDialog = true">Create new wallet</button>
       <div>Or</div>
-      <a href="#" @click="importWalletDialog = true">Import wallet</a>
-      <div>Or</div>
-      <a v-if="!useMatamaskForCurrentUser" href="#" @click="useMetamask">Use metamask</a>
-      <div v-else class="alert alert-info">
-        <i class="uiIconInfo"></i>
-        To be able to access your account using Metamask, you should enable/install it and connect into it
-      </div>
+      <a href="#" @click="importWalletDialog = true">Import existing wallet</a>
+      <div v-if="!useMetamask">Or</div>
+      <a v-if="!useMetamask" href="#" @click="switchToMetamask">Use metamask</a>
     </div>
+    <v-divider />
 
     <v-dialog v-model="createWalletDialog" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="createWalletDialog = false">
       <v-card class="elevation-12">
@@ -54,6 +45,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
     <v-dialog v-model="importWalletDialog" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
       <v-card class="elevation-12">
         <div class="popupHeader ClearFix">
@@ -103,7 +95,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import * as constants from '../WalletConstants.js';
-import {enableMetamask, initEmptyWeb3Instance} from '../WalletUtils.js';
+import {enableMetamask, disableMetamask, initEmptyWeb3Instance} from '../WalletUtils.js';
 import {saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
@@ -112,6 +104,18 @@ export default {
   },
   props: {
     isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    useMetamask: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    isReadOnly: {
       type: Boolean,
       default: function() {
         return false;
@@ -126,7 +130,6 @@ export default {
   },
   data() {
     return {
-      useMatamaskForCurrentUser: false,
       createWalletDialog: false,
       createWalletPassword: '',
       walletPrivateKey: '',
@@ -168,7 +171,6 @@ export default {
   },
   methods: {
     resetForm() {
-      this.useMatamaskForCurrentUser = false;
       this.createWalletPassword = '';
       this.walletPrivateKey = '';
       this.walletPrivateKeyShow = false;
@@ -184,12 +186,11 @@ export default {
       this.walletAddress = window.walletSettings.userPreferences.walletAddress;
       if (!window.walletSettings || !window.walletSettings.userPreferences) {
         // TODO
-      } else {
-        this.useMatamaskForCurrentUser = window.walletSettings.userPreferences.useMetamask;
       }
     },
     createWallet() {
-      const wallet = window.localWeb3.eth.accounts.wallet.create(1, this.createWalletPassword + Math.random());
+      const entropy = this.createWalletPassword + Math.random();
+      const wallet = window.localWeb3.eth.accounts.wallet.create(1, entropy);
       this.saveWallet(wallet[0]);
     },
     importWallet() {
@@ -203,20 +204,31 @@ export default {
     saveWallet(wallet) {
       const account = window.localWeb3.eth.accounts.wallet.add(wallet);
       const address = account['address'].toLowerCase();
-      window.localWeb3.eth.accounts.wallet.save(this.createWalletPassword, address);
 
       return saveNewAddress(
         this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
         this.isSpace ? 'space' : 'user',
         address,
         true)
+        .then((phrase, error) => {
+          // Create wallet with user password phrase and personal eXo Phrase generated
+          // To avoid having the complete passphrase that allows to decrypt wallet in a single location
+          window.localWeb3.eth.accounts.wallet.save(this.createWalletPassword + phrase, address);
+
+          // Save user passphrase in localStorage to avoid asking him for it eah time he refreshes the page
+          localStorage.setItem(`exo-wallet-${address}-userp`, this.createWalletPassword);
+
+          disableMetamask();
+
+          this.$emit("configured");
+        })
         .then((resp, error) => {
           if (error) {
             throw error;
           }
           if (resp && resp.ok) {
             this.walletAddress = address;
-            this.$emit("configured");
+            return resp.text();
           } else {
             this.errorMessage = 'Error saving new Wallet address';
           }
@@ -227,9 +239,8 @@ export default {
           window.localWeb3.eth.accounts.wallet.remove(address);
         });
     },
-    useMetamask() {
+    switchToMetamask() {
       enableMetamask();
-      this.useMatamaskForCurrentUser = true;
       this.$emit("configured");
     }
   }

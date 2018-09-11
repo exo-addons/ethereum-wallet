@@ -132,7 +132,7 @@ export default {
             console.debug("account field change event - error", error);
             this.$emit("error", `Account loading error: ${error}`);
           });
-      }
+      } 
     }
   },
   created() {
@@ -151,16 +151,26 @@ export default {
     init() {
       this.transactions = {};
       this.loadedBlocks = 0;
+      this.stopLoading = false;
 
       // Get transactions to latest block with maxBlocks to load
       return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
+        if (this.stopLoading) {
+          throw new Error("stopLoading");
+        }
         this.forceUpdateList();
       })
         .then(() => loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
+          if (this.stopLoading) {
+            throw new Error("stopLoading");
+          }
           this.$emit("refresh-balance");
           this.forceUpdateList();
         }))
         .then(() => loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
+          if (this.stopLoading) {
+            throw new Error("stopLoading");
+          }
           this.loadedBlocks = loadedBlocks;
           this.forceUpdateList();
         }))
@@ -170,8 +180,10 @@ export default {
           this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
         })
         .catch(e => {
-          console.debug("loadTransactions - method error", e);
-          this.$emit("error", `${e}`);
+          if (!this.stopLoading) {
+            console.debug("loadTransactions - method error", e);
+            this.$emit("error", `${e}`);
+          }
         });
     },
     loadMore() {
@@ -210,6 +222,9 @@ export default {
           this.forceUpdateList();
         });
       this.forceUpdateList();
+    },
+    stopLoadingTransactions() {
+      this.stopLoading = true;
     },
     forceUpdateList() {
       // A trick to force update computed list

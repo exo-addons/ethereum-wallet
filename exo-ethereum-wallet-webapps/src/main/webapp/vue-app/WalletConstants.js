@@ -432,18 +432,14 @@ export const FIAT_CURRENCIES = {
 
 export const NETWORK_NAMES = {
   0: '',
-  1: 'Ethereum Main network',
-  2: 'Ethereum Classic main network',
-  3: 'Ropsten network',
-  4: 'Rinkeby network',
-  42: 'Kovan network'
+  1: 'Ethereum Main',
+  2: 'Ethereum Classic main',
+  3: 'Ropsten',
+  4: 'Rinkeby',
+  42: 'Kovan'
 }
 
 export const OK = 'OK';
-export const ERROR_METAMASK_NOT_CONNECTED = 'ERROR_METAMASK_NOT_CONNECTED';
-export const ERROR_WRONG_WALLET_SETTINGS = 'ERROR_WRONG_WALLET_SETTINGS';
 export const ERROR_WALLET_NOT_CONFIGURED = 'ERROR_WALLET_NOT_CONFIGURED';
-export const ERROR_WALLET_ADDRESS_NOT_CONFIGURED = 'ERROR_WALLET_ADDRESS_NOT_CONFIGURED';
-export const ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND = 'ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND';
 export const ERROR_WALLET_SETTINGS_NOT_LOADED = 'ERROR_WALLET_SETTINGS_NOT_LOADED';
 export const ERROR_WALLET_DISCONNECTED = 'ERROR_WALLET_DISCONNECTED';

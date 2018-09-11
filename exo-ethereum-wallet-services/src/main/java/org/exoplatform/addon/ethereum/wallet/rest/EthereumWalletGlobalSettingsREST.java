@@ -16,8 +16,6 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
-
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -56,7 +54,7 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("users")
   public Response getSettings(@QueryParam("networkId") Long networkId, @QueryParam("spaceId") String spaceId) {
-    GlobalSettings globalSettings = ethereumWalletStorage.getSettings(networkId, getCurrentUserId(), spaceId);
+    GlobalSettings globalSettings = ethereumWalletStorage.getSettings(networkId, spaceId);
 
     return Response.ok(globalSettings.toJSONString()).build();
   }

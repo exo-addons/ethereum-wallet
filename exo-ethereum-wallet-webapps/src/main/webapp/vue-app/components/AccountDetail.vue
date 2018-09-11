@@ -3,7 +3,7 @@
     <v-card-media min-height="80px">
       <v-layout column fill-height>
         <v-card-title class="pb-0">
-          <v-btn absolute icon @click="$emit('back')">
+          <v-btn absolute icon @click="stopLoading(); $emit('back')">
             <v-icon>arrow_back</v-icon>
           </v-btn>
           <v-spacer />
@@ -30,7 +30,7 @@
       </v-layout>
     </v-card-media>
 
-    <v-divider v-if="isSpace" />
+    <v-divider v-if="isReadOnly" />
     <div v-else class="text-xs-center grey lighten-4">
       <!-- Contract actions -->
       <send-tokens-modal
@@ -122,16 +122,16 @@ export default {
     TokenTransactions
   },
   props: {
+    isReadOnly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     networkId: {
       type: Number,
       default: function() {
         return 0;
-      }
-    },
-    isSpace: {
-      type: Boolean,
-      default: function() {
-        return false;
       }
     },
     account: {
@@ -206,6 +206,11 @@ export default {
         }
       } else {
         this.$refs.generalTransactions.addTransaction(transaction);
+      }
+    },
+    stopLoading() {
+      if (this.$refs.generalTransactions) {
+        this.$refs.generalTransactions.stopLoadingTransactions();
       }
     }
   }

@@ -61,11 +61,11 @@ export function retrieveFiatExchangeRate() {
       window.retrieveFiatExchangeRateInterval = setTimeout(() => {
         retrieveFiatExchangeRate();
       }, 300000);
-      return retrieveGasPrice();
+      return computeGasPrice();
     });
 }
 
-export function retrieveGasPrice() {
+export function computeGasPrice() {
   if (!window.walletSettings) {
     window.walletSettings = {};
   }
@@ -88,45 +88,32 @@ export function initWeb3(isSpace) {
     throw new Error(constants.ERROR_WALLET_SETTINGS_NOT_LOADED);
   }
 
-  if (window.walletSettings.userPreferences.useMetamask) {
-    if (!window.web3 || !window.web3.isConnected || !window.web3.isConnected()) {
-      // Please connect to Metamask
-      throw new Error(constants.ERROR_METAMASK_NOT_CONNECTED);
-    }
+  if (!isSpace && window.walletSettings.userPreferences.useMetamask
+      && window.web3 && window.web3.eth.defaultAccount
+      && window.web3.isConnected && window.web3.isConnected()) {
+
     window.localWeb3 = new LocalWeb3(window.web3.currentProvider);
-    window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount;
-  } else if (window.walletSettings.userPreferences.walletAddress) {
-    if (!window.walletSettings || !window.walletSettings.providerURL) {
-      // Wrong Wallet settings
-      throw new Error(constants.ERROR_WRONG_WALLET_SETTINGS);
-    }
-    window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
-    window.localWeb3.eth.defaultAccount = window.walletSettings.userPreferences.walletAddress;
+    window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount ? window.web3.eth.defaultAccount.toLowerCase() : null;
 
-    if (!isSpace) {
-      const accountId = isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
-      const accountType = isSpace ? 'space' : 'user';
-      if(!isBrowserWallet(accountId, accountType, window.walletSettings.userPreferences.walletAddress)) {
-        throw new Error(constants.ERROR_WALLET_CONFIGURED_ADDRESS_NOT_FOUND);
-      }
-    }
+    return window.localWeb3.eth.getCoinbase()
+      .then(address => {
+        if (address) {
+          window.walletSettings.metamaskConnected = true;
+        } else {
+          window.walletSettings.metamaskConnected = false;
+          createLocalWeb3Instance(isSpace);
+        }
+        return checkNetworkStatus();
+      })
+      .catch(e => {
+        window.walletSettings.metamaskConnected = false;
+        createLocalWeb3Instance(isSpace);
+        return checkNetworkStatus();
+      });
   } else {
-    // Wallet not configured
-    throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
+    createLocalWeb3Instance(isSpace);
+    return checkNetworkStatus();
   }
-
-  // Test if network is connected
-  let isListening = false;
-  window.localWeb3.eth.net.isListening()
-    .then(listening => isListening = listening);
-  return new Promise((resolve) => setTimeout(resolve, 1000))
-    .then(() => {
-      if (!isListening) {
-        throw new Error(constants.ERROR_WALLET_DISCONNECTED);
-      }
-    })
-    .then(() => retrieveGasPrice())
-    .then(() => constants.OK);
 }
 
 export function initSettings(isSpace) {
@@ -159,7 +146,7 @@ export function initSettings(isSpace) {
         if (window.walletSettings.userPreferences.walletAddress) {
           const username = eXo.env.portal.userName;
           window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${username}-metamask`) === 'true';
-          console.log("window.walletSettings.userPreferences.useMetamask", window.walletSettings.userPreferences.useMetamask);
+          window.walletSettings.userPreferences.userP = localStorage.getItem(`exo-wallet-${window.walletSettings.userPreferences.walletAddress}-userp`);
         }
         return retrieveFiatExchangeRate();
       }
@@ -174,6 +161,12 @@ export function enableMetamask() {
   const username = eXo.env.portal.userName;
   localStorage.setItem(`exo-wallet-${username}-metamask`, 'true');
   window.walletSettings.userPreferences.useMetamask = true;
+}
+
+export function disableMetamask() {
+  const username = eXo.env.portal.userName;
+  localStorage.removeItem(`exo-wallet-${username}-metamask`);
+  window.walletSettings.userPreferences.useMetamask = false;
 }
 
 export function watchTransactionStatus(hash, transactionFinishedcallback) {
@@ -205,18 +198,13 @@ export function getTransactionReceipt(hash) {
 }
 
 export function computeNetwork() {
-  let netId = null;
   return window.localWeb3.eth.net.getId()
     .then((networkId, error) => {
       if (error) {
         throw error;
       }
       if (networkId) {
-        if (window.walletSettings) {
-          window.walletSettings.currentNetworkId = netId = networkId;
-        } else {
-          window.currentMetamaskNetworkId = netId = networkId;
-        }
+        window.walletSettings.currentNetworkId = networkId;
         return window.localWeb3.eth.net.getNetworkType();
       } else {
         throw new Error("Network is disconnected");
@@ -226,10 +214,9 @@ export function computeNetwork() {
       if (error) {
         throw error;
       }
-      return {
-        netId: netId,
-        netType: netType
-      };
+      if (netType) {
+        window.walletSettings.currentNetworkType = netType;
+      }
     });
 }
 
@@ -250,4 +237,46 @@ export function computeBalance(account) {
         balanceFiat: etherToFiat(retrievedBalance)
       };
     });
+}
+
+function createLocalWeb3Instance(isSpace) {
+  if (window.walletSettings.userPreferences.walletAddress) {
+    window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
+    window.localWeb3.eth.defaultAccount = window.walletSettings.userPreferences.walletAddress;
+
+    console.log("createLocalWeb3Instance", window.localWeb3);
+
+    const accountId = isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
+    const accountType = isSpace ? 'space' : 'user';
+
+    if (!window.walletSettings.userPreferences.userP
+        || !window.walletSettings.userPreferences.phrase
+        || !isBrowserWallet(accountId, accountType, window.walletSettings.userPreferences.walletAddress)) {
+      window.walletSettings.isReadOnly = true;
+    } else {
+      window.localWeb3.eth.accounts.wallet.load(window.walletSettings.userPreferences.userP && window.walletSettings.userPreferences.phrase,
+          window.walletSettings.userPreferences.walletAddress);
+      window.walletSettings.isReadOnly = window.localWeb3.eth.accounts.wallet.length > 0 && window.localWeb3.eth.accounts.wallet[window.walletSettings.userPreferences.walletAddress];
+    }
+
+  } else {
+    // Wallet not configured
+    throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
+  }
+}
+
+function checkNetworkStatus() {
+  // Test if network is connected
+  let isListening = false;
+  window.localWeb3.eth.net.isListening()
+    .then(listening => isListening = listening);
+  return new Promise((resolve) => setTimeout(resolve, 1000))
+    .then(() => {
+      if (!isListening) {
+        throw new Error(constants.ERROR_WALLET_DISCONNECTED);
+      }
+    })
+    .then(() => computeNetwork())
+    .then(() => computeGasPrice())
+    .then(() => constants.OK);
 }

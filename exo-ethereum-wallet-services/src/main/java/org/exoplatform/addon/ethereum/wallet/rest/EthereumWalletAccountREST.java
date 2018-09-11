@@ -125,8 +125,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     try {
-      ethereumWalletStorage.saveWalletAddress(accountDetail, getCurrentUserId());
-      return Response.ok().build();
+      String securityPhrase = ethereumWalletStorage.saveWalletAddress(accountDetail);
+      return Response.ok(securityPhrase).build();
     } catch (IllegalAccessException e) {
       return Response.status(403).build();
     } catch (IllegalStateException e) {

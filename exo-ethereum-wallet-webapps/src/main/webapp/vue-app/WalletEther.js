@@ -34,6 +34,11 @@ export function loadStoredTransactions(networkId, account, transactions, refresh
             });
         });
       }
+    })
+    .catch(error => {
+      if (`${error}`.indexOf('stopLoading') < 0) {
+        throw e;
+      }
     });
 }
 
@@ -49,6 +54,11 @@ export function loadPendingTransactions(networkId, account, transactions, refres
       });
       return pendingTransactions;
     })
+    .catch(error => {
+      if (`${error}`.indexOf('stopLoading') < 0) {
+        throw e;
+      }
+    });
 }
 
 export function loadTransactions(networkId, account, transactions, fromBlockNumber, toBlockNumber, maxBlocks, progressionCallback) {
@@ -60,11 +70,16 @@ export function loadTransactions(networkId, account, transactions, fromBlockNumb
     .then(toBlockTmp => toBlockNumber = toBlockTmp)
     .then(() => window.localWeb3.eth.getBlock(toBlockNumber, true))
     .then(lastBlock => addBlockTransactions(networkId, account, transactions, lastBlock, fromBlockNumber, 0, progressionCallback))
-    .then(() => {
+    .then(() => { 
       return {
         toBlock: toBlockNumber,
         fromBlock: fromBlockNumber,
         maxBlocks: maxBlocks
+      }
+    })
+    .catch(error => {
+      if (`${error}`.indexOf('stopLoading') < 0) {
+        throw e;
       }
     });
 }
@@ -217,7 +232,9 @@ function addBlockTransactions(networkId, account, transactions, block, untilBloc
   return window.localWeb3.eth.getBlock(block.parentHash, true)
     .then(blockTmp => addBlockTransactions(networkId, account, transactions, blockTmp, untilBlockNumber, loadedBlocks, progressionCallback))
     .catch(error => {
-      console.warn(`Error while retrieving bloc with hash ${block.parentHash}`, error);
+      if (`${error}`.indexOf('stopLoading') < 0) {
+        throw e;
+      }
     });
 }
 

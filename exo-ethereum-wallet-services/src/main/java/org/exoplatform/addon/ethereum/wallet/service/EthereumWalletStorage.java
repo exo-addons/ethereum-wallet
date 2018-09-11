@@ -21,6 +21,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
@@ -76,6 +77,8 @@ public class EthereumWalletStorage {
   public static final String  WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
 
   public static final String  WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
+
+  public static final String  WALLET_BROWSER_PHRASE_NAME    = "WALLET_BROWSER_PHRASE";
 
   private SettingService      settingService;
 
@@ -174,7 +177,7 @@ public class EthereumWalletStorage {
       // Retrieve stored global settings from memory
       return storedSettings;
     }
-    return getSettings(null, null);
+    return storedSettings = getSettings(null);
   }
 
   /**
@@ -182,11 +185,10 @@ public class EthereumWalletStorage {
    * settings will be included.
    * 
    * @param networkId
-   * @param username
    * @return
    */
-  public GlobalSettings getSettings(Long networkId, String username) {
-    return getSettings(networkId, username, null);
+  public GlobalSettings getSettings(Long networkId) {
+    return getSettings(networkId, null);
   }
 
   /**
@@ -195,12 +197,13 @@ public class EthereumWalletStorage {
    * retrieved
    * 
    * @param networkId
-   * @param username
    * @param spaceId
    * @return
    */
-  public GlobalSettings getSettings(Long networkId, String username, String spaceId) {
+  public GlobalSettings getSettings(Long networkId, String spaceId) {
     SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
+
+    String username = getCurrentUserId();
 
     GlobalSettings globalSettings = defaultSettings;
     if (globalSettingsValue != null && globalSettingsValue.getValue() != null) {
@@ -242,15 +245,14 @@ public class EthereumWalletStorage {
 
         if (StringUtils.isNotBlank(spaceId)) {
           userSettings.setWalletAddress(getSpaceAddress(spaceId));
+          userSettings.setPhrase(getSpacePhrase(spaceId));
         } else {
           userSettings.setWalletAddress(getUserAddress(username));
+          userSettings.setPhrase(getUserPhrase(username));
         }
       }
     }
 
-    if (username == null) {
-      storedSettings = globalSettings;
-    }
     return globalSettings;
   }
 
@@ -504,10 +506,11 @@ public class EthereumWalletStorage {
    * switch details in accountDetail parameter
    * 
    * @param accountDetail
-   * @param currentUserId
+   * @return
    * @throws IllegalAccessException
    */
-  public void saveWalletAddress(AccountDetail accountDetail, String currentUserId) throws IllegalAccessException {
+  public String saveWalletAddress(AccountDetail accountDetail) throws IllegalAccessException {
+    String currentUserId = getCurrentUserId();
     String id = accountDetail.getId();
     String type = accountDetail.getType();
     String address = accountDetail.getAddress();
@@ -539,16 +542,9 @@ public class EthereumWalletStorage {
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
       settingService.set(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME, SettingValue.create(address));
+      return generateSecurityPhrase(accountDetail);
     } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
-      Space space = getSpace(id);
-      if (space == null) {
-        LOG.warn("Space not found with id '{}'", id);
-        throw new IllegalStateException();
-      }
-      if (!spaceService.isManager(space, currentUserId) && !spaceService.isSuperManager(currentUserId)) {
-        LOG.error("User '{}' attempts to modify wallet address of space '{}'", currentUserId, space.getDisplayName());
-        throw new IllegalAccessException();
-      }
+      checkCurrentUserIsSpaceManager(id);
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       String oldAddress = getSpaceAddress(id);
       if (oldAddress != null) {
@@ -556,7 +552,9 @@ public class EthereumWalletStorage {
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, id, SettingValue.create(address));
+      return generateSecurityPhrase(accountDetail);
     }
+    return null;
   }
 
   /**
@@ -648,6 +646,72 @@ public class EthereumWalletStorage {
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
     return Arrays.asList(addressTransactionsArray);
+  }
+
+  private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {
+    String currentUser = getCurrentUserId();
+    String id = accountDetail.getId();
+    String type = accountDetail.getType();
+
+    Context context = null;
+    String paramName = null;
+
+    if (StringUtils.equals(type, USER_ACCOUNT_TYPE) && StringUtils.equals(currentUser, id)) {
+      context = Context.USER.id(id);
+      paramName = WALLET_BROWSER_PHRASE_NAME;
+    } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
+      checkCurrentUserIsSpaceManager(id);
+      context = WALLET_CONTEXT;
+      paramName = WALLET_BROWSER_PHRASE_NAME + id;
+    } else {
+      return null;
+    }
+
+    SettingValue<?> browserWalletPhraseValue = settingService.get(context, WALLET_SCOPE, paramName);
+    if (browserWalletPhraseValue != null && browserWalletPhraseValue.getValue() != null) {
+      return browserWalletPhraseValue.toString();
+    }
+    String phrase = RandomStringUtils.random(20);
+    settingService.set(context, WALLET_SCOPE, paramName, SettingValue.create(phrase));
+    return phrase;
+  }
+
+  private String getUserPhrase(String username) {
+    SettingValue<?> browserWalletPhraseValue = settingService.get(Context.USER.id(username),
+                                                                  WALLET_SCOPE,
+                                                                  WALLET_BROWSER_PHRASE_NAME);
+    if (browserWalletPhraseValue != null && browserWalletPhraseValue.getValue() != null) {
+      return browserWalletPhraseValue.getValue().toString();
+    }
+    return null;
+  }
+
+  private String getSpacePhrase(String spaceId) {
+    try {
+      checkCurrentUserIsSpaceManager(spaceId);
+    } catch (Exception e) {
+      return null;
+    }
+    SettingValue<?> browserWalletPhraseValue = settingService.get(WALLET_CONTEXT,
+                                                                  WALLET_SCOPE,
+                                                                  WALLET_BROWSER_PHRASE_NAME + spaceId);
+    if (browserWalletPhraseValue != null && browserWalletPhraseValue.getValue() != null) {
+      return browserWalletPhraseValue.getValue().toString();
+    }
+    return null;
+  }
+
+  private void checkCurrentUserIsSpaceManager(String id) throws IllegalAccessException {
+    String currentUserId = getCurrentUserId();
+    Space space = getSpace(id);
+    if (space == null) {
+      LOG.warn("Space not found with id '{}'", id);
+      throw new IllegalStateException();
+    }
+    if (!spaceService.isManager(space, currentUserId) && !spaceService.isSuperManager(currentUserId)) {
+      LOG.error("User '{}' attempts to modify wallet address of space '{}'", currentUserId, space.getDisplayName());
+      throw new IllegalAccessException();
+    }
   }
 
 }

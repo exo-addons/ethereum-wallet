@@ -16,8 +16,6 @@
  */
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import org.web3j.protocol.core.methods.response.EthBlock.Block;
-
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
 import org.exoplatform.container.ExoContainer;
@@ -28,7 +26,7 @@ import org.exoplatform.services.listener.*;
  * A listener to asynchronously save last watched block number
  */
 @Asynchronous
-public class EthereumLastWatchedBlockListener extends Listener<Block, Object> {
+public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
 
   private EthereumWalletStorage ethereumWalletStorage;
 
@@ -44,19 +42,19 @@ public class EthereumLastWatchedBlockListener extends Listener<Block, Object> {
   }
 
   @Override
-  public void onEvent(Event<Block, Object> event) throws Exception {
-    Block block = event.getSource();
-    if (block == null || block.getNumber() == null) {
+  public void onEvent(Event<Long, Object> event) throws Exception {
+    Long blockNumber = event.getSource();
+    if (blockNumber == null) {
       return;
     }
     RequestLifeCycle.begin(this.container);
     try {
-      long blockNumber = block.getNumber().longValue();
       GlobalSettings globalSettings = ethereumWalletStorage.getSettings();
       long networkId = globalSettings.getDefaultNetworkId();
       if (networkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
-        this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);
         this.lastSavedBlockNumber = blockNumber;
+        this.networkId = networkId;
+        this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);
       }
     } finally {
       RequestLifeCycle.end();

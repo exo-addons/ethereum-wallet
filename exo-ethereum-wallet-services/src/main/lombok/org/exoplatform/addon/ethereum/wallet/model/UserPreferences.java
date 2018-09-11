@@ -19,6 +19,8 @@ public class UserPreferences implements Serializable {
 
   private String            walletAddress    = null;
 
+  private String            phrase           = null;
+
   public String toJSONString() {
     return toJSONObject().toString();
   }
@@ -29,6 +31,7 @@ public class UserPreferences implements Serializable {
       jsonObject.put("currency", currency);
       jsonObject.put("defaultGas", defaultGas);
       jsonObject.put("walletAddress", walletAddress);
+      jsonObject.put("phrase", phrase);
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
     }
@@ -50,6 +53,9 @@ public class UserPreferences implements Serializable {
       }
       if (jsonObject.has("walletAddress")) {
         userPreferences.setWalletAddress(jsonObject.getString("walletAddress"));
+      }
+      if (jsonObject.has("phrase")) {
+        userPreferences.setWalletAddress(jsonObject.getString("phrase"));
       }
       return userPreferences;
     } catch (JSONException e) {

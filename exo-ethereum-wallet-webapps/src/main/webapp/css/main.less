@@ -92,6 +92,7 @@
   .alert {
     max-width: 100%;
     word-break: break-word;
+    white-space: normal;
   }
 
   .v-speed-dial {
@@ -166,6 +167,28 @@
 
     > .walletConfigurationMenu {
       top: 50px!important;
+    }
+  }
+  #readOnlyToolbar {
+    width: 100%;
+
+    > div {
+      height: auto !important;
+      padding: 0;
+    }
+
+    .alert {
+      width: 100%;
+      margin: 0;
+    }
+  }
+  .walletAppSetup {
+    padding: 5px;
+  }
+
+  #walletMetamaskSetup {
+    .alert {
+      margin: 0;
     }
   }
 }

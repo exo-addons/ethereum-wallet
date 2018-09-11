@@ -316,9 +316,10 @@ export default {
           }
         })
         .then(initWeb3)
-        .then(account => this.account = window.localWeb3.eth.defaultAccount)
-        .then(computeNetwork)
-        .then(netDetails => this.networkId = netDetails.netId)
+        .then(account => {
+          this.account = window.localWeb3.eth.defaultAccount;
+          this.networkId = window.walletSettings.currentNetworkId;
+        })
         .then(() => retrieveFiatExchangeRate())
         .then(() => this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$')
         .then(this.setDefaultValues)

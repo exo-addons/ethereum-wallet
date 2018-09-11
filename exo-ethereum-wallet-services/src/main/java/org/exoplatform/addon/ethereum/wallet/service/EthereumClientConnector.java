@@ -65,8 +65,6 @@ public class EthereumClientConnector implements Startable {
 
   private Subscription             transactionSubscription  = null;
 
-  private Subscription             blockSubscription        = null;
-
   private Queue<Transaction>       queue                    = new ConcurrentLinkedQueue<>();
 
   private ScheduledExecutorService scheduledExecutorService = null;
@@ -113,10 +111,18 @@ public class EthereumClientConnector implements Startable {
       while (transaction != null) {
         try {
           listenerService.broadcast(NEW_TRANSACTION_EVENT, transaction, null);
+          if (transaction.getBlockNumber() != null && transaction.getBlockNumber().longValue() > this.lastWatchedBlockNumber) {
+            this.lastWatchedBlockNumber = transaction.getBlockNumber().longValue();
+          }
         } catch (Throwable e) {
           LOG.warn("Error while handling transaction", e);
         }
         transaction = queue.poll();
+      }
+      try {
+        listenerService.broadcast(NEW_BLOCK_EVENT, this.lastWatchedBlockNumber, null);
+      } catch (Throwable e) {
+        LOG.warn("Error while broadcasting last watched block number event", e);
       }
     }, 10, 10, TimeUnit.SECONDS);
   }
@@ -145,16 +151,6 @@ public class EthereumClientConnector implements Startable {
         queue.add(tx);
       });
     }
-    this.blockSubscription = web3j.blockObservable(false).subscribe(block -> {
-      if (block != null && block.getBlock() != null) {
-        try {
-          listenerService.broadcast(NEW_BLOCK_EVENT, block.getBlock(), null);
-          this.lastWatchedBlockNumber = block.getBlock().getNumber().longValue();
-        } catch (Throwable e) {
-          LOG.warn("Error while handling block", e);
-        }
-      }
-    });
   }
 
   /**
@@ -169,14 +165,6 @@ public class EthereumClientConnector implements Startable {
         LOG.warn("Error occurred while unsubscribing to Ethereum transaction events", e);
       }
       this.transactionSubscription = null;
-    }
-    if (this.blockSubscription != null) {
-      try {
-        this.blockSubscription.unsubscribe();
-      } catch (Throwable e) {
-        LOG.warn("Error occurred while unsubscribing to Ethereum block events", e);
-      }
-      this.blockSubscription = null;
     }
   }
 
@@ -261,8 +249,7 @@ public class EthereumClientConnector implements Startable {
     }
 
     if (this.web3j == null || this.webSocketClient == null || this.webSocketClient.isClosed()
-        || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed() || this.blockSubscription == null
-        || this.blockSubscription.isUnsubscribed()) {
+        || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed()) {
 
       if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
         stopListeninigToTransactions();
