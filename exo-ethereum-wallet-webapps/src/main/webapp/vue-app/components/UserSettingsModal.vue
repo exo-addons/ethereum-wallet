@@ -53,6 +53,7 @@
                   <div class="text-xs-center">
                     <wallet-address :value="account" />
                   </div>
+                  <button class="btn btn-primary">Display private key (TODO)</button>
                 </v-card-text>
               </v-card>
             </v-expansion-panel-content>

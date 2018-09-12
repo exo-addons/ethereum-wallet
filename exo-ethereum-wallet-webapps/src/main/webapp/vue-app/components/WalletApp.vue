@@ -29,8 +29,8 @@
           <v-toolbar v-if="!loading && walletAddress && isReadOnly && !useMetamask" id="readOnlyToolbar" color="transparent" flat dense>
             <div class="alert alert-info">
               <i class="uiIconInfo"></i>
-              No private key was found on current browser. Your wallet is displayed in readonly mode.
-              <a v-if="!displayWalletSetup" href="#" @click="openWalletSetup">More options</a>
+              No private key was found in current browser. Your wallet is displayed in readonly mode.
+              <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="openWalletSetup">More options</a>
             </div>
           </v-toolbar>
 

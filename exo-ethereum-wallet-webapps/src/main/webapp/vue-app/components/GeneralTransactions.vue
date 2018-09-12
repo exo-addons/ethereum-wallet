@@ -53,7 +53,7 @@
         </v-chip>
       </v-flex>
       <div class="">
-        <a v-if="!loading && finishedLoading" href="#" @click="loadMore">Load more</a>
+        <a v-if="!loading && finishedLoading" href="javascript:void(0);" @click="loadMore">Load more</a>
       </div>
     </v-card>
   </v-flex>

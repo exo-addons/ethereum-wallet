@@ -3,9 +3,9 @@
     <div class="walletAppSetup">
       <button class="btn btn-primary" @click="createWalletDialog = true">Create new wallet</button>
       <div>Or</div>
-      <a href="#" @click="importWalletDialog = true">Import existing wallet</a>
+      <a href="javascript:void(0);" @click="importWalletDialog = true">Import existing wallet</a>
       <div v-if="!useMetamask">Or</div>
-      <a v-if="!useMetamask" href="#" @click="switchToMetamask">Use metamask</a>
+      <a v-if="!useMetamask" href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
     </div>
     <v-divider />
 
@@ -65,7 +65,6 @@
             :type="walletPrivateKeyShow ? 'text' : 'password'"
             name="walletPrivateKey"
             label="Wallet private key"
-            counter
             @click:append="walletPrivateKeyShow = !walletPrivateKeyShow"
           />
           <label for="importWalletPassword">This password will be used to encrypt your keys in current browser. You 'll have to keep it safe</label>
@@ -183,9 +182,8 @@ export default {
       if (!window.localWeb3) {
         initEmptyWeb3Instance();
       }
-      this.walletAddress = window.walletSettings.userPreferences.walletAddress;
-      if (!window.walletSettings || !window.walletSettings.userPreferences) {
-        // TODO
+      if (window.walletSettings && window.walletSettings.userPreferences) {
+        this.walletAddress = window.walletSettings.userPreferences.walletAddress;
       }
     },
     createWallet() {
