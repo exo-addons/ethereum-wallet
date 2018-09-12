@@ -49,7 +49,7 @@
       </v-list>
       <v-flex v-else-if="finishedLoading" class="text-xs-center">
         <v-chip color="white">
-          <span>No transactions</span>
+          <span>No recent transactions</span>
         </v-chip>
       </v-flex>
       <div class="">
