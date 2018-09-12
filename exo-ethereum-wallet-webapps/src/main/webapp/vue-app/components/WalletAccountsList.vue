@@ -22,7 +22,7 @@
       </v-list-tile-content>
 
       <v-speed-dial 
-        v-if="!isReadOnly"
+        v-show="!isReadOnly"
         v-model="item.openActions"
         direction="left"
         transition="slide-y-reverse-transition"

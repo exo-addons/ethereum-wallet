@@ -113,12 +113,6 @@ export default {
     WalletAddress
   },
   props: {
-    isReadOnly: {
-      type: Boolean,
-      default: function() {
-        return false;
-      }
-    },
     walletAddress: {
       type: String,
       default: function() {
@@ -140,7 +134,6 @@ export default {
       sameConfiguredNetwork: true,
       associatedWalletAddress: null,
       detectedMetamaskAccount: null,
-      isSpaceAdministrator: false,
       currentAccountAlreadyInUse: false,
       metamaskEnabled: false
     };
@@ -175,12 +168,14 @@ export default {
   },
   methods: {
     init() {
+      if (!window.walletSettings) {
+        return;
+      }
+
       this.metamaskEnabled = window.web3 && window.web3.currentProvider;
       this.metamaskConnected = this.metamaskEnabled && window.walletSettings.metamaskConnected;
 
-      if (window.walletSettings) {
-        this.associatedWalletAddress = window.walletSettings.userPreferences.walletAddress;
-      }
+      this.associatedWalletAddress = window.walletSettings.userPreferences.walletAddress;
 
       if (this.metamaskEnabled && this.metamaskConnected) {
         if (window.localWeb3.eth.defaultAccount) {
@@ -195,27 +190,9 @@ export default {
 
         // compute detected account associated user/space
         if (this.detectedMetamaskAccount !== this.associatedWalletAddress) {
-          if (this.isSpace) {
-            return this.initSpaceAccount().then(this.initAccount);
-          } else {
-            return this.initAccount();
-          }
+          return this.initAccount();
         }
       }
-    },
-    initSpaceAccount() {
-      return searchUserOrSpaceObject(eXo.env.portal.spaceGroup, 'space')
-        .then((spaceObject, error) => {
-          if (error) {
-            throw error;
-          }
-
-          if(spaceObject && spaceObject.managers && spaceObject.managers.length
-              && spaceObject.managers.indexOf(eXo.env.portal.userName) > -1) {
-            return this.isSpaceAdministrator = true;
-          }
-          return false;
-        });
     },
     initAccount() {
       return searchFullName(this.detectedMetamaskAccount)

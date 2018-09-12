@@ -26,7 +26,7 @@
                                  @settings-changed="init()" />
           </v-toolbar>
 
-          <v-toolbar v-if="!loading && walletAddress && isReadOnly && !useMetamask" id="readOnlyToolbar" color="transparent" flat dense>
+          <v-toolbar v-if="displayWalletCreationToolbar" id="readOnlyToolbar" color="transparent" flat dense>
             <div class="alert alert-info">
               <i class="uiIconInfo"></i>
               No private key was found in current browser. Your wallet is displayed in readonly mode.
@@ -40,9 +40,12 @@
             ref="walletAppSetup"
             :error-code="errorCode"
             :is-space="isSpace"
-            :is-read-only="isReadOnly"
             :use-metamask="useMetamask"
             @configured="init" />
+          <div v-else-if="displayWalletNotExistingYet" class="alert alert-info">
+            <i class="uiIconInfo"></i>
+            Space administrator hasn't set a Wallet for this space yet
+          </div>
 
           <!-- Body -->
           <v-card v-if="displayAccountsList" class="text-xs-center" flat>
@@ -58,7 +61,6 @@
               v-show="!loading"
               ref="walletMetamaskSetup"
               :is-space="isSpace"
-              :is-read-only="isReadOnly"
               :wallet-address="walletAddress"
               @loading="loading = true"
               @end-loading="loading = false"
@@ -68,10 +70,10 @@
             <wallet-accounts-list
               v-if="walletAddressConfigured"
               ref="WalletAccountsList"
+              :is-read-only="isReadOnly"
               :accounts-details="accountsDetails"
               :account="walletAddress"
               :network-id="networkId"
-              :is-read-only="isReadOnly"
               :refresh-index="refreshIndex"
               :fiat-symbol="fiatSymbol"
               @account-details-selected="openAccountDetail"
@@ -95,25 +97,22 @@ import WalletAppMenu from './WalletAppMenu.vue';
 import WalletAppSetup from './WalletAppSetup.vue';
 import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
 import WalletAccountsList from './WalletAccountsList.vue';
-import AddContractModal from './AddContractModal.vue';
 import AccountDetail from './AccountDetail.vue';
-import QrCodeModal from './QRCodeModal.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
+import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {searchAddress, searchUserOrSpaceObject, searchFullName} from '../WalletAddressRegistry.js';
-import {etherToFiat, initWeb3, initSettings, computeBalance} from '../WalletUtils.js';
+import {initWeb3, initSettings, computeBalance} from '../WalletUtils.js';
 
 export default {
   components: {
-    UserSettingsModal,
     WalletAppMenu,
     WalletAppSetup,
     WalletMetamaskSetup,
     WalletAccountsList,
-    QrCodeModal,
     AccountDetail,
+    UserSettingsModal,
     AddContractModal
   },
   props: {
@@ -130,12 +129,14 @@ export default {
       loading: true,
       useMetamask: false,
       isReadOnly: true,
+      isSpaceAdministrator: false,
       walletAddressConfigured: false,
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
       showSettingsModal: false,
       showAddContractModal: false,
       displayWalletSetup: false,
+      displayWalletNotExistingYet: false,
       networkId: null,
       walletAddress: null,
       selectedAccount: null,
@@ -151,6 +152,9 @@ export default {
   computed: {
     displayAccountsList() {
       return !this.isMaximized || !this.selectedAccount;
+    },
+    displayWalletCreationToolbar() {
+      return !this.loading && this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator);
     }
   },
   watch: {
@@ -205,6 +209,7 @@ export default {
       this.displayWalletSetup = false;
       this.accountsDetails = {};
       this.walletAddress = null;
+      this.displayWalletNotExistingYet = false;
 
       return initSettings(this.isSpace)
         .then((result, error) => {
@@ -219,6 +224,7 @@ export default {
           } else {
             this.isWalletEnabled = true;
             this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+            this.isSpaceAdministrator = window.walletSettings.isSpaceAdministrator;
             if (window.walletSettings.userPreferences.walletAddress) {
               this.initMenuApp();
               this.forceUpdate();
@@ -280,7 +286,11 @@ export default {
 
           if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
             this.errorCode = constants.ERROR_WALLET_NOT_CONFIGURED;
-            this.openWalletSetup();
+            if (!this.isSpace || this.isSpaceAdministrator) {
+              this.openWalletSetup();
+            } else {
+              this.displayWalletNotExistingYet = true;
+            }
           } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
             this.errorMessage = 'Failed to load user settings';
           } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {

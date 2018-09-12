@@ -88,10 +88,6 @@ export function searchAddress(id, type) {
  * }
  */
 export function searchUserOrSpaceObject(id, type) {
-  const address = sessionStorage.getItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
-  if (address) {
-    return Promise.resolve(address);
-  }
   return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp.ok) {
@@ -134,32 +130,6 @@ export function searchFullName(address) {
     .catch((e) => {
       console.debug("searchFullName method - error", e);
     });
-}
-
-/*
- * Retrieves User or Space details from sessionStorage
- * 
- * Return {
- *  "name": display name of space of user,
- *  "id": Id of space of user,
- *  "address": Ethereum account address,
- *  "avatar": avatar URL/URI,
- *  "type": 'user' or 'space'
- * }
- */
-export function getContactFromStorage(id, ...types) {
-  if (types && types.length) {
-    let i = 0;
-    do {
-      const type = types[i];
-      const value = sessionStorage.getItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
-      if (value && value.length) {
-        return JSON.parse(value);
-      }
-      i++;
-    } while(i < types.length);
-  }
-  return {};
 }
 
 /*

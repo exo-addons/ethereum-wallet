@@ -114,12 +114,6 @@ export default {
         return false;
       }
     },
-    isReadOnly: {
-      type: Boolean,
-      default: function() {
-        return false;
-      }
-    },
     errorCode: {
       type: String,
       default: function() {

@@ -1,4 +1,4 @@
-import {searchFullName, getContractFromStorage, getContactFromStorage} from './WalletAddressRegistry.js';
+import {searchFullName, getContractFromStorage} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus} from './WalletUtils.js';
 
 export function loadStoredTransactions(networkId, account, transactions, refreshCallback) {
@@ -114,15 +114,13 @@ export function addTransaction(networkId, account, transactions, transaction, re
   }
 
   // Retrieve user or space display name, avatar and id from sessionStorage
-  const contactDetails = getContactFromStorage(displayAddress, 'user', 'space');
-
   const transactionDetails = {
     hash: transaction.hash,
     titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
     displayAddress: displayAddress,
-    displayName: contactDetails.name ? contactDetails.name : displayAddress,
-    isContractName: contactDetails.name ? true : false,
-    avatar: contactDetails.avatar,
+    displayName: displayAddress,
+    isContractName: false,
+    avatar: null,
     name: null,
     status: status,
     color: isReceiver ? 'green' : 'red',
@@ -168,35 +166,33 @@ export function addTransaction(networkId, account, transactions, transaction, re
     });
   }
 
-  if (!contactDetails || !contactDetails.name) {
-    // Test if address corresponds to a contract
-    getContractFromStorage(account, displayAddress)
-      .then(contractDetails => {
-        if (contractDetails) {
-          transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
-          transactionDetails.isContractName = true;
-          transactionDetails.name = contractDetails.address;
-          transactionDetails.avatar = contractDetails.avatar;
-          // don't continue searching
-          return false;
-        }
-        // continue searching
-        return true;
-      })
-      .then(continueSearch => {
-        if(continueSearch) {
-          // The address is not of type contract, so search correspondin user/space display name
-          return searchFullName(displayAddress);
-        }
-      })
-      .then(item => {
-        if (item && item.name && item.name.length) {
-          transactionDetails.displayName = item.name;
-          transactionDetails.avatar = item.avatar;
-          transactionDetails.name = item.id;
-        }
-      });
-  }
+  // Test if address corresponds to a contract
+  getContractFromStorage(account, displayAddress)
+    .then(contractDetails => {
+      if (contractDetails) {
+        transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
+        transactionDetails.isContractName = true;
+        transactionDetails.name = contractDetails.address;
+        transactionDetails.avatar = contractDetails.avatar;
+        // don't continue searching
+        return false;
+      }
+      // continue searching
+      return true;
+    })
+    .then(continueSearch => {
+      if(continueSearch) {
+        // The address is not of type contract, so search correspondin user/space display name
+        return searchFullName(displayAddress);
+      }
+    })
+    .then(item => {
+      if (item && item.name && item.name.length) {
+        transactionDetails.displayName = item.name;
+        transactionDetails.avatar = item.avatar;
+        transactionDetails.name = item.id;
+      }
+    });
   return transactions;
 }
 

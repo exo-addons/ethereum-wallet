@@ -1,5 +1,5 @@
 import * as constants from './WalletConstants';
-import {isBrowserWallet} from './WalletAddressRegistry';
+import {isBrowserWallet, searchUserOrSpaceObject} from './WalletAddressRegistry';
 
 export function etherToFiat(amount) {
   if (window.walletSettings.fiatPrice && amount)  {
@@ -151,7 +151,12 @@ export function initSettings(isSpace) {
           window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${username}-metamask`) === 'true';
           window.walletSettings.userPreferences.userP = localStorage.getItem(`exo-wallet-${window.walletSettings.userPreferences.walletAddress}-userp`);
         }
-        return retrieveFiatExchangeRate();
+        if (isSpace && eXo.env.portal.spaceGroup) {
+          return initSpaceAccount(eXo.env.portal.spaceGroup)
+            .then(retrieveFiatExchangeRate);
+        } else {
+          return retrieveFiatExchangeRate();
+        }
       }
     })
     .catch(e => {
@@ -251,6 +256,8 @@ function createLocalWeb3Instance(isSpace, useMetamask) {
     const accountType = isSpace ? 'space' : 'user';
 
     if (useMetamask
+        || window.walletSettings.isReadOnly
+        || (isSpace && !window.walletSettings.isSpaceAdministrator)
         || !window.walletSettings.userPreferences.userP
         || !window.walletSettings.userPreferences.phrase
         || !isBrowserWallet(accountId, accountType, window.walletSettings.userPreferences.walletAddress)) {
@@ -288,5 +295,23 @@ function checkNetworkStatus(waitTime) {
         throw error;
       }
       return checkNetworkStatus(waitTime * 2);
+    });
+}
+
+function initSpaceAccount(spaceGroup) {
+  return searchUserOrSpaceObject(spaceGroup, 'space')
+    .then((spaceObject, error) => {
+      if (error) {
+        throw error;
+      }
+
+      if(spaceObject && spaceObject.managers && spaceObject.managers.length
+          && spaceObject.managers.indexOf(eXo.env.portal.userName) > -1) {
+        return window.walletSettings.isSpaceAdministrator = true;
+      } else {
+        window.walletSettings.isReadOnly = true;
+        return window.walletSettings.isSpaceAdministrator = false;
+      }
+      return false;
     });
 }

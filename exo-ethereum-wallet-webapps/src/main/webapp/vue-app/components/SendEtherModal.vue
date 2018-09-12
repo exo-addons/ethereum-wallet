@@ -86,7 +86,6 @@ export default {
   },
   watch: {
     dialog() {
-      console.warn("this.dialog", this.dialog);
       if (this.dialog) {
         this.$refs.autocomplete.clear();
         this.loading = false;

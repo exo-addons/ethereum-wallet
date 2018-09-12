@@ -38,7 +38,7 @@
 <script>
 import WalletAddress from './WalletAddress.vue';
 
-import {searchFullName, getContactFromStorage} from '../WalletAddressRegistry.js';
+import {searchFullName} from '../WalletAddressRegistry.js';
 import {watchTransactionStatus} from '../WalletUtils.js';
 import {addPendingTransactionToStorage, removePendingTransactionFromStorage, getPendingTransactionFromStorage} from '../WalletToken.js';
 
@@ -259,12 +259,11 @@ export default {
     addTransactionToList(from, to, amount, transactionHash, timestamp, labelFrom, labelTo, icon, pending, pendingTransactionSuccess) {
       const isReceiver = to === this.account;
       const displayedAddress = isReceiver ? from : to;
-      const contactDetails = getContactFromStorage(displayedAddress, 'user', 'space');
       const transactionDetails = {
         hash: transactionHash,
         titlePrefix: isReceiver ? labelFrom: labelTo,
-        displayName: contactDetails.name ? contactDetails.name : displayedAddress,
-        avatar: contactDetails.avatar,
+        displayName: displayedAddress,
+        avatar: null,
         name: null,
         isReceiver: isReceiver,
         color: isReceiver ? 'green' : 'red',
@@ -278,23 +277,18 @@ export default {
       // (Vue will not trigger computed values when changing attribute of an object inside an array)
       this.transactions[transactionDetails.hash] = transactionDetails;
       this.refreshIndex++;
-      if (!contactDetails || !contactDetails.name) {
-        return searchFullName(displayedAddress)
-          .then(item => {
-            if (item && item.name && item.name.length) {
-              transactionDetails.displayName = item.name;
-              transactionDetails.avatar = item.avatar;
-              transactionDetails.name = item.id;
+      searchFullName(displayedAddress)
+        .then(item => {
+          if (item && item.name && item.name.length) {
+            transactionDetails.displayName = item.name;
+            transactionDetails.avatar = item.avatar;
+            transactionDetails.name = item.id;
 
-              // Force update list
-              this.refreshIndex++;
-            }
-            return transactionDetails;
-          });
-      } else {
-        // Force update list
-        this.refreshIndex++;
-      }
+            // Force update list
+            this.refreshIndex++;
+          }
+          return transactionDetails;
+        });
       if (pending) {
         addPendingTransactionToStorage(this.networkId, this.account, this.contract._address.toLowerCase(), {
           from: from,
