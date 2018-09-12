@@ -1,11 +1,11 @@
 <template>
   <v-flex class="text-xs-center">
     <div class="walletAppSetup">
-      <button v-if="!walletAddress" class="btn btn-primary" @click="createWalletDialog = true">Create new wallet</button>
+      <button v-if="!walletAddress" class="btn btn-primary" @click="createWalletDialog = true; dialog = true;">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>
 
-      <a v-if="walletAddress" href="javascript:void(0);" @click="importWalletDialog = true">Import my wallet in current browser</a>
-      <a v-else href="javascript:void(0);" @click="importWalletDialog = true">Import existing wallet</a>
+      <a v-if="walletAddress" href="javascript:void(0);" @click="importWalletDialog = true; dialog = true;">Import my wallet in current browser</a>
+      <a v-else href="javascript:void(0);" @click="importWalletDialog = true; dialog = true;">Import existing wallet</a>
 
       <div v-if="!useMetamask">Or</div>
       <a v-if="!useMetamask" href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
@@ -128,14 +128,12 @@ export default {
       if (this.createWalletDialog) {
         this.resetForm();
         this.importWalletDialog = false;
-        this.dialog = true;
       }
     },
     importWalletDialog() {
       if (this.importWalletDialog) {
         this.resetForm();
         this.createWalletDialog = false;
-        this.dialog = true;
       }
     }
   },

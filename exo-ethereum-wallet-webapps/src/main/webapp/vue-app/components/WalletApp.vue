@@ -19,6 +19,7 @@
             <user-settings-modal :account="walletAddress"
                                  :open="showSettingsModal"
                                  :fiat-symbol="fiatSymbol"
+                                 :display-reset-option="displayWalletResetOption"
                                  @close="showSettingsModal = false"
                                  @settings-changed="init()" />
           </v-toolbar>
@@ -162,10 +163,13 @@ export default {
       return !this.isMaximized || !this.selectedAccount;
     },
     displayWalletCreationToolbar() {
-      return !this.loading && this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator);
+      return !this.loading && this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator) && !this.browserWalletExists;
     },
     displayWalletUnlockToolbar() {
       return !this.loading && this.walletAddress && !this.useMetamask && !this.browserWalletDecrypted && this.browserWalletExists;
+    },
+    displayWalletResetOption() {
+      return !this.loading && this.walletAddress && !this.useMetamask && this.browserWalletExists;
     }
   },
   watch: {
@@ -422,9 +426,6 @@ export default {
     },
     openWalletSetup() {
       this.displayWalletSetup = true;
-    },
-    unlockWallet() {
-      // TODO
     },
     watchMetamaskAccount() {
       const thiss = this;

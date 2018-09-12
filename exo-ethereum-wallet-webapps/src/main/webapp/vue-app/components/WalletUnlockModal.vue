@@ -36,7 +36,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button class="btn btn-primary mr-1" @click="unlockWallet">Create</button>
+        <button class="btn btn-primary mr-1" @click="unlockWallet">Unlock</button>
         <button class="btn" @click="dialog = false">Close</button>
         <v-spacer />
       </v-card-actions>

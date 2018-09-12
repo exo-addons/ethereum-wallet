@@ -38,6 +38,9 @@
                 <v-card-text>
                   <v-switch v-model="useMetamaskChoice" label="Use Metamask to access your wallet in current browser"></v-switch>
                 </v-card-text>
+                <v-card-text v-if="displayWalletResetOption">
+                  <wallet-reset-modal />
+                </v-card-text>
               </v-card>
             </v-expansion-panel-content>
             <v-expansion-panel-content>
@@ -70,6 +73,7 @@
 <script>
 import QrCode from './QRCode.vue';
 import WalletAddress from './WalletAddress.vue';
+import WalletResetModal from './WalletResetModal.vue';
 
 import {gasToFiat, enableMetamask, disableMetamask} from '../WalletUtils.js';
 import {FIAT_CURRENCIES} from '../WalletConstants.js';
@@ -77,6 +81,7 @@ import {FIAT_CURRENCIES} from '../WalletConstants.js';
 export default {
   components: {
     QrCode,
+    WalletResetModal,
     WalletAddress
   },
   props: {
@@ -87,6 +92,12 @@ export default {
       }
     },
     open: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    displayResetOption: {
       type: Boolean,
       default: function() {
         return false;
@@ -116,6 +127,11 @@ export default {
       useMetamaskChoice: false,
       defaulGasPriceFiat: 0
     };
+  },
+  computed: {
+    displayWalletResetOption() {
+      return this.displayResetOption && !this.useMetamaskChoice;
+    }
   },
   watch: {
     open() {
@@ -159,6 +175,7 @@ export default {
           })
         }).then(resp => {
           if (resp && resp.ok) {
+
             if (this.useMetamaskChoice) {
               enableMetamask();
             } else {
@@ -167,6 +184,7 @@ export default {
 
             window.walletSettings.userPreferences.userDefaultGas = this.defaultGas;
             window.walletSettings.userPreferences.currency = this.selectedCurrency.value;
+
             this.$emit('settings-changed', {
               defaultGas: this.defaultGas,
               currency: this.selectedCurrency.value
