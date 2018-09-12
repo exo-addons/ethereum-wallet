@@ -91,7 +91,7 @@ export function initWeb3(isSpace) {
     throw new Error(constants.ERROR_WALLET_SETTINGS_NOT_LOADED);
   }
 
-  if (!isSpace && window.walletSettings.userPreferences.useMetamask
+  if (window.walletSettings.userPreferences.useMetamask
       && window.web3 && window.web3.eth.defaultAccount
       && window.web3.isConnected && window.web3.isConnected()) {
 

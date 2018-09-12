@@ -127,8 +127,10 @@ export default {
       return this.refreshPendingTransactions()
         .then(() => this.refreshTransferList())
         .then(() => this.refreshApprovalList())
-        .then(() => this.$emit("end-loading"))
-        .finally(() => this.loading = false);
+        .finally(() => {
+          this.$emit("end-loading");
+          this.loading = false;
+        });
     },
     refreshPendingTransactions() {
       const pendingTransactions = getPendingTransactionFromStorage(this.networkId, this.account, this.contract._address.toLowerCase());

@@ -22,7 +22,7 @@
       </v-list-tile-content>
 
       <v-speed-dial 
-        v-show="!isReadOnly"
+        v-if="!isReadOnly && ((item.isContract && item.balance > 0 && item.etherBalance > 0) || (!item.isContract && item.balance))"
         v-model="item.openActions"
         direction="left"
         transition="slide-y-reverse-transition"
@@ -35,8 +35,7 @@
   
         <!-- Contract actions -->
         <send-tokens-modal
-          v-if="item.isContract"
-          :disabled="item.balance === 0 || item.etherBalance === 0"
+          v-if="item.isContract && item.balance > 0 && item.etherBalance > 0"
           :balance="item.balance"
           :ether-balance="item.etherBalance"
           :account="account"
@@ -46,8 +45,7 @@
           @error="$emit('error', $event)" />
   
         <delegate-tokens-modal
-          v-if="item.isContract"
-          :disabled="item.balance === 0 || item.etherBalance === 0"
+          v-if="item.isContract && item.balance > 0 && item.etherBalance > 0"
           :balance="item.balance"
           :ether-balance="item.etherBalance"
           :contract="item.contract"
@@ -56,8 +54,7 @@
           @error="$emit('error', $event)" />
   
         <send-delegated-tokens-modal
-          v-if="item.isContract"
-          :disabled="!hasDelegatedTokens || item.balance === 0 || item.etherBalance === 0"
+          v-if="item.isContract && item.balance > 0 && item.etherBalance > 0"
           :ether-balance="item.etherBalance"
           :contract="item.contract"
           :has-delegated-tokens="true"

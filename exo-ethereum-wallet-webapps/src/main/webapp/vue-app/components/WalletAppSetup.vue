@@ -1,9 +1,12 @@
 <template>
   <v-flex class="text-xs-center">
     <div class="walletAppSetup">
-      <button class="btn btn-primary" @click="createWalletDialog = true">Create new wallet</button>
-      <div>Or</div>
-      <a href="javascript:void(0);" @click="importWalletDialog = true">Import existing wallet</a>
+      <button v-if="!walletAddress" class="btn btn-primary" @click="createWalletDialog = true">Create new wallet</button>
+      <div v-if="!walletAddress">Or</div>
+
+      <a v-if="walletAddress" href="javascript:void(0);" @click="importWalletDialog = true">Import my wallet in current browser</a>
+      <a v-else href="javascript:void(0);" @click="importWalletDialog = true">Import existing wallet</a>
+
       <div v-if="!useMetamask">Or</div>
       <a v-if="!useMetamask" href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
     </div>
@@ -139,8 +142,6 @@ export default {
         priv: v => v.length === 66 || v.length === 64 || 'Exactly 66 characters are required'
       }
     };
-  },
-  computed: {
   },
   watch: {
     errorCode() {

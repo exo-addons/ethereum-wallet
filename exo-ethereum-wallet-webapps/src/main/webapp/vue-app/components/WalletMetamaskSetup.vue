@@ -135,7 +135,8 @@ export default {
       associatedWalletAddress: null,
       detectedMetamaskAccount: null,
       currentAccountAlreadyInUse: false,
-      metamaskEnabled: false
+      metamaskEnabled: false,
+      metamaskConnected: false
     };
   },
   computed: {
@@ -174,6 +175,7 @@ export default {
 
       this.metamaskEnabled = window.web3 && window.web3.currentProvider;
       this.metamaskConnected = this.metamaskEnabled && window.walletSettings.metamaskConnected;
+      console.log("this.metamaskConnected", this.metamaskConnected);
 
       this.associatedWalletAddress = window.walletSettings.userPreferences.walletAddress;
 
