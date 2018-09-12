@@ -626,15 +626,7 @@ public class EthereumWalletStorage {
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     if (!addressTransactions.contains(hash)) {
-      String[] addressTransactionsArray = addressTransactions.split(",");
-      if (addressTransactionsArray.length >= 20) {
-        List<String> transactionsList = new ArrayList<>(Arrays.asList(addressTransactionsArray));
-        transactionsList.add(0, hash);
-        transactionsList = transactionsList.subList(0, 20);
-        addressTransactions = StringUtils.join(transactionsList, ",");
-      } else {
-        addressTransactions = addressTransactions.isEmpty() ? hash : hash + "," + addressTransactions;
-      }
+      addressTransactions = addressTransactions.isEmpty() ? hash : hash + "," + addressTransactions;
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName, SettingValue.create(addressTransactions));
     }
   }
