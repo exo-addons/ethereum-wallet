@@ -12,80 +12,56 @@
     </div>
     <v-divider />
 
-    <v-dialog v-model="createWalletDialog" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="createWalletDialog = false">
+    <v-dialog v-model="dialog" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
       <v-card class="elevation-12">
         <div class="popupHeader ClearFix">
-          <a class="uiIconClose pull-right" aria-hidden="true" @click="createWalletDialog = false"></a>
-          <span class="PopupTitle popupTitle">Create new wallet</span>
-        </div>
-        <v-card-text v-if="walletCreated">
-          <div v-if="newTokenAddress" class="alert alert-success v-content">
-            <i class="uiIconSuccess"></i>
-            Wallet created with address: 
-            <wallet-address :value="walletAddress" />
-          </div>
-        </v-card-text>
-        <v-card-text v-else>
-          <div v-if="errorMessage" class="alert alert-error v-content">
-            <i class="uiIconError"></i>{{ errorMessage }}
-          </div>
-          <label for="createWalletPassword">This password will be used to encrypt your keys in current browser. You 'll have to keep it safe</label>
-          <v-text-field
-            v-model="createWalletPassword"
-            :append-icon="createWalletPasswordShow ? 'visibility_off' : 'visibility'"
-            :rules="[rules.required, rules.min]"
-            :type="createWalletPasswordShow ? 'text' : 'password'"
-            name="createWalletPassword"
-            label="Wallet Password"
-            counter
-            @click:append="createWalletPasswordShow = !createWalletPasswordShow"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <button class="btn btn-primary mr-1" @click="createWallet">Create</button>
-          <button class="btn" @click="createWalletDialog = false">Close</button>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="importWalletDialog" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
-      <v-card class="elevation-12">
-        <div class="popupHeader ClearFix">
-          <a class="uiIconClose pull-right" aria-hidden="true" @click="importWalletDialog = false"></a>
-          <span class="PopupTitle popupTitle">Import wallet private key</span>
+          <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
+          <span v-if="createWalletDialog" class="PopupTitle popupTitle">Import wallet private key</span>
+          <span v-else class="PopupTitle popupTitle">Create wallet</span>
         </div>
         <v-card-text>
           <div v-if="errorMessage" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ errorMessage }}
           </div>
-          <label v-if="walletAddress" for="walletPrivateKey">This is the private key of account {{ walletAddress }}</label>
-          <label v-else for="walletPrivateKey">This is the private key to import a new wallet address</label>
+
+          <label v-if="importWalletDialog && walletAddress" for="walletPrivateKey">This is the private key of account {{ walletAddress }}</label>
+          <label v-else-if="importWalletDialog" for="walletPrivateKey">This is the private key to import a new wallet address</label>
           <v-text-field
+            v-if="importWalletDialog"
             v-model="walletPrivateKey"
             :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
-            :rules="[rules.required, rules.priv]"
+            :rules="[rules.priv]"
             :type="walletPrivateKeyShow ? 'text' : 'password'"
             name="walletPrivateKey"
             label="Wallet private key"
             @click:append="walletPrivateKeyShow = !walletPrivateKeyShow"
           />
-          <label for="importWalletPassword">This password will be used to encrypt your keys in current browser. You 'll have to keep it safe</label>
+
+          <v-switch v-model="autoGenerateWalletPassword" label="Generate an automatic password" />
+          <div v-if="autoGenerateWalletPassword" class="alert alert-warning v-content">
+            <i class="uiIconWarning"></i>
+            It is highly recommended to use a personal password to avoid security issues.
+            If you choose to automatically generate a password, it will be stored in local browser to be able to access your wallet.
+          </div>
+
+          <label v-if="!autoGenerateWalletPassword" for="walletPassword">This password will be used to encrypt your keys in current browser. You should keep it in a safe place.</label>
           <v-text-field
-            v-model="createWalletPassword"
-            :append-icon="createWalletPasswordShow ? 'visibility_off' : 'visibility'"
-            :rules="[rules.required, rules.min]"
-            :type="createWalletPasswordShow ? 'text' : 'password'"
-            name="importWalletPassword"
+            v-if="!autoGenerateWalletPassword"
+            v-model="walletPassword"
+            :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+            :rules="[rules.min]"
+            :type="walletPasswordShow ? 'text' : 'password'"
+            name="walletPassword"
             label="Wallet Password"
             counter
-            @click:append="createWalletPasswordShow = !createWalletPasswordShow"
+            @click:append="walletPasswordShow = !walletPasswordShow"
           />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <button class="btn btn-primary mr-1" @click="importWallet">Import</button>
-          <button class="btn" @click="importWalletDialog = false">Close</button>
+          <button v-if="createWalletDialog" class="btn btn-primary mr-1" @click="createWallet">Create</button>
+          <button v-else class="btn btn-primary mr-1" @click="importWallet">Import</button>
+          <button class="btn" @click="dialog = false">Close</button>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -126,20 +102,19 @@ export default {
   },
   data() {
     return {
+      dialog: false,
       createWalletDialog: false,
-      createWalletPassword: '',
+      autoGenerateWalletPassword: true,
+      walletPassword: '',
+      walletPasswordShow: false,
       walletPrivateKey: '',
       walletPrivateKeyShow: false,
-      createWalletPasswordShow: false,
       walletAddress: null,
-      walletCreated: false,
       errorMessage: null,
-      importWalletDialog: false,
       constants: constants,
       rules: {
-        required: value => !!value || 'Required.',
         min: v => v.length >= 8 || 'At least 8 characters',
-        priv: v => v.length === 66 || v.length === 64 || 'Exactly 66 characters are required'
+        priv: v => v.length === 66 || v.length === 64 || 'Exactly 64 or 66 (with "0x") characters are required'
       }
     };
   },
@@ -152,11 +127,15 @@ export default {
     createWalletDialog() {
       if (this.createWalletDialog) {
         this.resetForm();
+        this.importWalletDialog = false;
+        this.dialog = true;
       }
     },
     importWalletDialog() {
       if (this.importWalletDialog) {
         this.resetForm();
+        this.createWalletDialog = false;
+        this.dialog = true;
       }
     }
   },
@@ -165,12 +144,12 @@ export default {
   },
   methods: {
     resetForm() {
-      this.createWalletPassword = '';
+      this.walletPassword = '';
+      this.walletPasswordShow = false;
+      this.autoGenerateWalletPassword = true;
       this.walletPrivateKey = '';
       this.walletPrivateKeyShow = false;
-      this.createWalletPasswordShow = false;
       this.walletAddress = null;
-      this.walletCreated = false;
       this.errorMessage = null;
     },
     init() {
@@ -181,10 +160,18 @@ export default {
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
       }
     },
+    getPassword() {
+      if (this.autoGenerateWalletPassword) {
+        return Math.random().toString(36).slice(2);
+      } else {
+        return this.walletPassword;
+      }
+    },
     createWallet() {
-      const entropy = this.createWalletPassword + Math.random();
+      const password = this.getPassword();
+      const entropy = password + Math.random();
       const wallet = window.localWeb3.eth.accounts.wallet.create(1, entropy);
-      this.saveWallet(wallet[0]);
+      this.saveWallet(wallet[0], password);
     },
     importWallet() {
       if (this.walletPrivateKey.indexOf("0x") < 0) {
@@ -192,12 +179,13 @@ export default {
       }
       const wallet = window.localWeb3.eth.accounts.wallet.add(this.walletPrivateKey);
       if (!this.walletAddress || wallet.address.toLowerCase() === this.walletAddress.toLowerCase()) {
-        this.saveWallet(wallet);
+        const password = this.getPassword();
+        this.saveWallet(wallet, password);
       } else {
         this.errorMessage = `Private key doesn't match address ${this.walletAddress}`;
       }
     },
-    saveWallet(wallet) {
+    saveWallet(wallet, password) {
       const account = window.localWeb3.eth.accounts.wallet.add(wallet);
       const address = account['address'].toLowerCase();
 
@@ -217,12 +205,11 @@ export default {
           }
         })
         .then((phrase, error) => {
-          saveWallet(this.createWalletPassword, phrase, address);
+          saveWallet(password, phrase, address, this.autoGenerateWalletPassword);
 
           disableMetamask();
 
-          this.createWalletDialog = false;
-          this.importWalletDialog = false;
+          this.dialog = false;
 
           this.$emit("configured");
 

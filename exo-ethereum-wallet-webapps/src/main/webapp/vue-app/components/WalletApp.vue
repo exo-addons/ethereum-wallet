@@ -23,11 +23,18 @@
                                  @settings-changed="init()" />
           </v-toolbar>
 
-          <v-toolbar v-if="displayWalletCreationToolbar" id="readOnlyToolbar" color="transparent" flat dense>
+          <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
             <div class="alert alert-info">
               <i class="uiIconInfo"></i>
               No private key was found in current browser. Your wallet is displayed in readonly mode.
               <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="openWalletSetup">More options</a>
+            </div>
+          </v-toolbar>
+          <v-toolbar v-else-if="displayWalletUnlockToolbar" class="additionalToolbar" color="transparent" flat dense>
+            <div class="alert alert-info">
+              <i class="uiIconInfo"></i>
+              Your wallet is locked in current browser, thus you can't send transactions.
+              <wallet-unlock-modal @refresh="init()"/>
             </div>
           </v-toolbar>
 
@@ -96,6 +103,7 @@ import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
 import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
+import WalletUnlockModal from './WalletUnlockModal.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
@@ -110,6 +118,7 @@ export default {
     WalletAccountsList,
     AccountDetail,
     UserSettingsModal,
+    WalletUnlockModal,
     AddContractModal
   },
   props: {
@@ -135,6 +144,8 @@ export default {
       displayWalletSetup: false,
       displayWalletNotExistingYet: false,
       networkId: null,
+      browserWalletExists: false,
+      browserWalletDecrypted: false,
       walletAddress: null,
       selectedAccount: null,
       fiatSymbol: '$',
@@ -152,6 +163,9 @@ export default {
     },
     displayWalletCreationToolbar() {
       return !this.loading && this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator);
+    },
+    displayWalletUnlockToolbar() {
+      return !this.loading && this.walletAddress && !this.useMetamask && !this.browserWalletDecrypted && this.browserWalletExists;
     }
   },
   watch: {
@@ -250,6 +264,8 @@ export default {
           }
 
           this.isReadOnly = window.walletSettings.isReadOnly;
+          this.browserWalletExists = window.walletSettings.browserWalletExists;
+          this.browserWalletDecrypted = window.walletSettings.browserWallet;
 
           this.walletAddressConfigured = true;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
@@ -406,6 +422,9 @@ export default {
     },
     openWalletSetup() {
       this.displayWalletSetup = true;
+    },
+    unlockWallet() {
+      // TODO
     },
     watchMetamaskAccount() {
       const thiss = this;

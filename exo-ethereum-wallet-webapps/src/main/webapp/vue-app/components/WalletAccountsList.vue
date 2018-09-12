@@ -22,7 +22,7 @@
       </v-list-tile-content>
 
       <v-speed-dial 
-        v-if="!isReadOnly && ((item.isContract && item.balance > 0 && item.etherBalance > 0) || (!item.isContract && item.balance))"
+        v-if="!isReadOnly && ((item.isContract && item.balance > 0 && item.etherBalance > 0) || (!item.isContract && item.balance && item.balance !== '0'))"
         v-model="item.openActions"
         direction="left"
         transition="slide-y-reverse-transition"
@@ -63,7 +63,7 @@
   
         <!-- Ether account actions -->
         <send-ether-modal
-          v-if="!item.isContract && item.balance"
+          v-if="!item.isContract && item.balance && item.balance !== '0'"
           :account="account"
           :balance="item.balance"
           icon

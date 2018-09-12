@@ -49,11 +49,6 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
     });
 }
 
-export function isBrowserWallet(id, type, address) {
-  address = address.toLowerCase();
-  return localStorage.getItem(`exo-wallet-${type}-${id}`) === address;
-}
-
 /*
  * Return the address of a user or space
  */
