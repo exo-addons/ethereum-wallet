@@ -247,6 +247,17 @@ export function computeBalance(account) {
     });
 }
 
+export function saveWallet(password, phrase, address) {
+  password = hashCode(password);
+
+  // Create wallet with user password phrase and personal eXo Phrase generated
+  // To avoid having the complete passphrase that allows to decrypt wallet in a single location
+  window.localWeb3.eth.accounts.wallet.save(password + phrase, address);
+
+  // Save user passphrase in localStorage to avoid asking him for it eah time he refreshes the page
+  localStorage.setItem(`exo-wallet-${address}-userp`, password);
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
@@ -315,3 +326,11 @@ function initSpaceAccount(spaceGroup) {
       return false;
     });
 }
+
+function hashCode(s) {
+  var h = 0, l = s.length, i = 0;
+  if ( l > 0 )
+    while (i < l)
+      h = (h << 5) - h + s.charCodeAt(i++) | 0;
+  return h;
+};

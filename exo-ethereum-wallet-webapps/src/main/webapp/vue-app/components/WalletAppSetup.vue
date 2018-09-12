@@ -94,7 +94,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import * as constants from '../WalletConstants.js';
-import {enableMetamask, disableMetamask, initEmptyWeb3Instance} from '../WalletUtils.js';
+import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveWallet} from '../WalletUtils.js';
 import {saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
@@ -216,12 +216,7 @@ export default {
           }
         })
         .then((phrase, error) => {
-          // Create wallet with user password phrase and personal eXo Phrase generated
-          // To avoid having the complete passphrase that allows to decrypt wallet in a single location
-          window.localWeb3.eth.accounts.wallet.save(this.createWalletPassword + phrase, address);
-
-          // Save user passphrase in localStorage to avoid asking him for it eah time he refreshes the page
-          localStorage.setItem(`exo-wallet-${address}-userp`, this.createWalletPassword);
+          saveWallet(this.createWalletPassword, phrase, address);
 
           disableMetamask();
 
