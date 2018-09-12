@@ -36,7 +36,7 @@
                             type="number" />
                 </v-card-text>
                 <v-card-text>
-                  <v-switch v-model="useMetamaskChoice" label="Use metamask"></v-switch>
+                  <v-switch v-model="useMetamaskChoice" label="Use Metamask to access your wallet in current browser"></v-switch>
                 </v-card-text>
               </v-card>
             </v-expansion-panel-content>
