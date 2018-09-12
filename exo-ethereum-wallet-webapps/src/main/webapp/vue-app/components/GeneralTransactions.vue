@@ -1,6 +1,7 @@
 <template>
   <v-flex>
     <v-card class="card--flex-toolbar">
+      <div v-if="!finishedLoading">Loading recent Transactions...</div>
       <v-progress-circular
         v-if="!finishedLoading"
         :rotate="-90"
@@ -40,8 +41,11 @@
                 </span>
               </v-list-tile-sub-title>
             </v-list-tile-content>
-            <v-list-tile-action v-if="item.date && !item.pending">
-              <v-list-tile-action-text>{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
+            <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
+              <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
+              <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
+                <v-icon color="primary">info</v-icon>
+              </a>
             </v-list-tile-action>
           </v-list-tile>
           <v-divider v-if="index + 1 < Object.keys(transactions).length" :key="index"></v-divider>
@@ -63,6 +67,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
+import {getEtherscanlink} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -99,6 +104,7 @@ export default {
       transactionsPerPage: 10,
       maxBlocksToLoad: 1000,
       loadedBlocks: 0,
+      etherscanLink: null,
       transactions: {}
     };
   },
@@ -133,6 +139,9 @@ export default {
             this.$emit("error", `Account loading error: ${error}`);
           });
       } 
+    },
+    networkId() {
+      this.etherscanLink = getEtherscanlink(this.networkId);
     }
   },
   created() {
@@ -145,6 +154,9 @@ export default {
           this.finishedLoading = true;
           this.$emit("error", `Account initialization error: ${error}`);
         });
+    }
+    if (!this.etherscanLink) {
+      this.etherscanLink = getEtherscanlink(this.networkId);
     }
   },
   methods: {

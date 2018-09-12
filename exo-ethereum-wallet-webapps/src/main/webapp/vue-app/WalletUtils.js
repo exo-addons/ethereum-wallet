@@ -258,6 +258,19 @@ export function saveWallet(password, phrase, address) {
   localStorage.setItem(`exo-wallet-${address}-userp`, password);
 }
 
+
+export function getEtherscanlink(networkId)  {
+  if (networkId) {
+    switch (networkId) {
+    case 1:
+      return "https://etherscan.io/tx/";
+    case 3:
+      return "https://ropsten.etherscan.io/tx/";
+    }
+  }
+  return null;
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));

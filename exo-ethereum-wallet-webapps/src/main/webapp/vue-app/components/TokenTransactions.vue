@@ -20,8 +20,11 @@
             </v-list-tile-title>
             <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
           </v-list-tile-content>
-          <v-list-tile-action v-if="!item.pending && item.date">
-            <v-list-tile-action-text>{{ item.date ? item.date.toLocaleDateString() : '' }} - {{ item.date ? item.date.toLocaleTimeString() : '' }}</v-list-tile-action-text>
+          <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
+            <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
+            <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
+              <v-icon color="primary">info</v-icon>
+            </a>
           </v-list-tile-action>
         </v-list-tile>
         <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
@@ -39,7 +42,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import {searchFullName} from '../WalletAddressRegistry.js';
-import {watchTransactionStatus} from '../WalletUtils.js';
+import {watchTransactionStatus, getEtherscanlink} from '../WalletUtils.js';
 import {addPendingTransactionToStorage, removePendingTransactionFromStorage, getPendingTransactionFromStorage} from '../WalletToken.js';
 
 export default {
@@ -72,6 +75,7 @@ export default {
       latestBlockNumber: 0,
       latestDelegatedBlockNumber: 0,
       transactions: {},
+      etherscanLink: null,
       loading: true
     };
   },
@@ -98,11 +102,17 @@ export default {
       if (contract) {
         this.init();
       }
+    },
+    networkId() {
+      this.etherscanLink = getEtherscanlink(this.networkId);
     }
   },
   created() {
     if (this.contract) {
       this.init();
+    }
+    if (!this.etherscanLink) {
+      this.etherscanLink = getEtherscanlink(this.networkId);
     }
   },
   methods: {
