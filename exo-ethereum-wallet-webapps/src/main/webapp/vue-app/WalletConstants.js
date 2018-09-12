@@ -275,157 +275,157 @@ export const ERC20_COMPLIANT_CONTRACT_BYTECODE = "0x6080604052348015610010576000
 export const FIAT_CURRENCIES = {
   "aud":{
     "value":"aud",
-    "text":"Australia Dollar",
+    "text":"Australia Dollar (AUD)",
     "symbol": "$ (AUD)"
   },
   "brl":{
     "value":"brl",
-    "text":"Brazil Real",
+    "text":"Brazil Real (R$)",
     "symbol": "R$"
   },
   "cad":{
     "value":"cad",
-    "text":"cad",
+    "text":"Canadian dollar (CAD)",
     "symbol": "$ (CAD)"
   },
   "chf":{
     "value":"chf",
-    "text":"Switzerland Franc",
+    "text":"Switzerland Franc (CHF)",
     "symbol": "CHF"
   },
   "clp":{
     "value":"clp",
-    "text":"Chile Peso",
+    "text":"Chile Peso (CLP)",
     "symbol": "$ (CLP)"
   },
   "cny":{
     "value":"cny",
-    "text":"China Yuan Renminbi",
+    "text":"China Yuan Renminbi (CNY)",
     "symbol": "¥ (CNY)"
   },
   "czk":{
     "value":"czk",
-    "text":"Czech Republic Koruna",
+    "text":"Czech Republic Koruna (Kč)",
     "symbol": "Kč"
   },
   "dkk":{
     "value":"dkk",
-    "text":"Denmark Krone",
+    "text":"Denmark Krone (DKK)",
     "symbol": "kr (DKK)"
   },
   "eur":{
     "value":"eur",
-    "text":"Euro Member Countries",
+    "text":"Euro Member Countries (€)",
     "symbol": "€"
   },
   "gbp":{
     "value":"gbp",
-    "text":"United Kingdom Pound",
+    "text":"United Kingdom Pound (£)",
     "symbol": "£"
   },
   "hkd":{
     "value":"hkd",
-    "text":"Hong Kong Dollar",
+    "text":"Hong Kong Dollar (HKD)",
     "symbol": "$ (HKD)"
   },
   "huf":{
     "value":"huf",
-    "text":"Hungary Forint",
+    "text":"Hungary Forint (Ft)",
     "symbol": "Ft"
   },
   "idr":{
     "value":"idr",
-    "text":"Indonesia Rupiah",
+    "text":"Indonesia Rupiah (Rp)",
     "symbol": "Rp"
   },
   "inr":{
     "value":"inr",
-    "text":"India Rupee",
+    "text":"India Rupee (INR)",
     "symbol": "INR"
   },
   "jpy":{
     "value":"jpy",
-    "text":"Japan Yen",
+    "text":"Japan Yen (¥)",
     "symbol": "¥"
   },
   "krw":{
     "value":"krw",
-    "text":"Korea (South) Won",
+    "text":"Korea (South) Won (₩)",
     "symbol": "₩"
   },
   "mxn":{
     "value":"mxn",
-    "text":"Mexico Peso",
+    "text":"Mexico Peso (MXN)",
     "symbol": "$ (MXN)"
   },
   "myr":{
     "value":"myr",
-    "text":"Malaysia Ringgit",
+    "text":"Malaysia Ringgit (RM)",
     "symbol": "RM"
   },
   "nok":{
     "value":"nok",
-    "text":"Norway Krone",
+    "text":"Norway Krone (NOK)",
     "symbol": "kr (NOK)"
   },
   "nzd":{
     "value":"nzd",
-    "text":"New Zealand Dollar",
+    "text":"New Zealand Dollar (NZD)",
     "symbol": "$ (NZD)"
   },
   "php":{
     "value":"php",
-    "text":"Philippines Piso",
+    "text":"Philippines Piso (₱)",
     "symbol": "₱"
   },
   "pkr":{
     "value":"pkr",
-    "text":"Pakistan Rupee",
+    "text":"Pakistan Rupee (₨)",
     "symbol": "₨"
   },
   "pln":{
     "value":"pln",
-    "text":"Poland Zloty",
+    "text":"Poland Zloty (zł)",
     "symbol": "zł"
   },
   "usd":{
     "value":"usd",
-    "text":"United States Dollar",
+    "text":"United States Dollar ($)",
     "symbol": "$"
   },
   "rub":{
     "value":"rub",
-    "text":"Russia Ruble",
+    "text":"Russia Ruble (₽)",
     "symbol": "₽"
   },
   "sek":{
     "value":"sek",
-    "text":"Sweden Krona",
+    "text":"Sweden Krona (SEK)",
     "symbol": "kr (SEK)"
   },
   "sgd":{
     "value":"sgd",
-    "text":"Singapore Dollar",
+    "text":"Singapore Dollar (SGD)",
     "symbol": "$ (SGD)"
   },
   "thb":{
     "value":"thb",
-    "text":"Thailand Baht",
+    "text":"Thailand Baht (THB)",
     "symbol": "฿ (THB)"
   },
   "try":{
     "value":"try",
-    "text":"Turkey Lira",
+    "text":"Turkey Lira (TRY)",
     "symbol": "TRY"
   },
   "twd":{
     "value":"twd",
-    "text":"Taiwan New Dollar",
+    "text":"Taiwan New Dollar (NT$)",
     "symbol": "NT$"
   },
   "zar":{
     "value":"zar",
-    "text":"South Africa Rand",
+    "text":"South Africa Rand (ZAR)",
     "symbol": "R (ZAR)"
   }
 }
