@@ -11,13 +11,10 @@
 
             <wallet-app-menu v-if="!hasError && !loading && walletAddress"
                              :is-space="isSpace"
-                             :is-account-details="selectedAccount !== null"
+                             :is-maximized="isMaximized"
                              @refresh="init()"
+                             @maximize="maximize()"
                              @modify-settings="showSettingsModal = true" />
-
-            <v-btn v-if="!isMaximized" icon class="maximizeIcon" @click="maximize">
-              <v-icon size="15px">fa-external-link-alt</v-icon>
-            </v-btn>
 
             <user-settings-modal :account="walletAddress"
                                  :open="showSettingsModal"
