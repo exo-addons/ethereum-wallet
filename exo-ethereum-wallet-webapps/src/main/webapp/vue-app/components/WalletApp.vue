@@ -287,10 +287,10 @@ export default {
             throw new Error("Wallet disabled for current user");
           } else {
             this.isWalletEnabled = true;
+            this.initMenuApp();
             this.useMetamask = window.walletSettings.userPreferences.useMetamask;
             this.isSpaceAdministrator = window.walletSettings.isSpaceAdministrator;
             if (window.walletSettings.userPreferences.walletAddress) {
-              this.initMenuApp();
               this.forceUpdate();
             } else if (!this.useMetamask) {
               throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
