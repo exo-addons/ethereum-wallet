@@ -85,6 +85,8 @@
 
             <wallet-summary
               v-if="!loading && walletAddress"
+              :accounts-details="accountsDetails"
+              :refresh-index="refreshIndex"
               :wallet-address="walletAddress"
               :ether-balance="etherBalance"
               :total-balance="totalBalance"

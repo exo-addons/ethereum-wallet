@@ -137,7 +137,7 @@ export default {
     account: {
       type: String,
       default: function() {
-        return {};
+        return null;
       }
     },
     fiatSymbol: {

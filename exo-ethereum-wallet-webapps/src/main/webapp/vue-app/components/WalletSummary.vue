@@ -13,7 +13,11 @@
 
     <v-card-actions>
       <v-spacer />
-      <button :disabled="disableSendButton" class="btn btn-primary mr-1">Send</button>
+      <send-funds-modal
+        :accounts-details="accountsDetails"
+        :refresh-index="refreshIndex"
+        :wallet-address="walletAddress"
+        :disabled="disableSendButton" />
       <wallet-receive-modal :wallet-address="walletAddress" />
       <v-spacer />
     </v-card-actions>
@@ -22,12 +26,26 @@
 
 <script>
 import WalletReceiveModal from './WalletReceiveModal.vue';
+import SendFundsModal from './SendFundsModal.vue';
 
 export default {
   components: {
+    SendFundsModal,
     WalletReceiveModal
   },
   props: {
+    accountsDetails: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
+    refreshIndex: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
     etherBalance: {
       type: Number,
       default: function() {

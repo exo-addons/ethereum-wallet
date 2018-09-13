@@ -56,7 +56,7 @@ export default {
     inputLabel: {
       type: String,
       default: function() {
-        return {};
+        return null;
       }
     },
     disabled: {
