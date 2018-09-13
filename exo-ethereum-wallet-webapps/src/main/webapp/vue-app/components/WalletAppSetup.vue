@@ -73,7 +73,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import * as constants from '../WalletConstants.js';
-import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveWallet} from '../WalletUtils.js';
+import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWallet} from '../WalletUtils.js';
 import {saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
@@ -203,7 +203,7 @@ export default {
           }
         })
         .then((phrase, error) => {
-          saveWallet(password, phrase, address, this.autoGenerateWalletPassword);
+          saveBrowerWallet(password, phrase, address, this.autoGenerateWalletPassword, this.autoGenerateWalletPassword);
 
           disableMetamask();
 

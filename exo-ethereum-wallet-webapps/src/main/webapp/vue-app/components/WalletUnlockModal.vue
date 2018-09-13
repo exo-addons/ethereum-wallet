@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import {unlockWallet} from '../WalletUtils.js';
+import {unlockBrowerWallet} from '../WalletUtils.js';
 
 export default {
   data() {
@@ -72,7 +72,7 @@ export default {
   },
   methods: {
     unlockWallet() {
-      const unlocked = unlockWallet(this.walletPassword, true, this.rememberPassword);
+      const unlocked = unlockBrowerWallet(this.walletPassword, null, null, true, this.rememberPassword);
       if (unlocked) {
         this.$emit("refresh");
         this.dialog = false;

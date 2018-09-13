@@ -22,6 +22,7 @@
                                  :display-reset-option="displayWalletResetOption"
                                  @close="showSettingsModal = false"
                                  @settings-changed="init()" />
+
           </v-toolbar>
 
           <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
@@ -221,7 +222,6 @@ export default {
       this.seeAccountDetails = false;
       this.errorMessage = null;
       this.selectedAccount = null;
-      this.displayWalletSetup = false;
       this.accountsDetails = {};
       this.walletAddress = null;
       this.displayWalletNotExistingYet = false;

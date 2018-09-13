@@ -39,7 +39,7 @@
                   <v-switch v-model="useMetamaskChoice" label="Use Metamask to access your wallet in current browser"></v-switch>
                 </v-card-text>
                 <v-card-text v-if="displayWalletResetOption">
-                  <wallet-reset-modal />
+                  <wallet-reset-modal @reseted="$emit('settings-changed')"/>
                 </v-card-text>
               </v-card>
             </v-expansion-panel-content>
