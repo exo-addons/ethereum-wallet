@@ -85,7 +85,7 @@ export default {
   },
   computed: {
     disableSendButton() {
-      return this.isReadOnly || !this.etherBalance;
+      return this.isReadOnly || !this.etherBalance || !Number(this.etherBalance);
     }
   }
 };
