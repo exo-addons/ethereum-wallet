@@ -25,6 +25,15 @@
 
           </v-toolbar>
 
+          <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i>
+              Your wallet is not yet backed up yet.
+              <wallet-backup-modal :display-complete-message="true" @copied="browserWalletBackedUp = true" />
+              <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
+            </div>
+          </v-toolbar>
+
           <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
             <div class="alert alert-info">
               <i class="uiIconInfo"></i>
@@ -106,11 +115,12 @@ import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
 import WalletUnlockModal from './WalletUnlockModal.vue';
+import WalletBackupModal from './WalletBackupModal.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {initWeb3, initSettings, computeBalance} from '../WalletUtils.js';
+import {initWeb3, initSettings, computeBalance, setWalletBackedUp} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -121,6 +131,7 @@ export default {
     AccountDetail,
     UserSettingsModal,
     WalletUnlockModal,
+    WalletBackupModal,
     AddContractModal
   },
   props: {
@@ -148,6 +159,7 @@ export default {
       networkId: null,
       browserWalletExists: false,
       browserWalletDecrypted: false,
+      browserWalletBackedUp: true,
       walletAddress: null,
       selectedAccount: null,
       fiatSymbol: '$',
@@ -171,6 +183,9 @@ export default {
     },
     displayWalletResetOption() {
       return !this.loading && this.walletAddress && !this.useMetamask && this.browserWalletExists;
+    },
+    displayWalletBackup() {
+      return !this.loading && this.walletAddress && !this.useMetamask && !this.browserWalletBackedUp && this.browserWalletExists;
     }
   },
   watch: {
@@ -270,6 +285,7 @@ export default {
           this.isReadOnly = window.walletSettings.isReadOnly;
           this.browserWalletExists = window.walletSettings.browserWalletExists;
           this.browserWalletDecrypted = window.walletSettings.browserWallet;
+          this.browserWalletBackedUp = window.walletSettings.userPreferences.backedUp;
 
           this.walletAddressConfigured = true;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
@@ -423,6 +439,10 @@ export default {
           </li>`);
         $(window).trigger("resize");
       });
+    },
+    hideBackupMessage() {
+      setWalletBackedUp(null, true);
+      this.browserWalletBackedUp = true;
     },
     openWalletSetup() {
       this.displayWalletSetup = true;

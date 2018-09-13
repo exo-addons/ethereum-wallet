@@ -203,7 +203,7 @@ export default {
           }
         })
         .then((phrase, error) => {
-          saveBrowerWallet(password, phrase, address, this.autoGenerateWalletPassword, this.autoGenerateWalletPassword);
+          saveBrowerWallet(password, phrase, address, this.autoGenerateWalletPassword, this.autoGenerateWalletPassword, this.createWalletDialog);
 
           disableMetamask();
 

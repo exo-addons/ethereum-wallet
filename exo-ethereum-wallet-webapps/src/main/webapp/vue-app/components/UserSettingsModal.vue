@@ -41,6 +41,9 @@
                 <v-card-text v-if="displayWalletResetOption">
                   <wallet-reset-modal @reseted="$emit('settings-changed')"/>
                 </v-card-text>
+                <v-card-text v-if="displayWalletResetOption">
+                  <wallet-backup-modal :display-complete-message="false" />
+                </v-card-text>
               </v-card>
             </v-expansion-panel-content>
             <v-expansion-panel-content>
@@ -74,6 +77,7 @@
 import QrCode from './QRCode.vue';
 import WalletAddress from './WalletAddress.vue';
 import WalletResetModal from './WalletResetModal.vue';
+import WalletBackupModal from './WalletBackupModal.vue';
 
 import {gasToFiat, enableMetamask, disableMetamask} from '../WalletUtils.js';
 import {FIAT_CURRENCIES} from '../WalletConstants.js';
@@ -82,6 +86,7 @@ export default {
   components: {
     QrCode,
     WalletResetModal,
+    WalletBackupModal,
     WalletAddress
   },
   props: {
