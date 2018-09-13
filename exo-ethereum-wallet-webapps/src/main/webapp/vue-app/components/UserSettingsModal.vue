@@ -52,7 +52,6 @@
                 <v-card-text>
                   <qr-code ref="qrCode"
                            :to="account"
-                           :build="true"
                            title="Address QR Code"
                            information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
         

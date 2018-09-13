@@ -58,7 +58,11 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(() => contractDetails.contract.methods.name().call())
     .then(name => contractDetails.name = name)
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
-    .then(balance => contractDetails.balance = parseFloat(`${balance}`))
+    .then(balance => {
+      contractDetails.balance = parseFloat(`${balance}`);
+      // TODO compute Token value in ether
+      contractDetails.balanceInEther = 0;
+    })
     .then(() => {
       return contractDetails;
     })

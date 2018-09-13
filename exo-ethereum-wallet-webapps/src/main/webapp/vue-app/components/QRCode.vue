@@ -11,12 +11,6 @@
 <script>
 export default {
   props: {
-    build: {
-      type: Boolean,
-      default: function() {
-        return false;
-      }
-    },
     netId: {
       type: String,
       default: function() {

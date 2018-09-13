@@ -50,14 +50,14 @@
             </div>
           </v-toolbar>
 
-          <wallet-app-setup
-            v-if="displayWalletSetup"
-            v-show="!loading"
-            ref="walletAppSetup"
-            :error-code="errorCode"
-            :is-space="isSpace"
-            :use-metamask="useMetamask"
-            @configured="init" />
+          <wallet-app-setup v-if="displayWalletSetup"
+                            v-show="!loading"
+                            ref="walletAppSetup"
+                            :error-code="errorCode"
+                            :is-space="isSpace"
+                            :use-metamask="useMetamask"
+                            @configured="init" />
+
           <div v-else-if="displayWalletNotExistingYet" class="alert alert-info">
             <i class="uiIconInfo"></i>
             Space administrator hasn't set a Wallet for this space yet
@@ -83,8 +83,17 @@
               @refresh="init()"
               @error="loading = false; errorMessage = $event" />
 
+            <wallet-summary
+              v-if="!loading && walletAddress"
+              :wallet-address="walletAddress"
+              :ether-balance="etherBalance"
+              :total-balance="totalBalance"
+              :total-fiat-balance="totalFiatBalance"
+              :is-read-only="isReadOnly"
+              :fiat-symbol="fiatSymbol" />
+
             <wallet-accounts-list
-              v-if="walletAddressConfigured"
+              v-if="isMaximized && walletAddressConfigured"
               ref="WalletAccountsList"
               :is-read-only="isReadOnly"
               :accounts-details="accountsDetails"
@@ -112,6 +121,7 @@
 import WalletAppMenu from './WalletAppMenu.vue';
 import WalletAppSetup from './WalletAppSetup.vue';
 import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
+import WalletSummary from './WalletSummary.vue';
 import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
@@ -121,13 +131,14 @@ import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {initWeb3, initSettings, computeBalance, setWalletBackedUp} from '../WalletUtils.js';
+import {initWeb3, initSettings, computeBalance, setWalletBackedUp, etherToFiat} from '../WalletUtils.js';
 
 export default {
   components: {
     WalletAppMenu,
     WalletAppSetup,
     WalletMetamaskSetup,
+    WalletSummary,
     WalletAccountsList,
     AccountDetail,
     UserSettingsModal,
@@ -187,6 +198,25 @@ export default {
     },
     displayWalletBackup() {
       return !this.loading && this.walletAddress && !this.useMetamask && !this.browserWalletBackedUp && this.browserWalletExists;
+    },
+    etherBalance() {
+      if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
+        return this.accountsDetails[this.walletAddress].balance;
+      }
+      return 0;
+    },
+    totalFiatBalance() {
+      return etherToFiat(this.totalBalance);
+    },
+    totalBalance() {
+      let balance = 0;
+      if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails) {
+        Object.keys(this.accountsDetails).forEach(key => {
+          const accountDetail = this.accountsDetails[key];
+          balance += Number((accountDetail.isContract ? accountDetail.balanceInEther : accountDetail.balance) || 0);
+        });
+      }
+      return balance;
     }
   },
   watch: {
