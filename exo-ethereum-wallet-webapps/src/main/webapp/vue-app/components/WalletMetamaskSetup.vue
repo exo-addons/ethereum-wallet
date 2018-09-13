@@ -178,6 +178,13 @@ export default {
 
       this.associatedWalletAddress = window.walletSettings.userPreferences.walletAddress;
 
+      this.addressAssociationDialog = false;
+      this.installInstructionDialog = false;
+      this.networkLabel = null;
+      this.sameConfiguredNetwork = true;
+      this.detectedMetamaskAccount = null;
+      this.currentAccountAlreadyInUse = false;
+
       if (this.metamaskEnabled && this.metamaskConnected) {
         if (window.localWeb3.eth.defaultAccount) {
           this.detectedMetamaskAccount = window.localWeb3.eth.defaultAccount.toLowerCase();
@@ -201,9 +208,7 @@ export default {
           if (error) {
             throw error;
           }
-          if (item && item.id && item.id.length) {
-            this.currentAccountAlreadyInUse = true;
-          }
+          this.currentAccountAlreadyInUse = item && item.id && item.id.length;
           return item;
         })
         .catch(e => {

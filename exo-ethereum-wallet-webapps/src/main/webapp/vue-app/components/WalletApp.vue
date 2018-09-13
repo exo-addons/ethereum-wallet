@@ -9,8 +9,9 @@
             <h4 v-else class="head-container">Wallet</h4>
             <v-spacer />
 
-            <wallet-app-menu v-if="!hasError && !loading && walletAddress"
+            <wallet-app-menu v-if="!hasError && !loading"
                              :is-space="isSpace"
+                             :wallet-address="walletAddress"
                              :is-maximized="isMaximized"
                              @refresh="init()"
                              @maximize="maximize()"
@@ -50,7 +51,7 @@
             </div>
           </v-toolbar>
 
-          <wallet-app-setup v-if="displayWalletSetup"
+          <wallet-app-setup v-if="displayWalletSetup && !useMetamask"
                             v-show="!loading"
                             ref="walletAppSetup"
                             :error-code="errorCode"
@@ -291,7 +292,7 @@ export default {
             if (window.walletSettings.userPreferences.walletAddress) {
               this.initMenuApp();
               this.forceUpdate();
-            } else {
+            } else if (!this.useMetamask) {
               throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
             }
           }

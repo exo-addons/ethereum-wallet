@@ -3,7 +3,7 @@
     <v-btn icon flat title="Refresh wallet" @click="$emit('refresh')">
       <v-icon size="20px">refresh</v-icon>
     </v-btn>
-    <v-btn v-if="!isSpace" icon flat title="Settings" @click="$emit('modify-settings')">
+    <v-btn v-if="!isSpace && walletAddress" icon flat title="Settings" @click="$emit('modify-settings')">
       <v-icon size="17px">fa-cog</v-icon>
     </v-btn>
     <v-btn v-if="!isMaximized" icon title="Open wallet application" class="maximizeIcon" @click="$emit('maximize')">
@@ -19,6 +19,12 @@ export default {
       type: Boolean,
       default: function() {
         return false;
+      }
+    },
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
       }
     },
     isMaximized: {

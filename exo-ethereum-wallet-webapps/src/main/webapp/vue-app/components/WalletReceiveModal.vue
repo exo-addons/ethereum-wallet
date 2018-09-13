@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup" width="450px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" content-class="uiPopup" width="450px" max-width="100vw" @keydown.esc="dialog = false">
     <button slot="activator" class="btn btn-primary ml-1">Receive</button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">

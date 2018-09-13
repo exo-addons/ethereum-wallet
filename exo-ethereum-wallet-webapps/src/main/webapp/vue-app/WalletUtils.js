@@ -146,10 +146,12 @@ export function initSettings(isSpace) {
         if (!window.walletSettings.userPreferences.userDefaultGas) {
           window.walletSettings.userPreferences.userDefaultGas = window.walletSettings.defaultGas;
         }
+
+        const username = eXo.env.portal.userName;
+        window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${username}-metamask`);
+
         if (window.walletSettings.userPreferences.walletAddress) {
-          const username = eXo.env.portal.userName;
           const address = window.walletSettings.userPreferences.walletAddress;
-          window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${username}-metamask`);
           const userP = localStorage.getItem(`exo-wallet-${address}-userp`);
           if (userP) {
             window.walletSettings.userP = userP;
@@ -383,9 +385,7 @@ function createLocalWeb3Instance(isSpace, useMetamask) {
     const accountId = isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
     const accountType = isSpace ? 'space' : 'user';
 
-    if (useMetamask
-        || !window.walletSettings.userPreferences.walletAddress
-        || (isSpace && !window.walletSettings.isSpaceAdministrator)) {
+    if (useMetamask || (isSpace && !window.walletSettings.isSpaceAdministrator)) {
       window.walletSettings.isReadOnly = true;
     } else {
       window.walletSettings.browserWallet = unlockBrowerWallet(window.walletSettings.userP);
