@@ -42,7 +42,7 @@
                   <wallet-reset-modal @reseted="$emit('settings-changed')"/>
                 </v-card-text>
                 <v-card-text v-if="displayWalletResetOption">
-                  <wallet-backup-modal :display-complete-message="false" />
+                  <wallet-backup-modal :display-complete-message="false" @copied="$emit('copied')" />
                 </v-card-text>
               </v-card>
             </v-expansion-panel-content>

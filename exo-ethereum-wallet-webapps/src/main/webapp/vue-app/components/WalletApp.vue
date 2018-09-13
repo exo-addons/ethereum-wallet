@@ -20,6 +20,7 @@
                                  :open="showSettingsModal"
                                  :fiat-symbol="fiatSymbol"
                                  :display-reset-option="displayWalletResetOption"
+                                 @copied="browserWalletBackedUp = true"
                                  @close="showSettingsModal = false"
                                  @settings-changed="init()" />
 
