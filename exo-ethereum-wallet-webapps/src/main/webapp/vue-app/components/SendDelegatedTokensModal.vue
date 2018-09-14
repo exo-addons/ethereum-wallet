@@ -164,7 +164,7 @@ export default {
               })
               .on('error', (error, receipt) => {
                 // The transaction has failed
-                this.error = `Error sending ether: ${error}`;
+                this.error = `Error sending delegated tokens: ${error}`;
                 this.loading = false;
                 this.$emit("error", this.error);
               });
