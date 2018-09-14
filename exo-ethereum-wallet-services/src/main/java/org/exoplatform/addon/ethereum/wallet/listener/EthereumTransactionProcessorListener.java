@@ -112,7 +112,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     if (receiverAddress != null) {
       receiver = getAccountDetail(receiverAddress);
     }
-    if (contractAddress != null) {
+
+    if (contractAddress != null && isContractTransaction) {
       contractDetails = ethereumWalletStorage.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
       if (contractDetails == null) {
         contractDetails = new ContractDetail(settings.getDefaultNetworkId(), contractAddress, contractAddress, contractAddress);
@@ -196,10 +197,6 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         if (transactionReceipt == null) {
           // Transaction may have failed
           return null;
-        }
-
-        if (transactionReceipt.getContractAddress() == null) {
-          throw new IllegalStateException("Not a contract transaction");
         }
 
         if (transactionReceipt.getLogs() == null || transactionReceipt.getLogs().size() == 0) {
