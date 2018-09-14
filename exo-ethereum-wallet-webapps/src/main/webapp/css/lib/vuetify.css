@@ -2175,33 +2175,6 @@
 .elevation-24 {
   box-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12) !important;
 }
-html {
-  box-sizing: border-box;
-  overflow-y: scroll; /* All browsers without overlaying scrollbars */
-  -webkit-text-size-adjust: 100%; /* iOS 8+ */
-}
-*,
-::before,
-::after {
-  box-sizing: inherit;
-}
-::before,
-::after {
-  text-decoration: inherit; /* Inherit text-decoration and vertical align to ::before and ::after pseudo elements */
-  vertical-align: inherit;
-}
-* {
-  background-repeat: no-repeat; /* Set `background-repeat: no-repeat` to all elements */
-  padding: 0; /* Reset `padding` and `margin` of all elements */
-  margin: 0;
-}
-audio:not([controls]) {
-  display: none;
-  height: 0;
-}
-hr {
-  overflow: visible; /* Show the overflow in Edge and IE */
-}
 article,
 aside,
 details,
@@ -2238,16 +2211,6 @@ a:active,
 a:hover {
   outline-width: 0; /* Remove the outline when hovering in all browsers */
 }
-code,
-kbd,
-pre,
-samp {
-  font-family: monospace, monospace; /* Specify the font family of code elements */
-}
-b,
-strong {
-  font-weight: bolder; /* Correct style set to `bold` in Edge 12+, Safari 6.2+, and Chrome 18+ */
-}
 dfn {
   font-style: italic; /* Address styling not present in Safari and Chrome */
 }
@@ -2255,31 +2218,12 @@ mark {
   background-color: #ff0;
   color: #000;
 }
-sub,
-sup {
-  font-size: 75%;
-  line-height: 0;
-  position: relative;
-  vertical-align: baseline;
-}
-sub {
-  bottom: -0.25em;
-}
-sup {
-  top: -0.5em;
-}
-input {
-  border-radius: 0;
-}
 button,
 [type="button"],
 [type="reset"],
 [type="submit"],
 [role="button"] {
   cursor: pointer;
-}
-[disabled] {
-  cursor: default;
 }
 [type="number"] {
   width: auto; /* Firefox 36+ */
@@ -2291,72 +2235,6 @@ button,
 [type="search"]::-webkit-search-decoration {
   -webkit-appearance: none; /* Safari 8 */
 }
-textarea {
-  overflow: auto; /* Internet Explorer 11+ */
-  resize: vertical; /* Specify textarea resizability */
-}
-button,
-input,
-optgroup,
-select,
-textarea {
-  font: inherit; /* Specify font inheritance of form elements */
-}
-optgroup {
-  font-weight: bold; /* Restore the font weight unset by the previous rule. */
-}
-button {
-  overflow: visible; /* Address `overflow` set to `hidden` in IE 8/9/10/11 */
-}
-button::-moz-focus-inner,
-[type="button"]::-moz-focus-inner,
-[type="reset"]::-moz-focus-inner,
-[type="submit"]::-moz-focus-inner {
-  border-style: 0;
-  padding: 0;
-}
-button:-moz-focusring,
-[type="button"]::-moz-focus-inner,
-[type="reset"]::-moz-focus-inner,
-[type="submit"]::-moz-focus-inner {
-  outline: 0;
-  border: 0;
-}
-button,
-html [type="button"],
-[type="reset"],
-[type="submit"] {
-  -webkit-appearance: button; /* Correct the inability to style clickable types in iOS */
-}
-button,
-select {
-  text-transform: none; /* Firefox 40+, Internet Explorer 11- */
-}
-button,
-input,
-select,
-textarea {
-  background-color: transparent;
-  border-style: none;
-  color: inherit;
-}
-select {
-  -moz-appearance: none; /* Firefox 36+ */
-  -webkit-appearance: none; /* Chrome 41+ */
-}
-select::-ms-expand {
-  display: none; /* Internet Explorer 11+ */
-}
-select::-ms-value {
-  color: currentColor; /* Internet Explorer 11+ */
-}
-legend {
-  border: 0; /* Correct `color` not being inherited in IE 8/9/10/11 */
-  color: inherit; /* Correct the color inheritance from `fieldset` elements in IE */
-  display: table; /* Correct the text wrapping in Edge and IE */
-  max-width: 100%; /* Correct the text wrapping in Edge and IE */
-  white-space: normal; /* Correct the text wrapping in Edge and IE */
-}
 ::-webkit-file-upload-button {
   -webkit-appearance: button; /* Correct the inability to style clickable types in iOS and Safari */
   font: inherit; /* Change font properties to `inherit` in Chrome and Safari */
@@ -2365,20 +2243,11 @@ legend {
   -webkit-appearance: textfield; /* Correct the odd appearance in Chrome and Safari */
   outline-offset: -2px; /* Correct the outline style in Safari */
 }
-img {
-  border-style: none; /* Remove border when inside `a` element in IE 8/9/10 */
-}
 progress {
   vertical-align: baseline;
 }
 svg:not(:root) {
   overflow: hidden; /* Internet Explorer 11- */
-}
-audio,
-canvas,
-progress,
-video {
-  display: inline-block; /* Internet Explorer 11+, Windows Phone 8.1+ */
 }
 [aria-busy="true"] {
   cursor: progress;
@@ -2739,11 +2608,6 @@ video {
   -webkit-transform: scale(0) rotate(-45deg);
           transform: scale(0) rotate(-45deg);
 }
-.blockquote {
-  padding: 16px 0 16px 24px;
-  font-size: 18px;
-  font-weight: 300;
-}
 code,
 kbd {
   display: inline-block;
@@ -2768,14 +2632,6 @@ kbd {
   background: #424242;
   color: #fff;
 }
-html {
-  font-size: 14px;
-  overflow-x: hidden;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
 .application {
   font-family: 'Roboto', sans-serif;
   line-height: 1.5;
@@ -2783,10 +2639,6 @@ html {
 ::-ms-clear,
 ::-ms-reveal {
   display: none;
-}
-ul,
-ol {
-  padding-left: 24px;
 }
 .display-4 {
   font-size: 112px !important;
@@ -2823,13 +2675,6 @@ ol {
   letter-spacing: normal !important;
   font-family: 'Roboto', sans-serif !important;
 }
-.title {
-  font-size: 20px !important;
-  font-weight: 500;
-  line-height: 1 !important;
-  letter-spacing: 0.02em !important;
-  font-family: 'Roboto', sans-serif !important;
-}
 .subheading {
   font-size: 16px !important;
   font-weight: 400;
@@ -2850,9 +2695,6 @@ ol {
   font-size: 14px;
   font-weight: 500;
 }
-p {
-  margin-bottom: 16px;
-}
 .overflow-hidden {
   overflow: hidden;
 }
@@ -2861,12 +2703,6 @@ p {
 }
 .overflow-y-hidden {
   overflow-y: hidden;
-}
-.right {
-  float: right !important;
-}
-.left {
-  float: left !important;
 }
 .ma-auto {
   margin-top: auto !important;

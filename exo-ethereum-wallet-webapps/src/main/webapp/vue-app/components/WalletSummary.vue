@@ -27,7 +27,11 @@
         @pending="pendingTransaction = true"
         @success="pendingTransaction = false; $emit('refresh-balance');"
         @error="pendingTransaction = false; $emit('error', $event);" />
-      <wallet-receive-modal :wallet-address="walletAddress" />
+      <wallet-receive-modal
+        :wallet-address="walletAddress"
+        @pending="pendingTransaction = true"
+        @success="pendingTransaction = false; $emit('refresh-balance');"
+        @error="pendingTransaction = false; $emit('error', $event);" />
       <v-spacer />
     </v-card-actions>
   </v-card>
