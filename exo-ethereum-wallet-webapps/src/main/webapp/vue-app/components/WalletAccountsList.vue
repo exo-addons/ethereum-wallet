@@ -10,7 +10,6 @@
           :key="index"
           class="accountItemContainer">
 
-
           <!-- Ether account actions -->
           <send-ether-modal
             :account="account"
@@ -54,7 +53,7 @@
               slot-scope="{ hover }"
               :class="`elevation-${hover ? 12 : 2}`"
               width="400px"
-              height="200px">
+              height="210px">
   
               <v-card-title class="blue white--text">
                 <v-icon dark>{{ item.icon }}</v-icon>

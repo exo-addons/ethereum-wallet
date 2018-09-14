@@ -24,7 +24,6 @@
                                  @copied="browserWalletBackedUp = true"
                                  @close="showSettingsModal = false"
                                  @settings-changed="init()" />
-
           </v-toolbar>
 
           <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
