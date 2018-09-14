@@ -6,7 +6,7 @@
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">Send Ether</span>
+        <span class="PopupTitle popupTitle">Send Funds</span>
       </div>
 
       <v-card-title primary-title class="pt-0">
