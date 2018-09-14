@@ -1,5 +1,46 @@
 <template>
   <v-card>
+    <!-- Ether account actions -->
+    <send-ether-modal
+      :account="account"
+      :balance="selectedItem && selectedItem.balance"
+      :open="sendEtherModal"
+      no-button
+      @sent="addSendEtherTransaction"
+      @close="sendEtherModal = false"
+      @error="$emit('error', $event)" />
+    <!-- Contract actions -->
+    <send-tokens-modal
+      :balance="selectedItem && selectedItem.balance"
+      :ether-balance="selectedItem && selectedItem.etherBalance"
+      :account="account"
+      :contract="selectedItem && selectedItem.contract"
+      :open="sendTokenModal"
+      :account-detail="selectedItem"
+      no-button
+      @sent="addSendTokenTransaction"
+      @close="sendTokenModal = false"
+      @error="$emit('error', $event)" />
+    <delegate-tokens-modal
+      :balance="selectedItem && selectedItem.balance"
+      :ether-balance="selectedItem && selectedItem.etherBalance"
+      :contract="selectedItem && selectedItem.contract"
+      :open="delegateTokenModal"
+      :account-detail="selectedItem"
+      no-button
+      @sent="addDelegateTokenTransaction"
+      @close="delegateTokenModal = false"
+      @error="$emit('error', $event)" />
+    <send-delegated-tokens-modal
+      :ether-balance="selectedItem && selectedItem.etherBalance"
+      :contract="selectedItem && selectedItem.contract"
+      :has-delegated-tokens="true"
+      :open="sendDelegatedTokenModal"
+      :account-detail="selectedItem"
+      no-button
+      @close="sendDelegatedTokenModal = false"
+      @error="$emit('error', $event)" />
+
     <v-container id="accountListContainer" fluid grid-list-lg>
       <v-layout
         row
@@ -9,44 +50,6 @@
           v-for="(item, index) in accountsList"
           :key="index"
           class="accountItemContainer">
-
-          <!-- Ether account actions -->
-          <send-ether-modal
-            :account="account"
-            :balance="selectedItem && selectedItem.balance"
-            :open="sendEtherModal"
-            no-button
-            @sent="addSendEtherTransaction"
-            @close="sendEtherModal = false"
-            @error="$emit('error', $event)" />
-          <!-- Contract actions -->
-          <send-tokens-modal
-            :balance="selectedItem && selectedItem.balance"
-            :ether-balance="selectedItem && selectedItem.etherBalance"
-            :account="account"
-            :contract="selectedItem && selectedItem.contract"
-            :open="sendTokenModal"
-            no-button
-            @sent="addSendTokenTransaction($event, item)"
-            @close="sendTokenModal = false"
-            @error="$emit('error', $event)" />
-          <delegate-tokens-modal
-            :balance="selectedItem && selectedItem.balance"
-            :ether-balance="selectedItem && selectedItem.etherBalance"
-            :contract="selectedItem && selectedItem.contract"
-            :open="delegateTokenModal"
-            no-button
-            @sent="addDelegateTokenTransaction($event, item)"
-            @close="delegateTokenModal = false"
-            @error="$emit('error', $event)" />
-          <send-delegated-tokens-modal
-            :ether-balance="selectedItem && selectedItem.etherBalance"
-            :contract="selectedItem && selectedItem.contract"
-            :has-delegated-tokens="true"
-            :open="sendDelegatedTokenModal"
-            no-button
-            @close="sendDelegatedTokenModal = false"
-            @error="$emit('error', $event)" />
 
           <v-hover>
             <v-card
@@ -194,7 +197,7 @@ export default {
   },
   methods: {
     addDelegateTokenTransaction(transaction, contract) {
-      addPendingTransactionToStorage(this.networkId, this.account, contract.address, {
+      const contractTransaction = {
         from: transaction.from,
         to: transaction.to,
         value: transaction.value,
@@ -204,14 +207,16 @@ export default {
         labelTo: 'Delegated to',
         icon: 'fa-users',
         pending: true
-      });
+      };
+      addPendingTransactionToStorage(this.networkId, this.account, contract.address, contractTransaction);
 
       watchTransactionStatus(transaction.hash, (receipt, block) => {
         removePendingTransactionFromStorage(this.networkId, this.account, contract.address, transaction.hash);
       });
+      this.$emit('transaction-sent', contractTransaction);
     },
     addSendTokenTransaction(transaction, contract) {
-      addPendingTransactionToStorage(this.networkId, this.account, contract.address, {
+      const contractTransaction = {
         from: transaction.from,
         to: transaction.to,
         value: transaction.value,
@@ -221,17 +226,22 @@ export default {
         labelTo: 'Sent to',
         icon: 'fa-exchange-alt',
         pending: true
-      });
+      };
+
+      addPendingTransactionToStorage(this.networkId, this.account, contract.address, contractTransaction);
 
       watchTransactionStatus(transaction.hash, (receipt, block) => {
         removePendingTransactionFromStorage(this.networkId, this.account, contract.address, transaction.hash);
       });
+
+      this.$emit('transaction-sent', contractTransaction);
     },
     addSendEtherTransaction(transaction) {
       addTransaction(this.networkId,
         this.account,
         [],
         transaction);
+      this.$emit('transaction-sent', transaction);
     }
   }
 };

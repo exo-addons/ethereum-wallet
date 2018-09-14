@@ -53,6 +53,12 @@ export default {
         return {};
       }
     },
+    accountDetail: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     noButton: {
       type: Boolean,
       default: function() {
@@ -155,7 +161,7 @@ export default {
                   pending: true,
                   type: 'delegateToken',
                   timestamp: Date.now()
-                });
+                }, this.accountDetail);
                 this.dialog = false;
               })
               .on('error', (error, receipt) => {

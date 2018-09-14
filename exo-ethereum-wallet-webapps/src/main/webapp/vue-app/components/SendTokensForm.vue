@@ -81,6 +81,7 @@ export default {
   methods: {
     init() {
       this.$refs.autocomplete.clear();
+      this.loading = false;
       this.showQRCodeModal = false;
       this.recipient = null;
       this.amount = null;

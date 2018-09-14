@@ -85,6 +85,7 @@
 
             <wallet-summary
               v-if="!loading && walletAddress"
+              ref="walletSummary"
               :accounts-details="accountsDetails"
               :refresh-index="refreshIndex"
               :network-id="networkId"
@@ -108,6 +109,7 @@
               :refresh-index="refreshIndex"
               :fiat-symbol="fiatSymbol"
               @account-details-selected="openAccountDetail"
+              @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
               @error="errorMessage = $event" />
 
           </v-card>

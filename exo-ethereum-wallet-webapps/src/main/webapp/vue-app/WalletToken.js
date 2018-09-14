@@ -343,8 +343,8 @@ export function addPendingTransactionToStorage(networkId, account, contractAddre
   }
 }
 
-export function removePendingTransactionFromStorage(networkId, account, contract, transactionHash) {
-  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contract}`;
+export function removePendingTransactionFromStorage(networkId, account, contractAddress, transactionHash) {
+  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contractAddress}`;
   let storageValue = localStorage.getItem(STORAGE_KEY);
   if (storageValue === null) {
     return;

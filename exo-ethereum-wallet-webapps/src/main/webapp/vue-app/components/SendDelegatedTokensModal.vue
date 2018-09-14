@@ -53,6 +53,12 @@ export default {
         return {};
       }
     },
+    accountDetail: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     noButton: {
       type: Boolean,
       default: function() {

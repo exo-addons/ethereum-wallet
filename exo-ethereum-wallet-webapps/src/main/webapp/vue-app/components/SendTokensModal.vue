@@ -13,7 +13,7 @@
                         :contract="contract"
                         :balance="balance"
                         :ether-balance="etherBalance"
-                        @sent="$emit('sent', $event)"
+                        @sent="$emit('sent', $event, accountDetail)"
                         @close="dialog = false"
                         @error="$emit('error', $event)" />
     </v-card>
@@ -44,6 +44,12 @@ export default {
       type: Boolean,
       default: function() {
         return false;
+      }
+    },
+    accountDetail: {
+      type: Object,
+      default: function() {
+        return {};
       }
     },
     contract: {
