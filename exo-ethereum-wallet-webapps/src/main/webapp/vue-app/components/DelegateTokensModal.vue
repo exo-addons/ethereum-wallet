@@ -1,9 +1,6 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent>
-    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="mt-1 mb-1" fab dark small title="Delegate Tokens" color="primary" icon>
-      <v-avatar size="20">D</v-avatar>
-    </v-btn>
-    <button v-else slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1"
+    <button v-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1"
             @keydown.esc="dialog = false">Delegate Tokens</button>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_spender', '_value']"
@@ -56,7 +53,13 @@ export default {
         return {};
       }
     },
-    icon: {
+    noButton: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    open: {
       type: Boolean,
       default: function() {
         return false;
@@ -99,6 +102,9 @@ export default {
     }
   },
   watch: {
+    open() {
+      this.dialog = this.open;
+    },
     dialog() {
       if (this.dialog) {
         this.$refs.autocomplete.clear();
@@ -107,6 +113,8 @@ export default {
         this.amount = null;
         this.warning = null;
         this.error = null;
+      } else {
+        this.$emit('close');
       }
     }
   },

@@ -1,9 +1,6 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="mt-1 mb-1" fab dark small title="Send tokens" color="primary" icon>
-      <v-icon size="20">send</v-icon>
-    </v-btn>
-    <button v-else slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">
+    <button v-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">
       Send Tokens
     </button>
     <v-card class="elevation-12">
@@ -37,7 +34,13 @@ export default {
         return null;
       }
     },
-    icon: {
+    noButton: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    open: {
       type: Boolean,
       default: function() {
         return false;
@@ -80,9 +83,14 @@ export default {
     }
   },
   watch: {
+    open() {
+      this.dialog = this.open;
+    },
     dialog() {
       if (this.dialog) {
         this.$refs.sendTokensForm.init();
+      } else {
+        this.$emit('close');
       }
     }
   }

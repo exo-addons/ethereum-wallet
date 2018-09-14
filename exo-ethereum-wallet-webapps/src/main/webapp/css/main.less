@@ -25,9 +25,24 @@
   .application--wrap {
     min-height: auto;
   }
+
   code {
     padding: 0;
     max-width: 100%;
+  }
+
+  #accountListContainer {
+    max-width: 100%;
+    box-sizing: border-box;
+    
+    .accountItemContainer {
+      max-width: 400px;
+      margin: 0 20px;
+      
+      .accountItemContent {
+        height: calc(100% - 80px);
+      }
+    }
   }
   #accountDetail {
     .v-list__tile__title {
@@ -60,6 +75,12 @@
   }
 
   > .walletConfigurationMenu {
+    top: 40px!important;
+    right: 20px!important;
+    left: auto!important;
+  }
+
+  .walletAccountMenu {
     top: 40px!important;
     right: 20px!important;
     left: auto!important;
