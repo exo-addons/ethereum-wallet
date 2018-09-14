@@ -325,8 +325,8 @@ function saveContractDeploymentTransactionHash(networkId, tokenName, tokenSymbol
   }
 }
 
-export function addPendingTransactionToStorage(networkId, account, contract, transaction) {
-  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contract}`;
+export function addPendingTransactionToStorage(networkId, account, contractAddress, transaction) {
+  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contractAddress}`;
   let storageValue = localStorage.getItem(STORAGE_KEY);
   if (storageValue === null) {
     storageValue = {};

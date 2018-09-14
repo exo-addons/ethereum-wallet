@@ -88,12 +88,16 @@
               v-if="!loading && walletAddress"
               :accounts-details="accountsDetails"
               :refresh-index="refreshIndex"
+              :network-id="networkId"
               :wallet-address="walletAddress"
               :ether-balance="etherBalance"
               :total-balance="totalBalance"
               :total-fiat-balance="totalFiatBalance"
               :is-read-only="isReadOnly"
-              :fiat-symbol="fiatSymbol" />
+              :fiat-symbol="fiatSymbol"
+              @refresh-balance="refreshBalance"
+              @refresh-token-balance="refreshTokenBalance"
+              @error="errorMessage = $event" />
 
             <wallet-accounts-list
               v-if="isMaximized && walletAddressConfigured"
@@ -133,7 +137,7 @@ import WalletBackupModal from './WalletBackupModal.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
-import {getContractsDetails, deleteContractFromStorage} from '../WalletToken.js';
+import {getContractsDetails, retrieveContractDetails, deleteContractFromStorage} from '../WalletToken.js';
 import {initWeb3, initSettings, computeBalance, setWalletBackedUp, etherToFiat} from '../WalletUtils.js';
 
 export default {
@@ -386,6 +390,7 @@ export default {
               address : this.walletAddress,
               error : `Error retrieving balance of wallet: ${error}`
             };
+            this.forceUpdate();
             throw error;
           }
           const accountDetails = {
@@ -397,7 +402,9 @@ export default {
             balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
             balanceFiat : balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0
           };
-          return this.accountsDetails[this.walletAddress] = accountDetails;
+          this.accountsDetails[this.walletAddress] = accountDetails;
+          this.forceUpdate();
+          return accountDetails;
         })
         .catch(e => {
           console.debug("refreshBalance method - error", e);
@@ -412,6 +419,14 @@ export default {
           };
           throw e;
         });
+    },
+    refreshTokenBalance(accountDetail) {
+      if (accountDetail) {
+        retrieveContractDetails(this.walletAddress ,accountDetail)
+          .then(() => this.forceUpdate());
+      } else {
+        console.debug('Empty contract');
+      }
     },
     reloadContracts() {
       this.showAddContractModal = false;

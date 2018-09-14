@@ -1,5 +1,10 @@
 <template>
   <v-card class="waletSummary">
+    <v-card-title v-if="pendingTransaction" primary-title class="pb-0">
+      <v-spacer />
+      <v-progress-circular title="A transaction is in progress" color="primary" indeterminate size="20"></v-progress-circular>
+      <v-spacer />
+    </v-card-title>
     <v-card-title primary-title class="pb-0">
       <v-spacer />
       <h3 class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h3>
@@ -16,8 +21,12 @@
       <send-funds-modal
         :accounts-details="accountsDetails"
         :refresh-index="refreshIndex"
+        :network-id="networkId"
         :wallet-address="walletAddress"
-        :disabled="disableSendButton" />
+        :disabled="disableSendButton"
+        @pending="pendingTransaction = true"
+        @success="pendingTransaction = false; $emit('refresh-balance');"
+        @error="pendingTransaction = false; $emit('error', $event);" />
       <wallet-receive-modal :wallet-address="walletAddress" />
       <v-spacer />
     </v-card-actions>
@@ -38,6 +47,12 @@ export default {
       type: Object,
       default: function() {
         return {};
+      }
+    },
+    networkId: {
+      type: Number,
+      default: function() {
+        return 0;
       }
     },
     refreshIndex: {
@@ -82,6 +97,11 @@ export default {
         return false;
       }
     }
+  },
+  data() {
+    return {
+      pendingTransaction: false
+    };
   },
   computed: {
     disableSendButton() {

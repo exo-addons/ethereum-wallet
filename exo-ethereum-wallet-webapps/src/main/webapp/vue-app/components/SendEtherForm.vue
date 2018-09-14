@@ -105,6 +105,7 @@ export default {
               gas: transaction.gas,
               gasPrice: transaction.gasPrice,
               pending: true,
+              type: 'sendEther',
               timestamp: Date.now()
             });
             this.$emit("close");
