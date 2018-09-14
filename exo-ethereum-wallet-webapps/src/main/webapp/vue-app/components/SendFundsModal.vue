@@ -31,7 +31,7 @@
                         :contract="selectedAccount.contract"
                         :balance="selectedAccount.balance"
                         :ether-balance="selectedAccount.etherBalance"
-                        @sent="$emit('sent', $event)"
+                        @sent="addPendingTransaction($event)"
                         @close="dialog = false" />
     </v-card>
   </v-dialog>
@@ -124,8 +124,6 @@ export default {
         return;
       }
 
-      this.$emit('pending', transaction);
-
       if (transaction.type === 'sendEther') {
         addTransaction(this.networkId,
           this.walletAddress,
@@ -153,7 +151,7 @@ export default {
 
           watchTransactionStatus(transaction.hash, (receipt, block) => {
             removePendingTransactionFromStorage(this.networkId, this.account, contractAddress, transaction.hash);
-            if (transaction.status) {
+            if (receipt) {
               this.$emit('success');
             } else {
               this.$emit('error', 'Token transaction has failed');
@@ -163,6 +161,8 @@ export default {
           console.debug("Transaction status check failed: no contract address was found");
         }
       }
+
+      this.$emit('pending', transaction);
     }
   }
 };

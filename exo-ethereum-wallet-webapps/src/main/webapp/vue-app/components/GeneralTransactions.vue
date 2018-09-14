@@ -166,17 +166,17 @@ export default {
       this.stopLoading = false;
 
       // Get transactions to latest block with maxBlocks to load
-      return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
+      return loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
         if (this.stopLoading) {
           throw new Error("stopLoading");
         }
+        this.$emit("refresh-balance");
         this.forceUpdateList();
       })
-        .then(() => loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
+        .then(() => loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
           if (this.stopLoading) {
             throw new Error("stopLoading");
           }
-          this.$emit("refresh-balance");
           this.forceUpdateList();
         }))
         .then(() => loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {

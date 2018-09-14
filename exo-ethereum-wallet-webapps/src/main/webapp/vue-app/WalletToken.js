@@ -1,4 +1,5 @@
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from './WalletConstants.js';
+import {watchTransactionStatus} from './WalletUtils.js';
 
 /*
  * Get the list of Contracts with details:
@@ -357,12 +358,23 @@ export function removePendingTransactionFromStorage(networkId, account, contract
   }
 }
 
-export function getPendingTransactionFromStorage(networkId, account, contract) {
-  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contract}`;
+export function getPendingTransactionFromStorage(networkId, account, contractAddress, transactionFinish) {
+  const STORAGE_KEY = `exo-wallet-token-transactions-progress-${networkId}-${account}-${contractAddress}`;
   let storageValue = localStorage.getItem(STORAGE_KEY);
+  let transactions = null;
   if (storageValue === null) {
-    return {};
+    transactions = {};
   } else {
-    return JSON.parse(storageValue);
+    transactions = JSON.parse(storageValue);
   }
+
+  if (transactionFinish) {
+    Object.keys(transactions).forEach(transactionHash => {
+      watchTransactionStatus(transactionHash, (receipt, block) => {
+        removePendingTransactionFromStorage(networkId, account, contractAddress, transactionHash);
+        transactionFinish(transactionHash, receipt, block);
+      });
+    });
+  }
+  return transactions;
 }

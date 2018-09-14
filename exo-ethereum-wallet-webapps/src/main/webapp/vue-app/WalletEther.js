@@ -151,16 +151,17 @@ export function addTransaction(networkId, account, transactions, transaction, re
       window.localWeb3.eth.getTransaction(transaction.hash)
         .then(tx => {
           transaction = tx;
+
           addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000, watchLoadSuccess, watchLoadError);
           removePendingTransactionFromStorage(networkId, account, transaction.hash);
           if (watchLoadSuccess) {
-            watchLoadSuccess();
+            watchLoadSuccess(transaction);
           }
         })
         .catch(error => {
           console.debug("watchTransactionStatus method - error", error);
           if (watchLoadError) {
-            watchLoadError(error);
+            watchLoadError(error, transaction);
           }
         });
     });
