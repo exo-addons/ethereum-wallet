@@ -3,7 +3,7 @@
     <v-btn icon flat title="Refresh wallet" @click="$emit('refresh')">
       <v-icon size="20px">refresh</v-icon>
     </v-btn>
-    <v-btn v-if="isMaximized && !isSpace && walletAddress" icon flat title="Settings" @click="$emit('modify-settings')">
+    <v-btn v-if="isMaximized && walletAddress" icon flat title="Settings" @click="$emit('modify-settings')">
       <v-icon size="17px">fa-cog</v-icon>
     </v-btn>
     <v-btn v-if="!isMaximized" icon title="Open wallet application" class="maximizeIcon" @click="$emit('maximize')">

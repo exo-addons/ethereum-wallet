@@ -3,7 +3,7 @@
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
-          <v-toolbar :color="isMaximized ? 'grey lighten-2':'transparent'" :class="isMaximized ? '':'no-padding'" flat dense>
+          <v-toolbar :color="isMaximized ? 'grey lighten-5':'transparent'" :class="isMaximized ? '':'no-padding'" flat dense>
             <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
             <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
             <h4 v-else class="head-container">Wallet</h4>
@@ -17,7 +17,7 @@
                              @maximize="maximize()"
                              @modify-settings="showSettingsModal = true" />
 
-            <user-settings-modal :account="walletAddress"
+            <user-settings-modal :is-space="isSpace"
                                  :open="showSettingsModal"
                                  :fiat-symbol="fiatSymbol"
                                  :display-reset-option="displayWalletResetOption"
@@ -25,6 +25,7 @@
                                  @close="showSettingsModal = false"
                                  @settings-changed="init()" />
           </v-toolbar>
+          <v-divider light />
 
           <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
             <div class="alert alert-warning">

@@ -221,7 +221,7 @@ export default {
         });
     },
     switchToMetamask() {
-      enableMetamask();
+      enableMetamask(this.isSpace);
       this.$emit("configured");
     }
   }

@@ -148,7 +148,10 @@ export function initSettings(isSpace) {
         }
 
         const username = eXo.env.portal.userName;
-        window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${username}-metamask`);
+        const spaceGroup = eXo.env.portal.spaceGroup;
+
+        const accountId = getRemoteId(isSpace);
+        window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${accountId}-metamask`);
 
         if (window.walletSettings.userPreferences.walletAddress) {
           const address = window.walletSettings.userPreferences.walletAddress;
@@ -164,8 +167,8 @@ export function initSettings(isSpace) {
           window.walletSettings.userPreferences.backedUp = localStorage.getItem(`exo-wallet-${address}-userp-backedup`);
         }
 
-        if (isSpace && eXo.env.portal.spaceGroup) {
-          return initSpaceAccount(eXo.env.portal.spaceGroup)
+        if (isSpace && spaceGroup) {
+          return initSpaceAccount(spaceGroup)
             .then(retrieveFiatExchangeRate);
         } else {
           return retrieveFiatExchangeRate();
@@ -178,15 +181,17 @@ export function initSettings(isSpace) {
     });
 }
 
-export function enableMetamask() {
-  const username = eXo.env.portal.userName;
-  localStorage.setItem(`exo-wallet-${username}-metamask`, 'true');
+export function enableMetamask(isSpace) {
+  const accountId = getRemoteId(isSpace);
+
+  localStorage.setItem(`exo-wallet-${accountId}-metamask`, 'true');
   window.walletSettings.userPreferences.useMetamask = true;
 }
 
-export function disableMetamask() {
-  const username = eXo.env.portal.userName;
-  localStorage.removeItem(`exo-wallet-${username}-metamask`);
+export function disableMetamask(isSpace) {
+  const accountId = getRemoteId(isSpace);
+
+  localStorage.removeItem(`exo-wallet-${accountId}-metamask`);
   window.walletSettings.userPreferences.useMetamask = false;
 }
 
@@ -392,7 +397,7 @@ function createLocalWeb3Instance(isSpace, useMetamask) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
     window.localWeb3.eth.defaultAccount = window.walletSettings.userPreferences.walletAddress.toLowerCase();
 
-    const accountId = isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
+    const accountId = getRemoteId(isSpace);
     const accountType = isSpace ? 'space' : 'user';
 
     if (useMetamask || (isSpace && !window.walletSettings.isSpaceAdministrator)) {
@@ -464,6 +469,10 @@ function initSpaceAccount(spaceGroup) {
       }
       return false;
     });
+}
+
+function getRemoteId(isSpace) {
+  return isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
 }
 
 function hashCode(s) {

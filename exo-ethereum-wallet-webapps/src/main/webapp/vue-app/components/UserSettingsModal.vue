@@ -11,14 +11,15 @@
         </div>
         <v-flex>
           <v-toolbar color="transparent" tabs flat>
-            <v-tabs v-model="selectedTab">
+            <v-tabs ref="settingsTabs" v-model="selectedTab">
+              <v-tabs-slider />
               <v-tab>Settings</v-tab>
-              <v-tab>Advanced settings</v-tab>
+              <v-tab v-if="!isSpace">Advanced settings</v-tab>
               <v-tab>Wallet details</v-tab>
             </v-tabs>
           </v-toolbar>
           <v-tabs-items v-model="selectedTab">
-            <v-tab-item>
+            <v-tab-item v-if="!isSpace">
               <v-card>
                 <v-card-text>
                   <span>Currency</span>
@@ -31,7 +32,7 @@
             </v-tab-item>
             <v-tab-item>
               <v-card>
-                <v-card-text>
+                <v-card-text v-if="!isSpace">
                   <span>Gas limit to spend on transactions (Maximum fee per transaction)</span>
                   <v-slider v-model="defaultGas"
                             :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
@@ -55,12 +56,12 @@
               <v-card>
                 <v-card-text>
                   <qr-code ref="qrCode"
-                           :to="account"
+                           :to="walletAddress"
                            title="Address QR Code"
                            information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
         
                   <div class="text-xs-center">
-                    <wallet-address :value="account" />
+                    <wallet-address :value="walletAddress" />
                   </div>
                 </v-card-text>
               </v-card>
@@ -99,6 +100,12 @@ export default {
         return null;
       }
     },
+    isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     open: {
       type: Boolean,
       default: function() {
@@ -116,12 +123,6 @@ export default {
       default: function() {
         return null;
       }
-    },
-    account: {
-      type: String,
-      default: function() {
-        return null;
-      }
     }
   },
   data () {
@@ -129,7 +130,8 @@ export default {
       loading: false,
       show: false,
       error: null,
-      selectedTab: 0,
+      walletAddress: null,
+      selectedTab: null,
       selectedCurrency: FIAT_CURRENCIES['usd'],
       currencies: [],
       defaultGas: 0,
@@ -145,15 +147,18 @@ export default {
   watch: {
     open() {
       if (this.open) {
+        this.walletAddress = window.walletSettings.userPreferences.walletAddress;
         this.defaultGas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 21000;
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.$refs.qrCode.computeCanvas();
-        this.show = true;
-        this.selectedTab = 0;
         this.useMetamaskChoice = window.walletSettings.userPreferences.useMetamask;
         if (window.walletSettings.userPreferences.currency) {
           this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.userPreferences.currency];
         }
+        this.show = true;
+
+        // Workaround to display slider on first popin open
+        this.$refs.settingsTabs.callSlider();
       }
     },
     show() {
@@ -172,48 +177,56 @@ export default {
     savePreferences() {
       this.loading = true;
       try {
-        fetch('/portal/rest/wallet/api/account/savePreferences', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            defaultGas: this.defaultGas,
-            currency: this.selectedCurrency.value
-          })
-        }).then(resp => {
-          if (resp && resp.ok) {
-
-            if (this.useMetamaskChoice) {
-              enableMetamask();
-            } else {
-              disableMetamask();
-            }
-
-            window.walletSettings.userPreferences.userDefaultGas = this.defaultGas;
-            window.walletSettings.userPreferences.currency = this.selectedCurrency.value;
-
-            this.$emit('settings-changed', {
+        if(this.isSpace) {
+          this.saveCommonSettings();
+          this.$emit('settings-changed');
+        } else {
+          fetch('/portal/rest/wallet/api/account/savePreferences', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
               defaultGas: this.defaultGas,
               currency: this.selectedCurrency.value
-            });
-            this.show = false;
-          } else {
-            this.error = 'Error saving preferences';
-          }
-          this.loading = false;
-        }).catch (e => {
-          console.debug("savePreferences method - error", e);
-          this.error = `Error while proceeding: ${e}`;
-          this.loading = false;
-        });
+            })
+          }).then(resp => {
+            if (resp && resp.ok) {
+
+              this.saveCommonSettings();
+
+              window.walletSettings.userPreferences.userDefaultGas = this.defaultGas;
+              window.walletSettings.userPreferences.currency = this.selectedCurrency.value;
+
+              this.$emit('settings-changed', {
+                defaultGas: this.defaultGas,
+                currency: this.selectedCurrency.value
+              });
+              this.show = false;
+            } else {
+              this.error = 'Error saving preferences';
+            }
+            this.loading = false;
+          }).catch (e => {
+            console.debug("savePreferences method - error", e);
+            this.error = `Error while proceeding: ${e}`;
+            this.loading = false;
+          });
+        }
       } catch(e) {
         console.debug("savePreferences method - error", e);
         this.loading = false;
         this.error = `Error while proceeding: ${e}`;
         this.$emit("end-loading");
+      }
+    },
+    saveCommonSettings() {
+      if (this.useMetamaskChoice) {
+        enableMetamask(this.isSpace);
+      } else {
+        disableMetamask(this.isSpace);
       }
     }
   }

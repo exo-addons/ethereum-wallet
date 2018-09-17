@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="400px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" :disabled="disabled" class="fixLinkHeight" content-class="uiPopup" width="400px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <a slot="activator" href="javascript:void(0);" @click="dialog = true">Unlock wallet</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
