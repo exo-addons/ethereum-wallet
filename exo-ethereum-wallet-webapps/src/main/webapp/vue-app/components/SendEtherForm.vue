@@ -5,8 +5,8 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-form>
-        <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
-        <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount"></v-text-field>
+        <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address" />
+        <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount" />
       </v-form>
       <qr-code-modal :from="account"
                      :to="recipient"

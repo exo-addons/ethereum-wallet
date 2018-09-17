@@ -223,14 +223,7 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
 }
 
 export function getTransactionReceipt(hash) {
-  return window.localWeb3.eth.getTransaction(hash)
-          .then(transaction => {
-            if (!transaction) {
-              throw new Error(`Transaction with hash ${hash} doesn't exist on blockchain`);
-            } else {
-              window.localWeb3.eth.getTransactionReceipt(hash);
-            }
-          });
+  return window.localWeb3.eth.getTransactionReceipt(hash);
 }
 
 export function computeNetwork() {

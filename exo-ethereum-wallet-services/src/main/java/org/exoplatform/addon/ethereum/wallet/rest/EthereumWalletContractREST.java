@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.ContractDetail;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -39,10 +39,10 @@ public class EthereumWalletContractREST implements ResourceContainer {
 
   private static final Log      LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
 
-  private EthereumWalletStorage ethereumWalletStorage;
+  private EthereumWalletService ethereumWalletService;
 
-  public EthereumWalletContractREST(EthereumWalletStorage ethereumWalletStorage) {
-    this.ethereumWalletStorage = ethereumWalletStorage;
+  public EthereumWalletContractREST(EthereumWalletService ethereumWalletService) {
+    this.ethereumWalletService = ethereumWalletService;
   }
 
   /**
@@ -68,7 +68,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    ethereumWalletStorage.saveDefaultContract(contractDetail);
+    ethereumWalletService.saveDefaultContract(contractDetail);
     return Response.ok().build();
   }
 
@@ -91,7 +91,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    ethereumWalletStorage.removeDefaultContract(address, networkId);
+    ethereumWalletService.removeDefaultContract(address, networkId);
     return Response.ok().build();
   }
 }

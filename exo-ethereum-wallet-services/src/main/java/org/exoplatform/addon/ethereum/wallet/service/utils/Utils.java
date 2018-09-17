@@ -26,12 +26,13 @@ import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.generated.Uint256;
 
-import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
-import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
+import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.portal.application.PortalApplication;
 import org.exoplatform.portal.application.PortalRequestContext;
+import org.exoplatform.portal.config.UserPortalConfigService;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
@@ -70,7 +71,14 @@ public class Utils {
   public static final String                             TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID =
                                                                                                        "ContractReceiverNotificationPlugin";
 
+  public static final String                             FUNDS_REQUEST_NOTIFICATION_ID                 =
+                                                                                       "FundsRequestNotificationPlugin";
+
   public static final String                             AMOUNT                                        = "amount";
+
+  public static final String                             SYMBOL                                        = "symbol";
+
+  public static final String                             MESSAGE                                       = "message";
 
   public static final String                             ACCOUNT_TYPE                                  = "account_type";
 
@@ -80,29 +88,47 @@ public class Utils {
 
   public static final String                             SENDER                                        = "sender";
 
-  public static final String                             SENDER_URL                                    = "sender_url";
+  public static final String                             USER                                          = "userFullname";
+
+  public static final String                             USER_URL                                      = "userUrl";
+
+  public static final String                             SENDER_URL                                    = "senderUrl";
 
   public static final String                             RECEIVER                                      = "receiver";
 
-  public static final String                             RECEIVER_URL                                  = "receiver_url";
+  public static final String                             RECEIVER_URL                                  = "receiverUrl";
+
+  public static final String                             FUNDS_ACCEPT_URL                              = "fundsAcceptUrl";
+
+  public static final ArgumentLiteral<AccountDetail>     FUNDS_REQUEST_SENDER_DETAIL_PARAMETER         =
+                                                                                               new ArgumentLiteral<>(AccountDetail.class,
+                                                                                                                     "senderFullName");
 
   public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER               =
-                                                                                         new ArgumentLiteral<AccountDetail>(AccountDetail.class,
-                                                                                                                            "senderAccountDetail");
+                                                                                         new ArgumentLiteral<>(AccountDetail.class,
+                                                                                                               "senderAccountDetail");
 
   public static final ArgumentLiteral<AccountDetail>     RECEIVER_ACCOUNT_DETAIL_PARAMETER             =
-                                                                                           new ArgumentLiteral<AccountDetail>(AccountDetail.class,
-                                                                                                                              "receiverAccountDetail");
+                                                                                           new ArgumentLiteral<>(AccountDetail.class,
+                                                                                                                 "receiverAccountDetail");
+
+  public static final ArgumentLiteral<FundsRequest>      FUNDS_REQUEST_PARAMETER                       =
+                                                                                 new ArgumentLiteral<>(FundsRequest.class,
+                                                                                                       "fundsRequest");
 
   public static final ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER                  =
-                                                                                      new ArgumentLiteral<TransactionStatus>(TransactionStatus.class,
-                                                                                                                             "transactionStatus");
+                                                                                      new ArgumentLiteral<>(TransactionStatus.class,
+                                                                                                            "transactionStatus");
 
   public static final ArgumentLiteral<String>            CONTRACT_PARAMETER                            =
-                                                                            new ArgumentLiteral<String>(String.class, CONTRACT);
+                                                                            new ArgumentLiteral<>(String.class, CONTRACT);
+
+  public static final ArgumentLiteral<ContractDetail>    CONTRACT_DETAILS_PARAMETER                    =
+                                                                                    new ArgumentLiteral<>(ContractDetail.class,
+                                                                                                          "contractDetails");
 
   public static final ArgumentLiteral<Double>            AMOUNT_PARAMETER                              =
-                                                                          new ArgumentLiteral<Double>(Double.class, AMOUNT);
+                                                                          new ArgumentLiteral<>(Double.class, AMOUNT);
 
   public static final Event                              CONTRACT_TRANSFER_EVENT                       =
                                                                                  new Event("Transfer",
@@ -159,6 +185,15 @@ public class Utils {
                                                                                    : getPermanentLink(account.getId(),
                                                                                                       account.getName());
     return profileLink;
+  }
+
+  public static String getAbsoluteMyWalletLink() {
+    return CommonsUtils.getCurrentDomain() + getMyWalletLink();
+  }
+
+  public static String getMyWalletLink() {
+    UserPortalConfigService userPortalConfigService = CommonsUtils.getService(UserPortalConfigService.class);
+    return "/" + PortalContainer.getInstance().getName() + "/" + userPortalConfigService.getDefaultPortal() + "/wallet";
   }
 
   public static String getPermanentLink(String prettyName, String name) {

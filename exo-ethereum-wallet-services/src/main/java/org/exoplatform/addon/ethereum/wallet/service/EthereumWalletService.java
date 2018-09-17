@@ -25,10 +25,13 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.commons.api.notification.NotificationContext;
+import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.api.settings.data.Scope;
+import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
@@ -42,9 +45,9 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 /**
  * A storage service to save/load information used by users and spaces wallets
  */
-public class EthereumWalletStorage {
+public class EthereumWalletService {
 
-  private static final Log    LOG                           = ExoLogger.getLogger(EthereumWalletStorage.class);
+  private static final Log    LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
 
   public static final String  DEFAULT_NETWORK_ID            = "defaultNetworkId";
 
@@ -92,7 +95,7 @@ public class EthereumWalletStorage {
 
   private GlobalSettings      storedSettings;
 
-  public EthereumWalletStorage(SettingService settingService,
+  public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
                                IdentityManager identityManager,
                                ListenerService listenerService,
@@ -408,6 +411,7 @@ public class EthereumWalletStorage {
     if (space == null) {
       return null;
     }
+
     String avatarUrl = space.getAvatarUrl();
     if (StringUtils.isBlank(avatarUrl)) {
       avatarUrl = "/rest/v1/social/spaces/" + id + "/avatar";
@@ -644,6 +648,61 @@ public class EthereumWalletStorage {
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
     return Arrays.asList(addressTransactionsArray);
+  }
+
+  /**
+   * Request funds
+   * 
+   * @param fundsRequest
+   * @throws IllegalAccessException
+   */
+  public void requestFunds(FundsRequest fundsRequest) throws IllegalAccessException {
+    String currentUser = getCurrentUserId();
+
+    AccountDetail requestSender = getAccountDetailsByAddress(fundsRequest.getAddress());
+    if (requestSender == null) {
+      throw new IllegalStateException("Bad request sent to server with invalid sender address");
+    }
+
+    String requestSenderId = requestSender.getId();
+    String requestSenderType = requestSender.getType();
+
+    if (StringUtils.equals(requestSenderType, USER_ACCOUNT_TYPE) && !StringUtils.equals(currentUser, requestSenderId)) {
+      LOG.warn("Bad request sent to server with invalid sender address");
+      throw new IllegalAccessException("Bad request sent to server with invalid sender address");
+    }
+
+    if (StringUtils.equals(requestSenderType, SPACE_ACCOUNT_TYPE)) {
+      checkCurrentUserIsSpaceManager(requestSenderId);
+    }
+
+    NotificationContext ctx = NotificationContextImpl.cloneInstance();
+
+    GlobalSettings settings = getSettings();
+    if (!StringUtils.isBlank(fundsRequest.getContract())) {
+      ContractDetail contractDetail = getDefaultContractDetail(fundsRequest.getContract(), settings.getDefaultNetworkId());
+      if (contractDetail == null) {
+        throw new IllegalStateException("Bad request sent to server with invalid contract address (O ly default addresses are permitted)");
+      }
+      ctx.append(CONTRACT_DETAILS_PARAMETER, contractDetail);
+    }
+
+    String requestReceipientId = fundsRequest.getReceipient();
+    String requestReceipientType = fundsRequest.getReceipientType();
+
+    AccountDetail requestReceipient = null;
+    if (USER_ACCOUNT_TYPE.equals(requestReceipientType)) {
+      requestReceipient = getUserDetails(requestReceipientId);
+    } else if (SPACE_ACCOUNT_TYPE.equals(requestReceipientType)) {
+      requestReceipient = getSpaceDetails(requestReceipientId);
+    }
+
+    ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER, getUserDetails(getCurrentUserId()));
+    ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, requestSender);
+    ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, requestReceipient);
+    ctx.append(FUNDS_REQUEST_PARAMETER, fundsRequest);
+
+    ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID))).execute(ctx);
   }
 
   private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {

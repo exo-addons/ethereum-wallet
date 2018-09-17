@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import {searchAddress, searchContact} from '../WalletAddressRegistry.js';
+import {searchAddress, searchContact, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
 
 export default {
   props: {
@@ -101,6 +101,8 @@ export default {
       }
     },
     selectedValue() {
+      console.log("********** this.selectedItem", this.selectedItem);
+
       this.$refs.selectAutoComplete.isFocused = false;
       this.addressLoad = 'loading';
       if (this.selectedValue) {
@@ -138,6 +140,14 @@ export default {
       this.isLoadingSuggestions = false;
       this.addressLoad = '';
       this.error = null;
+    },
+    selectItem(id, type) {
+      searchUserOrSpaceObject(id, type)
+        .then(item => {
+          item.id_type = `${item.type}_${item.id}`;
+          this.items.push(item);
+          this.$refs.selectAutoComplete.selectItem(item);
+        });
     }
   }
 };

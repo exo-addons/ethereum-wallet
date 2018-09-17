@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button slot="activator" :disabled="disabled" class="btn btn-primary mr-1">
+    <button slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">
       Send Funds
     </button>
     <v-card class="elevation-12">
@@ -118,6 +118,45 @@ export default {
     }
   },
   methods: {
+    prepareSendForm(receiver, receiver_type, amount, contractAddress) {
+      if (!this.accountsList || !this.accountsList.length) {
+        console.warn("prepareSendForm error -  no accounts found");
+        return;
+      }
+
+      this.dialog = true;
+
+      if (contractAddress && contractAddress.length) {
+        this.selectedOption = null;
+        let i = 0;
+        while (i < this.accountsList.length && !this.selectedOption) {
+          if (this.accountsList[i] && this.accountsList[i].value && this.accountsList[i].value.isContract
+              && this.accountsList[i].value.address === contractAddress.toLowerCase()) {
+            this.selectedOption = this.accountsList[i];
+          }
+          i++;
+        }
+
+        if (this.selectedOption) {
+          this.$nextTick(() => {
+            if (this.$refs.sendTokensForm) {
+              this.$refs.sendTokensForm.$refs.autocomplete.selectItem(receiver, receiver_type);
+              this.$refs.sendTokensForm.amount = Number(amount);
+            }
+          });
+        } else {
+          this.dialog = false;
+        }
+      } else {
+        this.selectedOption = this.accountsList[0];
+        this.$nextTick(() => {
+          if (this.$refs.sendEtherForm) {
+            this.$refs.sendEtherForm.$refs.autocomplete.selectItem(receiver, receiver_type);
+            this.$refs.sendEtherForm.amount = Number(amount);
+          }
+        });
+      }
+    },
     addPendingTransaction(transaction) {
       if (!transaction) {
         console.debug("Pending transaction is empty");

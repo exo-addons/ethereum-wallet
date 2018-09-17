@@ -17,7 +17,7 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.*;
@@ -28,7 +28,7 @@ import org.exoplatform.services.listener.*;
 @Asynchronous
 public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
 
-  private EthereumWalletStorage ethereumWalletStorage;
+  private EthereumWalletService ethereumWalletService;
 
   private ExoContainer          container;
 
@@ -36,8 +36,8 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
 
   private long                  networkId            = 0;
 
-  public EthereumLastWatchedBlockListener(ExoContainer container, EthereumWalletStorage ethereumWalletStorage) {
-    this.ethereumWalletStorage = ethereumWalletStorage;
+  public EthereumLastWatchedBlockListener(ExoContainer container, EthereumWalletService ethereumWalletService) {
+    this.ethereumWalletService = ethereumWalletService;
     this.container = container;
   }
 
@@ -49,12 +49,12 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
     }
     RequestLifeCycle.begin(this.container);
     try {
-      GlobalSettings globalSettings = ethereumWalletStorage.getSettings();
+      GlobalSettings globalSettings = ethereumWalletService.getSettings();
       long networkId = globalSettings.getDefaultNetworkId();
       if (networkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
         this.lastSavedBlockNumber = blockNumber;
         this.networkId = networkId;
-        this.ethereumWalletStorage.saveLastWatchedBlockNumber(networkId, blockNumber);
+        this.ethereumWalletService.saveLastWatchedBlockNumber(networkId, blockNumber);
       }
     } finally {
       RequestLifeCycle.end();

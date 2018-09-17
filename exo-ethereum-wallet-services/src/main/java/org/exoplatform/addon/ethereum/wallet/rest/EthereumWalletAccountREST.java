@@ -28,9 +28,8 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 
-import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
-import org.exoplatform.addon.ethereum.wallet.model.UserPreferences;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
+import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -45,10 +44,10 @@ public class EthereumWalletAccountREST implements ResourceContainer {
 
   private static final Log      LOG = ExoLogger.getLogger(EthereumWalletAccountREST.class);
 
-  private EthereumWalletStorage ethereumWalletStorage;
+  private EthereumWalletService ethereumWalletService;
 
-  public EthereumWalletAccountREST(EthereumWalletStorage ethereumWalletStorage) {
-    this.ethereumWalletStorage = ethereumWalletStorage;
+  public EthereumWalletAccountREST(EthereumWalletService ethereumWalletService) {
+    this.ethereumWalletService = ethereumWalletService;
   }
 
   /**
@@ -68,20 +67,20 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
     if (StringUtils.equals(type, USER_ACCOUNT_TYPE)) {
-      AccountDetail accountDetail = ethereumWalletStorage.getUserDetails(id);
+      AccountDetail accountDetail = ethereumWalletService.getUserDetails(id);
       if (accountDetail == null) {
         LOG.warn("User not found with id '{}'", id);
         return Response.status(400).build();
       }
-      accountDetail.setAddress(ethereumWalletStorage.getUserAddress(id));
+      accountDetail.setAddress(ethereumWalletService.getUserAddress(id));
       return Response.ok(accountDetail).build();
     } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
-      AccountDetail accountDetail = ethereumWalletStorage.getSpaceDetails(id);
+      AccountDetail accountDetail = ethereumWalletService.getSpaceDetails(id);
       if (accountDetail == null) {
         LOG.warn("Space not found with id '{}'", id);
         return Response.status(400).build();
       }
-      accountDetail.setAddress(ethereumWalletStorage.getSpaceAddress(id));
+      accountDetail.setAddress(ethereumWalletService.getSpaceAddress(id));
       return Response.ok(accountDetail).build();
     }
 
@@ -104,7 +103,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     address = address.toLowerCase();
-    AccountDetail accountDetail = ethereumWalletStorage.getAccountDetailsByAddress(address);
+    AccountDetail accountDetail = ethereumWalletService.getAccountDetailsByAddress(address);
 
     return Response.ok(accountDetail == null ? "{}" : accountDetail).build();
   }
@@ -125,7 +124,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     try {
-      String securityPhrase = ethereumWalletStorage.saveWalletAddress(accountDetail);
+      String securityPhrase = ethereumWalletService.saveWalletAddress(accountDetail);
       return Response.ok(securityPhrase).build();
     } catch (IllegalAccessException e) {
       return Response.status(403).build();
@@ -153,7 +152,46 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with invalid preferenes defaultGas '{}'", defaultGas);
       return Response.status(400).build();
     }
-    ethereumWalletStorage.saveUserPreferences(getCurrentUserId(), userPreferences);
+    ethereumWalletService.saveUserPreferences(getCurrentUserId(), userPreferences);
+
+    return Response.ok().build();
+  }
+
+  /**
+   * Save user preferences of Wallet
+   * 
+   * @param userPreferences
+   * @return
+   */
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Path("requestFunds")
+  public Response requestFunds(FundsRequest fundsRequest) {
+    if (fundsRequest == null) {
+      LOG.warn("Bad request sent to server with empty funds request");
+      return Response.status(400).build();
+    }
+
+    if (StringUtils.isBlank(fundsRequest.getAddress())) {
+      LOG.warn("Bad request sent to server with empty sender address");
+      return Response.status(400).build();
+    }
+
+    String receipientRemoteId = fundsRequest.getReceipient();
+    String receipientType = fundsRequest.getReceipientType();
+
+    if (StringUtils.isBlank(receipientRemoteId) || StringUtils.isBlank(receipientType)) {
+      LOG.warn("Bad request sent to server with empty receipient");
+      return Response.status(400).build();
+    }
+
+    try {
+      ethereumWalletService.requestFunds(fundsRequest);
+    } catch (IllegalAccessException e) {
+      return Response.status(403).build();
+    } catch (IllegalStateException e) {
+      return Response.status(400).build();
+    }
 
     return Response.ok().build();
   }
@@ -178,7 +216,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    List<String> userTransactions = ethereumWalletStorage.getAccountTransactions(networkId, address);
+    List<String> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address);
     JSONArray array = new JSONArray(userTransactions);
 
     return Response.ok(array.toString()).build();

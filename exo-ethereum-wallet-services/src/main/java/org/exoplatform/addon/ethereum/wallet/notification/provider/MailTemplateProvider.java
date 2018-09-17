@@ -18,6 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.notification.provider;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
+import org.exoplatform.addon.ethereum.wallet.notification.builder.RequestFundsTemplateBuilder;
 import org.exoplatform.addon.ethereum.wallet.notification.builder.TemplateBuilder;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfig;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfigs;
@@ -26,10 +27,11 @@ import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.container.xml.InitParams;
 
 @TemplateConfigs(templates = {
-    @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/WalletSenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/WalletReceiverPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/WalletContractSenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/WalletContractReceiverPlugin.gtmpl") })
+    @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/SenderPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/ReceiverPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/ContractSenderPlugin.gtmpl"),
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/ContractReceiverPlugin.gtmpl"),
+    @TemplateConfig(pluginId = FUNDS_REQUEST_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/mail/RequestFundsPlugin.gtmpl") })
 public class MailTemplateProvider extends TemplateProvider {
 
   public MailTemplateProvider(InitParams initParams) {
@@ -38,5 +40,6 @@ public class MailTemplateProvider extends TemplateProvider {
     this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
     this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
     this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID), new RequestFundsTemplateBuilder(this));
   }
 }

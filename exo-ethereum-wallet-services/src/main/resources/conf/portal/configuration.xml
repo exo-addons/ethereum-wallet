@@ -4,7 +4,7 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd" xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage</type>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService</type>
     <init-params>
       <value-param>
         <name>defaultNetworkId</name>
@@ -225,6 +225,41 @@
             </field>
             <field name="resourceBundleKey">
               <string>UINotification.label.EtherSenderNotificationPlugin</string>
+            </field>
+            <field name="order">
+              <string>1</string>
+            </field>
+            <field name="defaultConfig">
+              <collection type="java.util.ArrayList">
+                <value>
+                  <string>Instantly</string>
+                </value>
+              </collection>
+            </field>
+            <field name="groupId">
+              <string>wallet</string>
+            </field>
+            <field name="bundlePath">
+              <string>locale.notification.WalletNotification</string>
+            </field>
+          </object>
+        </object-param>
+      </init-params>
+    </component-plugin>
+    <component-plugin>
+      <name>notification.plugins</name>
+      <set-method>addPlugin</set-method>
+      <type>org.exoplatform.addon.ethereum.wallet.notification.plugin.FundsRequestNotificationPlugin</type>
+      <init-params>
+        <object-param>
+          <name>template.FundsRequestNotificationPlugin</name>
+          <description>The template of FundsRequestNotificationPlugin</description>
+          <object type="org.exoplatform.commons.api.notification.plugin.config.PluginConfig">
+            <field name="pluginId">
+              <string>FundsRequestNotificationPlugin</string>
+            </field>
+            <field name="resourceBundleKey">
+              <string>UINotification.label.FundsRequestNotificationPlugin</string>
             </field>
             <field name="order">
               <string>1</string>

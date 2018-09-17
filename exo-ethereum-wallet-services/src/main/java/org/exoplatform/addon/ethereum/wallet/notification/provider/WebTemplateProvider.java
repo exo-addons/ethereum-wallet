@@ -18,6 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.notification.provider;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
+import org.exoplatform.addon.ethereum.wallet.notification.builder.RequestFundsTemplateBuilder;
 import org.exoplatform.addon.ethereum.wallet.notification.builder.TemplateBuilder;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfig;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfigs;
@@ -29,7 +30,8 @@ import org.exoplatform.container.xml.InitParams;
     @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletSenderPlugin.gtmpl"),
     @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletReceiverPlugin.gtmpl"),
     @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletContractSenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletContractReceiverPlugin.gtmpl") })
+    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletContractReceiverPlugin.gtmpl"),
+    @TemplateConfig(pluginId = FUNDS_REQUEST_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/RequestFundsPlugin.gtmpl") })
 public class WebTemplateProvider extends TemplateProvider {
 
   public WebTemplateProvider(InitParams initParams) {
@@ -38,6 +40,7 @@ public class WebTemplateProvider extends TemplateProvider {
     this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
     this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
     this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID), new RequestFundsTemplateBuilder(this));
   }
 
 }

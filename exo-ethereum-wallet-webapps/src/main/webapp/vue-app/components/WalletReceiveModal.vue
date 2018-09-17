@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="dialog" content-class="uiPopup" width="450px" max-width="100vw" @keydown.esc="dialog = false">
-    <button slot="activator" class="btn btn-primary ml-1">Receive</button>
+    <button slot="activator" class="btn btn-primary ml-1 mt-2">Receive</button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>

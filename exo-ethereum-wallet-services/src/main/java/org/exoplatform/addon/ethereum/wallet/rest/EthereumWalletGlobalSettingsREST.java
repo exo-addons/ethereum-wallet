@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -38,10 +38,10 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
 
   private static final Log      LOG = ExoLogger.getLogger(EthereumWalletGlobalSettingsREST.class);
 
-  private EthereumWalletStorage ethereumWalletStorage;
+  private EthereumWalletService ethereumWalletService;
 
-  public EthereumWalletGlobalSettingsREST(EthereumWalletStorage ethereumWalletStorage) {
-    this.ethereumWalletStorage = ethereumWalletStorage;
+  public EthereumWalletGlobalSettingsREST(EthereumWalletService ethereumWalletService) {
+    this.ethereumWalletService = ethereumWalletService;
   }
 
   /**
@@ -54,7 +54,7 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("users")
   public Response getSettings(@QueryParam("networkId") Long networkId, @QueryParam("spaceId") String spaceId) {
-    GlobalSettings globalSettings = ethereumWalletStorage.getSettings(networkId, spaceId);
+    GlobalSettings globalSettings = ethereumWalletService.getSettings(networkId, spaceId);
 
     return Response.ok(globalSettings.toJSONString()).build();
   }
@@ -91,7 +91,7 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    ethereumWalletStorage.saveSettings(globalSettings);
+    ethereumWalletService.saveSettings(globalSettings);
     return Response.ok().build();
   }
 }

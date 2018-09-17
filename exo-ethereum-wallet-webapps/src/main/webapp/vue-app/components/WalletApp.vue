@@ -87,6 +87,8 @@
             <wallet-summary
               v-if="!loading && walletAddress"
               ref="walletSummary"
+              :is-space="isSpace"
+              :is-space-administrator="isSpaceAdministrator"
               :accounts-details="accountsDetails"
               :refresh-index="refreshIndex"
               :network-id="networkId"
@@ -268,6 +270,18 @@ export default {
             thiss.init();
           }
         });
+      })
+      .then((result, error) => {
+        if (this.$refs.walletSummary) {
+          this.$refs.walletSummary.checkSendingRequest(this.isReadOnly);
+        }
+      })
+      .catch(error => {
+        if (this.useMetamask) {
+          this.errorMessage = `You can't send transaction because Metamask is disconnected`;
+        } else {
+          this.errorMessage = `You can't send transaction because your wallet is disconnected`;
+        }
       });
   },
   methods: {

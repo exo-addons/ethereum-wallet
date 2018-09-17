@@ -51,7 +51,7 @@ public class EthereumClientConnector implements Startable {
 
   private ExoContainer             container;
 
-  private EthereumWalletStorage    ethereumWalletStorage;
+  private EthereumWalletService    ethereumWalletService;
 
   private ListenerService          listenerService;
 
@@ -71,10 +71,10 @@ public class EthereumClientConnector implements Startable {
 
   private long                     lastWatchedBlockNumber   = 0;
 
-  public EthereumClientConnector(EthereumWalletStorage ethereumWalletStorage,
+  public EthereumClientConnector(EthereumWalletService ethereumWalletService,
                                  ListenerService listenerService,
                                  ExoContainer container) {
-    this.ethereumWalletStorage = ethereumWalletStorage;
+    this.ethereumWalletService = ethereumWalletService;
     this.listenerService = listenerService;
     this.container = container;
   }
@@ -83,10 +83,10 @@ public class EthereumClientConnector implements Startable {
   public void start() {
     RequestLifeCycle.begin(container);
     try {
-      GlobalSettings storedSettings = this.ethereumWalletStorage.getSettings();
+      GlobalSettings storedSettings = this.ethereumWalletService.getSettings();
       if (storedSettings != null && StringUtils.isNotBlank(storedSettings.getWebsocketProviderURL())) {
         this.globalSettings = storedSettings;
-        this.lastWatchedBlockNumber = this.ethereumWalletStorage.getLastWatchedBlockNumber(storedSettings.getDefaultNetworkId());
+        this.lastWatchedBlockNumber = this.ethereumWalletService.getLastWatchedBlockNumber(storedSettings.getDefaultNetworkId());
       }
     } catch (Throwable e) {
       LOG.error("Error retrieving global settings", e);
@@ -209,7 +209,7 @@ public class EthereumClientConnector implements Startable {
     // If web networkId changed, then init last listened block on this network
     if (newGlobalSettings.getDefaultNetworkId() != null
         && !newGlobalSettings.getDefaultNetworkId().equals(oldGlobalSettings.getDefaultNetworkId())) {
-      this.lastWatchedBlockNumber = this.ethereumWalletStorage.getLastWatchedBlockNumber(newGlobalSettings.getDefaultNetworkId());
+      this.lastWatchedBlockNumber = this.ethereumWalletService.getLastWatchedBlockNumber(newGlobalSettings.getDefaultNetworkId());
     }
 
     // If web socket connection changed, then init new connection

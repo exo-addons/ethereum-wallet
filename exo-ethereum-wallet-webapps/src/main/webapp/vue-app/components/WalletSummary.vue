@@ -18,18 +18,28 @@
 
     <v-card-actions>
       <v-spacer />
-      <send-funds-modal
-        :accounts-details="accountsDetails"
-        :refresh-index="refreshIndex"
-        :network-id="networkId"
-        :wallet-address="walletAddress"
-        :disabled="disableSendButton"
-        @pending="loadPendingTransactions()"
-        @error="loadPendingTransactions(); $emit('error', $event);" />
-      <wallet-receive-modal
-        :wallet-address="walletAddress"
-        @pending="loadPendingTransactions()"
-        @error="hasPendingTransaction = false; $emit('error', $event);" />
+      <v-layout row wrap>
+        <v-flex>
+          <send-funds-modal
+            ref="sendFundsModal"
+            :accounts-details="accountsDetails"
+            :refresh-index="refreshIndex"
+            :network-id="networkId"
+            :wallet-address="walletAddress"
+            :disabled="disableSendButton"
+            @pending="loadPendingTransactions()"
+            @error="loadPendingTransactions(); $emit('error', $event);" />
+          <wallet-receive-modal
+            :wallet-address="walletAddress"
+            @pending="loadPendingTransactions()"
+            @error="hasPendingTransaction = false; $emit('error', $event);" />
+          <wallet-request-funds-modal
+            v-if="!isSpace || isSpaceAdministrator"
+            :accounts-details="accountsDetails"
+            :refresh-index="refreshIndex"
+            :wallet-address="walletAddress" />
+        </v-flex>
+      </v-layout>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -37,6 +47,7 @@
 
 <script>
 import WalletReceiveModal from './WalletReceiveModal.vue';
+import WalletRequestFundsModal from './WalletRequestFundsModal.vue';
 import SendFundsModal from './SendFundsModal.vue';
 
 import {loadPendingTransactions} from '../WalletEther.js';
@@ -45,6 +56,7 @@ import {getPendingTransactionFromStorage, removePendingTransactionFromStorage} f
 export default {
   components: {
     SendFundsModal,
+    WalletRequestFundsModal,
     WalletReceiveModal
   },
   props: {
@@ -64,6 +76,18 @@ export default {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     },
     refreshIndex: {
@@ -121,6 +145,18 @@ export default {
     this.loadPendingTransactions();
   },
   methods: {
+    checkSendingRequest(isReadOnly) {
+      if (document.location.search && document.location.search.length) {
+        const search = document.location.search.substring(1);
+        const parameters = JSON.parse(`{"${decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"')}"}`);
+        if (parameters && parameters.receiver && parameters.receiver_type && parameters.amount) {
+          if (isReadOnly) {
+            throw new Error('Your wallet is in readonly state');
+          }
+          this.$refs.sendFundsModal.prepareSendForm(parameters.receiver, parameters.receiver_type, parameters.amount, parameters.contract);
+        }
+      }
+    },
     loadPendingTransactions() {
       Object.keys(this.pendingTransactions).forEach(key => delete this.pendingTransactions[key]);
 

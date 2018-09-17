@@ -147,6 +147,7 @@ export default {
   watch: {
     open() {
       if (this.open) {
+        this.error = null;
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
         this.defaultGas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 21000;
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
@@ -175,12 +176,13 @@ export default {
   },
   methods: {
     savePreferences() {
-      this.loading = true;
       try {
         if(this.isSpace) {
           this.saveCommonSettings();
           this.$emit('settings-changed');
+          this.show = false;
         } else {
+          this.loading = true;
           fetch('/portal/rest/wallet/api/account/savePreferences', {
             method: 'POST',
             headers: {

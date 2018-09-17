@@ -29,7 +29,7 @@ import org.web3j.utils.Convert;
 import org.exoplatform.addon.ethereum.wallet.fork.ContractUtils;
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletStorage;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
@@ -46,13 +46,13 @@ import org.exoplatform.social.core.service.LinkProvider;
 public class EthereumTransactionProcessorListener extends Listener<Transaction, TransactionReceipt> {
   private static final Log        LOG = ExoLogger.getLogger(EthereumTransactionProcessorListener.class);
 
-  private EthereumWalletStorage   ethereumWalletStorage;
+  private EthereumWalletService   ethereumWalletService;
 
   private EthereumClientConnector ethereumClientConnector;
 
-  public EthereumTransactionProcessorListener(EthereumWalletStorage ethereumWalletStorage,
+  public EthereumTransactionProcessorListener(EthereumWalletService ethereumWalletService,
                                               EthereumClientConnector ethereumClientConnector) {
-    this.ethereumWalletStorage = ethereumWalletStorage;
+    this.ethereumWalletService = ethereumWalletService;
     this.ethereumClientConnector = ethereumClientConnector;
   }
 
@@ -77,7 +77,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     boolean isContractTransaction = amount == 0;
     boolean sendNotification = true;
 
-    GlobalSettings settings = ethereumWalletStorage.getSettings();
+    GlobalSettings settings = ethereumWalletService.getSettings();
 
     // Compute receiver address switch transaction type
     if (isContractTransaction) {
@@ -114,7 +114,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     if (contractAddress != null && isContractTransaction) {
-      contractDetails = ethereumWalletStorage.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
+      contractDetails = ethereumWalletService.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
       if (contractDetails == null) {
         contractDetails = new ContractDetail(settings.getDefaultNetworkId(), contractAddress, contractAddress, contractAddress);
       }
@@ -145,7 +145,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       }
 
       // Add user transaction
-      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(), sender.getAddress(), transaction.getHash());
+      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(), sender.getAddress(), transaction.getHash());
     }
 
     // Send notification to receiver if the address is recognized
@@ -158,7 +158,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       }
 
       // Add user transaction
-      ethereumWalletStorage.saveAccountTransaction(settings.getDefaultNetworkId(), receiver.getAddress(), transaction.getHash());
+      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(), receiver.getAddress(), transaction.getHash());
     }
   }
 
@@ -233,7 +233,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
   }
 
   private AccountDetail getAccountDetail(String address) {
-    AccountDetail accountDetails = ethereumWalletStorage.getAccountDetailsByAddress(address);
+    AccountDetail accountDetails = ethereumWalletService.getAccountDetailsByAddress(address);
     if (accountDetails == null) {
       accountDetails = new AccountDetail(null, null, address, address, null, LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
     }
