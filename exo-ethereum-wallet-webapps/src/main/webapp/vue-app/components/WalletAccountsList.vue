@@ -41,7 +41,7 @@
       @close="sendDelegatedTokenModal = false"
       @error="$emit('error', $event)" />
 
-    <v-container id="accountListContainer" fluid grid-list-lg>
+    <v-container v-if="accountsList.length" id="accountListContainer" fluid grid-list-lg>
       <v-layout
         row
         wrap>

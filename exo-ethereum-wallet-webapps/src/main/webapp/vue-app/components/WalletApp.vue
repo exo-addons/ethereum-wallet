@@ -279,6 +279,7 @@ export default {
       this.selectedAccount = null;
       this.accountsDetails = {};
       this.walletAddress = null;
+      this.displayWalletSetup = false;
       this.displayWalletNotExistingYet = false;
 
       return initSettings(this.isSpace)
