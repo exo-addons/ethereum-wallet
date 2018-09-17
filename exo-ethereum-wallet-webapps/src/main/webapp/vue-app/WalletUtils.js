@@ -211,6 +211,9 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
           watchTransactionStatus(hash, transactionFinishedcallback);
         }, 2000);
       }
+    })
+    .catch(error => {
+      transactionFinishedcallback(null, null);
     });
 }
 

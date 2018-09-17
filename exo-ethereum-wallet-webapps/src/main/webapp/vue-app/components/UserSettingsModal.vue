@@ -10,9 +10,15 @@
           <i class="uiIconError"></i>{{ error }}
         </div>
         <v-flex>
-          <v-expansion-panel>
-            <v-expansion-panel-content>
-              <div slot="header">Settings</div>
+          <v-toolbar color="transparent" tabs flat>
+            <v-tabs v-model="selectedTab">
+              <v-tab>Settings</v-tab>
+              <v-tab>Advanced settings</v-tab>
+              <v-tab>Wallet details</v-tab>
+            </v-tabs>
+          </v-toolbar>
+          <v-tabs-items v-model="selectedTab">
+            <v-tab-item>
               <v-card>
                 <v-card-text>
                   <span>Currency</span>
@@ -22,9 +28,8 @@
                     label="Select fiat currency used to display ether amounts conversion" />
                 </v-card-text>
               </v-card>
-            </v-expansion-panel-content>
-            <v-expansion-panel-content>
-              <div slot="header">Advanced settings</div>
+            </v-tab-item>
+            <v-tab-item>
               <v-card>
                 <v-card-text>
                   <span>Gas limit to spend on transactions (Maximum fee per transaction)</span>
@@ -45,9 +50,8 @@
                   <wallet-backup-modal :display-complete-message="false" @copied="$emit('copied')" />
                 </v-card-text>
               </v-card>
-            </v-expansion-panel-content>
-            <v-expansion-panel-content>
-              <div slot="header">Wallet details</div>
+            </v-tab-item>
+            <v-tab-item>
               <v-card>
                 <v-card-text>
                   <qr-code ref="qrCode"
@@ -60,8 +64,8 @@
                   </div>
                 </v-card-text>
               </v-card>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
+            </v-tab-item>
+          </v-tabs-items>
         </v-flex>
       </v-card-text>
       <v-card-actions>
@@ -125,6 +129,7 @@ export default {
       loading: false,
       show: false,
       error: null,
+      selectedTab: 0,
       selectedCurrency: FIAT_CURRENCIES['usd'],
       currencies: [],
       defaultGas: 0,
@@ -144,6 +149,7 @@ export default {
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.$refs.qrCode.computeCanvas();
         this.show = true;
+        this.selectedTab = 0;
         this.useMetamaskChoice = window.walletSettings.userPreferences.useMetamask;
         if (window.walletSettings.userPreferences.currency) {
           this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.userPreferences.currency];
