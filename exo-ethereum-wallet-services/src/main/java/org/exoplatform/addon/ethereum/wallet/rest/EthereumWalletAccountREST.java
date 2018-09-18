@@ -158,9 +158,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
-   * Save user preferences of Wallet
+   * Sends a fund request notifications
    * 
-   * @param userPreferences
+   * @param fundsRequest
    * @return
    */
   @POST
