@@ -1,5 +1,5 @@
 <template>
-  <v-flex class="text-xs-center">
+  <v-flex class="text-xs-center white">
     <div class="walletAppSetup">
       <button v-if="!walletAddress" class="btn btn-primary" @click="createWalletDialog = true; dialog = true;">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>

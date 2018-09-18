@@ -44,7 +44,7 @@
             v-model="walletPassword"
             :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
             :rules="[rules.min]"
-            :type="walletPasswordShow ? 'text' : 'current-password'"
+            :type="walletPasswordShow ? 'text' : 'password'"
             name="walletPassword"
             label="Current wallet password"
             placeholder="Input your current wallet password"
