@@ -9,10 +9,12 @@
         <span class="PopupTitle popupTitle">Send Funds</span>
       </div>
 
-      <v-card-title primary-title class="pt-0">
+      <v-card-title id="sendFundsAccount" primary-title class="pt-0">
         <v-combobox
           v-model="selectedOption"
           :items="accountsList"
+          attach="#sendFundsAccount"
+          absolute
           label="Select account" />
       </v-card-title>
 

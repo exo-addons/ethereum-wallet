@@ -30,7 +30,7 @@
           <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
             <div class="alert alert-warning">
               <i class="uiIconWarning"></i>
-              Your wallet is not yet backed up yet.
+              Your wallet is not backed up yet.
               <wallet-backup-modal :display-complete-message="true" @copied="browserWalletBackedUp = true" />
               <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
             </div>

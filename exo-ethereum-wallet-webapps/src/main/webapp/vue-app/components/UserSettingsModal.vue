@@ -72,6 +72,8 @@
       <v-card-actions>
         <v-spacer />
         <button :disabled="loading" :loading="loading" class="btn btn-primary" @click="savePreferences">Save</button>
+        <button :disabled="loading" :loading="loading" class="btn" @click="show = false">Close</button>
+        <v-spacer />
       </v-card-actions>
     </v-card>
   </v-dialog>

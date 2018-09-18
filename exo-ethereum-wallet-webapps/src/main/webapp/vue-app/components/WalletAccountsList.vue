@@ -58,7 +58,7 @@
               width="400px"
               height="210px">
   
-              <v-card-title class="blue white--text">
+              <v-card-title dark class="primary">
                 <v-icon dark>{{ item.icon }}</v-icon>
 
                 <v-spacer></v-spacer>
@@ -107,7 +107,7 @@
                   <h4 v-if="!item.error && (item.balance === 0 || item.balance)">{{ `${item.balance} ${item.symbol}` }}</h4>
                 </div>
                 <v-spacer></v-spacer>
-                <v-btn icon class="mr-0" @click="$emit('account-details-selected', item)">
+                <v-btn icon class="mr-2" @click="$emit('account-details-selected', item)">
                   <v-icon>fa-angle-right</v-icon>
                 </v-btn>
               </v-card-title>

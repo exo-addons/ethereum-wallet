@@ -15,6 +15,11 @@
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
         <span class="PopupTitle popupTitle">Send delegated Tokens</span>
       </div>
+      <v-card-title v-show="loading" class="pb-0">
+        <v-spacer />
+        <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+        <v-spacer />
+      </v-card-title>
       <v-card-text>
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}

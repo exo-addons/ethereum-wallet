@@ -8,7 +8,10 @@
           </v-btn>
           <v-spacer />
           <div class="title">
-            <h3>{{ contractDetail.title }}</h3>
+            <h3>
+              <v-icon class="primary--text">{{ contractDetail.icon }}</v-icon>
+              {{ contractDetail.title }}
+            </h3>
           </div>
           <v-spacer />
         </v-card-title>
