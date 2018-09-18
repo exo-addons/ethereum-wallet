@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card flat>
     <!-- Ether account actions -->
     <send-ether-modal
       :account="walletAddress"
@@ -41,7 +41,7 @@
       @close="sendDelegatedTokenModal = false"
       @error="$emit('error', $event)" />
 
-    <v-container v-if="accountsList.length" id="accountListContainer" fluid grid-list-lg>
+    <v-container v-if="accountsList.length" id="accountListContainer" flat fluid grid-list-lg>
       <v-layout
         row
         wrap>

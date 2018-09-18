@@ -3,8 +3,8 @@
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
-          <v-card class="elevation-2">
-            <v-toolbar :color="isMaximized ? 'white':'white'" :class="isMaximized ? '':'no-padding elevation-0'" flat dense>
+          <v-card :class="isMaximized && 'transparent'" flat>
+            <v-toolbar :class="isMaximized ? 'mb-3':'no-padding'" color="white" flat dense>
               <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
               <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
               <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
@@ -65,7 +65,7 @@
             </div>
   
             <!-- Body -->
-            <v-card v-if="displayAccountsList" class="text-xs-center elevation-0" flat>
+            <v-card v-if="displayAccountsList" class="text-xs-center" flat>
               <div v-if="errorMessage && !loading" class="alert alert-error">
                 <i class="uiIconError"></i>
                 {{ errorMessage }}
