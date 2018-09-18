@@ -30,7 +30,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Save</button>
+        <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Delegate</button>
         <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       </v-card-actions>
     </v-card>

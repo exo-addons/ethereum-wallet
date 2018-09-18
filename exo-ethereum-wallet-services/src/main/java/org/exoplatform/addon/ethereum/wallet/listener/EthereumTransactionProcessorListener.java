@@ -212,7 +212,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
           EventValues eventValues = ContractUtils.staticExtractEventParameters(CONTRACT_TRANSFER_EVENT,
                                                                                transactionReceipt.getLogs().get(0));
 
-          if (eventValues.getIndexedValues() != null && eventValues.getNonIndexedValues() != null
+          if (eventValues != null && eventValues.getIndexedValues() != null && eventValues.getNonIndexedValues() != null
               && eventValues.getIndexedValues().size() == 2 && eventValues.getNonIndexedValues().size() == 1) {
             String senderAddress = eventValues.getIndexedValues().get(0).getValue().toString();
             String receiverAddress = eventValues.getIndexedValues().get(1).getValue().toString();

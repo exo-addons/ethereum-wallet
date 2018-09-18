@@ -12,12 +12,12 @@
     </div>
     <v-divider />
 
-    <v-dialog v-model="dialog" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
+    <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
       <v-card class="elevation-12">
         <div class="popupHeader ClearFix">
           <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-          <span v-if="createWalletDialog" class="PopupTitle popupTitle">Import wallet private key</span>
-          <span v-else class="PopupTitle popupTitle">Create wallet</span>
+          <span v-if="createWalletDialog" class="PopupTitle popupTitle">Create wallet</span>
+          <span v-else class="PopupTitle popupTitle">Import wallet private key</span>
         </div>
         <v-card-text>
           <div v-if="errorMessage" class="alert alert-error v-content">

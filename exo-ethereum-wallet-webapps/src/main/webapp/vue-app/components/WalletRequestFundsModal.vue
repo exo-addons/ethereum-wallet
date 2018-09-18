@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup" width="450px" max-width="100vw" @keydown.esc="dialog = false">
-    <button slot="activator" class="btn btn-primary ml-1 mt-2">Request funds</button>
+  <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" @keydown.esc="dialog = false">
+    <button slot="activator" class="btn ml-1 mt-2">Request funds</button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
@@ -82,7 +82,6 @@ export default {
     },
     accountsList() {
       const accountsList = [];
-      console.log(this.accountsDetails);
       if (this.accountsDetails && this.refreshIndex > 0) {
         Object.keys(this.accountsDetails).forEach(key =>{
           if(!this.accountsDetails[key].isContract || this.accountsDetails[key].isDefault) {
@@ -92,7 +91,6 @@ export default {
             });
           }
         });
-        console.log("accountsList", accountsList);
       }
       return accountsList;
     }
@@ -114,8 +112,6 @@ export default {
         this.error = 'Please select a valid account';
         return;
       }
-
-      console.log(this.recipient);
 
       if (!this.recipient) {
         this.error = 'Please select a receipient to your request';

@@ -101,8 +101,6 @@ export default {
       }
     },
     selectedValue() {
-      console.log("********** this.selectedItem", this.selectedItem);
-
       this.$refs.selectAutoComplete.isFocused = false;
       this.addressLoad = 'loading';
       if (this.selectedValue) {

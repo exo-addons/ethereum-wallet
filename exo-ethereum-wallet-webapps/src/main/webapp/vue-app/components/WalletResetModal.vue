@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="400px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <a slot="activator" href="javascript:void(0);" @click="dialog = true">Reset wallet password</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
@@ -48,7 +48,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button class="btn btn-primary mr-1" @click="resetWallet">Reset</button>
+        <button class="btn btn-primary mr-1" @click="resetWallet">Confirm</button>
         <button class="btn" @click="dialog = false">Close</button>
         <v-spacer />
       </v-card-actions>

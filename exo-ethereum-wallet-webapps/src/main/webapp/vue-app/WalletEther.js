@@ -199,7 +199,7 @@ export function addTransaction(networkId, account, transactions, transaction, re
 
 function addBlockTransactions(networkId, account, transactions, block, untilBlockNumber, loadedBlocks, progressionCallback) {
   if (!block) {
-    throw new Error("Block not found");
+    throw new Error("An error occurred whilre retrieving data from network, this may be fixed by refreshing your wallet");
   }
 
   loadedBlocks++;

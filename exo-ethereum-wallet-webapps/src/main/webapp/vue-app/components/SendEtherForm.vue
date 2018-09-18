@@ -79,7 +79,7 @@ export default {
 
       const gas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 35000;
       if (this.amount + gasToEther(gas) >= this.balance) {
-        this.error = "Unsufficient ethers";
+        this.error = "Unsufficient funds";
         return;
       }
 
