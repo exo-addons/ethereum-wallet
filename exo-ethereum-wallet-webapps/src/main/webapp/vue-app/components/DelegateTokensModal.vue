@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <button v-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1"
             @keydown.esc="dialog = false">Delegate Tokens</button>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
@@ -16,7 +16,7 @@
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
         <span class="PopupTitle popupTitle">Delegate Tokens</span>
       </div>
-      <v-card-text class="pt-0">
+      <v-card-text>
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
         </div>

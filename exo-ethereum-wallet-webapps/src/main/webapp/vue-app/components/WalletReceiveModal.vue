@@ -1,6 +1,12 @@
 <template>
   <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" @keydown.esc="dialog = false">
-    <button slot="activator" class="btn ml-1 mt-2">Receive</button>
+    <v-btn v-if="icon" slot="activator" class="bottomNavigationItem" :disabled="disabled" title="Receive funds" flat value="receive">
+      <span>Receive</span>
+      <v-icon>fa-hand-holding-usd</v-icon>
+    </v-btn>
+    <button v-else slot="activator" class="btn ml-1 mt-2">
+      Receive
+    </button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
@@ -33,6 +39,12 @@ export default {
     QrCode
   },
   props: {
+    icon: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {

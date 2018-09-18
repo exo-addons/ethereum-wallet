@@ -1,11 +1,15 @@
 <template>
-  <v-card class="waletSummary">
-    <v-card-title v-if="hasPendingTransaction" primary-title class="pb-0">
+  <v-card class="waletSummary elevation-0">
+    <v-card-title v-if="pendingTransactionsCount" primary-title class="pb-0">
       <v-spacer />
-      <v-progress-circular title="A transaction is in progress" color="primary" indeterminate size="20"></v-progress-circular>
+      <v-badge right>
+        <span slot="badge">{{ pendingTransactionsCount }}</span>
+        <v-progress-circular title="A transaction is in progress" color="primary" indeterminate size="20"></v-progress-circular>
+      </v-badge>
+      
       <v-spacer />
     </v-card-title>
-    <v-card-title primary-title class="pb-0">
+    <v-card-title :class="!isMaximized && 'pt-2'" primary-title class="pb-0" >
       <v-spacer />
       <h3 class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h3>
       <v-spacer />
@@ -20,24 +24,31 @@
       <v-spacer />
       <v-layout row wrap>
         <v-flex>
-          <send-funds-modal
-            ref="sendFundsModal"
-            :accounts-details="accountsDetails"
-            :refresh-index="refreshIndex"
-            :network-id="networkId"
-            :wallet-address="walletAddress"
-            :disabled="disableSendButton"
-            @pending="loadPendingTransactions()"
-            @error="loadPendingTransactions(); $emit('error', $event);" />
-          <wallet-receive-modal
-            :wallet-address="walletAddress"
-            @pending="loadPendingTransactions()"
-            @error="hasPendingTransaction = false; $emit('error', $event);" />
-          <wallet-request-funds-modal
-            v-if="!isSpace || isSpaceAdministrator"
-            :accounts-details="accountsDetails"
-            :refresh-index="refreshIndex"
-            :wallet-address="walletAddress" />
+          <v-bottom-nav :value="true" color="white" class="elevation-0 buttomNavigation">
+            <send-funds-modal
+              ref="sendFundsModal"
+              :accounts-details="accountsDetails"
+              :refresh-index="refreshIndex"
+              :network-id="networkId"
+              :wallet-address="walletAddress"
+              :disabled="disableSendButton"
+              :icon="!isMaximized"
+              @pending="loadPendingTransactions()"
+              @error="loadPendingTransactions(); $emit('error', $event);" />
+            <v-divider v-if="!isMaximized" vertical />
+            <wallet-receive-modal
+              :wallet-address="walletAddress"
+              :icon="!isMaximized"
+              @pending="loadPendingTransactions()"
+              @error="$emit('error', $event);" />
+            <v-divider v-if="!isMaximized" vertical />
+            <wallet-request-funds-modal
+              v-if="!isSpace || isSpaceAdministrator"
+              :accounts-details="accountsDetails"
+              :refresh-index="refreshIndex"
+              :wallet-address="walletAddress"
+              :icon="!isMaximized" />
+          </v-bottom-nav>
         </v-flex>
       </v-layout>
       <v-spacer />
@@ -76,6 +87,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    isMaximized: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     },
     isSpace: {
@@ -137,7 +154,7 @@ export default {
     disableSendButton() {
       return this.isReadOnly || !this.etherBalance || !Number(this.etherBalance);
     },
-    hasPendingTransaction() {
+    pendingTransactionsCount() {
       return this.updatePendingTransactionsIndex && Object.keys(this.pendingTransactions).length;
     }
   },

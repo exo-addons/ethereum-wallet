@@ -3,125 +3,127 @@
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
-          <v-toolbar :color="isMaximized ? 'grey lighten-5':'transparent'" :class="isMaximized ? '':'no-padding'" flat dense>
-            <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
-            <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
-            <h4 v-else class="head-container">Wallet</h4>
-            <v-spacer />
-
-            <wallet-app-menu v-if="!hasError && !loading"
-                             :is-space="isSpace"
-                             :wallet-address="walletAddress"
-                             :is-maximized="isMaximized"
-                             @refresh="init()"
-                             @maximize="maximize()"
-                             @modify-settings="showSettingsModal = true" />
-
-            <user-settings-modal :is-space="isSpace"
-                                 :open="showSettingsModal"
-                                 :fiat-symbol="fiatSymbol"
-                                 :display-reset-option="displayWalletResetOption"
-                                 @copied="browserWalletBackedUp = true"
-                                 @close="showSettingsModal = false"
-                                 @settings-changed="init()" />
-          </v-toolbar>
-          <v-divider light />
-
-          <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
-            <div class="alert alert-warning">
-              <i class="uiIconWarning"></i>
-              Your wallet is not backed up yet.
-              <wallet-backup-modal :display-complete-message="true" @copied="browserWalletBackedUp = true" />
-              <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
-            </div>
-          </v-toolbar>
-
-          <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
-            <div class="alert alert-info">
+          <v-card class="elevation-2">
+            <v-toolbar :color="isMaximized ? 'white':'white'" :class="isMaximized ? '':'no-padding elevation-0'" flat dense>
+              <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
+              <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
+              <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
+              <v-spacer />
+  
+              <wallet-app-menu v-if="!hasError && !loading"
+                               :is-space="isSpace"
+                               :wallet-address="walletAddress"
+                               :is-maximized="isMaximized"
+                               @refresh="init()"
+                               @maximize="maximize()"
+                               @modify-settings="showSettingsModal = true" />
+  
+              <user-settings-modal :is-space="isSpace"
+                                   :open="showSettingsModal"
+                                   :fiat-symbol="fiatSymbol"
+                                   :display-reset-option="displayWalletResetOption"
+                                   @copied="browserWalletBackedUp = true"
+                                   @close="showSettingsModal = false"
+                                   @settings-changed="init()" />
+            </v-toolbar>
+  
+            <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
+              <div class="alert alert-warning">
+                <i class="uiIconWarning"></i>
+                Your wallet is not backed up yet.
+                <wallet-backup-modal :display-complete-message="true" @copied="browserWalletBackedUp = true" />
+                <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
+              </div>
+            </v-toolbar>
+  
+            <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
+              <div class="alert alert-info">
+                <i class="uiIconInfo"></i>
+                No private key was found in current browser. Your wallet is displayed in readonly mode.
+                <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="openWalletSetup">More options</a>
+              </div>
+            </v-toolbar>
+            <v-toolbar v-else-if="displayWalletUnlockToolbar" class="additionalToolbar" color="transparent" flat dense>
+              <div class="alert alert-info">
+                <i class="uiIconInfo"></i>
+                Your wallet is locked in current browser, thus you can't send transactions.
+                <wallet-unlock-modal @refresh="init()"/>
+              </div>
+            </v-toolbar>
+  
+            <wallet-app-setup v-if="displayWalletSetup && !useMetamask"
+                              v-show="!loading"
+                              ref="walletAppSetup"
+                              :error-code="errorCode"
+                              :is-space="isSpace"
+                              :use-metamask="useMetamask"
+                              @configured="init" />
+  
+            <div v-else-if="displayWalletNotExistingYet" class="alert alert-info">
               <i class="uiIconInfo"></i>
-              No private key was found in current browser. Your wallet is displayed in readonly mode.
-              <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="openWalletSetup">More options</a>
+              Space administrator hasn't set a Wallet for this space yet
             </div>
-          </v-toolbar>
-          <v-toolbar v-else-if="displayWalletUnlockToolbar" class="additionalToolbar" color="transparent" flat dense>
-            <div class="alert alert-info">
-              <i class="uiIconInfo"></i>
-              Your wallet is locked in current browser, thus you can't send transactions.
-              <wallet-unlock-modal @refresh="init()"/>
-            </div>
-          </v-toolbar>
-
-          <wallet-app-setup v-if="displayWalletSetup && !useMetamask"
-                            v-show="!loading"
-                            ref="walletAppSetup"
-                            :error-code="errorCode"
-                            :is-space="isSpace"
-                            :use-metamask="useMetamask"
-                            @configured="init" />
-
-          <div v-else-if="displayWalletNotExistingYet" class="alert alert-info">
-            <i class="uiIconInfo"></i>
-            Space administrator hasn't set a Wallet for this space yet
-          </div>
-
-          <!-- Body -->
-          <v-card v-if="displayAccountsList" class="text-xs-center" flat>
-            <div v-if="errorMessage && !loading" class="alert alert-error">
-              <i class="uiIconError"></i>
-              {{ errorMessage }}
-            </div>
-
-            <v-progress-circular v-if="loading" color="primary" indeterminate></v-progress-circular>
-
-            <wallet-metamask-setup
-              v-if="useMetamask"
-              v-show="!loading"
-              ref="walletMetamaskSetup"
-              :wallet-address="walletAddress"
-              :is-space="isSpace"
-              @loading="loading = true"
-              @end-loading="loading = false"
-              @refresh="init()"
-              @error="loading = false; errorMessage = $event" />
-
-            <wallet-summary
-              v-if="!loading && walletAddress"
-              ref="walletSummary"
-              :is-space="isSpace"
-              :is-space-administrator="isSpaceAdministrator"
-              :accounts-details="accountsDetails"
-              :refresh-index="refreshIndex"
-              :network-id="networkId"
-              :wallet-address="walletAddress"
-              :ether-balance="etherBalance"
-              :total-balance="totalBalance"
-              :total-fiat-balance="totalFiatBalance"
-              :is-read-only="isReadOnly"
-              :fiat-symbol="fiatSymbol"
-              @refresh-balance="refreshBalance"
-              @refresh-token-balance="refreshTokenBalance"
-              @error="errorMessage = $event" />
-
-            <wallet-accounts-list
-              v-if="isMaximized && walletAddressConfigured"
-              ref="WalletAccountsList"
-              :is-read-only="isReadOnly"
-              :accounts-details="accountsDetails"
-              :account="walletAddress"
-              :network-id="networkId"
-              :refresh-index="refreshIndex"
-              :fiat-symbol="fiatSymbol"
-              @account-details-selected="openAccountDetail"
-              @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
-              @error="errorMessage = $event" />
-
+  
+            <!-- Body -->
+            <v-card v-if="displayAccountsList" class="text-xs-center elevation-0" flat>
+              <div v-if="errorMessage && !loading" class="alert alert-error">
+                <i class="uiIconError"></i>
+                {{ errorMessage }}
+              </div>
+  
+              <v-progress-circular v-if="loading" color="primary" class="mb-2" indeterminate />
+  
+              <wallet-metamask-setup
+                v-if="useMetamask"
+                v-show="!loading"
+                ref="walletMetamaskSetup"
+                :wallet-address="walletAddress"
+                :is-space="isSpace"
+                @loading="loading = true"
+                @end-loading="loading = false"
+                @refresh="init()"
+                @error="loading = false; errorMessage = $event" />
+  
+              <wallet-summary
+                v-if="!loading && walletAddress"
+                ref="walletSummary"
+                :is-maximized="isMaximized"
+                :is-space="isSpace"
+                :is-space-administrator="isSpaceAdministrator"
+                :accounts-details="accountsDetails"
+                :refresh-index="refreshIndex"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :ether-balance="etherBalance"
+                :total-balance="totalBalance"
+                :total-fiat-balance="totalFiatBalance"
+                :is-read-only="isReadOnly"
+                :fiat-symbol="fiatSymbol"
+                @refresh-balance="refreshBalance"
+                @refresh-token-balance="refreshTokenBalance"
+                @error="errorMessage = $event" />
+  
+              <wallet-accounts-list
+                v-if="isMaximized && walletAddressConfigured"
+                ref="WalletAccountsList"
+                :is-read-only="isReadOnly"
+                :accounts-details="accountsDetails"
+                :wallet-address="walletAddress"
+                :network-id="networkId"
+                :refresh-index="refreshIndex"
+                :fiat-symbol="fiatSymbol"
+                @account-details-selected="openAccountDetail"
+                @refresh-contracts="forceUpdate"
+                @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
+                @error="errorMessage = $event" />
+  
+            </v-card>
+  
+            <!-- The selected account detail -->
+            <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
+              <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :is-read-only="isReadOnly" :network-id="networkId" :wallet-address="walletAddress" :contract-detail="selectedAccount" @back="back"/>
+            </v-navigation-drawer>
           </v-card>
-
-          <!-- The selected account detail -->
-          <v-navigation-drawer v-if="!isMaximized" id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
-            <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :is-read-only="isReadOnly" :network-id="networkId" :account="walletAddress" :contract-detail="selectedAccount" @back="back"/>
-          </v-navigation-drawer>
-          <account-detail v-else-if="selectedAccount" ref="accountDetail" :fiat-symbol="fiatSymbol" :network-id="networkId" :is-read-only="isReadOnly" :account="walletAddress" :contract-detail="selectedAccount" @back="back"/>
         </v-flex>
       </v-layout>
     </main>
@@ -196,7 +198,7 @@ export default {
   },
   computed: {
     displayAccountsList() {
-      return !this.isMaximized || !this.selectedAccount;
+      return true;
     },
     displayWalletCreationToolbar() {
       return !this.loading && this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator) && !this.browserWalletExists;
@@ -469,17 +471,7 @@ export default {
       if (!accountDetails.error) {
         this.selectedAccount = accountDetails;
       }
-      if (!this.isMaximized) {
-        this.seeAccountDetails = true;
-      }
-    },
-    deleteContract(item, event) {
-      if(deleteContractFromStorage(this.walletAddress, this.networkId, item.address)) {
-        delete this.accountsDetails[item.address];
-        this.forceUpdate();
-      }
-      event.preventDefault();
-      event.stopPropagation();
+      this.seeAccountDetails = true;
     },
     back() {
       this.seeAccountDetails = false;

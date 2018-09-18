@@ -2,7 +2,7 @@
   <v-card>
     <!-- Ether account actions -->
     <send-ether-modal
-      :account="account"
+      :account="walletAddress"
       :balance="selectedItem && selectedItem.balance"
       :open="sendEtherModal"
       no-button
@@ -13,7 +13,7 @@
     <send-tokens-modal
       :balance="selectedItem && selectedItem.balance"
       :ether-balance="selectedItem && selectedItem.etherBalance"
-      :account="account"
+      :account="walletAddress"
       :contract="selectedItem && selectedItem.contract"
       :open="sendTokenModal"
       :account-detail="selectedItem"
@@ -45,8 +45,7 @@
       <v-layout
         row
         wrap>
-        <v-spacer></v-spacer>
-        <v-flex 
+        <div 
           v-for="(item, index) in accountsList"
           :key="index"
           class="accountItemContainer">
@@ -54,8 +53,9 @@
           <v-hover>
             <v-card
               slot-scope="{ hover }"
-              :class="`elevation-${hover ? 12 : 2}`"
+              :class="`elevation-${hover ? 9 : 2}`"
               width="400px"
+              max-width="100%"
               height="210px">
   
               <v-card-title dark class="primary">
@@ -99,7 +99,7 @@
                   </v-list>
                 </v-menu>
               </v-card-title>
-              <v-card-title class="accountItemContent">
+              <v-card-title class="accountItemContent" @click="$emit('account-details-selected', item)">
                 <v-spacer></v-spacer>
                 <div class="text-xs-center">
                   <h3 v-if="item.error" class="headline mb-0">{{ item.error }}</h3>
@@ -113,8 +113,7 @@
               </v-card-title>
             </v-card>
           </v-hover>
-        </v-flex>
-        <v-spacer></v-spacer>
+        </div>
       </v-layout>
     </v-container>
   </v-card>
@@ -126,7 +125,7 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import {addPendingTransactionToStorage, removePendingTransactionFromStorage} from '../WalletToken.js';
+import {addPendingTransactionToStorage, removePendingTransactionFromStorage, deleteContractFromStorage} from '../WalletToken.js';
 import {watchTransactionStatus} from '../WalletUtils.js';
 import {addTransaction} from '../WalletEther.js';
 
@@ -156,7 +155,7 @@ export default {
         return null;
       }
     },
-    account: {
+    walletAddress: {
       type: String,
       default: function() {
         return null;
@@ -208,10 +207,10 @@ export default {
         icon: 'fa-users',
         pending: true
       };
-      addPendingTransactionToStorage(this.networkId, this.account, contract.address, contractTransaction);
+      addPendingTransactionToStorage(this.networkId, this.walletAddress, contract.address, contractTransaction);
 
       watchTransactionStatus(transaction.hash, (receipt, block) => {
-        removePendingTransactionFromStorage(this.networkId, this.account, contract.address, transaction.hash);
+        removePendingTransactionFromStorage(this.networkId, this.walletAddress, contract.address, transaction.hash);
       });
       this.$emit('transaction-sent', contractTransaction);
     },
@@ -228,20 +227,29 @@ export default {
         pending: true
       };
 
-      addPendingTransactionToStorage(this.networkId, this.account, contract.address, contractTransaction);
+      addPendingTransactionToStorage(this.networkId, this.walletAddress, contract.address, contractTransaction);
 
       watchTransactionStatus(transaction.hash, (receipt, block) => {
-        removePendingTransactionFromStorage(this.networkId, this.account, contract.address, transaction.hash);
+        removePendingTransactionFromStorage(this.networkId, this.walletAddress, contract.address, transaction.hash);
       });
 
       this.$emit('transaction-sent', contractTransaction);
     },
     addSendEtherTransaction(transaction) {
       addTransaction(this.networkId,
-        this.account,
+        this.walletAddress,
         [],
         transaction);
       this.$emit('transaction-sent', transaction);
+    },
+    deleteContract(item, event) {
+      console.log(this.walletAddress, this.networkId, item.address);
+      if(deleteContractFromStorage(this.walletAddress, this.networkId, item.address)) {
+        delete this.accountsDetails[item.address];
+        this.$emit('refresh-contracts');
+      }
+      event.preventDefault();
+      event.stopPropagation();
     }
   }
 };

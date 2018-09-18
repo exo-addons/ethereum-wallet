@@ -3,9 +3,6 @@
     <v-card-media min-height="80px">
       <v-layout column fill-height>
         <v-card-title class="pb-0">
-          <v-btn absolute icon @click="stopLoading(); $emit('back')">
-            <v-icon>arrow_back</v-icon>
-          </v-btn>
           <v-spacer />
           <div class="title">
             <h3>
@@ -14,6 +11,9 @@
             </h3>
           </div>
           <v-spacer />
+          <v-btn icon class="rightIcon" @click="stopLoading(); $emit('back')">
+            <v-icon>close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-title class="pt-0">
           <v-spacer />
@@ -34,14 +34,14 @@
     </v-card-media>
 
     <v-divider v-if="isReadOnly" />
-    <div v-else class="text-xs-center grey lighten-4">
+    <div v-else class="text-xs-center">
       <!-- Contract actions -->
       <send-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
         :balance="contractDetail.balance"
         :ether-balance="contractDetail.etherBalance"
-        :account="account"
+        :account="walletAddress"
         :contract="contractDetail.contract"
         @sent="newTransactionPending($event)"
         @error="loading = false; error = $event" />
@@ -65,7 +65,7 @@
       <!-- Ether account actions -->
       <send-ether-modal
         v-if="!contractDetail.isContract"
-        :account="account"
+        :account="walletAddress"
         :balance="contractDetail.balance"
         @sent="newTransactionPending($event)"
         @error="loading = false; error = $event" />
@@ -82,7 +82,7 @@
       id="contractTransactionsContent"
       ref="contractTransactions"
       :network-id="networkId"
-      :account="account"
+      :account="walletAddress"
       :contract="contractDetail.contract"
       @has-delegated-tokens="hasDelegatedTokens = true"
       @loading="loading = true"
@@ -93,7 +93,7 @@
       v-else id="generalTransactionsContent"
       ref="generalTransactions"
       :network-id="networkId"
-      :account="account"
+      :account="walletAddress"
       @loading="loading = true"
       @end-loading="loading = false"
       @error="loading = false; error = $event"
@@ -137,7 +137,7 @@ export default {
         return 0;
       }
     },
-    account: {
+    walletAddress: {
       type: String,
       default: function() {
         return null;
@@ -177,12 +177,12 @@ export default {
   },
   methods: {
     refreshBalance() {
-      return window.localWeb3.eth.getBalance(this.account)
+      return window.localWeb3.eth.getBalance(this.walletAddress)
         .then(balance => {
           balance = window.localWeb3.utils.fromWei(balance, "ether");
           if (this.contractDetail.isContract) {
             this.contractDetail.etherBalance = balance;
-            return retrieveContractDetails(this.account, this.contractDetail)
+            return retrieveContractDetails(this.walletAddress, this.contractDetail)
               .then(() => {
                 this.$forceUpdate();
               });

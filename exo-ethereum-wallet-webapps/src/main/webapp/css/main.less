@@ -1,6 +1,4 @@
 @import './lib/fontawesome.css';
-@import './lib/fontawesome-solid.css';
-@import './lib/fontawesome-brands.css';
 @import './lib/materialdesign-icons.css';
 @import './lib/vuetify.css';
 
@@ -33,19 +31,30 @@
   #accountListContainer {
     max-width: 100%;
     box-sizing: border-box;
-    
+
+    .layout {
+      display: inline-flex;
+    }
+
     .accountItemContainer {
-      max-width: 400px;
-      margin: 0 20px;
-      
+      max-width: 100%;
+      width: 400px;
+      margin: 0 auto 20px;
+
       .accountItemContent {
         height: calc(100% - 110px);
+        cursor: pointer;
       }
     }
   }
   #accountDetail {
     .v-list__tile__title {
       height: 29px;
+    }
+    .rightIcon {
+      position: absolute;
+      right: 0;
+      top: 9px;
     }
   }
   .v-autocomplete label {
@@ -89,7 +98,7 @@
     position: relative;
 
     .v-menu__content {
-      top: 50px !important;
+      top: 73px!important;
       left: 16px !important;
       position: absolute;
       width: 100%;
@@ -242,6 +251,17 @@
   .v-text-field .v-label--active {
     top: 0;
   }
+
+  .buttomNavigation {
+   .v-btn {
+      opacity: 1;
+      filter: none;
+    }
+
+    .bottomNavigationItem:hover {
+      color: #578dc9 !important;
+    }
+  }
 }
 
 #WalletAdminApp {
@@ -259,19 +279,28 @@
   &.minimized {
     padding: 10px;
 
-    #contractTransactionsContent {
-      max-height: ~"calc(100vh - 165px)";
-      overflow: auto;
-    }
-    #generalTransactionsContent {
-      max-height: ~"calc(100vh - 165px)";
-      overflow: auto;
+    .head-container {
+      padding-left: 11px;
+      font-size: 17px;
+      font-weight: 400;
+      color: #4d5466;
     }
 
-    > .walletConfigurationMenu {
-      top: 50px!important;
+    .buttomNavigation .v-dialog__activator {
+      height: 100%;
     }
   }
+
+  #contractTransactionsContent {
+    max-height: ~"calc(100vh - 191px)";
+    overflow: auto;
+  }
+
+  #generalTransactionsContent {
+    max-height: ~"calc(100vh - 191px)";
+    overflow: auto;
+  }
+
   .additionalToolbar {
     width: 100%;
 
@@ -293,6 +322,14 @@
     .alert {
       margin: 0;
     }
+  }
+  
+  &.maximized {
+    margin-top: 20px;
+  }
+
+  .arrow-up-right {
+    transform: rotate(45deg);
   }
 }
 

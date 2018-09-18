@@ -64,6 +64,7 @@
           <button v-if="createWalletDialog" class="btn btn-primary mr-1" @click="createWallet">Create</button>
           <button v-else class="btn btn-primary mr-1" @click="importWallet">Import</button>
           <button class="btn" @click="dialog = false">Close</button>
+          <v-spacer />
         </v-card-actions>
       </v-card>
     </v-dialog>

@@ -10,14 +10,12 @@
           <i class="uiIconError"></i>{{ error }}
         </div>
         <v-flex>
-          <v-toolbar color="transparent" tabs flat>
-            <v-tabs ref="settingsTabs" v-model="selectedTab">
-              <v-tabs-slider />
-              <v-tab>Settings</v-tab>
-              <v-tab v-if="!isSpace">Advanced settings</v-tab>
-              <v-tab>Wallet details</v-tab>
-            </v-tabs>
-          </v-toolbar>
+          <v-tabs ref="settingsTabs" v-model="selectedTab" class="pl-3 pr-3">
+            <v-tabs-slider />
+            <v-tab>Settings</v-tab>
+            <v-tab v-if="!isSpace">Advanced settings</v-tab>
+            <v-tab>Wallet details</v-tab>
+          </v-tabs>
           <v-tabs-items v-model="selectedTab">
             <v-tab-item v-if="!isSpace">
               <v-card>
@@ -71,7 +69,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button :disabled="loading" :loading="loading" class="btn btn-primary" @click="savePreferences">Save</button>
+        <button :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button>
         <button :disabled="loading" :loading="loading" class="btn" @click="show = false">Close</button>
         <v-spacer />
       </v-card-actions>

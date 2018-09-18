@@ -1,6 +1,10 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
+    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Send funds" flat value="send">
+      <span>Send</span>
+      <v-icon>send</v-icon>
+    </v-btn>
+    <button v-else slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">
       Send Funds
     </button>
     <v-card class="elevation-12">
@@ -9,13 +13,14 @@
         <span class="PopupTitle popupTitle">Send Funds</span>
       </div>
 
-      <v-card-title id="sendFundsAccount" primary-title class="pt-0 pb-0">
+      <v-card-title id="sendFundsAccount" primary-title class="pb-0">
         <v-combobox
           v-model="selectedOption"
           :items="accountsList"
           attach="#sendFundsAccount"
           absolute
-          label="Select account" />
+          label="Select currency"
+          placeholder="Select a currency to use for requesting funds" />
       </v-card-title>
 
       <send-ether-form v-if="selectedAccount && !selectedAccount.isContract"
@@ -73,6 +78,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    icon: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     },
     disabled: {

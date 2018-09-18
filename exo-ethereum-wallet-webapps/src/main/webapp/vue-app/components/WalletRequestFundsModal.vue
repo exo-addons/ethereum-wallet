@@ -1,6 +1,10 @@
 <template>
   <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" @keydown.esc="dialog = false">
-    <button slot="activator" class="btn ml-1 mt-2">Request funds</button>
+    <v-btn v-if="icon" slot="activator" class="bottomNavigationItem" :disabled="disabled" title="Request funds" flat value="request">
+      <span>Request</span>
+      <v-icon>fa-comment-dollar</v-icon>
+    </v-btn>
+    <button v-else slot="activator" class="btn ml-1 mt-2">Request funds</button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
@@ -64,6 +68,12 @@ export default {
     AutoComplete
   },
   props: {
+    icon: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {
