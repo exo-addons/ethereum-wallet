@@ -27,7 +27,7 @@
   </scm>
   <properties>
     <!-- 3rd party libraries versions -->
-    <org.exoplatform.platform.version>5.1.x-SNAPSHOT</org.exoplatform.platform.version>
+    <org.exoplatform.platform.version>5.1.0-RC12</org.exoplatform.platform.version>
 
     <!-- Ethereum We3 for Java library -->
     <org.web3j.version>3.5.0</org.web3j.version>
