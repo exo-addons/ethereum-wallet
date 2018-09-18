@@ -8,6 +8,7 @@
                     :label="inputLabel"
                     :disabled="disabled"
                     :attach="`#${id}`"
+                    :placeholder="inputPlaceholder"
                     content-class="contactAutoCompleteContent"
                     max-width="100%"
                     item-text="name"
@@ -55,6 +56,12 @@ import {searchAddress, searchContact, searchUserOrSpaceObject} from '../WalletAd
 export default {
   props: {
     inputLabel: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    inputPlaceholder: {
       type: String,
       default: function() {
         return null;

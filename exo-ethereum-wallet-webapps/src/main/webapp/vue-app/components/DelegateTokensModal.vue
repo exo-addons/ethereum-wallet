@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent>
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="300px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <button v-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1"
             @keydown.esc="dialog = false">Delegate Tokens</button>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
@@ -16,7 +16,7 @@
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
         <span class="PopupTitle popupTitle">Delegate Tokens</span>
       </div>
-      <v-card-text>
+      <v-card-text class="pt-0">
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
         </div>
@@ -24,14 +24,26 @@
           <i class="uiIconWarning"></i>{{ warning }}
         </div>
         <v-form>
-          <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
-          <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount"></v-text-field>
+          <auto-complete
+            ref="autocomplete"
+            :disabled="loading"
+            input-label="Recipient"
+            input-placeholder="Select a recipient for token delegation"
+            @item-selected="recipient = $event.address" />
+          <v-text-field
+            v-model.number="amount"
+            :disabled="loading"
+            name="amount"
+            label="Amount"
+            placeholder="Select an amount to delegate to recipient"
+            class="mt-4" />
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
         <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Delegate</button>
         <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+        <v-spacer />
       </v-card-actions>
     </v-card>
   </v-dialog>

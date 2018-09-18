@@ -9,7 +9,7 @@
         <span class="PopupTitle popupTitle">Send Funds</span>
       </div>
 
-      <v-card-title id="sendFundsAccount" primary-title class="pt-0">
+      <v-card-title id="sendFundsAccount" primary-title class="pt-0 pb-0">
         <v-combobox
           v-model="selectedOption"
           :items="accountsList"
@@ -17,8 +17,6 @@
           absolute
           label="Select account" />
       </v-card-title>
-
-      <v-divider v-if="selectedAccount" />
 
       <send-ether-form v-if="selectedAccount && !selectedAccount.isContract"
                        ref="sendEtherForm"

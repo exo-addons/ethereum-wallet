@@ -10,7 +10,12 @@
           <i class="uiIconError"></i>{{ error }}
         </div>
         <v-form>
-          <v-text-field v-model="address" name="address" label="Address" type="text"></v-text-field>
+          <v-text-field
+            v-model="address"
+            name="address"
+            label="Address"
+            placeholder="Select ERC20 Token address"
+            type="text" />
         </v-form>
       </v-card-text>
       <v-card-actions>

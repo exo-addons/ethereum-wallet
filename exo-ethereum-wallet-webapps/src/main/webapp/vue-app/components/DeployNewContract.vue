@@ -27,10 +27,20 @@
 
         <h4>ERC20 Token contract details</h4>
         <v-divider class="mb-4"/>
-        <v-text-field v-model="newTokenName" :rules="mandatoryRule" label="Token name" required />
-        <v-text-field v-model="newTokenSymbol" :rules="mandatoryRule" label="Token symbol" required></v-text-field>
+        <v-text-field
+          v-model="newTokenName"
+          :rules="mandatoryRule"
+          label="Token name"
+          placeholder="Input the ERC20 token name"
+          required />
+        <v-text-field
+          v-model="newTokenSymbol"
+          :rules="mandatoryRule"
+          label="Token symbol"
+          placeholder="Input the token symbol to uses to display token amounts"
+          required />
         <v-slider v-model="newTokenInitialCoins"
-                  :label="`Token coins supply: ${newTokenInitialCoins}`"
+                  :label="`Initial token coins supply: ${newTokenInitialCoins}`"
                   :min="0"
                   :max="1000000"
                   :step="10000"

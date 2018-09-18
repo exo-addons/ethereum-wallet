@@ -4,18 +4,35 @@
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">Receive funds</span>
+        <span class="PopupTitle popupTitle">Request funds</span>
       </div>
       <div v-if="error && !loading" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}
       </div>
-      <v-card-text class="text-xs-center ">
-        <v-combobox
-          v-model="selectedOption"
-          :items="accountsList"
-          label="Select account" />
-        <auto-complete v-if="selectedAccount" ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event" />
-        <v-text-field v-if="selectedAccount" v-model.number="amount" :disabled="loading" name="amount" label="Amount" />
+      <v-card-text>
+        <v-flex id="requestFundsAccount">
+          <v-combobox
+            v-model="selectedOption"
+            :items="accountsList"
+            attach="#requestFundsAccount"
+            label="Select currency"
+            placeholder="Select a currency to use for requesting funds" />
+        </v-flex>
+        <auto-complete
+          v-if="selectedAccount"
+          ref="autocomplete"
+          :disabled="loading"
+          input-label="Recipient"
+          input-placeholder="Select a recipient for your funds request"
+          @item-selected="recipient = $event" />
+        <v-text-field
+          v-if="selectedAccount"
+          v-model.number="amount"
+          :disabled="loading"
+          name="amount"
+          label="Amount"
+          placeholder="Select a suggested amount to request funds"
+          class="mt-4" />
         <v-textarea
           v-if="selectedAccount"
           id="requestMessage"
@@ -23,6 +40,7 @@
           :disabled="loading"
           name="requestMessage"
           label="Request message (Optional)"
+          placeholder="You can input a custom message to send with your request"
           class="mt-4"
           rows="7"
           flat

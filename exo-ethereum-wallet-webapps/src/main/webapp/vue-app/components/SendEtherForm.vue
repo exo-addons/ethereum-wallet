@@ -1,12 +1,24 @@
 <template>
   <v-card>
-    <v-card-text>
+    <v-card-text class="pt-0">
       <div v-if="error && !loading" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-form>
-        <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address" />
-        <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount" />
+        <auto-complete
+          ref="autocomplete"
+          :disabled="loading"
+          input-label="Recipient"
+          input-placeholder="Select a user, a space or an address to send to"
+          title="Select a user, a space or an address to send to"
+          @item-selected="recipient = $event.address" />
+        <v-text-field
+          v-model.number="amount"
+          :disabled="loading"
+          name="amount"
+          label="Amount"
+          placeholder="Select an amount of ethers to send"
+          class="mt-4" />
       </v-form>
       <qr-code-modal :from="account"
                      :to="recipient"
@@ -20,6 +32,7 @@
       <v-spacer />
       <button :disabled="!account || loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendEther">Send</button>
       <button :disabled="!account || loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <v-spacer />
     </v-card-actions>
   </v-card>
 </template>

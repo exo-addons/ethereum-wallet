@@ -23,39 +23,41 @@
           <div v-if="errorMessage" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ errorMessage }}
           </div>
-
-          <label v-if="importWalletDialog && walletAddress" for="walletPrivateKey">This is the private key of account {{ walletAddress }}</label>
-          <label v-else-if="importWalletDialog" for="walletPrivateKey">This is the private key to import a new wallet address</label>
-          <v-text-field
-            v-if="importWalletDialog"
-            v-model="walletPrivateKey"
-            :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
-            :rules="[rules.priv]"
-            :type="walletPrivateKeyShow ? 'text' : 'password'"
-            name="walletPrivateKey"
-            label="Wallet private key"
-            @click:append="walletPrivateKeyShow = !walletPrivateKeyShow"
-          />
-
-          <v-switch v-model="autoGenerateWalletPassword" label="Generate an automatic password" />
-          <div v-if="autoGenerateWalletPassword" class="alert alert-warning v-content">
-            <i class="uiIconWarning"></i>
-            It is highly recommended to use a personal password to avoid security issues.
-            If you choose to automatically generate a password, it will be stored in local browser to be able to access your wallet.
-          </div>
-
-          <label v-if="!autoGenerateWalletPassword" for="walletPassword">This password will be used to encrypt your keys in current browser. You should keep it in a safe place.</label>
-          <v-text-field
-            v-if="!autoGenerateWalletPassword"
-            v-model="walletPassword"
-            :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
-            :rules="[rules.min]"
-            :type="walletPasswordShow ? 'text' : 'password'"
-            name="walletPassword"
-            label="Wallet Password"
-            counter
-            @click:append="walletPasswordShow = !walletPasswordShow"
-          />
+          <v-form>
+            <label v-if="importWalletDialog && walletAddress" for="walletPrivateKey">This is the private key of account {{ walletAddress }}</label>
+            <label v-else-if="importWalletDialog" for="walletPrivateKey">This is the private key to import a new wallet address</label>
+            <v-text-field
+              v-if="importWalletDialog"
+              v-model="walletPrivateKey"
+              :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
+              :rules="[rules.priv]"
+              :type="walletPrivateKeyShow ? 'text' : 'password'"
+              name="walletPrivateKey"
+              label="Wallet private key"
+              placeholder="Input your wallet private key"
+              @click:append="walletPrivateKeyShow = !walletPrivateKeyShow"
+            />
+  
+            <v-switch v-model="autoGenerateWalletPassword" label="Generate an automatic password" />
+            <div v-if="autoGenerateWalletPassword" class="alert alert-warning v-content">
+              <i class="uiIconWarning"></i>
+              It is highly recommended to use a personal password to avoid security issues.
+              If you choose to automatically generate a password, it will be stored in local browser to be able to access your wallet.
+            </div>
+  
+            <label v-if="!autoGenerateWalletPassword" for="walletPassword">This password will be used to encrypt your keys in current browser. You should keep it in a safe place.</label>
+            <v-text-field
+              v-if="!autoGenerateWalletPassword"
+              v-model="walletPassword"
+              :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+              :rules="[rules.min]"
+              :type="walletPasswordShow ? 'text' : 'password'"
+              name="walletPassword"
+              label="Wallet Password"
+              counter
+              @click:append="walletPasswordShow = !walletPasswordShow"
+            />
+          </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />

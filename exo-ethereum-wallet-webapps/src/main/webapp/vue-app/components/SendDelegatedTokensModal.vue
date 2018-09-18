@@ -20,7 +20,7 @@
         <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
         <v-spacer />
       </v-card-title>
-      <v-card-text>
+      <v-card-text class="pt-0">
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
         </div>
@@ -28,15 +28,33 @@
           <i class="uiIconWarning"></i>{{ warning }}
         </div>
         <v-form>
-          <auto-complete ref="autocompleteFrom" :disabled="loading" input-label="From" @item-selected="from = $event.address"></auto-complete>
-          <auto-complete ref="autocompleteRecipient" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
-          <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount"></v-text-field>
+          <auto-complete
+            ref="autocompleteFrom"
+            :disabled="loading"
+            input-label="From"
+            input-placeholder="Select from which wallet you received a delegated tokens"
+            @item-selected="from = $event.address" />
+          <auto-complete
+            ref="autocompleteRecipient"
+            :disabled="loading"
+            class="mt-4"
+            input-label="Recipient"
+            input-placeholder="Select a recipient"
+            @item-selected="recipient = $event.address" />
+          <v-text-field
+            v-model.number="amount"
+            :disabled="loading"
+            name="amount"
+            label="Amount"
+            placeholder="Select an amount to send to recipient"
+            class="mt-4" />
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
         <button :disabled="loading || !recipient || !amount || !from" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
         <button :disabled="loading || !recipient || !amount || !from" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+        <v-spacer />
       </v-card-actions>
     </v-card>
   </v-dialog>

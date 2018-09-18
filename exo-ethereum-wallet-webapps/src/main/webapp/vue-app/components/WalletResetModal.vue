@@ -32,10 +32,11 @@
             v-model="walletPassword"
             :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
             :rules="[rules.min]"
-            :type="walletPasswordShow ? 'text' : 'password'"
+            :type="walletPasswordShow ? 'text' : 'current-password'"
             :disabled="loading"
             name="walletPassword"
             label="Current wallet password"
+            placeholder="Input your current wallet password"
             counter
             @click:append="walletPasswordShow = !walletPasswordShow"
           />
@@ -44,10 +45,11 @@
             v-model="newWalletPassword"
             :append-icon="newWalletPasswordShow ? 'visibility_off' : 'visibility'"
             :rules="[rules.min]"
-            :type="newWalletPasswordShow ? 'text' : 'password'"
+            :type="newWalletPasswordShow ? 'text' : 'new-password'"
             :disabled="loading"
             name="newWalletPassword"
             label="New wallet password"
+            placeholder="Input your new wallet password"
             counter
             @click:append="newWalletPasswordShow = !newWalletPasswordShow"
           />

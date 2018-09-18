@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-card-text>
+    <v-card-text class="pt-0">
       <div v-if="error && !loading" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}
       </div>
@@ -8,8 +8,19 @@
         <i class="uiIconWarning"></i>{{ warning }}
       </div>
       <v-form>
-        <auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" @item-selected="recipient = $event.address"></auto-complete>
-        <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount"></v-text-field>
+        <auto-complete
+          ref="autocomplete"
+          :disabled="loading"
+          input-label="Recipient"
+          input-placeholder="Select a user, a space or an address to send to"
+          @item-selected="recipient = $event.address" />
+        <v-text-field
+          v-model.number="amount"
+          :disabled="loading"
+          name="amount"
+          label="Amount"
+          placeholder="Select an amount of tokens to send"
+          class="mt-4" />
       </v-form>
       <qr-code-modal :to="recipient"
                      :from="account"
@@ -29,6 +40,7 @@
       <v-spacer />
       <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
       <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <v-spacer />
     </v-card-actions>
   </v-card>
 </template>

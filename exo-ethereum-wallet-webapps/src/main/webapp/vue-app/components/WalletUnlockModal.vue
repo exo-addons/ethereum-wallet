@@ -20,19 +20,21 @@
           <i class="uiIconInfo"></i>
           You have chosen to not remember your password, thus you will have to unlock your wallet each time you want to make a transaction with your wallet.
         </div>
-    
-        <v-text-field
-          v-model="walletPassword"
-          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
-          :rules="[rules.min]"
-          :type="walletPasswordShow ? 'text' : 'password'"
-          name="walletPassword"
-          label="Wallet Password"
-          counter
-          @click:append="walletPasswordShow = !walletPasswordShow"
-        />
-    
-        <v-switch v-model="rememberPassword" label="Remember my password" />
+        <v-form>
+          <v-text-field
+            v-model="walletPassword"
+            :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+            :rules="[rules.min]"
+            :type="walletPasswordShow ? 'text' : 'password'"
+            name="walletPassword"
+            label="Wallet Password"
+            placeholder="Input your wallet password"
+            counter
+            @click:append="walletPasswordShow = !walletPasswordShow"
+          />
+      
+          <v-switch v-model="rememberPassword" label="Remember my password" />
+        </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
