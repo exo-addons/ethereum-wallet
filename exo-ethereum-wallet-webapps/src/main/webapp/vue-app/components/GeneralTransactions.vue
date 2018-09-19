@@ -1,6 +1,12 @@
 <template>
   <v-flex>
     <v-card class="card--flex-toolbar">
+      <div v-if="error && !loading" class="alert alert-error">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
+
+      <v-progress-circular v-show="loading" indeterminate color="primary" />
+
       <div v-if="!finishedLoading">Loading recent Transactions...</div>
       <v-progress-circular
         v-if="!finishedLoading"
@@ -12,6 +18,7 @@
         buffer>
         {{ loadingPercentage }}%
       </v-progress-circular>
+
       <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
           <v-list-tile :key="item.hash" avatar>
@@ -32,13 +39,8 @@
               </v-list-tile-title>
               <v-list-tile-sub-title>
                 <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
-                <span>{{ item.amount }} ether</span>
-                <span v-if="item.amountFiat"> / {{ item.amountFiat }} {{ fiatSymbol }}</span>
-                <span v-if="item.fee">
-                  ( Fee: {{ item.fee }} ether
-                  <span v-if="item.feeFiat">/ {{ item.feeFiat }} {{ fiatSymbol }}</span>
-                  )
-                </span>
+                <span>{{ Number(item.amount) + Number(item.fee) }} ether</span>
+                <span v-if="item.amountFiat"> / {{ Number(item.amountFiat) + Number(item.feeFiat) }} {{ fiatSymbol }}</span>
               </v-list-tile-sub-title>
             </v-list-tile-content>
             <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
@@ -57,7 +59,7 @@
         </v-chip>
       </v-flex>
       <div class="">
-        <a v-if="!loading && finishedLoading" href="javascript:void(0);" @click="loadMore">Load more</a>
+        <a v-if="finishedLoading" href="javascript:void(0);" @click="loadMore">Load more</a>
       </div>
     </v-card>
   </v-flex>
@@ -91,6 +93,12 @@ export default {
       default: function() {
         return null;
       }
+    },
+    error: {
+      type: String,
+      default: function() {
+        return null;
+      }
     }
   },
   data () {
@@ -100,6 +108,7 @@ export default {
       refreshIndex: 1,
       newestBlockNumber: 0,
       oldestBlockNumber: 0,
+      loading: false,
       finishedLoading: false,
       transactionsPerPage: 10,
       maxBlocksToLoad: 1000,
@@ -131,11 +140,12 @@ export default {
   watch: {
     account(account) {
       if (account) {
-        this.$emit("loading");
+        this.loading = true;
         this.init()
-          .then(() => this.$emit("end-loading"))
+          .then(() => this.loading = false)
           .catch(error => {
             console.debug("account field change event - error", error);
+            this.loading = false;
             this.$emit("error", `Account loading error: ${error}`);
           });
       } 
@@ -152,6 +162,7 @@ export default {
         .catch(error => {
           console.debug("init method - error", error);
           this.finishedLoading = true;
+          this.loading = false;
           this.$emit("error", `Account initialization error: ${error}`);
         });
     }
@@ -164,6 +175,8 @@ export default {
       this.transactions = {};
       this.loadedBlocks = 0;
       this.stopLoading = false;
+      this.finishedLoading = true;
+      this.loading = true;
 
       // Get transactions to latest block with maxBlocks to load
       return loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
@@ -178,6 +191,8 @@ export default {
             throw new Error("stopLoading");
           }
           this.forceUpdateList();
+          this.loading = false;
+          this.finishedLoading = false;
         }))
         .then(() => loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
           if (this.stopLoading) {
@@ -190,8 +205,11 @@ export default {
           this.forceUpdateList();
           this.newestBlockNumber = loadedBlocksDetails.toBlock;
           this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
+          this.loading = false;
         })
         .catch(e => {
+          this.loading = false;
+          this.finishedLoading = true;
           if (!this.stopLoading) {
             console.debug("loadTransactions - method error", e);
             this.$emit("error", `${e}`);
@@ -207,12 +225,14 @@ export default {
       })
         .then(loadedBlocksDetails => {
           this.finishedLoading = true;
+          this.loading = false;
           this.forceUpdateList();
           this.newestBlockNumber = loadedBlocksDetails.toBlock;
           this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
         })
         .catch(e => {
           this.finishedLoading = true;
+          this.loading = false;
           console.debug("loadTransactions - method error", e);
           this.$emit("error", `${e}`);
         });

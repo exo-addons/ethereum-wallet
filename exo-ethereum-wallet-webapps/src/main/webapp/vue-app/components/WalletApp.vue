@@ -85,7 +85,7 @@
                 @error="loading = false; errorMessage = $event" />
   
               <wallet-summary
-                v-if="!loading && walletAddress"
+                v-if="walletAddress && refreshIndex && accountsDetails[walletAddress]"
                 ref="walletSummary"
                 :is-maximized="isMaximized"
                 :is-space="isSpace"

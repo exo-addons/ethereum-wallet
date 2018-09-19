@@ -44,7 +44,7 @@
         :account="walletAddress"
         :contract="contractDetail.contract"
         @sent="newTransactionPending($event)"
-        @error="loading = false; error = $event" />
+        @error="error = $event" />
       <delegate-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
@@ -52,7 +52,7 @@
         :ether-balance="contractDetail.etherBalance"
         :contract="contractDetail.contract"
         @sent="newTransactionPending($event)"
-        @error="loading = false; error = $event" />
+        @error="error = $event" />
       <send-delegated-tokens-modal
         v-if="contractDetail.isContract"
         :disabled="!hasDelegatedTokens || contractDetail.balance === 0 || contractDetail.etherBalance === 0"
@@ -60,7 +60,7 @@
         :contract="contractDetail.contract"
         :has-delegated-tokens="hasDelegatedTokens"
         @sent="newTransactionPending($event)"
-        @error="loading = false; error = $event" />
+        @error="error = $event" />
 
       <!-- Ether account actions -->
       <send-ether-modal
@@ -68,14 +68,8 @@
         :account="walletAddress"
         :balance="contractDetail.balance"
         @sent="newTransactionPending($event)"
-        @error="loading = false; error = $event" />
+        @error="error = $event" />
     </div>
-
-    <div v-if="error && !loading" class="alert alert-error">
-      <i class="uiIconError"></i>{{ error }}
-    </div>
-
-    <v-progress-circular v-show="loading" indeterminate color="primary" />
 
     <token-transactions
       v-if="contractDetail.isContract"
@@ -83,20 +77,20 @@
       ref="contractTransactions"
       :network-id="networkId"
       :account="walletAddress"
-      :contract="contractDetail.contract"
+      :contract-detail="contractDetail"
+      :fiat-symbol="fiatSymbol"
+      :error="error"
       @has-delegated-tokens="hasDelegatedTokens = true"
-      @loading="loading = true"
-      @end-loading="loading = false"
-      @error="loading = false; error = $event"
+      @error="error = $event"
       @refresh-balance="refreshBalance" />
     <general-transactions
       v-else id="generalTransactionsContent"
       ref="generalTransactions"
       :network-id="networkId"
       :account="walletAddress"
-      @loading="loading = true"
-      @end-loading="loading = false"
-      @error="loading = false; error = $event"
+      :fiat-symbol="fiatSymbol"
+      :error="error"
+      @error="error = $event"
       @refresh-balance="refreshBalance" />
   </v-flex>
 </template>
@@ -158,7 +152,6 @@ export default {
   },
   data() {
     return {
-      loading: false,
       // Avoid refreshing list and balance twice
       refreshing: false,
       error: null,
@@ -168,11 +161,6 @@ export default {
   watch: {
     contractDetail() {
       this.error = null;
-    },
-    loading() {
-      if(this.loading) {
-        this.error = null;
-      }
     }
   },
   methods: {

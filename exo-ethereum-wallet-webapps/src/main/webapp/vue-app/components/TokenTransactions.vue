@@ -1,40 +1,46 @@
 <template>
-  <v-flex v-if="Object.keys(transactions).length">
-    <v-list two-line class="pt-0 pb-0">
-      <template v-for="(item, index) in sortedTransaction">
-        <v-list-tile :key="item.hash" avatar>
-          <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
-          <v-list-tile-avatar v-else>
-            <v-icon :color="item.color ? item.color: 'black'">{{ item.icon }}</v-icon>
-          </v-list-tile-avatar>
-          <v-list-tile-content>
-            <v-list-tile-title>
-              <span>{{ item.titlePrefix }}</span>
-              <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
-                <v-avatar size="23px !important">
-                  <img :src="item.avatar">
-                </v-avatar>
-                <span v-html="item.displayName"></span>
-              </v-chip>
-              <wallet-address v-else :value="item.displayName" />
-            </v-list-tile-title>
-            <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
-          </v-list-tile-content>
-          <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
-            <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
-            <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
-              <v-icon color="primary">info</v-icon>
-            </a>
-          </v-list-tile-action>
-        </v-list-tile>
-        <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
-      </template>
-    </v-list>
-  </v-flex>
-  <v-flex v-else-if="!loading" class="text-xs-center">
-    <v-chip color="white">
-      <span>No transactions</span>
-    </v-chip>
+  <v-flex>
+    <v-card class="card--flex-toolbar">
+      <div v-if="error && !loading" class="alert alert-error">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
+    
+      <v-progress-circular v-show="loading" indeterminate color="primary" />
+
+      <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
+        <template v-for="(item, index) in sortedTransaction">
+          <v-list-tile :key="item.hash" avatar>
+            <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
+            <v-list-tile-avatar v-else>
+              <v-icon :color="item.color ? item.color: 'black'">{{ item.icon }}</v-icon>
+            </v-list-tile-avatar>
+            <v-list-tile-content>
+              <v-list-tile-title>
+                <span>{{ item.titlePrefix }}</span>
+                <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
+                  <v-avatar size="23px !important">
+                    <img :src="item.avatar">
+                  </v-avatar>
+                  <span v-html="item.displayName"></span>
+                </v-chip>
+                <wallet-address v-else :value="item.displayName" />
+              </v-list-tile-title>
+              <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
+            </v-list-tile-content>
+            <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
+              <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
+              <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
+                <v-icon color="primary">info</v-icon>
+              </a>
+            </v-list-tile-action>
+          </v-list-tile>
+          <v-divider v-if="index + 1 < sortedTransaction.length" :key="index"></v-divider>
+        </template>
+      </v-list>
+      <v-chip v-else-if="!loading" color="white">
+        <span>No transactions</span>
+      </v-chip>
+    </v-card>
   </v-flex>
 </template>
 
@@ -62,10 +68,16 @@ export default {
         return null;
       }
     },
-    contract: {
+    contractDetail: {
       type: Object,
       default: function() {
         return {};
+      }
+    },
+    error: {
+      type: String,
+      default: function() {
+        return null;
       }
     }
   },
@@ -76,7 +88,7 @@ export default {
       latestDelegatedBlockNumber: 0,
       transactions: {},
       etherscanLink: null,
-      loading: true
+      loading: false
     };
   },
   computed: {
@@ -95,11 +107,14 @@ export default {
           sortedTransactions[key] = transactions[key];
         });
       return sortedTransactions;
+    },
+    contractAddress() {
+      return this.contractDetail && this.contractDetail.address && this.contractDetail.address.toLowerCase();
     }
   },
   watch: {
-    contract(contract) {
-      if (contract) {
+    contractDetail() {
+      if (this.contractDetail && this.contractDetail.contract) {
         this.init();
       }
     },
@@ -108,35 +123,34 @@ export default {
     }
   },
   created() {
-    if (this.contract) {
-      this.init();
-    }
+    this.init();
     if (!this.etherscanLink) {
       this.etherscanLink = getEtherscanlink(this.networkId);
     }
   },
   methods: {
     init() {
-      if (this.contract) {
-        this.refreshNewwestTransactions();
+      if (this.contractDetail && this.contractDetail.contract) {
+        this.loading = true;
+        return this.refreshNewwestTransactions();
       }
     },
     refreshNewwestTransactions() {
       this.loading = true;
-      this.$emit("loading");
       return this.refreshPendingTransactions()
         .then(() => this.refreshTransferList())
         .then(() => this.refreshApprovalList())
         .finally(() => {
-          this.$emit("end-loading");
           this.loading = false;
         });
     },
     refreshPendingTransactions() {
-      const pendingTransactions = getPendingTransactionFromStorage(this.networkId, this.account, this.contract._address.toLowerCase());
+      const pendingTransactions = getPendingTransactionFromStorage(this.networkId, this.account, this.contractAddress);
       if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
         return Promise.resolve({});
       }
+
+      this.loading = true;
       return Promise.resolve(pendingTransactions)
         .then(pendingTransactions => {
           Object.keys(pendingTransactions).forEach(transactionHash => {
@@ -152,89 +166,117 @@ export default {
               transaction.icon,
               transaction.pending,
               () => {
+                this.loading = false;
                 this.$emit('refresh-balance');
               });
           });
           this.$forceUpdate();
           return pendingTransactions;
+        })
+        .finally(() => {
+          this.loading = false;
         });
     },
     refreshTransferList() {
-      return this.contract.getPastEvents("Transfer", {
+      this.loading = true;
+      return this.contractDetail.contract.getPastEvents("Transfer", {
         fromBlock: this.latestBlockNumber + 1,
         toBlock: 'latest'
-      }).then((events) => {
-        if (events && events.length) {
-          for (let i = 0; i < events.length; i++) {
-            const event = events[i];
-
-            this.latestBlockNumber = Math.max(this.latestBlockNumber, event.blockNumber);
-            if (event.returnValues && event.returnValues._from && event.returnValues._to) {
-              const from = event.returnValues._from.toLowerCase();
-              const to = event.returnValues._to.toLowerCase();
-
-              if (to === this.account || from === this.account) {
-                window.localWeb3.eth.getBlock(event.blockNumber, false)
-                  .then(block => {
-                    this.addTransactionToList(
-                      event.returnValues._from.toLowerCase(),
-                      event.returnValues._to.toLowerCase(),
-                      parseFloat(event.returnValues._value),
-                      event.transactionHash,
-                      block ? block.timestamp * 1000 : null,
-                      'Received from',
-                      'Sent to',
-                      'fa-exchange-alt');
-                  });
+      })
+        .then((events) => {
+          if (events && events.length) {
+            const promises = [];
+  
+            for (let i = 0; i < events.length; i++) {
+              const event = events[i];
+  
+              this.latestBlockNumber = Math.max(this.latestBlockNumber, event.blockNumber);
+              if (event.returnValues && event.returnValues._from && event.returnValues._to) {
+                const from = event.returnValues._from.toLowerCase();
+                const to = event.returnValues._to.toLowerCase();
+  
+                if (to === this.account || from === this.account) {
+                  const loadBlockPromise = window.localWeb3.eth.getBlock(event.blockNumber, false)
+                    .then(block => {
+                      this.addTransactionToList(
+                        event.returnValues._from.toLowerCase(),
+                        event.returnValues._to.toLowerCase(),
+                        parseFloat(event.returnValues._value),
+                        event.transactionHash,
+                        block ? block.timestamp * 1000 : null,
+                        'Received from',
+                        'Sent to',
+                        'fa-exchange-alt');
+                    });
+                  promises.push(loadBlockPromise);
+                }
               }
             }
+  
+            return Promise.all(promises);
           }
-        }
-        return true;
-      }).catch(e => {
-        this.$emit("error", `Error loading contract transactions: ${e}`);
-        return true;
-      });
+          return true;
+        })
+        .catch(e => {
+          this.$emit("error", `Error loading contract transactions: ${e}`);
+          return true;
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     refreshApprovalList() {
-      return this.contract.getPastEvents("Approval", {
+      this.loading = true;
+
+      return this.contractDetail.contract.getPastEvents("Approval", {
         fromBlock: this.latestDelegatedBlockNumber + 1,
         toBlock: 'latest'
-      }).then((events) => {
-        if (events && events.length) {
-          for (let i = 0; i < events.length; i++) {
-            const event = events[i];
-
-            this.latestDelegatedBlockNumber = Math.max(this.latestDelegatedBlockNumber, event.blockNumber);
-            if (event.returnValues && event.returnValues._spender && event.returnValues._owner) {
-              const from = event.returnValues._owner.toLowerCase();
-              const to = event.returnValues._spender.toLowerCase();
-              if (to === this.account || from === this.account) {
-                window.localWeb3.eth.getBlock(event.blockNumber, false)
-                  .then(block => {
-                    const transactionDetails = this.addTransactionToList(
-                      event.returnValues._owner.toLowerCase(),
-                      event.returnValues._spender.toLowerCase(),
-                      parseFloat(event.returnValues._value),
-                      event.transactionHash,
-                      block ? block.timestamp * 1000 : null,
-                      'Delegated from',
-                      'Delegated to',
-                      'fa-users');
-                    if (transactionDetails && transactionDetails.isReceiver) {
-                      this.$emit('has-delegated-tokens');
-                    }
-                  });
+      })
+        .then((events) => {
+          if (events && events.length) {
+            const promises = [];
+  
+            for (let i = 0; i < events.length; i++) {
+              const event = events[i];
+  
+              this.latestDelegatedBlockNumber = Math.max(this.latestDelegatedBlockNumber, event.blockNumber);
+              if (event.returnValues && event.returnValues._spender && event.returnValues._owner) {
+                const from = event.returnValues._owner.toLowerCase();
+                const to = event.returnValues._spender.toLowerCase();
+                if (to === this.account || from === this.account) {
+                  const loadBlockPromise = window.localWeb3.eth.getBlock(event.blockNumber, false)
+                    .then(block => {
+                      const transactionDetails = this.addTransactionToList(
+                        event.returnValues._owner.toLowerCase(),
+                        event.returnValues._spender.toLowerCase(),
+                        parseFloat(event.returnValues._value),
+                        event.transactionHash,
+                        block ? block.timestamp * 1000 : null,
+                        'Delegated from',
+                        'Delegated to',
+                        'fa-users');
+                      if (transactionDetails && transactionDetails.isReceiver) {
+                        this.$emit('has-delegated-tokens');
+                      }
+                    });
+  
+                  promises.push(loadBlockPromise);
+                }
               }
             }
+  
+            return Promise.all(promises);
           }
-        }
-        return true;
-      }).catch(e => {
-        console.debug("Error occurred while retrieving contract transactions", e);
-        this.$emit("error", `Error loading contract transactions: ${e}`);
-        return true;
-      });
+          return true;
+        })
+        .catch(e => {
+          console.debug("Error occurred while retrieving contract transactions", e);
+          this.$emit("error", `Error loading contract transactions: ${e}`);
+          return true;
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     addDelegateTransaction(transaction) {
       this.addTransactionToList(
@@ -302,7 +344,7 @@ export default {
           return transactionDetails;
         });
       if (pending) {
-        addPendingTransactionToStorage(this.networkId, this.account, this.contract._address.toLowerCase(), {
+        addPendingTransactionToStorage(this.networkId, this.account, this.contractAddress, {
           from: from,
           to: to,
           value: amount,
@@ -316,7 +358,7 @@ export default {
 
         watchTransactionStatus(transactionHash, (receipt, block) => {
           this.addTransactionToList(from, to, amount, transactionHash, block.timestamp * 1000, labelFrom, labelTo, icon, false);
-          removePendingTransactionFromStorage(this.networkId, this.account, this.contract._address.toLowerCase(), transactionHash);
+          removePendingTransactionFromStorage(this.networkId, this.account, this.contractAddress, transactionHash);
           if (pendingTransactionSuccess) {
             pendingTransactionSuccess();
           }

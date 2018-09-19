@@ -47,10 +47,14 @@
 
       .accountItemContent {
         height: calc(100% - 110px);
-        cursor: pointer;
       }
     }
   }
+
+  .clickable {
+    cursor: pointer;
+  }
+
   #accountDetail {
     .v-list__tile__title {
       height: 29px;
@@ -297,11 +301,13 @@
 
   #contractTransactionsContent {
     max-height: ~"calc(100vh - 192px)";
+    height: ~"calc(100vh - 192px)";
     overflow: auto;
   }
 
   #generalTransactionsContent {
     max-height: ~"calc(100vh - 192px)";
+    height: ~"calc(100vh - 192px)";
     overflow: auto;
   }
 

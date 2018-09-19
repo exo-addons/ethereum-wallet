@@ -124,7 +124,7 @@ export function addTransaction(networkId, account, transactions, transaction, re
     name: null,
     status: status,
     color: isReceiver ? 'green' : 'red',
-    icon: isFeeTransaction ? 'fa-undo' : 'fa-exchange-alt',
+    icon: isFeeTransaction ? 'fa-undo' : (isReceiver ? 'fa-arrow-down' : 'fa-arrow-up'),
     amount: amount,
     amountFiat: amountFiat,
     gas: transaction.gas,
@@ -171,7 +171,7 @@ export function addTransaction(networkId, account, transactions, transaction, re
   getContractFromStorage(account, displayAddress)
     .then(contractDetails => {
       if (contractDetails) {
-        transactionDetails.displayName = `Contract ${contractDetails.symbol}`;
+        transactionDetails.displayName = `Contract ${contractDetails.name}`;
         transactionDetails.isContractName = true;
         transactionDetails.name = contractDetails.address;
         transactionDetails.avatar = contractDetails.avatar;

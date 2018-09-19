@@ -59,11 +59,11 @@
               height="210px">
 
               <v-card-title dark class="primary">
-                <v-icon dark>{{ item.icon }}</v-icon>
+                <v-icon class="clickable" dark @click="$emit('account-details-selected', item)">{{ item.icon }}</v-icon>
 
-                <v-spacer></v-spacer>
-                <span class="headline">{{ item.title }}</span>
-                <v-spacer></v-spacer>
+                <v-spacer />
+                <v-card-sub-title class="headline clickable" @click="$emit('account-details-selected', item)">{{ item.title }}</v-card-sub-title>
+                <v-spacer />
 
                 <v-menu :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
                   <v-btn slot="activator" dark icon>
@@ -99,7 +99,7 @@
                   </v-list>
                 </v-menu>
               </v-card-title>
-              <v-card-title class="accountItemContent" @click="$emit('account-details-selected', item)">
+              <v-card-title class="accountItemContent clickable" @click="$emit('account-details-selected', item)">
                 <v-spacer></v-spacer>
                 <div class="text-xs-center">
                   <h3 v-if="item.error" class="headline mb-0">{{ item.error }}</h3>
