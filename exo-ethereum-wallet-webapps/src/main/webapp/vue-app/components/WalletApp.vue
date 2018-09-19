@@ -26,7 +26,7 @@
                                    @close="showSettingsModal = false"
                                    @settings-changed="init()" />
             </v-toolbar>
-  
+
             <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
               <div class="alert alert-warning">
                 <i class="uiIconWarning"></i>
@@ -35,7 +35,7 @@
                 <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
               </div>
             </v-toolbar>
-  
+
             <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
               <div class="alert alert-info">
                 <i class="uiIconInfo"></i>
@@ -120,8 +120,25 @@
             </v-card>
   
             <!-- The selected account detail -->
-            <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" :permanent="seeAccountDetailsPermanent" fixed temporary right width="700" max-width="100vw">
-              <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :is-read-only="isReadOnly" :network-id="networkId" :wallet-address="walletAddress" :contract-detail="selectedAccount" @back="back"/>
+            <v-navigation-drawer
+              id="accountDetailsDrawer"
+              v-model="seeAccountDetails"
+              fixed
+              temporary
+              right
+              stateless
+              width="700"
+              max-width="100vw">
+
+              <account-detail
+                ref="accountDetail"
+                :fiat-symbol="fiatSymbol"
+                :is-read-only="isReadOnly"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :contract-detail="selectedAccount"
+                @back="back()"/>
+
             </v-navigation-drawer>
           </v-card>
         </v-flex>
@@ -260,10 +277,16 @@ export default {
       return;
     }
 
+    const thiss = this;
+    $(document).on("keydown", event => {
+      if (event.which === 27 && thiss.seeAccountDetailsPermanent && !$('.v-dialog:visible').length) {
+        thiss.back();
+      }
+    });
+
     // Init application
     this.init()
       .then((result, error) => {
-        const thiss = this;
         // Refresh application when Metamask address changes
         this.watchMetamaskAccount();
         window.addEventListener('load', function() {
@@ -472,9 +495,17 @@ export default {
         this.selectedAccount = accountDetails;
       }
       this.seeAccountDetails = true;
+
+      this.$nextTick(() => {
+        const thiss = this;
+        $('.v-overlay').on('click', event => {
+          thiss.back();
+        });
+      });
     },
     back() {
       this.seeAccountDetails = false;
+      this.seeAccountDetailsPermanent = false;
       this.selectedAccount = null;
     },
     maximize() {

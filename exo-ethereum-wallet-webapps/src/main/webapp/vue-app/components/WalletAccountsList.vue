@@ -57,14 +57,14 @@
               width="400px"
               max-width="100%"
               height="210px">
-  
+
               <v-card-title dark class="primary">
                 <v-icon dark>{{ item.icon }}</v-icon>
 
                 <v-spacer></v-spacer>
                 <span class="headline">{{ item.title }}</span>
                 <v-spacer></v-spacer>
-          
+
                 <v-menu :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
                   <v-btn slot="activator" dark icon>
                     <v-icon>more_vert</v-icon>
