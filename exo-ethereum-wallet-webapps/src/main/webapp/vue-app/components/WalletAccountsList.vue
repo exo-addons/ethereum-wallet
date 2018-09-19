@@ -59,13 +59,13 @@
               height="210px">
 
               <v-card-title dark class="primary">
-                <v-icon class="clickable" dark @click="$emit('account-details-selected', item)">{{ item.icon }}</v-icon>
+                <v-icon :class="!item.error && 'clickable'" dark @click="!item.error && $emit('account-details-selected', item)">{{ item.icon }}</v-icon>
 
                 <v-spacer />
-                <v-card-sub-title class="headline clickable" @click="$emit('account-details-selected', item)">{{ item.title }}</v-card-sub-title>
-                <v-spacer />
+                <v-card-sub-title :class="item.error ? 'errorHeadline' : 'headline clickable'" @click="!item.error && $emit('account-details-selected', item)">{{ item.title }}</v-card-sub-title>
+                <v-spacer v-if="!item.error" />
 
-                <v-menu :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
+                <v-menu v-if="!item.error" :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
                   <v-btn slot="activator" dark icon>
                     <v-icon>more_vert</v-icon>
                   </v-btn>
@@ -99,15 +99,15 @@
                   </v-list>
                 </v-menu>
               </v-card-title>
-              <v-card-title class="accountItemContent clickable" @click="$emit('account-details-selected', item)">
+              <v-card-title :class="!item.error && 'clickable'" class="accountItemContent" @click="!item.error && $emit('account-details-selected', item)">
                 <v-spacer></v-spacer>
                 <div class="text-xs-center">
-                  <h3 v-if="item.error" class="headline mb-0">{{ item.error }}</h3>
+                  <h4 v-if="item.error" class="mb-0">{{ item.error }}</h4>
                   <h3 v-if="!item.error && (item.balanceFiat === 0 || item.balanceFiat)" class="headline mb-0">{{ `${item.balanceFiat} ${fiatSymbol}` }}</h3>
                   <h4 v-if="!item.error && (item.balance === 0 || item.balance)">{{ `${item.balance} ${item.symbol}` }}</h4>
                 </div>
-                <v-spacer></v-spacer>
-                <v-btn icon class="mr-2" @click="$emit('account-details-selected', item)">
+                <v-spacer v-if="!item.error" />
+                <v-btn v-if="!item.error" icon class="mr-2" @click="!item.error && $emit('account-details-selected', item)">
                   <v-icon>fa-angle-right</v-icon>
                 </v-btn>
               </v-card-title>

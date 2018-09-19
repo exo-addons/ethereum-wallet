@@ -27,9 +27,9 @@
               </v-list-tile-title>
               <v-list-tile-sub-title>{{ item.amount }}</v-list-tile-sub-title>
             </v-list-tile-content>
-            <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
+            <v-list-tile-action v-if="(item.date && !item.pending) || transactionEtherscanLink" class="transactionDetailActions" title="Open on etherscan">
               <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
-              <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
+              <a v-if="transactionEtherscanLink" :href="`${transactionEtherscanLink}${item.hash}`" target="_blank">
                 <v-icon color="primary">info</v-icon>
               </a>
             </v-list-tile-action>
@@ -48,7 +48,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import {searchFullName} from '../WalletAddressRegistry.js';
-import {watchTransactionStatus, getEtherscanlink} from '../WalletUtils.js';
+import {watchTransactionStatus, getTransactionEtherscanlink} from '../WalletUtils.js';
 import {addPendingTransactionToStorage, removePendingTransactionFromStorage, getPendingTransactionFromStorage} from '../WalletToken.js';
 
 export default {
@@ -87,7 +87,7 @@ export default {
       latestBlockNumber: 0,
       latestDelegatedBlockNumber: 0,
       transactions: {},
-      etherscanLink: null,
+      transactionEtherscanLink: null,
       loading: false
     };
   },
@@ -119,13 +119,13 @@ export default {
       }
     },
     networkId() {
-      this.etherscanLink = getEtherscanlink(this.networkId);
+      this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
     }
   },
   created() {
     this.init();
-    if (!this.etherscanLink) {
-      this.etherscanLink = getEtherscanlink(this.networkId);
+    if (!this.transactionEtherscanLink) {
+      this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
     }
   },
   methods: {
@@ -183,7 +183,7 @@ export default {
         fromBlock: this.latestBlockNumber + 1,
         toBlock: 'latest'
       })
-        .then((events) => {
+        .then(events => {
           if (events && events.length) {
             const promises = [];
   
@@ -232,7 +232,7 @@ export default {
         fromBlock: this.latestDelegatedBlockNumber + 1,
         toBlock: 'latest'
       })
-        .then((events) => {
+        .then(events => {
           if (events && events.length) {
             const promises = [];
   

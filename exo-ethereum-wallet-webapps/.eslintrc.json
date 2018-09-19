@@ -16,7 +16,8 @@
         "Vue": true,
         "Vuetify": true,
         "EthereumQRPlugin": true,
-        "isMaximized": true
+        "isMaximized": true,
+        "abiDecoder": true
     },
     "parserOptions": {
         "sourceType": "module",

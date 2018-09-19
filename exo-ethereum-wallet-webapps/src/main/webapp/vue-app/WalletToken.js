@@ -30,7 +30,6 @@ export function getContractsDetails(account, netId, onlyDefault) {
       contractDetails.address = address;
       contractDetails.icon = 'fa-file-contract';
       contractDetails.isContract = true;
-      contractDetails.address = address;
       contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
                                   && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
       contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails));
@@ -43,7 +42,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
  * Retrieve an ERC20 contract instance at specified address
  */
 export function retrieveContractDetails(account, contractDetails) {
-  return getContractInstance(account, contractDetails.address)
+  return getContractInstance(account, contractDetails.address, true)
     .then((contractInstance, error) => {
       if (error) {
         throw error;
@@ -65,21 +64,15 @@ export function retrieveContractDetails(account, contractDetails) {
       contractDetails.balance = parseFloat(`${balance}`);
       // TODO compute Token value in ether
       contractDetails.balanceInEther = 0;
-    })
-    .then(() => {
-      return contractDetails;
-    })
-    .then(() => {
+
       // Store contract persistent details in localStorage
-      localStorage.setItem(`exo-wallet-contract-${account}-${contractDetails.address}`.toLowerCase(), JSON.stringify({
-        symbol: contractDetails.symbol,
-        name: contractDetails.name,
-        address: contractDetails.address
-      }));
+      const toStoreContractDetails = Object.assign({}, contractDetails);
+      delete toStoreContractDetails.contract;
+      localStorage.setItem(`exo-wallet-contract-${account}-${contractDetails.address}`.toLowerCase(), JSON.stringify(toStoreContractDetails));
       return contractDetails;
     })
     .catch(e => {
-      console.debug("retrieveContractDetails method - error", e);
+      console.debug("retrieveContractDetails method - error", contractDetails, e);
       transformContracDetailsToFailed(contractDetails, e);
       return contractDetails;
     });
@@ -213,7 +206,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
   if (isDefaultContract && window.walletSettings && window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.indexOf(address) >= 0) {
     return Promise.reject(new Error('Contract already exists in the list'));
   }
-  return getContractInstance(account, address)
+  return getContractInstance(account, address, true)
     .then((foundContract, error) => {
       if (error) {
         throw error;
@@ -283,7 +276,7 @@ export function removeContractDeploymentTransactionsInProgress(networkId, transa
   }
 }
 
-function getContractInstance(account, address) {
+export function getContractInstance(account, address, usePromise) {
   try {
     const contractInstance = new window.localWeb3.eth.Contract(
         ERC20_COMPLIANT_CONTRACT_ABI, 
@@ -295,9 +288,18 @@ function getContractInstance(account, address) {
           data: ERC20_COMPLIANT_CONTRACT_BYTECODE
         }
       );
-    return Promise.resolve(contractInstance);
+    if (usePromise) {
+      return Promise.resolve(contractInstance);
+    } else {
+      return contractInstance;
+    }
   } catch (e) {
-    return Promise.reject(e);
+    console.debug('An error occurred while retrieving contract instance', e);
+    if (usePromise) {
+      return Promise.reject(e);
+    } else {
+      return null;
+    }
   }
 }
 

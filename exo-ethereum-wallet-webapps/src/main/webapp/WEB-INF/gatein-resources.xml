@@ -91,6 +91,9 @@
         <module>ethQRCode</module>
         <as>EthereumQRPlugin</as>
       </depends>
+      <depends>
+        <module>abiDecoder</module>
+      </depends>
     </module>
   </portlet>
 
@@ -123,6 +126,9 @@
       </depends>
       <depends>
         <module>ethQRCode</module>
+      </depends>
+      <depends>
+        <module>abiDecoder</module>
       </depends>
     </module>
   </portlet>
@@ -162,6 +168,22 @@
     <script>
       <minify>false</minify>
       <path>/js/lib/vuetify.min.js</path>
+    </script>
+    <depends>
+      <module>vue</module>
+    </depends>
+  </module>
+
+  <module>
+    <name>abiDecoder</name>
+    <script>
+      <minify>false</minify>
+      <adapter>
+        (function() {
+          <include>/js/lib/abi-decoder.js</include>
+          return abiDecoder;
+        })();
+      </adapter>
     </script>
     <depends>
       <module>vue</module>

@@ -1,5 +1,26 @@
 import {searchFullName, getContractFromStorage} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus} from './WalletUtils.js';
+import {getContractInstance} from './WalletToken.js';
+import {ERC20_COMPLIANT_CONTRACT_ABI} from './WalletConstants.js';
+
+export function loadPendingTransactions(networkId, account, transactions, refreshCallback) {
+  const pendingTransactions = getPendingTransactionFromStorage(networkId, account);
+  if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
+    return Promise.resolve({});
+  }
+  return Promise.resolve(pendingTransactions)
+    .then(pendingTransactions => {
+      Object.keys(pendingTransactions).forEach(transactionHash => {
+        addTransaction(networkId, account, transactions, pendingTransactions[transactionHash], null, null, refreshCallback);
+      });
+      return pendingTransactions;
+    })
+    .catch(error => {
+      if (`${error}`.indexOf('stopLoading') < 0) {
+        throw error;
+      }
+    });
+}
 
 export function loadStoredTransactions(networkId, account, transactions, refreshCallback) {
   return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
@@ -37,25 +58,6 @@ export function loadStoredTransactions(networkId, account, transactions, refresh
             });
         });
       }
-    })
-    .catch(error => {
-      if (`${error}`.indexOf('stopLoading') < 0) {
-        throw error;
-      }
-    });
-}
-
-export function loadPendingTransactions(networkId, account, transactions, refreshCallback) {
-  const pendingTransactions = getPendingTransactionFromStorage(networkId, account);
-  if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
-    return Promise.resolve({});
-  }
-  return Promise.resolve(pendingTransactions)
-    .then(pendingTransactions => {
-      Object.keys(pendingTransactions).forEach(transactionHash => {
-        addTransaction(networkId, account, transactions, pendingTransactions[transactionHash], null, null, refreshCallback);
-      });
-      return pendingTransactions;
     })
     .catch(error => {
       if (`${error}`.indexOf('stopLoading') < 0) {
@@ -116,13 +118,14 @@ export function addTransaction(networkId, account, transactions, transaction, re
   // Retrieve user or space display name, avatar and id from sessionStorage
   const transactionDetails = {
     hash: transaction.hash,
-    titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on' : 'Sent to',
+    titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on contract ' : 'Sent to',
     displayAddress: displayAddress,
     displayName: displayAddress,
     isContractName: false,
     avatar: null,
     name: null,
     status: status,
+    isFeeTransaction: isFeeTransaction,
     color: isReceiver ? 'green' : 'red',
     icon: isFeeTransaction ? 'fa-undo' : (isReceiver ? 'fa-arrow-down' : 'fa-arrow-up'),
     amount: amount,
@@ -171,12 +174,54 @@ export function addTransaction(networkId, account, transactions, transaction, re
   getContractFromStorage(account, displayAddress)
     .then(contractDetails => {
       if (contractDetails) {
-        transactionDetails.displayName = `Contract ${contractDetails.name}`;
+        transactionDetails.displayName = `${contractDetails.name}`;
         transactionDetails.isContractName = true;
         transactionDetails.name = contractDetails.address;
         transactionDetails.avatar = contractDetails.avatar;
-        // don't continue searching
-        return false;
+
+        try {
+          if (receipt && receipt.logs) {
+            contractDetails.contract = getContractInstance(account, contractDetails.address);
+            if (contractDetails.contract) {
+              if (!abiDecoder.getABIs() || !abiDecoder.getABIs().length) {
+                abiDecoder.addABI(ERC20_COMPLIANT_CONTRACT_ABI);
+              }
+
+              try {
+                const method = abiDecoder.decodeMethod(transaction.input);
+                const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
+                if (method) {
+                  if (method.name === 'transfer') {
+                    displayAddress = decodedLogs[0].events[1].value.toLowerCase();
+                    const amount = decodedLogs[0].events[2].value;
+                    transactionDetails.titlePrefix = `Transfer tokens ${amount} ${contractDetails.symbol} to `;
+                    transactionDetails.icon = 'fa-arrow-up';
+                  } else if (method.name === 'approve') {
+                    displayAddress = decodedLogs[0].events[1].value.toLowerCase();
+                    const amount = decodedLogs[0].events[2].value;
+                    transactionDetails.titlePrefix = `Delegate tokens ${amount} ${contractDetails.symbol} to `;
+                    transactionDetails.icon = 'fa-arrow-up';
+                  } else if (method.name === 'transferFrom') {
+                    displayAddress = decodedLogs[0].events[0].value.toLowerCase();
+                    const amount = decodedLogs[0].events[2].value;
+                    transactionDetails.titlePrefix = `Send tokens ${amount} ${contractDetails.symbol} on behalf of `;
+                    transactionDetails.icon = 'fa-arrow-up';
+                  }
+                }
+              } catch(e) {
+                console.debug('error while decoding transaction', transaction ,e);
+              }
+            } else {
+              return false;
+            }
+          } else {
+            return false;
+          }
+        } catch(e) {
+          console.debug('Error resolving Contract transaction status', e);
+          // don't continue searching
+          return false;
+        }
       }
       // continue searching
       return true;

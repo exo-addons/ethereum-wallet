@@ -5,11 +5,11 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
 
-      <v-progress-circular v-show="loading" indeterminate color="primary" />
-
       <div v-if="!finishedLoading">Loading recent Transactions...</div>
+
+      <v-progress-circular v-if="loading" indeterminate color="primary" />
       <v-progress-circular
-        v-if="!finishedLoading"
+        v-else-if="!finishedLoading"
         :rotate="-90"
         :size="80"
         :width="15"
@@ -19,40 +19,41 @@
         {{ loadingPercentage }}%
       </v-progress-circular>
 
-      <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
-        <template v-for="(item, index) in sortedTransaction">
-          <v-list-tile :key="item.hash" avatar>
-            <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
-            <v-list-tile-avatar v-else :title="item.error ? item.error : ''">
-              <v-icon :color="item.color ? item.color: 'black'">{{ item.icon }}</v-icon>
-            </v-list-tile-avatar>
-            <v-list-tile-content>
-              <v-list-tile-title>
-                <span>{{ item.titlePrefix }}</span>
-                <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
-                  <v-avatar size="23px !important">
-                    <img :src="item.avatar">
-                  </v-avatar>
-                  <span v-html="item.displayName"></span>
-                </v-chip>
-                <wallet-address v-else :allow-copy="!item.isContractName" :value="item.displayName" />
-              </v-list-tile-title>
-              <v-list-tile-sub-title>
-                <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
-                <span>{{ Number(item.amount) + Number(item.fee) }} ether</span>
-                <span v-if="item.amountFiat"> / {{ Number(item.amountFiat) + Number(item.feeFiat) }} {{ fiatSymbol }}</span>
-              </v-list-tile-sub-title>
-            </v-list-tile-content>
-            <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
-              <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
-              <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
-                <v-icon color="primary">info</v-icon>
-              </a>
-            </v-list-tile-action>
-          </v-list-tile>
-          <v-divider v-if="index + 1 < Object.keys(transactions).length" :key="index"></v-divider>
-        </template>
-      </v-list>
+      <v-expansion-panel v-if="Object.keys(transactions).length">
+        <v-expansion-panel-content v-for="(item, index) in sortedTransaction" :key="index">
+          <v-list slot="header" two-line class="pt-0 pb-0">
+            <v-list-tile :key="item.hash" avatar>
+              <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
+              <v-list-tile-avatar v-else :title="item.error ? item.error : ''">
+                <v-icon :color="item.color ? item.color: 'black'">{{ item.icon }}</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-list-tile-title>
+                  <span>{{ item.titlePrefix }}</span>
+                  <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.avatar">
+                    </v-avatar>
+                    <span v-html="item.displayName"></span>
+                  </v-chip>
+                  <wallet-address v-else :allow-copy="!item.isContractName" :value="item.displayName" />
+                </v-list-tile-title>
+                <v-list-tile-sub-title>
+                  <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
+                  <span>{{ Number(item.amount) + Number(item.fee) }} ether</span>
+                  <span v-if="item.amountFiat"> / {{ Number(item.amountFiat) + Number(item.feeFiat) }} {{ fiatSymbol }}</span>
+                </v-list-tile-sub-title>
+              </v-list-tile-content>
+              <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
+                <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
+                <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
+                  <v-icon color="primary">info</v-icon>
+                </a>
+              </v-list-tile-action>
+            </v-list-tile>
+          </v-list>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
       <v-flex v-else-if="finishedLoading" class="text-xs-center">
         <v-chip color="white">
           <span>No recent transactions</span>
@@ -69,7 +70,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
-import {getEtherscanlink} from '../WalletUtils.js';
+import {getTransactionEtherscanlink} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -151,7 +152,7 @@ export default {
       } 
     },
     networkId() {
-      this.etherscanLink = getEtherscanlink(this.networkId);
+      this.etherscanLink = getTransactionEtherscanlink(this.networkId);
     }
   },
   created() {
@@ -167,7 +168,7 @@ export default {
         });
     }
     if (!this.etherscanLink) {
-      this.etherscanLink = getEtherscanlink(this.networkId);
+      this.etherscanLink = getTransactionEtherscanlink(this.networkId);
     }
   },
   methods: {
