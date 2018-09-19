@@ -519,6 +519,10 @@ export default {
         if ($("#myWalletTad").length) {
           return;
         }
+        if (!$('.userNavigation .item').length) {
+          setTimeout(this.initMenuApp, 500);
+          return;
+        }
         $(".userNavigation").append(` \
           <li id='myWalletTad' class='item${this.isMaximized ? " active" : ""}'> \
             <a href='/portal/intranet/wallet'> \
