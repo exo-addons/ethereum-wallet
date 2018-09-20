@@ -60,13 +60,39 @@
   }
 
   #accountDetail {
+    position: relative;
+
     .v-list__tile__title {
       height: 29px;
     }
     .rightIcon {
       position: absolute;
       right: 0;
-      top: 9px;
+      top: 0;
+    }
+
+    #accountDetailIcon {
+      margin-bottom: 2px;
+    }
+
+    #accountDetailTitle {
+      margin: auto 0;
+      padding-top: 20px;
+
+      .title {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 8px;
+      }
+    }
+
+    #accountDetailActions > div {
+      margin: 0 auto;
+    }
+
+    .v-bottom-nav .v-btn .v-btn__content span {
+      padding: 0 10px;
     }
   }
   .v-autocomplete label {
@@ -317,8 +343,8 @@
   }
 
   #contractTransactionsContent {
-    max-height: ~"calc(100vh - 192px)";
-    height: ~"calc(100vh - 192px)";
+    max-height: ~"calc(100vh - 157px)";
+    height: ~"calc(100vh - 157px)";
     overflow-x: hidden;
     overflow-y: auto;
 
@@ -337,12 +363,16 @@
     .v-list {
       max-width: ~"calc(100vw - 30px)";
       display: block;
+    }
+
+    .v-bottom-nav .v-btn .v-btn__content span {
+      padding: 0 10px;
     }
   }
 
   #generalTransactionsContent {
-    max-height: ~"calc(100vh - 192px)";
-    height: ~"calc(100vh - 192px)";
+    max-height: ~"calc(100vh - 157px)";
+    height: ~"calc(100vh - 157px)";
     overflow-x: hidden;
     overflow-y: auto;
 
@@ -361,6 +391,10 @@
     .v-list {
       max-width: ~"calc(100vw - 30px)";
       display: block;
+    }
+
+    .v-bottom-nav .v-btn .v-btn__content span {
+      padding: 0 10px;
     }
   }
 
@@ -394,6 +428,7 @@
   .arrow-up-right {
     transform: rotate(45deg);
   }
+
 }
 
 @media (min-width : 1024px) {

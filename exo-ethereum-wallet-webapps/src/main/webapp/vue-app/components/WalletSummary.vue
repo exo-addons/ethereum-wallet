@@ -6,7 +6,7 @@
         <span slot="badge">{{ pendingTransactionsCount }}</span>
         <v-progress-circular title="A transaction is in progress" color="primary" indeterminate size="20"></v-progress-circular>
       </v-badge>
-      
+
       <v-spacer />
     </v-card-title>
     <v-card-title :class="!isMaximized && 'pt-2'" primary-title class="pb-0" >

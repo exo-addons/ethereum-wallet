@@ -1,75 +1,64 @@
 <template>
   <v-flex v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center white">
-    <v-card min-height="80px" flat>
-      <v-layout column fill-height>
-        <v-card-title class="pb-0">
-          <v-spacer />
-          <div class="title">
-            <h3>
-              <v-icon class="primary--text">{{ contractDetail.icon }}</v-icon>
-              {{ contractDetail.title }}
-            </h3>
+    <v-card-title class="align-start">
+      <v-layout column>
+        <v-flex id="accountDetailTitle">
+          <div class="headline title align-start">
+            <v-icon class="primary--text accountDetailIcon">{{ contractDetail.icon }}</v-icon>
+            {{ contractDetail.title }}
           </div>
-          <v-spacer />
-          <v-btn icon class="rightIcon" @click="stopLoading(); $emit('back')">
-            <v-icon>close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-title class="pt-0">
-          <v-spacer />
-          <v-list class="transparent">
-            <v-list-tile>
-              <v-list-tile-content v-if="contractDetail.balanceFiat" class="text-xs-center">
-                <v-list-tile-title class="text-xs-center">{{ contractDetail.balanceFiat }} {{ fiatSymbol }}</v-list-tile-title>
-                <v-list-tile-sub-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-sub-title>
-              </v-list-tile-content>
-              <v-list-tile-content v-else class="text-xs-center">
-                <v-list-tile-title>{{ contractDetail.balance }} {{ contractDetail.symbol }}</v-list-tile-title>
-              </v-list-tile-content>
-            </v-list-tile>
-          </v-list>
-          <v-spacer />
-        </v-card-title>
+          <h3 v-if="contractDetail.balanceFiat" class="font-weight-light">{{ contractDetail.balanceFiat }} {{ fiatSymbol }}</h3>
+          <h4 v-if="contractDetail.balanceFiat" class="grey--text font-weight-light">{{ contractDetail.balance }} {{ contractDetail.symbol }}</h4>
+          <h3 v-else class="font-weight-light">{{ contractDetail.balance }} {{ contractDetail.symbol }}</h3>
+        </v-flex>
+
+        <v-layout id="accountDetailActions">
+          <send-ether-modal
+            v-if="!contractDetail.isContract"
+            :is-readonly="isReadOnly"
+            :account="walletAddress"
+            :balance="contractDetail.balance"
+            use-navigation
+            @sent="newTransactionPending($event)"
+            @error="error = $event" />
+
+          <!-- Contract actions -->
+          <send-tokens-modal
+            v-if="contractDetail.isContract"
+            :is-readonly="isReadOnly"
+            :balance="contractDetail.balance"
+            :ether-balance="contractDetail.etherBalance"
+            :account="walletAddress"
+            :contract="contractDetail.contract"
+            use-navigation
+            @sent="newTransactionPending($event)"
+            @error="error = $event" />
+          <v-divider v-if="contractDetail.isContract" vertical />
+          <send-delegated-tokens-modal
+            v-if="contractDetail.isContract"
+            :is-readonly="isReadOnly"
+            :ether-balance="contractDetail.etherBalance"
+            :contract="contractDetail.contract"
+            :has-delegated-tokens="hasDelegatedTokens"
+            use-navigation
+            @sent="newTransactionPending($event)"
+            @error="error = $event" />
+          <v-divider v-if="contractDetail.isContract" vertical />
+          <delegate-tokens-modal
+            v-if="contractDetail.isContract"
+            :is-readonly="isReadOnly"
+            :balance="contractDetail.balance"
+            :ether-balance="contractDetail.etherBalance"
+            :contract="contractDetail.contract"
+            use-navigation
+            @sent="newTransactionPending($event)"
+            @error="error = $event" />
+        </v-layout>
+        <v-btn icon class="rightIcon" @click="stopLoading(); $emit('back')">
+          <v-icon>close</v-icon>
+        </v-btn>
       </v-layout>
-    </v-card>
-
-    <v-divider v-if="isReadOnly" />
-    <div v-else class="text-xs-center">
-      <!-- Contract actions -->
-      <send-tokens-modal
-        v-if="contractDetail.isContract"
-        :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
-        :balance="contractDetail.balance"
-        :ether-balance="contractDetail.etherBalance"
-        :account="walletAddress"
-        :contract="contractDetail.contract"
-        @sent="newTransactionPending($event)"
-        @error="error = $event" />
-      <delegate-tokens-modal
-        v-if="contractDetail.isContract"
-        :disabled="contractDetail.balance === 0 || contractDetail.etherBalance === 0"
-        :balance="contractDetail.balance"
-        :ether-balance="contractDetail.etherBalance"
-        :contract="contractDetail.contract"
-        @sent="newTransactionPending($event)"
-        @error="error = $event" />
-      <send-delegated-tokens-modal
-        v-if="contractDetail.isContract"
-        :disabled="!hasDelegatedTokens || contractDetail.balance === 0 || contractDetail.etherBalance === 0"
-        :ether-balance="contractDetail.etherBalance"
-        :contract="contractDetail.contract"
-        :has-delegated-tokens="hasDelegatedTokens"
-        @sent="newTransactionPending($event)"
-        @error="error = $event" />
-
-      <!-- Ether account actions -->
-      <send-ether-modal
-        v-if="!contractDetail.isContract"
-        :account="walletAddress"
-        :balance="contractDetail.balance"
-        @sent="newTransactionPending($event)"
-        @error="error = $event" />
-    </div>
+    </v-card-title>
 
     <token-transactions
       v-if="contractDetail.isContract"

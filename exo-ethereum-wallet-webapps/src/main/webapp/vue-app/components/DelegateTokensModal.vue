@@ -1,7 +1,14 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button v-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1"
-            @keydown.esc="dialog = false">Delegate Tokens</button>
+    <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
+      <v-btn flat value="send">
+        <span>Delegate Tokens</span>
+        <v-icon>send</v-icon>
+      </v-btn>
+    </v-bottom-nav>
+    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">
+      Delegate Tokens
+    </button>
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_spender', '_value']"
                    :args-types="['address', 'uint256']"
@@ -77,6 +84,18 @@ export default {
         return false;
       }
     },
+    isReadonly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    useNavigation: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     open: {
       type: Boolean,
       default: function() {
@@ -109,7 +128,8 @@ export default {
   },
   computed: {
     disabled() {
-      return !this.balance
+      return this.isReadonly
+        || !this.balance
         || this.balance === 0
         || (typeof this.balance === "string" 
             && (!this.balance.length || this.balance.trim() === "0"))

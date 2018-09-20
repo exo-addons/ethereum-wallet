@@ -1,6 +1,15 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button v-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">Send delegated Tokens</button>
+    <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
+      <v-btn flat value="send">
+        <span>Send delegated tokens</span>
+        <v-icon>send</v-icon>
+      </v-btn>
+    </v-bottom-nav>
+    <button v-else-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">
+      Send delegated tokens
+    </button>
+
     <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false"
                    :args-names="['_from', '_to', '_value']"
                    :args-types="['address', 'address', 'uint256']"
@@ -88,6 +97,18 @@ export default {
         return false;
       }
     },
+    isReadonly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    useNavigation: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     open: {
       type: Boolean,
       default: function() {
@@ -121,7 +142,8 @@ export default {
   },
   computed: {
     disabled() {
-      return !this.hasDelegatedTokens
+      return this.isReadonly
+             || !this.hasDelegatedTokens
              || !this.etherBalance
              || this.etherBalance === 0
              || (typeof this.etherBalance === "string" 

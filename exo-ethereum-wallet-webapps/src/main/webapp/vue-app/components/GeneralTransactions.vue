@@ -5,20 +5,18 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
 
-
-      <v-progress-circular v-show="loading" indeterminate color="primary" />
-      <div v-show="!finishedLoading">Loading recent Transactions... <a href="javascript:void(0);" @click="stopLoadingTransactions()">stop</a></div>
-      <v-progress-circular
+      <div v-show="loading || !finishedLoading">Loading recent Transactions... <a href="javascript:void(0);" @click="stopLoadingTransactions()">stop</a></div>
+      <v-progress-linear v-show="loading" indeterminate color="primary" class="mb-0 mt-0" />
+      <v-progress-linear
         v-show="!finishedLoading"
         :rotate="-90"
         :size="80"
         :width="15"
         :value="loadingPercentage"
         color="primary"
-        class="mb-2"
+        class="mb-0 mt-0"
         buffer>
-        {{ loadingPercentage }}%
-      </v-progress-circular>
+      </v-progress-linear>
 
       <v-expansion-panel v-if="Object.keys(transactions).length">
         <v-expansion-panel-content
@@ -52,7 +50,7 @@
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'ether' && !item.isReceiver">
-                  <span>Sent Ether to</span>
+                  <span>Sent to</span>
                   <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
                     <v-avatar size="23px !important">
                       <img :src="item.toAvatar">
@@ -70,7 +68,7 @@
 
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transfer'">
-                  <span>Sent {{ item.contractSymbol }} to</span>
+                  <span>Sent to</span>
                   <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
                     <v-avatar size="23px !important">
                       <img :src="item.toAvatar">
@@ -81,7 +79,7 @@
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approve'">
-                  <span>Delegated {{ item.contractSymbol }} to</span>
+                  <span>Delegated to</span>
                   <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
                     <v-avatar size="23px !important">
                       <img :src="item.toAvatar">
@@ -92,7 +90,7 @@
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferFrom'">
-                  <span>Sent {{ item.contractSymbol }} to</span>
+                  <span>Sent to</span>
 
                   <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
                     <v-avatar size="23px !important">
@@ -226,14 +224,13 @@
             </v-list-tile>
 
             <v-list-tile>
-              <v-list-tile-content>Etherscan link</v-list-tile-content>
+              <v-list-tile-content>Transaction hash</v-list-tile-content>
               <v-list-tile-content class="align-end">
                 <a
                   v-if="transactionEtherscanLink"
                   :href="`${transactionEtherscanLink}${item.hash}`"
                   target="_blank" alt="Open on etherscan">
-
-                  <v-icon color="primary">info</v-icon>
+                  {{ item.hash }}
                 </a>
               </v-list-tile-content>
             </v-list-tile>

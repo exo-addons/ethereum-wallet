@@ -1,6 +1,12 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button v-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">
+    <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
+      <v-btn flat value="send">
+        <span>Send Ether</span>
+        <v-icon>send</v-icon>
+      </v-btn>
+    </v-bottom-nav>
+    <button v-else-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">
       Send Ether
     </button>
     <v-card class="elevation-12">
@@ -33,7 +39,19 @@ export default {
         return null;
       }
     },
+    isReadonly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     noButton: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    useNavigation: {
       type: Boolean,
       default: function() {
         return false;
@@ -59,10 +77,7 @@ export default {
   },
   computed: {
     disabled() {
-      return !this.balance
-             || this.balance === 0
-             || (typeof this.balance === "string" 
-                 && (!this.balance.length || this.balance.trim() === "0"));
+      return this.isReadonly || !this.balance || Number(this.balance) === 0;
     }
   },
   watch: {

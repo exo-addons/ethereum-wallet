@@ -4,8 +4,8 @@
       <div v-if="error && !loading" class="alert alert-error">
         <i class="uiIconError"></i>{{ error }}
       </div>
-    
-      <v-progress-circular v-show="loading" indeterminate color="primary" />
+
+      <v-progress-linear v-show="loading" indeterminate color="primary" class="mb-0 mt-0" />
 
       <v-list v-if="Object.keys(transactions).length" two-line class="pt-0 pb-0">
         <template v-for="(item, index) in sortedTransaction">
