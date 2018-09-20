@@ -1,6 +1,6 @@
 <template>
   <v-flex>
-    <v-card class="card--flex-toolbar">
+    <v-card class="card--flex-toolbar" flat>
       <div v-if="error && !loading" class="alert alert-error">
         <i class="uiIconError"></i>{{ error }}
       </div>

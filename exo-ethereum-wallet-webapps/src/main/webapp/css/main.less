@@ -2,6 +2,10 @@
 @import './lib/materialdesign-icons.css';
 @import './lib/vuetify.css';
 
+.hide-scroll {
+  overflow: hidden;
+}
+
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
   background: transparent;
 
@@ -88,6 +92,15 @@
 
   .transactionDetailActions {
     box-sizing: border-box;
+    text-align: right;
+    margin-left: 5px;
+    align-items: flex-end;
+    width: auto;
+    overflow: visible;
+
+    div {
+      width: auto;
+    }
   }
 
   > .walletConfigurationMenu {
@@ -306,13 +319,49 @@
   #contractTransactionsContent {
     max-height: ~"calc(100vh - 192px)";
     height: ~"calc(100vh - 192px)";
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    .v-expansion-panel__header {
+      padding: 0 5px 0 0;
+    }
+
+    .v-expansion-panel {
+      box-shadow: none;
+    }
+
+    .v-expansion-panel__container:first-child {
+      border-top: 1px solid rgba(0,0,0,.12) !important;
+    }
+
+    .v-list {
+      max-width: ~"calc(100vw - 30px)";
+      display: block;
+    }
   }
 
   #generalTransactionsContent {
     max-height: ~"calc(100vh - 192px)";
     height: ~"calc(100vh - 192px)";
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    .v-expansion-panel__header {
+      padding: 0 5px 0 0;
+    }
+
+    .v-expansion-panel {
+      box-shadow: none;
+    }
+
+    .v-expansion-panel__container:first-child {
+      border-top: 1px solid rgba(0,0,0,.12) !important;
+    }
+
+    .v-list {
+      max-width: ~"calc(100vw - 30px)";
+      display: block;
+    }
   }
 
   .additionalToolbar {

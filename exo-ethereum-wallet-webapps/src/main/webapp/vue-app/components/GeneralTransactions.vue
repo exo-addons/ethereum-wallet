@@ -1,66 +1,251 @@
 <template>
   <v-flex>
-    <v-card class="card--flex-toolbar">
+    <v-card class="card--flex-toolbar" flat>
       <div v-if="error && !loading" class="alert alert-error">
         <i class="uiIconError"></i>{{ error }}
       </div>
 
-      <div v-if="!finishedLoading">Loading recent Transactions...</div>
 
-      <v-progress-circular v-if="loading" indeterminate color="primary" />
+      <v-progress-circular v-show="loading" indeterminate color="primary" />
+      <div v-show="!finishedLoading">Loading recent Transactions... <a href="javascript:void(0);" @click="stopLoadingTransactions()">stop</a></div>
       <v-progress-circular
-        v-else-if="!finishedLoading"
+        v-show="!finishedLoading"
         :rotate="-90"
         :size="80"
         :width="15"
         :value="loadingPercentage"
         color="primary"
+        class="mb-2"
         buffer>
         {{ loadingPercentage }}%
       </v-progress-circular>
 
       <v-expansion-panel v-if="Object.keys(transactions).length">
-        <v-expansion-panel-content v-for="(item, index) in sortedTransaction" :key="index">
+        <v-expansion-panel-content
+          v-for="(item, index) in sortedTransactions"
+          :key="index">
+
           <v-list slot="header" two-line class="pt-0 pb-0">
             <v-list-tile :key="item.hash" avatar>
               <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
-              <v-list-tile-avatar v-else :title="item.error ? item.error : ''">
-                <v-icon :color="item.color ? item.color: 'black'">{{ item.icon }}</v-icon>
+              <v-list-tile-avatar v-else-if="item.error" :title="item.error">
+                <v-icon color="red">warning</v-icon>
               </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title>
-                  <span>{{ item.titlePrefix }}</span>
-                  <v-chip v-if="item.avatar" :title="item.displayAddress" class="mt-0 mb-0" small>
+              <v-list-tile-avatar v-else-if="item.isReceiver">
+                <v-icon color="green">fa-arrow-down</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-avatar v-else>
+                <v-icon color="red">fa-arrow-up</v-icon>
+              </v-list-tile-avatar>
+
+              <v-list-tile-content class="transactionDetailContent">
+
+                <v-list-tile-title v-if="item.type === 'ether' && item.isReceiver">
+                  <span>Received Ether from</span>
+                  <v-chip v-if="item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
                     <v-avatar size="23px !important">
-                      <img :src="item.avatar">
+                      <img :src="item.fromAvatar">
                     </v-avatar>
-                    <span v-html="item.displayName"></span>
+                    <span v-html="item.fromDisplayName"></span>
                   </v-chip>
-                  <wallet-address v-else :allow-copy="!item.isContractName" :value="item.displayName" />
+                  <wallet-address v-else :value="item.fromAddress" />
                 </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'ether' && !item.isReceiver">
+                  <span>Sent Ether to</span>
+                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.toAvatar">
+                    </v-avatar>
+                    <span v-html="item.toDisplayName"></span>
+                  </v-chip>
+                  <wallet-address v-else :value="item.toAddress" />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.isContractCreation">
+                  <span>Created contract </span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transfer'">
+                  <span>Sent {{ item.contractSymbol }} to</span>
+                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.toAvatar">
+                    </v-avatar>
+                    <span v-html="item.toDisplayName" ></span>
+                  </v-chip>
+                  <wallet-address v-else :value="item.toAddress" />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approve'">
+                  <span>Delegated {{ item.contractSymbol }} to</span>
+                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.toAvatar">
+                    </v-avatar>
+                    <span v-html="item.toDisplayName"></span>
+                  </v-chip>
+                  <wallet-address v-else :value="item.toAddress" />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferFrom'">
+                  <span>Sent {{ item.contractSymbol }} to</span>
+
+                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.toAvatar">
+                    </v-avatar>
+                    <span v-html="item.toDisplayName"></span>
+                  </v-chip>
+                  <wallet-address v-else :value="item.toAddress" />
+
+                  on behalf of
+
+                  <v-chip v-if="item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.fromAvatar">
+                    </v-avatar>
+                    <span v-html="item.fromDisplayName"></span>
+                  </v-chip>
+                  <wallet-address v-else :value="item.fromAddress" />
+                </v-list-tile-title>
+
                 <v-list-tile-sub-title>
                   <v-icon v-if="!item.status" color="orange" title="Transaction failed">warning</v-icon>
-                  <span>{{ Number(item.amount) + Number(item.fee) }} ether</span>
-                  <span v-if="item.amountFiat"> / {{ Number(item.amountFiat) + Number(item.feeFiat) }} {{ fiatSymbol }}</span>
+                  <v-list-tile-action-text v-if="item.date && !item.pending">
+                    {{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}
+                  </v-list-tile-action-text>
+                </v-list-tile-sub-title>
+
+              </v-list-tile-content>
+
+              <v-list-tile-content v-if="item.type === 'ether'" class="transactionDetailActions">
+                <v-list-tile-title :class="item.isReceiver ? 'green--text' : 'red--text'">
+                  <span>{{ Number(item.amount) }} ETH</span>
+                </v-list-tile-title>
+                <v-list-tile-sub-title v-if="item.amountFiat">
+                  <v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text>
                 </v-list-tile-sub-title>
               </v-list-tile-content>
-              <v-list-tile-action v-if="(item.date && !item.pending) || etherscanLink" class="transactionDetailActions" title="Open on etherscan">
-                <v-list-tile-action-text v-if="item.date && !item.pending">{{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}</v-list-tile-action-text>
-                <a v-if="etherscanLink" :href="`${etherscanLink}${item.hash}`" target="_blank">
+              <v-list-tile-content v-else-if="item.type === 'contract' && !item.isContractCreation" class="transactionDetailActions">
+                <v-list-tile-title :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number(item.contractAmount) }} {{ item.contractSymbol }}</span></v-list-tile-title>
+                <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
+                <v-list-tile-sub-title v-else />
+              </v-list-tile-content>
+
+            </v-list-tile>
+          </v-list>
+
+          <v-list class="pl-5 ml-2 pr-4" dense>
+            <v-list-tile>
+              <v-list-tile-content>Etherscan link</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <a
+                  v-if="transactionEtherscanLink"
+                  :href="`${transactionEtherscanLink}${item.hash}`"
+                  target="_blank" alt="Open on etherscan">
+
                   <v-icon color="primary">info</v-icon>
                 </a>
-              </v-list-tile-action>
+              </v-list-tile-content>
             </v-list-tile>
+
+            <v-list-tile>
+              <v-list-tile-content>Status</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <v-icon
+                  :color="item.status ? 'success' : 'error'"
+                  v-text="item.status ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.amount">
+              <v-list-tile-content>Amount</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.amountFiat }} {{ fiatSymbol }}
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile v-else-if="item.contractAmount">
+              <v-list-tile-content>Amount</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.contractAmount }} {{ item.contractSymbol }}
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.fromAddress">
+              <v-list-tile-content>From address</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <a
+                  v-if="addressEtherscanLink"
+                  :href="`${addressEtherscanLink}${item.fromAddress}`"
+                  target="_blank"
+                  alt="Open on etherscan">{{ item.fromAddress }}</a>
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.toAddress">
+              <v-list-tile-content>To address</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <a
+                  v-if="addressEtherscanLink"
+                  :href="`${addressEtherscanLink}${item.toAddress}`"
+                  target="_blank"
+                  alt="Open on etherscan">{{ item.toAddress }}</a>
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile>
+              <v-list-tile-content>Balance now</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ contractDetail.balanceFiat }} {{ fiatSymbol }}
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.balanceAtDateFiat">
+              <v-list-tile-content>Balance at date</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.balanceAtDateFiat }} {{ fiatSymbol }}
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.contractName">
+              <v-list-tile-content>Contract name</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.contractName }}
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.contractAddress">
+              <v-list-tile-content>Contract address</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <a
+                  v-if="tokenEtherscanLink"
+                  :href="`${tokenEtherscanLink}${item.contractAddress}`"
+                  target="_blank"
+                  alt="Open on etherscan">{{ item.contractAddress }}</a>
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.fee">
+              <v-list-tile-content>Transaction fee</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.feeFiat }} {{ fiatSymbol }}
+              </v-list-tile-content>
+            </v-list-tile>
+
           </v-list>
         </v-expansion-panel-content>
       </v-expansion-panel>
-      <v-flex v-else-if="finishedLoading" class="text-xs-center">
+      <v-flex v-else-if="finishedLoading && !loading" class="text-xs-center">
         <v-chip color="white">
           <span>No recent transactions</span>
         </v-chip>
       </v-flex>
-      <div class="">
-        <a v-if="finishedLoading" href="javascript:void(0);" @click="loadMore">Load more</a>
+      <div>
+        <a v-if="finishedLoading && !loading" href="javascript:void(0);" @click="loadMore">Load more</a>
       </div>
     </v-card>
   </v-flex>
@@ -70,7 +255,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
-import {getTransactionEtherscanlink} from '../WalletUtils.js';
+import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -95,6 +280,12 @@ export default {
         return null;
       }
     },
+    contractDetail: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     error: {
       type: String,
       default: function() {
@@ -110,16 +301,18 @@ export default {
       newestBlockNumber: 0,
       oldestBlockNumber: 0,
       loading: false,
-      finishedLoading: false,
+      finishedLoading: true,
       transactionsPerPage: 10,
       maxBlocksToLoad: 1000,
       loadedBlocks: 0,
-      etherscanLink: null,
+      transactionEtherscanLink: null,
+      addressEtherscanLink: null,
+      tokenEtherscanLink: null,
       transactions: {}
     };
   },
   computed: {
-    sortedTransaction() {
+    sortedTransactions() {
       // A trick to force update computed list
       // since the attribute this.atransactions is modified outside the component
       if (!this.refreshIndex) {
@@ -152,7 +345,9 @@ export default {
       } 
     },
     networkId() {
-      this.etherscanLink = getTransactionEtherscanlink(this.networkId);
+      this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
+      this.addressEtherscanLink = getAddressEtherscanlink(this.networkId);
+      this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId);
     }
   },
   created() {
@@ -167,8 +362,10 @@ export default {
           this.$emit("error", `Account initialization error: ${error}`);
         });
     }
-    if (!this.etherscanLink) {
-      this.etherscanLink = getTransactionEtherscanlink(this.networkId);
+    if (!this.transactionEtherscanLink) {
+      this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
+      this.addressEtherscanLink = getAddressEtherscanlink(this.networkId);
+      this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId);
     }
   },
   methods: {
@@ -187,21 +384,36 @@ export default {
         this.$emit("refresh-balance");
         this.forceUpdateList();
       })
-        .then(() => loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
-          if (this.stopLoading) {
-            throw new Error("stopLoading");
-          }
+        .then(pendingTransactions => {
+
           this.forceUpdateList();
+
+          return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
+            if (this.stopLoading) {
+              throw new Error("stopLoading");
+            }
+
+            // Update by 5 transactions
+            if (this.transactions && Object.keys(this.transactions).length % 3 === 0) {
+              this.forceUpdateList();
+            }
+          });
+        })
+        .then(storedTansactions => {
+
+          this.forceUpdateList();
+
           this.loading = false;
           this.finishedLoading = false;
-        }))
-        .then(() => loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
-          if (this.stopLoading) {
-            throw new Error("stopLoading");
-          }
-          this.loadedBlocks = loadedBlocks;
-          this.forceUpdateList();
-        }))
+
+          return loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
+            if (this.stopLoading) {
+              throw new Error("stopLoading");
+            }
+            this.loadedBlocks = loadedBlocks;
+            this.forceUpdateList();
+          });
+        })
         .then(loadedBlocksDetails => {
           this.forceUpdateList();
           this.newestBlockNumber = loadedBlocksDetails.toBlock;

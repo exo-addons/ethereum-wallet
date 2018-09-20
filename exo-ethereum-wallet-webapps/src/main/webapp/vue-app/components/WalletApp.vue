@@ -252,11 +252,15 @@ export default {
   watch: {
     seeAccountDetails() {
       if (this.seeAccountDetails) {
+        $("body").addClass("hide-scroll");
+
         const thiss = this;
         setTimeout(() => {
           thiss.seeAccountDetailsPermanent = true;
         }, 200);
       } else {
+        $("body").removeClass("hide-scroll");
+
         this.seeAccountDetailsPermanent = false;
       }
     }

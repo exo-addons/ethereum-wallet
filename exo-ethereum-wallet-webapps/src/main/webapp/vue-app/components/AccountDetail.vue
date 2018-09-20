@@ -1,6 +1,6 @@
 <template>
   <v-flex v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center white">
-    <v-card-media min-height="80px">
+    <v-card min-height="80px" flat>
       <v-layout column fill-height>
         <v-card-title class="pb-0">
           <v-spacer />
@@ -31,7 +31,7 @@
           <v-spacer />
         </v-card-title>
       </v-layout>
-    </v-card-media>
+    </v-card>
 
     <v-divider v-if="isReadOnly" />
     <div v-else class="text-xs-center">
@@ -86,6 +86,7 @@
     <general-transactions
       v-else id="generalTransactionsContent"
       ref="generalTransactions"
+      :contract-detail="contractDetail"
       :network-id="networkId"
       :account="walletAddress"
       :fiat-symbol="fiatSymbol"

@@ -8,13 +8,14 @@ export function loadPendingTransactions(networkId, account, transactions, refres
   if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
     return Promise.resolve({});
   }
-  return Promise.resolve(pendingTransactions)
-    .then(pendingTransactions => {
-      Object.keys(pendingTransactions).forEach(transactionHash => {
-        addTransaction(networkId, account, transactions, pendingTransactions[transactionHash], null, null, refreshCallback);
-      });
-      return pendingTransactions;
-    })
+
+  const loadingPromises = [];
+
+  Object.keys(pendingTransactions).forEach(transactionHash => {
+    loadingPromises.push(addTransaction(networkId, account, transactions, pendingTransactions[transactionHash], null, null, refreshCallback));
+  });
+
+  return Promise.all(loadingPromises)
     .catch(error => {
       if (`${error}`.indexOf('stopLoading') < 0) {
         throw error;
@@ -33,12 +34,16 @@ export function loadStoredTransactions(networkId, account, transactions, refresh
     })
     .then(transactionHashes => {
       if (transactionHashes && transactionHashes.length) {
+        const loadingPromises = [];
+
         transactionHashes.forEach(transactionHash => {
           if (!transactionHash || !transactionHash.length) {
-            return;
+            return [];
           }
+
           let transaction,receipt;
-          window.localWeb3.eth.getTransaction(transactionHash)
+
+          const loadingPromise = window.localWeb3.eth.getTransaction(transactionHash)
             .then(transactionTmp => {
               transaction = transactionTmp;
               return window.localWeb3.eth.getTransactionReceipt(transactionHash);
@@ -48,15 +53,23 @@ export function loadStoredTransactions(networkId, account, transactions, refresh
               return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
             })
             .then(block => {
-              addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000);
+              return addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000);
+            })
+            .then(transactionDetails => {
               if (refreshCallback) {
-                refreshCallback();
+                return refreshCallback();
               }
+
+              return transactionDetails;
             })
             .catch(error => {
               throw error;
             });
+
+          loadingPromises.push(loadingPromise);
         });
+
+        return Promise.all(loadingPromises);
       }
     })
     .catch(error => {
@@ -98,36 +111,43 @@ export function addTransaction(networkId, account, transactions, transaction, re
   const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
   const transactionFeeInFiat = etherToFiat(transactionFeeInEth);
 
-  const isReceiver = transaction.to && transaction.to.toLowerCase() === account.toLowerCase();
+  const fromAddress = transaction.from && transaction.from.toLowerCase();
+  const toAddress = transaction.to && transaction.to.toLowerCase();
+
+  account = account.toLowerCase();
+
+  const isReceiver = toAddress === account;
 
   // Calculate sent/received amount
-  const amount = window.localWeb3.utils.fromWei(transaction.value, 'ether');
+  const amount = parseFloat(window.localWeb3.utils.fromWei(transaction.value, 'ether'));
   const amountFiat = etherToFiat(amount);
-  const isFeeTransaction = parseFloat(amount) === 0;
-
-  let displayAddress = isReceiver ? transaction.from : transaction.to;
-
-  let isContractCreationTransaction = false;
-
-  let contractAddress = null;
-  if (!displayAddress && receipt && receipt.contractAddress) {
-    contractAddress = displayAddress = receipt.contractAddress;
-    isContractCreationTransaction = true;
-  }
+  const isFeeTransaction = amount === 0;
 
   // Retrieve user or space display name, avatar and id from sessionStorage
   const transactionDetails = {
     hash: transaction.hash,
-    titlePrefix: isReceiver ? 'Received from': isContractCreationTransaction ? 'Transaction spent on Contract creation ' : isFeeTransaction ? 'Transaction spent on contract ' : 'Sent to',
-    displayAddress: displayAddress,
-    displayName: displayAddress,
     isContractName: false,
     avatar: null,
     name: null,
     status: status,
-    isFeeTransaction: isFeeTransaction,
-    color: isReceiver ? 'green' : 'red',
-    icon: isFeeTransaction ? 'fa-undo' : (isReceiver ? 'fa-arrow-down' : 'fa-arrow-up'),
+    type: isFeeTransaction ? 'contract' : 'ether',
+    isReceiver: isReceiver,
+    isContractCreation: !toAddress && receipt && receipt.contractAddress && receipt.logs && !receipt.logs.length,
+    contractAddress: null,
+    contractName: null,
+    contractSymbol: null,
+    contractMethodName: null,
+    contractAmount: null,
+    fromAddress: fromAddress,
+    fromUsername: null,
+    fromAvatar: null,
+    fromDisplayName: null,
+    toAddress: isFeeTransaction ? null : toAddress,
+    toUsername: null,
+    toAvatar: null,
+    toDisplayName: null,
+    balanceAtDateFiat: null,
+    balanceAtDate: null,
     amount: amount,
     amountFiat: amountFiat,
     gas: transaction.gas,
@@ -135,15 +155,9 @@ export function addTransaction(networkId, account, transactions, transaction, re
     gasPrice: transaction.gasPrice,
     fee: transactionFeeInEth,
     feeFiat: transactionFeeInFiat,
-    isContractCreation: contractAddress,
     date: timestamp ? new Date(timestamp) : transaction.timestamp,
     pending: transaction.pending
   };
-
-  // If user/space details wasn't found on sessionStorage,
-  // then display the transaction details and in // load name and avatar with a promise
-  // From eXo Platform Server
-  transactions[transactionDetails.hash] = transactionDetails;
 
   if (transaction.pending) {
     addPendingTransactionToStorage(networkId, account, transaction);
@@ -155,8 +169,11 @@ export function addTransaction(networkId, account, transactions, transaction, re
         .then(tx => {
           transaction = tx;
 
-          addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000, watchLoadSuccess, watchLoadError);
           removePendingTransactionFromStorage(networkId, account, transaction.hash);
+
+          return addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000, watchLoadSuccess, watchLoadError);
+        })
+        .then(() => {
           if (watchLoadSuccess) {
             watchLoadSuccess(transaction);
           }
@@ -171,48 +188,80 @@ export function addTransaction(networkId, account, transactions, transaction, re
   }
 
   // Test if address corresponds to a contract
-  getContractFromStorage(account, displayAddress)
+  transactionDetails.contractAddress = transactionDetails.isContractCreation ? receipt.contractAddress : toAddress;
+  return getContractFromStorage(account, transactionDetails.contractAddress)
     .then(contractDetails => {
       if (contractDetails) {
-        transactionDetails.displayName = `${contractDetails.name}`;
-        transactionDetails.isContractName = true;
-        transactionDetails.name = contractDetails.address;
-        transactionDetails.avatar = contractDetails.avatar;
+        transactionDetails.type = 'contract';
+        transactionDetails.contractName = contractDetails.name;
+        transactionDetails.contractAddress = contractDetails.address;
+        transactionDetails.contractSymbol = contractDetails.symbol;
 
         try {
-          if (receipt && receipt.logs) {
-            contractDetails.contract = getContractInstance(account, contractDetails.address);
-            if (contractDetails.contract) {
-              if (!abiDecoder.getABIs() || !abiDecoder.getABIs().length) {
-                abiDecoder.addABI(ERC20_COMPLIANT_CONTRACT_ABI);
-              }
+          if (transactionDetails.isContractCreation) {
+            return false;
+          } else if (receipt && receipt.logs) {
+            if (!abiDecoder.getABIs() || !abiDecoder.getABIs().length) {
+              abiDecoder.addABI(ERC20_COMPLIANT_CONTRACT_ABI);
+            }
 
-              try {
-                const method = abiDecoder.decodeMethod(transaction.input);
-                const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
-                if (method) {
-                  if (method.name === 'transfer') {
-                    displayAddress = decodedLogs[0].events[1].value.toLowerCase();
-                    const amount = decodedLogs[0].events[2].value;
-                    transactionDetails.titlePrefix = `Transfer tokens ${amount} ${contractDetails.symbol} to `;
-                    transactionDetails.icon = 'fa-arrow-up';
-                  } else if (method.name === 'approve') {
-                    displayAddress = decodedLogs[0].events[1].value.toLowerCase();
-                    const amount = decodedLogs[0].events[2].value;
-                    transactionDetails.titlePrefix = `Delegate tokens ${amount} ${contractDetails.symbol} to `;
-                    transactionDetails.icon = 'fa-arrow-up';
-                  } else if (method.name === 'transferFrom') {
-                    displayAddress = decodedLogs[0].events[0].value.toLowerCase();
-                    const amount = decodedLogs[0].events[2].value;
-                    transactionDetails.titlePrefix = `Send tokens ${amount} ${contractDetails.symbol} on behalf of `;
-                    transactionDetails.icon = 'fa-arrow-up';
-                  }
+            try {
+              const method = abiDecoder.decodeMethod(transaction.input);
+              const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
+
+              if (method && method.name) {
+                transactionDetails.contractMethodName = method.name;
+
+                if (method.name === 'transfer') {
+                  transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
+                  transactionDetails.contractAmount = decodedLogs[0].events[2].value;
+                  return searchFullName(transactionDetails.toAddress)
+                    .then(item => {
+                      if (item && item.name && item.name.length) {
+                        transactionDetails.toDisplayName = item.name;
+                        transactionDetails.toAvatar = item.avatar;
+                        transactionDetails.toUsername = item.id;
+                      }
+                      return false;
+                    });
+                } else if (method.name === 'approve') {
+                  transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
+                  transactionDetails.contractAmount = decodedLogs[0].events[2].value;
+                  return searchFullName(transactionDetails.toAddress)
+                    .then(item => {
+                      if (item && item.name && item.name.length) {
+                        transactionDetails.toDisplayName = item.name;
+                        transactionDetails.toAvatar = item.avatar;
+                        transactionDetails.toUsername = item.id;
+                      }
+                      return false;
+                    });
+                } else if (method.name === 'transferFrom') {
+                  transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
+                  transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
+                  transactionDetails.contractAmount = decodedLogs[0].events[2].value;
+
+                  return searchFullName(transactionDetails.toAddress)
+                    .then(item => {
+                      if (item && item.name && item.name.length) {
+                        transactionDetails.toDisplayName = item.name;
+                        transactionDetails.toAvatar = item.avatar;
+                        transactionDetails.toUsername = item.id;
+                      }
+                      return searchFullName(transactionDetails.fromAddress);
+                    })
+                    .then(item => {
+                      if (item && item.name && item.name.length) {
+                        transactionDetails.fromDisplayName = item.name;
+                        transactionDetails.fromAvatar = item.avatar;
+                        transactionDetails.fromUsername = item.id;
+                      }
+                      return false;
+                    });
                 }
-              } catch(e) {
-                console.debug('error while decoding transaction', transaction ,e);
               }
-            } else {
-              return false;
+            } catch(e) {
+              console.debug('error while decoding transaction', transaction ,e);
             }
           } else {
             return false;
@@ -223,28 +272,55 @@ export function addTransaction(networkId, account, transactions, transaction, re
           return false;
         }
       }
-      // continue searching
-      return true;
+      return !transactionDetails.isContractCreation;
     })
     .then(continueSearch => {
-      if(continueSearch) {
-        // The address is not of type contract, so search correspondin user/space display name
-        return searchFullName(displayAddress);
+      if (continueSearch) {
+        transactionDetails.type = 'ether';
+
+        // The address is not of type contract, so search corresponding user/space display name
+        return searchFullName(isReceiver ? fromAddress : toAddress)
       }
     })
     .then(item => {
       if (item && item.name && item.name.length) {
-        transactionDetails.displayName = item.name;
-        transactionDetails.avatar = item.avatar;
-        transactionDetails.name = item.id;
+        if (isReceiver) {
+          transactionDetails.fromDisplayName = item.name;
+          transactionDetails.fromAvatar = item.avatar;
+          transactionDetails.fromUsername = item.id;
+        } else {
+          transactionDetails.toDisplayName = item.name;
+          transactionDetails.toAvatar = item.avatar;
+          transactionDetails.toUsername = item.id;
+        }
       }
+
+      // If user/space details wasn't found on sessionStorage,
+      // then display the transaction details and in // load name and avatar with a promise
+      // From eXo Platform Server
+      transactions[transactionDetails.hash] = transactionDetails;
+    })
+    .then(() => {
+      if (transaction.blockNumber && transactionDetails.status && !transactionDetails.pending) {
+        return window.localWeb3.eth.getBalance(account, transaction.blockNumber)
+          .then(balanceAtDate => {
+            if (balanceAtDate) {
+              transactionDetails.balanceAtDate = window.localWeb3.utils.fromWei(balanceAtDate, 'ether');
+              transactionDetails.balanceAtDateFiat = etherToFiat(transactionDetails.balanceAtDate);
+            }
+          });
+      }
+
+      return transactionDetails;
+    })
+    .catch(error => {
+      console.debug('Error retrieving transaction details', transaction, error);
     });
-  return transactions;
 }
 
 function addBlockTransactions(networkId, account, transactions, block, untilBlockNumber, loadedBlocks, progressionCallback) {
   if (!block) {
-    throw new Error("An error occurred whilre retrieving data from network, this may be fixed by refreshing your wallet");
+    throw new Error("An error occurred while retrieving data from network, this may be fixed by refreshing your wallet");
   }
 
   loadedBlocks++;
@@ -256,18 +332,23 @@ function addBlockTransactions(networkId, account, transactions, block, untilBloc
   //  * or we reached the genesis block
   //  * or we already displayed 10 transactions
   // then stop searching
-  if (block.number === 0 || block.number <= untilBlockNumber) {
+  if (block.number === 0 || block.number <= untilBlockNumber || !account) {
     return false;
   }
+
+  account = account.toLowerCase();
+
   if (block.transactions && block.transactions.length) {
     // Iterate over transactions from retrieved from block
     block.transactions.forEach(transaction => {
+      const fromAddress = transaction.from && transaction.from.toLowerCase();
+      const toAddress = transaction.to && transaction.to.toLowerCase();
+
       // Make sure to not display transaction that hasn't a 'to' or 'from' address
-      if (transaction.to && transaction.to.toLowerCase() === account.toLowerCase()
-          || transaction.from && transaction.from.toLowerCase() === account.toLowerCase()) {
+      if (toAddress === account || fromAddress === account) {
         window.localWeb3.eth.getTransactionReceipt(transaction.hash)
           .then(receipt => {
-            addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000);
+            return addTransaction(networkId, account, transactions, transaction, receipt, block.timestamp * 1000);
           });
       }
     });
