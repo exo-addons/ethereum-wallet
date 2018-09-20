@@ -130,6 +130,7 @@
                   <v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text>
                 </v-list-tile-sub-title>
               </v-list-tile-content>
+
               <v-list-tile-content v-else-if="item.type === 'contract' && !item.isContractCreation" class="transactionDetailActions">
                 <v-list-tile-title :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number(item.contractAmount) }} {{ item.contractSymbol }}</span></v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
@@ -140,18 +141,6 @@
           </v-list>
 
           <v-list class="pl-5 ml-2 pr-4" dense>
-            <v-list-tile>
-              <v-list-tile-content>Etherscan link</v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                <a
-                  v-if="transactionEtherscanLink"
-                  :href="`${transactionEtherscanLink}${item.hash}`"
-                  target="_blank" alt="Open on etherscan">
-
-                  <v-icon color="primary">info</v-icon>
-                </a>
-              </v-list-tile-content>
-            </v-list-tile>
 
             <v-list-tile>
               <v-list-tile-content>Status</v-list-tile-content>
@@ -236,6 +225,18 @@
               </v-list-tile-content>
             </v-list-tile>
 
+            <v-list-tile>
+              <v-list-tile-content>Etherscan link</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <a
+                  v-if="transactionEtherscanLink"
+                  :href="`${transactionEtherscanLink}${item.hash}`"
+                  target="_blank" alt="Open on etherscan">
+
+                  <v-icon color="primary">info</v-icon>
+                </a>
+              </v-list-tile-content>
+            </v-list-tile>
           </v-list>
         </v-expansion-panel-content>
       </v-expansion-panel>
