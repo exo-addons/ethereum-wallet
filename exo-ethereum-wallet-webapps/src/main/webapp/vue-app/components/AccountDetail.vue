@@ -1,94 +1,79 @@
 <template>
-  <v-flex v-if="contractDetail && contractDetail.title" id="accountDetail" class="text-xs-center white">
+  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white">
     <v-card-title class="align-start">
       <v-layout column>
         <v-flex id="accountDetailTitle">
           <div class="headline title align-start">
-            <v-icon class="primary--text accountDetailIcon">{{ contractDetail.icon }}</v-icon>
-            {{ contractDetail.title }}
+            <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
+            {{ contractDetails.title }}
           </div>
-          <h3 v-if="contractDetail.balanceFiat" class="font-weight-light">{{ contractDetail.balanceFiat }} {{ fiatSymbol }}</h3>
-          <h4 v-if="contractDetail.balanceFiat" class="grey--text font-weight-light">{{ contractDetail.balance }} {{ contractDetail.symbol }}</h4>
-          <h3 v-else class="font-weight-light">{{ contractDetail.balance }} {{ contractDetail.symbol }}</h3>
+          <h3 v-if="contractDetails.balanceFiat" class="font-weight-light">{{ contractDetails.balanceFiat }} {{ fiatSymbol }}</h3>
+          <h4 v-if="contractDetails.balanceFiat" class="grey--text font-weight-light">{{ contractDetails.balance }} {{ contractDetails.symbol }}</h4>
+          <h3 v-else class="font-weight-light">{{ contractDetails.balance }} {{ contractDetails.symbol }}</h3>
         </v-flex>
 
-        <v-layout id="accountDetailActions">
+        <v-flex id="accountDetailActions">
+          <!-- Ether action -->
           <send-ether-modal
-            v-if="!contractDetail.isContract"
+            v-if="!contractDetails.isContract"
             :is-readonly="isReadOnly"
             :account="walletAddress"
-            :balance="contractDetail.balance"
+            :balance="contractDetails.balance"
             use-navigation
-            @sent="newTransactionPending($event)"
+            @sent="newTransactionPending"
             @error="error = $event" />
 
           <!-- Contract actions -->
           <send-tokens-modal
-            v-if="contractDetail.isContract"
+            v-if="contractDetails.isContract"
             :is-readonly="isReadOnly"
-            :balance="contractDetail.balance"
-            :ether-balance="contractDetail.etherBalance"
+            :balance="contractDetails.balance"
+            :ether-balance="contractDetails.etherBalance"
             :account="walletAddress"
-            :contract="contractDetail.contract"
+            :contract-details="contractDetails"
             use-navigation
-            @sent="newTransactionPending($event)"
+            @sent="newTransactionPending"
             @error="error = $event" />
-          <v-divider v-if="contractDetail.isContract" vertical />
+          <v-divider v-if="contractDetails.isContract" vertical />
           <send-delegated-tokens-modal
-            v-if="contractDetail.isContract"
+            v-if="contractDetails.isContract"
             :is-readonly="isReadOnly"
-            :ether-balance="contractDetail.etherBalance"
-            :contract="contractDetail.contract"
-            :has-delegated-tokens="hasDelegatedTokens"
+            :contract-details="contractDetails"
             use-navigation
-            @sent="newTransactionPending($event)"
+            @sent="newTransactionPending"
             @error="error = $event" />
-          <v-divider v-if="contractDetail.isContract" vertical />
+          <v-divider v-if="contractDetails.isContract" vertical />
           <delegate-tokens-modal
-            v-if="contractDetail.isContract"
+            v-if="contractDetails.isContract"
             :is-readonly="isReadOnly"
-            :balance="contractDetail.balance"
-            :ether-balance="contractDetail.etherBalance"
-            :contract="contractDetail.contract"
+            :contract-details="contractDetails"
             use-navigation
-            @sent="newTransactionPending($event)"
+            @sent="newTransactionPending"
             @error="error = $event" />
-        </v-layout>
+        </v-flex>
         <v-btn icon class="rightIcon" @click="stopLoading(); $emit('back')">
           <v-icon>close</v-icon>
         </v-btn>
       </v-layout>
     </v-card-title>
 
-    <token-transactions
-      v-if="contractDetail.isContract"
-      id="contractTransactionsContent"
-      ref="contractTransactions"
+    <transactions-list
+      id="transactionsList"
+      ref="transactionsList"
       :network-id="networkId"
       :account="walletAddress"
-      :contract-detail="contractDetail"
-      :fiat-symbol="fiatSymbol"
-      :error="error"
-      @has-delegated-tokens="hasDelegatedTokens = true"
-      @error="error = $event"
-      @refresh-balance="refreshBalance" />
-    <general-transactions
-      v-else id="generalTransactionsContent"
-      ref="generalTransactions"
-      :contract-detail="contractDetail"
-      :network-id="networkId"
-      :account="walletAddress"
+      :contract-details="contractDetails"
       :fiat-symbol="fiatSymbol"
       :error="error"
       @error="error = $event"
       @refresh-balance="refreshBalance" />
+
   </v-flex>
 </template>
 
 <script>
 import AddContractModal from './AddContractModal.vue';
-import GeneralTransactions from './GeneralTransactions.vue';
-import TokenTransactions from './TokenTransactions.vue';
+import TransactionsList from './TransactionsList.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import DelegateTokensModal from './DelegateTokensModal.vue';
 import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
@@ -101,12 +86,11 @@ import {etherToFiat} from '../WalletUtils.js';
 export default {
   components: {
     AddContractModal,
+    SendEtherModal,
+    SendTokensModal,
     DelegateTokensModal,
     SendDelegatedTokensModal,
-    SendTokensModal,
-    GeneralTransactions,
-    SendEtherModal,
-    TokenTransactions
+    TransactionsList
   },
   props: {
     isReadOnly: {
@@ -133,7 +117,7 @@ export default {
         return null;
       }
     },
-    contractDetail: {
+    contractDetails: {
       type: Object,
       default: function() {
         return {};
@@ -144,12 +128,11 @@ export default {
     return {
       // Avoid refreshing list and balance twice
       refreshing: false,
-      error: null,
-      hasDelegatedTokens: false
+      error: null
     };
   },
   watch: {
-    contractDetail() {
+    contractDetails() {
       this.error = null;
     }
   },
@@ -158,40 +141,33 @@ export default {
       return window.localWeb3.eth.getBalance(this.walletAddress)
         .then(balance => {
           balance = window.localWeb3.utils.fromWei(balance, "ether");
-          if (this.contractDetail.isContract) {
-            this.contractDetail.etherBalance = balance;
-            return retrieveContractDetails(this.walletAddress, this.contractDetail)
+          if (this.contractDetails.isContract) {
+            this.contractDetails.etherBalance = balance;
+            return retrieveContractDetails(this.walletAddress, this.contractDetails)
               .then(() => {
                 this.$forceUpdate();
               });
           } else {
-            this.contractDetail.balance = balance;
-            this.contractDetail.balanceFiat = etherToFiat(balance);
+            this.contractDetails.balance = balance;
+            this.contractDetails.balanceFiat = etherToFiat(balance);
             this.$forceUpdate();
           }
         });
     },
     isEtherBalanceSame(balance) {
-      return this.contractDetail.isContract ?
-        this.contractDetail.etherBalance === balance :
-        this.contractDetail.balance === balance;
+      return this.contractDetails.isContract ?
+        this.contractDetails.etherBalance === balance :
+        this.contractDetails.balance === balance;
     },
-    newTransactionPending(transaction) {
-      if (this.contractDetail.isContract) {
-        if (transaction.type === 'sendToken') {
-          this.$refs.contractTransactions.addSendTransaction(transaction);
-        } else if (transaction.type === 'delegateToken') {
-          this.$refs.contractTransactions.addDelegateTransaction(transaction);
-        } else {
-          throw new Error("Transaction type is not recognized", transaction);
-        }
-      } else {
-        this.$refs.generalTransactions.addTransaction(transaction);
+    newTransactionPending(transaction, contractDetails) {
+      if (this.$refs.transactionsList) {
+        this.$refs.transactionsList.addTransaction(transaction, contractDetails);
       }
+      this.$emit("transaction-sent");
     },
     stopLoading() {
-      if (this.$refs.generalTransactions) {
-        this.$refs.generalTransactions.stopLoadingTransactions();
+      if (this.$refs.transactionsList) {
+        this.$refs.transactionsList.stopLoadingTransactions();
       }
     }
   }

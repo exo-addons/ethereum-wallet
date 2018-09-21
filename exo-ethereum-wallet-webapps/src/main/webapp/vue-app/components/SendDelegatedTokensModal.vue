@@ -79,13 +79,7 @@ export default {
     AutoComplete
   },
   props: {
-    contract: {
-      type: Object,
-      default: function() {
-        return {};
-      }
-    },
-    accountDetail: {
+    contractDetails: {
       type: Object,
       default: function() {
         return {};
@@ -118,13 +112,7 @@ export default {
     hasDelegatedTokens: {
       type: Boolean,
       default: function() {
-        return false;
-      }
-    },
-    etherBalance: {
-      type: Number,
-      default: function() {
-        return 0;
+        return true;
       }
     }
   },
@@ -141,6 +129,9 @@ export default {
     };
   },
   computed: {
+    etherBalance() {
+      return this.contractDetails && this.contractDetails.etherBalance;
+    },
     disabled() {
       return this.isReadonly
              || !this.hasDelegatedTokens
@@ -190,26 +181,36 @@ export default {
 
       this.loading = true;
       try {
-        this.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
             if (result > window.walletSettings.userPreferences.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
             this.$emit("loading");
-            return this.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.account})
-              .on('confirmation', (confirmationNumber, receipt) => {
-                console.debug("send transaction transferFrom - confirmation", confirmationNumber, receipt);
-                if (this.loading) {
-                  this.$emit('close');
-                  this.dialog = false;
-                  this.loading = false;
-                }
-                // The transaction has been mined and confirmed
-                this.$emit("loaded");
+            return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.account})
+              .on('transactionHash', hash => {
+                const gas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 35000;
+
+                // The transaction has been hashed and will be sent
+                this.$emit("sent", {
+                  hash: hash,
+                  from: this.from,
+                  to: this.recipient,
+                  value : 0,
+                  gas: gas,
+                  gasPrice: window.walletSettings.gasPrice,
+                  contractAddress: this.contractDetails.address,
+                  contractMethodName: 'transferFrom',
+                  contractAmount : this.amount,
+                  pending: true,
+                  timestamp: Date.now()
+                }, this.contractDetails);
+
+                this.dialog = false;
               })
               .on('error', (error, receipt) => {
                 // The transaction has failed
-                this.error = `Error sending delegated tokens: ${error}`;
+                this.error = `Error delegating tokens: ${error}`;
                 this.loading = false;
                 this.$emit("error", this.error);
               });

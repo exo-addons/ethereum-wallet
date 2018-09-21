@@ -33,9 +33,7 @@
       <send-tokens-form v-if="selectedAccount && selectedAccount.isContract"
                         ref="sendTokensForm"
                         :account="walletAddress"
-                        :contract="selectedAccount.contract"
-                        :balance="selectedAccount.balance"
-                        :ether-balance="selectedAccount.etherBalance"
+                        :contract-details="selectedAccount"
                         @sent="addPendingTransaction($event)"
                         @close="dialog = false" />
     </v-card>
@@ -47,8 +45,7 @@ import SendEtherForm from './SendEtherForm.vue';
 import SendTokensForm from './SendTokensForm.vue';
 
 import {watchTransactionStatus} from '../WalletUtils.js';
-import {addTransaction} from '../WalletEther.js';
-import {addPendingTransactionToStorage, removePendingTransactionFromStorage} from '../WalletToken.js';
+import {addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -131,7 +128,7 @@ export default {
   methods: {
     prepareSendForm(receiver, receiver_type, amount, contractAddress) {
       if (!this.accountsList || !this.accountsList.length) {
-        console.warn("prepareSendForm error -  no accounts found");
+        console.debug("prepareSendForm error -  no accounts found");
         return;
       }
 
@@ -174,43 +171,15 @@ export default {
         return;
       }
 
-      if (transaction.type === 'sendEther') {
-        addTransaction(this.networkId,
-          this.walletAddress,
-          [],
-          transaction,
-          null,
-          null,
-          () => this.$emit('success'),
-          error => this.$emit('error', error));
-      } else if (transaction.type === 'sendToken') {
-        const contractAddress = this.selectedAccount.address;
-
-        if (contractAddress) {
-          addPendingTransactionToStorage(this.networkId, this.walletAddress, contractAddress, {
-            from: transaction.from,
-            to: transaction.to,
-            value: transaction.value,
-            hash: transaction.hash,
-            timestamp: Date.now(),
-            labelFrom: 'Received from',
-            labelTo: 'Sent to',
-            icon: 'fa-exchange-alt',
-            pending: true
-          });
-
-          watchTransactionStatus(transaction.hash, (receipt, block) => {
-            removePendingTransactionFromStorage(this.networkId, this.account, contractAddress, transaction.hash);
-            if (receipt) {
-              this.$emit('success');
-            } else {
-              this.$emit('error', 'Token transaction has failed');
-            }
-          });
-        } else {
-          console.debug("Transaction status check failed: no contract address was found");
-        }
-      }
+      addTransaction(this.networkId,
+        this.walletAddress,
+        this.selectedAccount,
+        [],
+        transaction,
+        null,
+        null,
+        () => this.$emit('success'),
+        error => this.$emit('error', error));
 
       this.$emit('pending', transaction);
     }

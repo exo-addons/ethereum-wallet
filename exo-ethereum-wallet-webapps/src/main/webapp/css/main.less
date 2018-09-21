@@ -71,13 +71,20 @@
       top: 0;
     }
 
-    #accountDetailIcon {
+    .accountDetailIcon {
       margin-bottom: 2px;
     }
 
     #accountDetailTitle {
       margin: auto 0;
       padding-top: 20px;
+      height: 100px;
+      display: flex;
+      flex-direction: column;
+
+      > * {
+        margin: auto;
+      }
 
       .title {
         position: absolute;
@@ -255,6 +262,8 @@
   }
   .alert{
     line-height: 29px;
+    display: inline-block;
+    max-width: 100%;
 
     i {
       margin-right: 0;
@@ -342,37 +351,9 @@
     }
   }
 
-  #contractTransactionsContent {
-    max-height: ~"calc(100vh - 157px)";
-    height: ~"calc(100vh - 157px)";
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    .v-expansion-panel__header {
-      padding: 0 5px 0 0;
-    }
-
-    .v-expansion-panel {
-      box-shadow: none;
-    }
-
-    .v-expansion-panel__container:first-child {
-      border-top: 1px solid rgba(0,0,0,.12) !important;
-    }
-
-    .v-list {
-      max-width: ~"calc(100vw - 30px)";
-      display: block;
-    }
-
-    .v-bottom-nav .v-btn .v-btn__content span {
-      padding: 0 10px;
-    }
-  }
-
-  #generalTransactionsContent {
-    max-height: ~"calc(100vh - 157px)";
-    height: ~"calc(100vh - 157px)";
+  .transactionsList {
+    max-height: ~"calc(100vh - 208px)";
+    height: ~"calc(100vh - 208px)";
     overflow-x: hidden;
     overflow-y: auto;
 
@@ -407,8 +388,8 @@
     }
 
     .alert {
-      width: 100%;
-      margin: 0;
+      max-width: 100%;
+      margin: 20px auto 0;
     }
   }
   .walletAppSetup {
@@ -416,8 +397,12 @@
   }
 
   #walletMetamaskSetup {
+    padding: 1px;
+
     .alert {
-      margin: 0;
+      margin: 20px auto 0;
+      width: auto;
+      max-width: fit-content;
     }
   }
 

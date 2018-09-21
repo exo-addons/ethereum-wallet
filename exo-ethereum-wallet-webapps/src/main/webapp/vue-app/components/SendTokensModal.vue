@@ -16,11 +16,9 @@
       </div>
       <send-tokens-form ref="sendTokensForm"
                         :account="account"
-                        :contract="contract"
-                        :balance="balance"
-                        :ether-balance="etherBalance"
+                        :contract-details="contractDetails"
                         class="pt-4"
-                        @sent="$emit('sent', $event, accountDetail)"
+                        @sent="$emit('sent', $event, contractDetails)"
                         @close="dialog = false"
                         @error="$emit('error', $event)" />
     </v-card>
@@ -39,6 +37,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    contractDetails: {
+      type: Object,
+      default: function() {
+        return {};
       }
     },
     noButton: {
@@ -65,28 +69,10 @@ export default {
         return false;
       }
     },
-    accountDetail: {
-      type: Object,
-      default: function() {
-        return {};
-      }
-    },
     contract: {
       type: Object,
       default: function() {
         return {};
-      }
-    },
-    balance: {
-      type: Number,
-      default: function() {
-        return 0;
-      }
-    },
-    etherBalance: {
-      type: Number,
-      default: function() {
-        return 0;
       }
     }
   },
@@ -96,6 +82,12 @@ export default {
     };
   },
   computed: {
+    balance() {
+      return this.contractDetails && this.contractDetails.balance;
+    },
+    etherBalance() {
+      return this.contractDetails && this.contractDetails.etherBalance;
+    },
     disabled() {
       return this.isReadonly
         || !this.balance

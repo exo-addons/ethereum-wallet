@@ -1,14 +1,20 @@
 <template>
-  <v-flex>
+  <v-flex class="transactionsList">
     <v-card class="card--flex-toolbar" flat>
       <div v-if="error && !loading" class="alert alert-error">
         <i class="uiIconError"></i>{{ error }}
       </div>
 
-      <div v-show="loading || !finishedLoading">Loading recent Transactions... <a href="javascript:void(0);" @click="stopLoadingTransactions()">stop</a></div>
-      <v-progress-linear v-show="loading" indeterminate color="primary" class="mb-0 mt-0" />
+      <div v-if="!stopLoading && (loading || displayLoadingPercentage)" class="grey--text">
+        Loading recent transactions...
+        <a v-if="displayLoadingPercentage" href="javascript:void(0);" @click="stopLoadingTransactions()">
+          stop
+        </a>
+      </div>
+      <div v-else-if="loading || displayLoadingPercentage" class="grey--text">Stopping...</div>
+
       <v-progress-linear
-        v-show="!finishedLoading"
+        v-if="!finishedLoading && displayLoadingPercentage"
         :rotate="-90"
         :size="80"
         :width="15"
@@ -17,8 +23,9 @@
         class="mb-0 mt-0"
         buffer>
       </v-progress-linear>
+      <v-progress-linear v-else-if="loading" indeterminate color="primary" class="mb-0 mt-0" />
 
-      <v-expansion-panel v-if="Object.keys(transactions).length">
+      <v-expansion-panel v-if="Object.keys(sortedTransactions).length">
         <v-expansion-panel-content
           v-for="(item, index) in sortedTransactions"
           :key="index">
@@ -37,7 +44,6 @@
               </v-list-tile-avatar>
 
               <v-list-tile-content class="transactionDetailContent">
-
                 <v-list-tile-title v-if="item.type === 'ether' && item.isReceiver">
                   <span>Received Ether from</span>
                   <v-chip v-if="item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
@@ -66,25 +72,24 @@
                   <wallet-address v-else :value="item.contractAddress" allow-copy />
                 </v-list-tile-title>
 
+                <v-list-tile-title v-else-if="item.type === 'contract' && (item.contractMethodName === 'transfer' || item.contractMethodName === 'approve')">
+                  <span v-if="item.contractMethodName === 'transfer' && item.isReceiver">Received from</span>
+                  <span v-else-if="item.contractMethodName === 'transfer' && !item.isReceiver">Sent to</span>
+                  <span v-else-if="item.contractMethodName === 'approve' && item.isReceiver">Delegated from</span>
+                  <span v-else>Delegated to</span>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transfer'">
-                  <span>Sent to</span>
-                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
+                  <v-chip v-if="item.isReceiver && item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
+                    <v-avatar size="23px !important">
+                      <img :src="item.fromAvatar">
+                    </v-avatar>
+                    <span v-html="item.fromDisplayName" ></span>
+                  </v-chip>
+                  <wallet-address v-else-if="item.isReceiver && !item.fromAvatar" :value="item.fromAddress" />
+                  <v-chip v-else-if="!item.isReceiver && item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
                     <v-avatar size="23px !important">
                       <img :src="item.toAvatar">
                     </v-avatar>
                     <span v-html="item.toDisplayName" ></span>
-                  </v-chip>
-                  <wallet-address v-else :value="item.toAddress" />
-                </v-list-tile-title>
-
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approve'">
-                  <span>Delegated to</span>
-                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.toAvatar">
-                    </v-avatar>
-                    <span v-html="item.toDisplayName"></span>
                   </v-chip>
                   <wallet-address v-else :value="item.toAddress" />
                 </v-list-tile-title>
@@ -134,12 +139,10 @@
                 <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
                 <v-list-tile-sub-title v-else />
               </v-list-tile-content>
-
             </v-list-tile>
           </v-list>
 
           <v-list class="pl-5 ml-2 pr-4" dense>
-
             <v-list-tile>
               <v-list-tile-content>Status</v-list-tile-content>
               <v-list-tile-content class="align-end">
@@ -169,7 +172,7 @@
                   v-if="addressEtherscanLink"
                   :href="`${addressEtherscanLink}${item.fromAddress}`"
                   target="_blank"
-                  alt="Open on etherscan">{{ item.fromAddress }}</a>
+                  title="Open on etherscan">{{ item.fromAddress }}</a>
               </v-list-tile-content>
             </v-list-tile>
 
@@ -180,18 +183,18 @@
                   v-if="addressEtherscanLink"
                   :href="`${addressEtherscanLink}${item.toAddress}`"
                   target="_blank"
-                  alt="Open on etherscan">{{ item.toAddress }}</a>
+                  title="Open on etherscan">{{ item.toAddress }}</a>
               </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile>
+            <v-list-tile v-if="!contractDetails.isContract">
               <v-list-tile-content>Balance now</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ contractDetail.balanceFiat }} {{ fiatSymbol }}
+                {{ contractDetails.balanceFiat }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile v-if="item.balanceAtDateFiat">
+            <v-list-tile v-if="!contractDetails.isContract && item.balanceAtDateFiat">
               <v-list-tile-content>Balance at date</v-list-tile-content>
               <v-list-tile-content class="align-end">
                 {{ item.balanceAtDateFiat }} {{ fiatSymbol }}
@@ -212,7 +215,7 @@
                   v-if="tokenEtherscanLink"
                   :href="`${tokenEtherscanLink}${item.contractAddress}`"
                   target="_blank"
-                  alt="Open on etherscan">{{ item.contractAddress }}</a>
+                  title="Open on etherscan">{{ item.contractAddress }}</a>
               </v-list-tile-content>
             </v-list-tile>
 
@@ -229,7 +232,7 @@
                 <a
                   v-if="transactionEtherscanLink"
                   :href="`${transactionEtherscanLink}${item.hash}`"
-                  target="_blank" alt="Open on etherscan">
+                  target="_blank" title="Open on etherscan">
                   {{ item.hash }}
                 </a>
               </v-list-tile-content>
@@ -237,27 +240,30 @@
           </v-list>
         </v-expansion-panel-content>
       </v-expansion-panel>
-      <v-flex v-else-if="finishedLoading && !loading" class="text-xs-center">
+      <v-flex v-else-if="!displayLoadingPercentage && !loading" class="text-xs-center">
         <v-chip color="white">
           <span>No recent transactions</span>
         </v-chip>
       </v-flex>
-      <div>
-        <a v-if="finishedLoading && !loading" href="javascript:void(0);" @click="loadMore">Load more</a>
+      <div v-if="!contractDetails.isContract">
+        <a v-if="!displayLoadingPercentage && !loading" href="javascript:void(0);" @click="loadMore()">Load more</a>
       </div>
     </v-card>
   </v-flex>
+
 </template>
 
 <script>
+import TransactionsList from './TransactionsList.vue';
 import WalletAddress from './WalletAddress.vue';
 
-import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletEther.js';
 import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
+import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
-    WalletAddress
+    WalletAddress,
+    TransactionsList
   },
   props: {
     networkId: {
@@ -278,7 +284,7 @@ export default {
         return null;
       }
     },
-    contractDetail: {
+    contractDetails: {
       type: Object,
       default: function() {
         return {};
@@ -303,13 +309,13 @@ export default {
       transactionsPerPage: 10,
       maxBlocksToLoad: 1000,
       loadedBlocks: 0,
-      transactionEtherscanLink: null,
-      addressEtherscanLink: null,
-      tokenEtherscanLink: null,
       transactions: {}
     };
   },
   computed: {
+    displayLoadingPercentage() {
+      return !this.contractDetails.isContract && !this.finishedLoading;
+    },
     sortedTransactions() {
       // A trick to force update computed list
       // since the attribute this.atransactions is modified outside the component
@@ -343,12 +349,20 @@ export default {
       } 
     },
     networkId() {
+      if (this.networkId) {
+        this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
+        this.addressEtherscanLink = getAddressEtherscanlink(this.networkId);
+        this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId);
+      }
+    }
+  },
+  created() {
+    if (!this.transactionEtherscanLink && this.networkId) {
       this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
       this.addressEtherscanLink = getAddressEtherscanlink(this.networkId);
       this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId);
     }
-  },
-  created() {
+
     if (this.account) {
       this.maxBlocksToLoad = window.walletSettings.defaultBlocksToRetrieve;
       this.init()
@@ -360,11 +374,6 @@ export default {
           this.$emit("error", `Account initialization error: ${error}`);
         });
     }
-    if (!this.transactionEtherscanLink) {
-      this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId);
-      this.addressEtherscanLink = getAddressEtherscanlink(this.networkId);
-      this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId);
-    }
   },
   methods: {
     init() {
@@ -375,36 +384,30 @@ export default {
       this.loading = true;
 
       // Get transactions to latest block with maxBlocks to load
-      return loadPendingTransactions(this.networkId, this.account, this.transactions, () => {
-        if (this.stopLoading) {
-          throw new Error("stopLoading");
-        }
+      return loadPendingTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
         this.$emit("refresh-balance");
         this.forceUpdateList();
       })
         .then(pendingTransactions => {
-
           this.forceUpdateList();
 
-          return loadStoredTransactions(this.networkId, this.account, this.transactions, () => {
+          return loadStoredTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
             if (this.stopLoading) {
               throw new Error("stopLoading");
             }
 
-            // Update by 5 transactions
-            if (this.transactions && Object.keys(this.transactions).length % 3 === 0) {
+            // Update by 10 transactions
+            if (this.transactions && Object.keys(this.transactions).length % 10 === 0) {
               this.forceUpdateList();
             }
           });
         })
         .then(storedTansactions => {
-
           this.forceUpdateList();
 
-          this.loading = false;
           this.finishedLoading = false;
 
-          return loadTransactions(this.networkId, this.account, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
+          return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
             if (this.stopLoading) {
               throw new Error("stopLoading");
             }
@@ -413,12 +416,19 @@ export default {
           });
         })
         .then(loadedBlocksDetails => {
-          this.forceUpdateList();
-          this.newestBlockNumber = loadedBlocksDetails.toBlock;
-          this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
           this.loading = false;
+
+          this.forceUpdateList();
+          if (loadedBlocksDetails && !this.contractDetails.isContract) {
+            this.newestBlockNumber = loadedBlocksDetails.toBlock;
+            this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
+          }
+          this.loading = false;
+          this.finishedLoading = true;
         })
         .catch(e => {
+          console.debug("loadTransactions - method error", e);
+
           this.loading = false;
           this.finishedLoading = true;
           if (!this.stopLoading) {
@@ -430,6 +440,8 @@ export default {
     loadMore() {
       this.loadedBlocks = 0;
       this.finishedLoading = false;
+      this.stopLoading = false;
+
       return loadTransactions(this.networkId, this.account, this.transactions, null, this.oldestBlockNumber, this.maxBlocksToLoad, (loadedBlocks) => {
         this.loadedBlocks = loadedBlocks;
         this.forceUpdateList();
@@ -448,9 +460,10 @@ export default {
           this.$emit("error", `${e}`);
         });
     },
-    addTransaction(transaction) {
-      this.transactions = addTransaction(this.networkId,
+    addTransaction(transaction, contactDetails) {
+      addTransaction(this.networkId,
         this.account,
+        contactDetails ? contactDetails : this.contactDetails,
         this.transactions,
         transaction,
         null,
@@ -463,17 +476,20 @@ export default {
           transaction.icon = 'warning';
           transaction.error = `Error loading transaction ${error}`;
           this.forceUpdateList();
-        });
-      this.forceUpdateList();
+        }).then(() => this.forceUpdateList());
     },
     stopLoadingTransactions() {
       this.stopLoading = true;
     },
     forceUpdateList() {
-      // A trick to force update computed list
-      // since the attribute this.atransactions is modified outside the component
-      this.refreshIndex ++;
-      this.$forceUpdate();
+      try {
+        // A trick to force update computed list
+        // since the attribute this.atransactions is modified outside the component
+        this.refreshIndex ++;
+        this.$forceUpdate();
+      } catch (e) {
+        console.debug("forceUpdateList - method error", e);
+      }
     }
   }
 };

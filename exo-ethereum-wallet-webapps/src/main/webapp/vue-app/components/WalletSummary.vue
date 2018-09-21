@@ -2,9 +2,9 @@
   <v-card class="waletSummary elevation-0">
     <v-card-title v-if="pendingTransactionsCount" primary-title class="pb-0">
       <v-spacer />
-      <v-badge right>
+      <v-badge color="red" right title="A transaction is in progress">
         <span slot="badge">{{ pendingTransactionsCount }}</span>
-        <v-progress-circular title="A transaction is in progress" color="primary" indeterminate size="20"></v-progress-circular>
+        <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
       </v-badge>
 
       <v-spacer />
@@ -61,8 +61,7 @@ import WalletReceiveModal from './WalletReceiveModal.vue';
 import WalletRequestFundsModal from './WalletRequestFundsModal.vue';
 import SendFundsModal from './SendFundsModal.vue';
 
-import {loadPendingTransactions} from '../WalletEther.js';
-import {getPendingTransactionFromStorage, removePendingTransactionFromStorage} from '../WalletToken.js';
+import {loadPendingTransactions} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -177,7 +176,7 @@ export default {
     loadPendingTransactions() {
       Object.keys(this.pendingTransactions).forEach(key => delete this.pendingTransactions[key]);
 
-      return loadPendingTransactions(this.networkId, this.walletAddress, this.pendingTransactions, transaction => {
+      return loadPendingTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, transaction => {
         if (this.pendingTransactions[transaction.hash]) {
           delete this.pendingTransactions[transaction.hash];
         }
@@ -191,31 +190,6 @@ export default {
         this.updatePendingTransactionsIndex++;
         this.$emit('error', error);
       })
-        .then(() => {
-          Object.keys(this.accountsDetails).forEach(key => {
-            const accountDetail = this.accountsDetails[key];
-            if (accountDetail && accountDetail.isContract) {
-              const contractTransactions = getPendingTransactionFromStorage(this.networkId, this.walletAddress, accountDetail.address,
-                (transactionHash, receipt) => {
-                  if (this.pendingTransactions[transactionHash]) {
-                    delete this.pendingTransactions[transactionHash];
-                  }
-                  this.updatePendingTransactionsIndex++;
-                  if (receipt) {
-                    this.$emit("refresh-token-balance", accountDetail);
-                  } else {
-                    this.$emit('error', `An error proceeding transaction on contract '${accountDetail.name}'`);
-                  }
-                });
-
-              if (contractTransactions && contractTransactions) {
-                Object.keys(contractTransactions).forEach(transactionHash => {
-                  this.pendingTransactions[transactionHash] = contractTransactions[transactionHash];
-                });
-              }
-            }
-          });
-        })
         .then(() => this.updatePendingTransactionsIndex++);
     }
   }

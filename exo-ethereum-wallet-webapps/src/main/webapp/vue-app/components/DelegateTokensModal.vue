@@ -72,7 +72,7 @@ export default {
         return {};
       }
     },
-    accountDetail: {
+    contractDetails: {
       type: Object,
       default: function() {
         return {};
@@ -101,18 +101,6 @@ export default {
       default: function() {
         return false;
       }
-    },
-    balance: {
-      type: Number,
-      default: function() {
-        return 0;
-      }
-    },
-    etherBalance: {
-      type: Number,
-      default: function() {
-        return 0;
-      }
     }
   },
   data () {
@@ -127,6 +115,12 @@ export default {
     };
   },
   computed: {
+    balance() {
+      return this.contractDetails && this.contractDetails.balance;
+    },
+    etherBalance() {
+      return this.contractDetails && this.contractDetails.etherBalance;
+    },
     disabled() {
       return this.isReadonly
         || !this.balance
@@ -173,12 +167,12 @@ export default {
 
       this.loading = true;
       try {
-        this.contract.methods.approve(this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contractDetails.contract.methods.approve(this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
             if (result > window.walletSettings.userPreferences.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
-            return this.contract.methods.approve(this.recipient, this.amount.toString()).send({from: this.account})
+            return this.contractDetails.contract.methods.approve(this.recipient, this.amount.toString()).send({from: this.account})
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 35000;
 
@@ -187,13 +181,16 @@ export default {
                   hash: hash,
                   from: this.account,
                   to: this.recipient,
-                  value : this.amount,
+                  value : 0,
                   gas: gas,
                   gasPrice: window.walletSettings.gasPrice,
+                  contractAddress: this.contractDetails.address,
+                  contractMethodName: 'approve',
+                  contractAmount : this.amount,
                   pending: true,
-                  type: 'delegateToken',
                   timestamp: Date.now()
-                }, this.accountDetail);
+                }, this.contractDetails);
+
                 this.dialog = false;
               })
               .on('error', (error, receipt) => {

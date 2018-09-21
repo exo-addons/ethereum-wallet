@@ -104,7 +104,20 @@ export function searchUserOrSpaceObject(id, type) {
  * }
  */
 export function searchFullName(address) {
+  if (!address) {
+    return;
+  }
+
   address = address.toLowerCase();
+
+  // Get user information from session storage (refreshed when browser closes)
+  let item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase())
+    || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
+
+  if (item) {
+    return Promise.resolve(JSON.parse(item));
+  }
+
   return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp.ok) {

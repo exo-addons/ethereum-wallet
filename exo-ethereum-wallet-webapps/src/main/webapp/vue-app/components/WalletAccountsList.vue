@@ -9,35 +9,30 @@
       @sent="addSendEtherTransaction"
       @close="sendEtherModal = false"
       @error="$emit('error', $event)" />
+
     <!-- Contract actions -->
     <send-tokens-modal
-      :balance="selectedItem && selectedItem.balance"
-      :ether-balance="selectedItem && selectedItem.etherBalance"
       :account="walletAddress"
-      :contract="selectedItem && selectedItem.contract"
+      :contract-details="selectedItem"
       :open="sendTokenModal"
-      :account-detail="selectedItem"
       no-button
       @sent="addSendTokenTransaction"
       @close="sendTokenModal = false"
       @error="$emit('error', $event)" />
     <delegate-tokens-modal
-      :balance="selectedItem && selectedItem.balance"
-      :ether-balance="selectedItem && selectedItem.etherBalance"
       :contract="selectedItem && selectedItem.contract"
+      :contract-details="selectedItem"
       :open="delegateTokenModal"
-      :account-detail="selectedItem"
       no-button
-      @sent="addDelegateTokenTransaction"
+      @sent="addSendTokenTransaction"
       @close="delegateTokenModal = false"
       @error="$emit('error', $event)" />
     <send-delegated-tokens-modal
-      :ether-balance="selectedItem && selectedItem.etherBalance"
       :contract="selectedItem && selectedItem.contract"
-      :has-delegated-tokens="true"
+      :contract-details="selectedItem"
       :open="sendDelegatedTokenModal"
-      :account-detail="selectedItem"
       no-button
+      @sent="addSendTokenTransaction"
       @close="sendDelegatedTokenModal = false"
       @error="$emit('error', $event)" />
 
@@ -125,9 +120,9 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import {addPendingTransactionToStorage, removePendingTransactionFromStorage, deleteContractFromStorage} from '../WalletToken.js';
+import {deleteContractFromStorage} from '../WalletToken.js';
 import {watchTransactionStatus} from '../WalletUtils.js';
-import {addTransaction} from '../WalletEther.js';
+import {addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -195,55 +190,25 @@ export default {
     }
   },
   methods: {
-    addDelegateTokenTransaction(transaction, contract) {
-      const contractTransaction = {
-        from: transaction.from,
-        to: transaction.to,
-        value: transaction.value,
-        hash: transaction.hash,
-        timestamp: Date.now(),
-        labelFrom: 'Delegated from',
-        labelTo: 'Delegated to',
-        icon: 'fa-users',
-        pending: true
-      };
-      addPendingTransactionToStorage(this.networkId, this.walletAddress, contract.address, contractTransaction);
-
-      watchTransactionStatus(transaction.hash, (receipt, block) => {
-        removePendingTransactionFromStorage(this.networkId, this.walletAddress, contract.address, transaction.hash);
-      });
-      this.$emit('transaction-sent', contractTransaction);
-    },
-    addSendTokenTransaction(transaction, contract) {
-      const contractTransaction = {
-        from: transaction.from,
-        to: transaction.to,
-        value: transaction.value,
-        hash: transaction.hash,
-        timestamp: Date.now(),
-        labelFrom: 'Received from',
-        labelTo: 'Sent to',
-        icon: 'fa-exchange-alt',
-        pending: true
-      };
-
-      addPendingTransactionToStorage(this.networkId, this.walletAddress, contract.address, contractTransaction);
-
-      watchTransactionStatus(transaction.hash, (receipt, block) => {
-        removePendingTransactionFromStorage(this.networkId, this.walletAddress, contract.address, transaction.hash);
-      });
-
-      this.$emit('transaction-sent', contractTransaction);
-    },
     addSendEtherTransaction(transaction) {
       addTransaction(this.networkId,
         this.walletAddress,
+        this.accountsDetails[this.account],
         [],
         transaction);
+
+      this.$emit('transaction-sent', transaction);
+    },
+    addSendTokenTransaction(transaction, contract) {
+      addTransaction(this.networkId,
+        this.walletAddress,
+        contract,
+        [],
+        transaction);
+
       this.$emit('transaction-sent', transaction);
     },
     deleteContract(item, event) {
-      console.log(this.walletAddress, this.networkId, item.address);
       if(deleteContractFromStorage(this.walletAddress, this.networkId, item.address)) {
         delete this.accountsDetails[item.address];
         this.$emit('refresh-contracts');

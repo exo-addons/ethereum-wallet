@@ -61,22 +61,10 @@ export default {
         return null;
       }
     },
-    contract: {
+    contractDetails: {
       type: Object,
       default: function() {
         return {};
-      }
-    },
-    balance: {
-      type: Number,
-      default: function() {
-        return 0;
-      }
-    },
-    etherBalance: {
-      type: Number,
-      default: function() {
-        return 0;
       }
     }
   },
@@ -115,12 +103,12 @@ export default {
 
       this.loading = true;
       try {
-        this.contract.methods.transfer(this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contractDetails.contract.methods.transfer(this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
             if (result > window.walletSettings.userPreferences.userDefaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.userDefaultGas} while the estimation of necessary gas is ${result}`;
             }
-            return this.contract.methods.transfer(this.recipient, this.amount.toString()).send({from: this.account})
+            return this.contractDetails.contract.methods.transfer(this.recipient, this.amount.toString()).send({from: this.account})
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 35000;
 
@@ -129,13 +117,15 @@ export default {
                   hash: hash,
                   from: this.account,
                   to: this.recipient,
-                  value : this.amount,
-                  gas: gas,
+                  value : 0,
+                  gas: window.walletSettings.userPreferences.userDefaultGas,
                   gasPrice: window.walletSettings.gasPrice,
                   pending: true,
-                  type: 'sendToken',
+                  contractAddress: this.contractDetails.address,
+                  contractMethodName: 'transfer',
+                  contractAmount : this.amount,
                   timestamp: Date.now()
-                });
+                }, this.contractDetails);
                 this.$emit("close");
               })
               .on('error', (error, receipt) => {

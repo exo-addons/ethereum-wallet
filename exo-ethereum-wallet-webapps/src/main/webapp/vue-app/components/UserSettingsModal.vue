@@ -12,7 +12,7 @@
         <v-flex>
           <v-tabs ref="settingsTabs" v-model="selectedTab" class="pl-3 pr-3">
             <v-tabs-slider />
-            <v-tab>Settings</v-tab>
+            <v-tab>Display</v-tab>
             <v-tab v-if="!isSpace">Advanced settings</v-tab>
             <v-tab>Wallet details</v-tab>
           </v-tabs>

@@ -29,7 +29,38 @@ export function gasToFiat(amount, gasPriceInEther) {
 }
 
 export function retrieveFiatExchangeRate() {
+  window.walletSettings.fiatSymbol = window.walletSettings.userPreferences.currency && constants.FIAT_CURRENCIES[window.walletSettings.userPreferences.currency] ? constants.FIAT_CURRENCIES[window.walletSettings.userPreferences.currency].symbol : '$';
+
   const currency = window.walletSettings && window.walletSettings.userPreferences.currency ? window.walletSettings.userPreferences.currency : 'usd';
+  // Retrieve Fiat <=> Ether exchange rate
+  return retrieveFiatExchangeRateOnline(currency)
+    .then(content => {
+      if (content && content.length && content[0][`price_${currency}`]) {
+        localStorage.setItem(`exo-wallet-exchange-${currency}`, JSON.stringify(content));
+      } else {
+        // Try to get old information from local storage
+        content = localStorage.getItem(`exo-wallet-exchange-${currency}`);
+        if (content) {
+          content = JSON.parse(content);
+        }
+      }
+
+      window.walletSettings.usdPrice = content ? parseFloat(content[0].price_usd) : 0;
+      window.walletSettings.fiatPrice = content ? parseFloat(content[0][`price_${currency}`]) : 0;
+      window.walletSettings.priceLastUpdated = content ? new Date(parseInt(content[0].last_updated) * 1000) : null;
+    })
+    .then(() => {
+      if (window.retrieveFiatExchangeRateInterval) {
+        clearInterval(window.retrieveFiatExchangeRateInterval);
+      }
+      window.retrieveFiatExchangeRateInterval = setTimeout(() => {
+        retrieveFiatExchangeRate();
+      }, 300000);
+      return computeGasPrice();
+    });
+}
+
+function retrieveFiatExchangeRateOnline(currency) {
   // Retrieve Fiat <=> Ether exchange rate
   return fetch(`https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=${currency}`, {
       referrerPolicy: "no-referrer",
@@ -42,26 +73,10 @@ export function retrieveFiatExchangeRate() {
         return resp.json();
       } else if(typeof resp === 'string' && resp.length) {
         return JSON.parse(resp);
-      } else {
-        return null;
       }
     })
-    .then(content => {
-      if (content && content.length && content[0][`price_${currency}`]) {
-        window.walletSettings.usdPrice = parseFloat(content[0].price_usd);
-        window.walletSettings.fiatPrice = parseFloat(content[0][`price_${currency}`]);
-        window.walletSettings.priceLastUpdated = new Date(parseInt(content[0].last_updated) * 1000);
-        window.walletSettings.fiatSymbol = window.walletSettings.userPreferences.currency && constants.FIAT_CURRENCIES[window.walletSettings.userPreferences.currency] ? constants.FIAT_CURRENCIES[window.walletSettings.userPreferences.currency].symbol : '$';
-      }
-    })
-    .then(() => {
-      if (window.retrieveFiatExchangeRateInterval) {
-        clearInterval(window.retrieveFiatExchangeRateInterval);
-      }
-      window.retrieveFiatExchangeRateInterval = setTimeout(() => {
-        retrieveFiatExchangeRate();
-      }, 300000);
-      return computeGasPrice();
+    .catch (error => {
+      console.debug("error retrieving currency exchange, trying to get exchange from local store", error);
     });
 }
 

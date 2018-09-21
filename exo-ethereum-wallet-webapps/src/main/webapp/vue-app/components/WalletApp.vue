@@ -27,7 +27,7 @@
                                    @settings-changed="init()" />
             </v-toolbar>
 
-            <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="transparent" flat dense>
+            <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="white" flat dense>
               <div class="alert alert-warning">
                 <i class="uiIconWarning"></i>
                 Your wallet is not backed up yet.
@@ -36,14 +36,14 @@
               </div>
             </v-toolbar>
 
-            <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="transparent" flat dense>
+            <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="white" flat dense>
               <div class="alert alert-info">
                 <i class="uiIconInfo"></i>
                 No private key was found in current browser. Your wallet is displayed in readonly mode.
                 <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="openWalletSetup">More options</a>
               </div>
             </v-toolbar>
-            <v-toolbar v-else-if="displayWalletUnlockToolbar" class="additionalToolbar" color="transparent" flat dense>
+            <v-toolbar v-else-if="displayWalletUnlockToolbar" class="additionalToolbar" color="white" flat dense>
               <div class="alert alert-info">
                 <i class="uiIconInfo"></i>
                 Your wallet is locked in current browser, thus you can't send transactions.
@@ -136,7 +136,8 @@
                 :is-read-only="isReadOnly"
                 :network-id="networkId"
                 :wallet-address="walletAddress"
-                :contract-detail="selectedAccount"
+                :contract-details="selectedAccount"
+                @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
                 @back="back()"/>
 
             </v-navigation-drawer>
