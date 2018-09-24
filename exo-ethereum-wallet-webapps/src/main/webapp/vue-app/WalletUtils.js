@@ -146,21 +146,12 @@ export function initSettings(isSpace) {
     })
     .then(settings => {
       if (settings && settings.isWalletEnabled) {
-        if (!window.walletSettings) {
-          window.walletSettings = {};
-        }
-        Object.keys(settings).forEach(key => {
-          window.walletSettings[key] = settings[key];
-        });
-        if (!window.walletSettings.defaultGas) {
-          window.walletSettings.defaultGas = 21000;
-        }
-        if (!window.walletSettings.userPreferences) {
-          window.walletSettings.userPreferences = {};
-        }
-        if (!window.walletSettings.userPreferences.userDefaultGas) {
-          window.walletSettings.userPreferences.userDefaultGas = window.walletSettings.defaultGas;
-        }
+        window.walletSettings = window.walletSettings || {};
+        window.walletSettings.userPreferences = {};
+        window.walletSettings = $.extend(window.walletSettings, settings);
+        window.walletSettings.defaultGas = window.walletSettings.defaultGas || 21000;
+        window.walletSettings.userPreferences.userDefaultGas = 
+          window.walletSettings.userPreferences.userDefaultGas || window.walletSettings.defaultGas;
 
         const username = eXo.env.portal.userName;
         const spaceGroup = eXo.env.portal.spaceGroup;
@@ -168,8 +159,8 @@ export function initSettings(isSpace) {
         const accountId = getRemoteId(isSpace);
         window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${accountId}-metamask`);
 
-        if (window.walletSettings.userPreferences.walletAddress) {
-          const address = window.walletSettings.userPreferences.walletAddress;
+        const address = window.walletSettings.userPreferences.walletAddress;
+        if (address) {
           const userP = localStorage.getItem(`exo-wallet-${address}-userp`);
           if (userP) {
             window.walletSettings.userP = userP;

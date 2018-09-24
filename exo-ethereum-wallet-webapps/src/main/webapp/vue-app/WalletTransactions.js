@@ -230,10 +230,12 @@ export function addTransaction(networkId, account, contractDetails, transactions
     contractAmount: transaction.contractAmount,
     fromAddress: fromAddress,
     fromUsername: null,
+    fromType: null,
     fromAvatar: null,
     fromDisplayName: null,
     toAddress: toAddress,
     toUsername: null,
+    toType: null,
     toAvatar: null,
     toDisplayName: null,
     balanceAtDateFiat: null,
@@ -332,6 +334,8 @@ export function addTransaction(networkId, account, contractDetails, transactions
         transactionDetails.fromDisplayName = item.name;
         transactionDetails.fromAvatar = item.avatar;
         transactionDetails.fromUsername = item.id;
+        transactionDetails.fromType = item.type;
+        transactionDetails.fromTechnicalId = item.technicalId;
       }
     })
     .then(() => {
@@ -344,6 +348,8 @@ export function addTransaction(networkId, account, contractDetails, transactions
         transactionDetails.toDisplayName = item.name;
         transactionDetails.toAvatar = item.avatar;
         transactionDetails.toUsername = item.id;
+        transactionDetails.toType = item.type;
+        transactionDetails.toTechnicalId = item.technicalId;
       }
     })
     .then(() => {

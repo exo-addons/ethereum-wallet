@@ -416,7 +416,7 @@ public class EthereumWalletService {
     if (StringUtils.isBlank(avatarUrl)) {
       avatarUrl = "/rest/v1/social/spaces/" + id + "/avatar";
     }
-    return new AccountDetail(id, SPACE_ACCOUNT_TYPE, space.getDisplayName(), null, space.getManagers(), avatarUrl);
+    return new AccountDetail(id, space.getId(), SPACE_ACCOUNT_TYPE, space.getDisplayName(), null, space.getManagers(), avatarUrl);
   }
 
   /**
@@ -439,7 +439,7 @@ public class EthereumWalletService {
     if (StringUtils.isBlank(avatarUrl)) {
       avatarUrl = "/rest/v1/social/users/" + id + "/avatar";
     }
-    return new AccountDetail(id, USER_ACCOUNT_TYPE, identity.getProfile().getFullName(), null, null, avatarUrl);
+    return new AccountDetail(id, identity.getId(), USER_ACCOUNT_TYPE, identity.getProfile().getFullName(), null, null, avatarUrl);
   }
 
   /**

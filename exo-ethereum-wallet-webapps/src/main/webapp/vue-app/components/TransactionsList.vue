@@ -44,32 +44,52 @@
               </v-list-tile-avatar>
 
               <v-list-tile-content class="transactionDetailContent">
-                <v-list-tile-title v-if="item.type === 'ether' && item.isReceiver">
-                  <span>Received Ether from</span>
-                  <v-chip v-if="item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.fromAvatar">
-                    </v-avatar>
-                    <span v-html="item.fromDisplayName"></span>
-                  </v-chip>
-                  <wallet-address v-else :value="item.fromAddress" />
-                </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'ether' && !item.isReceiver">
-                  <span>Sent to</span>
-                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.toAvatar">
-                    </v-avatar>
-                    <span v-html="item.toDisplayName"></span>
-                  </v-chip>
-                  <wallet-address v-else :value="item.toAddress" />
-                </v-list-tile-title>
-
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.isContractCreation">
+                <v-list-tile-title v-if="item.type === 'contract' && item.isContractCreation">
                   <span>Created contract </span>
                   <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
                   <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'ether'">
+                  <span v-if="item.isReceiver">Received from</span>
+                  <span v-else>Sent to</span>
+
+                  <profile-chip
+                    v-if="item.isReceiver"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <profile-chip
+                    v-else
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferFrom'">
+                  <span>Sent to</span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <span>on behalf of</span>
+                  <profile-chip
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && (item.contractMethodName === 'transfer' || item.contractMethodName === 'approve')">
@@ -78,42 +98,28 @@
                   <span v-else-if="item.contractMethodName === 'approve' && item.isReceiver">Delegated from</span>
                   <span v-else>Delegated to</span>
 
-                  <v-chip v-if="item.isReceiver && item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.fromAvatar">
-                    </v-avatar>
-                    <span v-html="item.fromDisplayName" ></span>
-                  </v-chip>
-                  <wallet-address v-else-if="item.isReceiver && !item.fromAvatar" :value="item.fromAddress" />
-                  <v-chip v-else-if="!item.isReceiver && item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.toAvatar">
-                    </v-avatar>
-                    <span v-html="item.toDisplayName" ></span>
-                  </v-chip>
-                  <wallet-address v-else :value="item.toAddress" />
+                  <profile-chip
+                    v-if="item.isReceiver"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <profile-chip
+                    v-else
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferFrom'">
-                  <span>Sent to</span>
-
-                  <v-chip v-if="item.toAvatar" :title="item.toUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.toAvatar">
-                    </v-avatar>
-                    <span v-html="item.toDisplayName"></span>
-                  </v-chip>
-                  <wallet-address v-else :value="item.toAddress" />
-
-                  on behalf of
-
-                  <v-chip v-if="item.fromAvatar" :title="item.fromUsername" class="mt-0 mb-0" small>
-                    <v-avatar size="23px !important">
-                      <img :src="item.fromAvatar">
-                    </v-avatar>
-                    <span v-html="item.fromDisplayName"></span>
-                  </v-chip>
-                  <wallet-address v-else :value="item.fromAddress" />
+                <v-list-tile-title v-else>
+                  <span>Contract transaction</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
                 </v-list-tile-title>
 
                 <v-list-tile-sub-title>
@@ -241,9 +247,7 @@
         </v-expansion-panel-content>
       </v-expansion-panel>
       <v-flex v-else-if="!displayLoadingPercentage && !loading" class="text-xs-center">
-        <v-chip color="white">
-          <span>No recent transactions</span>
-        </v-chip>
+        <span>No recent transactions</span>
       </v-flex>
       <div v-if="!contractDetails.isContract">
         <a v-if="!displayLoadingPercentage && !loading" href="javascript:void(0);" @click="loadMore()">Load more</a>
@@ -256,12 +260,14 @@
 <script>
 import TransactionsList from './TransactionsList.vue';
 import WalletAddress from './WalletAddress.vue';
+import ProfileChip from './ProfileChip.vue';
 
 import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
 import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
+    ProfileChip,
     WalletAddress,
     TransactionsList
   },
