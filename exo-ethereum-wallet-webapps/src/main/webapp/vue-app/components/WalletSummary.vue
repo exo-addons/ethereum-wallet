@@ -9,15 +9,31 @@
 
       <v-spacer />
     </v-card-title>
-    <v-card-title :class="!isMaximized && 'pt-2'" primary-title class="pb-0" >
+
+    <v-card-title v-if="isMaximized" primary-title class="pb-0" >
       <v-spacer />
       <h3 class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h3>
       <v-spacer />
     </v-card-title>
-    <v-card-title primary-title class="pt-0">
+    <v-card-title v-else primary-title class="pt-2 pb-0" >
+      <v-flex class="flex-center">
+        <h4 v-if="principalAccount === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h4>
+        <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ totalBalance }} ether</h4>
+        <h4 v-else class="headline">{{ principalAccountDetails.balance }} {{ principalAccountDetails.symbol }}</h4>
+      </v-flex>
+    </v-card-title>
+
+    <v-card-title v-if="isMaximized" primary-title class="pt-0">
       <v-spacer />
       <div>{{ totalBalance }} ether</div>
       <v-spacer />
+    </v-card-title>
+    <v-card-title v-else primary-title class="pt-0 text-xs-center">
+      <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index" class="flex-center">
+        <template v-if="accountDetails.key === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</template>
+        <template v-else-if="accountDetails.key === 'ether'" class="headline">{{ totalBalance }} ether</template>
+        <template v-else class="headline">{{ accountDetails.balance }} {{ accountDetails.symbol }}</template>
+      </v-flex>
     </v-card-title>
 
     <v-card-actions>
@@ -106,6 +122,18 @@ export default {
         return false;
       }
     },
+    overviewAccounts: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
+    principalAccount: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     refreshIndex: {
       type: Number,
       default: function() {
@@ -155,6 +183,35 @@ export default {
     },
     pendingTransactionsCount() {
       return this.updatePendingTransactionsIndex && Object.keys(this.pendingTransactions).length;
+    },
+    principalAccountDetails() {
+      if (this.refreshIndex > 0 && this.principalAccount
+          && this.accountsDetails[this.principalAccount]) {
+        return this.accountsDetails[this.principalAccount];
+      } else {
+        // Return ether/fiat
+        return this.accountsDetails[this.walletAddress];
+      }
+    },
+    overviewAccountsArray() {
+      const accountsList = [];
+      this.overviewAccounts.forEach(selectedValue => {
+        if (selectedValue !== this.principalAccount) {
+          if (selectedValue === 'fiat') {
+            const accountDetails = Object.assign({}, this.accountsDetails[this.walletAddress]);
+            accountDetails.key = 'fiat';
+            accountsList.push(accountDetails);
+          } else if (selectedValue === 'ether') {
+            const accountDetails = Object.assign({}, this.accountsDetails[this.walletAddress]);
+            accountDetails.key = 'ether';
+            accountsList.push(accountDetails);
+          } else if (this.accountsDetails[selectedValue]) {
+            accountsList.push(this.accountsDetails[selectedValue]);
+          }
+        }
+      });
+
+      return accountsList;
     }
   },
   created() {

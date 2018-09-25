@@ -25,6 +25,22 @@
                     v-model="selectedCurrency"
                     :items="currencies"
                     label="Select fiat currency used to display ether amounts conversion" />
+                  <v-combobox
+                    v-model="selectedPrincipalAccount"
+                    :items="accountsList"
+                    item-disabled="itemDisabled"
+                    label="Select principal account displayed in wallet overview"
+                    placeholder="Select principal account displayed in wallet overview"
+                    chips />
+                  <v-combobox
+                    v-model="selectedOverviewAccounts"
+                    :items="accountsList"
+                    label="List of balances to display on wallet summary (by order)"
+                    placeholder="List of contracts, ether and fiat to display on wallet summary (by order)"
+                    multiple
+                    deletable-chips
+                    clearable
+                    chips />
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -123,6 +139,24 @@ export default {
       default: function() {
         return null;
       }
+    },
+    overviewAccounts: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
+    principalAccount: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
+    accountsDetails: {
+      type: Object,
+      default: function() {
+        return {};
+      }
     }
   },
   data () {
@@ -136,7 +170,12 @@ export default {
       currencies: [],
       defaultGas: 0,
       useMetamaskChoice: false,
-      defaulGasPriceFiat: 0
+      defaulGasPriceFiat: 0,
+      selectedOverviewAccounts: [],
+      selectedPrincipalAccount: null,
+      etherAccount: {text: 'Ether', value: 'ether', disabled: false},
+      fiatAccount: {text: 'Fiat', value: 'fiat', disabled: false},
+      accountsList: []
     };
   },
   computed: {
@@ -158,8 +197,52 @@ export default {
         }
         this.show = true;
 
+        this.accountsList = [];
+        this.selectedOverviewAccounts = [];
+        this.selectedPrincipalAccount = null;
+
+        this.accountsList.push(Object.assign({}, this.etherAccount), Object.assign({}, this.fiatAccount));
+        if (this.accountsDetails) {
+          Object.keys(this.accountsDetails).forEach(key => {
+            const accountDetails = this.accountsDetails[key];
+            if (accountDetails.isContract) {
+              this.accountsList.push({text: accountDetails.name, value: accountDetails.address, disabled: false});
+            }
+          });
+        }
+
+        this.overviewAccounts.forEach(selectedValue => {
+          const selectedObject = this.getOverviewAccountObject(selectedValue);
+          if (selectedObject) {
+            this.selectedOverviewAccounts.push(selectedObject);
+          }
+        });
+
+        this.selectedPrincipalAccount = this.getOverviewAccountObject(this.principalAccount);
+
         // Workaround to display slider on first popin open
         this.$refs.settingsTabs.callSlider();
+      }
+    },
+    selectedPrincipalAccount() {
+      if (this.selectedPrincipalAccount) {
+        this.selectedOverviewAccounts.forEach(account => {
+          account.disabled = false;
+        });
+
+        this.accountsList.forEach((account, index) => {
+          if (this.selectedPrincipalAccount.value === account.value) {
+            account.disabled = true;
+            const accountIndex = this.selectedOverviewAccounts.findIndex(foundSelectedAccount => foundSelectedAccount.value === account.value);
+            if (accountIndex >= 0) {
+              this.selectedOverviewAccounts.splice(accountIndex, 1);
+            }
+            this.selectedOverviewAccounts.unshift(account);
+          } else {
+            account.disabled = false;
+          }
+        });
+        this.$forceUpdate();
       }
     },
     show() {
@@ -192,7 +275,9 @@ export default {
             credentials: 'include',
             body: JSON.stringify({
               defaultGas: this.defaultGas,
-              currency: this.selectedCurrency.value
+              currency: this.selectedCurrency.value,
+              principalAccount: this.selectedPrincipalAccount.value,
+              overviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
             })
           }).then(resp => {
             if (resp && resp.ok) {
@@ -229,6 +314,19 @@ export default {
         enableMetamask(this.isSpace);
       } else {
         disableMetamask(this.isSpace);
+      }
+    },
+    getOverviewAccountObject(selectedValue) {
+      if (selectedValue === 'fiat') {
+        return Object.assign({}, this.fiatAccount);
+      } else if (selectedValue === 'ether') {
+        return Object.assign({}, this.etherAccount);
+      } else if(this.accountsList && this.accountsList.length) {
+        const selectedContractAddress = this.accountsList.findIndex(contract => contract.value === selectedValue);
+        if (selectedContractAddress >= 0) {
+          const contract = this.accountsList[selectedContractAddress];
+          return {text: contract.text, value: contract.value, disabled: false};
+        }
       }
     }
   }

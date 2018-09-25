@@ -160,6 +160,10 @@ export function initSettings(isSpace) {
           }
         }
         window.walletSettings.defaultPrincipalAccount = window.walletSettings.defaultPrincipalAccount || window.walletSettings.defaultOverviewAccounts[0];
+        window.walletSettings.userPreferences.principalAccount = window.walletSettings.userPreferences.principalAccount
+          || window.walletSettings.defaultPrincipalAccount;
+        window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts
+          || window.walletSettings.defaultOverviewAccounts;
 
         const username = eXo.env.portal.userName;
         const spaceGroup = eXo.env.portal.spaceGroup;

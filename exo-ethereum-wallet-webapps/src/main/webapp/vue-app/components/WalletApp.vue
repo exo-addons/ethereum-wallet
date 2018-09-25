@@ -22,6 +22,9 @@
                                    :open="showSettingsModal"
                                    :fiat-symbol="fiatSymbol"
                                    :display-reset-option="displayWalletResetOption"
+                                   :accounts-details="accountsDetails"
+                                   :overview-accounts="overviewAccounts"
+                                   :principal-account="principalAccount"
                                    @copied="browserWalletBackedUp = true"
                                    @close="showSettingsModal = false"
                                    @settings-changed="init()" />
@@ -85,12 +88,14 @@
                 @error="loading = false; errorMessage = $event" />
   
               <wallet-summary
-                v-if="walletAddress && refreshIndex && accountsDetails[walletAddress]"
+                v-if="walletAddress && !loading && accountsDetails[walletAddress]"
                 ref="walletSummary"
                 :is-maximized="isMaximized"
                 :is-space="isSpace"
                 :is-space-administrator="isSpaceAdministrator"
                 :accounts-details="accountsDetails"
+                :overview-accounts="overviewAccounts"
+                :principal-account="principalAccount"
                 :refresh-index="refreshIndex"
                 :network-id="networkId"
                 :wallet-address="walletAddress"
@@ -104,7 +109,7 @@
                 @error="errorMessage = $event" />
   
               <wallet-accounts-list
-                v-if="isMaximized && walletAddressConfigured"
+                v-if="isMaximized && walletAddressConfigured && !loading"
                 ref="WalletAccountsList"
                 :is-read-only="isReadOnly"
                 :accounts-details="accountsDetails"
@@ -195,6 +200,8 @@ export default {
       walletAddressConfigured: false,
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
+      overviewAccounts: null,
+      principalAccount: null,
       showSettingsModal: false,
       showAddContractModal: false,
       displayWalletSetup: false,
@@ -206,7 +213,6 @@ export default {
       walletAddress: null,
       selectedAccount: null,
       fiatSymbol: '$',
-      contracts: [],
       accountsDetails: {},
       refreshIndex: 1,
       watchMetamaskAccountInterval: null,
@@ -371,6 +377,8 @@ export default {
           this.browserWalletExists = window.walletSettings.browserWalletExists;
           this.browserWalletDecrypted = window.walletSettings.browserWallet;
           this.browserWalletBackedUp = window.walletSettings.userPreferences.backedUp;
+          this.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts;
+          this.principalAccount = window.walletSettings.userPreferences.principalAccount;
 
           this.walletAddressConfigured = true;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
@@ -428,7 +436,7 @@ export default {
       return computeBalance(this.walletAddress)
         .then((balanceDetails, error) => {
           if (error) {
-            this.accountsDetails[this.walletAddress] = {
+            this.$set(this.accountsDetails, this.walletAddress, {
               title : 'ether',
               icon : 'warning',
               balance : 0,
@@ -436,7 +444,7 @@ export default {
               isContract : false,
               address : this.walletAddress,
               error : `Error retrieving balance of wallet: ${error}`
-            };
+            });
             this.forceUpdate();
             throw error;
           }
@@ -449,13 +457,13 @@ export default {
             balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
             balanceFiat : balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0
           };
-          this.accountsDetails[this.walletAddress] = accountDetails;
+          this.$set(this.accountsDetails, this.walletAddress, accountDetails);
           this.forceUpdate();
           return accountDetails;
         })
         .catch(e => {
           console.debug("refreshBalance method - error", e);
-          this.accountsDetails[this.walletAddress] = {
+          this.$set(this.accountsDetails, this.walletAddress, {
             title : 'ether',
             icon : 'warning',
             balance : 0,
@@ -463,7 +471,7 @@ export default {
             isContract : false,
             address : this.walletAddress,
             error : `Error retrieving balance of wallet ${e}`,
-          };
+          });
           throw e;
         });
     },
@@ -488,7 +496,7 @@ export default {
                 if (this.accountsDetails[this.walletAddress]) {
                   contractDetails.etherBalance = this.accountsDetails[this.walletAddress].balance;
                 }
-                this.accountsDetails[contractDetails.address] = contractDetails;
+                this.$set(this.accountsDetails, contractDetails.address, contractDetails);
               }
             });
             this.forceUpdate();
