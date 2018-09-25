@@ -20,7 +20,7 @@
             <v-tab-item v-if="!isSpace">
               <v-card>
                 <v-card-text>
-                  <span>Currency</span>
+                  <span>Fiat currency</span>
                   <v-combobox
                     v-model="selectedCurrency"
                     :items="currencies"
@@ -174,7 +174,7 @@ export default {
       selectedOverviewAccounts: [],
       selectedPrincipalAccount: null,
       etherAccount: {text: 'Ether', value: 'ether', disabled: false},
-      fiatAccount: {text: 'Fiat', value: 'fiat', disabled: false},
+      fiatAccount: {text: 'Fiat ($, €...)', value: 'fiat', disabled: false},
       accountsList: []
     };
   },

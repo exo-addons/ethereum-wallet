@@ -10,12 +10,7 @@
       <v-spacer />
     </v-card-title>
 
-    <v-card-title v-if="isMaximized" primary-title class="pb-0" >
-      <v-spacer />
-      <h3 class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h3>
-      <v-spacer />
-    </v-card-title>
-    <v-card-title v-else primary-title class="pt-2 pb-0" >
+    <v-card-title primary-title class="pt-2 pb-0" >
       <v-flex class="flex-center">
         <h4 v-if="principalAccount === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h4>
         <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ totalBalance }} ether</h4>
@@ -23,12 +18,7 @@
       </v-flex>
     </v-card-title>
 
-    <v-card-title v-if="isMaximized" primary-title class="pt-0">
-      <v-spacer />
-      <div>{{ totalBalance }} ether</div>
-      <v-spacer />
-    </v-card-title>
-    <v-card-title v-else primary-title class="pt-0 text-xs-center">
+    <v-card-title v-if="!isMaximized" primary-title class="pt-0 text-xs-center">
       <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index" class="flex-center">
         <template v-if="accountDetails.key === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</template>
         <template v-else-if="accountDetails.key === 'ether'" class="headline">{{ totalBalance }} ether</template>
