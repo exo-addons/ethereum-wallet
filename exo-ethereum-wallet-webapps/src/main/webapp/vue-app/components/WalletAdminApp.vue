@@ -1,161 +1,224 @@
 <template>
-  <v-app v-if="isWalletEnabled" id="WalletAdminApp" color="transaprent">
+  <v-app v-if="isWalletEnabled" id="WalletAdminApp" color="transaprent" flat>
     <main>
       <v-layout>
-        <v-flex class="white">
+        <v-flex class="white text-xs-center" flat>
           <div v-if="error && !loading" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ error }}
           </div>
+
           <div v-if="!sameConfiguredNetwork" class="alert alert-warning v-content">
             <i class="uiIconWarning"></i>
             Current selected network on Metamask is different from configured network to use with the platform.
             (The deployed contracts on default network aren't displayed)
           </div>
-          <v-card class="text-xs-center pr-3 pl-3">
-            <v-combobox
-              v-model="selectedNetwork"
-              :items="networks"
-              label="Select ethereum network" />
 
-            <v-text-field
-              v-if="showSpecificNetworkFields"
-              v-model="selectedNetwork.value"
-              :rules="mandatoryRule"
-              :label="`Ethereum Network ID (current id: ${networkId})`"
-              type="number"
-              name="defaultNetworkId" />
+          <v-dialog v-model="loading" persistent width="300">
+            <v-card color="primary" dark>
+              <v-card-text>
+                Loading ...
+                <v-progress-linear indeterminate color="white" class="mb-0" />
+              </v-card-text>
+            </v-card>
+          </v-dialog>
 
-            <v-text-field
-              v-if="showSpecificNetworkFields"
-              ref="providerURL"
-              v-model="selectedNetwork.httpLink"
-              :rules="mandatoryRule"
-              type="text"
-              name="providerURL"
-              label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
-              autofocus />
+          <v-tabs v-model="selectedTab" grow>
+            <v-tabs-slider color="primary" />
+            <v-tab key="general">Settings</v-tab>
+            <v-tab key="overview">Advanced settings</v-tab>
+            <v-tab key="contracts">Contracts</v-tab>
+          </v-tabs>
 
-            <v-text-field
-              v-if="showSpecificNetworkFields"
-              ref="websocketProviderURL"
-              v-model="selectedNetwork.wsLink"
-              :rules="mandatoryRule"
-              type="text"
-              name="websocketProviderURL"
-              label="Ethereum Network Websocket URL used for notifications" />
+          <v-tabs-items v-model="selectedTab">
+            <v-tab-item key="general">
+              <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
+                <v-combobox
+                  v-model="selectedNetwork"
+                  :items="networks"
+                  label="Select ethereum network" />
+    
+                <v-text-field
+                  v-if="showSpecificNetworkFields"
+                  v-model="selectedNetwork.value"
+                  :rules="mandatoryRule"
+                  :label="`Ethereum Network ID (current id: ${networkId})`"
+                  type="number"
+                  name="defaultNetworkId" />
+    
+                <v-text-field
+                  v-if="showSpecificNetworkFields"
+                  ref="providerURL"
+                  v-model="selectedNetwork.httpLink"
+                  :rules="mandatoryRule"
+                  type="text"
+                  name="providerURL"
+                  label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
+                  autofocus />
+    
+                <v-text-field
+                  v-if="showSpecificNetworkFields"
+                  ref="websocketProviderURL"
+                  v-model="selectedNetwork.wsLink"
+                  :rules="mandatoryRule"
+                  type="text"
+                  name="websocketProviderURL"
+                  label="Ethereum Network Websocket URL used for notifications" />
+    
+                <v-autocomplete
+                  ref="accessPermissionAutoComplete"
+                  v-model="accessPermission"
+                  :items="accessPermissionOptions"
+                  :loading="isLoadingSuggestions"
+                  :search-input.sync="accessPermissionSearchTerm"
+                  :open-on-click="false"
+                  :open-on-hover="false"
+                  :open-on-clear="false"
+                  :no-filter="true"
+                  counter="1"
+                  max-width="100%"
+                  item-text="name"
+                  item-value="id"
+                  label="Wallet access permission (Spaces only)"
+                  placeholder="Start typing to Search a space"
+                  hide-no-data hide-details hide-selected chips>
+    
+                  <template slot="no-data">
+                    <v-list-tile>
+                      <v-list-tile-title>
+                        Search for a <strong>Space</strong>
+                      </v-list-tile-title>
+                    </v-list-tile>
+                  </template>
+    
+                  <template slot="selection" slot-scope="{ item, selected }">
+                    <v-chip :selected="selected" color="blue-grey" class="white--text">
+                      <v-avatar dark>
+                        <img :src="item.avatar">
+                      </v-avatar>
+                      <span>{{ item.name }}</span>
+                    </v-chip>
+                  </template>
+              
+                  <template slot="item" slot-scope="{ item, tile }">
+                    <v-list-tile-avatar>
+                      <img :src="item.avatar">
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                      <v-list-tile-title v-text="item.name"></v-list-tile-title>
+                    </v-list-tile-content>
+                  </template>
+                </v-autocomplete>
 
-            <v-autocomplete
-              ref="accessPermissionAutoComplete"
-              v-model="accessPermission"
-              :items="accessPermissionOptions"
-              :loading="isLoadingSuggestions"
-              :search-input.sync="accessPermissionSearchTerm"
-              :open-on-click="false"
-              :open-on-hover="false"
-              :open-on-clear="false"
-              :no-filter="true"
-              counter="1"
-              max-width="100%"
-              item-text="name"
-              item-value="id"
-              label="Wallet access permission (Spaces only)"
-              placeholder="Start typing to Search a space"
-              hide-no-data hide-details hide-selected chips>
+                <v-combobox
+                  v-model="selectedPrincipalAccount"
+                  :items="accountsList"
+                  class="mt-4"
+                  item-disabled="itemDisabled"
+                  label="Select principal account displayed in wallet overview"
+                  placeholder="Select principal account displayed in wallet overview"
+                  chips />
 
-              <template slot="no-data">
-                <v-list-tile>
-                  <v-list-tile-title>
-                    Search for a <strong>Space</strong>
-                  </v-list-tile-title>
-                </v-list-tile>
-              </template>
+                <v-combobox
+                  v-model="selectedOverviewAccounts"
+                  :items="accountsList"
+                  label="List of balances to display on wallet summary (by order)"
+                  placeholder="List of contracts, ether and fiat to display on wallet summary (by order)"
+                  multiple
+                  deletable-chips
+                  clearable
+                  chips />
+    
+                <v-card-actions>
+                  <v-spacer />
+                  <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
+                    Save
+                  </button>
+                  <v-spacer />
+                </v-card-actions>
 
-              <template slot="selection" slot-scope="{ item, selected }">
-                <v-chip :selected="selected" color="blue-grey" class="white--text">
-                  <v-avatar dark>
-                    <img :src="item.avatar">
-                  </v-avatar>
-                  <span>{{ item.name }}</span>
-                </v-chip>
-              </template>
-          
-              <template slot="item" slot-scope="{ item, tile }">
-                <v-list-tile-avatar>
-                  <img :src="item.avatar">
-                </v-list-tile-avatar>
-                <v-list-tile-content>
-                  <v-list-tile-title v-text="item.name"></v-list-tile-title>
-                </v-list-tile-content>
-              </template>
-            </v-autocomplete>
+              </v-card>
+            </v-tab-item>
 
-            <v-slider
-              v-model="defaultGas"
-              :label="`Default Gas for transactions: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
-              :min="21000"
-              :max="100000"
-              :step="1000"
-              type="number"
-              class="mt-4"
-              required />
-            <v-slider
-              v-model="defaultBlocksToRetrieve"
-              :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
-              :min="100"
-              :max="10000"
-              :step="100"
-              type="number"
-              required />
-            <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
-              Save
-            </button>
-          </v-card>
-          <v-card v-show="sameConfiguredNetwork">
-            <v-divider />
-            <v-subheader class="text-xs-center">Default contracts</v-subheader>
-            <v-divider />
-            <div class="text-xs-center">
-              <v-progress-circular v-show="loading" indeterminate color="primary" />
-            </div>
+            <v-tab-item key="overview">
+              <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
 
-            <div v-if="newTokenAddress" class="alert alert-success v-content">
-              <i class="uiIconSuccess"></i>
-              Contract created under address: 
-              <wallet-address :value="newTokenAddress" />
-            </div>
-            <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
-              <template slot="items" slot-scope="props">
-                <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>
-                <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
-                <td v-else class="text-xs-right">{{ props.item.address }}</td>
-                <td class="text-xs-right">
-                  <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
-                  <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
-                    <i class="uiIconTrash uiIconBlue"></i>
-                  </v-btn>
-                </td>
-              </template>
-            </v-data-table>
-            <v-divider />
-            <div class="text-xs-center pt-2 pb-2">
-              <button class="btn btn-primary mt-3" @click="showAddContractModal = true">
-                Add Existing contract Address
-              </button>
-              <deploy-new-contract 
-                v-show="sameConfiguredNetwork"
-                :account="account"
-                :network-id="networkId"
-                :fiat-symbol="fiatSymbol"
-                @list-updated="updateList($event)"/>
-              <add-contract-modal
-                :net-id="networkId"
-                :account="account"
-                :open="showAddContractModal"
-                :is-default-contract="true"
-                @added="contractsModified"
-                @close="showAddContractModal = false" />
-            </div>
-          </v-card>
+                <v-slider
+                  v-model="defaultGas"
+                  :label="`Default Gas for transactions: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
+                  :min="21000"
+                  :max="100000"
+                  :step="1000"
+                  type="number"
+                  class="mt-4"
+                  required />
+                <v-slider
+                  v-model="defaultBlocksToRetrieve"
+                  :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
+                  :min="100"
+                  :max="10000"
+                  :step="100"
+                  type="number"
+                  required />
+
+                <v-card-actions>
+                  <v-spacer />
+                  <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
+                    Save
+                  </button>
+                  <v-spacer />
+                </v-card-actions>
+
+              </v-card>
+            </v-tab-item>
+
+            <v-tab-item key="contracts">
+              <v-card v-if="sameConfiguredNetwork" flat>
+                <v-subheader class="text-xs-center">Default contracts</v-subheader>
+                <v-divider />
+    
+                <div v-if="newTokenAddress" class="alert alert-success v-content">
+                  <i class="uiIconSuccess"></i>
+                  Contract created under address: 
+                  <wallet-address :value="newTokenAddress" />
+                </div>
+                <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
+                  <template slot="items" slot-scope="props">
+                    <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>
+                    <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
+                    <td v-else class="text-xs-right">{{ props.item.address }}</td>
+                    <td class="text-xs-right">
+                      <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
+                      <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
+                        <i class="uiIconTrash uiIconBlue"></i>
+                      </v-btn>
+                    </td>
+                  </template>
+                </v-data-table>
+                <v-divider />
+                <div class="text-xs-center pt-2 pb-2">
+                  <deploy-new-contract 
+                    v-show="sameConfiguredNetwork"
+                    :account="account"
+                    :network-id="networkId"
+                    :fiat-symbol="fiatSymbol"
+                    @list-updated="updateList($event)"/>
+
+                  <button class="btn mt-3" @click="showAddContractModal = true">
+                    Add Existing contract Address
+                  </button>
+                  <add-contract-modal
+                    :net-id="networkId"
+                    :account="account"
+                    :open="showAddContractModal"
+                    :is-default-contract="true"
+                    @added="contractsModified"
+                    @close="showAddContractModal = false" />
+                </div>
+              </v-card>
+            </v-tab-item>
+
+          </v-tabs-items>
+
         </v-flex>
       </v-layout>
     </main>
@@ -181,6 +244,8 @@ export default {
     return {
       isWalletEnabled: false,
       loading: false,
+      loadingSettings: false,
+      selectedTab: true,
       sameConfiguredNetwork: true,
       accessPermission: '',
       accessPermissionOptions: [],
@@ -194,6 +259,8 @@ export default {
       networkId: null,
       newTokenAddress: null,
       showAddContractModal: false,
+      selectedOverviewAccounts: [],
+      selectedPrincipalAccount: null,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ],
@@ -241,6 +308,8 @@ export default {
           httpLink: 'http://127.0.0.1:8545'
         }
       ],
+      etherAccount: {text: 'Ether', value: 'ether', disabled: false},
+      fiatAccount: {text: 'Fiat', value: 'fiat', disabled: false},
       contracts: []
     };
   },
@@ -267,6 +336,16 @@ export default {
     },
     showSpecificNetworkFields() {
       return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
+    },
+    accountsList() {
+      const accountsList = [];
+      accountsList.push(Object.assign({}, this.etherAccount), Object.assign({}, this.fiatAccount));
+      if (this.contracts) {
+        this.contracts.forEach(contract => {
+          accountsList.push({text: contract.name, value: contract.address, disabled: false});
+        });
+      }
+      return accountsList;
     }
   },
   watch: {
@@ -286,6 +365,27 @@ export default {
           this.isLoadingSuggestions = false;
         });
     },
+    selectedPrincipalAccount() {
+      if (this.selectedPrincipalAccount) {
+        this.selectedOverviewAccounts.forEach(account => {
+          account.disabled = false;
+        });
+
+        this.accountsList.forEach((account, index) => {
+          if (this.selectedPrincipalAccount.value === account.value) {
+            account.disabled = true;
+            const accountIndex = this.selectedOverviewAccounts.findIndex(foundSelectedAccount => foundSelectedAccount.value === account.value);
+            if (accountIndex >= 0) {
+              this.selectedOverviewAccounts.splice(accountIndex, 1);
+            }
+            this.selectedOverviewAccounts.unshift(account);
+          } else {
+            account.disabled = false;
+          }
+        });
+        this.$forceUpdate();
+      }
+    },
     accessPermission(newValue, oldValue) {
       if (oldValue) {
         this.accessPermissionSearchTerm = null;
@@ -304,6 +404,9 @@ export default {
   methods: {
     init() {
       this.loading = true;
+      this.loadingSettings = true;
+      this.$forceUpdate();
+
       return initSettings()
         .then(() => {
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
@@ -320,17 +423,41 @@ export default {
           this.account = window.localWeb3.eth.defaultAccount;
           this.networkId = window.walletSettings.currentNetworkId;
         })
-        .then(() => retrieveFiatExchangeRate())
-        .then(() => this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$')
         .then(this.setDefaultValues)
-        .then(() => this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value))
+        .then(() => this.loadingSettings = false)
         .then(this.refreshContractsList)
+        .then(this.setSelectedValues)
         .then(() => this.loading = false)
         .catch(e => {
           console.debug("init method - error", e);
           this.loading = false;
+          this.loadingSettings = false;
           this.errorMessage = `Error encountered: ${e}`;
         });
+    },
+    setSelectedValues() {
+      const selectedOverviewAccountsValues = window.walletSettings.defaultOverviewAccounts;
+      selectedOverviewAccountsValues.forEach(selectedValue => {
+        const selectedObject = this.getOverviewAccountObject(selectedValue);
+        if (selectedObject) {
+          this.selectedOverviewAccounts.push(selectedObject);
+        }
+      });
+
+      this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
+    },
+    getOverviewAccountObject(selectedValue) {
+      if (selectedValue === 'fiat') {
+        return Object.assign({}, this.fiatAccount);
+      } else if (selectedValue === 'ether') {
+        return Object.assign({}, this.etherAccount);
+      } else if(this.contracts && this.contracts.length) {
+        const selectedContractAddress = this.contracts.findIndex(contract => contract.address === selectedValue);
+        if (selectedContractAddress >= 0) {
+          const contract = this.contracts[selectedContractAddress];
+          return {text: contract.name, value: contract.address, disabled: false};
+        }
+      }
     },
     setDefaultValues() {
       if (window.walletSettings.accessPermission) {
@@ -360,6 +487,8 @@ export default {
       if (window.walletSettings.defaultGas) {
         this.defaultGas = window.walletSettings.defaultGas;
       }
+      this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
+      this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
     },
     updateList(address) {
       this.loading = true;
@@ -461,6 +590,8 @@ export default {
           websocketProviderURL: this.selectedNetwork.wsLink,
           defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
           defaultNetworkId: this.selectedNetwork.value,
+          defaultPrincipalAccount: this.selectedPrincipalAccount.value,
+          defaultOverviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
           defaultGas: this.defaultGas
         })
       }).then(resp => {

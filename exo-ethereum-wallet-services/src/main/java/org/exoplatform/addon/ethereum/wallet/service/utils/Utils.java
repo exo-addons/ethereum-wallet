@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.*;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
@@ -226,5 +227,17 @@ public class Utils {
     } finally {
       WebuiRequestContext.setCurrentInstance(null);
     }
+  }
+
+  public static List<String> jsonArrayToList(JSONObject jsonObject, String key) throws JSONException {
+    List<String> list = null;
+    if (jsonObject.has(key)) {
+      list = new ArrayList<String>();
+      JSONArray arrayValue = jsonObject.getJSONArray(key);
+      for (int i = 0; i < arrayValue.length(); i++) {
+        list.add(arrayValue.getString(i));
+      }
+    }
+    return list;
   }
 }

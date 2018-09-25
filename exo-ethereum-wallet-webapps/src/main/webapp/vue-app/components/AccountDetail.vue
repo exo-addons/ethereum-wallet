@@ -27,8 +27,6 @@
           <send-tokens-modal
             v-if="contractDetails.isContract"
             :is-readonly="isReadOnly"
-            :balance="contractDetails.balance"
-            :ether-balance="contractDetails.etherBalance"
             :account="walletAddress"
             :contract-details="contractDetails"
             use-navigation

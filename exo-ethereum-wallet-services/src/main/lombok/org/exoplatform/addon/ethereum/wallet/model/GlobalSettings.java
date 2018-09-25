@@ -1,5 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.jsonArrayToList;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -27,6 +29,10 @@ public class GlobalSettings implements Serializable {
 
   private Integer                defaultGas              = 65000;
 
+  private String                 defaultPrincipalAccount = null;
+
+  private List<String>           defaultOverviewAccounts = null;
+
   private UserPreferences        userPreferences;
 
   /**
@@ -51,6 +57,13 @@ public class GlobalSettings implements Serializable {
       if (userPreferences != null) {
         jsonObject.put("userPreferences", userPreferences.toJSONObject());
       }
+      if (defaultPrincipalAccount != null) {
+        jsonObject.put("defaultPrincipalAccount", defaultPrincipalAccount);
+      }
+      if (defaultOverviewAccounts != null) {
+        jsonObject.put("defaultOverviewAccounts", new JSONArray(defaultOverviewAccounts));
+      }
+
       jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
@@ -102,6 +115,13 @@ public class GlobalSettings implements Serializable {
 
       int storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getInt("defaultGas") : 0;
       globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
+
+      String storedDefaultPrincipalAccount =
+                                           jsonObject.has("defaultPrincipalAccount") ? jsonObject.getString("defaultPrincipalAccount")
+                                                                                     : null;
+      globalSettings.setDefaultPrincipalAccount(storedDefaultPrincipalAccount);
+
+      globalSettings.setDefaultOverviewAccounts(jsonArrayToList(jsonObject, "defaultOverviewAccounts"));
 
       return globalSettings;
     } catch (JSONException e) {

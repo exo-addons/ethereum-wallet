@@ -1,10 +1,12 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.jsonArrayToList;
+
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.*;
 
 import lombok.Data;
 
@@ -21,6 +23,10 @@ public class UserPreferences implements Serializable {
 
   private String            phrase           = null;
 
+  private String            principalAccount = null;
+
+  private List<String>      overviewAccounts = null;
+
   public String toJSONString() {
     return toJSONObject().toString();
   }
@@ -32,6 +38,13 @@ public class UserPreferences implements Serializable {
       jsonObject.put("defaultGas", defaultGas);
       jsonObject.put("walletAddress", walletAddress);
       jsonObject.put("phrase", phrase);
+
+      if (principalAccount != null) {
+        jsonObject.put("principalAccount", principalAccount);
+      }
+      if (overviewAccounts != null) {
+        jsonObject.put("overviewAccounts", new JSONArray(overviewAccounts));
+      }
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
     }
@@ -57,6 +70,10 @@ public class UserPreferences implements Serializable {
       if (jsonObject.has("phrase")) {
         userPreferences.setWalletAddress(jsonObject.getString("phrase"));
       }
+      if (jsonObject.has("principalAccount")) {
+        userPreferences.setPrincipalAccount(jsonObject.getString("principalAccount"));
+      }
+      userPreferences.setOverviewAccounts(jsonArrayToList(jsonObject, "overviewAccounts"));
       return userPreferences;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);

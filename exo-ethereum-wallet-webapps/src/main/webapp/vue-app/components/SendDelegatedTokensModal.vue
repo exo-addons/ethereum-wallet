@@ -1,11 +1,12 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
-      <v-btn flat value="send">
+      <v-btn :disabled="disabled" flat value="send">
         <span>Send delegated tokens</span>
         <v-icon>send</v-icon>
       </v-btn>
     </v-bottom-nav>
+
     <button v-else-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">
       Send delegated tokens
     </button>

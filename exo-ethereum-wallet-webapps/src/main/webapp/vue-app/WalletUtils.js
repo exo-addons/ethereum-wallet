@@ -71,8 +71,6 @@ function retrieveFiatExchangeRateOnline(currency) {
     .then(resp => {
       if (resp && resp.ok) {
         return resp.json();
-      } else if(typeof resp === 'string' && resp.length) {
-        return JSON.parse(resp);
       }
     })
     .catch (error => {
@@ -152,6 +150,16 @@ export function initSettings(isSpace) {
         window.walletSettings.defaultGas = window.walletSettings.defaultGas || 21000;
         window.walletSettings.userPreferences.userDefaultGas = 
           window.walletSettings.userPreferences.userDefaultGas || window.walletSettings.defaultGas;
+
+        if (!window.walletSettings.defaultOverviewAccounts || !window.walletSettings.defaultOverviewAccounts.length) {
+          if (window.walletSettings.defaultContractsToDisplay) {
+            window.walletSettings.defaultOverviewAccounts = window.walletSettings.defaultContractsToDisplay.slice();
+            window.walletSettings.defaultOverviewAccounts.unshift('fiat', 'ether');
+          } else {
+            window.walletSettings.defaultOverviewAccounts = ['fiat', 'ether'];
+          }
+        }
+        window.walletSettings.defaultPrincipalAccount = window.walletSettings.defaultPrincipalAccount || window.walletSettings.defaultOverviewAccounts[0];
 
         const username = eXo.env.portal.userName;
         const spaceGroup = eXo.env.portal.spaceGroup;
