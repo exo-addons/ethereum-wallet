@@ -10,83 +10,51 @@
               <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
               <v-spacer />
   
-              <wallet-app-menu v-if="!hasError && !loading"
-                               :is-space="isSpace"
-                               :wallet-address="walletAddress"
-                               :is-maximized="isMaximized"
-                               @refresh="init()"
-                               @maximize="maximize()"
-                               @modify-settings="showSettingsModal = true" />
+              <wallet-app-menu 
+                v-if="!loading"
+                :is-space="isSpace"
+                :wallet-address="walletAddress"
+                :is-maximized="isMaximized"
+                :is-space-administrator="isSpaceAdministrator"
+                @refresh="init()"
+                @maximize="maximize()"
+                @modify-settings="showSettingsModal = true" />
   
-              <user-settings-modal :is-space="isSpace"
-                                   :open="showSettingsModal"
-                                   :fiat-symbol="fiatSymbol"
-                                   :display-reset-option="displayWalletResetOption"
-                                   :accounts-details="accountsDetails"
-                                   :overview-accounts="overviewAccounts"
-                                   :principal-account="principalAccount"
-                                   @copied="browserWalletBackedUp = true"
-                                   @close="showSettingsModal = false"
-                                   @settings-changed="init()" />
+              <user-settings-modal
+                :is-space="isSpace"
+                :open="showSettingsModal"
+                :fiat-symbol="fiatSymbol"
+                :display-reset-option="displayWalletResetOption"
+                :accounts-details="accountsDetails"
+                :overview-accounts="overviewAccounts"
+                :principal-account="principalAccount"
+                @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()"
+                @close="showSettingsModal = false"
+                @settings-changed="init()" />
             </v-toolbar>
 
-            <v-toolbar v-if="displayWalletBackup" class="additionalToolbar" color="white" flat dense>
-              <div class="alert alert-warning">
-                <i class="uiIconWarning"></i>
-                Your wallet is not backed up yet.
-                <wallet-backup-modal :display-complete-message="true" @copied="browserWalletBackedUp = true" />
-                <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
-              </div>
+            <v-toolbar v-if="!loading" class="additionalToolbar" color="white" flat dense>
+              <wallet-setup
+                ref="walletSetup"
+                :is-space="isSpace"
+                :wallet-address="walletAddress"
+                :refresh-index="refreshIndex"
+                class="mb-3"
+                @loading="loading = true"
+                @end-loading="loading = false"
+                @refresh="init()"
+                @error="loading = false; errorMessage = $event" />
             </v-toolbar>
 
-            <v-toolbar v-if="displayWalletCreationToolbar" class="additionalToolbar" color="white" flat dense>
-              <div class="alert alert-info">
-                <i class="uiIconInfo"></i>
-                No private key was found in current browser. Your wallet is displayed in readonly mode.
-                <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="openWalletSetup">More options</a>
-              </div>
-            </v-toolbar>
-            <v-toolbar v-else-if="displayWalletUnlockToolbar" class="additionalToolbar" color="white" flat dense>
-              <div class="alert alert-info">
-                <i class="uiIconInfo"></i>
-                Your wallet is locked in current browser, thus you can't send transactions.
-                <wallet-unlock-modal @refresh="init()"/>
-              </div>
-            </v-toolbar>
-  
-            <wallet-app-setup v-if="displayWalletSetup && !useMetamask"
-                              v-show="!loading"
-                              ref="walletAppSetup"
-                              :error-code="errorCode"
-                              :is-space="isSpace"
-                              :use-metamask="useMetamask"
-                              @configured="init" />
-  
-            <div v-else-if="displayWalletNotExistingYet" class="alert alert-info">
-              <i class="uiIconInfo"></i>
-              Space administrator hasn't set a Wallet for this space yet
-            </div>
-  
             <!-- Body -->
             <v-card v-if="displayAccountsList" class="text-xs-center" flat>
               <div v-if="errorMessage && !loading" class="alert alert-error">
                 <i class="uiIconError"></i>
                 {{ errorMessage }}
               </div>
-  
+
               <v-progress-circular v-if="loading" color="primary" class="mb-2" indeterminate />
-  
-              <wallet-metamask-setup
-                v-if="useMetamask"
-                v-show="!loading"
-                ref="walletMetamaskSetup"
-                :wallet-address="walletAddress"
-                :is-space="isSpace"
-                @loading="loading = true"
-                @end-loading="loading = false"
-                @refresh="init()"
-                @error="loading = false; errorMessage = $event" />
-  
+
               <wallet-summary
                 v-if="walletAddress && !loading && accountsDetails[walletAddress]"
                 ref="walletSummary"
@@ -109,7 +77,7 @@
                 @error="errorMessage = $event" />
   
               <wallet-accounts-list
-                v-if="isMaximized && walletAddressConfigured && !loading"
+                v-if="isMaximized && !loading"
                 ref="WalletAccountsList"
                 :is-read-only="isReadOnly"
                 :accounts-details="accountsDetails"
@@ -121,7 +89,6 @@
                 @refresh-contracts="forceUpdate"
                 @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
                 @error="errorMessage = $event" />
-  
             </v-card>
   
             <!-- The selected account detail -->
@@ -155,31 +122,25 @@
 
 <script>
 import WalletAppMenu from './WalletAppMenu.vue';
-import WalletAppSetup from './WalletAppSetup.vue';
-import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
+import WalletSetup from './WalletSetup.vue';
 import WalletSummary from './WalletSummary.vue';
 import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
 import UserSettingsModal from './UserSettingsModal.vue';
-import WalletUnlockModal from './WalletUnlockModal.vue';
-import WalletBackupModal from './WalletBackupModal.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {getContractsDetails, retrieveContractDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {initWeb3, initSettings, computeBalance, setWalletBackedUp, etherToFiat} from '../WalletUtils.js';
+import {initWeb3, initSettings, computeBalance, etherToFiat} from '../WalletUtils.js';
 
 export default {
   components: {
     WalletAppMenu,
-    WalletAppSetup,
-    WalletMetamaskSetup,
     WalletSummary,
+    WalletSetup,
     WalletAccountsList,
     AccountDetail,
     UserSettingsModal,
-    WalletUnlockModal,
-    WalletBackupModal,
     AddContractModal
   },
   props: {
@@ -197,10 +158,9 @@ export default {
       useMetamask: false,
       isReadOnly: true,
       isSpaceAdministrator: false,
-      walletAddressConfigured: false,
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
-      overviewAccounts: null,
+      overviewAccounts: [],
       principalAccount: null,
       showSettingsModal: false,
       showAddContractModal: false,
@@ -208,15 +168,12 @@ export default {
       displayWalletNotExistingYet: false,
       networkId: null,
       browserWalletExists: false,
-      browserWalletDecrypted: false,
       browserWalletBackedUp: true,
       walletAddress: null,
       selectedAccount: null,
       fiatSymbol: '$',
       accountsDetails: {},
       refreshIndex: 1,
-      watchMetamaskAccountInterval: null,
-      errorCode: null,
       errorMessage: null
     };
   },
@@ -224,17 +181,8 @@ export default {
     displayAccountsList() {
       return true;
     },
-    displayWalletCreationToolbar() {
-      return !this.loading && this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator) && !this.browserWalletExists;
-    },
-    displayWalletUnlockToolbar() {
-      return !this.loading && this.walletAddress && !this.useMetamask && !this.browserWalletDecrypted && this.browserWalletExists;
-    },
     displayWalletResetOption() {
       return !this.loading && this.walletAddress && !this.useMetamask && this.browserWalletExists;
-    },
-    displayWalletBackup() {
-      return !this.loading && this.walletAddress && !this.useMetamask && !this.browserWalletBackedUp && this.browserWalletExists;
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
@@ -298,21 +246,13 @@ export default {
     // Init application
     this.init()
       .then((result, error) => {
-        // Refresh application when Metamask address changes
-        this.watchMetamaskAccount();
-        window.addEventListener('load', function() {
-          if (!thiss.loading && thiss.useMetamask && window && window.web3 && window.web3.eth && window.web3.eth.defaultAccount
-              && window.web3.eth.defaultAccount.toLowerCase() !== this.walletAddress) {
-            thiss.init();
-          }
-        });
-      })
-      .then((result, error) => {
         if (this.$refs.walletSummary) {
           this.$refs.walletSummary.checkSendingRequest(this.isReadOnly);
         }
       })
       .catch(error => {
+        console.debug('An error occurred while on initialization', error);
+
         if (this.useMetamask) {
           this.errorMessage = `You can't send transaction because Metamask is disconnected`;
         } else {
@@ -325,12 +265,9 @@ export default {
       this.loading = true;
       this.errorMessage = null;
       this.seeAccountDetails = false;
-      this.errorMessage = null;
       this.selectedAccount = null;
       this.accountsDetails = {};
       this.walletAddress = null;
-      this.displayWalletSetup = false;
-      this.displayWalletNotExistingYet = false;
 
       return initSettings(this.isSpace)
         .then((result, error) => {
@@ -349,7 +286,7 @@ export default {
             this.isSpaceAdministrator = window.walletSettings.isSpaceAdministrator;
             if (window.walletSettings.userPreferences.walletAddress) {
               this.forceUpdate();
-            } else if (!this.useMetamask) {
+            } else {
               throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
             }
           }
@@ -375,12 +312,8 @@ export default {
 
           this.isReadOnly = window.walletSettings.isReadOnly;
           this.browserWalletExists = window.walletSettings.browserWalletExists;
-          this.browserWalletDecrypted = window.walletSettings.browserWallet;
-          this.browserWalletBackedUp = window.walletSettings.userPreferences.backedUp;
           this.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts;
           this.principalAccount = window.walletSettings.userPreferences.principalAccount;
-
-          this.walletAddressConfigured = true;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
 
           return this.refreshBalance();
@@ -395,14 +328,6 @@ export default {
           if (error) {
             throw error;
           }
-          if (this.useMetamask) {
-            return this.$refs.walletMetamaskSetup.init();
-          }
-        })
-        .then((result, error) => {
-          if (error) {
-            throw error;
-          }
           this.forceUpdate();
           this.loading = false;
         })
@@ -411,20 +336,18 @@ export default {
           const error = `${e}`;
 
           if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
-            this.errorCode = constants.ERROR_WALLET_NOT_CONFIGURED;
-            if (!this.isSpace || this.isSpaceAdministrator) {
-              this.openWalletSetup();
-            } else {
-              this.displayWalletNotExistingYet = true;
+            if (!this.useMetamask) {
+              this.browserWalletExists = window.walletSettings.browserWalletExists = false;
+              this.walletAddress = null;
             }
           } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
             this.errorMessage = 'Failed to load user settings';
           } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
             this.errorMessage = 'Failed to connect to network';
           } else {
-            this.walletAddressConfigured = true;
             this.errorMessage = error;
           }
+          this.forceUpdate();
           this.loading = false;
         });
     },
@@ -545,32 +468,6 @@ export default {
           </li>`);
         $(window).trigger("resize");
       });
-    },
-    hideBackupMessage() {
-      setWalletBackedUp(null, true);
-      this.browserWalletBackedUp = true;
-    },
-    openWalletSetup() {
-      this.displayWalletSetup = true;
-    },
-    watchMetamaskAccount() {
-      const thiss = this;
-
-      if (this.watchMetamaskAccountInterval) {
-        clearInterval(this.watchMetamaskAccountInterval);
-      }
-      // In case account switched in Metamask
-      // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
-      this.watchMetamaskAccountInterval = setInterval(function() {
-        if (!thiss.useMetamask || !window || !window.web3 || !window.web3.eth.defaultAccount || !thiss.walletAddress) {
-          return;
-        }
-
-        if (window.web3.eth.defaultAccount.toLowerCase() !== thiss.walletAddress.toLowerCase()) {
-          thiss.init();
-          return;
-        }
-      }, 1000);
     }
   }
 };

@@ -1,12 +1,12 @@
 <template>
   <v-card class="waletSummary elevation-0">
+
     <v-card-title v-if="pendingTransactionsCount" primary-title class="pb-0">
       <v-spacer />
       <v-badge color="red" right title="A transaction is in progress">
         <span slot="badge">{{ pendingTransactionsCount }}</span>
         <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
       </v-badge>
-
       <v-spacer />
     </v-card-title>
 
@@ -18,7 +18,7 @@
       </v-flex>
     </v-card-title>
 
-    <v-card-title v-if="!isMaximized" primary-title class="pt-0 text-xs-center">
+    <v-card-title primary-title class="pt-0 text-xs-center">
       <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index" class="flex-center">
         <template v-if="accountDetails.key === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</template>
         <template v-else-if="accountDetails.key === 'ether'" class="headline">{{ totalBalance }} ether</template>

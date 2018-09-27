@@ -65,7 +65,7 @@
                     <v-icon>more_vert</v-icon>
                   </v-btn>
 
-                  <v-list>
+                  <v-list class="pt-0 pb-0">
                     <v-list-tile v-if="!item.isContract && item.balance && item.balance !== '0'" @click="selectedItem = item; sendEtherModal = true">
                       <v-list-tile-title>
                         Send Ether

@@ -14,13 +14,12 @@
             <v-tabs-slider />
             <v-tab>Display</v-tab>
             <v-tab v-if="!isSpace">Advanced settings</v-tab>
-            <v-tab>Wallet details</v-tab>
+            <v-tab v-if="walletAddress">Wallet details</v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab">
             <v-tab-item v-if="!isSpace">
               <v-card>
                 <v-card-text>
-                  <span>Fiat currency</span>
                   <v-combobox
                     v-model="selectedCurrency"
                     :items="currencies"
@@ -66,13 +65,14 @@
                 </v-card-text>
               </v-card>
             </v-tab-item>
-            <v-tab-item>
+            <v-tab-item v-if="walletAddress">
               <v-card>
                 <v-card-text>
-                  <qr-code ref="qrCode"
-                           :to="walletAddress"
-                           title="Address QR Code"
-                           information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
+                  <qr-code
+                    ref="qrCode"
+                    :to="walletAddress"
+                    title="Address QR Code"
+                    information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
         
                   <div class="text-xs-center">
                     <wallet-address :value="walletAddress" />
@@ -184,18 +184,23 @@ export default {
     }
   },
   watch: {
+    walletAddress() {
+      if (this.walletAddress) {
+        this.$nextTick(() => {
+          this.$refs.qrCode.computeCanvas();
+        });
+      }
+    },
     open() {
       if (this.open) {
         this.error = null;
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
         this.defaultGas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 21000;
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
-        this.$refs.qrCode.computeCanvas();
         this.useMetamaskChoice = window.walletSettings.userPreferences.useMetamask;
         if (window.walletSettings.userPreferences.currency) {
           this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.userPreferences.currency];
         }
-        this.show = true;
 
         this.accountsList = [];
         this.selectedOverviewAccounts = [];
@@ -222,6 +227,8 @@ export default {
 
         // Workaround to display slider on first popin open
         this.$refs.settingsTabs.callSlider();
+
+        this.show = true;
       }
     },
     selectedPrincipalAccount() {
@@ -325,7 +332,9 @@ export default {
         const selectedContractAddress = this.accountsList.findIndex(contract => contract.value === selectedValue);
         if (selectedContractAddress >= 0) {
           const contract = this.accountsList[selectedContractAddress];
-          return {text: contract.text, value: contract.value, disabled: false};
+          if (!contract.error) {
+            return {text: contract.text, value: contract.value, disabled: false};
+          }
         }
       }
     }

@@ -3,7 +3,7 @@ import {searchUserOrSpaceObject} from './WalletAddressRegistry';
 
 export function etherToFiat(amount) {
   if (window.walletSettings.fiatPrice && amount)  {
-    return (window.walletSettings.fiatPrice * amount).toFixed(2);
+    return (window.walletSettings.fiatPrice * amount).toFixed(4);
   }
   return 0;
 }
@@ -23,7 +23,7 @@ export function gasToFiat(amount, gasPriceInEther) {
     gasPriceInEther = window.walletSettings.gasPriceInEther;
   }
   if (window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
-    return (gasPriceInEther * window.walletSettings.fiatPrice * amount).toFixed(2);
+    return (gasPriceInEther * window.walletSettings.fiatPrice * amount).toFixed(4);
   }
   return 0;
 }
@@ -498,9 +498,7 @@ function initSpaceAccount(spaceGroup) {
       if (error) {
         throw error;
       }
-
-      if(spaceObject && spaceObject.managers && spaceObject.managers.length
-          && spaceObject.managers.indexOf(eXo.env.portal.userName) > -1) {
+      if(spaceObject && spaceObject.spaceAdministrator) {
         return window.walletSettings.isSpaceAdministrator = true;
       } else {
         window.walletSettings.isReadOnly = true;

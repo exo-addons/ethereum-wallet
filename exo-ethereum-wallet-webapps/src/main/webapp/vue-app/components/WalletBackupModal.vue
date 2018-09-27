@@ -112,7 +112,6 @@ export default {
   },
   methods: {
     backedUp() {
-      setWalletBackedUp(null, true);
       this.$emit("copied");
       this.dialog = false;
     },

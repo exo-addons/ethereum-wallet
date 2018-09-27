@@ -7,12 +7,6 @@
             <i class="uiIconError"></i>{{ error }}
           </div>
 
-          <div v-if="!sameConfiguredNetwork" class="alert alert-warning v-content">
-            <i class="uiIconWarning"></i>
-            Current selected network on Metamask is different from configured network to use with the platform.
-            (The deployed contracts on default network aren't displayed)
-          </div>
-
           <v-dialog v-model="loading" persistent width="300">
             <v-card color="primary" dark>
               <v-card-text>
@@ -22,21 +16,33 @@
             </v-card>
           </v-dialog>
 
-          <v-tabs v-model="selectedTab" grow>
+          <wallet-setup
+            v-if="!loading"
+            ref="walletSetup"
+            :wallet-address="walletAddress"
+            :refresh-index="refreshIndex"
+            class="mb-3"
+            @loading="loading = true"
+            @end-loading="loading = false"
+            @refresh="init()"
+            @error="loading = false; error = $event" />
+
+          <v-tabs v-if="displaySettings" v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
             <v-tab key="general">Settings</v-tab>
-            <v-tab key="overview">Advanced settings</v-tab>
-            <v-tab key="contracts">Contracts</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
           </v-tabs>
 
-          <v-tabs-items v-model="selectedTab">
+          <v-tabs-items v-if="displaySettings" v-model="selectedTab">
+
             <v-tab-item key="general">
               <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <v-combobox
                   v-model="selectedNetwork"
                   :items="networks"
                   label="Select ethereum network" />
-    
+
                 <v-text-field
                   v-if="showSpecificNetworkFields"
                   v-model="selectedNetwork.value"
@@ -44,7 +50,7 @@
                   :label="`Ethereum Network ID (current id: ${networkId})`"
                   type="number"
                   name="defaultNetworkId" />
-    
+
                 <v-text-field
                   v-if="showSpecificNetworkFields"
                   ref="providerURL"
@@ -54,7 +60,7 @@
                   name="providerURL"
                   label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
                   autofocus />
-    
+
                 <v-text-field
                   v-if="showSpecificNetworkFields"
                   ref="websocketProviderURL"
@@ -65,6 +71,7 @@
                   label="Ethereum Network Websocket URL used for notifications" />
     
                 <v-autocomplete
+                  v-if="sameConfiguredNetwork"
                   ref="accessPermissionAutoComplete"
                   v-model="accessPermission"
                   :items="accessPermissionOptions"
@@ -110,6 +117,7 @@
                 </v-autocomplete>
 
                 <v-combobox
+                  v-if="sameConfiguredNetwork"
                   v-model="selectedPrincipalAccount"
                   :items="accountsList"
                   class="mt-4"
@@ -119,6 +127,7 @@
                   chips />
 
                 <v-combobox
+                  v-if="sameConfiguredNetwork"
                   v-model="selectedOverviewAccounts"
                   :items="accountsList"
                   label="List of balances to display on wallet summary (by order)"
@@ -139,7 +148,7 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item key="overview">
+            <v-tab-item v-if="sameConfiguredNetwork" key="overview">
               <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
 
                 <v-slider
@@ -171,8 +180,8 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item key="contracts">
-              <v-card v-if="sameConfiguredNetwork" flat>
+            <v-tab-item v-if="sameConfiguredNetwork" key="contracts">
+              <v-card flat>
                 <v-subheader class="text-xs-center">Default contracts</v-subheader>
                 <v-divider />
     
@@ -197,8 +206,7 @@
                 <v-divider />
                 <div class="text-xs-center pt-2 pb-2">
                   <deploy-new-contract 
-                    v-show="sameConfiguredNetwork"
-                    :account="account"
+                    :account="walletAddress"
                     :network-id="networkId"
                     :fiat-symbol="fiatSymbol"
                     @list-updated="updateList($event)"/>
@@ -208,7 +216,7 @@
                   </button>
                   <add-contract-modal
                     :net-id="networkId"
-                    :account="account"
+                    :account="walletAddress"
                     :open="showAddContractModal"
                     :is-default-contract="true"
                     @added="contractsModified"
@@ -216,9 +224,7 @@
                 </div>
               </v-card>
             </v-tab-item>
-
           </v-tabs-items>
-
         </v-flex>
       </v-layout>
     </main>
@@ -229,6 +235,7 @@
 import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
+import WalletSetup from './WalletSetup.vue';
 
 import {searchSpaces} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
@@ -238,7 +245,8 @@ export default {
   components: {
     DeployNewContract,
     AddContractModal,
-    WalletAddress
+    WalletAddress,
+    WalletSetup
   },
   data () {
     return {
@@ -255,7 +263,8 @@ export default {
       defaultGas: 50000,
       defaultGasFiatPrice: 0,
       fiatSymbol: '$',
-      account: null,
+      refreshIndex: 1,
+      walletAddress: null,
       networkId: null,
       newTokenAddress: null,
       showAddContractModal: false,
@@ -314,25 +323,8 @@ export default {
     };
   },
   computed: {
-    metamaskEnabled () {
-      return window.web3 && window.web3.currentProvider && window.web3.currentProvider.isMetaMask;
-    },
-    metamaskConnected () {
-      return this.metamaskEnabled && window.web3.currentProvider.isConnected();
-    },
-    error() {
-      if(this.loading) {
-        return null;
-      } else if (this.errorMessage) {
-        return this.errorMessage;
-      } else if (!this.metamaskEnabled) {
-        return 'Please install or Enable Metamask';
-      } else if (!this.metamaskConnected) {
-        return 'Please connect Metamask to a network';
-      } else if (!this.account) {
-        return 'Please select a valid account using Metamask';
-      }
-      return null;
+    displaySettings() {
+      return !this.loading && !this.loadingSettings;
     },
     showSpecificNetworkFields() {
       return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
@@ -383,7 +375,7 @@ export default {
             account.disabled = false;
           }
         });
-        this.$forceUpdate();
+        this.forceUpdate();
       }
     },
     accessPermission(newValue, oldValue) {
@@ -405,34 +397,38 @@ export default {
     init() {
       this.loading = true;
       this.loadingSettings = true;
-      this.$forceUpdate();
+      this.showAddContractModal = true;
+      this.forceUpdate();
+      this.selectedOverviewAccounts = [];
 
       return initSettings()
         .then(() => {
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
             this.isWalletEnabled = false;
-            this.$forceUpdate();
+            this.forceUpdate();
             throw new Error("Wallet disabled for current user");
           } else {
-            this.$forceUpdate();
             this.isWalletEnabled = true;
           }
         })
         .then(initWeb3)
         .then(account => {
-          this.account = window.localWeb3.eth.defaultAccount;
+          this.walletAddress = window.localWeb3.eth.defaultAccount;
           this.networkId = window.walletSettings.currentNetworkId;
         })
         .then(this.setDefaultValues)
         .then(() => this.loadingSettings = false)
         .then(this.refreshContractsList)
         .then(this.setSelectedValues)
-        .then(() => this.loading = false)
+        .then(() => {
+          this.loading = false;
+          this.forceUpdate();
+        })
         .catch(e => {
           console.debug("init method - error", e);
           this.loading = false;
           this.loadingSettings = false;
-          this.errorMessage = `Error encountered: ${e}`;
+          this.error = `Error encountered: ${e}`;
         });
     },
     setSelectedValues() {
@@ -455,7 +451,9 @@ export default {
         const selectedContractAddress = this.contracts.findIndex(contract => contract.address === selectedValue);
         if (selectedContractAddress >= 0) {
           const contract = this.contracts[selectedContractAddress];
-          return {text: contract.name, value: contract.address, disabled: false};
+          if (!contract.error) {
+            return {text: contract.name, value: contract.address, disabled: false};
+          }
         }
       }
     },
@@ -500,11 +498,11 @@ export default {
         .catch(e => {
           console.debug("refreshContractsList method - error", e);
           this.loading = false;
-          this.errorMessage = `Error encountered: ${e}`;
+          this.error = `Error encountered: ${e}`;
         });
     },
     refreshContractsList() {
-      return getContractsDetails(this.account, this.networkId, true)
+      return getContractsDetails(this.walletAddress, this.networkId, true)
         .then(contracts => {
           return contracts;
         })
@@ -538,7 +536,7 @@ export default {
                       this.contractsModified();
                     } else {
                       // Save newly created contract as default
-                      return saveContractAddress(this.account, contractAddress, this.networkId, contractInProgress.isDefault)
+                      return saveContractAddress(this.walletAddress, contractAddress, this.networkId, contractInProgress.isDefault)
                         .then((added, error) => {
                           if (error) {
                             throw error;
@@ -548,14 +546,14 @@ export default {
                             removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
                             this.contractsModified();
                           } else {
-                            this.errorMessage = `Address ${contractAddress} is not recognized as ERC20 Token contract's address`;
+                            this.error = `Address ${contractAddress} is not recognized as ERC20 Token contract's address`;
                           }
                           this.loading = false;
                         })
                         .catch(err => {
                           console.debug("saveContractAddress method - error", err);
                           this.loading = false;
-                          this.errorMessage = `${err}`;
+                          this.error = `${err}`;
                         });
                     }
                   } else {
@@ -610,12 +608,12 @@ export default {
             return this.contractsModified();
           }
         } else {
-          this.errorMessage = 'Error saving global settings';
+          this.error = 'Error saving global settings';
         }
         this.loading = false;
       }).catch(e => {
         console.debug("fetch global-settings - error", e);
-        this.errorMessage = 'Error saving global settings';
+        this.error = 'Error saving global settings';
       });
     },
     contractsModified() {
@@ -624,12 +622,12 @@ export default {
         .catch(e => {
           console.debug("refreshContractsList method - error", e);
           this.loading = false;
-          this.errorMessage = `Error adding new contract address: ${e}`;
+          this.error = `Error adding new contract address: ${e}`;
         });
     },
     deleteContract(item, event) {
       if (!item || !item.address) {
-        this.errorMessage = 'Contract doesn\'t have an address';
+        this.error = 'Contract doesn\'t have an address';
       }
       this.loading = true;
       if (item.hash) {
@@ -639,7 +637,7 @@ export default {
         removeContractAddressFromDefault(item.address)
           .then((resp, error) => {
             if (error) {
-              this.errorMessage = 'Error deleting contract as default';
+              this.error = 'Error deleting contract as default';
             } else {
               return this.refreshContractsList();
             }
@@ -648,11 +646,15 @@ export default {
           .catch(e => {
             console.debug("removeContractAddressFromDefault method - error", e);
             this.loading = false;
-            this.errorMessage = 'Error deleting contract as default';
+            this.error = 'Error deleting contract as default';
           });
       }
       event.preventDefault();
       event.stopPropagation();
+    },
+    forceUpdate() {
+      this.refreshIndex++;
+      this.$forceUpdate();
     }
   }
 };

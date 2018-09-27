@@ -1,0 +1,165 @@
+<template>
+  <v-flex id="walletAppSetup" class="text-xs-center">
+    <div v-if="displayWalletBackup" class="alert alert-warning">
+      <i class="uiIconWarning"></i>
+      Your wallet is not backed up yet.
+      <wallet-backup-modal display-complete-message @copied="hideBackupMessage()" />
+      <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
+    </div>
+
+    <div v-if="displayWalletCreationToolbar" class="alert alert-info">
+      <i class="uiIconInfo"></i>
+      No private key was found in current browser. Your wallet is displayed in readonly mode.
+      <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="displayWalletSetupActions()">More options</a>
+    </div>
+    <div v-else-if="displayWalletUnlockToolbar" class="alert alert-info">
+      <i class="uiIconInfo"></i>
+      Your wallet is locked in current browser, thus you can't send transactions.
+      <wallet-unlock-modal @refresh="$emit('refresh')"/>
+    </div>
+
+    <div v-if="displayWalletNotExistingYet" class="alert alert-info">
+      <i class="uiIconInfo"></i>
+      Space administrator hasn't set a Wallet for this space yet
+    </div>
+    <wallet-metamask-setup
+      v-else-if="useMetamask"
+      ref="walletMetamaskSetup"
+      :is-space="isSpace"
+      :wallet-address="walletAddress"
+      :refresh-index="refreshIndex"
+      @loading="$emit('loading')"
+      @end-loading="$emit('end-loading')"
+      @refresh="$emit('refresh')"
+      @error="$emit('error', $event)" />
+    <wallet-browser-setup
+      v-else-if="displayWalletSetup"
+      ref="walletBrowserSetup"
+      :is-space="isSpace"
+      :use-metamask="useMetamask"
+      :refresh-index="refreshIndex"
+      @configured="$emit('refresh')" />
+  </v-flex>
+</template>
+
+<script>
+import WalletBrowserSetup from './WalletBrowserSetup.vue';
+import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
+import WalletUnlockModal from './WalletUnlockModal.vue';
+import WalletBackupModal from './WalletBackupModal.vue';
+
+import {setWalletBackedUp} from '../WalletUtils.js';
+
+export default {
+  components: {
+    WalletBrowserSetup,
+    WalletMetamaskSetup,
+    WalletUnlockModal,
+    WalletBackupModal
+  },
+  props: {
+    isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    isReadOnly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    refreshIndex: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    }
+  },
+  data() {
+    return {
+      useMetamask: false,
+      browserWalletExists: false,
+      isSpaceAdministrator: false,
+      displayWalletSetup: false,
+      networkId: null,
+      browserWalletDecrypted: false,
+      browserWalletBackedUp: true,
+      watchMetamaskAccountInterval: null,
+    };
+  },
+  computed: {
+    displayWalletNotExistingYet() {
+      return this.isSpace && !this.isSpaceAdministrator && !this.walletAddress;
+    },
+    displayWalletCreationToolbar() {
+      return this.walletAddress && this.isReadOnly && !this.useMetamask && (!this.isSpace || this.isSpaceAdministrator) && !this.browserWalletExists;
+    },
+    displayWalletUnlockToolbar() {
+      return this.walletAddress && !this.useMetamask && !this.browserWalletDecrypted && this.browserWalletExists;
+    },
+    displayWalletBackup() {
+      return this.walletAddress && !this.useMetamask && !this.browserWalletBackedUp && this.browserWalletExists;
+    }
+  },
+  watch: {
+    refreshIndex(newValue, oldValue) {
+      if (newValue > oldValue) {
+        this.init();
+      }
+    }
+  },
+  created() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.isReadOnly = window.walletSettings.isReadOnly;
+      this.browserWalletExists = window.walletSettings.browserWalletExists;
+      this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+      this.isSpaceAdministrator = window.walletSettings.isSpaceAdministrator;
+      this.browserWalletDecrypted = window.walletSettings.browserWallet;
+      this.browserWalletBackedUp = window.walletSettings.userPreferences.backedUp;
+
+      this.displayWalletSetup = !this.walletAddress && (!this.isSpace || this.isSpaceAdministrator);
+
+      if (this.useMetamask) {
+        this.watchMetamaskAccount();
+      }
+    },
+    displayWalletSetupActions() {
+      this.displayWalletSetup = true;
+    },
+    hideBackupMessage() {
+      setWalletBackedUp(null, true);
+      this.browserWalletBackedUp = true;
+    },
+    watchMetamaskAccount() {
+      const thiss = this;
+
+      if (this.watchMetamaskAccountInterval) {
+        clearInterval(this.watchMetamaskAccountInterval);
+      }
+      // In case account switched in Metamask
+      // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
+      this.watchMetamaskAccountInterval = setInterval(function() {
+        if (!thiss.useMetamask || !window || !window.web3 || !window.web3.eth.defaultAccount || !thiss.walletAddress) {
+          return;
+        }
+
+        if (window.web3.eth.defaultAccount.toLowerCase() !== thiss.walletAddress.toLowerCase()) {
+          thiss.$emit('refresh');
+          return;
+        }
+      }, 1000);
+    }
+  }
+};
+</script>

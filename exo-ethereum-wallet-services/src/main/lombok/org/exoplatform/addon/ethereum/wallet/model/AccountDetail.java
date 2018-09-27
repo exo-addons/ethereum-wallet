@@ -19,7 +19,7 @@ public class AccountDetail implements Serializable {
 
   private String            address;
 
-  private String[]          managers;
+  private boolean           isSpaceAdministrator;
 
   private String            avatar;
 
@@ -31,7 +31,7 @@ public class AccountDetail implements Serializable {
                        String type,
                        String name,
                        String address,
-                       String[] managers,
+                       boolean isSpaceAdministrator,
                        String avatar) {
     super();
     this.id = id;
@@ -39,7 +39,7 @@ public class AccountDetail implements Serializable {
     this.type = type;
     this.name = name;
     this.address = address;
-    this.managers = managers;
+    this.isSpaceAdministrator = isSpaceAdministrator;
     this.avatar = avatar;
   }
 }

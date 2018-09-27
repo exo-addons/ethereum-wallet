@@ -1,6 +1,6 @@
 <template>
   <v-flex class="text-xs-center white">
-    <div class="walletAppSetup">
+    <div id="walletBrowserSetup">
       <button v-if="!walletAddress" class="btn btn-primary" @click="createWalletDialog = true; dialog = true;">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>
 
@@ -96,10 +96,10 @@ export default {
         return false;
       }
     },
-    errorCode: {
-      type: String,
+    refreshIndex: {
+      type: Number,
       default: function() {
-        return null;
+        return 0;
       }
     }
   },
@@ -122,11 +122,6 @@ export default {
     };
   },
   watch: {
-    errorCode() {
-      if (this.errorCode && this.errorCode.length) {
-        this.init();
-      }
-    },
     createWalletDialog() {
       if (this.createWalletDialog) {
         this.resetForm();
@@ -137,6 +132,11 @@ export default {
       if (this.importWalletDialog) {
         this.resetForm();
         this.createWalletDialog = false;
+      }
+    },
+    refreshIndex(newValue, oldValue) {
+      if (newValue > oldValue) {
+        this.init();
       }
     }
   },

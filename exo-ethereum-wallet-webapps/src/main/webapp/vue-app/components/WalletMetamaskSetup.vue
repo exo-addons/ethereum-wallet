@@ -113,16 +113,22 @@ export default {
     WalletAddress
   },
   props: {
+    isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {
         return null;
       }
     },
-    isSpace: {
-      type: Boolean,
+    refreshIndex: {
+      type: Number,
       default: function() {
-        return false;
+        return 0;
       }
     }
   },
@@ -162,6 +168,13 @@ export default {
       return this.sameConfiguredNetwork
         && this.detectedMetamaskAccount
         && this.associatedWalletAddress !== this.detectedMetamaskAccount;
+    }
+  },
+  watch: {
+    refreshIndex(newValue, oldValue) {
+      if (newValue > oldValue) {
+        this.init();
+      }
     }
   },
   created() {
