@@ -13,7 +13,13 @@
                     max-width="100%"
                     item-text="name"
                     item-value="id_type"
-                    hide-details hide-selected chips clearable cache-items>
+                    hide-details
+                    hide-selected
+                    chips
+                    clearable
+                    cache-items
+                    dense
+                    flat>
   
       <template slot="no-data">
         <v-list-tile>
@@ -36,15 +42,12 @@
           {{ item.name }}
         </v-label>
       </template>
-  
+
       <template slot="item" slot-scope="{ item, tile }">
-        <v-list-tile-avatar v-if="item.avatar">
+        <v-list-tile-avatar v-if="item.avatar" tile size="20">
           <img :src="item.avatar">
         </v-list-tile-avatar>
-        <v-list-tile-content>
-          <v-list-tile-title v-text="item.name"></v-list-tile-title>
-          <v-list-tile-sub-title v-text="item.id"></v-list-tile-sub-title>
-        </v-list-tile-content>
+        <v-list-tile-title v-text="item.name" />
       </template>
     </v-autocomplete>
   </v-flex>
