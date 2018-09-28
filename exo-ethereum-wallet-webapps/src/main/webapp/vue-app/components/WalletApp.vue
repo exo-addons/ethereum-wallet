@@ -8,6 +8,19 @@
               <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
               <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
               <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
+              <div id="etherTooLowWarningParent">
+                <v-tooltip
+                  v-if="displayEtherBalanceTooLow"
+                  content-class="etherTooLowWarning"
+                  attach="#etherTooLowWarningParent"
+                  absolute
+                  top
+                  class="ml-2">
+                  <v-icon slot="activator" color="orange">warning</v-icon>
+                  <span>Not enough funds to send transactions</span>
+                </v-tooltip>
+              </div>
+
               <v-spacer />
   
               <wallet-app-menu 
@@ -132,7 +145,7 @@ import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {getContractsDetails, retrieveContractDetails, deleteContractFromStorage} from '../WalletToken.js';
-import {initWeb3, initSettings, computeBalance, etherToFiat} from '../WalletUtils.js';
+import {initWeb3, initSettings, computeBalance, etherToFiat, gasToEther} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -184,6 +197,9 @@ export default {
     },
     displayWalletResetOption() {
       return !this.loading && this.walletAddress && !this.useMetamask && this.browserWalletExists;
+    },
+    displayEtherBalanceTooLow() {
+      return (!this.isSpace || !this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.userDefaultGas);
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
