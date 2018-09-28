@@ -27,6 +27,8 @@ public class UserPreferences implements Serializable {
 
   private List<String>      overviewAccounts = null;
 
+  private Boolean           enableDelegation = null;
+
   public String toJSONString() {
     return toJSONObject().toString();
   }
@@ -38,7 +40,9 @@ public class UserPreferences implements Serializable {
       jsonObject.put("defaultGas", defaultGas);
       jsonObject.put("walletAddress", walletAddress);
       jsonObject.put("phrase", phrase);
-
+      if (enableDelegation != null) {
+        jsonObject.put("enableDelegation", enableDelegation);
+      }
       if (principalAccount != null) {
         jsonObject.put("principalAccount", principalAccount);
       }
@@ -72,6 +76,9 @@ public class UserPreferences implements Serializable {
       }
       if (jsonObject.has("principalAccount")) {
         userPreferences.setPrincipalAccount(jsonObject.getString("principalAccount"));
+      }
+      if (jsonObject.has("enableDelegation")) {
+        userPreferences.setEnableDelegation(jsonObject.getBoolean("enableDelegation"));
       }
       userPreferences.setOverviewAccounts(jsonArrayToList(jsonObject, "overviewAccounts"));
       return userPreferences;

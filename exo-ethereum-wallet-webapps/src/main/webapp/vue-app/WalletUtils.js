@@ -156,9 +156,14 @@ export function initSettings(isSpace) {
         window.walletSettings = window.walletSettings || {};
         window.walletSettings.userPreferences = {};
         window.walletSettings = $.extend(window.walletSettings, settings);
+        window.walletSettings.enableDelegation = window.walletSettings.hasOwnProperty('enableDelegation') ? window.walletSettings.enableDelegation : true;
         window.walletSettings.defaultGas = window.walletSettings.defaultGas || 21000;
         window.walletSettings.userPreferences.userDefaultGas = 
           window.walletSettings.userPreferences.userDefaultGas || window.walletSettings.defaultGas;
+        window.walletSettings.userPreferences.enableDelegation =
+          window.walletSettings.userPreferences.hasOwnProperty('enableDelegation') ?
+            window.walletSettings.userPreferences.enableDelegation
+          : window.walletSettings.enableDelegation;
 
         if (!window.walletSettings.defaultOverviewAccounts || !window.walletSettings.defaultOverviewAccounts.length) {
           if (window.walletSettings.defaultContractsToDisplay) {

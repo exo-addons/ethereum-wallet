@@ -76,12 +76,12 @@
                           Send token
                         </v-list-tile-title>
                       </v-list-tile>
-                      <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; delegateTokenModal = true">
+                      <v-list-tile v-if="enableDelegation && item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; delegateTokenModal = true">
                         <v-list-tile-title>
                           Delegate tokens
                         </v-list-tile-title>
                       </v-list-tile>
-                      <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; sendDelegatedTokenModal = true">
+                      <v-list-tile v-if="enableDelegation && item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; sendDelegatedTokenModal = true">
                         <v-list-tile-title>
                           Send delegated tokens
                         </v-list-tile-title>
@@ -182,6 +182,7 @@ export default {
       sendTokenModal: false,
       delegateTokenModal: false,
       sendDelegatedTokenModal: false,
+      enableDelegation: true,
       selectedItem: null
     };
   },
@@ -210,6 +211,9 @@ export default {
 
       return accountsList;
     }
+  },
+  created() {
+    this.enableDelegation = window.walletSettings.userPreferences.enableDelegation;
   },
   methods: {
     addSendEtherTransaction(transaction) {

@@ -17,6 +17,8 @@ public class GlobalSettings implements Serializable {
 
   private boolean                walletEnabled           = true;
 
+  private boolean                enableDelegation        = true;
+
   private String                 accessPermission        = null;
 
   private String                 providerURL             = "https://ropsten.infura.io";
@@ -48,6 +50,7 @@ public class GlobalSettings implements Serializable {
     JSONObject jsonObject = new JSONObject();
     try {
       jsonObject.put("isWalletEnabled", walletEnabled);
+      jsonObject.put("enableDelegation", enableDelegation);
       jsonObject.put("accessPermission", accessPermission);
       jsonObject.put("providerURL", providerURL);
       jsonObject.put("websocketProviderURL", websocketProviderURL);
@@ -115,6 +118,9 @@ public class GlobalSettings implements Serializable {
 
       int storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getInt("defaultGas") : 0;
       globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
+
+      boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation") : true;
+      globalSettings.setEnableDelegation(storedEnableDelegation);
 
       String storedDefaultPrincipalAccount =
                                            jsonObject.has("defaultPrincipalAccount") ? jsonObject.getString("defaultPrincipalAccount")

@@ -34,7 +34,7 @@
             @error="error = $event" />
           <v-divider v-if="contractDetails.isContract" vertical />
           <send-delegated-tokens-modal
-            v-if="contractDetails.isContract"
+            v-if="contractDetails.isContract && enableDelegation"
             :is-readonly="isReadOnly"
             :contract-details="contractDetails"
             use-navigation
@@ -42,7 +42,7 @@
             @error="error = $event" />
           <v-divider v-if="contractDetails.isContract" vertical />
           <delegate-tokens-modal
-            v-if="contractDetails.isContract"
+            v-if="contractDetails.isContract && enableDelegation"
             :is-readonly="isReadOnly"
             :contract-details="contractDetails"
             use-navigation
@@ -126,12 +126,14 @@ export default {
     return {
       // Avoid refreshing list and balance twice
       refreshing: false,
+      enableDelegation: true,
       error: null
     };
   },
   watch: {
     contractDetails() {
       this.error = null;
+      this.enableDelegation = window.walletSettings.userPreferences.enableDelegation;
     }
   },
   methods: {

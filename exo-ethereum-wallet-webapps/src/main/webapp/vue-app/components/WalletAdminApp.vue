@@ -150,6 +150,9 @@
 
             <v-tab-item v-if="sameConfiguredNetwork" key="overview">
               <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
+                <div>
+                  <v-switch v-model="enableDelegation" label="Enable token delegation operations for wallets by default"></v-switch>
+                </div>
 
                 <v-slider
                   v-model="defaultGas"
@@ -270,6 +273,7 @@ export default {
       showAddContractModal: false,
       selectedOverviewAccounts: [],
       selectedPrincipalAccount: null,
+      enableDelegation: true,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ],
@@ -487,6 +491,7 @@ export default {
       }
       this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
       this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
+      this.enableDelegation = window.walletSettings.enableDelegation;
     },
     updateList(address) {
       this.loading = true;
@@ -590,7 +595,8 @@ export default {
           defaultNetworkId: this.selectedNetwork.value,
           defaultPrincipalAccount: this.selectedPrincipalAccount.value,
           defaultOverviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
-          defaultGas: this.defaultGas
+          defaultGas: this.defaultGas,
+          enableDelegation: this.enableDelegation
         })
       }).then(resp => {
         if (resp && resp.ok) {

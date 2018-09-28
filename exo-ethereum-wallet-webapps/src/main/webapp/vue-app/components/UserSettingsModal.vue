@@ -58,6 +58,9 @@
                   <div>
                     <v-switch v-model="useMetamaskChoice" label="Use Metamask to access your wallet in current browser"></v-switch>
                   </div>
+                  <div>
+                    <v-switch v-if="!isSpace" v-model="enableDelegation" label="Enable token delegation operations"></v-switch>
+                  </div>
                   <div v-if="displayWalletResetOption" class="mb-3">
                     <wallet-reset-modal @reseted="$emit('settings-changed')"/>
                   </div>
@@ -172,6 +175,7 @@ export default {
       currencies: [],
       defaultGas: 0,
       useMetamaskChoice: false,
+      enableDelegation: true,
       defaulGasPriceFiat: 0,
       selectedOverviewAccounts: [],
       selectedPrincipalAccount: null,
@@ -200,6 +204,7 @@ export default {
         this.defaultGas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 21000;
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.useMetamaskChoice = window.walletSettings.userPreferences.useMetamask;
+        this.enableDelegation = window.walletSettings.userPreferences.enableDelegation;
         if (window.walletSettings.userPreferences.currency) {
           this.selectedCurrency = FIAT_CURRENCIES[window.walletSettings.userPreferences.currency];
         }
@@ -287,6 +292,7 @@ export default {
               currency: this.selectedCurrency.value,
               principalAccount: this.selectedPrincipalAccount.value,
               overviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
+              enableDelegation: this.enableDelegation
             })
           }).then(resp => {
             if (resp && resp.ok) {
