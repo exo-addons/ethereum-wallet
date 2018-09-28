@@ -5,7 +5,7 @@
       <v-icon>send</v-icon>
     </v-btn>
     <button v-else slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">
-      Send Funds
+      Send
     </button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
@@ -13,50 +13,50 @@
         <span class="PopupTitle popupTitle">Send Funds</span>
       </div>
 
-      <v-card-title id="sendFundsAccount" primary-title class="pb-0">
-        <v-combobox
-          v-model="selectedOption"
-          :items="accountsList"
-          attach="#sendFundsAccount"
-          absolute
-          label="Select currency"
-          placeholder="Select a currency to use for requesting funds" />
-      </v-card-title>
+      <send-funds-form 
+        ref="sendFundsForm"
+        :wallet-address="walletAddress"
+        :network-id="networkId"
+        :selected-account="selectedOption && selectedOption.value"
+        @success="$emit('success', $event)"
+        @error="$emit('error', $event)"
+        @sent="addPendingTransaction($event)"
+        @pending="$emit('pending', $event)"
+        @close="dialog = false">
 
-      <send-ether-form v-if="selectedAccount && !selectedAccount.isContract"
-                       ref="sendEtherForm"
-                       :account="walletAddress"
-                       :balance="selectedAccount.balance"
-                       @sent="addPendingTransaction($event)"
-                       @close="dialog = false" />
+        <div id="sendFundsAccount">
+          <v-combobox
+            v-model="selectedOption"
+            :items="accountsList"
+            attach="#sendFundsAccount"
+            absolute
+            label="Select currency"
+            placeholder="Select a currency to use for requesting funds" />
+        </div>
 
-      <send-tokens-form v-if="selectedAccount && selectedAccount.isContract"
-                        ref="sendTokensForm"
-                        :account="walletAddress"
-                        :contract-details="selectedAccount"
-                        @sent="addPendingTransaction($event)"
-                        @close="dialog = false" />
+      </send-funds-form>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
-import SendEtherForm from './SendEtherForm.vue';
-import SendTokensForm from './SendTokensForm.vue';
-
-import {watchTransactionStatus} from '../WalletUtils.js';
-import {addTransaction} from '../WalletTransactions.js';
+import SendFundsForm from './SendFundsForm.vue';
 
 export default {
   components: {
-    SendEtherForm,
-    SendTokensForm
+    SendFundsForm
   },
   props: {
     accountsDetails: {
       type: Object,
       default: function() {
         return {};
+      }
+    },
+    principalAccount: {
+      type: String,
+      default: function() {
+        return null;
       }
     },
     refreshIndex: {
@@ -90,16 +90,13 @@ export default {
       }
     }
   },
-  data () {
+  data() {
     return {
       selectedOption: null,
       dialog: null
     };
   },
   computed: {
-    selectedAccount() {
-      return this.selectedOption && this.selectedOption.value;
-    },
     accountsList() {
       const accountsList = [];
       if (this.accountsDetails && this.refreshIndex > 0) {
@@ -116,19 +113,21 @@ export default {
   watch: {
     dialog() {
       if (this.dialog) {
-        if (this.$refs.sendEtherForm) {
-          this.$refs.sendEtherForm.init();
-        }
-        if (this.$refs.sendTokensForm) {
-          this.$refs.sendTokensForm.init();
-        }
+        this.$nextTick(() => {
+          if (!this.selectedOption) {
+            const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
+            this.prepareSendForm(null, null, null, contractAddress, true);
+          }
+        });
+      } else {
+        this.selectedOption = null;
       }
     }
   },
   methods: {
-    prepareSendForm(receiver, receiver_type, amount, contractAddress) {
+    prepareSendForm(receiver, receiver_type, amount, contractAddress, keepDialogOpen) {
       if (!this.accountsList || !this.accountsList.length) {
-        console.debug("prepareSendForm error -  no accounts found");
+        console.debug("prepareSendForm error - no accounts found");
         return;
       }
 
@@ -144,44 +143,13 @@ export default {
           }
           i++;
         }
-
-        if (this.selectedOption) {
-          this.$nextTick(() => {
-            if (this.$refs.sendTokensForm) {
-              this.$refs.sendTokensForm.$refs.autocomplete.selectItem(receiver, receiver_type);
-              this.$refs.sendTokensForm.amount = Number(amount);
-            }
-          });
-        } else {
-          this.dialog = false;
-        }
       } else {
         this.selectedOption = this.accountsList[0];
-        this.$nextTick(() => {
-          if (this.$refs.sendEtherForm) {
-            this.$refs.sendEtherForm.$refs.autocomplete.selectItem(receiver, receiver_type);
-            this.$refs.sendEtherForm.amount = Number(amount);
-          }
-        });
-      }
-    },
-    addPendingTransaction(transaction) {
-      if (!transaction) {
-        console.debug("Pending transaction is empty");
-        return;
       }
 
-      addTransaction(this.networkId,
-        this.walletAddress,
-        this.selectedAccount,
-        [],
-        transaction,
-        null,
-        null,
-        () => this.$emit('success'),
-        error => this.$emit('error', error));
-
-      this.$emit('pending', transaction);
+      this.$nextTick(() => {
+        this.$refs.sendFundsForm.prepareSendForm(receiver, receiver_type, amount, contractAddress, keepDialogOpen);
+      });
     }
   }
 };

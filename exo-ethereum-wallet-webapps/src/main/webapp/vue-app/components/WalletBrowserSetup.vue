@@ -24,7 +24,7 @@
             <i class="uiIconError"></i>{{ errorMessage }}
           </div>
           <v-form>
-            <label v-if="importWalletDialog && walletAddress" for="walletPrivateKey">This is the private key of account {{ walletAddress }}</label>
+            <label v-if="importWalletDialog && walletAddress" for="walletPrivateKey">Please introduce the private key of {{ walletAddress }}</label>
             <label v-else-if="importWalletDialog" for="walletPrivateKey">This is the private key to import a new wallet address</label>
             <v-text-field
               v-if="importWalletDialog"

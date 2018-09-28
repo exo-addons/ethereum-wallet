@@ -4,7 +4,7 @@
       <span>Request</span>
       <v-icon>fa-comment-dollar</v-icon>
     </v-btn>
-    <button v-else slot="activator" class="btn ml-1 mt-2">Request funds</button>
+    <button v-else slot="activator" class="btn ml-1 mt-2">Request</button>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
@@ -14,14 +14,6 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-card-text>
-        <v-flex id="requestFundsAccount">
-          <v-combobox
-            v-model="selectedOption"
-            :items="accountsList"
-            attach="#requestFundsAccount"
-            label="Select currency"
-            placeholder="Select a currency to use for requesting funds" />
-        </v-flex>
         <auto-complete
           v-if="selectedAccount"
           ref="autocomplete"
@@ -29,14 +21,28 @@
           input-label="Recipient"
           input-placeholder="Select a recipient for your funds request"
           @item-selected="recipient = $event" />
-        <v-text-field
-          v-if="selectedAccount"
-          v-model.number="amount"
-          :disabled="loading"
-          name="amount"
-          label="Amount"
-          placeholder="Select a suggested amount to request funds"
-          class="mt-4" />
+
+        <v-container flat fluid grid-list-lg class="mt-4 pl-2">
+          <v-layout row wrap>
+            <v-text-field
+              v-if="selectedAccount"
+              v-model.number="amount"
+              :disabled="loading"
+              name="amount"
+              label="Amount"
+              placeholder="Select a suggested amount to request funds" />
+
+            <div id="requestFundsAccount" class="ml-1">
+              <v-combobox
+                v-model="selectedOption"
+                :items="accountsList"
+                attach="#requestFundsAccount"
+                label="Select currency"
+                placeholder="Select a currency to use for requesting funds" />
+            </div>
+          </v-layout>
+        </v-container>
+
         <v-textarea
           v-if="selectedAccount"
           id="requestMessage"
@@ -75,6 +81,12 @@ export default {
       }
     },
     walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    principalAccount: {
       type: String,
       default: function() {
         return null;
@@ -131,6 +143,8 @@ export default {
         if (this.$refs && this.$refs.autocomplete) {
           this.$refs.autocomplete.clear();
         }
+        const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
+        this.selectedOption = this.accountsList.find(account => account.value && account.value.address && ((account.value.isContract && account.value.address === contractAddress) || (!account.value.isContract && !contractAddress)));
       }
     }
   },

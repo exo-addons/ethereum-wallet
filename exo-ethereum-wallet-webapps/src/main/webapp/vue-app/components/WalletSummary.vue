@@ -39,6 +39,7 @@
               :wallet-address="walletAddress"
               :disabled="disableSendButton"
               :icon="!isMaximized"
+              :principal-account="principalAccount"
               @pending="loadPendingTransactions()"
               @error="loadPendingTransactions(); $emit('error', $event);" />
             <v-divider v-if="!isMaximized" vertical />
@@ -51,6 +52,7 @@
             <wallet-request-funds-modal
               v-if="!isSpace || isSpaceAdministrator"
               :accounts-details="accountsDetails"
+              :principal-account="principalAccount"
               :refresh-index="refreshIndex"
               :wallet-address="walletAddress"
               :icon="!isMaximized" />
@@ -119,9 +121,9 @@ export default {
       }
     },
     principalAccount: {
-      type: Object,
+      type: String,
       default: function() {
-        return {};
+        return null;
       }
     },
     refreshIndex: {

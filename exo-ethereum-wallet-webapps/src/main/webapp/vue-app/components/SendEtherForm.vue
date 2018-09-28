@@ -11,14 +11,23 @@
           input-label="Recipient"
           input-placeholder="Select a user, a space or an address to send to"
           title="Select a user, a space or an address to send to"
-          @item-selected="recipient = $event.address" />
-        <v-text-field
-          v-model.number="amount"
-          :disabled="loading"
-          name="amount"
-          label="Amount"
-          placeholder="Select an amount of ethers to send"
-          class="mt-4" />
+          @item-selected="recipient = $event.address; $emit('receiver-selected', $event)" />
+
+        <v-container flat fluid grid-list-lg class="mt-4 pl-2">
+          <v-layout row wrap>
+            <v-text-field
+              v-model.number="amount"
+              :disabled="loading"
+              name="amount"
+              label="Amount"
+              placeholder="Select an amount of ethers to send"
+              @input="$emit('amount-selected', amount)" />
+
+            <slot></slot>
+
+          </v-layout>
+        </v-container>
+
       </v-form>
       <qr-code-modal :from="account"
                      :to="recipient"
