@@ -28,8 +28,8 @@
                     v-model="selectedPrincipalAccount"
                     :items="accountsList"
                     item-disabled="itemDisabled"
-                    label="Select principal account displayed in wallet overview"
-                    placeholder="Select principal account displayed in wallet overview"
+                    label="Select principal currency displayed in wallet summary"
+                    placeholder="Select principal currency displayed in wallet summary"
                     chips />
                   <v-combobox
                     v-model="selectedOverviewAccounts"
@@ -46,22 +46,24 @@
             <v-tab-item>
               <v-card>
                 <v-card-text v-if="!isSpace">
-                  <span>Gas limit to spend on transactions (Maximum fee per transaction)</span>
-                  <v-slider v-model="defaultGas"
-                            :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
-                            :max="90000"
-                            :min="21000"
-                            :step="1000"
-                            type="number" />
-                </v-card-text>
-                <v-card-text>
-                  <v-switch v-model="useMetamaskChoice" label="Use Metamask to access your wallet in current browser"></v-switch>
-                </v-card-text>
-                <v-card-text v-if="displayWalletResetOption">
-                  <wallet-reset-modal @reseted="$emit('settings-changed')"/>
-                </v-card-text>
-                <v-card-text v-if="displayWalletResetOption">
-                  <wallet-backup-modal :display-complete-message="false" @copied="$emit('copied')" />
+                  <div>
+                    <span>Maximum transaction fee</span>
+                    <v-slider v-model="defaultGas"
+                              :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
+                              :max="90000"
+                              :min="21000"
+                              :step="1000"
+                              type="number" />
+                  </div>
+                  <div>
+                    <v-switch v-model="useMetamaskChoice" label="Use Metamask to access your wallet in current browser"></v-switch>
+                  </div>
+                  <div v-if="displayWalletResetOption" class="mb-3">
+                    <wallet-reset-modal @reseted="$emit('settings-changed')"/>
+                  </div>
+                  <div v-if="displayWalletResetOption">
+                    <wallet-backup-modal :display-complete-message="false" @copied="$emit('copied')" />
+                  </div>
                 </v-card-text>
               </v-card>
             </v-tab-item>

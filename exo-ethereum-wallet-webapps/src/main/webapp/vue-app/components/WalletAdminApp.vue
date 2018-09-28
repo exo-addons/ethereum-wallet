@@ -105,7 +105,7 @@
                       <span>{{ item.name }}</span>
                     </v-chip>
                   </template>
-              
+
                   <template slot="item" slot-scope="{ item, tile }">
                     <v-list-tile-avatar>
                       <img :src="item.avatar">
@@ -153,7 +153,7 @@
 
                 <v-slider
                   v-model="defaultGas"
-                  :label="`Default Gas for transactions: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
+                  :label="`Maximum transaction fee: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
                   :min="21000"
                   :max="100000"
                   :step="1000"
