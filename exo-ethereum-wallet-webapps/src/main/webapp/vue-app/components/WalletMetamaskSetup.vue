@@ -56,7 +56,12 @@
       <i class="uiIconWarning"></i>
       Please switch Metamask to <strong>{{ networkLabel }}</strong>
     </div>
-    <!-- Ethereum address association -->
+    <!-- Ethereum space address association -->
+    <div v-else-if="newAddressDetected && isSpace" class="alert alert-info">
+      <i class="uiIconInfo"></i>
+      <span>Please switch metamask to {{ walletAddress }} account to be able to send transactions</span>
+    </div>
+    <!-- Ethereum user address association -->
     <div v-else-if="newAddressDetected" class="alert alert-info">
       <i class="uiIconInfo"></i>
       <span>A new wallet has been detected!</span>
@@ -119,6 +124,12 @@ export default {
         return false;
       }
     },
+    isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {
@@ -167,7 +178,8 @@ export default {
     newAddressDetected() {
       return this.sameConfiguredNetwork
         && this.detectedMetamaskAccount
-        && this.associatedWalletAddress !== this.detectedMetamaskAccount;
+        && this.associatedWalletAddress !== this.detectedMetamaskAccount
+        && (!this.isSpace || this.isSpaceAdministrator);
     }
   },
   watch: {
@@ -199,8 +211,8 @@ export default {
       this.currentAccountAlreadyInUse = false;
 
       if (this.metamaskEnabled && this.metamaskConnected) {
-        if (window.localWeb3.eth.defaultAccount) {
-          this.detectedMetamaskAccount = window.localWeb3.eth.defaultAccount.toLowerCase();
+        if (window.web3.eth.defaultAccount) {
+          this.detectedMetamaskAccount = window.web3.eth.defaultAccount.toLowerCase();
         }
 
         this.sameConfiguredNetwork = window.walletSettings.defaultNetworkId === window.walletSettings.currentNetworkId;

@@ -90,6 +90,12 @@ export default {
         return false;
       }
     },
+    isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     useMetamask: {
       type: Boolean,
       default: function() {

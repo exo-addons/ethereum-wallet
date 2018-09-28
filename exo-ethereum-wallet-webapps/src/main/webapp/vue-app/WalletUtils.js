@@ -108,20 +108,29 @@ export function initWeb3(isSpace) {
       && window.web3 && window.web3.eth.defaultAccount
       && window.web3.isConnected && window.web3.isConnected()) {
 
-    window.localWeb3 = new LocalWeb3(window.web3.currentProvider);
-    window.localWeb3.eth.defaultAccount = window.web3.eth.defaultAccount ? window.web3.eth.defaultAccount.toLowerCase() : null;
+    const tempWeb3 = new LocalWeb3(window.web3.currentProvider);
+    tempWeb3.eth.defaultAccount = window.web3.eth.defaultAccount ? window.web3.eth.defaultAccount.toLowerCase() : null;
 
-    return window.localWeb3.eth.getCoinbase()
+    return tempWeb3.eth.getCoinbase()
       .then(address => {
         if (address) {
           window.walletSettings.metamaskConnected = true;
         } else {
           window.walletSettings.metamaskConnected = false;
+        }
+
+        // Display wallet in read only mode when selected Metamask account is not the associated one
+        if (!window.walletSettings.metamaskConnected ||  !window.web3.eth.defaultAccount || (window.walletSettings.userPreferences.walletAddress && window.web3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
           createLocalWeb3Instance(isSpace, true);
+        } else {
+          window.localWeb3 = tempWeb3;
+          window.walletSettings.isReadOnly = false;
         }
         return checkNetworkStatus();
       })
       .catch(e => {
+        console.debug("error retrieving metamask connection status. Consider Metamask as disconnected", e);
+
         window.walletSettings.metamaskConnected = false;
         createLocalWeb3Instance(isSpace, true);
         return checkNetworkStatus();

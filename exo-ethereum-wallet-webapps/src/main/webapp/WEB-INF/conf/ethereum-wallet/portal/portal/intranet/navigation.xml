@@ -31,7 +31,7 @@
             <uri>wallet</uri>
             <name>wallet</name>
             <label>Wallet</label>
-            <visibility>HIDDEN</visibility>
+            <visibility>SYSTEM</visibility>
             <page-reference>portal::intranet::wallet</page-reference>
         </node>
     </page-nodes>

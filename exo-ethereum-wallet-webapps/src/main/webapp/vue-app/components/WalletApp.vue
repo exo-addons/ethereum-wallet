@@ -304,12 +304,7 @@ export default {
           }
 
           this.networkId = window.walletSettings.currentNetworkId;
-
-          if (this.useMetamask && window && window.web3 && window.web3.eth && window.web3.eth.defaultAccount) {
-            this.walletAddress = window.web3.eth.defaultAccount.toLowerCase();
-          } else if (window.localWeb3.eth.defaultAccount) {
-            this.walletAddress = window.localWeb3.eth.defaultAccount.toLowerCase();
-          }
+          this.walletAddress = window.localWeb3.eth.defaultAccount.toLowerCase();
 
           this.isReadOnly = window.walletSettings.isReadOnly;
           this.browserWalletExists = window.walletSettings.browserWalletExists;

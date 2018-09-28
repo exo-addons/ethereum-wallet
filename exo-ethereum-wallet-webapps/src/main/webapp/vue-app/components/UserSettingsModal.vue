@@ -3,7 +3,7 @@
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>
-        <span class="PopupTitle popupTitle">User Preferences</span>
+        <span class="PopupTitle popupTitle">Preferences</span>
       </div>
       <v-card-text>
         <div v-if="error && !loading" class="alert alert-error v-content">
@@ -12,8 +12,8 @@
         <v-flex>
           <v-tabs ref="settingsTabs" v-model="selectedTab" class="pl-3 pr-3">
             <v-tabs-slider />
-            <v-tab>Display</v-tab>
-            <v-tab v-if="!isSpace">Advanced settings</v-tab>
+            <v-tab v-if="!isSpace">Display</v-tab>
+            <v-tab>Advanced settings</v-tab>
             <v-tab v-if="walletAddress">Wallet details</v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab">
@@ -45,8 +45,8 @@
             </v-tab-item>
             <v-tab-item>
               <v-card>
-                <v-card-text v-if="!isSpace">
-                  <div>
+                <v-card-text>
+                  <div v-if="!isSpace">
                     <span>Maximum transaction fee</span>
                     <v-slider v-model="defaultGas"
                               :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"

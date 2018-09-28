@@ -26,6 +26,7 @@
       v-else-if="useMetamask"
       ref="walletMetamaskSetup"
       :is-space="isSpace"
+      :is-space-administrator="isSpaceAdministrator"
       :wallet-address="walletAddress"
       :refresh-index="refreshIndex"
       @loading="$emit('loading')"
@@ -36,6 +37,7 @@
       v-else-if="displayWalletSetup"
       ref="walletBrowserSetup"
       :is-space="isSpace"
+      :is-space-administrator="isSpaceAdministrator"
       :use-metamask="useMetamask"
       :refresh-index="refreshIndex"
       @configured="$emit('refresh')" />
@@ -64,6 +66,12 @@ export default {
         return false;
       }
     },
+    isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     isReadOnly: {
       type: Boolean,
       default: function() {
@@ -87,12 +95,12 @@ export default {
     return {
       useMetamask: false,
       browserWalletExists: false,
-      isSpaceAdministrator: false,
       displayWalletSetup: false,
       networkId: null,
       browserWalletDecrypted: false,
       browserWalletBackedUp: true,
       watchMetamaskAccountInterval: null,
+      detectedMetamaskAccount: null
     };
   },
   computed: {
@@ -131,6 +139,7 @@ export default {
       this.displayWalletSetup = !this.walletAddress && (!this.isSpace || this.isSpaceAdministrator);
 
       if (this.useMetamask) {
+        this.detectedMetamaskAccount = window.web3 && window.web3.eth && window.web3.eth.defaultAccount;
         this.watchMetamaskAccount();
       }
     },
@@ -150,11 +159,11 @@ export default {
       // In case account switched in Metamask
       // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
       this.watchMetamaskAccountInterval = setInterval(function() {
-        if (!thiss.useMetamask || !window || !window.web3 || !window.web3.eth.defaultAccount || !thiss.walletAddress) {
+        if (!thiss.useMetamask || !window || !window.web3 || !window.web3.eth.defaultAccount || !thiss.detectedMetamaskAccount) {
           return;
         }
 
-        if (window.web3.eth.defaultAccount.toLowerCase() !== thiss.walletAddress.toLowerCase()) {
+        if (window.web3.eth.defaultAccount.toLowerCase() !== thiss.detectedMetamaskAccount.toLowerCase()) {
           thiss.$emit('refresh');
           return;
         }
