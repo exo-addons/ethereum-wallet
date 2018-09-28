@@ -34,8 +34,8 @@
                   <v-combobox
                     v-model="selectedOverviewAccounts"
                     :items="accountsList"
-                    label="List of balances to display on wallet summary (by order)"
-                    placeholder="List of contracts, ether and fiat to display on wallet summary (by order)"
+                    label="List of currencies to use (by order)"
+                    placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
                     multiple
                     deletable-chips
                     clearable

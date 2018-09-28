@@ -53,6 +53,12 @@ export default {
         return {};
       }
     },
+    overviewAccounts: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
     principalAccount: {
       type: String,
       default: function() {
@@ -100,12 +106,17 @@ export default {
     accountsList() {
       const accountsList = [];
       if (this.accountsDetails && this.refreshIndex > 0) {
-        Object.keys(this.accountsDetails).forEach(key =>
-          accountsList.push({
-            text: this.accountsDetails[key].title,
-            value: this.accountsDetails[key]
-          })
-        );
+        Object.keys(this.accountsDetails).forEach(key => {
+          // Check list of accounts to display switch user preferences
+          const isContractOption = this.overviewAccounts.indexOf(key) > -1;
+          const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
+          if (isContractOption || isEtherOption) {
+            accountsList.push({
+              text: this.accountsDetails[key].title,
+              value: this.accountsDetails[key]
+            });
+          }
+        });
       }
       return accountsList;
     }
@@ -133,18 +144,19 @@ export default {
 
       this.dialog = true;
 
-      if (contractAddress && contractAddress.length) {
-        this.selectedOption = null;
-        let i = 0;
-        while (i < this.accountsList.length && !this.selectedOption) {
-          if (this.accountsList[i] && this.accountsList[i].value && this.accountsList[i].value.isContract
-              && this.accountsList[i].value.address === contractAddress.toLowerCase()) {
-            this.selectedOption = this.accountsList[i];
-          }
-          i++;
+      this.selectedOption = null;
+      let i = 0;
+      while (i < this.accountsList.length && !this.selectedOption) {
+        const account = this.accountsList[i];
+        if (account && account.value
+            // Token account
+            && ((account.value.isContract && contractAddress && account.value.address === contractAddress.toLowerCase())
+            // Ether account
+            || (!account.value.isContract && !contractAddress))) {
+
+          this.selectedOption = this.accountsList[i];
         }
-      } else {
-        this.selectedOption = this.accountsList[0];
+        i++;
       }
 
       this.$nextTick(() => {

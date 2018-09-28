@@ -86,16 +86,22 @@ export default {
         return null;
       }
     },
-    principalAccount: {
-      type: String,
-      default: function() {
-        return null;
-      }
-    },
     accountsDetails: {
       type: Object,
       default: function() {
         return {};
+      }
+    },
+    overviewAccounts: {
+      type: Object,
+      default: function() {
+        return {};
+      }
+    },
+    principalAccount: {
+      type: String,
+      default: function() {
+        return null;
       }
     },
     refreshIndex: {
@@ -124,7 +130,10 @@ export default {
       const accountsList = [];
       if (this.accountsDetails && this.refreshIndex > 0) {
         Object.keys(this.accountsDetails).forEach(key =>{
-          if(!this.accountsDetails[key].isContract || this.accountsDetails[key].isDefault) {
+          // Check list of accounts to display switch user preferences
+          const isContractOption = this.overviewAccounts.indexOf(key) > -1;
+          const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
+          if (isContractOption || isEtherOption) {
             accountsList.push({
               text: this.accountsDetails[key].title,
               value: this.accountsDetails[key]

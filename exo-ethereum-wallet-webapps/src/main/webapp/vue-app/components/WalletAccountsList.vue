@@ -40,75 +40,76 @@
       <v-layout
         row
         wrap>
-        <div 
-          v-for="(item, index) in accountsList"
-          :key="index"
-          class="accountItemContainer">
 
-          <v-hover>
-            <v-card
-              slot-scope="{ hover }"
-              :class="`elevation-${hover ? 9 : 2}`"
-              width="400px"
-              max-width="100%"
-              height="210px">
+        <template v-for="(item, index) in accountsList">
 
-              <v-card-title dark class="primary">
-                <v-icon :class="!item.error && 'clickable'" dark @click="!item.error && $emit('account-details-selected', item)">{{ item.icon }}</v-icon>
-
-                <v-spacer />
-                <v-card-sub-title :class="item.error ? 'errorHeadline' : 'headline clickable'" @click="!item.error && $emit('account-details-selected', item)">{{ item.title }}</v-card-sub-title>
-                <v-spacer v-if="!item.error" />
-
-                <v-menu v-if="!item.error" :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
-                  <v-btn slot="activator" dark icon>
-                    <v-icon>more_vert</v-icon>
+          <div v-if="(item.isContract && overviewAccounts.indexOf(item.address) > -1) || (!item.isContract && (overviewAccounts.indexOf('ether') > -1 || overviewAccounts.indexOf('fiat') > -1))" :key="index" class="accountItemContainer">
+  
+            <v-hover>
+              <v-card
+                slot-scope="{ hover }"
+                :class="`elevation-${hover ? 9 : 2}`"
+                width="400px"
+                max-width="100%"
+                height="210px">
+  
+                <v-card-title dark class="primary">
+                  <v-icon :class="!item.error && 'clickable'" dark @click="!item.error && $emit('account-details-selected', item)">{{ item.icon }}</v-icon>
+  
+                  <v-spacer />
+                  <v-card-sub-title :class="item.error ? 'errorHeadline' : 'headline clickable'" @click="!item.error && $emit('account-details-selected', item)">{{ item.title }}</v-card-sub-title>
+                  <v-spacer v-if="!item.error" />
+  
+                  <v-menu v-if="!item.error" :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
+                    <v-btn slot="activator" dark icon>
+                      <v-icon>more_vert</v-icon>
+                    </v-btn>
+  
+                    <v-list class="pt-0 pb-0">
+                      <v-list-tile v-if="!item.isContract && item.balance && item.balance !== '0'" @click="selectedItem = item; sendEtherModal = true">
+                        <v-list-tile-title>
+                          Send Ether
+                        </v-list-tile-title>
+                      </v-list-tile>
+                      <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; sendTokenModal = true">
+                        <v-list-tile-title>
+                          Send token
+                        </v-list-tile-title>
+                      </v-list-tile>
+                      <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; delegateTokenModal = true">
+                        <v-list-tile-title>
+                          Delegate tokens
+                        </v-list-tile-title>
+                      </v-list-tile>
+                      <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; sendDelegatedTokenModal = true">
+                        <v-list-tile-title>
+                          Send delegated tokens
+                        </v-list-tile-title>
+                      </v-list-tile>
+                      <v-list-tile v-if="!isSpace && item.isContract && !item.isDefault" @click="deleteContract(item, $event)">
+                        <v-list-tile-title>
+                          Remove from list
+                        </v-list-tile-title>
+                      </v-list-tile>
+                    </v-list>
+                  </v-menu>
+                </v-card-title>
+                <v-card-title :class="!item.error && 'clickable'" class="accountItemContent" @click="!item.error && $emit('account-details-selected', item)">
+                  <v-spacer></v-spacer>
+                  <div class="text-xs-center">
+                    <h4 v-if="item.error" class="mb-0">{{ item.error }}</h4>
+                    <h3 v-if="!item.error && (item.balanceFiat === 0 || item.balanceFiat) && overviewAccounts.indexOf('fiat') > -1" class="headline mb-0">{{ `${item.balanceFiat} ${fiatSymbol}` }}</h3>
+                    <h4 v-if="!item.error && (item.balance === 0 || item.balance)">{{ `${item.balance} ${item.symbol}` }}</h4>
+                  </div>
+                  <v-spacer v-if="!item.error" />
+                  <v-btn v-if="!item.error" icon class="mr-2" @click="!item.error && $emit('account-details-selected', item)">
+                    <v-icon>fa-angle-right</v-icon>
                   </v-btn>
-
-                  <v-list class="pt-0 pb-0">
-                    <v-list-tile v-if="!item.isContract && item.balance && item.balance !== '0'" @click="selectedItem = item; sendEtherModal = true">
-                      <v-list-tile-title>
-                        Send Ether
-                      </v-list-tile-title>
-                    </v-list-tile>
-                    <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; sendTokenModal = true">
-                      <v-list-tile-title>
-                        Send token
-                      </v-list-tile-title>
-                    </v-list-tile>
-                    <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; delegateTokenModal = true">
-                      <v-list-tile-title>
-                        Delegate tokens
-                      </v-list-tile-title>
-                    </v-list-tile>
-                    <v-list-tile v-if="item.isContract && item.balance > 0 && item.etherBalance > 0" @click="selectedItem = item; sendDelegatedTokenModal = true">
-                      <v-list-tile-title>
-                        Send delegated tokens
-                      </v-list-tile-title>
-                    </v-list-tile>
-                    <v-list-tile v-if="!isSpace && item.isContract && !item.isDefault" @click="deleteContract(item, $event)">
-                      <v-list-tile-title>
-                        Remove from list
-                      </v-list-tile-title>
-                    </v-list-tile>
-                  </v-list>
-                </v-menu>
-              </v-card-title>
-              <v-card-title :class="!item.error && 'clickable'" class="accountItemContent" @click="!item.error && $emit('account-details-selected', item)">
-                <v-spacer></v-spacer>
-                <div class="text-xs-center">
-                  <h4 v-if="item.error" class="mb-0">{{ item.error }}</h4>
-                  <h3 v-if="!item.error && (item.balanceFiat === 0 || item.balanceFiat)" class="headline mb-0">{{ `${item.balanceFiat} ${fiatSymbol}` }}</h3>
-                  <h4 v-if="!item.error && (item.balance === 0 || item.balance)">{{ `${item.balance} ${item.symbol}` }}</h4>
-                </div>
-                <v-spacer v-if="!item.error" />
-                <v-btn v-if="!item.error" icon class="mr-2" @click="!item.error && $emit('account-details-selected', item)">
-                  <v-icon>fa-angle-right</v-icon>
-                </v-btn>
-              </v-card-title>
-            </v-card>
-          </v-hover>
-        </div>
+                </v-card-title>
+              </v-card>
+            </v-hover>
+          </div>
+        </template>
       </v-layout>
     </v-container>
   </v-card>
@@ -142,6 +143,12 @@ export default {
       type: Object,
       default: function() {
         return {};
+      }
+    },
+    overviewAccounts: {
+      type: Array,
+      default: function() {
+        return [];
       }
     },
     fiatSymbol: {
@@ -184,8 +191,23 @@ export default {
       if (!this.refreshIndex) {
         return;
       }
+
       const accountsList = [];
-      Object.keys(this.accountsDetails).forEach(key => accountsList.push(this.accountsDetails[key]));
+      let etherAccountAdded = false;
+      this.overviewAccounts.forEach(selectedValue => {
+        if (selectedValue !== this.principalAccount) {
+          if (selectedValue === 'fiat' || selectedValue === 'ether') {
+            if (!etherAccountAdded) {
+              const accountDetails = Object.assign({}, this.accountsDetails[this.walletAddress]);
+              accountsList.push(accountDetails);
+              etherAccountAdded = true;
+            }
+          } else if (this.accountsDetails[selectedValue]) {
+            accountsList.push(this.accountsDetails[selectedValue]);
+          }
+        }
+      });
+
       return accountsList;
     }
   },

@@ -34,12 +34,13 @@
             <send-funds-modal
               ref="sendFundsModal"
               :accounts-details="accountsDetails"
+              :overview-accounts="overviewAccounts"
+              :principal-account="principalAccount"
               :refresh-index="refreshIndex"
               :network-id="networkId"
               :wallet-address="walletAddress"
               :disabled="disableSendButton"
               :icon="!isMaximized"
-              :principal-account="principalAccount"
               @pending="loadPendingTransactions()"
               @error="loadPendingTransactions(); $emit('error', $event);" />
             <v-divider v-if="!isMaximized" vertical />
@@ -52,6 +53,7 @@
             <wallet-request-funds-modal
               v-if="!isSpace || isSpaceAdministrator"
               :accounts-details="accountsDetails"
+              :overview-accounts="overviewAccounts"
               :principal-account="principalAccount"
               :refresh-index="refreshIndex"
               :wallet-address="walletAddress"

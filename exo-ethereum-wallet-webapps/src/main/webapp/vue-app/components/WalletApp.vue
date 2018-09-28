@@ -81,6 +81,7 @@
                 ref="WalletAccountsList"
                 :is-read-only="isReadOnly"
                 :accounts-details="accountsDetails"
+                :overview-accounts="overviewAccounts"
                 :wallet-address="walletAddress"
                 :network-id="networkId"
                 :refresh-index="refreshIndex"
