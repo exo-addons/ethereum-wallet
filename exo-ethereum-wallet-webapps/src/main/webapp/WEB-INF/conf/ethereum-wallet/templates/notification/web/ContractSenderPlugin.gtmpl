@@ -6,7 +6,7 @@
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
-          <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceContractSenderNotificationPlugin", SENDER_URL, AMOUNT, RECEIVER_URL, CONTRACT) : _ctx.appRes("Notification.message.ContractSenderNotificationPlugin", AMOUNT, RECEIVER_URL, CONTRACT)%>
+          <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceContractSenderNotificationPlugin", SENDER_URL, AMOUNT, RECEIVER_URL, SYMBOL) : _ctx.appRes("Notification.message.ContractSenderNotificationPlugin", AMOUNT, RECEIVER_URL, SYMBOL)%>
         </div>
         <div class="lastUpdatedTime">
             $LAST_UPDATED_TIME

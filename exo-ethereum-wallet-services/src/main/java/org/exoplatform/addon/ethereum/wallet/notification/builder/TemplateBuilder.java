@@ -49,7 +49,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
     String sender = notification.getValueOwnerParameter(SENDER);
     String receiverUrl = notification.getValueOwnerParameter(RECEIVER_URL);
     String senderUrl = notification.getValueOwnerParameter(SENDER_URL);
-    String contract = notification.getValueOwnerParameter(CONTRACT);
+    String symbol = notification.getValueOwnerParameter(SYMBOL);
     try {
       templateContext.put("AMOUNT", amount);
       templateContext.put("ACCOUNT_TYPE", type);
@@ -58,9 +58,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("SENDER_URL", senderUrl);
       templateContext.put("RECEIVER_URL", receiverUrl);
       templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
-      if (contract != null) {
-        templateContext.put("CONTRACT", contract);
-      }
+      templateContext.put("SYMBOL", symbol);
       templateContext.put("NOTIFICATION_ID", notification.getId());
       try {
         templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));

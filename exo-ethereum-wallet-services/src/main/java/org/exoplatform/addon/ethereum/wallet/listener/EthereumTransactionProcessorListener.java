@@ -171,7 +171,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, senderAccountDetails);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, receiverAccountDetails);
     if (contractDetails != null) {
-      ctx.append(CONTRACT_PARAMETER, contractDetails.getName());
+      ctx.append(CONTRACT_DETAILS_PARAMETER, contractDetails);
     }
     ctx.append(AMOUNT_PARAMETER, amount);
 

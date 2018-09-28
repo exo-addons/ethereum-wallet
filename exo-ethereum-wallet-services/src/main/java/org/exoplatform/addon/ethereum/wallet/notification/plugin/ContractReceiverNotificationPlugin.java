@@ -20,8 +20,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.List;
 
-import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
-import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
+import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
 import org.exoplatform.commons.api.notification.plugin.BaseNotificationPlugin;
@@ -48,7 +47,7 @@ public class ContractReceiverNotificationPlugin extends BaseNotificationPlugin {
   protected NotificationInfo makeNotification(NotificationContext ctx) {
     AccountDetail senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
     AccountDetail receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
-    String contract = ctx.value(CONTRACT_PARAMETER);
+    ContractDetail contractDetail = ctx.value(CONTRACT_DETAILS_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
 
     List<String> toList = getNotificationReceiversUsers(receiverAccountDetail, senderAccountDetail.getId());
@@ -60,7 +59,7 @@ public class ContractReceiverNotificationPlugin extends BaseNotificationPlugin {
                            .to(toList)
                            .with(ACCOUNT_TYPE, receiverAccountDetail.getType())
                            .with(AMOUNT, String.valueOf(amount))
-                           .with(CONTRACT, contract)
+                           .with(SYMBOL, contractDetail.getSymbol())
                            .with(AVATAR, CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar())
                            .with(SENDER_URL, getPermanentLink(senderAccountDetail))
                            .with(RECEIVER_URL, getPermanentLink(receiverAccountDetail))

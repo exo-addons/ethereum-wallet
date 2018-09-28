@@ -85,8 +85,6 @@ public class Utils {
 
   public static final String                             AVATAR                                        = "avatar";
 
-  public static final String                             CONTRACT                                      = "contract";
-
   public static final String                             SENDER                                        = "sender";
 
   public static final String                             USER                                          = "userFullname";
@@ -120,9 +118,6 @@ public class Utils {
   public static final ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER                  =
                                                                                       new ArgumentLiteral<>(TransactionStatus.class,
                                                                                                             "transactionStatus");
-
-  public static final ArgumentLiteral<String>            CONTRACT_PARAMETER                            =
-                                                                            new ArgumentLiteral<>(String.class, CONTRACT);
 
   public static final ArgumentLiteral<ContractDetail>    CONTRACT_DETAILS_PARAMETER                    =
                                                                                     new ArgumentLiteral<>(ContractDetail.class,

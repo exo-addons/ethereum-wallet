@@ -9,7 +9,7 @@
         </div>
         <div class="status">
           <%= ACCOUNT_TYPE.equals("space") ? 
-               _ctx.appRes("Notification.message.SpaceFundsRequestNotificationPlugin", USER_URL, SENDER_URL, AMOUNT, SYMBOL)
+               _ctx.appRes("Notification.message.SpaceFundsRequestNotificationPlugin", USER_URL, AMOUNT, SYMBOL, SENDER_URL)
                : _ctx.appRes("Notification.message.FundsRequestNotificationPlugin", USER_URL, AMOUNT, SYMBOL)%>
         </div>
         <% if (org.apache.commons.lang3.StringUtils.isNotBlank(MESSAGE)) { %>
