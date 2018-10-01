@@ -7,10 +7,9 @@
       <a v-if="walletAddress" href="javascript:void(0);" @click="importWalletDialog = true; dialog = true;">Import my wallet in current browser</a>
       <a v-else href="javascript:void(0);" @click="importWalletDialog = true; dialog = true;">Import existing wallet</a>
 
-      <div v-if="!useMetamask">Or</div>
-      <a v-if="!useMetamask" href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
+      <div>Or</div>
+      <a href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
     </div>
-    <v-divider />
 
     <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
       <v-card class="elevation-12">
@@ -91,12 +90,6 @@ export default {
       }
     },
     isSpaceAdministrator: {
-      type: Boolean,
-      default: function() {
-        return false;
-      }
-    },
-    useMetamask: {
       type: Boolean,
       default: function() {
         return false;

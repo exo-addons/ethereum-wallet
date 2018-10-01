@@ -38,7 +38,6 @@
                     placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
                     multiple
                     deletable-chips
-                    clearable
                     chips />
                 </v-card-text>
               </v-card>

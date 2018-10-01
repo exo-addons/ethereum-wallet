@@ -1,5 +1,5 @@
 <template>
-  <v-flex id="walletAppSetup" class="text-xs-center">
+  <v-flex id="walletSetup" class="text-xs-center">
     <div v-if="displayWalletBackup" class="alert alert-warning">
       <i class="uiIconWarning"></i>
       Your wallet is not backed up yet.
@@ -38,7 +38,6 @@
       ref="walletBrowserSetup"
       :is-space="isSpace"
       :is-space-administrator="isSpaceAdministrator"
-      :use-metamask="useMetamask"
       :refresh-index="refreshIndex"
       @configured="$emit('refresh')" />
   </v-flex>

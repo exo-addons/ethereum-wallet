@@ -3,7 +3,7 @@
     <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
       <v-btn :disabled="disabled" flat value="send">
         <span>Delegate Tokens</span>
-        <v-icon>send</v-icon>
+        <v-icon>fa-user-check</v-icon>
       </v-btn>
     </v-bottom-nav>
     <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">

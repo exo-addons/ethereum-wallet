@@ -16,7 +16,6 @@
                     hide-details
                     hide-selected
                     chips
-                    clearable
                     cache-items
                     dense
                     flat>

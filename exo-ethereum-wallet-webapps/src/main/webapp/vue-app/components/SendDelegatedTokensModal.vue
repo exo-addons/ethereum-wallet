@@ -3,7 +3,7 @@
     <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
       <v-btn :disabled="disabled" flat value="send">
         <span>Send delegated tokens</span>
-        <v-icon>send</v-icon>
+        <v-icon>fa-share-square</v-icon>
       </v-btn>
     </v-bottom-nav>
 

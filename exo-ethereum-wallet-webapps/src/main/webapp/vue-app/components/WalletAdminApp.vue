@@ -37,7 +37,7 @@
           <v-tabs-items v-if="displaySettings" v-model="selectedTab">
 
             <v-tab-item key="general">
-              <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
+              <v-card v-if="!loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <v-combobox
                   v-model="selectedNetwork"
                   :items="networks"
@@ -134,7 +134,6 @@
                   placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
                   multiple
                   deletable-chips
-                  clearable
                   chips />
     
                 <v-card-actions>
@@ -416,6 +415,10 @@ export default {
           }
         })
         .then(initWeb3)
+        .catch(error => {
+          console.debug("Error connecting to network", error);
+          this.error = "Error connecting to network";
+        })
         .then(account => {
           this.walletAddress = window.localWeb3.eth.defaultAccount;
           this.networkId = window.walletSettings.currentNetworkId;
@@ -424,6 +427,12 @@ export default {
         .then(() => this.loadingSettings = false)
         .then(this.refreshContractsList)
         .then(this.setSelectedValues)
+        .catch(error => {
+          console.debug("Error retrieving contracts", error);
+          if (!this.error) {
+            this.error = "Error retrieving contracts";
+          }
+        })
         .then(() => {
           this.loading = false;
           this.forceUpdate();
@@ -598,29 +607,34 @@ export default {
           defaultGas: this.defaultGas,
           enableDelegation: this.enableDelegation
         })
-      }).then(resp => {
-        if (resp && resp.ok) {
-          const reloadContract = window.walletSettings.defaultNetworkId !== this.selectedNetwork.value;
-
-          window.walletSettings.defaultNetworkId = this.selectedNetwork.value;
-          window.walletSettings.providerURL = this.selectedNetwork.httpLink;
-          window.walletSettings.websocketProviderURL = this.selectedNetwork.wsLink;
-          window.walletSettings.accessPermission = this.accessPermission;
-          window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
-          window.walletSettings.defaultGas = this.defaultGas;
-          this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
-
-          if (reloadContract) {
-            return this.contractsModified();
+      })
+        .then(resp => {
+          if (resp && resp.ok) {
+            const reloadContract = window.walletSettings.defaultNetworkId !== this.selectedNetwork.value;
+  
+            window.walletSettings.defaultNetworkId = this.selectedNetwork.value;
+            window.walletSettings.providerURL = this.selectedNetwork.httpLink;
+            window.walletSettings.websocketProviderURL = this.selectedNetwork.wsLink;
+            window.walletSettings.accessPermission = this.accessPermission;
+            window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
+            window.walletSettings.defaultGas = this.defaultGas;
+            this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
+  
+            if (reloadContract) {
+              return this.contractsModified();
+            }
+          } else {
+            this.error = 'Error saving global settings';
           }
-        } else {
+        })
+        .then(this.init)
+        .catch(e => {
+          console.debug("fetch global-settings - error", e);
           this.error = 'Error saving global settings';
-        }
-        this.loading = false;
-      }).catch(e => {
-        console.debug("fetch global-settings - error", e);
-        this.error = 'Error saving global settings';
-      });
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     contractsModified() {
       this.refreshContractsList()
