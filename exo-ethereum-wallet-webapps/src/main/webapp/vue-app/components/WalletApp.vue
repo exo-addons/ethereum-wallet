@@ -8,9 +8,8 @@
               <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
               <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
               <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
-              <div id="etherTooLowWarningParent">
+              <div v-if="displayEtherBalanceTooLow" id="etherTooLowWarningParent">
                 <v-tooltip
-                  v-if="displayEtherBalanceTooLow"
                   content-class="etherTooLowWarning"
                   attach="#etherTooLowWarningParent"
                   absolute
@@ -199,7 +198,7 @@ export default {
       return !this.loading && this.walletAddress && !this.useMetamask && this.browserWalletExists;
     },
     displayEtherBalanceTooLow() {
-      return (!this.isSpace || !this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.userDefaultGas);
+      return !this.loading && (!this.isSpace || !this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.userDefaultGas);
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
