@@ -314,6 +314,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
               } else if (method.name === 'transferFrom') {
                 transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
                 transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
+                transactionDetails.byAddress = transaction.from.toLowerCase();
                 transactionDetails.contractAmount = decodedLogs[0].events[2].value;
                 transactionDetails.isReceiver = false;
               }
@@ -353,6 +354,20 @@ export function addTransaction(networkId, account, contractDetails, transactions
       }
     })
     .then(() => {
+      if (transactionDetails.byAddress) {
+        return searchFullName(transactionDetails.byAddress);
+      }
+    })
+    .then(item => {
+      if (item && item.name && item.name.length) {
+        transactionDetails.byDisplayName = item.name;
+        transactionDetails.byAvatar = item.avatar;
+        transactionDetails.byUsername = item.id;
+        transactionDetails.byType = item.type;
+        transactionDetails.byTechnicalId = item.technicalId;
+      }
+    })
+    .then(() => {
       if (transactionDetails.pending
           || transaction.from.toLowerCase() === account
           || (transaction.to && transaction.to.toLowerCase() === account)
@@ -369,7 +384,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
     })
     .then(transactionDetails => {
       if (transaction.blockNumber && transactionDetails.status && !transactionDetails.pending) {
-        return window.localWeb3.eth.getBalance(account, transaction.blockNumber)
+        return window.localWeb3.eth.getBalance(account, transaction.blockNumber - 1)
           .then(balanceAtDate => {
             if (balanceAtDate) {
               transactionDetails.balanceAtDate = window.localWeb3.utils.fromWei(balanceAtDate, 'ether');

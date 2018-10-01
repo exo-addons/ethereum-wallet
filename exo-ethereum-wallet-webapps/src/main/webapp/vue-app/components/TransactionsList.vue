@@ -82,6 +82,14 @@
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
+                  <span>by</span>
+                  <profile-chip
+                    :address="item.byAddress"
+                    :profile-id="item.byUsername"
+                    :profile-technical-id="item.byTechnicalId"
+                    :profile-type="item.byType"
+                    :display-name="item.byDisplayName"
+                    :avatar="item.byAvatar" />
                   <span>on behalf of</span>
                   <profile-chip
                     :address="item.fromAddress"
