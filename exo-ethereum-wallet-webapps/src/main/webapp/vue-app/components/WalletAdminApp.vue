@@ -30,6 +30,7 @@
           <v-tabs v-if="displaySettings" v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
             <v-tab key="general">Settings</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="funds">Initial accounts funds</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
           </v-tabs>
@@ -69,52 +70,51 @@
                   type="text"
                   name="websocketProviderURL"
                   label="Ethereum Network Websocket URL used for notifications" />
-    
-                <v-autocomplete
-                  v-if="sameConfiguredNetwork"
-                  ref="accessPermissionAutoComplete"
-                  v-model="accessPermission"
-                  :items="accessPermissionOptions"
-                  :loading="isLoadingSuggestions"
-                  :search-input.sync="accessPermissionSearchTerm"
-                  :open-on-click="false"
-                  :open-on-hover="false"
-                  :open-on-clear="false"
-                  :no-filter="true"
-                  counter="1"
-                  max-width="100%"
-                  item-text="name"
-                  item-value="id"
-                  label="Wallet access permission (Spaces only)"
-                  placeholder="Start typing to Search a space"
-                  hide-no-data hide-details hide-selected chips>
-    
-                  <template slot="no-data">
-                    <v-list-tile>
-                      <v-list-tile-title>
-                        Search for a <strong>Space</strong>
-                      </v-list-tile-title>
-                    </v-list-tile>
-                  </template>
-    
-                  <template slot="selection" slot-scope="{ item, selected }">
-                    <v-chip :selected="selected" color="blue-grey" class="white--text">
-                      <v-avatar dark>
-                        <img :src="item.avatar">
-                      </v-avatar>
-                      <span>{{ item.name }}</span>
-                    </v-chip>
-                  </template>
 
-                  <template slot="item" slot-scope="{ item, tile }">
-                    <v-list-tile-avatar>
-                      <img :src="item.avatar">
-                    </v-list-tile-avatar>
-                    <v-list-tile-content>
-                      <v-list-tile-title v-text="item.name"></v-list-tile-title>
-                    </v-list-tile-content>
-                  </template>
-                </v-autocomplete>
+                <v-flex id="accessPermissionAutoComplete" class="contactAutoComplete mt-4">
+                  <v-autocomplete
+                    v-if="sameConfiguredNetwork"
+                    ref="accessPermissionAutoComplete"
+                    v-model="accessPermission"
+                    :items="accessPermissionOptions"
+                    :loading="isLoadingSuggestions"
+                    :search-input.sync="accessPermissionSearchTerm"
+                    attach="#accessPermissionAutoComplete"
+                    label="Wallet access permission (Spaces only)"
+                    class="contactAutoComplete"
+                    placeholder="Start typing to Search a space"
+                    content-class="contactAutoCompleteContent"
+                    max-width="100%"
+                    item-text="name"
+                    item-value="id"
+                    hide-details
+                    hide-selected
+                    chips
+                    cache-items
+                    dense
+                    flat>
+                    <template slot="no-data">
+                      <v-list-tile>
+                        <v-list-tile-title>
+                          Search for a <strong>Space</strong>
+                        </v-list-tile-title>
+                      </v-list-tile>
+                    </template>
+      
+                    <template slot="selection" slot-scope="{ item, selected }">
+                      <v-chip :selected="selected" class="autocompleteSelectedItem">
+                        <span>{{ item.name }}</span>
+                      </v-chip>
+                    </template>
+  
+                    <template slot="item" slot-scope="{ item, tile }">
+                      <v-list-tile-avatar v-if="item.avatar" tile size="20">
+                        <img :src="item.avatar">
+                      </v-list-tile-avatar>
+                      <v-list-tile-title v-text="item.name" />
+                    </template>
+                  </v-autocomplete>
+                </v-flex>
 
                 <v-combobox
                   v-if="sameConfiguredNetwork"
@@ -147,6 +147,94 @@
               </v-card>
             </v-tab-item>
 
+            <v-tab-item key="funds">
+              <v-card v-if="!loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
+                <v-card-title>
+                  The following settings manages the funds holder and the amount of initial funds to send for a user that has created a new wallet for the first time.
+                  You can choose to set initial funds for a token to 0 so that no funds will be send.
+                  The funds holder will receive a notification per user per currency (ether and/or token).
+                </v-card-title>
+                <v-card-text>
+                  <v-flex id="fundsHolderAutoComplete" class="contactAutoComplete">
+                    <v-autocomplete
+                      v-if="sameConfiguredNetwork"
+                      ref="fundsHolderAutoComplete"
+                      v-model="fundsHolder"
+                      :items="fundsHolderOptions"
+                      :loading="isLoadingSuggestions"
+                      :search-input.sync="fundsHolderSearchTerm"
+                      attach="#fundsHolderAutoComplete"
+                      label="Wallet funds holder"
+                      class="contactAutoComplete"
+                      placeholder="Start typing to Search a user"
+                      content-class="contactAutoCompleteContent"
+                      max-width="100%"
+                      item-text="name"
+                      item-value="id"
+                      hide-details
+                      hide-selected
+                      chips
+                      cache-items
+                      dense
+                      flat>
+                      <template slot="no-data">
+                        <v-list-tile>
+                          <v-list-tile-title>
+                            Search for a <strong>user</strong>
+                          </v-list-tile-title>
+                        </v-list-tile>
+                      </template>
+        
+                      <template slot="selection" slot-scope="{ item, selected }">
+                        <v-chip :selected="selected" class="autocompleteSelectedItem">
+                          <span>{{ item.name }}</span>
+                        </v-chip>
+                      </template>
+    
+                      <template slot="item" slot-scope="{ item, tile }">
+                        <v-list-tile-avatar v-if="item.avatar" tile size="20">
+                          <img :src="item.avatar">
+                        </v-list-tile-avatar>
+                        <v-list-tile-title v-text="item.name" />
+                      </template>
+                    </v-autocomplete>
+                  </v-flex>
+
+                  <v-textarea
+                    id="initialfundsRequestMessage"
+                    v-model="initialfundsRequestMessage"
+                    name="initialfundsRequestMessage"
+                    label="Initial funds request message"
+                    placeholder="You can input a custom message to send with initial funds request"
+                    class="mt-4"
+                    rows="7"
+                    flat
+                    no-resize />
+                </v-card-text>
+
+                <v-card-text class="text-xs-left">
+                  <v-label light>Default amount of automatic initial funds request</v-label>
+                  <v-data-table :headers="initialFundsHeaders" :items="initialFunds" :sortable="false" hide-actions>
+                    <template slot="items" slot-scope="props">
+                      <td class="text-xs-left">
+                        {{ props.item.name ? props.item.name : props.item.address }}
+                      </td>
+                      <td>
+                        <v-text-field v-model="props.item.amount" single-line />
+                      </td>
+                    </template>
+                  </v-data-table>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
+                    Save
+                  </button>
+                  <v-spacer />
+                </v-card-actions>
+              </v-card>
+            </v-tab-item>
+
             <v-tab-item v-if="sameConfiguredNetwork" key="overview">
               <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <div>
@@ -162,6 +250,7 @@
                   type="number"
                   class="mt-4"
                   required />
+
                 <v-slider
                   v-model="defaultBlocksToRetrieve"
                   :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
@@ -239,7 +328,7 @@ import AddContractModal from './AddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
 import WalletSetup from './WalletSetup.vue';
 
-import {searchSpaces} from '../WalletAddressRegistry.js';
+import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
 import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat} from '../WalletUtils.js';
 
@@ -257,6 +346,9 @@ export default {
       loadingSettings: false,
       selectedTab: true,
       sameConfiguredNetwork: true,
+      fundsHolder: '',
+      fundsHolderOptions: [],
+      fundsHolderSearchTerm: null,
       accessPermission: '',
       accessPermissionOptions: [],
       accessPermissionSearchTerm: null,
@@ -294,6 +386,20 @@ export default {
           align: 'center',
           sortable: false,
           value: 'action'
+        }
+      ],
+      initialFundsHeaders: [
+        {
+          text: 'Name',
+          align: 'left',
+          sortable: false,
+          value: 'name'
+        },
+        {
+          text: 'Amount',
+          align: 'center',
+          sortable: false,
+          value: 'amount'
         }
       ],
       selectedNetwork: {
@@ -360,6 +466,25 @@ export default {
           this.isLoadingSuggestions = false;
         });
     },
+    fundsHolderSearchTerm() {
+      if (!this.fundsHolderSearchTerm || !this.fundsHolderSearchTerm.length) {
+        return;
+      }
+      this.isLoadingSuggestions = true;
+      searchUsers(this.fundsHolderSearchTerm, true)
+        .then(items => {
+          if (items) {
+            this.fundsHolderOptions = items;
+          } else {
+            this.fundsHolderOptions = [];
+          }
+          this.isLoadingSuggestions = false;
+        })
+        .catch((e) => {
+          console.debug("searchUsers method - error", e);
+          this.isLoadingSuggestions = false;
+        });
+    },
     selectedPrincipalAccount() {
       if (this.selectedPrincipalAccount) {
         this.selectedOverviewAccounts.forEach(account => {
@@ -387,6 +512,14 @@ export default {
         // A hack to close on select
         // See https://www.reddit.com/r/vuetifyjs/comments/819h8u/how_to_close_a_multiple_autocomplete_vselect/
         this.$refs.accessPermissionAutoComplete.isFocused = false;
+      }
+    },
+    fundsHolder(newValue, oldValue) {
+      if (oldValue) {
+        this.fundsHolderSearchTerm = null;
+        // A hack to close on select
+        // See https://www.reddit.com/r/vuetifyjs/comments/819h8u/how_to_close_a_multiple_autocomplete_vselect/
+        this.$refs.fundsHolderAutoComplete.isFocused = false;
       }
     },
     defaultGas() {
@@ -454,6 +587,27 @@ export default {
       });
 
       this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
+      if (!window.walletSettings.initialFunds) {
+        window.walletSettings.initialFunds = [{name : 'ether', address : 'ether', amount : 0}];
+        if(this.contracts) {
+          this.contracts.forEach(contract => {
+            window.walletSettings.initialFunds.push({name : contract.name, address : contract.address,  amount : 0});
+          });
+        }
+      } else {
+        // Add newly added contracts
+        this.contracts.forEach(contract => {
+          const contractDetails = window.walletSettings.initialFunds.find(tmpContract => tmpContract.address === contract.address);
+          if(!contractDetails) {
+            window.walletSettings.initialFunds.push({name : contract.name, address : contract.address,  amount : 0});
+          } else if(contractDetails.address === 'ether') {
+            contractDetails.name = 'ether';
+          } else  {
+            contractDetails.name = contract.name;
+          }
+        });
+      }
+      this.initialFunds = window.walletSettings.initialFunds;
     },
     getOverviewAccountObject(selectedValue) {
       if (selectedValue === 'fiat') {
@@ -471,6 +625,17 @@ export default {
       }
     },
     setDefaultValues() {
+      if (window.walletSettings.fundsHolder) {
+        this.fundsHolder = window.walletSettings.fundsHolder;
+        searchUsers(this.fundsHolder, true)
+          .then(items => {
+            if (items) {
+              this.fundsHolderOptions = items;
+            } else {
+              this.fundsHolderOptions = [];
+            }
+          });
+      }
       if (window.walletSettings.accessPermission) {
         this.accessPermission = window.walletSettings.accessPermission;
         searchSpaces(this.accessPermission)
@@ -501,6 +666,7 @@ export default {
       this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
       this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
       this.enableDelegation = window.walletSettings.enableDelegation;
+      this.initialfundsRequestMessage = window.walletSettings.initialfundsRequestMessage;
     },
     updateList(address) {
       this.loading = true;
@@ -589,6 +755,12 @@ export default {
     },
     saveGlobalSettings() {
       this.loading = true;
+      const initialFundsMap = {};
+      if (this.initialFunds && this.initialFunds.length) {
+        this.initialFunds.forEach(initialFund => {
+          initialFundsMap[initialFund.address] = initialFund.amount;
+        });
+      }
       fetch('/portal/rest/wallet/api/global-settings/save', {
         method: 'POST',
         credentials: 'include',
@@ -598,6 +770,9 @@ export default {
         },
         body: JSON.stringify({
           accessPermission: this.accessPermission,
+          fundsHolder: this.fundsHolder,
+          fundsHolderType: 'user',
+          initialfundsRequestMessage: this.initialfundsRequestMessage,
           providerURL: this.selectedNetwork.httpLink,
           websocketProviderURL: this.selectedNetwork.wsLink,
           defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
@@ -605,7 +780,8 @@ export default {
           defaultPrincipalAccount: this.selectedPrincipalAccount.value,
           defaultOverviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
           defaultGas: this.defaultGas,
-          enableDelegation: this.enableDelegation
+          enableDelegation: this.enableDelegation,
+          initialFunds: initialFundsMap
         })
       })
         .then(resp => {
@@ -616,6 +792,7 @@ export default {
             window.walletSettings.providerURL = this.selectedNetwork.httpLink;
             window.walletSettings.websocketProviderURL = this.selectedNetwork.wsLink;
             window.walletSettings.accessPermission = this.accessPermission;
+            window.walletSettings.fundsHolder = this.fundsHolder;
             window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
             window.walletSettings.defaultGas = this.defaultGas;
             this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);

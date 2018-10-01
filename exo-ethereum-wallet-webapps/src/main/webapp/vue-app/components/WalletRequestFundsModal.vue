@@ -14,7 +14,7 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-card-text>
-        <auto-complete
+        <address-auto-complete
           v-if="selectedAccount"
           ref="autocomplete"
           :disabled="loading"
@@ -67,11 +67,11 @@
 </template>
 
 <script>
-import AutoComplete from './AutoComplete.vue';
+import AddressAutoComplete from './AddressAutoComplete.vue';
 
 export default {
   components: {
-    AutoComplete
+    AddressAutoComplete
   },
   props: {
     icon: {

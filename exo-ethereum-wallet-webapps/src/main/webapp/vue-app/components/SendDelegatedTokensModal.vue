@@ -38,13 +38,13 @@
           <i class="uiIconWarning"></i>{{ warning }}
         </div>
         <v-form>
-          <auto-complete
+          <address-auto-complete
             ref="autocompleteFrom"
             :disabled="loading"
             input-label="From"
             input-placeholder="Select from which wallet you received a delegated tokens"
             @item-selected="from = $event.address" />
-          <auto-complete
+          <address-auto-complete
             ref="autocompleteRecipient"
             :disabled="loading"
             class="mt-4"
@@ -71,13 +71,13 @@
 </template>
 
 <script>
-import AutoComplete from './AutoComplete.vue';
+import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
 export default {
   components: {
     QrCodeModal,
-    AutoComplete
+    AddressAutoComplete
   },
   props: {
     contractDetails: {

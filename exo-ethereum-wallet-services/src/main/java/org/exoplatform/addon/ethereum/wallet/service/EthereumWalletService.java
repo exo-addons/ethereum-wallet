@@ -527,7 +527,7 @@ public class EthereumWalletService {
    * @return
    * @throws IllegalAccessException
    */
-  public String saveWalletAddress(AccountDetail accountDetail) throws IllegalAccessException {
+  public String saveWalletAddress(AccountDetail accountDetail) throws Exception {
     String currentUserId = getCurrentUserId();
     String id = accountDetail.getId();
     String type = accountDetail.getType();
@@ -540,13 +540,15 @@ public class EthereumWalletService {
       throw new IllegalStateException();
     }
 
+    String oldAddress = null;
+
     if (StringUtils.equals(type, USER_ACCOUNT_TYPE)) {
       if (!StringUtils.equals(currentUserId, id)) {
         LOG.error("User '{}' attempts to modify wallet address of user '{}'", currentUserId, id);
         throw new IllegalAccessException();
       }
 
-      String oldAddress = getUserAddress(id);
+      oldAddress = getUserAddress(id);
       if (oldAddress != null && !StringUtils.equals(oldAddress, address)) {
         AccountDetail userDetailsByOldAddress = getAccountDetailsByAddress(oldAddress);
         if (userDetailsByOldAddress != null) {
@@ -562,10 +564,9 @@ public class EthereumWalletService {
 
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       settingService.set(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME, SettingValue.create(address));
-      return generateSecurityPhrase(accountDetail);
     } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
       checkCurrentUserIsSpaceManager(id);
-      String oldAddress = getSpaceAddress(id);
+      oldAddress = getSpaceAddress(id);
       if (oldAddress != null && !StringUtils.equals(oldAddress, address)) {
         // Remove old address mapping
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
@@ -573,9 +574,17 @@ public class EthereumWalletService {
 
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, id, SettingValue.create(address));
-      return generateSecurityPhrase(accountDetail);
+    } else {
+      return null;
     }
-    return null;
+
+    if (StringUtils.isBlank(oldAddress)) {
+      this.listenerService.broadcast(NEW_ADDRESS_ASSOCIATED_EVENT, this, accountDetail);
+    } else {
+      this.listenerService.broadcast(MODIFY_ADDRESS_ASSOCIATED_EVENT, this, accountDetail);
+    }
+
+    return generateSecurityPhrase(accountDetail);
   }
 
   /**

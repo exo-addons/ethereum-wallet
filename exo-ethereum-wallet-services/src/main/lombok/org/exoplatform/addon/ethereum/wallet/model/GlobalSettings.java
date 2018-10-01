@@ -1,9 +1,10 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.USER_ACCOUNT_TYPE;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.jsonArrayToList;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.*;
@@ -13,27 +14,35 @@ import lombok.Data;
 @Data
 public class GlobalSettings implements Serializable {
 
-  private static final long      serialVersionUID        = -4672745644323864680L;
+  private static final long      serialVersionUID           = -4672745644323864680L;
 
-  private boolean                walletEnabled           = true;
+  private boolean                walletEnabled              = true;
 
-  private boolean                enableDelegation        = true;
+  private boolean                enableDelegation           = true;
 
-  private String                 accessPermission        = null;
+  private String                 accessPermission           = null;
 
-  private String                 providerURL             = "https://ropsten.infura.io";
+  private String                 fundsHolder                = null;
 
-  private String                 websocketProviderURL    = "wss://ropsten.infura.io/ws";
+  private String                 initialfundsRequestMessage = null;
 
-  private Integer                defaultBlocksToRetrieve = 100;
+  private String                 fundsHolderType            = USER_ACCOUNT_TYPE;
 
-  private Long                   defaultNetworkId        = 3L;
+  private String                 providerURL                = "https://ropsten.infura.io";
 
-  private Integer                defaultGas              = 65000;
+  private String                 websocketProviderURL       = "wss://ropsten.infura.io/ws";
 
-  private String                 defaultPrincipalAccount = null;
+  private Integer                defaultBlocksToRetrieve    = 100;
 
-  private List<String>           defaultOverviewAccounts = null;
+  private Long                   defaultNetworkId           = 3L;
+
+  private Integer                defaultGas                 = 65000;
+
+  private String                 defaultPrincipalAccount    = null;
+
+  private List<String>           defaultOverviewAccounts    = null;
+
+  private Map<String, Double>    initialFunds;
 
   private UserPreferences        userPreferences;
 
@@ -52,11 +61,25 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("isWalletEnabled", walletEnabled);
       jsonObject.put("enableDelegation", enableDelegation);
       jsonObject.put("accessPermission", accessPermission);
+      jsonObject.put("initialfundsRequestMessage", initialfundsRequestMessage);
+      jsonObject.put("fundsHolder", fundsHolder);
+      jsonObject.put("fundsHolderType", fundsHolderType);
       jsonObject.put("providerURL", providerURL);
       jsonObject.put("websocketProviderURL", websocketProviderURL);
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
+      if (initialFunds != null && !initialFunds.isEmpty()) {
+        JSONArray array = new JSONArray();
+        Set<String> addresses = initialFunds.keySet();
+        for (String address : addresses) {
+          JSONObject obj = new JSONObject();
+          obj.put("address", address);
+          obj.put("amount", initialFunds.get(address));
+          array.put(obj);
+        }
+        jsonObject.put("initialFunds", array);
+      }
       if (userPreferences != null) {
         jsonObject.put("userPreferences", userPreferences.toJSONObject());
       }
@@ -90,13 +113,32 @@ public class GlobalSettings implements Serializable {
         return null;
       }
     }
+
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       GlobalSettings globalSettings = new GlobalSettings();
 
+      String storedFundsHolder = jsonObject.has("fundsHolder") ? jsonObject.getString("fundsHolder") : null;
+      globalSettings.setFundsHolder(storedFundsHolder == null || storedFundsHolder.isEmpty() ? defaultSettings.getFundsHolder()
+                                                                                             : storedFundsHolder);
+
+      String storedFundsHolderType = jsonObject.has("fundsHolderType") ? jsonObject.getString("fundsHolderType") : null;
+      globalSettings.setFundsHolderType(storedFundsHolderType == null
+          || storedFundsHolderType.isEmpty() ? defaultSettings.getFundsHolderType() : storedFundsHolderType);
+
+      JSONArray storedInitialFunds = jsonObject.has("initialFunds") ? jsonObject.getJSONArray("initialFunds") : null;
+      globalSettings.setInitialFunds(storedInitialFunds == null ? defaultSettings.getInitialFunds() : toMap(storedInitialFunds));
+
       String storedAccessPermission = jsonObject.has("accessPermission") ? jsonObject.getString("accessPermission") : null;
       globalSettings.setAccessPermission(storedAccessPermission == null
           || storedAccessPermission.isEmpty() ? defaultSettings.getAccessPermission() : storedAccessPermission);
+
+      String storedInitialfundsRequestMessage =
+                                              jsonObject.has("initialfundsRequestMessage") ? jsonObject.getString("initialfundsRequestMessage")
+                                                                                           : null;
+      globalSettings.setInitialfundsRequestMessage(storedInitialfundsRequestMessage == null
+          || storedInitialfundsRequestMessage.isEmpty() ? defaultSettings.getInitialfundsRequestMessage()
+                                                        : storedInitialfundsRequestMessage);
 
       String storedProviderURL = jsonObject.has("providerURL") ? jsonObject.getString("providerURL") : null;
       globalSettings.setProviderURL(storedProviderURL == null || storedProviderURL.isEmpty() ? defaultSettings.getProviderURL()
@@ -138,4 +180,17 @@ public class GlobalSettings implements Serializable {
   public static final GlobalSettings parseStringToObject(String jsonString) {
     return parseStringToObject(null, jsonString);
   }
+
+  private static Map<String, Double> toMap(JSONArray storedInitialFunds) throws JSONException {
+    HashMap<String, Double> map = new HashMap<>();
+    if (storedInitialFunds == null || storedInitialFunds.length() == 0) {
+      return map;
+    }
+    for (int i = 0; i < storedInitialFunds.length(); i++) {
+      JSONObject obj = storedInitialFunds.getJSONObject(i);
+      map.put(obj.getString("address"), obj.getDouble("amount"));
+    }
+    return map;
+  }
+
 }

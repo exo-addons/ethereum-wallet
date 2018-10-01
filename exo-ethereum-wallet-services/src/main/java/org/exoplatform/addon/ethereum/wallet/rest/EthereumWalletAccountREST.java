@@ -130,6 +130,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(403).build();
     } catch (IllegalStateException e) {
       return Response.status(400).build();
+    } catch (Exception e) {
+      return Response.status(500).build();
     }
   }
 

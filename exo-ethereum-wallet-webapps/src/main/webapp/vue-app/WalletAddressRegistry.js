@@ -161,11 +161,11 @@ export function getContractFromStorage(account, address) {
 /*
  * Search users from eXo Platform, used for suggester
  */
-export function searchUsers(filter) {
+export function searchUsers(filter, includeCurrentUserInResults) {
   const params = $.param({
     nameToSearch: filter,
     typeOfRelation: 'mention_activity_stream',
-    currentUser: eXo.env.portal.userName,
+    currentUser: includeCurrentUserInResults ? '' : eXo.env.portal.userName,
     spaceURL: isOnlySpaceMembers() ? getAccessPermission() : null
   });
   return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})

@@ -5,7 +5,7 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-form>
-        <auto-complete
+        <address-auto-complete
           ref="autocomplete"
           :disabled="loading"
           input-label="Recipient"
@@ -47,14 +47,14 @@
 </template>
 
 <script>
-import AutoComplete from './AutoComplete.vue';
+import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import {gasToEther} from '../WalletUtils.js';
 
 export default {
   components: {
     QrCodeModal,
-    AutoComplete
+    AddressAutoComplete
   },
   props: {
     account: {

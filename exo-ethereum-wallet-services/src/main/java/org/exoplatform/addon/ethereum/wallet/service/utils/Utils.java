@@ -54,6 +54,12 @@ public class Utils {
   public static final String                             GLOAL_SETTINGS_CHANGED_EVENT                  =
                                                                                       "exo.addon.wallet.settings.changed";
 
+  public static final String                             NEW_ADDRESS_ASSOCIATED_EVENT                  =
+                                                                                      "exo.addon.wallet.addressAssociation.new";
+
+  public static final String                             MODIFY_ADDRESS_ASSOCIATED_EVENT               =
+                                                                                         "exo.addon.wallet.addressAssociation.modification";
+
   public static final String                             NEW_TRANSACTION_EVENT                         =
                                                                                "exo.addon.wallet.transaction.loaded";
 

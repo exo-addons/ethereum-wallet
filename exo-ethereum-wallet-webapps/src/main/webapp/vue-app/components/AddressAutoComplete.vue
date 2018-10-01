@@ -9,6 +9,7 @@
                     :disabled="disabled"
                     :attach="`#${id}`"
                     :placeholder="inputPlaceholder"
+                    class="contactAutoComplete"
                     content-class="contactAutoCompleteContent"
                     max-width="100%"
                     item-text="name"
