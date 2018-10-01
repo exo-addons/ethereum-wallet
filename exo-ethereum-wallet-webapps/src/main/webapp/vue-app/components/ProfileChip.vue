@@ -1,10 +1,7 @@
 <template>
-  <v-chip v-if="profileId" :id="id" :title="profileId" :href="`/portal/g/:spaces:${profileId}/`" class="mt-0 mb-0" small>
-    <v-avatar size="23px !important">
-      <img :src="avatar">
-    </v-avatar>
+  <a v-if="profileId" :id="id" :title="profileId" :href="`/portal/g/:spaces:${profileId}/`" rel="nofollow" target="_blank">
     <span v-html="displayName"></span>
-  </v-chip>
+  </a>
   <wallet-address v-else :value="address" />
 </template>
 
