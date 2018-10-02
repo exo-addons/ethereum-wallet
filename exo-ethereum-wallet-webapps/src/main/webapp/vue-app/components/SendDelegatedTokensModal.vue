@@ -182,15 +182,15 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.userDefaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.defaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
-            if (result > window.walletSettings.userPreferences.userDefaultGas) {
-              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.userDefaultGas} while the estimation of necessary gas is ${result}`;
+            if (result > window.walletSettings.userPreferences.defaultGas) {
+              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}`;
             }
             this.$emit("loading");
             return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.account})
               .on('transactionHash', hash => {
-                const gas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 35000;
+                const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
                 // The transaction has been hashed and will be sent
                 this.$emit("sent", {

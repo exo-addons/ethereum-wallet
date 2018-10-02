@@ -85,7 +85,8 @@ export function computeGasPrice() {
   if (window.localWeb3 && window.localWeb3.currentProvider) {
     return window.localWeb3.eth.getGasPrice()
       .then(gasPrice => {
-        window.walletSettings.gasPrice = gasPrice;
+        // Ad 10% of gas price to avoid "transaction underpriced" errors
+        window.walletSettings.gasPrice = gasPrice * 1.1;
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
       })
       .catch(error => {
@@ -157,9 +158,9 @@ export function initSettings(isSpace) {
         window.walletSettings.userPreferences = {};
         window.walletSettings = $.extend(window.walletSettings, settings);
         window.walletSettings.enableDelegation = window.walletSettings.hasOwnProperty('enableDelegation') ? window.walletSettings.enableDelegation : true;
-        window.walletSettings.defaultGas = window.walletSettings.defaultGas || 21000;
-        window.walletSettings.userPreferences.userDefaultGas = 
-          window.walletSettings.userPreferences.userDefaultGas || window.walletSettings.defaultGas;
+        window.walletSettings.defaultGas = window.walletSettings.defaultGas || 35000;
+        window.walletSettings.userPreferences.defaultGas = 
+          window.walletSettings.userPreferences.defaultGas || window.walletSettings.defaultGas;
         window.walletSettings.userPreferences.enableDelegation =
           window.walletSettings.userPreferences.hasOwnProperty('enableDelegation') ?
             window.walletSettings.userPreferences.enableDelegation

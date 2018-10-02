@@ -50,7 +50,7 @@
                     <v-slider v-model="defaultGas"
                               :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
                               :max="90000"
-                              :min="21000"
+                              :min="35000"
                               :step="1000"
                               type="number" />
                   </div>
@@ -200,7 +200,7 @@ export default {
       if (this.open) {
         this.error = null;
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
-        this.defaultGas = window.walletSettings.userPreferences.userDefaultGas ? window.walletSettings.userPreferences.userDefaultGas : 21000;
+        this.defaultGas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
         this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
         this.useMetamaskChoice = window.walletSettings.userPreferences.useMetamask;
         this.enableDelegation = window.walletSettings.userPreferences.enableDelegation;
@@ -298,7 +298,7 @@ export default {
 
               this.saveCommonSettings();
 
-              window.walletSettings.userPreferences.userDefaultGas = this.defaultGas;
+              window.walletSettings.userPreferences.defaultGas = this.defaultGas;
               window.walletSettings.userPreferences.currency = this.selectedCurrency.value;
 
               this.$emit('settings-changed', {

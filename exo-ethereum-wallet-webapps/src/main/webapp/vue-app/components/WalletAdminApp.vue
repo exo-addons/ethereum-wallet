@@ -244,7 +244,7 @@
                 <v-slider
                   v-model="defaultGas"
                   :label="`Maximum transaction fee: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
-                  :min="21000"
+                  :min="35000"
                   :max="100000"
                   :step="1000"
                   type="number"

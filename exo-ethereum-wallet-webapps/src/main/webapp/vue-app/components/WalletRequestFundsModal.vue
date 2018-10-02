@@ -151,6 +151,7 @@ export default {
       if (this.dialog) {
         this.requestMessage = '';
         this.recipient = null;
+        this.amount = null;
         if (this.$refs && this.$refs.autocomplete) {
           this.$refs.autocomplete.clear();
         }

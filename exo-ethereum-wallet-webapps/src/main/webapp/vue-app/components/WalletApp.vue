@@ -195,10 +195,10 @@ export default {
       return true;
     },
     displayWalletResetOption() {
-      return !this.loading && this.walletAddress && !this.useMetamask && this.browserWalletExists;
+      return !this.loading && !this.errorMessage && this.walletAddress && !this.useMetamask && this.browserWalletExists;
     },
     displayEtherBalanceTooLow() {
-      return !this.loading && (!this.isSpace || !this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.userDefaultGas);
+      return !this.loading && !this.errorMessage && (!this.isSpace || !this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.defaultGas);
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {

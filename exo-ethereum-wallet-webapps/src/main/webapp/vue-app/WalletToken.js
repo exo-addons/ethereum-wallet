@@ -283,7 +283,7 @@ export function getContractInstance(account, address, usePromise) {
         address,
         {
           from: account, 
-          gas: window.walletSettings.userPreferences.userDefaultGas,
+          gas: window.walletSettings.userPreferences.defaultGas,
           gasPrice: window.walletSettings.gasPrice,
           data: ERC20_COMPLIANT_CONTRACT_BYTECODE
         }

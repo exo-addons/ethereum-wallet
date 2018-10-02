@@ -101,8 +101,8 @@ export default {
               options.from = this.from;
             }
 
-            if (window.walletSettings.userPreferences.userDefaultGas) {
-              options.gas = window.walletSettings.userPreferences.userDefaultGas;
+            if (window.walletSettings.userPreferences.defaultGas) {
+              options.gas = window.walletSettings.userPreferences.defaultGas;
             }
   
             if (this.isContract) {
