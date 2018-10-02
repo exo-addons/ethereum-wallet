@@ -229,30 +229,21 @@ export function disableMetamask(isSpace) {
 }
 
 export function watchTransactionStatus(hash, transactionFinishedcallback) {
-  // Because no websocket connection is allowed using metamask,
-  // we will watch the transaction status periodically
-  getTransactionReceipt(hash)
-    .then(receipt => {
-      if (receipt) {
-        window.localWeb3.eth.getBlock(receipt.blockNumber)
-          .then(block => {
-            if (block) {
-              transactionFinishedcallback(receipt, block);
-            } else {
-              setTimeout(() => {
-                watchTransactionStatus(hash, transactionFinishedcallback);
-              }, 2000);
-            }
-          });
-      } else {
-        setTimeout(() => {
-          watchTransactionStatus(hash, transactionFinishedcallback);
-        }, 2000);
-      }
-    })
-    .catch(error => {
-      transactionFinishedcallback(null, null);
-    });
+  hash = hash.toLowerCase();
+
+  console.log("watchTransactionStatus", watchTransactionStatus);
+  if (!window.watchingTransactions) {
+      window.watchingTransactions = {};
+  }
+  let initWatching = false;
+  if (!window.watchingTransactions[hash]) {
+      window.watchingTransactions[hash] = [];
+      initWatching = true;
+  }
+  window.watchingTransactions[hash].push(transactionFinishedcallback);
+  if(initWatching) {
+    waitAsyncForTransactionStatus(hash);
+  }
 }
 
 export function getTransactionReceipt(hash) {
@@ -521,6 +512,40 @@ function initSpaceAccount(spaceGroup) {
       }
       return false;
     });
+}
+
+function waitAsyncForTransactionStatus(hash) {
+  getTransactionReceipt(hash)
+  .then(receipt => {
+    if (receipt) {
+      window.localWeb3.eth.getBlock(receipt.blockNumber)
+      .then(block => {
+        if (block) {
+          console.log("window.watchingTransactions", window.watchingTransactions[hash]);
+          if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
+            window.watchingTransactions[hash].forEach(callback => {
+              callback(receipt, block);
+            });
+          }
+        } else {
+          setTimeout(() => {
+            waitAsyncForTransactionStatus(hash);
+          }, 2000);
+        }
+      });
+    } else {
+      setTimeout(() => {
+        waitAsyncForTransactionStatus(hash);
+      }, 2000);
+    }
+  })
+  .catch(error => {
+    if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
+      window.watchingTransactions[hash].forEach(callback => {
+        callback(null, null);
+      });
+    }
+  });
 }
 
 function getRemoteId(isSpace) {
