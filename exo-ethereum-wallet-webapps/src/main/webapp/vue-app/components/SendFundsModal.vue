@@ -13,6 +13,10 @@
         <span class="PopupTitle popupTitle">Send Funds</span>
       </div>
 
+      <div v-if="error" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
+
       <send-funds-form 
         ref="sendFundsForm"
         :wallet-address="walletAddress"
@@ -20,6 +24,7 @@
         :selected-account="selectedOption && selectedOption.value"
         @success="$emit('success', $event)"
         @error="$emit('error', $event)"
+        @dialog-error="error = $event"
         @sent="addPendingTransaction($event)"
         @pending="$emit('pending', $event)"
         @close="dialog = false">
@@ -99,6 +104,7 @@ export default {
   data() {
     return {
       selectedOption: null,
+      error: null,
       dialog: null
     };
   },
@@ -109,7 +115,9 @@ export default {
         Object.keys(this.accountsDetails).forEach(key => {
           // Check list of accounts to display switch user preferences
           const isContractOption = this.overviewAccounts.indexOf(key) > -1;
-          const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
+          // Always allow to display ether option
+          // const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
+          const isEtherOption = isContractOption || (key === this.walletAddress);
           if (isContractOption || isEtherOption) {
             accountsList.push({
               text: this.accountsDetails[key].title,
@@ -124,6 +132,7 @@ export default {
   watch: {
     dialog() {
       if (this.dialog) {
+        this.error = null;
         this.$nextTick(() => {
           if (!this.selectedOption) {
             const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
@@ -150,7 +159,7 @@ export default {
         const account = this.accountsList[i];
         if (account && account.value
             // Token account
-            && ((account.value.isContract && contractAddress && account.value.address === contractAddress.toLowerCase())
+            && ((account.value.isContract && contractAddress && account.value.address.toLowerCase() === contractAddress.toLowerCase())
             // Ether account
             || (!account.value.isContract && !contractAddress))) {
 

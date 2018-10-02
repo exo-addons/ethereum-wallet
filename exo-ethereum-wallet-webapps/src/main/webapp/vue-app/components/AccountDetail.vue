@@ -32,7 +32,7 @@
             use-navigation
             @sent="newTransactionPending"
             @error="error = $event" />
-          <v-divider v-if="contractDetails.isContract" vertical />
+          <v-divider v-if="contractDetails.isContract && enableDelegation" vertical />
           <send-delegated-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
             :is-readonly="isReadOnly"
@@ -40,7 +40,7 @@
             use-navigation
             @sent="newTransactionPending"
             @error="error = $event" />
-          <v-divider v-if="contractDetails.isContract" vertical />
+          <v-divider v-if="contractDetails.isContract && enableDelegation" vertical />
           <delegate-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
             :is-readonly="isReadOnly"

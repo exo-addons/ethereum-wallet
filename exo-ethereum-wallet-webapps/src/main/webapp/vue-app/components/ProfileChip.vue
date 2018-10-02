@@ -1,5 +1,5 @@
 <template>
-  <a v-if="profileId" :id="id" :title="profileId" :href="`/portal/g/:spaces:${profileId}/`" rel="nofollow" target="_blank">
+  <a v-if="profileId" :id="id" :title="profileId" :href="url" rel="nofollow" target="_blank">
     <span v-html="displayName"></span>
   </a>
   <wallet-address v-else :value="address" />
@@ -65,6 +65,16 @@ export default {
         members : "Members"
       }
     };
+  },
+  computed: {
+    url() {
+      if(this.profileType === 'user') {
+        return `${eXo.env.portal.context}/${eXo.env.portal.portalName}/profile/${this.profileId}`;
+      } else if(this.profileType === 'space') {
+        return `${eXo.env.portal.context}/g/:spaces:${this.profileId}/`;
+      }
+      return '#';
+    }
   },
   watch: {
     profileId(oldValue, newValue) {

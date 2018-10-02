@@ -125,8 +125,14 @@ export default {
         this.receiver = receiver;
         this.receiver_type = receiver_type;
         this.amount = amount;
-      } else if(!keepDialogOpen) {
-        this.$emit("close");
+      } else {
+        if (receiver && receiver_type && amount) {
+          this.$emit("dialog-error", "Selected currency is not displayed switch your preferences");
+        }
+
+        if(!keepDialogOpen) {
+          this.$emit("close");
+        }
       }
     },
     addPendingTransaction(transaction) {
@@ -134,6 +140,8 @@ export default {
         console.debug("Pending transaction is empty");
         return;
       }
+
+      this.error = null;
 
       addTransaction(this.networkId,
         this.walletAddress,
