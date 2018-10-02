@@ -529,19 +529,24 @@ function waitAsyncForTransactionStatus(hash) {
   .then(receipt => {
     if (receipt) {
       window.localWeb3.eth.getBlock(receipt.blockNumber)
-      .then(block => {
-        if (block) {
-          if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
-            window.watchingTransactions[hash].forEach(callback => {
-              callback(receipt, block);
-            });
+        .then(block => {
+          if (block) {
+            if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
+              window.watchingTransactions[hash].forEach(callback => {
+                callback(receipt, block);
+              });
+            }
+          } else {
+            setTimeout(() => {
+              waitAsyncForTransactionStatus(hash);
+            }, 2000);
           }
-        } else {
+        })
+        .catch(() => {
           setTimeout(() => {
             waitAsyncForTransactionStatus(hash);
           }, 2000);
-        }
-      });
+        });
     } else {
       setTimeout(() => {
         waitAsyncForTransactionStatus(hash);
