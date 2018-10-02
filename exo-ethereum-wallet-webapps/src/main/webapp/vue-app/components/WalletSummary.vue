@@ -32,6 +32,7 @@
         <v-flex>
           <v-bottom-nav :value="true" color="white" class="elevation-0 buttomNavigation">
             <send-funds-modal
+              v-if="!isSpace || isSpaceAdministrator"
               ref="sendFundsModal"
               :accounts-details="accountsDetails"
               :overview-accounts="overviewAccounts"
