@@ -60,6 +60,8 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
+import {truncateError} from '../WalletUtils.js';
+
 export default {
   components: {
     QrCodeModal,
@@ -194,21 +196,21 @@ export default {
                 this.dialog = false;
               })
               .on('error', (error, receipt) => {
-                // The transaction has failed
-                this.error = `Error delegating tokens: ${error}`;
+                console.debug("Web3 contract.approve method - error", error);
                 this.loading = false;
+                this.error = `Error delegating tokens: ${truncateError(error)}`;
                 this.$emit("error", this.error);
               });
           })
           .catch (e => {
             console.debug("Web3 contract.approve method - error", e);
             this.loading = false;
-            this.$emit("error", `Error while proceeding: ${e}`);
+            this.error = `Error delegating tokens: ${truncateError(e)}`;
           });
       } catch(e) {
         console.debug("Web3 contract.approve method - error", e);
         this.loading = false;
-        this.$emit("error", `Error while proceeding: ${e}`);
+        this.error = `Error delegating tokens: ${truncateError(e)}`;
       }
     }
   }

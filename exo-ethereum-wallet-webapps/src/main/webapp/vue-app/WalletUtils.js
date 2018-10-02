@@ -231,7 +231,6 @@ export function disableMetamask(isSpace) {
 export function watchTransactionStatus(hash, transactionFinishedcallback) {
   hash = hash.toLowerCase();
 
-  console.log("watchTransactionStatus", watchTransactionStatus);
   if (!window.watchingTransactions) {
       window.watchingTransactions = {};
   }
@@ -437,6 +436,17 @@ export function setWalletBackedUp(address, backedUp) {
   window.walletSettings.userPreferences.backedUp = backedUp;
 }
 
+export function truncateError(error) {
+  if (!error) {
+    return '';
+  }
+  error = String(error);
+  if(error.indexOf(' at ') > 0) {
+    error = error.substring(0, error.indexOf(' at '));
+  }
+  return error;
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
@@ -521,7 +531,6 @@ function waitAsyncForTransactionStatus(hash) {
       window.localWeb3.eth.getBlock(receipt.blockNumber)
       .then(block => {
         if (block) {
-          console.log("window.watchingTransactions", window.watchingTransactions[hash]);
           if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
             window.watchingTransactions[hash].forEach(callback => {
               callback(receipt, block);

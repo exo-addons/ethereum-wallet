@@ -58,6 +58,8 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
+import {truncateError} from '../WalletUtils.js';
+
 export default {
   components: {
     QrCodeModal,
@@ -138,21 +140,25 @@ export default {
                 this.$emit("close");
               })
               .on('error', (error, receipt) => {
-                // The transaction has failed
-                this.error = `Error sending tokens: ${error}`;
+                console.debug("Web3 contract.transferFrom method - error", error);
                 this.loading = false;
+
+                // The transaction has failed
+                this.error = `Error sending tokens: ${truncateError(error)}`;
                 this.$emit("error", this.error);
               });
           })
           .catch (e => {
             console.debug("Web3 contract.transfer method - error", e);
-            this.error = `Error while proceeding: ${e}`;
             this.loading = false;
+
+            this.error = `Error sending tokens: ${truncateError(e)}`;
           });
       } catch(e) {
         console.debug("Web3 contract.transfer method - error", e);
         this.loading = false;
-        this.error = `Error while proceeding: ${e}`;
+
+        this.error = `Error sending tokens: ${truncateError(e)}`;
       }
     }
   }

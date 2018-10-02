@@ -766,7 +766,10 @@ public class EthereumWalletService {
 
   private String getSpacePhrase(String spaceId) {
     try {
-      checkCurrentUserIsSpaceManager(spaceId);
+      boolean isSpaceManager = checkCurrentUserIsSpaceManager(spaceId, false);
+      if (!isSpaceManager) {
+        return null;
+      }
     } catch (Exception e) {
       return null;
     }
@@ -779,7 +782,11 @@ public class EthereumWalletService {
     return null;
   }
 
-  private void checkCurrentUserIsSpaceManager(String id) throws IllegalAccessException {
+  private boolean checkCurrentUserIsSpaceManager(String id) throws IllegalAccessException {
+    return checkCurrentUserIsSpaceManager(id, true);
+  }
+  
+  private boolean checkCurrentUserIsSpaceManager(String id, boolean throwException) throws IllegalAccessException {
     String currentUserId = getCurrentUserId();
     Space space = getSpace(id);
     if (space == null) {
@@ -787,9 +794,14 @@ public class EthereumWalletService {
       throw new IllegalStateException();
     }
     if (!spaceService.isManager(space, currentUserId) && !spaceService.isSuperManager(currentUserId)) {
-      LOG.error("User '{}' attempts to modify wallet address of space '{}'", currentUserId, space.getDisplayName());
-      throw new IllegalAccessException();
+      if (throwException) {
+        LOG.error("User '{}' attempts to modify wallet address of space '{}'", currentUserId, space.getDisplayName());
+        throw new IllegalAccessException();
+      } else {
+        return false;
+      }
     }
+    return true;
   }
 
 }
