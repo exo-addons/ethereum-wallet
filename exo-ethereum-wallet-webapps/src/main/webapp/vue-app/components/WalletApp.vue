@@ -4,7 +4,7 @@
       <v-layout>
         <v-flex>
           <v-card :class="isMaximized && 'transparent'" flat>
-            <v-toolbar :class="isMaximized ? 'mb-3':'no-padding'" color="white" flat dense>
+            <v-toolbar :class="isMaximized ? 'mb-3':'no-padding'" class="walletAppToolbar" color="white" flat dense>
               <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
               <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
               <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
