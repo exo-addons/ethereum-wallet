@@ -1,9 +1,9 @@
 // Abstract contract for the full ERC 20 Token standard
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.25;
 
 
-contract EIP20Interface {
+contract ERC20Interface {
     /* This is a slight change to the ERC20 base standard.
     function totalSupply() constant returns (uint256 supply);
     is replaced with:
