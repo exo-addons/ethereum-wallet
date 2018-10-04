@@ -161,6 +161,7 @@ export default {
       } else {
         this.$emit('close');
       }
+      this.loading = false;
     }
   },
   methods: {

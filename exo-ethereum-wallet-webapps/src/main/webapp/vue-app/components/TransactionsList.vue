@@ -149,7 +149,8 @@
               </v-list-tile-content>
 
               <v-list-tile-content v-else-if="item.type === 'contract' && !item.isContractCreation" class="transactionDetailActions">
-                <v-list-tile-title :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number(item.contractAmount) }} {{ item.contractSymbol }}</span></v-list-tile-title>
+                <v-list-tile-title v-if="item.contractAmount" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number(item.contractAmount) }} {{ item.contractSymbol }}</span></v-list-tile-title>
+                <v-list-tile-title v-else :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ item.amount ? Number(item.amount) : 0 }} ether</span></v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
                 <v-list-tile-sub-title v-else />
               </v-list-tile-content>
@@ -411,7 +412,7 @@ export default {
             }
 
             // Update by 10 transactions
-            if (this.transactions && Object.keys(this.transactions).length % 10 === 0) {
+            if (this.transactions && Object.keys(this.transactions).length % 20 === 0) {
               this.forceUpdateList();
             }
           });

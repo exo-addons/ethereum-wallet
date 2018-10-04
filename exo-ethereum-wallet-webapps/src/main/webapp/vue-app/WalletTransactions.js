@@ -152,8 +152,8 @@ export function loadTransactions(networkId, account, contractDetails, transactio
               },
               topics: [
                 window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
-                window.localWeb3.utils.padLeft(account, 64), null,
-                null
+                null,
+                window.localWeb3.utils.padLeft(account, 64)
               ]
       }))
       .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
@@ -163,7 +163,7 @@ export function loadTransactions(networkId, account, contractDetails, transactio
         console.debug("Error occurred while retrieving contract transactions", e);
         throw e;
       });
-  } else {
+  }/* else {
     // Retrive transactions from 1000 previous blocks (at maximum)
     // and display transactions sent/received by the current account
     return getFromBlock(fromBlockNumber, toBlockNumber, maxBlocks)
@@ -185,7 +185,7 @@ export function loadTransactions(networkId, account, contractDetails, transactio
           throw error;
         }
       });
-  }
+  } */
 }
 
 export function addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, timestamp, watchLoadSuccess, watchLoadError) {
