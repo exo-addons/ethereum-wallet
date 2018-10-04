@@ -72,6 +72,11 @@
       <artifactId>core</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.exoplatform.addons.wallet</groupId>
+      <artifactId>exo-ethereum-wallet-contracts</artifactId>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

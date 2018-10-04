@@ -59,6 +59,13 @@
       <type>war</type>
       <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>exo-ethereum-wallet-contracts</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
