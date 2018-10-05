@@ -8,6 +8,9 @@ contract FreezableAccount is Owned {
 
     mapping (address => bool) public frozenAccount;
 
+    constructor() internal{
+    }
+
     function freezeAccount(address _target) public onlyOwner returns (bool){
         if (!frozenAccount[_target]) {
             frozenAccount[_target] = true;

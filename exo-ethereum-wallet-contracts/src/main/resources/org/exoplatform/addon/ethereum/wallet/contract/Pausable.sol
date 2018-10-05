@@ -7,6 +7,9 @@ contract Pausable is Owned {
 
     bool public paused = false;
 
+    constructor() internal{
+    }
+
     modifier whenNotPaused(){
         require (!paused);
         _;

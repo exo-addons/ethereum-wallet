@@ -201,9 +201,9 @@
                   </v-flex>
 
                   <v-textarea
-                    id="initialfundsRequestMessage"
-                    v-model="initialfundsRequestMessage"
-                    name="initialfundsRequestMessage"
+                    id="initialFundsRequestMessage"
+                    v-model="initialFundsRequestMessage"
+                    name="initialFundsRequestMessage"
                     label="Initial funds request message"
                     placeholder="You can input a custom message to send with initial funds request"
                     class="mt-4"
@@ -533,7 +533,7 @@ export default {
     init() {
       this.loading = true;
       this.loadingSettings = true;
-      this.showAddContractModal = true;
+      this.showAddContractModal = false;
       this.forceUpdate();
       this.selectedOverviewAccounts = [];
 
@@ -666,7 +666,7 @@ export default {
       this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
       this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
       this.enableDelegation = window.walletSettings.enableDelegation;
-      this.initialfundsRequestMessage = window.walletSettings.initialfundsRequestMessage;
+      this.initialFundsRequestMessage = window.walletSettings.initialFundsRequestMessage;
     },
     updateList(address) {
       this.loading = true;
@@ -772,7 +772,7 @@ export default {
           accessPermission: this.accessPermission,
           fundsHolder: this.fundsHolder,
           fundsHolderType: 'user',
-          initialfundsRequestMessage: this.initialfundsRequestMessage,
+          initialFundsRequestMessage: this.initialFundsRequestMessage,
           providerURL: this.selectedNetwork.httpLink,
           websocketProviderURL: this.selectedNetwork.wsLink,
           defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,

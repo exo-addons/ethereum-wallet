@@ -24,7 +24,7 @@ public class GlobalSettings implements Serializable {
 
   private String                 fundsHolder                = null;
 
-  private String                 initialfundsRequestMessage = null;
+  private String                 initialFundsRequestMessage = null;
 
   private String                 fundsHolderType            = USER_ACCOUNT_TYPE;
 
@@ -51,17 +51,27 @@ public class GlobalSettings implements Serializable {
    */
   private transient List<String> defaultContractsToDisplay;
 
-  public String toJSONString() {
-    return toJSONObject().toString();
+  /**
+   * Managed by code
+   */
+  private transient JSONArray    contractAbi                = null;
+
+  /**
+   * Managed by code
+   */
+  private transient String       contractBin                = null;
+
+  public String toJSONString(boolean includeTransient) {
+    return toJSONObject(includeTransient).toString();
   }
 
-  public JSONObject toJSONObject() {
+  public JSONObject toJSONObject(boolean includeTransient) {
     JSONObject jsonObject = new JSONObject();
     try {
       jsonObject.put("isWalletEnabled", walletEnabled);
       jsonObject.put("enableDelegation", enableDelegation);
       jsonObject.put("accessPermission", accessPermission);
-      jsonObject.put("initialfundsRequestMessage", initialfundsRequestMessage);
+      jsonObject.put("initialfundsRequestMessage", initialFundsRequestMessage);
       jsonObject.put("fundsHolder", fundsHolder);
       jsonObject.put("fundsHolderType", fundsHolderType);
       jsonObject.put("providerURL", providerURL);
@@ -69,6 +79,7 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
+
       if (initialFunds != null && !initialFunds.isEmpty()) {
         JSONArray array = new JSONArray();
         Set<String> addresses = initialFunds.keySet();
@@ -89,8 +100,15 @@ public class GlobalSettings implements Serializable {
       if (defaultOverviewAccounts != null) {
         jsonObject.put("defaultOverviewAccounts", new JSONArray(defaultOverviewAccounts));
       }
-
-      jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
+      if (includeTransient) {
+        jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
+        if (contractAbi != null) {
+          jsonObject.put("contractAbi", contractAbi);
+        }
+        if (contractBin != null) {
+          jsonObject.put("contractBin", contractBin);
+        }
+      }
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
     }
@@ -99,7 +117,7 @@ public class GlobalSettings implements Serializable {
 
   @Override
   public String toString() {
-    return toJSONString();
+    return toJSONString(false);
   }
 
   public static final GlobalSettings parseStringToObject(GlobalSettings defaultSettings, String jsonString) {
@@ -113,64 +131,49 @@ public class GlobalSettings implements Serializable {
         return null;
       }
     }
-
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       GlobalSettings globalSettings = new GlobalSettings();
-
       String storedFundsHolder = jsonObject.has("fundsHolder") ? jsonObject.getString("fundsHolder") : null;
       globalSettings.setFundsHolder(storedFundsHolder == null || storedFundsHolder.isEmpty() ? defaultSettings.getFundsHolder()
                                                                                              : storedFundsHolder);
-
       String storedFundsHolderType = jsonObject.has("fundsHolderType") ? jsonObject.getString("fundsHolderType") : null;
       globalSettings.setFundsHolderType(storedFundsHolderType == null
           || storedFundsHolderType.isEmpty() ? defaultSettings.getFundsHolderType() : storedFundsHolderType);
-
       JSONArray storedInitialFunds = jsonObject.has("initialFunds") ? jsonObject.getJSONArray("initialFunds") : null;
       globalSettings.setInitialFunds(storedInitialFunds == null ? defaultSettings.getInitialFunds() : toMap(storedInitialFunds));
-
       String storedAccessPermission = jsonObject.has("accessPermission") ? jsonObject.getString("accessPermission") : null;
       globalSettings.setAccessPermission(storedAccessPermission == null
           || storedAccessPermission.isEmpty() ? defaultSettings.getAccessPermission() : storedAccessPermission);
-
       String storedInitialfundsRequestMessage =
                                               jsonObject.has("initialfundsRequestMessage") ? jsonObject.getString("initialfundsRequestMessage")
                                                                                            : null;
-      globalSettings.setInitialfundsRequestMessage(storedInitialfundsRequestMessage == null
-          || storedInitialfundsRequestMessage.isEmpty() ? defaultSettings.getInitialfundsRequestMessage()
+      globalSettings.setInitialFundsRequestMessage(storedInitialfundsRequestMessage == null
+          || storedInitialfundsRequestMessage.isEmpty() ? defaultSettings.getInitialFundsRequestMessage()
                                                         : storedInitialfundsRequestMessage);
-
       String storedProviderURL = jsonObject.has("providerURL") ? jsonObject.getString("providerURL") : null;
       globalSettings.setProviderURL(storedProviderURL == null || storedProviderURL.isEmpty() ? defaultSettings.getProviderURL()
                                                                                              : storedProviderURL);
-
       String storedWebsocketProviderURL = jsonObject.has("websocketProviderURL") ? jsonObject.getString("websocketProviderURL")
                                                                                  : null;
       globalSettings.setWebsocketProviderURL(storedWebsocketProviderURL == null
           || storedWebsocketProviderURL.isEmpty() ? defaultSettings.getProviderURL() : storedWebsocketProviderURL);
-
       int storedDefaultBlocksToRetrieve = jsonObject.has("defaultBlocksToRetrieve") ? jsonObject.getInt("defaultBlocksToRetrieve")
                                                                                     : 0;
       globalSettings.setDefaultBlocksToRetrieve(storedDefaultBlocksToRetrieve == 0 ? defaultSettings.getDefaultBlocksToRetrieve()
                                                                                    : storedDefaultBlocksToRetrieve);
-
       long storedDefaultNetworkId = jsonObject.has("defaultNetworkId") ? jsonObject.getLong("defaultNetworkId") : 0;
       globalSettings.setDefaultNetworkId(storedDefaultNetworkId == 0L ? defaultSettings.getDefaultBlocksToRetrieve()
                                                                       : storedDefaultNetworkId);
-
       int storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getInt("defaultGas") : 0;
       globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
-
       boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation") : true;
       globalSettings.setEnableDelegation(storedEnableDelegation);
-
       String storedDefaultPrincipalAccount =
                                            jsonObject.has("defaultPrincipalAccount") ? jsonObject.getString("defaultPrincipalAccount")
                                                                                      : null;
       globalSettings.setDefaultPrincipalAccount(storedDefaultPrincipalAccount);
-
       globalSettings.setDefaultOverviewAccounts(jsonArrayToList(jsonObject, "defaultOverviewAccounts"));
-
       return globalSettings;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);

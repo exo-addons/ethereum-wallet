@@ -77,7 +77,6 @@ import DelegateTokensModal from './DelegateTokensModal.vue';
 import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import {ERC20_COMPLIANT_CONTRACT_ABI} from '../WalletConstants.js';
 import {retrieveContractDetails} from '../WalletToken.js';
 import {etherToFiat} from '../WalletUtils.js';
 

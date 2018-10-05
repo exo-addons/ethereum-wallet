@@ -158,7 +158,7 @@
           </v-list>
 
           <v-list class="pl-5 ml-2 pr-4" dense>
-            <v-list-tile>
+            <v-list-tile v-if="!item.pending">
               <v-list-tile-content>Status</v-list-tile-content>
               <v-list-tile-content class="align-end">
                 <v-icon

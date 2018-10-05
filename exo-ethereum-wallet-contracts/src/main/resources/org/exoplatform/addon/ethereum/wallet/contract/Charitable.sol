@@ -6,6 +6,9 @@ contract Charitable is Owned {
     // TODO add this per buyer account
     uint public minBalanceForAccounts;
 
+    constructor() internal{
+    }
+
     function setMinBalance(uint minimumBalanceInFinney) public onlyOwner{
         minBalanceForAccounts = minimumBalanceInFinney * 1 finney;
     }

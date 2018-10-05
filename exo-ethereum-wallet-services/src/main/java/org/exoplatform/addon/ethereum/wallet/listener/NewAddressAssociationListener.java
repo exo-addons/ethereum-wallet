@@ -51,7 +51,7 @@ public class NewAddressAssociationListener extends Listener<Object, AccountDetai
       request.setAddress(accountDetail.getAddress());
       request.setReceipient(settings.getFundsHolder());
       request.setReceipientType(settings.getFundsHolderType());
-      request.setMessage(settings.getInitialfundsRequestMessage());
+      request.setMessage(settings.getInitialFundsRequestMessage());
 
       this.ethereumWalletService.requestFunds(request);
 

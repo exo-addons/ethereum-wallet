@@ -24,9 +24,9 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
-        <includes>
-          <include>**/*</include>
-        </includes>
+        <excludes>
+          <exclude>**/*</exclude>
+        </excludes>
       </resource>
       <resource>
         <directory>target/generated-sources</directory>
@@ -35,7 +35,7 @@
           <include>**/*.bin</include>
         </includes>
         <excludes>
-          <exclude>org.exoplatform.addon.ethereum.wallet/**</exclude>
+          <exclude>org.exoplatform.addon.ethereum.wallet.contract/**</exclude>
         </excludes>
       </resource>
     </resources>
@@ -51,12 +51,12 @@
               <goal>generate-sources</goal>
             </goals>
             <configuration>
-              <packageName>org.exoplatform.addon.ethereum.wallet</packageName>
-              <sourceDestination>target/generated-sources</sourceDestination>
+              <packageName>org.exoplatform.addon.ethereum.wallet.contract</packageName>
+              <sourceDestination>exo-ethereum-wallet-contracts/target/generated-sources</sourceDestination>
               <nativeJavaType>true</nativeJavaType>
-              <outputFormat>java,abi</outputFormat>
+              <outputFormat>java,bin,abi</outputFormat>
               <soliditySourceFiles>
-                <directory>src/main/resources</directory>
+                <directory>exo-ethereum-wallet-contracts/src/main/resources</directory>
                 <includes>
                   <include>**/*.sol</include>
                 </includes>
@@ -76,10 +76,10 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>target/generated-sources/org/exoplatform/addon/ethereum/wallet</outputDirectory>
+              <outputDirectory>target/generated-sources/org/exoplatform/addon/ethereum/wallet/contract</outputDirectory>
               <resources>          
                 <resource>
-                  <directory>target/generated-sources/org.exoplatform.addon.ethereum.wallet</directory>
+                  <directory>target/generated-sources/org.exoplatform.addon.ethereum.wallet.contract</directory>
                 </resource>
               </resources>              
             </configuration>            
