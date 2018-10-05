@@ -148,7 +148,6 @@
         <version>${org.rxjava.version}</version>
         <scope>provided</scope>
       </dependency>
-
     </dependencies>
   </dependencyManagement>
   <build>
@@ -160,12 +159,35 @@
           <artifactId>frontend-maven-plugin</artifactId>
           <version>${com.github.eirslett.frontend.version}</version>
         </plugin>
-        <!-- Maven Plugin for generating contracts JAVA sources -->
+        <!-- Maven Plugin for compiling Smart Contracts -->
         <plugin>
           <groupId>org.web3j</groupId>
           <artifactId>web3j-maven-plugin</artifactId>
           <version>${org.web3j-maven-plugin.version}</version>
+          <!-- Workaround until SWF-4412 got fixed, see:
+          https://jira.exoplatform.org/browse/SWF-4412?focusedCommentId=481032&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-481032 -->
+          <dependencies>
+            <dependency>
+                <groupId>org.ethereum</groupId>
+                <artifactId>solcJ-all</artifactId>
+                <scope>system</scope>
+                <version>0.4.24</version>
+                <systemPath>${basedir}/../SWF-4412/solcJ-all-0.4.24.jar</systemPath>
+            </dependency>
+            <dependency>
+              <groupId>org.apache.maven.plugin-tools</groupId>
+              <artifactId>maven-plugin-tools-api</artifactId>
+              <version>2.5.1</version>
+              <exclusions>
+                <exclusion>
+                  <groupId>org.ethereum</groupId>
+                  <artifactId>solcJ-all</artifactId>
+                </exclusion>
+              </exclusions>
+            </dependency>
+          </dependencies>
         </plugin>
+        <!-- Maven Plugin for generating contracts JAVA sources -->
         <plugin>
           <groupId>org.projectlombok</groupId>
           <artifactId>lombok-maven-plugin</artifactId>
@@ -182,28 +204,4 @@
       </plugins>
     </pluginManagement>
   </build>
-  <repositories>
-    <repository>
-      <id>ethereumrepo</id>
-      <url>https://dl.bintray.com/ethereum/maven/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>ethereumrepo</id>
-      <url>https://dl.bintray.com/ethereum/maven/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
 </project>
