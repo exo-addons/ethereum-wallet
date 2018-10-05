@@ -40,7 +40,7 @@ contract ERTToken is
         return allowed[_owner][_spender];
     }
 
-    function transfer(address _to, uint256 _value) public whenNotFrozen whenApproved(_to) returns (bool success){
+    function transfer(address _to, uint256 _value) public whenNotFrozen whenApproved(msg.sender, _to) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
         super.approveAccount(_to);
@@ -52,7 +52,7 @@ contract ERTToken is
         return true;
     }
 
-    function approve(address _spender, uint256 _value) public whenNotFrozen whenApproved(_spender) returns (bool success){
+    function approve(address _spender, uint256 _value) public whenNotFrozen whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _spender);
         super.approveAccount(_spender);
@@ -61,7 +61,7 @@ contract ERTToken is
         return true;
     }
 
-    function transferFrom(address _from, address _to, uint256 _value) public whenNotFrozen whenApproved(_to) returns (bool success){
+    function transferFrom(address _from, address _to, uint256 _value) public whenNotFrozen whenApproved(_from, _to) returns (bool success){
         super.approveAccount(_to);
         allowed[_from][msg.sender] = safeSubtract(allowed[_from][msg.sender], _value);
         super._transfer(msg.sender, _to, _value);

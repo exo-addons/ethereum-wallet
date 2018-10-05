@@ -28,8 +28,8 @@ contract ApprouvableAccount is Owned {
         }
     }
 
-    modifier whenApproved(address _target){
-        require (approvedAccount[_target]);
+    modifier whenApproved(address _from, address _to){
+        require (msg.sender == _from || approvedAccount[_to]);
         _;
     }
 

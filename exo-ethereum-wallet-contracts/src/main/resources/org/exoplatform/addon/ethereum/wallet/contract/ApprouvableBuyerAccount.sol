@@ -28,8 +28,8 @@ contract ApprouvableBuyerAccount is Owned {
         }
     }
 
-    modifier whenBuyerApproved(address _target){
-        require (approvedBuyerAccount[_target]);
+    modifier whenBuyerApproved(address _buyer){
+        require (owner == _buyer || approvedBuyerAccount[_buyer]);
         _;
     }
 
