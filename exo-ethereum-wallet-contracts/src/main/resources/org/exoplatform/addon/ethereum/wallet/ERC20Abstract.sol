@@ -1,9 +1,8 @@
-pragma solidity ^0.4.25;
-
+pragma solidity ^0.4.24;
 import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 
-contract ERC20Abstract is ERC20Interface, SafeMath {
+contract ERC20Abstract is SafeMath, ERC20Interface {
 
     mapping (address => uint256) public balances;
 
@@ -11,17 +10,13 @@ contract ERC20Abstract is ERC20Interface, SafeMath {
 
     string public name;
 
-    uint8 public decimals;
-
     string public symbol;
 
-    // This generates a public event on the blockchain that will notify clients
-    event Transfer(address indexed from, address indexed to, uint256 value);
+    uint256 public totalSupply;
 
-    /**
-     * Internal transfer, only can be called by this contract
-     */
-    function _transfer(address _from, address _to, uint _value) private {
+    uint8 public decimals;
+
+    function _transfer(address _from, address _to, uint _value) internal{
         // Prevent transfer transaction with no tokens
         require(_value > 0);
         // Prevent transfer to 0x0 address. Use burn() instead

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 import "./Owned.sol";
 
 contract Pausable is Owned {
@@ -17,13 +17,13 @@ contract Pausable is Owned {
         _;
     }
 
-    function pause() onlyOwner whenNotPaused returns (bool){
+    function pause() public onlyOwner whenNotPaused returns (bool){
         paused = true;
         emit Pause();
         return true;
     }
 
-    function unPause() onlyOwner whenPaused returns (bool){
+    function unPause() public onlyOwner whenPaused returns (bool){
         paused = false;
         emit UnPause();
         return true;

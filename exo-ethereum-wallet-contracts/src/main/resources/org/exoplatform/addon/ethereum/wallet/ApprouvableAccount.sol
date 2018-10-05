@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 import "./Owned.sol";
 
 contract ApprouvableAccount is Owned {
@@ -8,14 +8,19 @@ contract ApprouvableAccount is Owned {
 
     mapping (address => bool) public approvedAccount;
 
-    function approveAccount(address _target) onlyOwner returns (bool){
+    constructor() internal{
+        // TODO consider when ownership transferred twice, the old owner should always be approved at first
+        approveAccount(msg.sender);
+    }
+
+    function approveAccount(address _target) public onlyOwner returns (bool){
         if (!approvedAccount[_target]) {
             approvedAccount[_target] = true;
             emit ApprovedAccount(_target);
         }
     }
 
-    function disapproveAccount(address _target) onlyOwner returns (bool){
+    function disapproveAccount(address _target) public onlyOwner returns (bool){
         // TODO use external contract call for this
         if (approvedAccount[_target]) {
             approvedAccount[_target] = false;
@@ -24,7 +29,7 @@ contract ApprouvableAccount is Owned {
     }
 
     modifier whenApproved(address _target){
-        require (msg.sender == super.owner || approvedAccount[_target]);
+        require (approvedAccount[_target]);
         _;
     }
 

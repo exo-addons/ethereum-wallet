@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 import "./Owned.sol";
 
 contract FreezableAccount is Owned {
@@ -8,14 +8,14 @@ contract FreezableAccount is Owned {
 
     mapping (address => bool) public frozenAccount;
 
-    function freezeAccount(address _target) onlyOwner returns (bool){
+    function freezeAccount(address _target) public onlyOwner returns (bool){
         if (!frozenAccount[_target]) {
             frozenAccount[_target] = true;
             emit FrozenAccount(_target);
         }
     }
 
-    function unFrozenAccount(address _target) onlyOwner returns (bool){
+    function unFrozenAccount(address _target) public onlyOwner returns (bool){
         if (frozenAccount[_target]) {
             frozenAccount[_target] = false;
             emit UnFrozenAccount(_target);

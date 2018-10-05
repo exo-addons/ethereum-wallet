@@ -1,14 +1,14 @@
-pragma solidity ^0.4.25;
-
+pragma solidity ^0.4.24;
 import "./ERC20Abstract.sol";
+import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 import "./Owned.sol";
 
-contract Mintable is ERC20Abstract, SafeMath, Owned {
+contract Mintable is Owned, SafeMath, ERC20Interface, ERC20Abstract {
 
-    function mintToken(address target, uint256 mintedAmount) onlyOwner{
-        super.balances[target] = safeAdd(super.balances[target], mintedAmount);
-        require(super.totalSupply + mintedAmount > totalSupply);
+    function mintToken(address target, uint256 mintedAmount) public onlyOwner{
+        balances[target] = super.safeAdd(balances[target], mintedAmount);
+        require(totalSupply + mintedAmount > totalSupply);
         totalSupply += mintedAmount;
         emit Transfer(0, owner, mintedAmount);
         emit Transfer(owner, target, mintedAmount);
