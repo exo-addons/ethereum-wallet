@@ -19,7 +19,7 @@ contract ERC20Abstract is SafeMath, ERC20Interface {
     function _transfer(address _from, address _to, uint _value) internal{
         // Prevent transfer transaction with no tokens
         require(_value > 0);
-        // Prevent transfer to 0x0 address
+        // Prevent transfer to 0x0 address. Use burn() instead
         require(_to != 0x0);
         // Check if the sender has enough
         require(balances[_from] >= _value);
