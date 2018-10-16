@@ -32,5 +32,4 @@ contract ApprouvableAccount is Owned {
         require (msg.sender == _from || approvedAccount[_to]);
         _;
     }
-
 }

@@ -45,6 +45,10 @@ public class NewAddressAssociationListener extends Listener<Object, AccountDetai
 
       FundsRequest request = new FundsRequest();
       if (!"ether".equals(address)) {
+        // If contract adress is not a default one anymore, skip
+        if (!settings.getDefaultContractsToDisplay().contains(address)) {
+          continue;
+        }
         request.setContract(address);
       }
       request.setAmount(amount);
@@ -54,9 +58,6 @@ public class NewAddressAssociationListener extends Listener<Object, AccountDetai
       request.setMessage(settings.getInitialFundsRequestMessage());
 
       this.ethereumWalletService.requestFunds(request);
-
     }
-
   }
-
 }

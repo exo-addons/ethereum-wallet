@@ -163,8 +163,8 @@ export function loadTransactions(networkId, account, contractDetails, transactio
         console.debug("Error occurred while retrieving contract transactions", e);
         throw e;
       });
-  }/* else {
-    // Retrive transactions from 1000 previous blocks (at maximum)
+  } else {
+    // Retrive transactions from previous blocks (at maximum)
     // and display transactions sent/received by the current account
     return getFromBlock(fromBlockNumber, toBlockNumber, maxBlocks)
       .then(fromBlockTmp => fromBlockNumber = fromBlockTmp)
@@ -185,7 +185,7 @@ export function loadTransactions(networkId, account, contractDetails, transactio
           throw error;
         }
       });
-  } */
+  }
 }
 
 export function addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, timestamp, watchLoadSuccess, watchLoadError) {

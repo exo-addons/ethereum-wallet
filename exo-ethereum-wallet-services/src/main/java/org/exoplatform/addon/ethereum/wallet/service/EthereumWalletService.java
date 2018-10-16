@@ -217,23 +217,25 @@ public class EthereumWalletService implements Startable {
   /**
    * Save global settings
    * 
-   * @param globalSettings
+   * @param newGlobalSettings
    */
-  public void saveSettings(GlobalSettings globalSettings) {
-    if (globalSettings == null) {
+  public void saveSettings(GlobalSettings newGlobalSettings) {
+    if (newGlobalSettings == null) {
       throw new IllegalArgumentException("globalSettings parameter is mandatory");
     }
+
+    GlobalSettings oldGlobalSettings = getSettings();
 
     settingService.set(WALLET_CONTEXT,
                        WALLET_SCOPE,
                        GLOBAL_SETTINGS_KEY_NAME,
-                       SettingValue.create(globalSettings.toJSONString(false)));
+                       SettingValue.create(newGlobalSettings.toJSONString(false)));
 
     // Clear cached in memory stored settings
     this.storedSettings = null;
 
     try {
-      this.listenerService.broadcast(GLOAL_SETTINGS_CHANGED_EVENT, this, globalSettings);
+      this.listenerService.broadcast(GLOAL_SETTINGS_CHANGED_EVENT, oldGlobalSettings, newGlobalSettings);
     } catch (Exception e) {
       LOG.error("An error occurred while broadcasting wallet settings modification event", e);
     }

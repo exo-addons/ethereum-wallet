@@ -141,19 +141,19 @@ contract('ERTToken', function(accounts) {
       return tokenInstance.balanceOf(fromAccount);
     }).then(balance => {
       assert.equal(balance.toNumber(), 90,
-          'deducts the amount from the sending account');
+        'deducts the amount from the sending account');
       return tokenInstance.balanceOf(spendingAccount);
     }).then(balance => {
       assert.equal(balance.toNumber(), 0,
-      'spending account shouldn\'t have recieved tokens tokens');
+        'spending account shouldn\'t have recieved tokens tokens');
       return tokenInstance.balanceOf(toAccount);
     }).then(balance => {
       assert.equal(balance.toNumber(), 10,
-          'adds the amount from the receiving account');
+        'adds the amount from the receiving account');
       return tokenInstance.allowance(fromAccount, spendingAccount);
     }).then(allowance => {
       assert.equal(allowance.toNumber(), 0,
-          'deducts the amount from the allowance');
+        'deducts the amount from the allowance');
     });
   });
 });

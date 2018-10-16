@@ -606,8 +606,15 @@ export default {
             contractDetails.name = contract.name;
           }
         });
+
+        this.initialFunds = [];
+        window.walletSettings.initialFunds.forEach(contract => {
+          const contractDetails = this.contracts.find(tmpContract => tmpContract.address === contract.address);
+          if (contractDetails || contract.address === 'ether') {
+            this.initialFunds.push(contract);
+          }
+        });
       }
-      this.initialFunds = window.walletSettings.initialFunds;
     },
     getOverviewAccountObject(selectedValue) {
       if (selectedValue === 'fiat') {
