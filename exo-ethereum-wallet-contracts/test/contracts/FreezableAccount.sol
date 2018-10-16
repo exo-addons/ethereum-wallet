@@ -12,6 +12,7 @@ contract FreezableAccount is Owned {
     }
 
     function freezeAccount(address _target) public onlyOwner returns (bool){
+        require (owner != _target);
         if (!frozenAccount[_target]) {
             frozenAccount[_target] = true;
             emit FrozenAccount(_target);
@@ -26,7 +27,7 @@ contract FreezableAccount is Owned {
     }
 
     modifier whenNotFrozen(){
-        require (!frozenAccount[msg.sender]);
+        require (owner == msg.sender || !frozenAccount[msg.sender]);
         _;
     }
 }

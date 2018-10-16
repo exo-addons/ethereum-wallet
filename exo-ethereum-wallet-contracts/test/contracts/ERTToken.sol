@@ -43,32 +43,38 @@ contract ERTToken is
     function transfer(address _to, uint256 _value) public whenNotFrozen whenApproved(msg.sender, _to) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
-        super.approveAccount(_to);
+        if (msg.sender == owner) {
+          super.approveAccount(_to);
+        }
         // This is to avoid calling this function with empty tokens transfer
         // If the user doesn't have enough ethers, he will simply reattempt with empty tokens
         super._transfer(msg.sender, _to, _value);
         // TODO use external contract call for this
-        //super.checkSenderEtherBalance();
+        // super.checkSenderEtherBalance();
         return true;
     }
 
     function approve(address _spender, uint256 _value) public whenNotFrozen whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _spender);
-        super.approveAccount(_spender);
+        require(balances[msg.sender] >= _value);
+        if (msg.sender == owner) {
+          super.approveAccount(_spender);
+        }
         allowed[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public whenNotFrozen whenApproved(_from, _to) returns (bool success){
-        super.approveAccount(_to);
+        require(balances[_from] >= _value);
+        require(allowed[_from][msg.sender] >= _value);
         allowed[_from][msg.sender] = safeSubtract(allowed[_from][msg.sender], _value);
-        super._transfer(msg.sender, _to, _value);
-        super.checkSenderEtherBalance();
+        if (msg.sender == owner) {
+          super.approveAccount(_to);
+        }
+        super._transfer(_from, _to, _value);
+        // super.checkSenderEtherBalance();
         return true;
     }
-    
-    
-
 }
