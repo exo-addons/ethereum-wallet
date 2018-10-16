@@ -48,7 +48,7 @@ contract ERTToken is
         // If the user doesn't have enough ethers, he will simply reattempt with empty tokens
         super._transfer(msg.sender, _to, _value);
         // TODO use external contract call for this
-        // super.checkSenderEtherBalance();
+        //super.checkSenderEtherBalance();
         return true;
     }
 
@@ -68,5 +68,7 @@ contract ERTToken is
         super.checkSenderEtherBalance();
         return true;
     }
+    
+    
 
 }
