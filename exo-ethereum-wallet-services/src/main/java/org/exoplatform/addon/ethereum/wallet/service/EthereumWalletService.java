@@ -51,6 +51,11 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
+  private static final char[]  SIMPLE_CHARS                  = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+      'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+      'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8',
+      '9' };
+
   private static final Log     LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
 
   public static final String   DEFAULT_NETWORK_ID            = "defaultNetworkId";
@@ -822,7 +827,7 @@ public class EthereumWalletService implements Startable {
     if (browserWalletPhraseValue != null && browserWalletPhraseValue.getValue() != null) {
       return browserWalletPhraseValue.getValue().toString();
     }
-    String phrase = RandomStringUtils.random(20);
+    String phrase = RandomStringUtils.random(20, SIMPLE_CHARS);
     settingService.set(context, WALLET_SCOPE, paramName, SettingValue.create(phrase));
     return phrase;
   }
