@@ -1,32 +1,30 @@
 <template>
   <v-flex class="text-xs-center white">
     <div id="walletBrowserSetup">
-      <button v-if="!walletAddress" class="btn btn-primary" @click="createWalletDialog = true; dialog = true;">Create new wallet</button>
+      <button v-if="!walletAddress" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>
 
-      <a v-if="walletAddress" href="javascript:void(0);" @click="importWalletDialog = true; dialog = true;">Import my wallet in current browser</a>
-      <a v-else href="javascript:void(0);" @click="importWalletDialog = true; dialog = true;">Import existing wallet</a>
+      <a v-if="walletAddress" href="javascript:void(0);" @click="importWalletDialog = true;">Import my wallet in current browser</a>
+      <a v-else href="javascript:void(0);" @click="importWalletDialog = true;">Import existing wallet</a>
 
       <div>Or</div>
       <a href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
     </div>
 
-    <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
+    <v-dialog v-model="importWalletDialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
       <v-card class="elevation-12">
         <div class="popupHeader ClearFix">
-          <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-          <span v-if="createWalletDialog" class="PopupTitle popupTitle">Create wallet</span>
-          <span v-else class="PopupTitle popupTitle">Import wallet private key</span>
+          <a class="uiIconClose pull-right" aria-hidden="true" @click="importWalletDialog = false"></a>
+          <span class="PopupTitle popupTitle">Import wallet private key</span>
         </div>
         <v-card-text>
           <div v-if="errorMessage" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ errorMessage }}
           </div>
           <v-form>
-            <label v-if="importWalletDialog && walletAddress" for="walletPrivateKey">Please introduce the private key of {{ walletAddress }}</label>
-            <label v-else-if="importWalletDialog" for="walletPrivateKey">This is the private key to import a new wallet address</label>
+            <label v-if="walletAddress" for="walletPrivateKey">Please introduce the private key of {{ walletAddress }}</label>
+            <label v-else for="walletPrivateKey">This is the private key to import a new wallet address</label>
             <v-text-field
-              v-if="importWalletDialog"
               v-model="walletPrivateKey"
               :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
               :rules="[rules.priv]"
@@ -60,9 +58,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <button v-if="createWalletDialog" class="btn btn-primary mr-1" @click="createWallet">Create</button>
-          <button v-else class="btn btn-primary mr-1" @click="importWallet">Import</button>
-          <button class="btn" @click="dialog = false">Close</button>
+          <button class="btn btn-primary mr-1" @click="importWallet">Import</button>
+          <button class="btn" @click="importWalletDialog = false">Close</button>
           <v-spacer />
         </v-card-actions>
       </v-card>
@@ -104,8 +101,7 @@ export default {
   },
   data() {
     return {
-      dialog: false,
-      createWalletDialog: false,
+      importWalletDialog: false,
       autoGenerateWalletPassword: true,
       walletPassword: '',
       walletPasswordShow: false,
@@ -121,16 +117,9 @@ export default {
     };
   },
   watch: {
-    createWalletDialog() {
-      if (this.createWalletDialog) {
-        this.resetForm();
-        this.importWalletDialog = false;
-      }
-    },
     importWalletDialog() {
       if (this.importWalletDialog) {
         this.resetForm();
-        this.createWalletDialog = false;
       }
     },
     refreshIndex(newValue, oldValue) {
@@ -205,14 +194,12 @@ export default {
           }
         })
         .then((phrase, error) => {
-          saveBrowerWallet(password, phrase, address, this.autoGenerateWalletPassword, this.autoGenerateWalletPassword, this.createWalletDialog);
+          saveBrowerWallet(password, phrase, address, this.autoGenerateWalletPassword, this.autoGenerateWalletPassword, !this.importWalletDialog);
 
           disableMetamask();
 
-          this.dialog = false;
-
+          this.importWalletDialog = false;
           this.$emit("configured");
-
           this.walletAddress = address;
         })
         .catch(e => {

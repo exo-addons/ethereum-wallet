@@ -61,7 +61,7 @@
                     <v-switch v-if="!isSpace" v-model="enableDelegation" label="Enable token delegation operations"></v-switch>
                   </div>
                   <div v-if="displayWalletResetOption" class="mb-3">
-                    <wallet-reset-modal @reseted="$emit('settings-changed')"/>
+                    <wallet-reset-modal button-label="Reset wallet password" @reseted="$emit('settings-changed')"/>
                   </div>
                   <div v-if="displayWalletResetOption">
                     <wallet-backup-modal :display-complete-message="false" @copied="$emit('copied')" />

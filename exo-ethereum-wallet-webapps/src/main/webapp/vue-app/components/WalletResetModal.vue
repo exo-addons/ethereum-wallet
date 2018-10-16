@@ -1,10 +1,10 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <a slot="activator" href="javascript:void(0);" @click="dialog = true">Reset wallet password</a>
+    <a slot="activator" href="javascript:void(0);" @click="dialog = true">{{ buttonLabel }}</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">Reset wallet</span>
+        <span class="PopupTitle popupTitle">Reset wallet password</span>
       </div>
       <v-card-title v-show="loading" class="pb-0">
         <v-spacer />
@@ -71,6 +71,14 @@
 import {unlockBrowerWallet, saveBrowerWallet} from '../WalletUtils.js';
 
 export default {
+  props: {
+    buttonLabel: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    }
+  },
   data() {
     return {
       dialog: false,

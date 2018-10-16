@@ -44,8 +44,10 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
 
         // Save user's or space's associated address in local storage
         sessionStorage.setItem(`exo-wallet-address-${type}-${id}`, address);
+        return resp;
+      } else {
+        throw new Error("Error saving wallet address");
       }
-      return resp;
     });
 }
 
