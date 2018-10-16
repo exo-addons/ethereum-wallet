@@ -18,8 +18,8 @@
       </v-flex>
     </v-card-title>
 
-    <v-card-title primary-title class="pt-0 text-xs-center">
-      <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index" class="flex-center">
+    <v-card-title primary-title class="pt-0 flex-center">
+      <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index">
         <template v-if="accountDetails.key === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</template>
         <template v-else-if="accountDetails.key === 'ether'" class="headline">{{ totalBalance }} ether</template>
         <template v-else class="headline">{{ accountDetails.balance }} {{ accountDetails.symbol }}</template>
