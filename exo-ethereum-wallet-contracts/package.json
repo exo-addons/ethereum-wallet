@@ -1,0 +1,12 @@
+{
+  "name": "truffle-test-contracts",
+  "version": "0.0.1",
+  "description": "Contracts test",
+  "scripts": {
+    "test": "cd src/main/resources && truffle test"
+  },
+  "dependencies": {
+    "truffle": "^4.1.14",
+    "truffle-contract": "^3.0.6"
+  }
+}
