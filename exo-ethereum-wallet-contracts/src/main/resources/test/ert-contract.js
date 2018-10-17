@@ -38,6 +38,28 @@ contract('ERTToken', function(accounts) {
   it('transfers 10 ERTToken to the account[1]', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;
+      // Test transferring something larger than the sender's balance
+      // balances[_from] >= _value
+      return tokenInstance.transfer(accounts[1], 99999999999999999);
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'error1 message must contain revert');
+      
+   // Test error require msg.sender != _to
+      return tokenInstance.transfer(accounts[0], 99, {from : accounts[0]});
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'error2 message must contain revert');  
+     
+      // Test error require value > 0
+      return tokenInstance.transfer(accounts[5], -5);
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'error3 message must contain revert');
+      
+      
+   // Test error require to != 0x0
+      return tokenInstance.transfer(0x0, 7, {from : accounts[0]});
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'error4 message must contain revert');
+      
       return tokenInstance.transfer.call(accounts[1], 5, {
         from : accounts[0]
       });
@@ -76,6 +98,18 @@ contract('ERTToken', function(accounts) {
   it('approves tokens for delegated transfer', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;
+      
+      // Test approving amount larger than balance balances[msg.sender] >= _value
+      return tokenInstance.approve(accounts[1], 11111111111111, {from : accounts[0]});
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'error1 prime message must contain revert');  
+      
+      // Test require msg.sender != _spender
+      return tokenInstance.approve(accounts[0], 11, {from : accounts[0]});
+    }).then(assert.fail).catch(function(error) {
+      assert(error.message.indexOf('revert') >= 0, 'error2 prime message must contain revert');
+      
+      
       return tokenInstance.approve.call(accounts[1], 5);
     }).then(function(success) {
       assert.equal(success, true, 'transaction failed');
