@@ -12,7 +12,33 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
   const loadingPromises = [];
 
   Object.keys(pendingTransactions).forEach(transactionHash => {
-    loadingPromises.push(addTransaction(networkId, account, contractDetails, transactions, pendingTransactions[transactionHash], null, null, refreshCallback));
+    let transaction;
+    loadingPromises.push(window.localWeb3.eth.getTransaction(transactionHash)
+      .then(transactionTmp => {
+        transaction = transactionTmp;
+        if (transactionTmp) {
+          return window.localWeb3.eth.getTransactionReceipt(transactionHash)
+        } else {
+          throw new Error("Invalid transaction hash", transactionHash);
+        }
+      })
+      .then(receipt => {
+        if (receipt) {
+          removePendingTransactionFromStorage(networkId, account, contractDetails, transactionHash);
+          return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
+            .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
+            .then(transactionDetails => {
+              refreshCallback(transactionDetails);
+              return transactionDetails;
+            });
+        } else {
+          return addTransaction(networkId, account, contractDetails, transactions, pendingTransactions[transactionHash], null, null, refreshCallback);
+        }
+      })
+      .catch(error => {
+        console.debug("Error while retrieving transaction details", transactionHash, error);
+      })
+    );
   });
 
   return Promise.all(loadingPromises)
@@ -67,7 +93,7 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
                 return;
               }
 
-              return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block.timestamp * 1000);
+              return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000);
             })
             .then(transactionDetails => {
               if (transaction.ignore) {
@@ -75,7 +101,7 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
               }
 
               if (transactionDetails && refreshCallback) {
-                return refreshCallback();
+                return refreshCallback(transactionDetails);
               }
 
               return transactionDetails;
@@ -263,7 +289,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
 
           removePendingTransactionFromStorage(networkId, account, contractDetails, transaction.hash);
 
-          return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block.timestamp * 1000, watchLoadSuccess, watchLoadError);
+          return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000, watchLoadSuccess, watchLoadError);
         })
         .then(() => {
           if (watchLoadSuccess) {
@@ -304,8 +330,8 @@ export function addTransaction(networkId, account, contractDetails, transactions
             }
             const method = abiDecoder.decodeMethod(transaction.input);
             const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
-            if (method && method.name) {
-              transactionDetails.contractMethodName = method.name;
+            transactionDetails.contractMethodName = method && method.name;
+            if (transactionDetails.contractMethodName && decodedLogs && decodedLogs.length) {
               if (method.name === 'transfer' || method.name === 'approve') {
                 transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
                 transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
@@ -604,7 +630,7 @@ function addEventsToTransactions(networkId, account, contractDetails, transactio
             promises.push(
               window.localWeb3.eth.getBlock(transaction.blockNumber)
                 .then(block => {
-                  transaction.timestamp = block.timestamp * 1000;
+                  transaction.timestamp = block && block.timestamp * 1000;
                   return transaction;
                 })
             );

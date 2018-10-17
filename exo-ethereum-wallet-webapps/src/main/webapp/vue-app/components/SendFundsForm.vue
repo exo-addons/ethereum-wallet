@@ -146,7 +146,7 @@ export default {
       const selectedAccount = this.selectedAccount;
       addTransaction(this.networkId,
         this.walletAddress,
-        this.selectedAccount,
+        selectedAccount,
         [],
         transaction,
         null,

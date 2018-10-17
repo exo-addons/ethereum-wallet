@@ -57,7 +57,7 @@
       Please switch Metamask to <strong>{{ networkLabel }}</strong>
     </div>
     <!-- Ethereum space address association -->
-    <div v-else-if="newAddressDetected && isSpace" class="alert alert-info">
+    <div v-else-if="newAddressDetected && isSpace && associatedWalletAddress" class="alert alert-info">
       <i class="uiIconInfo"></i>
       <span>Please switch metamask to {{ walletAddress }} account to be able to send transactions</span>
     </div>

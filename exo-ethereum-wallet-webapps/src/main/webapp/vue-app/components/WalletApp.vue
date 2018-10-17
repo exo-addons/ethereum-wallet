@@ -300,7 +300,7 @@ export default {
             this.initMenuApp();
             this.useMetamask = window.walletSettings.userPreferences.useMetamask;
             this.isSpaceAdministrator = window.walletSettings.isSpaceAdministrator;
-            if (window.walletSettings.userPreferences.walletAddress) {
+            if (window.walletSettings.userPreferences.walletAddress || this.useMetamask) {
               this.forceUpdate();
             } else {
               throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
