@@ -422,12 +422,16 @@ export default {
 
           this.finishedLoading = false;
 
+          let transactionsCount = this.transactions && this.transactions.length;
           return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
             if (this.stopLoading) {
               throw new Error("stopLoading");
             }
             this.loadedBlocks = loadedBlocks;
-            this.forceUpdateList();
+            const newTransactionsCount = this.transactions && this.transactions.length;
+            if (transactionsCount !== newTransactionsCount) {
+              this.forceUpdateList();
+            }
           });
         })
         .then(loadedBlocksDetails => {
