@@ -430,6 +430,7 @@ export default {
             this.loadedBlocks = loadedBlocks;
             const newTransactionsCount = this.transactions && this.transactions.length;
             if (transactionsCount !== newTransactionsCount) {
+              transactionsCount = newTransactionsCount;
               this.forceUpdateList();
             }
           });

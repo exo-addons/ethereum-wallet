@@ -24,11 +24,22 @@
               label="Amount"
               placeholder="Select an amount of tokens to send"
               @input="$emit('amount-selected', amount)" />
-
             <slot></slot>
-
           </v-layout>
         </v-container>
+
+        <v-text-field
+          v-if="!storedPassword"
+          v-model="walletPassword"
+          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+          :type="walletPasswordShow ? 'text' : 'password'"
+          :disabled="loading"
+          name="walletPassword"
+          label="Wallet password"
+          placeholder="Input your wallet password"
+          counter
+          @click:append="walletPasswordShow = !walletPasswordShow"
+        />
 
       </v-form>
       <qr-code-modal :to="recipient"
@@ -58,7 +69,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {truncateError} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -83,6 +94,10 @@ export default {
     return {
       loading: false,
       showQRCodeModal: false,
+      storedPassword: false,
+      walletPassword: '',
+      walletPasswordShow: false,
+      useMetamask: false,
       recipient: null,
       amount: null,
       warning: null,
@@ -98,10 +113,13 @@ export default {
       this.amount = null;
       this.warning = null;
       this.error = null;
+      this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+      this.storedPassword = this.useMetamask || (window.walletSettings.userP && window.walletSettings.browserWalletExists);
     },
     sendTokens() {
       this.error = null;
       this.warning = null;
+
       if (!window.localWeb3.utils.isAddress(this.recipient)) {
         this.error = "Invalid recipient address";
         return;
@@ -109,6 +127,17 @@ export default {
 
       if (!this.amount || isNaN(parseInt(this.amount)) || !isFinite(this.amount) || this.amount <= 0) {
         this.error = "Invalid amount";
+        return;
+      }
+
+      if (!this.storedPassword && (!this.walletPassword || !this.walletPassword.length)) {
+        this.error = "Password field is mandatory";
+        return;
+      }
+
+      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : this.walletPassword, null, null, true, false);
+      if (!unlocked) {
+        this.error = "Wrong password";
         return;
       }
 
@@ -153,7 +182,8 @@ export default {
             this.loading = false;
 
             this.error = `Error sending tokens: ${truncateError(e)}`;
-          });
+          })
+          .finally(() => this.useMetamask || lockBrowerWallet());
       } catch(e) {
         console.debug("Web3 contract.transfer method - error", e);
         this.loading = false;

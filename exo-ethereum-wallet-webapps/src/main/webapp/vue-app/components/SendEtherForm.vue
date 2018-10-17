@@ -22,12 +22,21 @@
               label="Amount"
               placeholder="Select an amount of ethers to send"
               @input="$emit('amount-selected', amount)" />
-
             <slot></slot>
-
           </v-layout>
         </v-container>
-
+        <v-text-field
+          v-if="!storedPassword"
+          v-model="walletPassword"
+          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+          :type="walletPasswordShow ? 'text' : 'password'"
+          :disabled="loading"
+          name="walletPassword"
+          label="Wallet password"
+          placeholder="Input your wallet password"
+          counter
+          @click:append="walletPasswordShow = !walletPasswordShow"
+        />
       </v-form>
       <qr-code-modal :from="account"
                      :to="recipient"
@@ -49,7 +58,7 @@
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
-import {gasToEther} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, gasToEther} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -73,6 +82,10 @@ export default {
   data () {
     return {
       showQRCodeModal: false,
+      storedPassword: false,
+      walletPassword: '',
+      walletPasswordShow: false,
+      useMetamask: false,
       loading: false,
       recipient: null,
       amount: null,
@@ -85,7 +98,9 @@ export default {
       this.loading = false;
       this.recipient = null;
       this.amount = null;
-      this.error = null;      
+      this.error = null;
+      this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+      this.storedPassword = this.useMetamask || (window.walletSettings.userP && window.walletSettings.browserWalletExists);
     },
     sendEther() {
       this.error = null;
@@ -99,9 +114,20 @@ export default {
         return;
       }
 
+      if (!this.storedPassword && (!this.walletPassword || !this.walletPassword.length)) {
+        this.error = "Password field is mandatory";
+        return;
+      }
+
       const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
       if (this.amount + gasToEther(gas) >= this.balance) {
         this.error = "Unsufficient funds";
+        return;
+      }
+
+      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : this.walletPassword, null, null, true, false);
+      if (!unlocked) {
+        this.error = "Wrong password";
         return;
       }
 
@@ -142,6 +168,10 @@ export default {
         console.debug("Web3.eth.sendTransaction method - error", e);
         this.loading = false;
         this.error = `Error sending ether: ${e}`;
+      } finally {
+        if (!this.useMetamask) {
+          lockBrowerWallet();
+        }
       }
     }
   }

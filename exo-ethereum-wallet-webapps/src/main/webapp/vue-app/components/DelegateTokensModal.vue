@@ -44,6 +44,18 @@
             label="Amount"
             placeholder="Select an amount to delegate to recipient"
             class="mt-4" />
+          <v-text-field
+            v-if="!storedPassword"
+            v-model="walletPassword"
+            :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+            :type="walletPasswordShow ? 'text' : 'password'"
+            :disabled="loading"
+            name="walletPassword"
+            label="Wallet password"
+            placeholder="Input your wallet password"
+            counter
+            @click:append="walletPasswordShow = !walletPasswordShow"
+          />
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -60,7 +72,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {truncateError} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -108,6 +120,10 @@ export default {
   data () {
     return {
       showQRCodeModal: false,
+      storedPassword: false,
+      walletPassword: '',
+      walletPasswordShow: false,
+      useMetamask: false,
       recipient: null,
       loading: false,
       amount: null,
@@ -147,6 +163,8 @@ export default {
         this.amount = null;
         this.warning = null;
         this.error = null;
+        this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+        this.storedPassword = this.useMetamask || (window.walletSettings.userP && window.walletSettings.browserWalletExists);
       } else {
         this.$emit('close');
       }
@@ -167,6 +185,16 @@ export default {
         return;
       }
 
+      if (!this.storedPassword && (!this.walletPassword || !this.walletPassword.length)) {
+        this.error = "Password field is mandatory";
+        return;
+      }
+
+      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : this.walletPassword, null, null, true, false);
+      if (!unlocked) {
+        this.error = "Wrong password";
+        return;
+      }
 
       this.loading = true;
       try {
@@ -207,7 +235,8 @@ export default {
             console.debug("Web3 contract.approve method - error", e);
             this.loading = false;
             this.error = `Error delegating tokens: ${truncateError(e)}`;
-          });
+          })
+          .finally(() => this.useMetamask || lockBrowerWallet());
       } catch(e) {
         console.debug("Web3 contract.approve method - error", e);
         this.loading = false;
