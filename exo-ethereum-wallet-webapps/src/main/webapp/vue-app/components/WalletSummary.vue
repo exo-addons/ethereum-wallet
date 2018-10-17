@@ -237,18 +237,19 @@ export default {
       Object.keys(this.pendingTransactions).forEach(key => delete this.pendingTransactions[key]);
 
       return loadPendingTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, transaction => {
+        const contractDetails = transaction.to && this.accountsDetails[transaction.to.toLowerCase()];
+        this.refreshBalance(contractDetails);
         if (this.pendingTransactions[transaction.hash]) {
           delete this.pendingTransactions[transaction.hash];
         }
         this.updatePendingTransactionsIndex++;
-        this.$emit("refresh-balance");
       },
       (error, transaction) => {
+        this.$emit('error', error);
         if (this.pendingTransactions[transaction.hash]) {
           delete this.pendingTransactions[transaction.hash];
         }
         this.updatePendingTransactionsIndex++;
-        this.$emit('error', error);
       })
         .then(() => this.updatePendingTransactionsIndex++);
     }
