@@ -42,6 +42,7 @@
               :wallet-address="walletAddress"
               :disabled="disableSendButton"
               :icon="!isMaximized"
+              @success="refreshBalance($event)"
               @pending="loadPendingTransactions()"
               @error="loadPendingTransactions(); $emit('error', $event);" />
             <v-divider v-if="!isMaximized" vertical />
@@ -223,6 +224,13 @@ export default {
           }
           this.$refs.sendFundsModal.prepareSendForm(parameters.receiver, parameters.receiver_type, parameters.amount, parameters.contract);
         }
+      }
+    },
+    refreshBalance(accountDetails) {
+      if (accountDetails && accountDetails.isContract) {
+        this.$emit("refresh-token-balance", accountDetails);
+      } else {
+        this.$emit("refresh-balance");
       }
     },
     loadPendingTransactions() {

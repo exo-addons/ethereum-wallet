@@ -143,6 +143,7 @@ export default {
 
       this.error = null;
 
+      const selectedAccount = this.selectedAccount;
       addTransaction(this.networkId,
         this.walletAddress,
         this.selectedAccount,
@@ -150,7 +151,7 @@ export default {
         transaction,
         null,
         null,
-        () => this.$emit('success'),
+        () => this.$emit('success', selectedAccount),
         error => this.$emit('error', error));
 
       this.$emit('pending', transaction);
