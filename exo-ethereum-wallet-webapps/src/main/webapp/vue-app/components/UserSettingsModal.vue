@@ -1,11 +1,14 @@
 <template>
-  <v-dialog v-model="show" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="show = false">
+  <v-dialog v-model="show" content-class="uiPopup" width="700px" max-width="100vw" persistent @keydown.esc="show = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>
         <span class="PopupTitle popupTitle">Preferences</span>
       </div>
-      <v-card-text>
+      <v-card-text v-if="loading || appLoading" class="text-xs-center">
+        <v-progress-circular color="primary" class="mb-2" indeterminate />
+      </v-card-text>
+      <v-card-text v-show="!loading && !appLoading">
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
         </div>
@@ -13,8 +16,9 @@
           <v-tabs ref="settingsTabs" v-model="selectedTab" class="pl-3 pr-3">
             <v-tabs-slider />
             <v-tab v-if="!isSpace">Display</v-tab>
-            <v-tab>Advanced settings</v-tab>
-            <v-tab v-if="walletAddress">Wallet details</v-tab>
+            <v-tab v-if="walletAddress">Details</v-tab>
+            <v-tab v-if="walletAddress">security</v-tab>
+            <v-tab>Advanced</v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab">
             <v-tab-item v-if="!isSpace">
@@ -42,6 +46,45 @@
                 </v-card-text>
               </v-card>
             </v-tab-item>
+            <v-tab-item v-if="walletAddress">
+              <v-card>
+                <v-card-text>
+                  <qr-code
+                    ref="qrCode"
+                    :to="walletAddress"
+                    title="Address QR Code"
+                    information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
+
+                  <div class="text-xs-center">
+                    <wallet-address :value="walletAddress" />
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-tab-item>
+            <v-tab-item v-if="walletAddress">
+              <v-card>
+                <v-card-text>
+                  <div v-if="displayWalletResetOption" class="mb-3">
+                    <wallet-reset-modal
+                      button-label="Reset wallet password"
+                      display-remember-me
+                      @reseted="$emit('settings-changed')"/>
+                  </div>
+                  <div v-if="displayWalletResetOption" class="mb-3">
+                    <wallet-backup-modal
+                      :display-complete-message="false"
+                      button
+                      @copied="$emit('copied')" />
+                  </div>
+                  <div v-if="displayWalletResetOption">
+                    <wallet-import-key-modal
+                      :wallet-address="walletAddress"
+                      button
+                      @configured="$emit('settings-changed')" />
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-tab-item>
             <v-tab-item>
               <v-card>
                 <v-card-text>
@@ -60,43 +103,13 @@
                   <div>
                     <v-switch v-if="!isSpace" v-model="enableDelegation" label="Enable token delegation operations"></v-switch>
                   </div>
-                  <div v-if="displayWalletResetOption" class="mb-3">
-                    <wallet-reset-modal
-                      button-label="Reset wallet password"
-                      @reseted="$emit('settings-changed')"/>
-                  </div>
-                  <div v-if="displayWalletResetOption" class="mb-3">
-                    <wallet-backup-modal
-                      :display-complete-message="false"
-                      @copied="$emit('copied')" />
-                  </div>
-                  <div v-if="displayWalletResetOption">
-                    <wallet-import-key-modal
-                      :wallet-address="walletAddress"
-                      @configured="$emit('settings-changed')" />
-                  </div>
-                </v-card-text>
-              </v-card>
-            </v-tab-item>
-            <v-tab-item v-if="walletAddress">
-              <v-card>
-                <v-card-text>
-                  <qr-code
-                    ref="qrCode"
-                    :to="walletAddress"
-                    title="Address QR Code"
-                    information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
-        
-                  <div class="text-xs-center">
-                    <wallet-address :value="walletAddress" />
-                  </div>
                 </v-card-text>
               </v-card>
             </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions v-if="selectedTab !== 3 && selectedTab !== 2">
         <v-spacer />
         <button :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button>
         <button :disabled="loading" :loading="loading" class="btn" @click="show = false">Close</button>
@@ -129,6 +142,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    appLoading: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     },
     isSpace: {

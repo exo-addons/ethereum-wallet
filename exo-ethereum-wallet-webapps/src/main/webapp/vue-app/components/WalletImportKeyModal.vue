@@ -1,7 +1,10 @@
 <template>
   <v-dialog v-model="importWalletDialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
-    <a v-if="walletAddress" slot="activator" href="javascript:void(0);" @click="importWalletDialog = true;">Import my wallet in current browser</a>
-    <a v-else slot="activator" href="javascript:void(0);" @click="importWalletDialog = true;">Import existing wallet</a>
+    <div v-if="button" slot="activator" @click="$event.preventDefault();$event.stopPropagation();">
+      <h4>Restore</h4>
+      <button class="btn mt-3" @click="importWalletDialog = true">Restore your wallet</button>
+    </div>
+    <a v-else slot="activator" href="javascript:void(0);" @click="importWalletDialog = true;">{{ walletAddress ? 'Restore my wallet' : 'Import existing wallet' }}</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="importWalletDialog = false"></a>
@@ -68,6 +71,12 @@ export default {
   },
   props: {
     isSpace: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    button: {
       type: Boolean,
       default: function() {
         return false;

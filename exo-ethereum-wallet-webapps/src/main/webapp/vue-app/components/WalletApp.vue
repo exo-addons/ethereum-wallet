@@ -35,6 +35,7 @@
               <user-settings-modal
                 :is-space="isSpace"
                 :open="showSettingsModal"
+                :app-loading="loading"
                 :fiat-symbol="fiatSymbol"
                 :display-reset-option="displayWalletResetOption"
                 :accounts-details="accountsDetails"
