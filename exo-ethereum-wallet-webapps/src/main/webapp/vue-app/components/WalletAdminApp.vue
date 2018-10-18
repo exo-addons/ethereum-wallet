@@ -784,8 +784,8 @@ export default {
           websocketProviderURL: this.selectedNetwork.wsLink,
           defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
           defaultNetworkId: this.selectedNetwork.value,
-          defaultPrincipalAccount: this.selectedPrincipalAccount.value,
-          defaultOverviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
+          defaultPrincipalAccount: this.selectedPrincipalAccount && this.selectedPrincipalAccount.value,
+          defaultOverviewAccounts: this.selectedOverviewAccounts && this.selectedOverviewAccounts.map(item => item.value),
           defaultGas: this.defaultGas,
           enableDelegation: this.enableDelegation,
           initialFunds: initialFundsMap
