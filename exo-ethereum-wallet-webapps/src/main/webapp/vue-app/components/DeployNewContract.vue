@@ -64,21 +64,18 @@
                   type="number"
                   required />
 
-        <h4>Contract address management</h4>
-        <v-divider />
-        <v-list three-line>
-          <v-list-tile avatar>
-            <v-list-tile-action>
-              <v-checkbox v-model="newTokenSetAsDefault" />
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title>Install contract as default one for all wallets</v-list-tile-title>
-              <v-list-tile-sub-title>
-                This will display the contract in all users wallet by default without any additional action from users. Else, the contract will be added to the current user's wallet only.
-              </v-list-tile-sub-title>
-            </v-list-tile-content>
-          </v-list-tile>
-        </v-list>
+        <h4 v-if="!storedPassword">Your wallet password</h4>
+        <v-text-field
+          v-if="!storedPassword"
+          v-model="walletPassword"
+          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+          :type="walletPasswordShow ? 'text' : 'password'"
+          :disabled="loading"
+          name="walletPassword"
+          placeholder="Input your wallet password"
+          counter
+          @click:append="walletPasswordShow = !walletPasswordShow"
+        />
         <v-list>
           <v-list-tile>
             <v-spacer />
@@ -99,7 +96,7 @@ import WalletAddress from './WalletAddress.vue';
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
 import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, newContractInstance, deployContract} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
-import {gasToFiat} from '../WalletUtils.js';
+import {gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -130,6 +127,7 @@ export default {
       loading: false,
       errorMessage: '',
       warning: null,
+      storedPassword: false,
       newTokenName: '',
       newTokenSymbol: '',
       newTokenGas: 0,
@@ -140,7 +138,10 @@ export default {
       newTokenInitialCoins: 0,
       newTokenSetAsDefault: true,
       newTokenAddress: '',
+      walletPassword: '',
+      walletPasswordShow: false,
       createNewToken: false,
+      useMetamask: false,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ],
@@ -186,6 +187,8 @@ export default {
       this.newTokenAddress = '';
       this.valid = false;
       this.contracts = [];
+      this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+      this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
     },
     calculateGasPriceInFiat() {
       if (this.newTokenGas && this.newTokenGasPrice) {
@@ -206,7 +209,19 @@ export default {
         return;
       }
 
+      if (!this.storedPassword && (!this.walletPassword || !this.walletPassword.length)) {
+        this.errorMessage = "Password field is mandatory";
+        return;
+      }
+
       this.loading = true;
+      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+      if (!unlocked) {
+        this.error = "Wrong password";
+        this.loading = false;
+        return;
+      }
+
       try {
         const NEW_TOKEN_DEPLOYMENT_TX = newContractInstance(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol);
         deployContract(NEW_TOKEN_DEPLOYMENT_TX, this.networkId, this.newTokenName, this.newTokenSymbol, this.newTokenSetAsDefault, this.account, this.newTokenGas, this.newTokenGasPrice, () => {
@@ -240,12 +255,14 @@ export default {
                     this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
                     this.newTokenAddress = newTokenInstance.options.address;
                   }
+                  lockBrowerWallet();
                 })
                 .catch(e => {
                   console.debug("saveContractAddressAsDefault method - error", e);
                   this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users: ${e}`;
                   this.loading = false;
                   this.newTokenAddress = newTokenInstance.options.address;
+                  lockBrowerWallet();
                 });
             } else {
               // Save contract address to display for current user only
@@ -261,8 +278,10 @@ export default {
                   } else {
                     this.errorMessage = `Error during contract address saving for all users`;
                   }
+                  lockBrowerWallet();
                 })
                 .catch(e => {
+                  lockBrowerWallet();
                   console.debug("saveContractAddress method - error", e);
                   this.loading = false;
                   this.errorMessage = `Error during contract address saving for all users: ${e}`;
@@ -275,6 +294,7 @@ export default {
             this.errorMessage = `Error during contract deployment: ${e}`;
           });
       } catch(e) {
+        lockBrowerWallet();
         console.debug("saveContractAddress method - error", e);
         this.loading = false;
         this.errorMessage = `Error during contract deployment: ${e}`;
