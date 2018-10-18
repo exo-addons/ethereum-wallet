@@ -41,7 +41,10 @@
       :is-space="isSpace"
       :is-space-administrator="isSpaceAdministrator"
       :refresh-index="refreshIndex"
-      @configured="$emit('refresh')" />
+      @configured="$emit('refresh')"
+      @loading="$emit('loading')"
+      @end-loading="$emit('end-loading')"
+      @error="$emit('error', $event)" />
   </v-flex>
 </template>
 

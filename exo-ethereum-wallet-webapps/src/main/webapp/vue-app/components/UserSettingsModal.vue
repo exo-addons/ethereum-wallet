@@ -61,10 +61,19 @@
                     <v-switch v-if="!isSpace" v-model="enableDelegation" label="Enable token delegation operations"></v-switch>
                   </div>
                   <div v-if="displayWalletResetOption" class="mb-3">
-                    <wallet-reset-modal button-label="Reset wallet password" @reseted="$emit('settings-changed')"/>
+                    <wallet-reset-modal
+                      button-label="Reset wallet password"
+                      @reseted="$emit('settings-changed')"/>
+                  </div>
+                  <div v-if="displayWalletResetOption" class="mb-3">
+                    <wallet-backup-modal
+                      :display-complete-message="false"
+                      @copied="$emit('copied')" />
                   </div>
                   <div v-if="displayWalletResetOption">
-                    <wallet-backup-modal :display-complete-message="false" @copied="$emit('copied')" />
+                    <wallet-import-key-modal
+                      :wallet-address="walletAddress"
+                      @configured="$emit('settings-changed')" />
                   </div>
                 </v-card-text>
               </v-card>
@@ -102,6 +111,7 @@ import QrCode from './QRCode.vue';
 import WalletAddress from './WalletAddress.vue';
 import WalletResetModal from './WalletResetModal.vue';
 import WalletBackupModal from './WalletBackupModal.vue';
+import WalletImportKeyModal from './WalletImportKeyModal.vue';
 
 import {gasToFiat, enableMetamask, disableMetamask} from '../WalletUtils.js';
 import {FIAT_CURRENCIES} from '../WalletConstants.js';
@@ -111,6 +121,7 @@ export default {
     QrCode,
     WalletResetModal,
     WalletBackupModal,
+    WalletImportKeyModal,
     WalletAddress
   },
   props: {
