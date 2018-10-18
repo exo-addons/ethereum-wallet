@@ -97,25 +97,21 @@ export default {
           });
         }
 
-        if (this.receiver && this.receiver_type && this.amount) {
-          this.$nextTick(() => {
-            if (this.$refs.sendEtherForm) {
+        this.$nextTick(() => {
+          if (this.$refs.sendEtherForm) {
+            this.$refs.sendEtherForm.init();
+            if (this.receiver && this.receiver_type && this.amount) {
               this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.receiver, this.receiver_type);
               this.$refs.sendEtherForm.amount = Number(this.amount);
-            } else if (this.$refs.sendTokensForm) {
+            }
+          } else if (this.$refs.sendTokensForm) {
+            this.$refs.sendTokensForm.init();
+            if (this.receiver && this.receiver_type && this.amount) {
               this.$refs.sendTokensForm.$refs.autocomplete.selectItem(this.receiver, this.receiver_type);
               this.$refs.sendTokensForm.amount = Number(this.amount);
             }
-          });
-        } else {
-          this.$nextTick(() => {
-            if (this.$refs.sendEtherForm) {
-              this.$refs.sendEtherForm.init();
-            } else if (this.$refs.sendTokensForm) {
-              this.$refs.sendTokensForm.init();
-            }
-          });
-        }
+          }
+        });
       });
     }
   },

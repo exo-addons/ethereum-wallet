@@ -72,7 +72,7 @@
 import WalletAddress from './WalletAddress.vue';
 
 import * as constants from '../WalletConstants.js';
-import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWallet} from '../WalletUtils.js';
+import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWallet, setWalletBackedUp} from '../WalletUtils.js';
 import {saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
@@ -195,6 +195,7 @@ export default {
         })
         .then((phrase, error) => {
           saveBrowerWallet(password, phrase, address, this.autoGenerateWalletPassword, this.autoGenerateWalletPassword, !this.importWalletDialog);
+          setWalletBackedUp(address, this.importWalletDialog);
 
           disableMetamask();
 
@@ -204,8 +205,6 @@ export default {
         })
         .catch(e => {
           console.debug("saveNewAddress method - error", e);
-          window.localWeb3.eth.accounts.wallet.remove(address);
-          localStorage.removeItem(`exo-wallet-${address}-userp`);
           this.errorMessage = `Error saving new Wallet address`;
         });
     },

@@ -69,7 +69,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -114,7 +114,7 @@ export default {
       this.warning = null;
       this.error = null;
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
-      this.storedPassword = this.useMetamask || (window.walletSettings.userP && window.walletSettings.browserWalletExists);
+      this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
     },
     sendTokens() {
       this.error = null;
@@ -135,7 +135,7 @@ export default {
         return;
       }
 
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : this.walletPassword, null, null, true, false);
+      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
       if (!unlocked) {
         this.error = "Wrong password";
         return;
@@ -174,7 +174,10 @@ export default {
 
                 // The transaction has failed
                 this.error = `Error sending tokens: ${truncateError(error)}`;
-                this.$emit("error", this.error);
+                // Display error on main screen only when dialog is not opened
+                if (!this.dialog) {
+                  this.$emit("error", this.error);
+                }
               });
           })
           .catch (e => {
