@@ -48,8 +48,8 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button class="btn btn-primary mr-1" @click="importWallet">Import</button>
-        <button class="btn" @click="importWalletDialog = false">Close</button>
+        <button :disabled="loading" class="btn btn-primary mr-1" @click="importWallet">Import</button>
+        <button :disabled="loading" class="btn" @click="importWalletDialog = false">Close</button>
         <v-spacer />
       </v-card-actions>
     </v-card>
@@ -89,6 +89,7 @@ export default {
       walletPrivateKey: '',
       walletPrivateKeyShow: false,
       errorMessage: null,
+      loading: false,
       rules: {
         min: v => v.length >= 8 || 'At least 8 characters',
         priv: v => v.length === 66 || v.length === 64 || 'Exactly 64 or 66 (with "0x") characters are required'
@@ -110,6 +111,7 @@ export default {
       this.walletPrivateKey = '';
       this.walletPrivateKeyShow = false;
       this.errorMessage = null;
+      this.loading = false;
     },
     getPassword() {
       if (this.autoGenerateWalletPassword) {
@@ -119,6 +121,7 @@ export default {
       }
     },
     importWallet() {
+      this.loading = true;
       try {
         if (this.walletPrivateKey.indexOf("0x") < 0) {
           this.walletPrivateKey = `0x${this.walletPrivateKey}`;
@@ -128,19 +131,23 @@ export default {
           const password = this.getPassword();
           saveBrowerWalletInstance(wallet, password, this.isSpace, this.autoGenerateWalletPassword, true)
             .then(() => {
+              this.loading = false;
               this.importWalletDialog = false;
               this.$nextTick(() => {
                 this.$emit('configured');
               });
             })
             .catch(e => {
+              this.loading = false;
               console.debug("saveBrowerWalletInstance method - error", e);
               this.errorMessage = `Error saving new Wallet address`;
             });
         } else {
+          this.loading = false;
           this.errorMessage = `Private key doesn't match address ${this.walletAddress}`;
         }
       } catch(e) {
+        this.loading = false;
         console.debug('Error importing private key', e);
         this.errorMessage = `Error saving new Wallet address`;
       }

@@ -1,7 +1,7 @@
 <template>
   <v-flex class="text-xs-center white">
     <div id="walletBrowserSetup">
-      <button v-if="!walletAddress" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
+      <button v-if="!walletAddress" :disabled="loading" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>
 
       <wallet-import-key-modal
@@ -48,6 +48,7 @@ export default {
   data() {
     return {
       walletAddress: null,
+      loading: false,
       rules: {
         min: v => v.length >= 8 || 'At least 8 characters',
         priv: v => v.length === 66 || v.length === 64 || 'Exactly 64 or 66 (with "0x") characters are required'
@@ -74,7 +75,7 @@ export default {
       }
     },
     createWallet() {
-      this.$emit('loading');
+      this.loading = true;
 
       const password = generatePassword();
       const entropy = password + Math.random();
@@ -83,12 +84,12 @@ export default {
       saveBrowerWalletInstance(wallet[0], password, this.isSpace, true, false)
         .then(() => {
           this.$emit("configured");
-          this.$emit('end-loading');
+          this.loading = false;
         })
         .catch(e => {
           console.debug("saveBrowerWalletInstance method - error", e);
           this.$emit('error', 'Error saving new Wallet address');
-          this.$emit('end-loading');
+          this.loading = false;
         });
     },
     switchToMetamask() {
