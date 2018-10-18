@@ -482,7 +482,7 @@ export function truncateError(error) {
     error = error.substring(0, error.indexOf(' at '));
   }
 
-  if (error.indexOf('replacement transaction underpriced') || error.indexOf('known transaction')) {
+  if (error.indexOf('replacement transaction underpriced') > 0 || error.indexOf('known transaction') > 0) {
     error = 'Another transaction is in progress please wait until the first transaction is finished';
   }
   return error;
