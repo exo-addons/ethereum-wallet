@@ -94,6 +94,12 @@ export default {
     AddressAutoComplete
   },
   props: {
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     contractDetails: {
       type: Object,
       default: function() {

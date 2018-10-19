@@ -231,6 +231,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
 
   const fromAddress = transaction.from && transaction.from.toLowerCase();
   const toAddress = transaction.to && transaction.to.toLowerCase();
+  const byAddress = transaction.by && transaction.by.toLowerCase();
 
   account = account.toLowerCase();
 
@@ -254,6 +255,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
     contractSymbol: null,
     contractMethodName: transaction.contractMethodName,
     contractAmount: transaction.contractAmount,
+    byAddress: byAddress,
     fromAddress: fromAddress,
     fromUsername: null,
     fromType: null,
