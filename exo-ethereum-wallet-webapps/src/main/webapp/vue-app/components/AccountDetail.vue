@@ -32,7 +32,6 @@
             use-navigation
             @sent="newTransactionPending"
             @error="error = $event" />
-          <v-divider v-if="contractDetails.isContract && enableDelegation" vertical />
           <send-delegated-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
             :wallet-address="walletAddress"
@@ -41,7 +40,6 @@
             use-navigation
             @sent="newTransactionPending"
             @error="error = $event" />
-          <v-divider v-if="contractDetails.isContract && enableDelegation" vertical />
           <delegate-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
             :is-readonly="isReadOnly"

@@ -62,11 +62,11 @@
                   <v-spacer v-if="!item.error" />
   
                   <v-menu v-if="!item.error" :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
-                    <v-btn slot="activator" dark icon>
-                      <v-icon>more_vert</v-icon>
+                    <v-btn slot="activator" :disabled="isReadOnly" dark icon>
+                      <v-icon v-if="!isReadOnly">more_vert</v-icon>
                     </v-btn>
   
-                    <v-list class="pt-0 pb-0">
+                    <v-list v-if="!isReadOnly" class="pt-0 pb-0">
                       <v-list-tile v-if="!item.isContract && item.balance && item.balance !== '0'" @click="selectedItem = item; sendEtherModal = true">
                         <v-list-tile-title>
                           Send Ether
@@ -193,7 +193,6 @@ export default {
       if (!this.refreshIndex) {
         return;
       }
-
       const accountsList = [];
       let etherAccountAdded = false;
       this.overviewAccounts.forEach(selectedValue => {

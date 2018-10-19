@@ -129,7 +129,7 @@ export function initWeb3(isSpace) {
           createLocalWeb3Instance(isSpace, true);
         } else {
           window.localWeb3 = tempWeb3;
-          window.walletSettings.isReadOnly = false;
+          window.walletSettings.isReadOnly = isSpace && !window.walletSettings.isSpaceAdministrator;
         }
         return checkNetworkStatus();
       })
