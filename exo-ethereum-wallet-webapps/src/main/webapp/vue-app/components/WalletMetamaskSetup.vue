@@ -56,52 +56,53 @@
       <i class="uiIconWarning"></i>
       Please switch Metamask to <strong>{{ networkLabel }}</strong>
     </div>
-    <!-- Ethereum space address association -->
-    <div v-else-if="newAddressDetected && isSpace && associatedWalletAddress" class="alert alert-info">
-      <i class="uiIconInfo"></i>
-      <span>Please switch metamask to {{ walletAddress }} account to be able to send transactions</span>
-    </div>
-    <!-- Ethereum user address association -->
-    <div v-else-if="newAddressDetected" class="alert alert-info">
-      <i class="uiIconInfo"></i>
-      <span>A new wallet has been detected!</span>
+    <div v-else-if="newAddressDetected">
+      <div v-if="associatedWalletAddress" class="alert alert-warning">
+        <i class="uiIconWarning"></i>
+        <span>Please switch metamask to {{ walletAddress }} account to be able to send transactions</span>
+      </div>
       <br />
-      <button class="btn" @click.stop="addressAssociationDialog = true">
-        See details
-      </button>
-      <v-dialog v-model="addressAssociationDialog" content-class="uiPopup" width="500px" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
-        <v-card>
-          <div class="popupHeader ClearFix">
-            <a class="uiIconClose pull-right" aria-hidden="true" @click="addressAssociationDialog = false"></a>
-            <span class="PopupTitle popupTitle">Configure my wallet address</span>
-          </div>
-          <v-card-text>
-            <div v-if="currentAccountAlreadyInUse">
-              Currently selected account in Metamask is already in use, you can't use it in this wallet.
+      <div class="alert alert-info">
+        <i class="uiIconInfo"></i>
+        <span>A new wallet has been detected on Metamask!</span>
+        <br />
+        <button class="btn" @click.stop="addressAssociationDialog = true">
+          See details
+        </button>
+        <v-dialog v-model="addressAssociationDialog" content-class="uiPopup" width="500px" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
+          <v-card>
+            <div class="popupHeader ClearFix">
+              <a class="uiIconClose pull-right" aria-hidden="true" @click="addressAssociationDialog = false"></a>
+              <span class="PopupTitle popupTitle">Configure your wallet address</span>
             </div>
-            <div v-else-if="displaySpaceAccountAssociationHelp">
-              Would you like to use the current address <wallet-address :value="detectedMetamaskAccount" /> in Space Wallet ?
-            </div>
-            <div v-else-if="displayUserAccountAssociationHelp">
-              Would you like to use the current address <wallet-address :value="detectedMetamaskAccount" /> in your Wallet ?
-            </div>
-            <div v-else-if="displayUserAccountChangeHelp">
-              Would you like to replace your wallet address <wallet-address :value="associatedWalletAddress" /> by the current address <wallet-address :value="detectedMetamaskAccount" /> ?
-            </div>
-          </v-card-text>
-    
-          <v-card-actions v-if="displayAccountHelpActions" class="text-xs-center">
-            <v-spacer></v-spacer>
-            <button class="btn btn-primary mr-2" @click="saveNewAddressInWallet()">
-              Yes
-            </button>
-            <button class="btn" @click="addressAssociationDialog = false">
-              No
-            </button>
-            <v-spacer></v-spacer>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+            <v-card-text>
+              <div v-if="currentAccountAlreadyInUse">
+                Currently selected account in Metamask is already in use, you can't use it in this wallet.
+              </div>
+              <div v-else-if="displaySpaceAccountAssociationHelp">
+                Would you like to use the current address <wallet-address :value="detectedMetamaskAccount" /> in Space Wallet ?
+              </div>
+              <div v-else-if="displayUserAccountAssociationHelp">
+                Would you like to use the current address <wallet-address :value="detectedMetamaskAccount" /> in your Wallet ?
+              </div>
+              <div v-else-if="displayUserAccountChangeHelp">
+                Would you like to replace your wallet address <wallet-address :value="associatedWalletAddress" /> by the current address <wallet-address :value="detectedMetamaskAccount" /> ?
+              </div>
+            </v-card-text>
+      
+            <v-card-actions v-if="displayAccountHelpActions" class="text-xs-center">
+              <v-spacer></v-spacer>
+              <button class="btn btn-primary mr-2" @click="saveNewAddressInWallet()">
+                Yes
+              </button>
+              <button class="btn" @click="addressAssociationDialog = false">
+                No
+              </button>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </div>
     </div>
   </v-flex>
 </template>

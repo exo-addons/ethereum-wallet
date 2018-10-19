@@ -74,12 +74,16 @@
                         <template slot="content">
                           <ul>
                             <li>
-                              <strong>Connect with browser:</strong>
-                              Your wallet credentials are stored securely <strong>only</strong> in your current browser's local storage
+                              <strong>Connect with browser (recommended):</strong>
+                              <p>
+                                Your wallet credentials are stored securely <strong>only</strong> in your current browser's local storage
+                              </p>
                             </li>
                             <li>
                               <strong>Connect with Metamask:</strong>
-                              <a href="https://metamask.io" target="_blank">MetaMask</a> is a browser extension that can manage multiple identities
+                              <p>
+                                <a href="https://metamask.io" target="_blank">MetaMask</a> is a browser extension that can manage multiple identities
+                              </p>
                             </li>
                           </ul>
                         </template>
@@ -99,7 +103,7 @@
                           <i class="uiIconWarning"></i>
                         </v-btn>
                         <template slot="content">
-                          Your wallet has no password. You can set a password to more protect your funds.
+                          Your wallet has no password. You can set a password to better protect your funds.
                         </template>
                       </information-bubble>
                     </h4>
@@ -274,6 +278,11 @@ export default {
         this.$nextTick(() => {
           this.$refs.qrCode.computeCanvas();
         });
+      }
+    },
+    appLoading() {
+      if (!this.appLoading) {
+        this.refreshFromSettings();
       }
     },
     open() {

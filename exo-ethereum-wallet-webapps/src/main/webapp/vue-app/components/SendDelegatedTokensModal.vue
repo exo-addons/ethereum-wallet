@@ -220,7 +220,7 @@ export default {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}`;
             }
             this.$emit("loading");
-            return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.account})
+            return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.walletAddress})
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
@@ -229,6 +229,7 @@ export default {
                   hash: hash,
                   from: this.from,
                   to: this.recipient,
+                  by: this.walletAddress,
                   value : 0,
                   gas: gas,
                   gasPrice: window.walletSettings.gasPrice,

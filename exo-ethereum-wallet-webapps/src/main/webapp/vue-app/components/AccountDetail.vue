@@ -35,6 +35,7 @@
           <v-divider v-if="contractDetails.isContract && enableDelegation" vertical />
           <send-delegated-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
+            :wallet-address="walletAddress"
             :is-readonly="isReadOnly"
             :contract-details="contractDetails"
             use-navigation

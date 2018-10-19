@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :content-class="title && 'uiPopup'" width="300px" max-width="100vw" @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" :content-class="title && 'uiPopup'" hide-overlay width="300px" max-width="100vw" @keydown.esc="dialog = false">
     <template slot="activator">
       <slot></slot>
     </template>

@@ -28,6 +28,7 @@
       @close="delegateTokenModal = false"
       @error="$emit('error', $event)" />
     <send-delegated-tokens-modal
+      :wallet-address="walletAddress"
       :contract="selectedItem && selectedItem.contract"
       :contract-details="selectedItem"
       :open="sendDelegatedTokenModal"
