@@ -50,7 +50,7 @@
           :disabled="loading"
           name="requestMessage"
           label="Request message (Optional)"
-          placeholder="You can input a custom message to send with your request"
+          placeholder="You can enter a custom message to send with your request"
           class="mt-4"
           rows="7"
           flat

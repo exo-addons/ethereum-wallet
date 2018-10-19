@@ -1,16 +1,6 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" class="fixLinkHeight" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <div v-if="button" slot="activator" @click="$event.preventDefault();$event.stopPropagation();">
-      <h4>Backup</h4>
-      <template v-if="!backedUp">
-        <div class="alert alert-warning v-content">
-          <i class="uiIconWarning"></i>
-          Your wallet is not backed up yet. You may loose access to your funds permanently!
-        </div>
-      </template>
-      <button class="btn mt-3" @click="dialog = true">Backup your wallet</button>
-    </div>
-    <a v-else slot="activator" href="javascript:void(0);" @click="dialog = true">Backup your wallet</a>
+    <a slot="activator" href="javascript:void(0);" @click="dialog = true">Backup your wallet</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
@@ -57,7 +47,7 @@
             :type="walletPasswordShow ? 'text' : 'password'"
             name="walletPassword"
             label="Current wallet password"
-            placeholder="Input your current wallet password"
+            placeholder="Enter your current wallet password"
             counter
             @click:append="walletPasswordShow = !walletPasswordShow"
           />
@@ -87,12 +77,6 @@ export default {
     WalletAddress
   },
   props: {
-    button: {
-      type: Boolean,
-      default: function() {
-        return false;
-      }
-    },
     displayCompleteMessage: {
       type: Boolean,
       default: function() {

@@ -205,7 +205,7 @@
                     v-model="initialFundsRequestMessage"
                     name="initialFundsRequestMessage"
                     label="Initial funds request message"
-                    placeholder="You can input a custom message to send with initial funds request"
+                    placeholder="You can enter a custom message to send with initial funds request"
                     class="mt-4"
                     rows="7"
                     flat

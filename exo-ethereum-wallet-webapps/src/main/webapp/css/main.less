@@ -9,6 +9,14 @@
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
   background: transparent;
 
+  label {
+    margin-bottom: 0;
+  }
+
+  .v-messages {
+    min-height: auto;
+  }
+
   .v-select__selections {
     max-width: 80%;
   }
@@ -395,6 +403,17 @@
     > .v-chip__content {
       height: auto;
       padding: 0;
+    }
+  }
+
+  .inlineIconButton {
+    margin: 0 5px 2px;
+    width: 18px;
+    height: 18px;
+
+    .uiIconWarning {
+      margin: 0 0 2px;
+      font-size: 15px;
     }
   }
 }

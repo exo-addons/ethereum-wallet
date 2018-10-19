@@ -31,13 +31,13 @@
           v-model="newTokenName"
           :rules="mandatoryRule"
           label="Token name"
-          placeholder="Input the ERC20 token name"
+          placeholder="Enter the ERC20 token name"
           required />
         <v-text-field
           v-model="newTokenSymbol"
           :rules="mandatoryRule"
           label="Token symbol"
-          placeholder="Input the token symbol to uses to display token amounts"
+          placeholder="Enter the token symbol to uses to display token amounts"
           required />
         <v-slider v-model="newTokenInitialCoins"
                   :label="`Initial token coins supply: ${newTokenInitialCoins}`"
@@ -72,7 +72,7 @@
           :type="walletPasswordShow ? 'text' : 'password'"
           :disabled="loading"
           name="walletPassword"
-          placeholder="Input your wallet password"
+          placeholder="Enter your wallet password"
           counter
           @click:append="walletPasswordShow = !walletPasswordShow"
         />

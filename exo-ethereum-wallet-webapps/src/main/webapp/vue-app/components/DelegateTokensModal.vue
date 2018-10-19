@@ -52,7 +52,7 @@
             :disabled="loading"
             name="walletPassword"
             label="Wallet password"
-            placeholder="Input your wallet password"
+            placeholder="Enter your wallet password"
             counter
             @click:append="walletPasswordShow = !walletPasswordShow"
           />

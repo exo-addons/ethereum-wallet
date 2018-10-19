@@ -1,10 +1,6 @@
 <template>
   <v-dialog v-model="importWalletDialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
-    <div v-if="button" slot="activator" @click="$event.preventDefault();$event.stopPropagation();">
-      <h4>Restore</h4>
-      <button class="btn mt-3" @click="importWalletDialog = true">Restore your wallet</button>
-    </div>
-    <a v-else slot="activator" href="javascript:void(0);" @click="importWalletDialog = true;">{{ walletAddress ? 'Restore my wallet' : 'Import existing wallet' }}</a>
+    <a slot="activator" href="javascript:void(0);" @click="importWalletDialog = true;">{{ walletAddress ? 'Restore my wallet' : 'Import existing wallet' }}</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="importWalletDialog = false"></a>
@@ -24,7 +20,7 @@
             :type="walletPrivateKeyShow ? 'text' : 'password'"
             name="walletPrivateKey"
             label="Wallet private key"
-            placeholder="Input your wallet private key"
+            placeholder="Enter your wallet private key"
             @click:append="walletPrivateKeyShow = !walletPrivateKeyShow"
           />
 
@@ -76,12 +72,6 @@ export default {
         return false;
       }
     },
-    button: {
-      type: Boolean,
-      default: function() {
-        return false;
-      }
-    },
     walletAddress: {
       type: String,
       default: function() {
@@ -92,7 +82,7 @@ export default {
   data() {
     return {
       importWalletDialog: false,
-      autoGenerateWalletPassword: true,
+      autoGenerateWalletPassword: false,
       walletPassword: '',
       walletPasswordShow: false,
       walletPrivateKey: '',
