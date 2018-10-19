@@ -144,6 +144,9 @@ export function initWeb3(isSpace) {
 
 export function initSettings(isSpace) {
   const spaceId = isSpace ? eXo.env.portal.spaceGroup : '';
+
+  clearCache();
+
   return fetch(`/portal/rest/wallet/api/global-settings?networkId=0&spaceId=${spaceId}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp && resp.ok) {
@@ -618,4 +621,13 @@ function browserWalletExists(address) {
     && encryptedWalletObject[0].address
     && (encryptedWalletObject[0].address.toLowerCase() === address.toLowerCase()
         || `0x${encryptedWalletObject[0].address.toLowerCase()}` === address.toLowerCase());
+}
+
+function clearCache() {
+  Object.keys(sessionStorage).forEach(key => {
+    // Remove association of (address <=> user/space)
+    if (key.indexOf('exo-wallet-address-') === 0) {
+      sessionStorage.removeItem(key);
+    }
+  });
 }
