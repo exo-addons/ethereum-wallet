@@ -58,7 +58,7 @@
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
-import {unlockBrowerWallet, lockBrowerWallet, gasToEther, hashCode} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, gasToEther, hashCode, truncateError} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -160,7 +160,7 @@ export default {
           })
           .on('error', (error, receipt) => {
             // The transaction has failed
-            this.error = `Error sending ether: ${error}`;
+            this.error = truncateError(`Error sending ether: ${error}`);
             this.loading = false;
             // Display error on main screen only when dialog is not opened
             if (!this.dialog) {
@@ -170,7 +170,7 @@ export default {
       } catch(e) {
         console.debug("Web3.eth.sendTransaction method - error", e);
         this.loading = false;
-        this.error = `Error sending ether: ${e}`;
+        this.error = truncateError(`Error sending ether: ${e}`);
       } finally {
         if (!this.useMetamask) {
           lockBrowerWallet();

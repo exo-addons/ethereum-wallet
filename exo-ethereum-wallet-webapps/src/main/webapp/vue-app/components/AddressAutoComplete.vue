@@ -73,6 +73,12 @@ export default {
         return null;
       }
     },
+    noAddress: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     disabled: {
       type: Boolean,
       default: function() {
@@ -94,7 +100,7 @@ export default {
   },
   watch: {
     searchTerm(value) {
-      if(window.localWeb3.utils.isAddress(value)) {
+      if(!this.noAddress && window.localWeb3.utils.isAddress(value)) {
         this.items = [{
           address: value,
           name: value,

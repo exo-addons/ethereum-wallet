@@ -66,7 +66,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button :disabled="loading" class="btn btn-primary mr-1" @click="resetWallet">Confirm</button>
+        <button :disabled="loading" class="btn btn-primary mr-1" @click="loading =true; resetWallet();">Confirm</button>
         <button :disabled="loading" class="btn" @click="dialog = false">Close</button>
         <v-spacer />
       </v-card-actions>

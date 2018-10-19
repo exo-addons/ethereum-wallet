@@ -158,7 +158,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button v-if="!isSpace && selectedTab !== 4 && selectedTab !== 2" :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button>
+        <button v-if="!isSpace && selectedTab !== 1 && selectedTab !== 3" :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button>
         <button :disabled="loading" :loading="loading" class="btn" @click="show = false">Close</button>
         <v-spacer />
       </v-card-actions>
