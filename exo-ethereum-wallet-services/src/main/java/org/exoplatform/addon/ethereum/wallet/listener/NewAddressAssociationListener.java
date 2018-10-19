@@ -32,7 +32,8 @@ public class NewAddressAssociationListener extends Listener<Object, AccountDetai
 
     GlobalSettings settings = ethereumWalletService.getSettings();
     Map<String, Double> initialFunds = settings.getInitialFunds();
-    if (initialFunds == null || initialFunds.isEmpty()) {
+    if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null || settings.getFundsHolder().isEmpty()
+        || accountDetail.getId() == null || settings.getFundsHolder().equals(accountDetail.getId())) {
       return;
     }
 
