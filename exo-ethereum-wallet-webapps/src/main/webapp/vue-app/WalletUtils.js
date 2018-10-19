@@ -125,11 +125,11 @@ export function initWeb3(isSpace) {
         }
 
         // Display wallet in read only mode when selected Metamask account is not the associated one
-        if (!window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
+        if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
           createLocalWeb3Instance(isSpace, true);
         } else {
           window.localWeb3 = tempWeb3;
-          window.walletSettings.isReadOnly = isSpace && !window.walletSettings.isSpaceAdministrator;
+          window.walletSettings.isReadOnly = false;
         }
         return checkNetworkStatus();
       })
