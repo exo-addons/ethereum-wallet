@@ -106,13 +106,17 @@ export function initWeb3(isSpace) {
   }
 
   if (window.walletSettings.userPreferences.useMetamask
-      && window.web3 && window.web3.eth.defaultAccount
+      && window.ethereum
+      && window.web3
       && window.web3.isConnected && window.web3.isConnected()) {
 
     const tempWeb3 = new LocalWeb3(window.web3.currentProvider);
-    tempWeb3.eth.defaultAccount = window.web3.eth.defaultAccount ? window.web3.eth.defaultAccount.toLowerCase() : null;
 
-    return tempWeb3.eth.getCoinbase()
+    return window.ethereum.enable()
+      .then(accounts => {
+        tempWeb3.eth.defaultAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null;
+      })
+      .then(() => tempWeb3.eth.getCoinbase())
       .then(address => {
         if (address) {
           window.walletSettings.metamaskConnected = true;
@@ -121,7 +125,7 @@ export function initWeb3(isSpace) {
         }
 
         // Display wallet in read only mode when selected Metamask account is not the associated one
-        if (!window.walletSettings.metamaskConnected ||  !window.web3.eth.defaultAccount || (window.walletSettings.userPreferences.walletAddress && window.web3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
+        if (!window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
           createLocalWeb3Instance(isSpace, true);
         } else {
           window.localWeb3 = tempWeb3;

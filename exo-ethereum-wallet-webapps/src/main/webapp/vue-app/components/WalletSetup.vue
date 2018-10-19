@@ -4,7 +4,7 @@
       <i class="uiIconWarning"></i>
       Your wallet is not backed up yet.
       <wallet-backup-modal display-complete-message @copied="hideBackupMessage()" />
-      <a href="javascript:void(0);" @click="hideBackupMessage">Don't ask me again</a>
+      <a href="javascript:void(0);" @click="skipWalletBackedUp">Don't ask me again</a>
     </div>
 
     <div v-if="displayResetPassword" class="alert alert-warning">
@@ -157,6 +157,10 @@ export default {
       this.skipWalletPasswordSet = true;
     },
     hideBackupMessage() {
+      setWalletBackedUp(null, true);
+      this.browserWalletBackedUp = true;
+    },
+    skipWalletBackedUp() {
       skipWalletBackedUp();
       this.browserWalletBackedUp = true;
     },

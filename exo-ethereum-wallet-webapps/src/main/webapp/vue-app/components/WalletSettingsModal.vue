@@ -287,7 +287,6 @@ export default {
     },
     open() {
       if (this.open) {
-        console.log(this);
         this.error = null;
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
         this.defaultGas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
