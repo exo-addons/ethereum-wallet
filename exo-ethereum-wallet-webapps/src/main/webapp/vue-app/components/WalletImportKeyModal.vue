@@ -10,7 +10,7 @@
         <div v-if="errorMessage" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ errorMessage }}
         </div>
-        <v-form>
+        <v-form ref="form">
           <label v-if="walletAddress" for="walletPrivateKey" class="mb-3">
             Please enter the private key for the following wallet (Find your private key in Backup section):
             <br />
@@ -71,14 +71,17 @@ export default {
       errorMessage: null,
       loading: false,
       rules: {
-        min: v => v.length >= 8 || 'At least 8 characters',
-        priv: v => v.length === 66 || v.length === 64 || 'Exactly 64 or 66 (with "0x") characters are required'
+        min: v => (v && v.length >= 8) || 'At least 8 characters',
+        priv: v => (v && (v.length === 66 || v.length === 64)) || 'Exactly 64 or 66 (with "0x") characters are required'
       }
     };
   },
   watch: {
     importWalletDialog() {
       if (this.importWalletDialog) {
+        if (this.$refs.form) {
+          this.$refs.form.reset();
+        }
         this.resetForm();
       }
     }

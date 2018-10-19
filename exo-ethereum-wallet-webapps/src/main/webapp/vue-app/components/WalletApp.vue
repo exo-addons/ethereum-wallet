@@ -32,7 +32,7 @@
                 @maximize="maximize()"
                 @modify-settings="showSettingsModal = true" />
   
-              <user-settings-modal
+              <wallet-settings-modal
                 :is-space="isSpace"
                 :open="showSettingsModal"
                 :app-loading="loading"
@@ -140,7 +140,7 @@ import WalletSetup from './WalletSetup.vue';
 import WalletSummary from './WalletSummary.vue';
 import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
-import UserSettingsModal from './UserSettingsModal.vue';
+import WalletSettingsModal from './WalletSettingsModal.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
@@ -154,7 +154,7 @@ export default {
     WalletSetup,
     WalletAccountsList,
     AccountDetail,
-    UserSettingsModal,
+    WalletSettingsModal,
     AddContractModal
   },
   props: {

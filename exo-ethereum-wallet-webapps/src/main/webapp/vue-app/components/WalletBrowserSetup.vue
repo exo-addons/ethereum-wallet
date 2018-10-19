@@ -48,11 +48,7 @@ export default {
   data() {
     return {
       walletAddress: null,
-      loading: false,
-      rules: {
-        min: v => v.length >= 8 || 'At least 8 characters',
-        priv: v => v.length === 66 || v.length === 64 || 'Exactly 64 or 66 (with "0x") characters are required'
-      }
+      loading: false
     };
   },
   watch: {

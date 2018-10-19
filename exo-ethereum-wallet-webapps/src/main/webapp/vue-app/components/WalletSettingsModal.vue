@@ -16,9 +16,9 @@
           <v-tabs ref="settingsTabs" v-model="selectedTab" class="pl-3 pr-3">
             <v-tabs-slider />
             <v-tab v-if="!isSpace">Display</v-tab>
+            <v-tab v-if="walletAddress">Security</v-tab>
+            <v-tab v-if="!isSpace">Advanced</v-tab>
             <v-tab v-if="walletAddress">Details</v-tab>
-            <v-tab v-if="walletAddress">security</v-tab>
-            <v-tab>Advanced</v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab">
             <v-tab-item v-if="!isSpace">
@@ -43,21 +43,6 @@
                     multiple
                     deletable-chips
                     chips />
-                </v-card-text>
-              </v-card>
-            </v-tab-item>
-            <v-tab-item v-if="walletAddress">
-              <v-card>
-                <v-card-text>
-                  <qr-code
-                    ref="qrCode"
-                    :to="walletAddress"
-                    title="Address QR Code"
-                    information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
-
-                  <div class="text-xs-center">
-                    <wallet-address :value="walletAddress" />
-                  </div>
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -134,7 +119,7 @@
                 </v-card-text>
               </v-card>
             </v-tab-item>
-            <v-tab-item>
+            <v-tab-item v-if="!isSpace">
               <v-card>
                 <v-card-text>
                   <div v-if="!isSpace">
@@ -153,12 +138,27 @@
                 </v-card-text>
               </v-card>
             </v-tab-item>
+            <v-tab-item v-if="walletAddress">
+              <v-card>
+                <v-card-text>
+                  <qr-code
+                    ref="qrCode"
+                    :to="walletAddress"
+                    title="Address QR Code"
+                    information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
+
+                  <div class="text-xs-center">
+                    <wallet-address :value="walletAddress" />
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-card-text>
-      <v-card-actions v-if="selectedTab !== 3 && selectedTab !== 2">
+      <v-card-actions>
         <v-spacer />
-        <button :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button>
+        <button v-if="!isSpace && selectedTab !== 4 && selectedTab !== 2" :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button>
         <button :disabled="loading" :loading="loading" class="btn" @click="show = false">Close</button>
         <v-spacer />
       </v-card-actions>
@@ -248,7 +248,7 @@ export default {
       show: false,
       error: null,
       walletAddress: null,
-      selectedTab: null,
+      selectedTab: 0,
       selectedCurrency: FIAT_CURRENCIES['usd'],
       currencies: [],
       defaultGas: 0,
@@ -287,6 +287,7 @@ export default {
     },
     open() {
       if (this.open) {
+        console.log(this);
         this.error = null;
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
         this.defaultGas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
