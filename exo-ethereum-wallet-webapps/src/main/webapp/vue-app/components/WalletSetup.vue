@@ -134,7 +134,6 @@ export default {
   },
   methods: {
     refresh() {
-      console.log("refresh");
       this.$emit("refresh");
     },
     init() {

@@ -286,8 +286,6 @@ export default {
       this.accountsDetails = {};
       this.walletAddress = null;
 
-      console.log("init");
-
       return initSettings(this.isSpace)
         .then((result, error) => {
           if (error) {
