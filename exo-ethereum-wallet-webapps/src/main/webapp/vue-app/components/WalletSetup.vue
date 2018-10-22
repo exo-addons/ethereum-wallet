@@ -32,8 +32,8 @@
       :wallet-address="walletAddress"
       :refresh-index="refreshIndex"
       @loading="$emit('loading')"
+      @refresh="refresh()"
       @end-loading="$emit('end-loading')"
-      @refresh="$emit('refresh')"
       @error="$emit('error', $event)" />
     <wallet-browser-setup
       v-else-if="displayWalletSetup"
@@ -41,7 +41,7 @@
       :is-space="isSpace"
       :is-space-administrator="isSpaceAdministrator"
       :refresh-index="refreshIndex"
-      @configured="$emit('refresh')"
+      @configured="refresh()"
       @loading="$emit('loading')"
       @end-loading="$emit('end-loading')"
       @error="$emit('error', $event)" />
@@ -133,6 +133,10 @@ export default {
     this.init();
   },
   methods: {
+    refresh() {
+      console.log("refresh");
+      this.$emit("refresh");
+    },
     init() {
       this.isReadOnly = window.walletSettings.isReadOnly;
       this.browserWalletExists = window.walletSettings.browserWalletExists;
@@ -145,7 +149,7 @@ export default {
       this.displayWalletSetup = !this.walletAddress && (!this.isSpace || this.isSpaceAdministrator);
 
       if (this.useMetamask) {
-        this.detectedMetamaskAccount = window.web3 && window.web3.eth && window.web3.eth.defaultAccount;
+        this.detectedMetamaskAccount = window.walletSettings.detectedMetamaskAccount;
         this.watchMetamaskAccount();
       }
     },
@@ -173,15 +177,19 @@ export default {
       // In case account switched in Metamask
       // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
       this.watchMetamaskAccountInterval = setInterval(function() {
-        if (!thiss.useMetamask || !window || !window.web3 || !window.web3.eth.defaultAccount || !thiss.detectedMetamaskAccount) {
+        if (!thiss.useMetamask || !thiss.detectedMetamaskAccount || !window || !window.ethereum) {
           return;
         }
 
-        if (window.web3.eth.defaultAccount.toLowerCase() !== thiss.detectedMetamaskAccount.toLowerCase()) {
-          thiss.$emit('refresh');
-          return;
-        }
-      }, 1000);
+        window.ethereum.enable()
+          .then(accounts => {
+            window.walletSettings.detectedMetamaskAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null;
+            if (window.walletSettings.detectedMetamaskAccount && window.walletSettings.detectedMetamaskAccount.toLowerCase() !== thiss.detectedMetamaskAccount) {
+              thiss.$emit('refresh');
+              return;
+            }
+          });
+      }, 2000);
     }
   }
 };

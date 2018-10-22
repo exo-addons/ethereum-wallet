@@ -212,9 +212,7 @@ export default {
       this.currentAccountAlreadyInUse = false;
 
       if (this.metamaskEnabled && this.metamaskConnected) {
-        if (window.web3.eth.defaultAccount) {
-          this.detectedMetamaskAccount = window.web3.eth.defaultAccount.toLowerCase();
-        }
+        this.detectedMetamaskAccount = window.walletSettings.detectedMetamaskAccount;
 
         this.sameConfiguredNetwork = window.walletSettings.defaultNetworkId === window.walletSettings.currentNetworkId;
         this.networkLabel = constants.NETWORK_NAMES[window.walletSettings.defaultNetworkId];
@@ -242,26 +240,20 @@ export default {
         });
     },
     saveNewAddressInWallet() {
-      this.$emit("loading");
       return saveNewAddress(
         this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
         this.isSpace ? 'space' : 'user',
         this.detectedMetamaskAccount)
-
         .then((resp, error) => {
           if (error) {
             throw error;
           }
           if (resp && resp.ok) {
-            this.associatedWalletAddress = this.detectedMetamaskAccount;
-            this.displaySpaceAccountCreationHelp = false;
-            if (this.isSpace) {
-              this.init();
-            }
+            this.$emit("refresh");
+            this.init();
           } else {
             this.errorMessage = 'Error saving new Wallet address';
           }
-          this.$emit("end-loading");
         })
         .catch(e => {
           console.debug("saveNewAddress method - error", e);

@@ -114,7 +114,8 @@ export function initWeb3(isSpace) {
 
     return window.ethereum.enable()
       .then(accounts => {
-        tempWeb3.eth.defaultAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null;
+        window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null;
+        console.log("window.walletSettings.detectedMetamaskAccount", window.walletSettings.detectedMetamaskAccount);
       })
       .then(() => tempWeb3.eth.getCoinbase())
       .then(address => {
