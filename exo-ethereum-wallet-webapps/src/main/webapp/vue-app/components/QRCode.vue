@@ -101,10 +101,10 @@ export default {
               options.from = this.from;
             }
 
-            if (window.walletSettings.userPreferences.defaultGas) {
+            if (window.walletSettings.userPreferences.defaultGas && this.isContract || this.amount > 0) {
               options.gas = window.walletSettings.userPreferences.defaultGas;
             }
-  
+
             if (this.isContract) {
               options.mode = "contract_function";
               options.functionSignature = {};
