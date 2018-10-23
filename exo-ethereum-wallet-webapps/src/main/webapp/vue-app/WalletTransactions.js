@@ -323,6 +323,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
         transactionDetails.contractName = contractDetails.name;
         transactionDetails.contractAddress = contractDetails.address;
         transactionDetails.contractSymbol = contractDetails.symbol;
+        transactionDetails.contractDecimalsNumber = contractDetails.decimalsNumber || 1;
         try {
           if (transactionDetails.isContractCreation) {
             return false;
@@ -337,13 +338,13 @@ export function addTransaction(networkId, account, contractDetails, transactions
               if (method.name === 'transfer' || method.name === 'approve') {
                 transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
                 transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
-                transactionDetails.contractAmount = decodedLogs[0].events[2].value;
+                transactionDetails.contractAmount = decodedLogs[0].events[2].value / transactionDetails.contractDecimalsNumber;
                 transactionDetails.isReceiver = transactionDetails.toAddress === account;
               } else if (method.name === 'transferFrom') {
                 transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
                 transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
                 transactionDetails.byAddress = transaction.from.toLowerCase();
-                transactionDetails.contractAmount = decodedLogs[0].events[2].value;
+                transactionDetails.contractAmount = decodedLogs[0].events[2].value / transactionDetails.contractDecimalsNumber;
                 transactionDetails.isReceiver = false;
               }
             }

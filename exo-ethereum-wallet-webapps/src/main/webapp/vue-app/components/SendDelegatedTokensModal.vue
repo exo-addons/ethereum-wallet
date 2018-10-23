@@ -202,7 +202,7 @@ export default {
         return;
       }
 
-      if (!this.amount || isNaN(parseInt(this.amount)) || !isFinite(this.amount) || this.amount <= 0) {
+      if (!this.amount || isNaN(parseFloat(this.amount)) || !isFinite(this.amount) || this.amount <= 0) {
         this.error = "Invalid amount";
         return;
       }
@@ -220,13 +220,13 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).estimateGas({gas: window.walletSettings.userPreferences.defaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, (this.amount * this.contractDetails.decimalsNumber).toString()).estimateGas({gas: window.walletSettings.userPreferences.defaultGas, gasPrice: window.walletSettings.gasPrice})
           .then(result => {
             if (result > window.walletSettings.userPreferences.defaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}`;
             }
             this.$emit("loading");
-            return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, this.amount.toString()).send({from: this.walletAddress})
+            return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, (this.amount * this.contractDetails.decimalsNumber).toString()).send({from: this.walletAddress})
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 

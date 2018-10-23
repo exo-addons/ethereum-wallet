@@ -59,9 +59,21 @@ export function retrieveContractDetails(account, contractDetails) {
       contractDetails.name = name;
       contractDetails.title = name;
     })
+    .then(() => {
+      return contractDetails.contract.methods.decimals().call()
+        .then(decimals => {
+          contractDetails.decimals = decimals || 0;
+          contractDetails.decimalsNumber = Math.pow(10, contractDetails.decimals);
+        })
+        .catch(e => {
+          console.debug("no decimals operation found in contract ", contractDetails.address);
+          contractDetails.decimals = 0;
+          contractDetails.decimalsNumber = 1;
+        })
+    })
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
     .then(balance => {
-      contractDetails.balance = parseFloat(`${balance}`);
+      contractDetails.balance = parseFloat(`${balance / contractDetails.decimalsNumber}`);
       // TODO compute Token value in ether
       contractDetails.balanceInEther = 0;
 
@@ -211,6 +223,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       if (error) {
         throw error;
       }
+      // Test on existence of balanceOf method in contract code
       return foundContract.methods.balanceOf(account).call();
     }).then((balance, error) => {
       if (error) {

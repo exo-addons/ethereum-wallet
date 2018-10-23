@@ -46,6 +46,13 @@
                   :step="10000"
                   type="number"
                   required />
+        <v-slider v-model="newTokenDecimals"
+                  :label="`Token coins decimals: ${newTokenDecimals}`"
+                  :min="0"
+                  :max="18"
+                  :step="1"
+                  type="number"
+                  required />
 
         <h4>Contract creation transaction fee</h4>
         <v-divider class="mb-4"/>
@@ -223,7 +230,7 @@ export default {
       }
 
       try {
-        const NEW_TOKEN_DEPLOYMENT_TX = newContractInstance(this.newTokenInitialCoins, this.newTokenName, this.newTokenDecimals, this.newTokenSymbol);
+        const NEW_TOKEN_DEPLOYMENT_TX = newContractInstance(this.newTokenInitialCoins * Math.pow(10, this.newTokenDecimals), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol);
         deployContract(NEW_TOKEN_DEPLOYMENT_TX, this.networkId, this.newTokenName, this.newTokenSymbol, this.newTokenSetAsDefault, this.account, this.newTokenGas, this.newTokenGasPrice, () => {
           this.$emit("list-updated", null);
           this.createNewToken = false;
