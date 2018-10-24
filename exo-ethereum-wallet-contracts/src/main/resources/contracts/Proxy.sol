@@ -1,3 +1,5 @@
+pragma solidity ^0.4.24;
+
 contract Proxy {
     
     // Storage position of the address of the current implementation
