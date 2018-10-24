@@ -71,7 +71,7 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("isWalletEnabled", walletEnabled);
       jsonObject.put("enableDelegation", enableDelegation);
       jsonObject.put("accessPermission", accessPermission);
-      jsonObject.put("initialfundsRequestMessage", initialFundsRequestMessage);
+      jsonObject.put("initialFundsRequestMessage", initialFundsRequestMessage);
       jsonObject.put("fundsHolder", fundsHolder);
       jsonObject.put("fundsHolderType", fundsHolderType);
       jsonObject.put("providerURL", providerURL);
@@ -146,7 +146,7 @@ public class GlobalSettings implements Serializable {
       globalSettings.setAccessPermission(storedAccessPermission == null
           || storedAccessPermission.isEmpty() ? defaultSettings.getAccessPermission() : storedAccessPermission);
       String storedInitialfundsRequestMessage =
-                                              jsonObject.has("initialfundsRequestMessage") ? jsonObject.getString("initialfundsRequestMessage")
+                                              jsonObject.has("initialFundsRequestMessage") ? jsonObject.getString("initialFundsRequestMessage")
                                                                                            : null;
       globalSettings.setInitialFundsRequestMessage(storedInitialfundsRequestMessage == null
           || storedInitialfundsRequestMessage.isEmpty() ? defaultSettings.getInitialFundsRequestMessage()
