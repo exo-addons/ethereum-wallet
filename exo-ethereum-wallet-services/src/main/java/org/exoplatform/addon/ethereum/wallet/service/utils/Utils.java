@@ -81,6 +81,8 @@ public class Utils {
   public static final String                             FUNDS_REQUEST_NOTIFICATION_ID                 =
                                                                                        "FundsRequestNotificationPlugin";
 
+  public static final String                             FUNDS_REQUEST_SENT                            = "sent";
+
   public static final String                             AMOUNT                                        = "amount";
 
   public static final String                             SYMBOL                                        = "symbol";

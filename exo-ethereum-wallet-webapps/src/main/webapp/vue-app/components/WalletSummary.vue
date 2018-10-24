@@ -222,7 +222,7 @@ export default {
           if (isReadOnly) {
             throw new Error('Your wallet is in readonly state');
           }
-          this.$refs.sendFundsModal.prepareSendForm(parameters.receiver, parameters.receiver_type, parameters.amount, parameters.contract);
+          this.$refs.sendFundsModal.prepareSendForm(parameters.receiver, parameters.receiver_type, parameters.amount, parameters.contract, parameters.id);
         }
       }
     },

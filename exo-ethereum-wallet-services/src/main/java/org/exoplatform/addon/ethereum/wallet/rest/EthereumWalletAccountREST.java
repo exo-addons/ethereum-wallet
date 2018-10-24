@@ -131,6 +131,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     } catch (IllegalStateException e) {
       return Response.status(400).build();
     } catch (Exception e) {
+      LOG.error("Error associating address to user " + accountDetail.getId() + " using address " + accountDetail.getAddress(), e);
       return Response.status(500).build();
     }
   }
@@ -189,6 +190,32 @@ public class EthereumWalletAccountREST implements ResourceContainer {
 
     try {
       ethereumWalletService.requestFunds(fundsRequest);
+    } catch (IllegalAccessException e) {
+      return Response.status(403).build();
+    } catch (IllegalStateException e) {
+      return Response.status(400).build();
+    }
+
+    return Response.ok().build();
+  }
+
+  /**
+   * Mark a notification as sent
+   * 
+   * @param notificationId
+   * @return
+   */
+  @GET
+  @Path("markFundRequestAsSent")
+  public Response markFundRequestAsSent(@QueryParam("notificationId") String notificationId) {
+    if (StringUtils.isBlank(notificationId)) {
+      LOG.warn("Bad request sent to server with empty notificationId");
+      return Response.status(400).build();
+    }
+
+    String currentUser = getCurrentUserId();
+    try {
+      ethereumWalletService.markFundRequestAsSent(notificationId, currentUser);
     } catch (IllegalAccessException e) {
       return Response.status(403).build();
     } catch (IllegalStateException e) {
