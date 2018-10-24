@@ -4,7 +4,7 @@ import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 import "./Owned.sol";
 
-contract Mintable is Owned, SafeMath, ERC20Interface, ERC20Abstract {
+contract Mintable is Owned, SafeMath, ERC20Abstract {
 
     function mintToken(address target, uint256 mintedAmount) public onlyOwner{
         balances[target] = super.safeAdd(balances[target], mintedAmount);

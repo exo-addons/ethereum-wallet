@@ -12,7 +12,6 @@ const ERTToken = artifacts.require("ERTToken");
         return tokenInstance.approveAccount(accounts[7],  {
             from : accounts[0]});
       }).then(receipt => {
-        //console.log(receipt);
         assert.equal(receipt.logs.length, 1, 'number of emitted event is wrong');
         assert.equal(receipt.logs[0].event,'ApprovedAccount', 'should be the "AppovedAccount" event');
         assert.equal(receipt.logs[0].args.target, accounts[7], 'the approved account is wrong');

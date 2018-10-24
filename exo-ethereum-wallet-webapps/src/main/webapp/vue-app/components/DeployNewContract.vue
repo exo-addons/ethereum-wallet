@@ -48,7 +48,7 @@
                   required />
         <v-slider v-model="newTokenDecimals"
                   :label="`Token coins decimals: ${newTokenDecimals}`"
-                  :min="0"
+                  :min="6"
                   :max="18"
                   :step="1"
                   type="number"

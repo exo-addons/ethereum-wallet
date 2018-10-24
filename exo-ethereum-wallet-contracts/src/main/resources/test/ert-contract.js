@@ -6,7 +6,7 @@ contract('ERTToken', function(accounts) {
 
   let tokenInstance;
 
-  it('initializes the contract with the correct values', function() {
+  it('test contract initialization attributes', function() {
     return ERTToken.deployed().then(instance => {
       tokenInstance = instance;
       return tokenInstance.totalSupply();
@@ -27,7 +27,7 @@ contract('ERTToken', function(accounts) {
     });
   })
 
-  it("put 100000 * 10 ^ 18 ERTToken in the admin account", function() {
+  it('put 100000 * 10 ^ 18 ERTToken in the admin account', function() {
     return ERTToken.deployed().then(function(instance) {
       return instance.balanceOf(accounts[0]);
     }).then(
@@ -37,64 +37,65 @@ contract('ERTToken', function(accounts) {
         });
   });
 
-  it('transfers 10 ERTToken to the account[1]', function() {
+  it('transfer tokens', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;
       // Test transferring something larger than the sender's balance
       // balances[_from] >= _value
-      return tokenInstance.transfer(accounts[1], 99999999999999999 * decimals);
+      return tokenInstance.transfer(accounts[1], 100001 * decimals);
     }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0, 'error1 message must contain revert');
+      assert(error.message.indexOf('revert') >= 0, 'message must contain revert: no transfer with exceeded tokens is allowed');
 
-   // Test error require msg.sender != _to
+      // Test error require msg.sender != _to
       return tokenInstance.transfer(accounts[0], 99 * decimals, {from : accounts[0]});
     }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0, 'error2 message must contain revert');  
+      assert(error.message.indexOf('revert') >= 0, 'message must contain revert: no self transfer is allowed');  
      
       // Test error require value > 0
       return tokenInstance.transfer(accounts[5], -5 * decimals);
     }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0, 'error3 message must contain revert');
-      
-      
-   // Test error require to != 0x0
+      assert(error.message.indexOf('revert') >= 0, 'message must contain revert: no negative tokens transfer should be allowed');
+
+      // Test error require to != 0x0
       return tokenInstance.transfer(0x0, 7 * decimals, {from : accounts[0]});
     }).then(assert.fail).catch(function(error) {
-      assert(error.message.indexOf('revert') >= 0, 'error4 message must contain revert');
-      
-      return tokenInstance.transfer.call(accounts[1], 5 * decimals, {
+      assert(error.message.indexOf('revert') >= 0, 'message must contain revert: no transfer to 0x address is allowed');
+
+      return tokenInstance.balanceOf(accounts[0]);
+    }).then(balance => {
+      balance = balance.toNumber();
+      assert.equal(balance, 100000 * decimals, 'Wrong balance of contract owner');
+
+      return tokenInstance.transfer.call(accounts[1], 6 * decimals, {
         from : accounts[0]
       });
-    }).then(function(success) {
+    }).then(success => {
       assert.equal(success, true, 'Transaction failed');
       return tokenInstance.transfer(accounts[1], 10 * decimals, {
         from : accounts[0]
       });
-    }).then(
-        function(receipt) {
-          assert.equal(receipt.logs.length, 2,
-              'number of emitted event is wrong');
-          assert.equal(receipt.logs[0].event, 'ApprovedAccount',
-              'should be the "AppovedAccount" event');
-          assert.equal(receipt.logs[1].event, 'Transfer',
-              'should be the "Transfer" event');
-          assert.equal(receipt.logs[1].args._from, accounts[0],
-              'the account the tokens are transferred from is wrong');
-          assert.equal(receipt.logs[1].args._to, accounts[1],
-              'the account the tokens are transferred to is wrong');
-          assert.equal(receipt.logs[1].args._value, 10 * decimals,
-              'the transfer amount is wrong');
-          return tokenInstance.balanceOf(accounts[1]);
-        }).then(
-        function(balance) {
-          assert.equal(balance.toNumber(), 10 * decimals,
-              'token balance of receiver is wrong');
-          return tokenInstance.balanceOf(accounts[0]);
-        }).then(
-        function(balance) {
-          assert.equal(balance.toNumber(), (100000 - 10) * decimals,
-              'token balance of sender is wrong');
-        });
+    }).then(receipt => {
+      assert(receipt.logs.length >= 2,
+          'number of emitted event is wrong');
+      assert.equal(receipt.logs[0].event, 'ApprovedAccount',
+          'should be the "AppovedAccount" event');
+      assert.equal(receipt.logs[1].event, 'Transfer',
+          'should be the "Transfer" event');
+      assert.equal(receipt.logs[1].args._from, accounts[0],
+          'the account the tokens are transferred from is wrong');
+      assert.equal(receipt.logs[1].args._to, accounts[1],
+          'the account the tokens are transferred to is wrong');
+      assert.equal(receipt.logs[1].args._value, 10 * decimals,
+          'the transfer amount is wrong');
+      return tokenInstance.balanceOf(accounts[1]);
+    }).then(balance => {
+      assert.equal(balance.toNumber(), 10 * decimals,
+          'token balance of receiver is wrong');
+      return tokenInstance.balanceOf(accounts[0]);
+    }).then(balance => {
+      assert.equal(balance.toNumber(), (100000 - 10) * decimals,
+          'token balance of sender is wrong');
+    });
   });
 
   it('approves tokens for delegated transfer', function() {

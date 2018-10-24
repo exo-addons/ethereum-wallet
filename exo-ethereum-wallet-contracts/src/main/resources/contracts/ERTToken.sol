@@ -5,6 +5,8 @@ import "./SafeMath.sol";
 import "./Pausable.sol";
 import "./ApprouvableAccount.sol";
 import "./ERC20Abstract.sol";
+import "./FundCollection.sol";
+import "./GasPayableInToken.sol";
 import "./Mintable.sol";
 
 contract ERTToken is 
@@ -14,14 +16,16 @@ contract ERTToken is
   ApprouvableAccount,
   ERC20Interface,
   ERC20Abstract,
+  FundCollection,
+  GasPayableInToken,
   Mintable {
-
     constructor(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public{
-        balances[msg.sender] = _initialAmount;
-        totalSupply = _initialAmount;
         name = _tokenName;
         decimals = _decimalUnits;
         symbol = _tokenSymbol;
+        totalSupply = _initialAmount;
+        balances[msg.sender] = totalSupply;
+        setTokenPriceInGas(10 ** (uint(decimals) - 6));
     }
 
     function balanceOf(address _owner) public view returns (uint256 balance){
@@ -32,15 +36,18 @@ contract ERTToken is
         return allowed[_owner][_spender];
     }
 
-    function transfer(address _to, uint256 _value) public whenApproved(msg.sender, _to) returns (bool success){
+    function transfer(address _to, uint256 _value) public notExcessiveGasPrice whenApproved(msg.sender, _to) returns (bool success){
+        uint gasLimit = gasleft();
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
         if (msg.sender == owner) {
-          super.approveAccount(_to);
+            super.approveAccount(_to);
         }
         // This is to avoid calling this function with empty tokens transfer
         // If the user doesn't have enough ethers, he will simply reattempt with empty tokens
-        super._transfer(msg.sender, _to, _value);
+        require(super._transfer(msg.sender, _to, _value) == true);
+        emit Transfer(msg.sender, _to, _value);
+        super._payGasInToken(gasLimit);
         return true;
     }
 
@@ -49,7 +56,7 @@ contract ERTToken is
         require(msg.sender != _spender);
         require(balances[msg.sender] >= _value);
         if (msg.sender == owner) {
-          super.approveAccount(_spender);
+            super.approveAccount(_spender);
         }
         allowed[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
@@ -61,9 +68,10 @@ contract ERTToken is
         require(allowed[_from][msg.sender] >= _value);
         allowed[_from][msg.sender] = safeSubtract(allowed[_from][msg.sender], _value);
         if (msg.sender == owner) {
-          super.approveAccount(_to);
+            super.approveAccount(_to);
         }
-        super._transfer(_from, _to, _value);
+        require(super._transfer(_from, _to, _value) == true);
+        emit Transfer(_from, _to, _value);
         return true;
     }
 }
