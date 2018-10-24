@@ -439,6 +439,37 @@ export default {
     showSpecificNetworkFields() {
       return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
     },
+    initialFunds() {
+      let initialFunds = [];
+      if (!window.walletSettings.initialFunds) {
+        initialFunds = [{name : 'ether', address : 'ether', amount : 0}];
+        if(this.contracts) {
+          this.contracts.forEach(contract => {
+            initialFunds.push({name : contract.name, address : contract.address,  amount : 0});
+          });
+        }
+      } else {
+        // Add newly added contracts
+        this.contracts.forEach(contract => {
+          const contractDetails = window.walletSettings.initialFunds.find(tmpContract => tmpContract.address === contract.address);
+          if(!contractDetails) {
+            window.walletSettings.initialFunds.push({name : contract.name, address : contract.address,  amount : 0});
+          } else if(contractDetails.address === 'ether') {
+            contractDetails.name = 'ether';
+          } else  {
+            contractDetails.name = contract.name;
+          }
+        });
+
+        window.walletSettings.initialFunds.forEach(contract => {
+          const contractDetails = this.contracts.find(tmpContract => tmpContract.address === contract.address);
+          if (contractDetails || contract.address === 'ether') {
+            initialFunds.push(contract);
+          }
+        });
+      }
+      return initialFunds;
+    },
     accountsList() {
       const accountsList = [];
       accountsList.push(Object.assign({}, this.etherAccount), Object.assign({}, this.fiatAccount));
@@ -595,34 +626,6 @@ export default {
       });
 
       this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
-      if (!window.walletSettings.initialFunds) {
-        window.walletSettings.initialFunds = [{name : 'ether', address : 'ether', amount : 0}];
-        if(this.contracts) {
-          this.contracts.forEach(contract => {
-            window.walletSettings.initialFunds.push({name : contract.name, address : contract.address,  amount : 0});
-          });
-        }
-      } else {
-        // Add newly added contracts
-        this.contracts.forEach(contract => {
-          const contractDetails = window.walletSettings.initialFunds.find(tmpContract => tmpContract.address === contract.address);
-          if(!contractDetails) {
-            window.walletSettings.initialFunds.push({name : contract.name, address : contract.address,  amount : 0});
-          } else if(contractDetails.address === 'ether') {
-            contractDetails.name = 'ether';
-          } else  {
-            contractDetails.name = contract.name;
-          }
-        });
-
-        this.initialFunds = [];
-        window.walletSettings.initialFunds.forEach(contract => {
-          const contractDetails = this.contracts.find(tmpContract => tmpContract.address === contract.address);
-          if (contractDetails || contract.address === 'ether') {
-            this.initialFunds.push(contract);
-          }
-        });
-      }
     },
     getOverviewAccountObject(selectedValue) {
       if (selectedValue === 'fiat') {
