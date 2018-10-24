@@ -83,8 +83,11 @@ export function computeGasPrice() {
     window.walletSettings = {};
   }
   if (window.localWeb3 && window.localWeb3.currentProvider) {
+    console.debug("Retrieving gas price");
     return window.localWeb3.eth.getGasPrice()
       .then(gasPrice => {
+        console.debug("detected Gas price:", gasPrice);
+
         // Ad 10% of gas price to avoid "transaction underpriced" errors
         window.walletSettings.gasPrice = Math.floor(gasPrice * 1.1);
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
@@ -92,6 +95,8 @@ export function computeGasPrice() {
       .catch(error => {
         console.debug("computeGasPrice method error: ", error);
       });
+  } else {
+    console.debug("Cannot retrieve gas price because no preconfigured provider");
   }
 }
 
@@ -256,21 +261,26 @@ export function computeNetwork() {
   return window.localWeb3.eth.net.getId()
     .then((networkId, error) => {
       if (error) {
+        console.debug("Error computing network id", error);
         throw error;
       }
       if (networkId) {
+        console.debug("Detected network id:", networkId);
         window.walletSettings.currentNetworkId = networkId;
         return window.localWeb3.eth.net.getNetworkType();
       } else {
+        console.debug("Network is disconnected");
         throw new Error("Network is disconnected");
       }
     })
     .then((netType, error) => {
       if (error) {
+        console.debug("Error computing network type", error);
         throw error;
       }
       if (netType) {
         window.walletSettings.currentNetworkType = netType;
+        console.debug("Detected network type:", netType);
       }
     });
 }
@@ -550,17 +560,21 @@ function checkNetworkStatus(waitTime) {
   return new Promise((resolve) => setTimeout(resolve, waitTime))
     .then(() => {
       if (!isListening) {
+        console.debug("The network seems to be disconnected");
         throw new Error(constants.ERROR_WALLET_DISCONNECTED);
       }
     })
     .then(() => computeNetwork())
     .then(() => computeGasPrice())
+    .then(() => console.debug("Network status: OK"))
     .then(() => constants.OK)
     .catch(error => {
       if (waitTime >= 5000) {
         throw error;
       }
-      return checkNetworkStatus(waitTime * 2);
+      waitTime = waitTime * 2;
+      console.debug("Reattempt to connect with wait time:", waitTime);
+      return checkNetworkStatus(waitTime);
     });
 }
 

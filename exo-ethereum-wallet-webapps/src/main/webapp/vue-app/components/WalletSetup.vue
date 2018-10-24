@@ -3,15 +3,15 @@
     <div v-if="displayWalletBackup" class="alert alert-warning">
       <i class="uiIconWarning"></i>
       Your wallet is not backed up yet.
-      <wallet-backup-modal display-complete-message @copied="hideBackupMessage()" />
-      <a href="javascript:void(0);" @click="skipWalletBackedUp">Don't ask me again</a>
+      <wallet-backup-modal class="ml-3" display-complete-message @copied="hideBackupMessage()" />
+      <a class="ml-3" href="javascript:void(0);" @click="skipWalletBackedUp">Don't ask me again</a>
     </div>
 
     <div v-if="displayResetPassword" class="alert alert-warning">
       <i class="uiIconWarning"></i>
       Your wallet is not secured yet.
-      <wallet-reset-modal button-label="Set a password" @reseted="hideSetPasswordMessage();$emit('refresh');"/>
-      <a href="javascript:void(0);" @click="hideSetPasswordMessage">Don't ask me again</a>
+      <wallet-reset-modal class="ml-3" button-label="Set a password" @reseted="hideSetPasswordMessage();$emit('refresh');"/>
+      <a class="ml-3" href="javascript:void(0);" @click="hideSetPasswordMessage">Don't ask me again</a>
     </div>
 
     <div v-if="displayWalletCreationToolbar" class="alert alert-info">
@@ -176,7 +176,7 @@ export default {
       // In case account switched in Metamask
       // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
       this.watchMetamaskAccountInterval = setInterval(function() {
-        if (!thiss.useMetamask || !thiss.detectedMetamaskAccount || !window || !window.ethereum) {
+        if (!thiss.useMetamask || !window || !window.ethereum) {
           return;
         }
 
