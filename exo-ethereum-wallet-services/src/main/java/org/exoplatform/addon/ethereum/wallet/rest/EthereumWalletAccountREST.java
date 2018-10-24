@@ -131,6 +131,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     } catch (IllegalStateException e) {
       return Response.status(400).build();
     } catch (Exception e) {
+      LOG.error("Error associating address to user " + accountDetail.getId() + " using address " + accountDetail.getAddress(), e);
       return Response.status(500).build();
     }
   }
@@ -220,7 +221,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     } catch (IllegalStateException e) {
       return Response.status(400).build();
     }
-    
+
     return Response.ok().build();
   }
 

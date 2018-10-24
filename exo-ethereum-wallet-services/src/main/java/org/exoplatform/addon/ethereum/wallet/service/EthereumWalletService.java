@@ -802,6 +802,10 @@ public class EthereumWalletService implements Startable {
       requestReceipient = getSpaceDetails(requestReceipientId);
     }
 
+    if (requestReceipient == null || requestReceipient.getTechnicalId() == null) {
+      LOG.warn("Can't find fund request recipient with id {} and type {}", requestReceipientId, requestReceipientType);
+    }
+
     ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER, getUserDetails(getCurrentUserId()));
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, requestSender);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, requestReceipient);
