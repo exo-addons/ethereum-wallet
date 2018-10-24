@@ -136,7 +136,7 @@ export default {
         this.$nextTick(() => {
           if (!this.selectedOption) {
             const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
-            this.prepareSendForm(null, null, null, contractAddress, true);
+            this.prepareSendForm(null, null, null, contractAddress, null, true);
           }
         });
       } else {
@@ -145,7 +145,7 @@ export default {
     }
   },
   methods: {
-    prepareSendForm(receiver, receiver_type, amount, contractAddress, keepDialogOpen) {
+    prepareSendForm(receiver, receiverType, amount, contractAddress, notificationId, keepDialogOpen) {
       if (!this.accountsList || !this.accountsList.length) {
         console.debug("prepareSendForm error - no accounts found");
         return;
@@ -169,7 +169,7 @@ export default {
       }
 
       this.$nextTick(() => {
-        this.$refs.sendFundsForm.prepareSendForm(receiver, receiver_type, amount, contractAddress, keepDialogOpen);
+        this.$refs.sendFundsForm.prepareSendForm(receiver, receiverType, amount, contractAddress, notificationId, keepDialogOpen);
       });
     }
   }

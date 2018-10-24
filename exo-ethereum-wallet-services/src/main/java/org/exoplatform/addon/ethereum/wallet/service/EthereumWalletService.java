@@ -28,7 +28,9 @@ import org.picocontainer.Startable;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.NotificationContext;
+import org.exoplatform.commons.api.notification.model.NotificationInfo;
 import org.exoplatform.commons.api.notification.model.PluginKey;
+import org.exoplatform.commons.api.notification.service.storage.WebNotificationStorage;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
@@ -51,75 +53,78 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
-  private static final char[]  SIMPLE_CHARS                  = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-      'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-      'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8',
-      '9' };
+  private static final char[]    SIMPLE_CHARS                  = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+      'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+      'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+      '8', '9' };
 
-  private static final Log     LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
+  private static final Log       LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
 
-  public static final String   DEFAULT_NETWORK_ID            = "defaultNetworkId";
+  public static final String     DEFAULT_NETWORK_ID            = "defaultNetworkId";
 
-  public static final String   DEFAULT_NETWORK_URL           = "defaultNetworkURL";
+  public static final String     DEFAULT_NETWORK_URL           = "defaultNetworkURL";
 
-  public static final String   DEFAULT_NETWORK_WS_URL        = "defaultNetworkWSURL";
+  public static final String     DEFAULT_NETWORK_WS_URL        = "defaultNetworkWSURL";
 
-  public static final String   DEFAULT_ACCESS_PERMISSION     = "defaultAccessPermission";
+  public static final String     DEFAULT_ACCESS_PERMISSION     = "defaultAccessPermission";
 
-  public static final String   DEFAULT_GAS                   = "defaultGas";
+  public static final String     DEFAULT_GAS                   = "defaultGas";
 
-  public static final String   DEFAULT_BLOCKS_TO_RETRIEVE    = "defaultBlocksToRetrieve";
+  public static final String     DEFAULT_BLOCKS_TO_RETRIEVE    = "defaultBlocksToRetrieve";
 
-  public static final String   DEFAULT_CONTRACTS_ADDRESSES   = "defaultContractAddresses";
+  public static final String     DEFAULT_CONTRACTS_ADDRESSES   = "defaultContractAddresses";
 
-  public static final String   SCOPE_NAME                    = "ADDONS_ETHEREUM_WALLET";
+  public static final String     SCOPE_NAME                    = "ADDONS_ETHEREUM_WALLET";
 
-  public static final String   GLOBAL_SETTINGS_KEY_NAME      = "GLOBAL_SETTINGS";
+  public static final String     GLOBAL_SETTINGS_KEY_NAME      = "GLOBAL_SETTINGS";
 
-  public static final String   ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
+  public static final String     ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
-  public static final String   LAST_BLOCK_NUMBER_KEY_NAME    = "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
+  public static final String     LAST_BLOCK_NUMBER_KEY_NAME    = "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
 
-  public static final String   SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
+  public static final String     SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
 
-  public static final Context  WALLET_CONTEXT                = Context.GLOBAL;
+  public static final Context    WALLET_CONTEXT                = Context.GLOBAL;
 
-  public static final Scope    WALLET_SCOPE                  = Scope.APPLICATION.id(SCOPE_NAME);
+  public static final Scope      WALLET_SCOPE                  = Scope.APPLICATION.id(SCOPE_NAME);
 
-  public static final String   WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
+  public static final String     WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
 
-  public static final String   WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
+  public static final String     WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
 
-  public static final String   WALLET_BROWSER_PHRASE_NAME    = "WALLET_BROWSER_PHRASE";
+  public static final String     WALLET_BROWSER_PHRASE_NAME    = "WALLET_BROWSER_PHRASE";
 
-  public static final String   ABI_PATH_PARAMETER            = "contract.abi.path";
+  public static final String     ABI_PATH_PARAMETER            = "contract.abi.path";
 
-  public static final String   BIN_PATH_PARAMETER            = "contract.bin.path";
+  public static final String     BIN_PATH_PARAMETER            = "contract.bin.path";
 
-  private SettingService       settingService;
+  private SettingService         settingService;
 
-  private IdentityManager      identityManager;
+  private IdentityManager        identityManager;
 
-  private SpaceService         spaceService;
+  private SpaceService           spaceService;
 
-  private ListenerService      listenerService;
+  private WebNotificationStorage webNotificationStorage;
 
-  private ConfigurationManager configurationManager;
+  private ListenerService        listenerService;
 
-  private GlobalSettings       defaultSettings               = new GlobalSettings();
+  private ConfigurationManager   configurationManager;
 
-  private GlobalSettings       storedSettings;
+  private GlobalSettings         defaultSettings               = new GlobalSettings();
 
-  private String               contractAbiPath;
+  private GlobalSettings         storedSettings;
 
-  private JSONArray            contractAbi;
+  private String                 contractAbiPath;
 
-  private String               contractBinaryPath;
+  private JSONArray              contractAbi;
 
-  private String               contractBinary;
+  private String                 contractBinaryPath;
+
+  private String                 contractBinary;
 
   public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
+                               WebNotificationStorage webNotificationStorage,
                                IdentityManager identityManager,
                                ListenerService listenerService,
                                ConfigurationManager configurationManager,
@@ -128,6 +133,7 @@ public class EthereumWalletService implements Startable {
     this.settingService = settingService;
     this.identityManager = identityManager;
     this.spaceService = spaceService;
+    this.webNotificationStorage = webNotificationStorage;
     this.listenerService = listenerService;
 
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
@@ -802,6 +808,26 @@ public class EthereumWalletService implements Startable {
     ctx.append(FUNDS_REQUEST_PARAMETER, fundsRequest);
 
     ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID))).execute(ctx);
+  }
+
+  /**
+   * Mark a fund request web notification as sent
+   * 
+   * @param notificationId
+   * @param currentUser
+   * @throws IllegalAccessException if current user is not the targetted user of
+   *           notification
+   */
+  public void markFundRequestAsSent(String notificationId, String currentUser) throws IllegalAccessException {
+    NotificationInfo notificationInfo = webNotificationStorage.get(notificationId);
+    if (notificationInfo == null) {
+      throw new IllegalStateException("Notification with id " + notificationId + " wasn't found");
+    }
+    if (notificationInfo.getTo() == null || !currentUser.equals(notificationInfo.getTo())) {
+      throw new IllegalAccessException("Target user of notification '" + notificationId + "' is different from current user");
+    }
+    notificationInfo.getOwnerParameter().put(FUNDS_REQUEST_SENT, "true");
+    webNotificationStorage.update(notificationInfo, false);
   }
 
   private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {

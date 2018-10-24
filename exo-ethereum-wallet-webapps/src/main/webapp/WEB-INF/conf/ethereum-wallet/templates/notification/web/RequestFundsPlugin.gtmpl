@@ -1,10 +1,11 @@
+<% String acceptURL = FUNDS_REQUEST_SENT ? "" : FUNDS_ACCEPT_URL + "&id=" + NOTIFICATION_ID; %>
 <li class="$READ clearfix" data-id="$NOTIFICATION_ID">
   <div class="media">
     <div class="avatarXSmall pull-left">
       <img src="$AVATAR" />
     </div>
     <div class="media-body">
-      <div class="contentSmall" data-link="$FUNDS_ACCEPT_URL">
+      <div class="contentSmall" data-link="$acceptURL">
         <div class="content">
         </div>
         <div class="status">
@@ -12,14 +13,18 @@
                _ctx.appRes("Notification.message.SpaceFundsRequestNotificationPlugin", USER_URL, AMOUNT, SYMBOL, SENDER_URL)
                : _ctx.appRes("Notification.message.FundsRequestNotificationPlugin", USER_URL, AMOUNT, SYMBOL)%>
         </div>
-        <% if (org.apache.commons.lang3.StringUtils.isNotBlank(MESSAGE)) { %>
+        <% if (org.apache.commons.lang.StringUtils.isNotBlank(MESSAGE)) { %>
         <div class="content">
           <%= MESSAGE %>
         </div>
         <% } %>
         <div class="content">
           <div class="confirm">
-            <a class="btn btn-mini btn-primary delete-item" href="$FUNDS_ACCEPT_URL"><%= _ctx.appRes("Notification.message.FundsRequestAccpt") %></a>
+            <% if(FUNDS_REQUEST_SENT) { %>
+              <i class="uiIcon uiIconTick uiIconLightGray"></i>
+            <% } else { %>
+              <a class="btn btn-mini btn-primary delete-item" href="$acceptURL"><%= _ctx.appRes("Notification.message.FundsRequestAccpt") %></a>
+            <% } %>
           </div>
         </div>
         <div class="lastUpdatedTime">

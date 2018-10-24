@@ -54,7 +54,8 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
     String userUrl = notification.getValueOwnerParameter(USER_URL);
     String symbol = notification.getValueOwnerParameter(SYMBOL);
     String message = notification.getValueOwnerParameter(MESSAGE);
-
+    String notificationRead = notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey());
+    String fundRequestSent = notification.getValueOwnerParameter(FUNDS_REQUEST_SENT);
     try {
       templateContext.put("AMOUNT", amount);
       templateContext.put("ACCOUNT_TYPE", type);
@@ -69,14 +70,13 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("MESSAGE", message);
       templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
       templateContext.put("NOTIFICATION_ID", notification.getId());
+      templateContext.put("READ", Boolean.valueOf(notificationRead) ? "read" : "unread");
+      templateContext.put("FUNDS_REQUEST_SENT", Boolean.valueOf(fundRequestSent));
       try {
         templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
       } catch (Exception e) {
         templateContext.put("LAST_UPDATED_TIME", "");
       }
-      templateContext.put("READ",
-                          Boolean.valueOf(notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey())) ? "read"
-                                                                                                                                : "unread");
 
       String body = TemplateUtils.processGroovy(templateContext);
       // binding the exception throws by processing template

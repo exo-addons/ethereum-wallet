@@ -9,7 +9,7 @@
       ref="sendEtherForm"
       :account="walletAddress"
       :balance="selectedAccount && selectedAccount.balance"
-      @receiver-selected="receiver = $event.id; receiver_type = $event.type"
+      @receiver-selected="receiver = $event.id; receiverType = $event.type"
       @amount-selected="amount = $event"
       @sent="addPendingTransaction($event)"
       @close="$emit('close')">
@@ -22,7 +22,7 @@
       ref="sendTokensForm"
       :account="walletAddress"
       :contract-details="selectedAccount"
-      @receiver-selected="receiver = $event.id; receiver_type = $event.type"
+      @receiver-selected="receiver = $event.id; receiverType = $event.type"
       @amount-selected="amount = $event"
       @sent="addPendingTransaction($event)"
       @close="$emit('close')">
@@ -38,6 +38,7 @@ import SendEtherForm from './SendEtherForm.vue';
 import SendTokensForm from './SendTokensForm.vue';
 
 import {addTransaction} from '../WalletTransactions.js';
+import {markFundRequestAsSent} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -68,7 +69,8 @@ export default {
     return {
       formName: null,
       receiver: null,
-      receiver_type: null,
+      receiverType: null,
+      notificationId: null,
       amount: null
     };
   },
@@ -100,14 +102,14 @@ export default {
         this.$nextTick(() => {
           if (this.$refs.sendEtherForm) {
             this.$refs.sendEtherForm.init();
-            if (this.receiver && this.receiver_type && this.amount) {
-              this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.receiver, this.receiver_type);
+            if (this.receiver && this.receiverType && this.amount) {
+              this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.receiver, this.receiverType);
               this.$refs.sendEtherForm.amount = Number(this.amount);
             }
           } else if (this.$refs.sendTokensForm) {
             this.$refs.sendTokensForm.init();
-            if (this.receiver && this.receiver_type && this.amount) {
-              this.$refs.sendTokensForm.$refs.autocomplete.selectItem(this.receiver, this.receiver_type);
+            if (this.receiver && this.receiverType && this.amount) {
+              this.$refs.sendTokensForm.$refs.autocomplete.selectItem(this.receiver, this.receiverType);
               this.$refs.sendTokensForm.amount = Number(this.amount);
             }
           }
@@ -116,13 +118,14 @@ export default {
     }
   },
   methods: {
-    prepareSendForm(receiver, receiver_type, amount, contractAddress, keepDialogOpen) {
+    prepareSendForm(receiver, receiverType, amount, contractAddress, notificationId, keepDialogOpen) {
       if (this.selectedAccount) {
         this.receiver = receiver;
-        this.receiver_type = receiver_type;
+        this.receiverType = receiverType;
+        this.notificationId = notificationId;
         this.amount = amount;
       } else {
-        if (receiver && receiver_type && amount) {
+        if (receiver && receiverType && amount) {
           this.$emit("dialog-error", "Selected currency is not displayed switch your preferences");
         }
 
@@ -151,6 +154,10 @@ export default {
         error => this.$emit('error', error));
 
       this.$emit('pending', transaction);
+
+      if (this.notificationId) {
+        markFundRequestAsSent(this.notificationId);
+      }
     }
   }
 };

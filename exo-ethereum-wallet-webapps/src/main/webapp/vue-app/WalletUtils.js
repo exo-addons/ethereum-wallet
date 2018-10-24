@@ -524,6 +524,13 @@ export function generatePassword() {
   return Math.random().toString(36).slice(2);
 }
 
+export function markFundRequestAsSent(notificationId) {
+  return fetch(`/portal/rest/wallet/api/account/markFundRequestAsSent?notificationId=${notificationId}`, {credentials: 'include'})
+    .then(resp =>  {
+      return resp && resp.ok;
+    });
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
