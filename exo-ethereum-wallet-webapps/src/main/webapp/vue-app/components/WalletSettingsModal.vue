@@ -75,8 +75,8 @@
                       </information-bubble>
                     </h4>
                     <v-radio-group v-model="accountType" @change="changeAccountType">
-                      <v-radio label="Connect with browser" value="1" />
-                      <v-radio label="Connect with Metamask" value="2" />
+                      <v-radio label="Connect with browser (recommended)" value="1" />
+                      <v-radio label="Connect with Metamask (advanced users)" value="2" />
                     </v-radio-group>
                   </div>
 
