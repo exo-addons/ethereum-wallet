@@ -454,7 +454,8 @@ public class EthereumWalletService implements Startable {
     String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
     if (defaultContractsAddressesValue != null) {
-      String[] contractAddresses = defaultContractsAddressesValue.getValue().toString().split(",");
+      String defaultContractsAddressesString = defaultContractsAddressesValue.getValue().toString().toLowerCase();
+      String[] contractAddresses = defaultContractsAddressesString.split(",");
       contractAddressList = Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toList());
     } else {
       contractAddressList = Collections.emptyList();

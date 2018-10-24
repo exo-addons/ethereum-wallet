@@ -9,6 +9,8 @@ import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.services.listener.Event;
 import org.exoplatform.services.listener.Listener;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 
 /**
  * This listener will be triggered when a new address is associated to a user or
@@ -16,6 +18,8 @@ import org.exoplatform.services.listener.Listener;
  * new address is added.
  */
 public class NewAddressAssociationListener extends Listener<Object, AccountDetail> {
+
+  private static final Log      LOG = ExoLogger.getLogger(NewAddressAssociationListener.class);
 
   private EthereumWalletService ethereumWalletService;
 
@@ -41,13 +45,16 @@ public class NewAddressAssociationListener extends Listener<Object, AccountDetai
     for (String address : addresses) {
       Double amount = initialFunds.get(address);
       if (amount == null || amount == 0) {
+        LOG.info("Fund request amount is 0, thus no notification will be sent.", address);
         continue;
       }
 
+      address = address.toLowerCase();
       FundsRequest request = new FundsRequest();
-      if (!"ether".equals(address)) {
+      if (!"ether".equalsIgnoreCase(address)) {
         // If contract adress is not a default one anymore, skip
         if (!settings.getDefaultContractsToDisplay().contains(address)) {
+          LOG.warn("Can't find contract with address {}. No fund request notification will be sent.", address);
           continue;
         }
         request.setContract(address);

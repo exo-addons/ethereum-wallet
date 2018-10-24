@@ -68,6 +68,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
+    contractDetail.setAddress(contractDetail.getAddress().toLowerCase());
     ethereumWalletService.saveDefaultContract(contractDetail);
     return Response.ok().build();
   }
@@ -91,7 +92,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    ethereumWalletService.removeDefaultContract(address, networkId);
+    ethereumWalletService.removeDefaultContract(address.toLowerCase(), networkId);
     return Response.ok().build();
   }
 }
