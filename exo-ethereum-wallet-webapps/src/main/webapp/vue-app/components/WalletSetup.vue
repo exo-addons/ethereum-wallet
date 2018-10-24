@@ -176,7 +176,7 @@ export default {
       // In case account switched in Metamask
       // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
       this.watchMetamaskAccountInterval = setInterval(function() {
-        if (!thiss.useMetamask || !thiss.detectedMetamaskAccount || !window || !window.ethereum) {
+        if (!thiss.useMetamask || !window || !window.ethereum) {
           return;
         }
 

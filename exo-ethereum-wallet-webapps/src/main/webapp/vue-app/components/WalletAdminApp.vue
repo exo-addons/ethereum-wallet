@@ -328,6 +328,7 @@ import AddContractModal from './AddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
 import WalletSetup from './WalletSetup.vue';
 
+import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
 import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat} from '../WalletUtils.js';
@@ -536,6 +537,7 @@ export default {
       this.showAddContractModal = false;
       this.forceUpdate();
       this.selectedOverviewAccounts = [];
+      this.error = null;
 
       return initSettings()
         .then(() => {
@@ -549,8 +551,12 @@ export default {
         })
         .then(initWeb3)
         .catch(error => {
-          console.debug("Error connecting to network", error);
-          this.error = "Error connecting to network";
+          if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
+            console.debug("Error connecting to network", error);
+            this.error = "Error connecting to network";
+          } else {
+            throw error;
+          }
         })
         .then(account => {
           this.walletAddress = window.localWeb3.eth.defaultAccount;
@@ -561,9 +567,11 @@ export default {
         .then(this.refreshContractsList)
         .then(this.setSelectedValues)
         .catch(error => {
-          console.debug("Error retrieving contracts", error);
-          if (!this.error) {
-            this.error = "Error retrieving contracts";
+          if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
+            console.debug("Error retrieving contracts", error);
+            if (!this.error) {
+              this.error = "Error retrieving contracts";
+            }
           }
         })
         .then(() => {

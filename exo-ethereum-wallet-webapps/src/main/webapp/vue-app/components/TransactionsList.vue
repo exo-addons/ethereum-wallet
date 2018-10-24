@@ -397,6 +397,7 @@ export default {
       this.stopLoading = false;
       this.finishedLoading = true;
       this.loading = true;
+      this.error = null;
 
       // Get transactions to latest block with maxBlocks to load
       return loadPendingTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
