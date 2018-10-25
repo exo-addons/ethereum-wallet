@@ -131,7 +131,7 @@
         </v-flex>
       </v-layout>
     </main>
-    <main v-else-if="isMaximized">
+    <main v-else-if="isMaximized && !loading">
       <v-layout>
         <v-flex>
           <v-card-title class="transparent" flat>

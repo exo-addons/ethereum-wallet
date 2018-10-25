@@ -533,12 +533,19 @@ export function markFundRequestAsSent(notificationId) {
 
 export function checkFundRequestStatus(notificationId) {
   return fetch(`/portal/rest/wallet/api/account/fundRequestSent?notificationId=${notificationId}`, {credentials: 'include'})
-  .then(resp =>  {
-    return resp && resp.ok && resp.text();
-  })
-  .then(content =>  {
-    return "true" === content;
-  });
+    .then(resp =>  {
+      return resp && resp.ok && resp.text();
+    })
+    .then(content =>  {
+      return "true" === content;
+    });
+}
+
+export function getWallets() {
+  return fetch(`/portal/rest/wallet/api/account/list`, {credentials: 'include'})
+    .then(resp =>  {
+      return resp && resp.ok && resp.json();
+    });
 }
 
 function createLocalWeb3Instance(isSpace, useMetamask) {

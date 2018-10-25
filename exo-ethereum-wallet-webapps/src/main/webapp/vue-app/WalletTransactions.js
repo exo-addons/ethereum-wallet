@@ -123,98 +123,72 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
     });
 }
 
-export function loadTransactions(networkId, account, contractDetails, transactions, fromBlockNumber, toBlockNumber, maxBlocks, progressionCallback) {
+export function loadContractTransactions(networkId, account, contractDetails, transactions, progressionCallback) {
   account = account.toLowerCase();
-
-  if (contractDetails.isContract) {
-    // Load Transfer events for user as sender
-    return contractDetails.contract.getPastEvents("Transfer", {
-      fromBlock: fromBlockNumber ? fromBlockNumber : 0,
-      filter: {
-        isError: 0,
-        txreceipt_status: 1
-      },
-      topics: [
-        window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
-        window.localWeb3.utils.padLeft(account, 64),
-        null
-      ]
-    })
-      .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
-      // Load Transfer events for user as receiver
-      .then(() => contractDetails.contract.getPastEvents("Transfer", {
-          fromBlock: fromBlockNumber ? fromBlockNumber : 0,
-          filter: {
-            isError: 0,
-            txreceipt_status: 1
-          },
-          topics: [
-            window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
-            null,
-            window.localWeb3.utils.padLeft(account, 64)
-          ]
-      }))
-      .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
-      // Load Approval events for user as receiver
-      .then(() => contractDetails.contract.getPastEvents("Approval", {
-          fromBlock: fromBlockNumber ? fromBlockNumber : 0,
-              filter: {
-                isError: 0,
-                txreceipt_status: 1
-              },
-              topics: [
-                window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
-                window.localWeb3.utils.padLeft(account, 64),
-                null
-              ]
-      }))
-      .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
-      // Load Approval events for user as sender
-      .then(() => contractDetails.contract.getPastEvents("Approval", {
-          fromBlock: fromBlockNumber ? fromBlockNumber : 0,
-              filter: {
-                isError: 0,
-                txreceipt_status: 1
-              },
-              topics: [
-                window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
-                null,
-                window.localWeb3.utils.padLeft(account, 64)
-              ]
-      }))
-      .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
-
-      .then(() => transactions)
-      .catch(e => {
-        console.debug("Error occurred while retrieving contract transactions", e);
-        throw e;
-      });
-  } else {
-    // Retrive transactions from previous blocks (at maximum)
-    // and display transactions sent/received by the current account
-    return getFromBlock(fromBlockNumber, toBlockNumber, maxBlocks)
-      .then(fromBlockTmp => fromBlockNumber = fromBlockTmp)
-      .then(() => getToBlock(fromBlockNumber, toBlockNumber, maxBlocks))
-      .then(toBlockTmp => toBlockNumber = toBlockTmp)
-      .then(() => window.localWeb3.eth.getBlock(toBlockNumber, true))
-      .then(lastBlock => addBlockTransactions(networkId, account, contractDetails, transactions, lastBlock, fromBlockNumber, 0, progressionCallback))
-      .then(() => {
-        return {
-          toBlock: toBlockNumber,
-          fromBlock: fromBlockNumber,
-          maxBlocks: maxBlocks
-        }
-      })
-      .catch(error => {
-        console.debug("Error occurred while retrieving transactions", error);
-        if (`${error}`.indexOf('stopLoading') < 0) {
-          throw error;
-        }
-      });
-  }
+  // Load Transfer events for user as sender
+  return contractDetails.contract.getPastEvents("Transfer", {
+    fromBlock: fromBlockNumber ? fromBlockNumber : 0,
+    filter: {
+      isError: 0,
+      txreceipt_status: 1
+    },
+    topics: [
+      window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
+      window.localWeb3.utils.padLeft(account, 64),
+      null
+    ]
+  })
+    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
+    // Load Transfer events for user as receiver
+    .then(() => contractDetails.contract.getPastEvents("Transfer", {
+        fromBlock: fromBlockNumber ? fromBlockNumber : 0,
+        filter: {
+          isError: 0,
+          txreceipt_status: 1
+        },
+        topics: [
+          window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
+          null,
+          window.localWeb3.utils.padLeft(account, 64)
+        ]
+    }))
+    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
+    // Load Approval events for user as receiver
+    .then(() => contractDetails.contract.getPastEvents("Approval", {
+        fromBlock: fromBlockNumber ? fromBlockNumber : 0,
+            filter: {
+              isError: 0,
+              txreceipt_status: 1
+            },
+            topics: [
+              window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
+              window.localWeb3.utils.padLeft(account, 64),
+              null
+            ]
+    }))
+    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
+    // Load Approval events for user as sender
+    .then(() => contractDetails.contract.getPastEvents("Approval", {
+        fromBlock: fromBlockNumber ? fromBlockNumber : 0,
+            filter: {
+              isError: 0,
+              txreceipt_status: 1
+            },
+            topics: [
+              window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
+              null,
+              window.localWeb3.utils.padLeft(account, 64)
+            ]
+    }))
+    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
+    .then(() => transactions)
+    .catch(e => {
+      console.debug("Error occurred while retrieving contract transactions", e);
+      throw e;
+    });
 }
 
-export function addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, timestamp, watchLoadSuccess, watchLoadError) {
+export function addTransaction(networkId, account, accountDetails, transactions, transaction, receipt, timestamp, watchLoadSuccess, watchLoadError) {
   if(!transaction || !networkId || !account) {
     console.debug("Wrong paramters for addTransaction method", networkId, account, transaction);
     return;
@@ -280,7 +254,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
   };
 
   if (transaction.pending) {
-    addPendingTransactionToStorage(networkId, account, contractDetails, transaction);
+    addPendingTransactionToStorage(networkId, account, accountDetails, transaction);
 
     let loadedBlock = null;
     let loadedReceipt = null;
@@ -289,9 +263,9 @@ export function addTransaction(networkId, account, contractDetails, transactions
         .then(tx => {
           transaction = tx;
 
-          removePendingTransactionFromStorage(networkId, account, contractDetails, transaction.hash);
+          removePendingTransactionFromStorage(networkId, account, accountDetails, transaction.hash);
 
-          return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000, watchLoadSuccess, watchLoadError);
+          return addTransaction(networkId, account, accountDetails, transactions, transaction, receipt, block && block.timestamp * 1000, watchLoadSuccess, watchLoadError);
         })
         .then(() => {
           if (watchLoadSuccess) {
@@ -316,7 +290,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
     transactionDetails.type = 'ether';
   }
 
-  return getContractFromStorage(account, transactionDetails.contractAddress)
+  return getContractFromStorage(transactionDetails.contractAddress)
     .then(contractDetails => {
       if (contractDetails) {
         transactionDetails.type = 'contract';
@@ -352,6 +326,8 @@ export function addTransaction(networkId, account, contractDetails, transactions
         } catch(e) {
           console.debug('Error resolving Contract transaction status', e);
         }
+      } else if(accountDetails && accountDetails.isContract) {
+        console.debug("Can't find contract details from storage", transactionDetails.contractAddress);
       }
     })
     .then(() => {
@@ -407,7 +383,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
         // From eXo Platform Server
         return transactions[transactionDetails.hash] = transactionDetails;
       } else {
-        console.error("It seems that the transaction is added into list by error, skipping.", transactionDetails);
+        console.error("It seems that the transaction is added into list by error, skipping.", account, transactionDetails);
       }
       return null;
     })
@@ -426,6 +402,7 @@ export function addTransaction(networkId, account, contractDetails, transactions
     })
     .catch(error => {
       console.debug('Error retrieving transaction details', transaction, error);
+      return null;
     });
 }
 
@@ -568,45 +545,6 @@ export function getPendingTransactionFromStorage(networkId, account, contractDet
   } else {
     return JSON.parse(storageValue);
   }
-}
-
-function addBlockTransactions(networkId, account, contractDetails, transactions, block, untilBlockNumber, loadedBlocks, progressionCallback) {
-  if (!block) {
-    throw new Error("An error occurred while retrieving data from network, this may be fixed by refreshing your wallet");
-  }
-
-  loadedBlocks++;
-
-  if (progressionCallback) {
-    try {
-      progressionCallback(loadedBlocks);
-    } catch(e) {
-      if (`${e}`.indexOf("stopLoading") < 0) {
-        console.debug("error while calling progressionCallback", e);
-      } else {
-        // Stop loading command used
-        return false;
-      }
-    }
-  }
-
-  // If we :
-  //  * already searched inside 1000 block
-  //  * or we reached the genesis block
-  //  * or we already displayed 10 transactions
-  // then stop searching
-  if (block.number === 0 || block.number <= untilBlockNumber || !account) {
-    return false;
-  }
-
-  return formatTransactionsWithDetails(networkId, account, contractDetails, transactions, block.transactions, block.timestamp * 1000, progressionCallback)
-    .then(() => window.localWeb3.eth.getBlock(block.parentHash, true))
-    .then(blockTmp => addBlockTransactions(networkId, account, contractDetails, transactions, blockTmp, untilBlockNumber, loadedBlocks, progressionCallback))
-    .catch(error => {
-      if (`${error}`.indexOf('stopLoading') < 0) {
-        throw error;
-      }
-    });
 }
 
 function addEventsToTransactions(networkId, account, contractDetails, transactions, events, fieldFrom, fieldTo, progressionCallback) {

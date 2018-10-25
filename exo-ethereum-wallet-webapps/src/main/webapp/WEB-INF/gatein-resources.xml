@@ -166,6 +166,9 @@
         <module>iePolyfills</module>
       </depends>
       <depends>
+        <module>abiDecoder</module>
+      </depends>
+      <depends>
         <module>vuetify</module>
       </depends>
       <depends>

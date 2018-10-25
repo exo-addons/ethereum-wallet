@@ -37,6 +37,7 @@ import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.api.settings.data.Scope;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.utils.IOUtil;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.configuration.ConfigurationManager;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.listener.ListenerService;
@@ -702,15 +703,18 @@ public class EthereumWalletService implements Startable {
   }
 
   private Space getSpace(String id) {
+    if (id.indexOf("/spaces/") >= 0) {
+      return spaceService.getSpaceByGroupId(id);
+    }
     Space space = spaceService.getSpaceByPrettyName(id);
     if (space == null) {
-      space = spaceService.getSpaceByUrl(id);
+      space = spaceService.getSpaceByGroupId("/spaces/" + id);
       if (space == null) {
         space = spaceService.getSpaceByDisplayName(id);
+        if (space == null) {
+          space = spaceService.getSpaceByUrl(id);
+        }
       }
-    }
-    if (space == null) {
-      return null;
     }
     return space;
   }
@@ -854,6 +858,84 @@ public class EthereumWalletService implements Startable {
     }
     String fundRequestSentString = notificationInfo.getOwnerParameter().get(FUNDS_REQUEST_SENT);
     return Boolean.parseBoolean(fundRequestSentString);
+  }
+
+  /**
+   * Retrieves the list registered wallets
+   * 
+   * @return
+   * @throws Exception
+   */
+  public List<AccountDetail> lisWallets() throws Exception {
+    List<AccountDetail> accounts = new ArrayList<>();
+    Map<String, String> usernames = getListOfWalletsOfType(USER_ACCOUNT_TYPE);
+    for (String username : usernames.keySet()) {
+      AccountDetail details = getUserDetails(username);
+      if (details != null) {
+        details.setAddress(usernames.get(username));
+        accounts.add(details);
+      }
+    }
+
+    Map<String, String> spaces = getListOfWalletsOfType(SPACE_ACCOUNT_TYPE);
+    for (String spaceId : spaces.keySet()) {
+      AccountDetail details = getSpaceDetails(spaceId);
+      if (details != null) {
+        details.setAddress(spaces.get(spaceId));
+        accounts.add(details);
+      }
+    }
+    return accounts;
+  }
+
+  private Map<String, String> getListOfWalletsOfType(String walletType) throws Exception {
+    if (StringUtils.isBlank(walletType) || !(USER_ACCOUNT_TYPE.equals(walletType) || SPACE_ACCOUNT_TYPE.equals(walletType))) {
+      throw new IllegalArgumentException("Unrecognized wallet type: " + walletType);
+    }
+    Map<String, String> names = new HashMap<>();
+    if (USER_ACCOUNT_TYPE.equals(walletType)) {
+      int pageSize = 100;
+      int current = 0;
+      List<Context> contexts = null;
+      do {
+        contexts = settingService.getContextsByTypeAndScopeAndSettingName(Context.USER.getName(),
+                                                                          WALLET_SCOPE.getName(),
+                                                                          WALLET_SCOPE.getId(),
+                                                                          ADDRESS_KEY_NAME,
+                                                                          current,
+                                                                          pageSize);
+        if (contexts != null && !contexts.isEmpty()) {
+          List<String> usernames = contexts.stream().map(context -> context.getId()).collect(Collectors.toList());
+          for (String username : usernames) {
+            names.put(username, getUserAddress(username));
+          }
+        }
+        current += pageSize;
+      } while (contexts != null && contexts.size() == pageSize);
+    } else {
+      int pageSize = 100;
+      int current = 0;
+      Space[] spaces = null;
+      do {
+        ListAccess<Space> spacesListAccress = spaceService.getAllSpacesWithListAccess();
+        spaces = spacesListAccress.load(current, pageSize);
+        if (spaces != null && spaces.length > 0) {
+          for (Space space : spaces) {
+            String spaceId = getSpaceId(space);
+            SettingValue<?> spaceAddress = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, spaceId);
+            if (spaceAddress != null && spaceAddress.getValue() != null) {
+              names.put(spaceId, spaceAddress.getValue().toString());
+            }
+          }
+        }
+        current += pageSize;
+      } while (spaces != null && spaces.length == pageSize);
+    }
+    return names;
+  }
+
+  private String getSpaceId(Space space) {
+    return space.getGroupId().split("/")[2];
   }
 
   private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {

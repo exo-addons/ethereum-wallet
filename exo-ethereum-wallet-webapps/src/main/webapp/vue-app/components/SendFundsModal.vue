@@ -61,9 +61,9 @@ export default {
       }
     },
     overviewAccounts: {
-      type: Object,
+      type: Array,
       default: function() {
-        return {};
+        return [];
       }
     },
     principalAccount: {
@@ -112,14 +112,18 @@ export default {
   },
   computed: {
     accountsList() {
+      console.log("this.accountsDetails", this.accountsDetails);
+      console.log("this.overviewAccounts", this.overviewAccounts);
       const accountsList = [];
       if (this.accountsDetails && this.refreshIndex > 0) {
         Object.keys(this.accountsDetails).forEach(key => {
           // Check list of accounts to display switch user preferences
           const isContractOption = this.overviewAccounts.indexOf(key) > -1;
+          console.log("isContractOption", key, isContractOption);
           // Always allow to display ether option
           // const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
           const isEtherOption = isContractOption || (key === this.walletAddress);
+          console.log("isEtherOption", isEtherOption);
           if (isContractOption || isEtherOption) {
             accountsList.push({
               text: this.accountsDetails[key].title,
@@ -138,6 +142,8 @@ export default {
         this.$nextTick(() => {
           if (!this.selectedOption) {
             const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
+            console.log("contractAddress", contractAddress);
+            console.log("accountsList", this.accountsList);
             this.prepareSendForm(null, null, null, contractAddress, null, true);
           }
         });

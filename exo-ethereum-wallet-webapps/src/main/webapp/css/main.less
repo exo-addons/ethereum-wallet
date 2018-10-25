@@ -420,22 +420,7 @@
       font-size: 15px;
     }
   }
-}
 
-#WalletAdminApp {
-   margin: 10px 11px 0;
-
-  .v-dialog__content {
-    z-index: 100000 !important;
-  }
-
-  #initialfundsRequestMessage {
-    margin-bottom: 0;
-    margin-top: 4px;
-  }
-}
-
-#WalletApp, #WalletSpaceApp {
   .accountItem {
     cursor: pointer;
   }
@@ -496,12 +481,12 @@
     }
   }
 
-  &.maximized {
-    margin: 20px 20px 0;
-  }
-
   .arrow-up-right {
     transform: rotate(45deg);
+  }
+
+  &.maximized {
+    margin: 20px 20px 0;
   }
 
 }
@@ -523,6 +508,23 @@
         }
       }
     }
+  }
+}
+
+#WalletAdminApp {
+   margin: 10px 11px 0;
+
+  .v-dialog__content {
+    z-index: 100000 !important;
+  }
+
+  #initialfundsRequestMessage {
+    margin-bottom: 0;
+    margin-top: 4px;
+  }
+  .transactionsList {
+    max-height: calc(100vh - 153px);
+    height: calc(100vh - 153px);
   }
 }
 

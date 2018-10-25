@@ -151,8 +151,8 @@ export function searchFullName(address) {
  *  address: Ethereum contract address
  * }
  */
-export function getContractFromStorage(account, address) {
-  let contractDetails = localStorage.getItem(`exo-wallet-contract-${account}-${address}`.toLowerCase());
+export function getContractFromStorage(address) {
+  let contractDetails = localStorage.getItem(`exo-wallet-contract-${address}`.toLowerCase());
   if (contractDetails) {
     contractDetails = JSON.parse(contractDetails);
     return Promise.resolve(contractDetails);

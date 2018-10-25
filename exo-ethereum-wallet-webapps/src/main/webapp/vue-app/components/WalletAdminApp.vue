@@ -16,27 +16,16 @@
             </v-card>
           </v-dialog>
 
-          <wallet-setup
-            v-if="!loading"
-            ref="walletSetup"
-            :wallet-address="walletAddress"
-            :refresh-index="refreshIndex"
-            class="mb-3"
-            @loading="loading = true"
-            @end-loading="loading = false"
-            @refresh="init()"
-            @error="loading = false; error = $event" />
-
           <v-tabs v-if="displaySettings" v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
             <v-tab key="general">Settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="funds">Initial accounts funds</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="wallets">Wallets</v-tab>
           </v-tabs>
 
           <v-tabs-items v-if="displaySettings" v-model="selectedTab">
-
             <v-tab-item key="general">
               <v-card v-if="!loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <v-combobox
@@ -102,7 +91,10 @@
                     </template>
       
                     <template slot="selection" slot-scope="{ item, selected }">
-                      <v-chip :selected="selected" class="autocompleteSelectedItem">
+                      <v-chip v-if="item.error" :selected="selected" class="autocompleteSelectedItem">
+                        <del><span>{{ item.name }}</span></del>
+                      </v-chip>
+                      <v-chip v-else :selected="selected" class="autocompleteSelectedItem">
                         <span>{{ item.name }}</span>
                       </v-chip>
                     </template>
@@ -147,7 +139,7 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item key="funds">
+            <v-tab-item v-if="sameConfiguredNetwork" key="funds">
               <v-card v-if="!loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <v-card-title>
                   The following settings manages the funds holder and the amount of initial funds to send for a user that has created a new wallet for the first time.
@@ -272,10 +264,24 @@
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" key="contracts">
-              <v-card flat>
+              <wallet-setup
+                ref="walletSetup"
+                :wallet-address="walletAddress"
+                :refresh-index="refreshIndex"
+                class="mb-3"
+                @loading="loadingContracts = true"
+                @end-loading="loadingContracts = false"
+                @refresh="init()"
+                @error="loadingContracts = false; error = $event" />
+              <v-card-title v-if="loadingContracts">
+                <v-spacer />
+                <v-progress-circular indeterminate color="primary" />
+                <v-spacer />
+              </v-card-title>
+              <v-card v-else flat>
                 <v-subheader class="text-xs-center">Default contracts</v-subheader>
                 <v-divider />
-    
+
                 <div v-if="newTokenAddress" class="alert alert-success v-content">
                   <i class="uiIconSuccess"></i>
                   Contract created under address: 
@@ -315,6 +321,64 @@
                 </div>
               </v-card>
             </v-tab-item>
+
+            <v-tab-item v-if="sameConfiguredNetwork" key="wallets">
+              <v-card-title v-if="loadingWallets">
+                <v-spacer />
+                <v-progress-circular indeterminate color="primary" />
+                <v-spacer />
+              </v-card-title>
+              <v-card v-else flat>
+                <v-data-table :headers="walletHeaders" :items="wallets">
+                  <template slot="items" slot-scope="props">
+                    <tr class="clickable" @click="openAccountDetail(props.item)">
+                      <td>
+                        <v-avatar size="36px">
+                          <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                        </v-avatar>
+                      </td>
+                      <td>
+                        {{ props.item.name }}
+                      </td>
+                      <td>
+                        {{ props.item.address }}
+                      </td>
+                      <td class="text-xs-right">
+                        <v-progress-circular v-if="props.item.balancePrincipal === false" :width="3" indeterminate color="primary" />
+                        <template v-else>{{ props.item.balancePrincipal }}</template>
+                      </td>
+                      <td class="text-xs-right">
+                        <v-progress-circular v-if="props.item.balance === false" :width="3" indeterminate color="primary" />
+                        <template v-else>{{ props.item.balance }}</template>
+                      </td>
+                    </tr>
+                  </template>
+                </v-data-table>
+
+                <!-- The selected account detail -->
+                <v-navigation-drawer
+                  id="accountDetailsDrawer"
+                  v-model="seeAccountDetails"
+                  fixed
+                  temporary
+                  right
+                  stateless
+                  width="700"
+                  max-width="100vw">
+
+                  <account-detail
+                    ref="accountDetail"
+                    :fiat-symbol="fiatSymbol"
+                    :network-id="networkId"
+                    :wallet-address="selectedWalletAddress"
+                    :contract-details="selectedWalletDetails"
+                    is-read-only
+                    is-display-only
+                    @back="back()"/>
+
+                </v-navigation-drawer>
+              </v-card>
+            </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-layout>
@@ -327,17 +391,19 @@ import DeployNewContract from './DeployNewContract.vue';
 import AddContractModal from './AddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
 import WalletSetup from './WalletSetup.vue';
+import AccountDetail from './AccountDetail.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
-import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
-import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat} from '../WalletUtils.js';
+import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress, getContractInstance} from '../WalletToken.js';
+import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance} from '../WalletUtils.js';
 
 export default {
   components: {
     DeployNewContract,
     AddContractModal,
     WalletAddress,
+    AccountDetail,
     WalletSetup
   },
   data () {
@@ -345,6 +411,8 @@ export default {
       isWalletEnabled: false,
       loading: false,
       loadingSettings: false,
+      loadingContracts: false,
+      loadingWallets: false,
       selectedTab: true,
       sameConfiguredNetwork: true,
       fundsHolder: '',
@@ -366,6 +434,10 @@ export default {
       selectedOverviewAccounts: [],
       selectedPrincipalAccount: null,
       enableDelegation: true,
+      seeAccountDetails: false,
+      seeAccountDetailsPermanent: false,
+      selectedWalletAddress: null,
+      selectedWalletDetails: null,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ],
@@ -387,6 +459,36 @@ export default {
           align: 'center',
           sortable: false,
           value: 'action'
+        }
+      ],
+      walletHeaders: [
+        {
+          text: '',
+          align: 'left',
+          sortable: false,
+          value: 'avatar'
+        },
+        {
+          text: 'Name',
+          align: 'left',
+          sortable: true,
+          value: 'name'
+        },
+        {
+          text: 'Address',
+          align: 'center',
+          sortable: false,
+          value: 'address'
+        },
+        {
+          text: 'Principal balance',
+          align: 'right',
+          value: 'balancePrincipal'
+        },
+        {
+          text: 'Ether balance',
+          align: 'right',
+          value: 'balance'
         }
       ],
       initialFundsHeaders: [
@@ -429,7 +531,8 @@ export default {
       ],
       etherAccount: {text: 'Ether', value: 'ether', disabled: false},
       fiatAccount: {text: 'Fiat', value: 'fiat', disabled: false},
-      contracts: []
+      contracts: [],
+      wallets: []
     };
   },
   computed: {
@@ -498,6 +601,20 @@ export default {
           this.isLoadingSuggestions = false;
         });
     },
+    seeAccountDetails() {
+      if (this.seeAccountDetails) {
+        $("body").addClass("hide-scroll");
+
+        const thiss = this;
+        setTimeout(() => {
+          thiss.seeAccountDetailsPermanent = true;
+        }, 200);
+      } else {
+        $("body").removeClass("hide-scroll");
+
+        this.seeAccountDetailsPermanent = false;
+      }
+    },
     fundsHolderSearchTerm() {
       if (!this.fundsHolderSearchTerm || !this.fundsHolderSearchTerm.length) {
         return;
@@ -559,12 +676,14 @@ export default {
     }
   },
   created() {
-    this.init();
+    this.init()
+      .then(() => this.loadWallets());
   },
   methods: {
-    init() {
+    init(ignoreContracts) {
       this.loading = true;
       this.loadingSettings = true;
+      this.loadingContracts = true;
       this.showAddContractModal = false;
       this.forceUpdate();
       this.selectedOverviewAccounts = [];
@@ -580,7 +699,7 @@ export default {
             this.isWalletEnabled = true;
           }
         })
-        .then(initWeb3)
+        .then(() => ignoreContracts || initWeb3())
         .catch(error => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
             console.debug("Error connecting to network", error);
@@ -595,7 +714,7 @@ export default {
         })
         .then(this.setDefaultValues)
         .then(() => this.loadingSettings = false)
-        .then(this.refreshContractsList)
+        .then(() => ignoreContracts || this.refreshContractsList())
         .then(this.setSelectedValues)
         .catch(error => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
@@ -606,14 +725,57 @@ export default {
           }
         })
         .then(() => {
-          this.loading = false;
+          this.loadingContracts = this.loading = false;
           this.forceUpdate();
         })
         .catch(e => {
           console.debug("init method - error", e);
-          this.loading = false;
+          this.loadingContracts = this.loadingSettings = this.loadingWallets = this.loading = false;
           this.loadingSettings = false;
           this.error = `Error encountered: ${e}`;
+        });
+    },
+    loadWallets() {
+      this.loadingWallets = true;
+      getWallets()
+        .then(wallets => this.wallets = wallets)
+        .then(() => {
+          let principalContract = null;
+          if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value && this.selectedPrincipalAccount.value !== 'ether') {
+            principalContract = getContractInstance(this.walletAddress, this.selectedPrincipalAccount.value, false);
+          }
+          this.wallets.forEach(wallet => {
+            if(wallet && wallet.address) {
+              wallet.balance = false;
+              wallet.balancePrincipal = false;
+              computeBalance(wallet.address)
+                .then((balanceDetails, error) => {
+                  if (error) {
+                    this.$set(wallet, 'icon', 'warning');
+                    this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
+                  } else {
+                    this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
+                    this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
+                  }
+                  this.$forceUpdate();
+                });
+              if (principalContract) {
+                principalContract.methods.balanceOf(wallet.address).call()
+                  .then((balance, error) => {
+                    if (error) {
+                      throw new Error('Invalid contract address');
+                    }
+                    balance = String(balance);
+                    this.$set(wallet, 'balancePrincipal', balance);
+                  });
+              } else {
+                wallet.balancePrincipal = "-";
+              }
+            }
+          });
+        })
+        .finally(() => {
+          this.loadingWallets = false;
         });
     },
     setSelectedValues() {
@@ -626,6 +788,39 @@ export default {
       });
 
       this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
+    },
+    openAccountDetail(accountDetails) {
+      this.selectedWalletAddress = accountDetails.address;
+      this.computeWalletDetails(accountDetails);
+      this.seeAccountDetails = true;
+
+      this.$nextTick(() => {
+        const thiss = this;
+        $('.v-overlay').on('click', event => {
+          thiss.back();
+        });
+      });
+    },
+    computeWalletDetails(accountDetails) {
+      if (!this.selectedWalletAddress) {
+        this.selectedWalletDetails = null;
+        return;
+      }
+      this.selectedWalletDetails = {
+        title : 'ether',
+        icon : 'fab fa-ethereum',
+        symbol : 'ether',
+        isContract : false,
+        address : this.selectedWalletAddress,
+        balance : accountDetails.balance,
+        balanceFiat : accountDetails.balanceFiat
+      };
+    },
+    back() {
+      this.seeAccountDetails = false;
+      this.seeAccountDetailsPermanent = false;
+      this.selectedWalletAddress = null;
+      this.selectedWalletDetails = null;
     },
     getOverviewAccountObject(selectedValue) {
       if (selectedValue === 'fiat') {
@@ -662,6 +857,9 @@ export default {
               this.accessPermissionOptions = items;
             } else {
               this.accessPermissionOptions = [];
+            }
+            if (!this.accessPermissionOptions.find(item => item.id === this.accessPermission)) {
+              this.accessPermissionOptions.push({id : this.accessPermission, name : this.accessPermission, error : true});
             }
           });
       }
@@ -773,12 +971,15 @@ export default {
     },
     saveGlobalSettings() {
       this.loading = true;
+      this.loadingSettings = true;
       const initialFundsMap = {};
       if (this.initialFunds && this.initialFunds.length) {
         this.initialFunds.forEach(initialFund => {
           initialFundsMap[initialFund.address] = initialFund.amount;
         });
       }
+      const reloadContract = window.walletSettings.defaultNetworkId !== this.selectedNetwork.value;
+
       fetch('/portal/rest/wallet/api/global-settings/save', {
         method: 'POST',
         credentials: 'include',
@@ -804,8 +1005,6 @@ export default {
       })
         .then(resp => {
           if (resp && resp.ok) {
-            const reloadContract = window.walletSettings.defaultNetworkId !== this.selectedNetwork.value;
-  
             window.walletSettings.defaultNetworkId = this.selectedNetwork.value;
             window.walletSettings.providerURL = this.selectedNetwork.httpLink;
             window.walletSettings.websocketProviderURL = this.selectedNetwork.wsLink;
@@ -815,20 +1014,16 @@ export default {
             window.walletSettings.defaultGas = this.defaultGas;
             this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
   
-            if (reloadContract) {
-              return this.contractsModified();
-            }
+            this.loadingSettings = this.loading = false;
           } else {
             this.error = 'Error saving global settings';
           }
         })
-        .then(this.init)
+        .then(this.init(!reloadContract))
         .catch(e => {
+          this.loading = false;
           console.debug("fetch global-settings - error", e);
           this.error = 'Error saving global settings';
-        })
-        .finally(() => {
-          this.loading = false;
         });
     },
     contractsModified() {

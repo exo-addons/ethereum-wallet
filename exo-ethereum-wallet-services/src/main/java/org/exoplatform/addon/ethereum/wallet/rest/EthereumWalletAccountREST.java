@@ -252,6 +252,26 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
+   * Get list of wallet accounts
+   * 
+   * @return
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("list")
+  @RolesAllowed("administrators")
+  public Response getWallets() {
+    List<AccountDetail> accounts;
+    try {
+      accounts = ethereumWalletService.lisWallets();
+      return Response.ok(accounts).build();
+    } catch (Exception e) {
+      LOG.warn("Error retrieving list of wallets", e);
+      return Response.serverError().build();
+    }
+  }
+
+  /**
    * Get list of transactions of an address
    * 
    * @param networkId

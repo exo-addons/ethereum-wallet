@@ -5,25 +5,10 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
 
-      <div v-if="!stopLoading && (loading || displayLoadingPercentage)" class="grey--text">
+      <div v-if="loading" class="grey--text">
         Loading recent transactions...
-        <a v-if="displayLoadingPercentage" href="javascript:void(0);" @click="stopLoadingTransactions()">
-          stop
-        </a>
       </div>
-      <div v-else-if="loading || displayLoadingPercentage" class="grey--text">Stopping...</div>
-
-      <v-progress-linear
-        v-if="!finishedLoading && displayLoadingPercentage"
-        :rotate="-90"
-        :size="80"
-        :width="15"
-        :value="loadingPercentage"
-        color="primary"
-        class="mb-0 mt-0"
-        buffer>
-      </v-progress-linear>
-      <v-progress-linear v-else-if="loading" indeterminate color="primary" class="mb-0 mt-0" />
+      <v-progress-linear v-if="loading" indeterminate color="primary" class="mb-0 mt-0" />
 
       <v-expansion-panel v-if="Object.keys(sortedTransactions).length">
         <v-expansion-panel-content
@@ -255,12 +240,9 @@
           </v-list>
         </v-expansion-panel-content>
       </v-expansion-panel>
-      <v-flex v-else-if="!displayLoadingPercentage && !loading" class="text-xs-center">
+      <v-flex v-else-if="!loading" class="text-xs-center">
         <span>No recent transactions</span>
       </v-flex>
-      <div v-if="!contractDetails.isContract">
-        <a v-if="!displayLoadingPercentage && !loading" href="javascript:void(0);" @click="loadMore()">Load more</a>
-      </div>
     </v-card>
   </v-flex>
 
@@ -272,7 +254,7 @@ import WalletAddress from './WalletAddress.vue';
 import ProfileChip from './ProfileChip.vue';
 
 import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
-import {loadPendingTransactions, loadStoredTransactions, loadTransactions, addTransaction} from '../WalletTransactions.js';
+import {loadPendingTransactions, loadStoredTransactions, loadContractTransactions, addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -317,20 +299,11 @@ export default {
       // A trick to force update computed list
       // since the attribute this.atransactions is modified outside the component
       refreshIndex: 1,
-      newestBlockNumber: 0,
-      oldestBlockNumber: 0,
       loading: false,
-      finishedLoading: true,
-      transactionsPerPage: 10,
-      maxBlocksToLoad: 1000,
-      loadedBlocks: 0,
       transactions: {}
     };
   },
   computed: {
-    displayLoadingPercentage() {
-      return !this.contractDetails.isContract && !this.finishedLoading;
-    },
     sortedTransactions() {
       // A trick to force update computed list
       // since the attribute this.atransactions is modified outside the component
@@ -345,9 +318,6 @@ export default {
           sortedTransactions[key] = transactions[key];
         });
       return sortedTransactions;
-    },
-    loadingPercentage() {
-      return parseInt(this.loadedBlocks * 100 / this.maxBlocksToLoad);
     }
   },
   watch: {
@@ -379,12 +349,9 @@ export default {
     }
 
     if (this.account) {
-      this.maxBlocksToLoad = window.walletSettings.defaultBlocksToRetrieve;
       this.init()
-        .then(() => this.finishedLoading = true)
         .catch(error => {
           console.debug("init method - error", error);
-          this.finishedLoading = true;
           this.loading = false;
           this.$emit("error", `Account initialization error: ${error}`);
         });
@@ -394,8 +361,6 @@ export default {
     init() {
       this.transactions = {};
       this.loadedBlocks = 0;
-      this.stopLoading = false;
-      this.finishedLoading = true;
       this.loading = true;
       this.error = null;
 
@@ -404,78 +369,24 @@ export default {
         this.$emit("refresh-balance");
         this.forceUpdateList();
       })
-        .then(pendingTransactions => {
+        .then(() => {
           this.forceUpdateList();
-
-          return loadStoredTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
-            if (this.stopLoading) {
-              throw new Error("stopLoading");
-            }
-
-            // Update by 10 transactions
-            if (this.transactions && Object.keys(this.transactions).length % 20 === 0) {
-              this.forceUpdateList();
-            }
-          });
+          return loadStoredTransactions(this.networkId, this.account, this.contractDetails, this.transactions);
         })
-        .then(storedTansactions => {
-          this.forceUpdateList();
-
-          this.finishedLoading = false;
-
-          let transactionsCount = this.transactions && this.transactions.length;
-          return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, null, null, this.maxBlocksToLoad, (loadedBlocks) => {
-            if (this.stopLoading) {
-              throw new Error("stopLoading");
-            }
-            this.loadedBlocks = loadedBlocks;
-            const newTransactionsCount = this.transactions && this.transactions.length;
-            if (transactionsCount !== newTransactionsCount) {
-              transactionsCount = newTransactionsCount;
+        .then(() => {
+          if (this.contractDetails.isContract) {
+            return loadContractTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
               this.forceUpdateList();
-            }
-          });
-        })
-        .then(loadedBlocksDetails => {
-          this.loading = false;
-
-          this.forceUpdateList();
-          if (loadedBlocksDetails && !this.contractDetails.isContract) {
-            this.newestBlockNumber = loadedBlocksDetails.toBlock;
-            this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
+            });
           }
+        })
+        .then(() => {
           this.loading = false;
-          this.finishedLoading = true;
+          this.forceUpdateList();
         })
         .catch(e => {
           console.debug("loadTransactions - method error", e);
 
-          this.loading = false;
-          this.finishedLoading = true;
-          if (!this.stopLoading) {
-            console.debug("loadTransactions - method error", e);
-            this.$emit("error", `${e}`);
-          }
-        });
-    },
-    loadMore() {
-      this.loadedBlocks = 0;
-      this.finishedLoading = false;
-      this.stopLoading = false;
-
-      return loadTransactions(this.networkId, this.account, this.transactions, null, this.oldestBlockNumber, this.maxBlocksToLoad, (loadedBlocks) => {
-        this.loadedBlocks = loadedBlocks;
-        this.forceUpdateList();
-      })
-        .then(loadedBlocksDetails => {
-          this.finishedLoading = true;
-          this.loading = false;
-          this.forceUpdateList();
-          this.newestBlockNumber = loadedBlocksDetails.toBlock;
-          this.oldestBlockNumber = loadedBlocksDetails.fromBlock;
-        })
-        .catch(e => {
-          this.finishedLoading = true;
           this.loading = false;
           console.debug("loadTransactions - method error", e);
           this.$emit("error", `${e}`);
@@ -498,9 +409,6 @@ export default {
           transaction.error = `Error loading transaction ${error}`;
           this.forceUpdateList();
         }).then(() => this.forceUpdateList());
-    },
-    stopLoadingTransactions() {
-      this.stopLoading = true;
     },
     forceUpdateList() {
       try {

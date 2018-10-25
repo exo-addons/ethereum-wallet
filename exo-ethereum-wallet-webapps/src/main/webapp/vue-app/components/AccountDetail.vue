@@ -12,7 +12,7 @@
           <h3 v-else class="font-weight-light">{{ contractDetails.balance }} {{ contractDetails.symbol }}</h3>
         </v-flex>
 
-        <v-flex id="accountDetailActions">
+        <v-flex v-if="!isDisplayOnly" id="accountDetailActions">
           <!-- Ether action -->
           <send-ether-modal
             v-if="!contractDetails.isContract"
@@ -90,6 +90,12 @@ export default {
   },
   props: {
     isReadOnly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    isDisplayOnly: {
       type: Boolean,
       default: function() {
         return false;

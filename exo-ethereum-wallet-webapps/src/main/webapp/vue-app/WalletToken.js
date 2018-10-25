@@ -80,7 +80,7 @@ export function retrieveContractDetails(account, contractDetails) {
       // Store contract persistent details in localStorage
       const toStoreContractDetails = Object.assign({}, contractDetails);
       delete toStoreContractDetails.contract;
-      localStorage.setItem(`exo-wallet-contract-${account}-${contractDetails.address}`.toLowerCase(), JSON.stringify(toStoreContractDetails));
+      localStorage.setItem(`exo-wallet-contract-${contractDetails.address}`.toLowerCase(), JSON.stringify(toStoreContractDetails));
       return contractDetails;
     })
     .catch(e => {
