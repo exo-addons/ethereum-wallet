@@ -131,6 +131,20 @@
         </v-flex>
       </v-layout>
     </main>
+    <main v-else-if="isMaximized">
+      <v-layout>
+        <v-flex>
+          <v-card-title class="transparent" flat>
+            <v-spacer />
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i>
+              You don't have enough access rights to use Ethereum Wallet application
+            </div>
+            <v-spacer />
+          </v-card-title>
+        </v-flex>
+      </v-layout>
+    </main>
   </v-app>
 </template>
 
