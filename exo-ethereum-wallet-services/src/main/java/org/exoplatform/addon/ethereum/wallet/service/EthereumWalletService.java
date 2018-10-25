@@ -835,6 +835,27 @@ public class EthereumWalletService implements Startable {
     webNotificationStorage.update(notificationInfo, false);
   }
 
+  /**
+   * Get fund request status
+   * 
+   * @param notificationId
+   * @param currentUser
+   * @return true if fund request sent
+   * @throws IllegalAccessException if current user is not the targetted user of
+   *           notification
+   */
+  public boolean isFundRequestSent(String notificationId, String currentUser) throws IllegalAccessException {
+    NotificationInfo notificationInfo = webNotificationStorage.get(notificationId);
+    if (notificationInfo == null) {
+      throw new IllegalStateException("Notification with id " + notificationId + " wasn't found");
+    }
+    if (notificationInfo.getTo() == null || !currentUser.equals(notificationInfo.getTo())) {
+      throw new IllegalAccessException("Target user of notification '" + notificationId + "' is different from current user");
+    }
+    String fundRequestSentString = notificationInfo.getOwnerParameter().get(FUNDS_REQUEST_SENT);
+    return Boolean.parseBoolean(fundRequestSentString);
+  }
+
   private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {
     String currentUser = getCurrentUserId();
     String id = accountDetail.getId();

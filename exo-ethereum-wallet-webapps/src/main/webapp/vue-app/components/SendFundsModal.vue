@@ -47,6 +47,8 @@
 <script>
 import SendFundsForm from './SendFundsForm.vue';
 
+import {checkFundRequestStatus} from '../WalletUtils.js';
+
 export default {
   components: {
     SendFundsForm
@@ -151,7 +153,14 @@ export default {
         return;
       }
 
-      this.dialog = true;
+      if (receiver && receiverType && amount && notificationId) {
+        checkFundRequestStatus(notificationId)
+          .then(sent => {
+            this.dialog = !sent;
+          });
+      } else {
+        this.dialog = true;
+      }
 
       this.selectedOption = null;
       let i = 0;

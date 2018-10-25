@@ -93,7 +93,7 @@
     <component-plugin>
       <name>exo.addon.wallet.addressAssociation.new</name>
       <set-method>addListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.NewAddressAssociationListener</type>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.InitialFundsRequestListener</type>
       <description>Send initial funds request when a user creates a new wallet</description>
     </component-plugin>
   </external-component-plugins>

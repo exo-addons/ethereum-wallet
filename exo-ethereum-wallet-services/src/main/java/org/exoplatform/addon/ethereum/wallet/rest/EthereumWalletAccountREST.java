@@ -226,6 +226,32 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
+   * Returns fund request status
+   * 
+   * @param notificationId
+   * @return
+   */
+  @GET
+  @Path("fundRequestSent")
+  @Produces(MediaType.TEXT_PLAIN)
+  public Response isFundRequestSent(@QueryParam("notificationId") String notificationId) {
+    if (StringUtils.isBlank(notificationId)) {
+      LOG.warn("Bad request sent to server with empty notificationId");
+      return Response.status(400).build();
+    }
+
+    String currentUser = getCurrentUserId();
+    try {
+      boolean fundRequestSent = ethereumWalletService.isFundRequestSent(notificationId, currentUser);
+      return Response.ok(String.valueOf(fundRequestSent)).build();
+    } catch (IllegalAccessException e) {
+      return Response.status(403).build();
+    } catch (IllegalStateException e) {
+      return Response.status(400).build();
+    }
+  }
+
+  /**
    * Get list of transactions of an address
    * 
    * @param networkId

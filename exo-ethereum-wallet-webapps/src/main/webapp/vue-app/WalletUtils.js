@@ -531,6 +531,16 @@ export function markFundRequestAsSent(notificationId) {
     });
 }
 
+export function checkFundRequestStatus(notificationId) {
+  return fetch(`/portal/rest/wallet/api/account/fundRequestSent?notificationId=${notificationId}`, {credentials: 'include'})
+  .then(resp =>  {
+    return resp && resp.ok && resp.text();
+  })
+  .then(content =>  {
+    return "true" === content;
+  });
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));

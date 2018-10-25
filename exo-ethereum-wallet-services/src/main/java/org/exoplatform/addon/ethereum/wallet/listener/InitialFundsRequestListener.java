@@ -17,13 +17,13 @@ import org.exoplatform.services.log.Log;
  * a space. Thus an initial funds request should be sent to funds holder when a
  * new address is added.
  */
-public class NewAddressAssociationListener extends Listener<Object, AccountDetail> {
+public class InitialFundsRequestListener extends Listener<Object, AccountDetail> {
 
-  private static final Log      LOG = ExoLogger.getLogger(NewAddressAssociationListener.class);
+  private static final Log      LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
 
   private EthereumWalletService ethereumWalletService;
 
-  public NewAddressAssociationListener(EthereumWalletService ethereumWalletService) {
+  public InitialFundsRequestListener(EthereumWalletService ethereumWalletService) {
     this.ethereumWalletService = ethereumWalletService;
   }
 
