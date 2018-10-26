@@ -138,6 +138,9 @@ public class Utils {
   public static final ArgumentLiteral<Double>            AMOUNT_PARAMETER                              =
                                                                           new ArgumentLiteral<>(Double.class, AMOUNT);
 
+  public static final ArgumentLiteral<String>            MESSAGE_PARAMETER                             =
+                                                                           new ArgumentLiteral<>(String.class, MESSAGE);
+
   public static final Event                              CONTRACT_TRANSFER_EVENT                       =
                                                                                  new Event("Transfer",
                                                                                            Arrays.asList(new TypeReference<Address>(true) {

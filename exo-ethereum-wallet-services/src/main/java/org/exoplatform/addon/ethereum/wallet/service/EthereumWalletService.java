@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.picocontainer.Startable;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
@@ -40,6 +41,8 @@ import org.exoplatform.commons.utils.IOUtil;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.configuration.ConfigurationManager;
 import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.services.cache.CacheService;
+import org.exoplatform.services.cache.ExoCache;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -54,80 +57,83 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
-  private static final char[]    SIMPLE_CHARS                  = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-      'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-      'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9' };
+  private static final char[]                  SIMPLE_CHARS                  = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+      'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4',
+      '5', '6', '7', '8', '9' };
 
-  private static final Log       LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
+  private static final Log                     LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
 
-  public static final String     DEFAULT_NETWORK_ID            = "defaultNetworkId";
+  public static final String                   DEFAULT_NETWORK_ID            = "defaultNetworkId";
 
-  public static final String     DEFAULT_NETWORK_URL           = "defaultNetworkURL";
+  public static final String                   DEFAULT_NETWORK_URL           = "defaultNetworkURL";
 
-  public static final String     DEFAULT_NETWORK_WS_URL        = "defaultNetworkWSURL";
+  public static final String                   DEFAULT_NETWORK_WS_URL        = "defaultNetworkWSURL";
 
-  public static final String     DEFAULT_ACCESS_PERMISSION     = "defaultAccessPermission";
+  public static final String                   DEFAULT_ACCESS_PERMISSION     = "defaultAccessPermission";
 
-  public static final String     DEFAULT_GAS                   = "defaultGas";
+  public static final String                   DEFAULT_GAS                   = "defaultGas";
 
-  public static final String     DEFAULT_BLOCKS_TO_RETRIEVE    = "defaultBlocksToRetrieve";
+  public static final String                   DEFAULT_BLOCKS_TO_RETRIEVE    = "defaultBlocksToRetrieve";
 
-  public static final String     DEFAULT_CONTRACTS_ADDRESSES   = "defaultContractAddresses";
+  public static final String                   DEFAULT_CONTRACTS_ADDRESSES   = "defaultContractAddresses";
 
-  public static final String     SCOPE_NAME                    = "ADDONS_ETHEREUM_WALLET";
+  public static final String                   SCOPE_NAME                    = "ADDONS_ETHEREUM_WALLET";
 
-  public static final String     GLOBAL_SETTINGS_KEY_NAME      = "GLOBAL_SETTINGS";
+  public static final String                   GLOBAL_SETTINGS_KEY_NAME      = "GLOBAL_SETTINGS";
 
-  public static final String     ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
+  public static final String                   ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
-  public static final String     LAST_BLOCK_NUMBER_KEY_NAME    = "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
+  public static final String                   LAST_BLOCK_NUMBER_KEY_NAME    = "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
 
-  public static final String     SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
+  public static final String                   SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
 
-  public static final Context    WALLET_CONTEXT                = Context.GLOBAL;
+  public static final Context                  WALLET_CONTEXT                = Context.GLOBAL;
 
-  public static final Scope      WALLET_SCOPE                  = Scope.APPLICATION.id(SCOPE_NAME);
+  public static final Scope                    WALLET_SCOPE                  = Scope.APPLICATION.id(SCOPE_NAME);
 
-  public static final String     WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
+  public static final String                   WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
 
-  public static final String     WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
+  public static final String                   WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
 
-  public static final String     WALLET_BROWSER_PHRASE_NAME    = "WALLET_BROWSER_PHRASE";
+  public static final String                   WALLET_BROWSER_PHRASE_NAME    = "WALLET_BROWSER_PHRASE";
 
-  public static final String     ABI_PATH_PARAMETER            = "contract.abi.path";
+  public static final String                   ABI_PATH_PARAMETER            = "contract.abi.path";
 
-  public static final String     BIN_PATH_PARAMETER            = "contract.bin.path";
+  public static final String                   BIN_PATH_PARAMETER            = "contract.bin.path";
 
-  private SettingService         settingService;
+  private SettingService                       settingService;
 
-  private IdentityManager        identityManager;
+  private IdentityManager                      identityManager;
 
-  private SpaceService           spaceService;
+  private SpaceService                         spaceService;
 
-  private WebNotificationStorage webNotificationStorage;
+  private WebNotificationStorage               webNotificationStorage;
 
-  private ListenerService        listenerService;
+  private ListenerService                      listenerService;
 
-  private ConfigurationManager   configurationManager;
+  private ConfigurationManager                 configurationManager;
 
-  private GlobalSettings         defaultSettings               = new GlobalSettings();
+  private GlobalSettings                       defaultSettings               = new GlobalSettings();
 
-  private GlobalSettings         storedSettings;
+  private GlobalSettings                       storedSettings;
 
-  private String                 contractAbiPath;
+  private String                               contractAbiPath;
 
-  private JSONArray              contractAbi;
+  private JSONArray                            contractAbi;
 
-  private String                 contractBinaryPath;
+  private String                               contractBinaryPath;
 
-  private String                 contractBinary;
+  private String                               contractBinary;
+
+  private ExoCache<String, TransactionMessage> transactionMessagesCache      = null;
 
   public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
                                WebNotificationStorage webNotificationStorage,
                                IdentityManager identityManager,
                                ListenerService listenerService,
+                               CacheService cacheService,
                                ConfigurationManager configurationManager,
                                InitParams params) {
     this.configurationManager = configurationManager;
@@ -136,6 +142,7 @@ public class EthereumWalletService implements Startable {
     this.spaceService = spaceService;
     this.webNotificationStorage = webNotificationStorage;
     this.listenerService = listenerService;
+    this.transactionMessagesCache = cacheService.getCacheInstance("exo.addon.wallet.transactions");
 
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
       String value = params.getValueParam(DEFAULT_NETWORK_ID).getValue();
@@ -708,8 +715,9 @@ public class EthereumWalletService implements Startable {
    * @param networkId
    * @param address
    * @param hash
+   * @param sender
    */
-  public void saveAccountTransaction(Long networkId, String address, String hash) {
+  public void saveAccountTransaction(Long networkId, String address, String hash, boolean sender) {
     if (StringUtils.isBlank(address)) {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
@@ -723,7 +731,16 @@ public class EthereumWalletService implements Startable {
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     if (!addressTransactions.contains(hash)) {
-      addressTransactions = addressTransactions.isEmpty() ? hash : hash + "," + addressTransactions;
+      String content = hash;
+      TransactionMessage transactionMessage = transactionMessagesCache.get(hash);
+      if (transactionMessage != null) {
+        if (!sender) {
+          // Avoid saving label only for sender
+          transactionMessage = new TransactionMessage(transactionMessage.getHash(), null, transactionMessage.getMessage(), null);
+        }
+        content = transactionMessage.toString();
+      }
+      addressTransactions = addressTransactions.isEmpty() ? content : content + "," + addressTransactions;
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName, SettingValue.create(addressTransactions));
     }
   }
@@ -735,12 +752,14 @@ public class EthereumWalletService implements Startable {
    * @param address
    * @return
    */
-  public List<String> getAccountTransactions(Long networkId, String address) {
+  public List<JSONObject> getAccountTransactions(Long networkId, String address) {
     String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
-    return Arrays.asList(addressTransactionsArray);
+    return Arrays.stream(addressTransactionsArray)
+                 .map(transaction -> new TransactionMessage(transaction).toJSONObject())
+                 .collect(Collectors.toList());
   }
 
   /**
@@ -869,6 +888,35 @@ public class EthereumWalletService implements Startable {
       }
     }
     return accounts;
+  }
+
+  /**
+   * Save temporary transaction label and message
+   * 
+   * @param transactionMessage
+   */
+  public void saveTransactionMessage(TransactionMessage transactionMessage) {
+    this.transactionMessagesCache.put(transactionMessage.getHash(), transactionMessage);
+  }
+
+  /**
+   * Get temporary transaction label and message
+   * 
+   * @param transactionHash
+   * @return
+   */
+  public TransactionMessage getTransactionMessage(String transactionHash) {
+    return this.transactionMessagesCache.get(transactionHash);
+  }
+
+  /**
+   * Remove transaction message object
+   * 
+   * @param hash
+   * @return
+   */
+  public TransactionMessage removeTransactionMessageFromCache(String hash) {
+    return this.transactionMessagesCache.remove(hash);
   }
 
   private Map<String, String> getListOfWalletsOfType(String walletType) throws Exception {

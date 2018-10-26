@@ -102,13 +102,13 @@ export default {
         this.$nextTick(() => {
           if (this.$refs.sendEtherForm) {
             this.$refs.sendEtherForm.init();
-            if (this.receiver && this.receiverType && this.amount) {
+            if (this.receiver && this.receiverType) {
               this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.receiver, this.receiverType);
               this.$refs.sendEtherForm.amount = Number(this.amount);
             }
           } else if (this.$refs.sendTokensForm) {
             this.$refs.sendTokensForm.init();
-            if (this.receiver && this.receiverType && this.amount) {
+            if (this.receiver && this.receiverType) {
               this.$refs.sendTokensForm.$refs.autocomplete.selectItem(this.receiver, this.receiverType);
               this.$refs.sendTokensForm.amount = Number(this.amount);
             }

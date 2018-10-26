@@ -27,6 +27,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
@@ -272,6 +273,25 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
+   * Store transaction custom label and message
+   * 
+   * @param transactionMessage
+   * @return
+   */
+  @POST
+  @Path("saveTransactionMessage")
+  public Response saveTransactionMessage(TransactionMessage transactionMessage) {
+    if (transactionMessage == null || StringUtils.isBlank(transactionMessage.getHash())) {
+      LOG.warn("Bad request sent to server with empty transaction hash");
+      return Response.status(400).build();
+    }
+
+    transactionMessage.setSender(getCurrentUserId());
+    ethereumWalletService.saveTransactionMessage(transactionMessage);
+    return Response.ok().build();
+  }
+
+  /**
    * Get list of transactions of an address
    * 
    * @param networkId
@@ -291,7 +311,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    List<String> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address);
+    List<JSONObject> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address);
     JSONArray array = new JSONArray(userTransactions);
 
     return Response.ok(array.toString()).build();

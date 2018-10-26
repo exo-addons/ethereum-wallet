@@ -50,6 +50,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
     String receiverUrl = notification.getValueOwnerParameter(RECEIVER_URL);
     String senderUrl = notification.getValueOwnerParameter(SENDER_URL);
     String symbol = notification.getValueOwnerParameter(SYMBOL);
+    String message = notification.getValueOwnerParameter(MESSAGE);
     String notificationRead = notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey());
     try {
       templateContext.put("AMOUNT", amount);
@@ -62,6 +63,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("SYMBOL", symbol);
       templateContext.put("NOTIFICATION_ID", notification.getId());
       templateContext.put("READ", Boolean.valueOf(notificationRead) ? "read" : "unread");
+      templateContext.put("MESSAGE", message);
       try {
         templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
       } catch (Exception e) {

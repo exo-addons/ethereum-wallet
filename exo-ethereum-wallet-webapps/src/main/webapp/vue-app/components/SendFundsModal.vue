@@ -162,7 +162,7 @@ export default {
         return;
       }
 
-      if (receiver && receiverType && amount && notificationId) {
+      if (receiver && receiverType && notificationId) {
         checkFundRequestStatus(notificationId)
           .then(sent => {
             this.dialog = !sent;

@@ -90,6 +90,10 @@ export function computeGasPrice() {
 
         // Ad 10% of gas price to avoid "transaction underpriced" errors
         window.walletSettings.gasPrice = Math.floor(gasPrice * 1.1);
+        // Avoid adding excessive gas price
+        if (window.walletSettings.gasPrice > 200000000000) {
+          window.walletSettings.gasPrice = 200000000000;
+        }
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
       })
       .catch(error => {

@@ -6,10 +6,17 @@
     <div class="media-body">
       <div class="contentSmall">
         <div class="content">
+        </div>
+        <div class="status">
           <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceEtherReceiverNotificationPlugin", RECEIVER_URL, AMOUNT, SENDER_URL) : _ctx.appRes("Notification.message.EtherReceiverNotificationPlugin", AMOUNT, SENDER_URL)%>
         </div>
+        <% if(MESSAGE) { %>
+          <div class="content">
+            <%= MESSAGE %>
+          </div>
+        <% } %>
         <div class="lastUpdatedTime">
-            $LAST_UPDATED_TIME
+          $LAST_UPDATED_TIME
         </div>
       </div>
     </div>

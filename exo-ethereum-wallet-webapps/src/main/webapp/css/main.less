@@ -9,6 +9,10 @@
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
   background: transparent;
 
+  textarea {
+    margin-bottom: 0;
+  }
+
   label {
     margin-bottom: 0;
   }
@@ -489,6 +493,14 @@
     margin: 20px 20px 0;
   }
 
+  .dynamic-height .v-list__tile {
+    height: auto;
+    min-height: 40px;
+    
+    .v-list__tile__content.align-end {
+      max-width: ~"calc(100% - 110px)";
+    }
+  }
 }
 
 @media (min-width : 1024px) {

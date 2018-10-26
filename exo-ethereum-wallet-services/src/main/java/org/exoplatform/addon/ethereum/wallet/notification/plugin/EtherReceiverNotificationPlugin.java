@@ -49,6 +49,7 @@ public class EtherReceiverNotificationPlugin extends BaseNotificationPlugin {
     AccountDetail senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
     AccountDetail receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
+    String message = ctx.value(MESSAGE_PARAMETER);
 
     List<String> toList = getNotificationReceiversUsers(receiverAccountDetail, senderAccountDetail.getId());
     if (toList == null || toList.isEmpty()) {
@@ -59,6 +60,7 @@ public class EtherReceiverNotificationPlugin extends BaseNotificationPlugin {
                            .to(toList)
                            .with(ACCOUNT_TYPE, receiverAccountDetail.getType())
                            .with(AMOUNT, String.valueOf(amount))
+                           .with(MESSAGE, message)
                            .with(AVATAR, CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar())
                            .with(SENDER_URL, getPermanentLink(senderAccountDetail))
                            .with(RECEIVER_URL, getPermanentLink(receiverAccountDetail))

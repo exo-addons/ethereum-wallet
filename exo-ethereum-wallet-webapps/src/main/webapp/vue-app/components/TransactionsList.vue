@@ -152,6 +152,20 @@
               </v-list-tile-content>
             </v-list-tile>
 
+            <v-list-tile v-if="item.label" class="dynamic-height">
+              <v-list-tile-content>Label</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.label }}
+              </v-list-tile-content>
+            </v-list-tile>
+
+            <v-list-tile v-if="item.message" class="dynamic-height">
+              <v-list-tile-content>Message</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.message }}
+              </v-list-tile-content>
+            </v-list-tile>
+
             <v-list-tile v-if="item.amount">
               <v-list-tile-content>Amount</v-list-tile-content>
               <v-list-tile-content class="align-end">
@@ -368,10 +382,18 @@ export default {
       return loadPendingTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
         this.$emit("refresh-balance");
         this.forceUpdateList();
-      })
+      }, true)
+        .catch(e => {
+          console.debug("loadPendingTransactions - method error", e);
+          this.$emit("error", `${e}`);
+        })
         .then(() => {
           this.forceUpdateList();
           return loadStoredTransactions(this.networkId, this.account, this.contractDetails, this.transactions);
+        })
+        .catch(e => {
+          console.debug("loadStoredTransactions - method error", e);
+          this.$emit("error", `${e}`);
         })
         .then(() => {
           if (this.contractDetails.isContract) {
@@ -388,7 +410,6 @@ export default {
           console.debug("loadTransactions - method error", e);
 
           this.loading = false;
-          console.debug("loadTransactions - method error", e);
           this.$emit("error", `${e}`);
         });
     },

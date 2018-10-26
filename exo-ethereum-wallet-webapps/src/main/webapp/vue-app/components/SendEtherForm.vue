@@ -37,14 +37,34 @@
           counter
           @click:append="walletPasswordShow = !walletPasswordShow"
         />
+        <v-text-field
+          v-model="transactionLabel"
+          :disabled="loading"
+          type="text"
+          name="transactionLabel"
+          label="Label (Optional)"
+          placeholder="Enter label for your transaction" />
+        <v-textarea
+          id="transactionMessage"
+          v-model="transactionMessage"
+          :disabled="loading"
+          name="transactionMessage"
+          label="Message (Optional)"
+          placeholder="Enter a custom message to send to the receiver with your transaction"
+          class="mt-4"
+          rows="3"
+          flat
+          no-resize />
       </v-form>
-      <qr-code-modal :from="account"
-                     :to="recipient"
-                     :amount="amount"
-                     :open="showQRCodeModal"
-                     title="Send Ether QR Code"
-                     information="You can scan this QR code by using a different application that supports QR code transaction generation to send ethers"
-                     @close="showQRCodeModal = false" />
+
+      <qr-code-modal 
+        :from="account"
+        :to="recipient"
+        :amount="amount"
+        :open="showQRCodeModal"
+        title="Send Ether QR Code"
+        information="You can scan this QR code by using a different application that supports QR code transaction generation to send ethers"
+        @close="showQRCodeModal = false" />
     </v-card-text>
     <v-card-actions>
       <v-spacer />
@@ -59,6 +79,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import {unlockBrowerWallet, lockBrowerWallet, gasToEther, hashCode, truncateError} from '../WalletUtils.js';
+import {saveTransactionMessage} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -83,6 +104,8 @@ export default {
     return {
       showQRCodeModal: false,
       storedPassword: false,
+      transactionLabel: '',
+      transactionMessage: '',
       walletPassword: '',
       walletPasswordShow: false,
       useMetamask: false,
@@ -99,6 +122,8 @@ export default {
       this.recipient = null;
       this.amount = null;
       this.error = null;
+      this.transactionMessage = null;
+      this.transactionLabel = null;
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
     },
@@ -144,6 +169,7 @@ export default {
         // Send an amount of ether to a third person
         window.localWeb3.eth.sendTransaction(transaction)
           .on('transactionHash', hash => {
+            saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
             // The transaction has been hashed and will be sent
             this.$emit("sent", {
               hash: hash,
@@ -153,6 +179,8 @@ export default {
               gas: transaction.gas,
               gasPrice: transaction.gasPrice,
               pending: true,
+              label: this.transactionLabel,
+              message: this.transactionMessage,
               type: 'sendEther',
               timestamp: Date.now()
             });

@@ -137,6 +137,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     boolean transactionStatusOk = false;
+    boolean transactionSaved = false;
     // Send notification to sender if the address is recognized
     if (sender != null && sender.getId() != null) {
       if (sendNotification) {
@@ -144,12 +145,16 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
                                             isContractTransaction ? TransactionStatus.CONTRACT_SENDER : TransactionStatus.SENDER;
         if (isContractTransaction || checkTransactionStatus(transaction) != null) {
           transactionStatusOk = true;
-          sendNotification(sender, receiver, contractDetails, transactionStatus, amount);
+          sendNotification(transaction.getHash(), sender, receiver, contractDetails, transactionStatus, amount);
         }
       }
 
       // Add user transaction
-      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(), sender.getAddress(), transaction.getHash());
+      transactionSaved = true;
+      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(),
+                                                   sender.getAddress(),
+                                                   transaction.getHash(),
+                                                   true);
     }
 
     // Send notification to receiver if the address is recognized
@@ -159,16 +164,25 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         TransactionStatus transactionStatus = isContractTransaction ? TransactionStatus.CONTRACT_RECEIVER
                                                                     : TransactionStatus.RECEIVER;
         if (isContractTransaction || transactionStatusOk || checkTransactionStatus(transaction) != null) {
-          sendNotification(sender, receiver, contractDetails, transactionStatus, amount);
+          sendNotification(transaction.getHash(), sender, receiver, contractDetails, transactionStatus, amount);
         }
       }
 
       // Add user transaction
-      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(), receiver.getAddress(), transaction.getHash());
+      transactionSaved = true;
+      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(),
+                                                   receiver.getAddress(),
+                                                   transaction.getHash(),
+                                                   false);
+    }
+
+    if (transactionSaved) {
+      ethereumWalletService.removeTransactionMessageFromCache(transaction.getHash());
     }
   }
 
-  private void sendNotification(AccountDetail senderAccountDetails,
+  private void sendNotification(String transactionHash,
+                                AccountDetail senderAccountDetails,
                                 AccountDetail receiverAccountDetails,
                                 ContractDetail contractDetails,
                                 TransactionStatus transactionStatus,
@@ -176,6 +190,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     NotificationContext ctx = NotificationContextImpl.cloneInstance();
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, senderAccountDetails);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, receiverAccountDetails);
+
+    TransactionMessage transactionMessage = ethereumWalletService.getTransactionMessage(transactionHash);
+    ctx.append(MESSAGE_PARAMETER, transactionMessage == null ? null : transactionMessage.getMessage());
+
     if (contractDetails != null) {
       ctx.append(CONTRACT_DETAILS_PARAMETER, contractDetails);
     }

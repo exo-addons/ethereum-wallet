@@ -3,7 +3,7 @@ import {etherToFiat, watchTransactionStatus} from './WalletUtils.js';
 import {getContractInstance} from './WalletToken.js';
 import {ERC20_COMPLIANT_CONTRACT_ABI} from './WalletConstants.js';
 
-export function loadPendingTransactions(networkId, account, contractDetails, transactions, refreshCallback) {
+export function loadPendingTransactions(networkId, account, contractDetails, transactions, refreshCallback, removeIfNotFound) {
   const pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
   if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
     return Promise.resolve({});
@@ -17,9 +17,14 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
       .then(transactionTmp => {
         transaction = transactionTmp;
         if (transactionTmp) {
+          transaction.label = pendingTransactions[transactionHash].label;
+          transaction.message = pendingTransactions[transactionHash].message;
           return window.localWeb3.eth.getTransactionReceipt(transactionHash)
         } else {
-          throw new Error("Invalid transaction hash", transactionHash);
+          if (removeIfNotFound) {
+            removePendingTransactionFromStorage(networkId, account, contractDetails, transactionHash);
+          }
+          throw new Error("Invalid transaction hash, it will be removed", transactionHash);
         }
       })
       .then(receipt => {
@@ -58,59 +63,61 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
         return null;
       }
     })
-    .then(transactionHashes => {
-      if (transactionHashes && transactionHashes.length) {
+    .then(transactionDetails => {
+      if (transactionDetails && transactionDetails.length) {
         const loadingPromises = [];
 
-        transactionHashes.forEach(transactionHash => {
-          if (!transactionHash || !transactionHash.length) {
-            return [];
+        transactionDetails.forEach(transactionDetail => {
+          if (!transactionDetail || !transactionDetail.hash || !transactionDetail.hash.length) {
+            console.debug("Can't parse transaction detail", transactionDetail);
+          } else {
+            let transaction,receipt;
+
+            const transactionHash = transactionDetail.hash;
+            const loadingPromise = window.localWeb3.eth.getTransaction(transactionHash)
+              .then(transactionTmp => {
+                transaction = transactionTmp;
+
+                // if this is about loading a contract transactions, ignore other transactions
+                if (!transaction || (contractDetails.isContract && (!transaction.to || transaction.to.toLowerCase() !== contractDetails.address))) {
+                  transaction.ignore = true;
+                } else {
+                  transaction.label = transactionDetail.label;
+                  transaction.message = transactionDetail.message;
+                  return window.localWeb3.eth.getTransactionReceipt(transactionHash);
+                }
+              })
+              .then(receiptTmp => {
+                if (transaction.ignore) {
+                  return;
+                }
+
+                receipt = receiptTmp;
+                return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
+              })
+              .then(block => {
+                if (transaction.ignore) {
+                  return;
+                }
+
+                return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000);
+              })
+              .then(transactionDetails => {
+                if (transaction.ignore) {
+                  return;
+                }
+
+                if (transactionDetails && refreshCallback) {
+                  return refreshCallback(transactionDetails);
+                }
+
+                return transactionDetails;
+              })
+              .catch(error => {
+                throw error;
+              });
+            loadingPromises.push(loadingPromise);
           }
-
-          let transaction,receipt;
-
-          const loadingPromise = window.localWeb3.eth.getTransaction(transactionHash)
-            .then(transactionTmp => {
-              transaction = transactionTmp;
-
-              // if this is about loading a contract transactions, ignore other transactions
-              if (!transaction || (contractDetails.isContract && (!transaction.to || transaction.to.toLowerCase() !== contractDetails.address))) {
-                transaction.ignore = true;
-              } else {
-                return window.localWeb3.eth.getTransactionReceipt(transactionHash);
-              }
-            })
-            .then(receiptTmp => {
-              if (transaction.ignore) {
-                return;
-              }
-
-              receipt = receiptTmp;
-              return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
-            })
-            .then(block => {
-              if (transaction.ignore) {
-                return;
-              }
-
-              return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000);
-            })
-            .then(transactionDetails => {
-              if (transaction.ignore) {
-                return;
-              }
-
-              if (transactionDetails && refreshCallback) {
-                return refreshCallback(transactionDetails);
-              }
-
-              return transactionDetails;
-            })
-            .catch(error => {
-              throw error;
-            });
-
-          loadingPromises.push(loadingPromise);
         });
 
         return Promise.all(loadingPromises);
@@ -216,6 +223,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
   const transactionDetails = {
     hash: transaction.hash,
     status: status,
+    label: transaction.label,
+    message: transaction.message,
     type: isFeeTransaction ? 'contract' : 'ether',
     isReceiver: isReceiver,
     isContractCreation: !toAddress && receipt && receipt.contractAddress,
@@ -257,6 +266,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     watchTransactionStatus(transaction.hash, (receipt, block) => {
       window.localWeb3.eth.getTransaction(transaction.hash)
         .then(tx => {
+          tx.label = transaction.label;
+          tx.message = transaction.message;
           transaction = tx;
 
           removePendingTransactionFromStorage(networkId, account, accountDetails, transaction.hash);
@@ -540,6 +551,27 @@ export function getPendingTransactionFromStorage(networkId, account, contractDet
     return {};
   } else {
     return JSON.parse(storageValue);
+  }
+}
+
+export function saveTransactionMessage(transactionHash, transactionMessage, transactionLabel) {
+  if (transactionHash && (transactionMessage || transactionLabel)) {
+    transactionLabel = transactionLabel || '';
+    transactionMessage = transactionMessage || '';
+
+    fetch('/portal/rest/wallet/api/account/saveTransactionMessage', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        hash: transactionHash,
+        label: transactionLabel,
+        message: transactionMessage,
+      })
+    });
   }
 }
 
