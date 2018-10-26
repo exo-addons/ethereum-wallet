@@ -702,23 +702,6 @@ public class EthereumWalletService implements Startable {
                        SettingValue.create(lastWatchedBlockNumber));
   }
 
-  private Space getSpace(String id) {
-    if (id.indexOf("/spaces/") >= 0) {
-      return spaceService.getSpaceByGroupId(id);
-    }
-    Space space = spaceService.getSpaceByPrettyName(id);
-    if (space == null) {
-      space = spaceService.getSpaceByGroupId("/spaces/" + id);
-      if (space == null) {
-        space = spaceService.getSpaceByDisplayName(id);
-        if (space == null) {
-          space = spaceService.getSpaceByUrl(id);
-        }
-      }
-    }
-    return space;
-  }
-
   /**
    * Save transaction hash for an account
    * 

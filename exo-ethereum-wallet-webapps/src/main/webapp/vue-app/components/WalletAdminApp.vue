@@ -356,6 +356,7 @@
                             class="bottomNavigationItem transparent"
                             title="Send funds"
                             flat
+                            icon
                             @click="openSendFundsModal($event, props.item, true)">
                             <v-icon>send</v-icon>
                           </v-btn>
@@ -375,6 +376,7 @@
                             class="bottomNavigationItem transparent"
                             title="Send funds"
                             flat
+                            icon
                             @click="openSendFundsModal($event, props.item)">
                             <v-icon>send</v-icon>
                           </v-btn>
