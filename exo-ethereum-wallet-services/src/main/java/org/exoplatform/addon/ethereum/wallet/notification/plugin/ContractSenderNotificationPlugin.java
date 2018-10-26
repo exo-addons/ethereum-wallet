@@ -50,6 +50,7 @@ public class ContractSenderNotificationPlugin extends BaseNotificationPlugin {
     ContractDetail contractDetail = ctx.value(CONTRACT_DETAILS_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
     String message = ctx.value(MESSAGE_PARAMETER);
+    String hash = ctx.value(HASH_PARAMETER);
 
     List<String> toList = getNotificationReceiversUsers(senderAccountDetail, receiverAccountDetail.getId());
     if (toList == null || toList.isEmpty()) {
@@ -62,6 +63,7 @@ public class ContractSenderNotificationPlugin extends BaseNotificationPlugin {
                            .with(ACCOUNT_TYPE, senderAccountDetail.getType())
                            .with(SYMBOL, contractDetail.getSymbol())
                            .with(MESSAGE, message)
+                           .with(HASH, hash)
                            .with(AVATAR, CommonsUtils.getCurrentDomain() + receiverAccountDetail.getAvatar())
                            .with(SENDER_URL, getPermanentLink(senderAccountDetail))
                            .with(RECEIVER_URL, getPermanentLink(receiverAccountDetail))

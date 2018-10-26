@@ -91,7 +91,7 @@
   
               <wallet-accounts-list
                 v-if="isMaximized && !loading"
-                ref="WalletAccountsList"
+                ref="walletAccountsList"
                 :is-read-only="isReadOnly"
                 :accounts-details="accountsDetails"
                 :overview-accounts="overviewAccounts"
@@ -123,6 +123,7 @@
                 :network-id="networkId"
                 :wallet-address="walletAddress"
                 :contract-details="selectedAccount"
+                :selected-transaction-hash="selectedTransactionHash"
                 @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
                 @back="back()"/>
 
@@ -198,6 +199,7 @@ export default {
       browserWalletExists: false,
       browserWalletBackedUp: true,
       walletAddress: null,
+      selectedTransactionHash: null,
       selectedAccount: null,
       fiatSymbol: '$',
       accountsDetails: {},
@@ -279,6 +281,9 @@ export default {
       .then((result, error) => {
         if (this.$refs.walletSummary) {
           this.$refs.walletSummary.checkSendingRequest(this.isReadOnly);
+        }
+        if (this.$refs.walletAccountsList) {
+          this.$refs.walletAccountsList.checkOpenTransaction();
         }
       })
       .catch(error => {
@@ -452,9 +457,10 @@ export default {
           }
         });
     },
-    openAccountDetail(accountDetails) {
+    openAccountDetail(accountDetails, hash) {
       if (!accountDetails.error) {
         this.selectedAccount = accountDetails;
+        this.selectedTransactionHash = hash;
       }
       this.seeAccountDetails = true;
 

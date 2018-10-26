@@ -93,6 +93,8 @@ public class Utils {
 
   public static final String                             MESSAGE                                       = "message";
 
+  public static final String                             HASH                                          = "hash";
+
   public static final String                             ACCOUNT_TYPE                                  = "account_type";
 
   public static final String                             AVATAR                                        = "avatar";
@@ -140,6 +142,9 @@ public class Utils {
 
   public static final ArgumentLiteral<String>            MESSAGE_PARAMETER                             =
                                                                            new ArgumentLiteral<>(String.class, MESSAGE);
+
+  public static final ArgumentLiteral<String>            HASH_PARAMETER                                =
+                                                                        new ArgumentLiteral<>(String.class, HASH);
 
   public static final Event                              CONTRACT_TRANSFER_EVENT                       =
                                                                                  new Event("Transfer",

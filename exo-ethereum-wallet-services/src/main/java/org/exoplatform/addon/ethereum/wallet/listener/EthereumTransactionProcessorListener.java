@@ -188,11 +188,12 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
                                 TransactionStatus transactionStatus,
                                 double amount) {
     NotificationContext ctx = NotificationContextImpl.cloneInstance();
+    ctx.append(HASH_PARAMETER, transactionHash);
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, senderAccountDetails);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, receiverAccountDetails);
 
     TransactionMessage transactionMessage = ethereumWalletService.getTransactionMessage(transactionHash);
-    ctx.append(MESSAGE_PARAMETER, transactionMessage == null ? null : transactionMessage.getMessage());
+    ctx.append(MESSAGE_PARAMETER, transactionMessage == null ? "" : transactionMessage.getMessage());
 
     if (contractDetails != null) {
       ctx.append(CONTRACT_DETAILS_PARAMETER, contractDetails);

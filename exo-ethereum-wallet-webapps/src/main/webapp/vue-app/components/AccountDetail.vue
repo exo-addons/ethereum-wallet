@@ -61,6 +61,7 @@
       :account="walletAddress"
       :contract-details="contractDetails"
       :fiat-symbol="fiatSymbol"
+      :selected-transaction-hash="selectedTransactionHash"
       :error="error"
       @error="error = $event"
       @refresh-balance="refreshBalance" />
@@ -114,6 +115,12 @@ export default {
       }
     },
     fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    selectedTransactionHash: {
       type: String,
       default: function() {
         return null;

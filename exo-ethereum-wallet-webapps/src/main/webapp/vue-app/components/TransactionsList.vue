@@ -13,9 +13,11 @@
       <v-expansion-panel v-if="Object.keys(sortedTransactions).length">
         <v-expansion-panel-content
           v-for="(item, index) in sortedTransactions"
-          :key="index">
+          :id="`transaction-${item.hash}`"
+          :key="index"
+          :value="item.selected">
 
-          <v-list slot="header" two-line class="pt-0 pb-0">
+          <v-list slot="header" :class="item.selected && 'blue lighten-5'" two-line class="pt-0 pb-0">
             <v-list-tile :key="item.hash" avatar>
               <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
               <v-list-tile-avatar v-else-if="item.error" :title="item.error">
@@ -306,6 +308,12 @@ export default {
       default: function() {
         return null;
       }
+    },
+    selectedTransactionHash: {
+      type: String,
+      default: function() {
+        return null;
+      }
     }
   },
   data () {
@@ -403,6 +411,20 @@ export default {
           }
         })
         .then(() => {
+          if (this.selectedTransactionHash) {
+            const selectedTransaction = this.transactions[this.selectedTransactionHash];
+            if (selectedTransaction) {
+              this.$set(selectedTransaction, "selected", true);
+              this.$nextTick(() => {
+                setTimeout(() => {
+                  const selectedTransactionElement = document.getElementById(`transaction-${selectedTransaction.hash}`);
+                  if (selectedTransactionElement) {
+                    selectedTransactionElement.scrollIntoView();
+                  }
+                } ,200);
+              });
+            }
+          }
           this.loading = false;
           this.forceUpdateList();
         })

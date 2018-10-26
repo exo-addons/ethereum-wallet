@@ -225,6 +225,19 @@ export default {
 
       this.$emit('transaction-sent', transaction);
     },
+    checkOpenTransaction() {
+      if (document.location.search && document.location.search.length) {
+        const search = document.location.search.substring(1);
+        const parameters = JSON.parse(`{"${decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"')}"}`);
+        if (this.walletAddress && this.accountsDetails && parameters && parameters.hash) {
+          if (this.accountsDetails[this.walletAddress]) {
+            this.$emit('account-details-selected', this.accountsDetails[this.walletAddress], parameters.hash);
+          } else if(Object.keys(this.accountsDetails).length) {
+            this.$emit('account-details-selected', this.accountsDetails[Object.keys(this.accountsDetails)[0]], parameters.hash);
+          }
+        }
+      }
+    },
     addSendTokenTransaction(transaction, contract) {
       addTransaction(this.networkId,
         this.walletAddress,
