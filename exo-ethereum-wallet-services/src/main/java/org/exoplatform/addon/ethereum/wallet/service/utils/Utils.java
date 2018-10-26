@@ -34,6 +34,8 @@ import org.exoplatform.container.PortalContainer;
 import org.exoplatform.portal.application.PortalApplication;
 import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.UserPortalConfigService;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
@@ -46,6 +48,8 @@ import org.exoplatform.webui.application.WebuiRequestContext;
  * Utils class to provide common tools and constants
  */
 public class Utils {
+  private static final Log                               LOG                                           =
+                                                             ExoLogger.getLogger(Utils.class);
 
   public static final String                             SPACE_ACCOUNT_TYPE                            = "space";
 
@@ -168,14 +172,18 @@ public class Utils {
 
   public static List<String> getNotificationReceiversUsers(AccountDetail toAccount, String excludedId) {
     if (SPACE_ACCOUNT_TYPE.equals(toAccount.getType())) {
-      Space space = CommonsUtils.getService(SpaceService.class).getSpaceByPrettyName(toAccount.getId());
-      String[] members = space.getMembers();
-      if (members == null || members.length == 0) {
-        return Collections.emptyList();
-      } else if (StringUtils.isBlank(excludedId)) {
-        return Arrays.asList(members);
+      Space space = getSpace(toAccount.getId());
+      if (space == null) {
+        return Collections.singletonList(toAccount.getId());
       } else {
-        return Arrays.stream(members).filter(member -> !excludedId.equals(member)).collect(Collectors.toList());
+        String[] members = space.getMembers();
+        if (members == null || members.length == 0) {
+          return Collections.emptyList();
+        } else if (StringUtils.isBlank(excludedId)) {
+          return Arrays.asList(members);
+        } else {
+          return Arrays.stream(members).filter(member -> !excludedId.equals(member)).collect(Collectors.toList());
+        }
       }
     } else {
       return Collections.singletonList(toAccount.getId());
@@ -183,12 +191,40 @@ public class Utils {
   }
 
   public static String getPermanentLink(AccountDetail account) {
-    String profileLink = account.getId() == null
-        || account.getType() == null ? account.getName()
-                                     : USER_ACCOUNT_TYPE.equals(account.getType()) ? LinkProvider.getProfileLink(account.getId())
-                                                                                   : getPermanentLink(account.getId(),
-                                                                                                      account.getName());
+    String profileLink = null;
+    try {
+      profileLink = account.getId() == null
+          || account.getType() == null ? account.getName()
+                                       : USER_ACCOUNT_TYPE.equals(account.getType()) ? LinkProvider.getProfileLink(account.getId())
+                                                                                     : getPermanentLink(getSpacePrettyName(account.getId()),
+                                                                                                        account.getName());
+    } catch (Exception e) {
+      LOG.error("Error getting profile link of space", e);
+    }
     return profileLink;
+  }
+
+  public static String getSpacePrettyName(String id) {
+    Space space = getSpace(id);
+    return space == null ? id : space.getPrettyName();
+  }
+
+  public static Space getSpace(String id) {
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+    if (id.indexOf("/spaces/") >= 0) {
+      return spaceService.getSpaceByGroupId(id);
+    }
+    Space space = spaceService.getSpaceByPrettyName(id);
+    if (space == null) {
+      space = spaceService.getSpaceByGroupId("/spaces/" + id);
+      if (space == null) {
+        space = spaceService.getSpaceByDisplayName(id);
+        if (space == null) {
+          space = spaceService.getSpaceByUrl(id);
+        }
+      }
+    }
+    return space;
   }
 
   public static String getAbsoluteMyWalletLink() {

@@ -142,7 +142,9 @@ export default {
 
       this.error = null;
 
+      // This assignement should be kept to avoid conflit in parallet execution
       const selectedAccount = this.selectedAccount;
+      const recipient = transaction.to.toLowerCase();
       addTransaction(this.networkId,
         this.walletAddress,
         selectedAccount,
@@ -150,7 +152,7 @@ export default {
         transaction,
         null,
         null,
-        () => this.$emit('success', selectedAccount),
+        () => this.$emit('success', selectedAccount, recipient),
         error => this.$emit('error', error));
 
       this.$emit('pending', transaction);

@@ -127,7 +127,6 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
   account = account.toLowerCase();
   // Load Transfer events for user as sender
   return contractDetails.contract.getPastEvents("Transfer", {
-    fromBlock: fromBlockNumber ? fromBlockNumber : 0,
     filter: {
       isError: 0,
       txreceipt_status: 1
@@ -141,7 +140,6 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Transfer events for user as receiver
     .then(() => contractDetails.contract.getPastEvents("Transfer", {
-        fromBlock: fromBlockNumber ? fromBlockNumber : 0,
         filter: {
           isError: 0,
           txreceipt_status: 1
@@ -155,30 +153,28 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Approval events for user as receiver
     .then(() => contractDetails.contract.getPastEvents("Approval", {
-        fromBlock: fromBlockNumber ? fromBlockNumber : 0,
-            filter: {
-              isError: 0,
-              txreceipt_status: 1
-            },
-            topics: [
-              window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
-              window.localWeb3.utils.padLeft(account, 64),
-              null
-            ]
+      filter: {
+        isError: 0,
+        txreceipt_status: 1
+      },
+      topics: [
+        window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
+        window.localWeb3.utils.padLeft(account, 64),
+        null
+      ]
     }))
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
     // Load Approval events for user as sender
     .then(() => contractDetails.contract.getPastEvents("Approval", {
-        fromBlock: fromBlockNumber ? fromBlockNumber : 0,
-            filter: {
-              isError: 0,
-              txreceipt_status: 1
-            },
-            topics: [
-              window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
-              null,
-              window.localWeb3.utils.padLeft(account, 64)
-            ]
+      filter: {
+        isError: 0,
+        txreceipt_status: 1
+      },
+      topics: [
+        window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
+        null,
+        window.localWeb3.utils.padLeft(account, 64)
+      ]
     }))
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
     .then(() => transactions)

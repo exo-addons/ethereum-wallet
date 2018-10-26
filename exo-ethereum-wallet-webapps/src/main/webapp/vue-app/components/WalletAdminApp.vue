@@ -344,12 +344,41 @@
                         {{ props.item.address }}
                       </td>
                       <td class="text-xs-right">
-                        <v-progress-circular v-if="props.item.balancePrincipal === false" :width="3" indeterminate color="primary" />
-                        <template v-else>{{ props.item.balancePrincipal }}</template>
+                        <v-card-title v-if="props.item.loadingBalancePrincipal" primary-title class="pb-0">
+                          <v-spacer />
+                          <v-badge color="red" right title="A transaction is in progress">
+                            <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+                          </v-badge>
+                        </v-card-title>
+                        <template v-else-if="props.item.balancePrincipal">
+                          {{ props.item.balancePrincipal }}
+                          <v-btn 
+                            class="bottomNavigationItem transparent"
+                            title="Send funds"
+                            flat
+                            @click="openSendFundsModal($event, props.item, true)">
+                            <v-icon>send</v-icon>
+                          </v-btn>
+                        </template>
+                        <template v-else>-</template>
                       </td>
                       <td class="text-xs-right">
-                        <v-progress-circular v-if="props.item.balance === false" :width="3" indeterminate color="primary" />
-                        <template v-else>{{ props.item.balance }}</template>
+                        <v-card-title v-if="props.item.loadingBalance" primary-title class="pb-0">
+                          <v-spacer />
+                          <v-badge color="red" right title="A transaction is in progress">
+                            <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+                          </v-badge>
+                        </v-card-title>
+                        <template v-else>
+                          {{ props.item.balance }}
+                          <v-btn 
+                            class="bottomNavigationItem transparent"
+                            title="Send funds"
+                            flat
+                            @click="openSendFundsModal($event, props.item)">
+                            <v-icon>send</v-icon>
+                          </v-btn>
+                        </template>
                       </td>
                     </tr>
                   </template>
@@ -375,8 +404,20 @@
                     is-read-only
                     is-display-only
                     @back="back()"/>
-
                 </v-navigation-drawer>
+
+                <send-funds-modal
+                  ref="sendFundsModal"
+                  :accounts-details="accountsDetails"
+                  :overview-accounts="overviewAccounts"
+                  :principal-account="principalAccount"
+                  :refresh-index="refreshIndex"
+                  :network-id="networkId"
+                  :wallet-address="walletAddress"
+                  no-button
+                  @success="refreshBalance"
+                  @pending="pendingTransaction"
+                  @error="refreshBalance(null, null, $event)" />
               </v-card>
             </v-tab-item>
           </v-tabs-items>
@@ -392,10 +433,11 @@ import AddContractModal from './AddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
 import WalletSetup from './WalletSetup.vue';
 import AccountDetail from './AccountDetail.vue';
+import SendFundsModal from './SendFundsModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
-import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress, getContractInstance} from '../WalletToken.js';
+import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
 import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance} from '../WalletUtils.js';
 
 export default {
@@ -404,6 +446,7 @@ export default {
     AddContractModal,
     WalletAddress,
     AccountDetail,
+    SendFundsModal,
     WalletSetup
   },
   data () {
@@ -482,12 +525,12 @@ export default {
         },
         {
           text: 'Principal balance',
-          align: 'right',
+          align: 'center',
           value: 'balancePrincipal'
         },
         {
           text: 'Ether balance',
-          align: 'right',
+          align: 'center',
           value: 'balance'
         }
       ],
@@ -538,6 +581,47 @@ export default {
   computed: {
     displaySettings() {
       return !this.loading && !this.loadingSettings;
+    },
+    principalAccount() {
+      if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
+        return this.selectedPrincipalAccount.value === 'ether' ? this.walletAddress : this.selectedPrincipalAccount.value;
+      } else {
+        return this.walletAddress;
+      }
+    },
+    overviewAccounts() {
+      const overviewAccounts = [];
+      if (this.selectedOverviewAccounts && this.selectedOverviewAccounts.length) {
+        // Add contracts addresses
+        this.selectedOverviewAccounts.forEach(account => {
+          if (account.value && account.value !== 'ether' && account.value !== this.walletAddress) {
+            overviewAccounts.push(account.value);
+          }
+        });
+      }
+      // Add ether to the comobobox list options
+      overviewAccounts.push(this.walletAddress);
+      return overviewAccounts;
+    },
+    accountsDetails() {
+      const accountsDetails = {};
+      if (this.contracts && this.contracts.length) {
+        this.contracts.forEach(contract => {
+          accountsDetails[contract.address] = contract;
+        });
+      }
+      const currentUserWallet = this.wallets.find(wallet => wallet.address === this.walletAddress);
+      if (currentUserWallet) {
+        accountsDetails[this.walletAddress] = {
+          title : 'ether',
+          icon : 'warning',
+          balance : currentUserWallet.balance,
+          symbol : 'ether',
+          isContract : false,
+          address : this.walletAddress
+        };
+      }
+      return accountsDetails;
     },
     showSpecificNetworkFields() {
       return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
@@ -709,7 +793,7 @@ export default {
           }
         })
         .then(account => {
-          this.walletAddress = window.localWeb3.eth.defaultAccount;
+          this.walletAddress = window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
           this.networkId = window.walletSettings.currentNetworkId;
         })
         .then(this.setDefaultValues)
@@ -735,6 +819,43 @@ export default {
           this.error = `Error encountered: ${e}`;
         });
     },
+    openSendFundsModal(event, wallet, principal) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (wallet && wallet.address && wallet.type) {
+        if (principal) {
+          if(this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
+            const principalInitialFund = this.initialFunds.find(account => account.address === this.selectedPrincipalAccount.value);
+            this.$refs.sendFundsModal.prepareSendForm(wallet.id, wallet.type, principalInitialFund && principalInitialFund.amount, this.selectedPrincipalAccount.value);
+          } else {
+            console.error("No selected principal account found");
+          }
+        } else {
+          const etherInitialFund = this.initialFunds.find(account => account.address === 'ether');
+          this.$refs.sendFundsModal.prepareSendForm(wallet.id, wallet.type, etherInitialFund && etherInitialFund.amount);
+        }
+      }
+    },
+    pendingTransaction(transaction) {
+      const recipient = transaction.to.toLowerCase();
+      const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === recipient);
+      if (transaction.contractAddress) {
+        this.$set(wallet, "loadingBalancePrincipal", true);
+      } else {
+        this.$set(wallet, "loadingBalance", true);
+      }
+    },
+    refreshBalance(accountDetails, address, error) {
+      if (error) {
+        console.debug("Error while proceeding transaction", error);
+        return;
+      }
+      const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === address);
+      if (wallet) {
+        this.computeBalance(accountDetails, wallet);
+      }
+    },
     loadWallets() {
       this.loadingWallets = true;
       getWallets()
@@ -742,41 +863,47 @@ export default {
         .then(() => {
           let principalContract = null;
           if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value && this.selectedPrincipalAccount.value !== 'ether') {
-            principalContract = getContractInstance(this.walletAddress, this.selectedPrincipalAccount.value, false);
+            principalContract = this.contracts.find(contract => contract.isContract && contract.address === this.selectedPrincipalAccount.value);
           }
           this.wallets.forEach(wallet => {
             if(wallet && wallet.address) {
-              wallet.balance = false;
-              wallet.balancePrincipal = false;
-              computeBalance(wallet.address)
-                .then((balanceDetails, error) => {
-                  if (error) {
-                    this.$set(wallet, 'icon', 'warning');
-                    this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
-                  } else {
-                    this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
-                    this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
-                  }
-                  this.$forceUpdate();
-                });
-              if (principalContract) {
-                principalContract.methods.balanceOf(wallet.address).call()
-                  .then((balance, error) => {
-                    if (error) {
-                      throw new Error('Invalid contract address');
-                    }
-                    balance = String(balance);
-                    this.$set(wallet, 'balancePrincipal', balance);
-                  });
-              } else {
-                wallet.balancePrincipal = "-";
-              }
+              this.$set(wallet, "loadingBalance", true);
+              this.$set(wallet, "loadingBalancePrincipal", true);
+              this.computeBalance(principalContract, wallet);
             }
           });
         })
         .finally(() => {
           this.loadingWallets = false;
         });
+    },
+    computeBalance(accountDetails, wallet) {
+      computeBalance(wallet.address)
+        .then((balanceDetails, error) => {
+          if (error) {
+            this.$set(wallet, 'icon', 'warning');
+            this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
+          } else {
+            this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
+            this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
+          }
+          this.$set(wallet, "loadingBalance", false);
+          this.$forceUpdate();
+        });
+      if (accountDetails && accountDetails.contract && accountDetails.isContract) {
+        accountDetails.contract.methods.balanceOf(wallet.address).call()
+          .then((balance, error) => {
+            if (error) {
+              this.$set(wallet, "loadingBalancePrincipal", false);
+              throw new Error('Invalid contract address');
+            }
+            balance = String(balance);
+            this.$set(wallet, 'balancePrincipal', balance);
+            this.$set(wallet, "loadingBalancePrincipal", false);
+          });
+      } else {
+        this.$set(wallet, "loadingBalancePrincipal", false);
+      }
     },
     setSelectedValues() {
       const selectedOverviewAccountsValues = window.walletSettings.defaultOverviewAccounts;
@@ -899,9 +1026,6 @@ export default {
     },
     refreshContractsList() {
       return getContractsDetails(this.walletAddress, this.networkId, true)
-        .then(contracts => {
-          return contracts;
-        })
         .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
         .then(() => getContractDeploymentTransactionsInProgress(this.networkId))
         .then(contractsInProgress => {

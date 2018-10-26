@@ -1,10 +1,10 @@
 <template>
   <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Send funds" flat value="send">
+    <v-btn v-if="icon && !noButton" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Send funds" flat value="send">
       <span>Send</span>
       <v-icon>send</v-icon>
     </v-btn>
-    <button v-else slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">
+    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">
       Send
     </button>
     <v-card class="elevation-12">
@@ -22,7 +22,7 @@
         :wallet-address="walletAddress"
         :network-id="networkId"
         :selected-account="selectedOption && selectedOption.value"
-        @success="$emit('success', $event)"
+        @success="success"
         @error="$emit('error', $event)"
         @dialog-error="error = $event"
         @sent="addPendingTransaction($event)"
@@ -101,6 +101,12 @@ export default {
       default: function() {
         return false;
       }
+    },
+    noButton: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
     }
   },
   data() {
@@ -112,18 +118,14 @@ export default {
   },
   computed: {
     accountsList() {
-      console.log("this.accountsDetails", this.accountsDetails);
-      console.log("this.overviewAccounts", this.overviewAccounts);
       const accountsList = [];
       if (this.accountsDetails && this.refreshIndex > 0) {
         Object.keys(this.accountsDetails).forEach(key => {
           // Check list of accounts to display switch user preferences
           const isContractOption = this.overviewAccounts.indexOf(key) > -1;
-          console.log("isContractOption", key, isContractOption);
           // Always allow to display ether option
           // const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
           const isEtherOption = isContractOption || (key === this.walletAddress);
-          console.log("isEtherOption", isEtherOption);
           if (isContractOption || isEtherOption) {
             accountsList.push({
               text: this.accountsDetails[key].title,
@@ -142,8 +144,6 @@ export default {
         this.$nextTick(() => {
           if (!this.selectedOption) {
             const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
-            console.log("contractAddress", contractAddress);
-            console.log("accountsList", this.accountsList);
             this.prepareSendForm(null, null, null, contractAddress, null, true);
           }
         });
@@ -153,6 +153,9 @@ export default {
     }
   },
   methods: {
+    success(...args) {
+      this.$emit('success', ...args);
+    },
     prepareSendForm(receiver, receiverType, amount, contractAddress, notificationId, keepDialogOpen) {
       if (!this.accountsList || !this.accountsList.length) {
         console.debug("prepareSendForm error - no accounts found");
