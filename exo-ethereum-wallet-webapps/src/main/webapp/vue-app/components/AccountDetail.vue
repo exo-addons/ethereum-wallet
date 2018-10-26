@@ -48,7 +48,7 @@
             @sent="newTransactionPending"
             @error="error = $event" />
         </v-flex>
-        <v-btn icon class="rightIcon" @click="stopLoading(); $emit('back')">
+        <v-btn icon class="rightIcon" @click="$emit('back')">
           <v-icon>close</v-icon>
         </v-btn>
       </v-layout>
@@ -168,11 +168,6 @@ export default {
         this.$refs.transactionsList.addTransaction(transaction, contractDetails);
       }
       this.$emit("transaction-sent");
-    },
-    stopLoading() {
-      if (this.$refs.transactionsList) {
-        this.$refs.transactionsList.stopLoadingTransactions();
-      }
     }
   }
 };
