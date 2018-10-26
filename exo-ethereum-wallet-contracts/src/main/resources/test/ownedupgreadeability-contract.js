@@ -84,11 +84,11 @@ contract('OwnedUpgradeabilityProxy', function(accounts) {
     it('upgrade and call', function() {
     return OwnedUpgradeabilityProxy.deployed().then(instance => {
         proxy = instance; 
-        return proxy.upgradeToAndCall(ERTToken.address , ERTToken.abi , {from : accounts[1]});
+        return proxy.upgradeToAndCall(OwnedUpgradeabilityProxy.address , ERTToken.abi , {from : accounts[1]});
     }).then(function(result) {
         return proxy.implementation();
           }).then(function(implementation) {
-              assert.equal(implementation, ERTToken.address , 'should upgrades to the given implementation');   
+              assert.equal(implementation, OwnedUpgradeabilityProxy.address , 'should upgrades to the given implementation');   
      
        
           }); 
