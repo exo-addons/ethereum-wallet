@@ -37,7 +37,7 @@
         <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
           <i class="uiIconWarning"></i>{{ warning }}
         </div>
-        <v-form>
+        <v-form @submit="$event.preventDefault();$event.stopPropagation();">
           <address-auto-complete
             ref="autocompleteFrom"
             :disabled="loading"

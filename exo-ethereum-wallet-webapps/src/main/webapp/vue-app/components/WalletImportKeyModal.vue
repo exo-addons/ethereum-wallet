@@ -10,7 +10,7 @@
         <div v-if="errorMessage" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ errorMessage }}
         </div>
-        <v-form ref="form">
+        <v-form ref="form" @submit="$event.preventDefault();$event.stopPropagation();">
           <label v-if="walletAddress" for="walletPrivateKey" class="mb-3">
             Please enter the private key for the following wallet (Find your private key in Backup section):
             <br />

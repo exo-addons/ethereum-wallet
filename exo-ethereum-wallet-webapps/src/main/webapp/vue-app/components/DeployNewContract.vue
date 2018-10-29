@@ -8,7 +8,7 @@
         <a class="uiIconClose pull-right" aria-hidden="true" @click="createNewToken = false"></a>
         <span class="PopupTitle popupTitle">Deploy new ERC20 Token contract</span>
       </div>
-      <v-form ref="form" v-model="valid" class="pl-5 pr-5 pt-3">
+      <v-form ref="form" v-model="valid" class="pl-5 pr-5 pt-3" @submit="$event.preventDefault();$event.stopPropagation();">
         <div class="text-xs-center">
           <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
         </div>

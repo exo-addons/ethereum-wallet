@@ -9,7 +9,7 @@
         <div v-if="error && !loading" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ error }}
         </div>
-        <v-form>
+        <v-form @submit="$event.preventDefault();$event.stopPropagation();">
           <v-text-field
             v-model="address"
             name="address"
