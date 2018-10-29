@@ -69,7 +69,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
       return Response.status(400).build();
     }
     contractDetail.setAddress(contractDetail.getAddress().toLowerCase());
-    ethereumWalletService.saveDefaultContract(contractDetail);
+    try {
+      ethereumWalletService.saveDefaultContract(contractDetail);
+    } catch (Exception e) {
+      LOG.warn("Error saving contract as default: " + contractDetail.getAddress(), e);
+      return Response.serverError().build();
+    }
     return Response.ok().build();
   }
 
@@ -92,7 +97,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Can't remove empty network id for contract");
       return Response.status(400).build();
     }
-    ethereumWalletService.removeDefaultContract(address.toLowerCase(), networkId);
+    try {
+      ethereumWalletService.removeDefaultContract(address.toLowerCase(), networkId);
+    } catch (Exception e) {
+      LOG.warn("Error removing default contract: " + address, e);
+      return Response.serverError().build();
+    }
     return Response.ok().build();
   }
 }

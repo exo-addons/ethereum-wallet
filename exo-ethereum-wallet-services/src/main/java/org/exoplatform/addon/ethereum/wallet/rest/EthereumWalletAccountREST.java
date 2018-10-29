@@ -124,6 +124,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
+    LOG.info("User '{}' is saving new wallet address for {} '{}' with address '{}'",
+             getCurrentUserId(),
+             accountDetail.getType(),
+             accountDetail.getId(),
+             accountDetail.getAddress());
     try {
       String securityPhrase = ethereumWalletService.saveWalletAddress(accountDetail);
       return Response.ok(securityPhrase).build();
@@ -132,7 +137,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     } catch (IllegalStateException e) {
       return Response.status(400).build();
     } catch (Exception e) {
-      LOG.error("Error associating address to user " + accountDetail.getId() + " using address " + accountDetail.getAddress(), e);
+      LOG.error("Unknown error occurred while saving address: User " + getCurrentUserId() + " attempts to save address of "
+          + accountDetail.getType() + " '" + accountDetail.getId() + "' using address " + accountDetail.getAddress(), e);
       return Response.status(500).build();
     }
   }
@@ -156,7 +162,14 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with invalid preferenes defaultGas '{}'", defaultGas);
       return Response.status(400).build();
     }
-    ethereumWalletService.saveUserPreferences(getCurrentUserId(), userPreferences);
+
+    LOG.info("Saving user preferences '{}'", getCurrentUserId());
+    try {
+      ethereumWalletService.saveUserPreferences(getCurrentUserId(), userPreferences);
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while saving user preferences '" + getCurrentUserId() + "'", e);
+      return Response.status(500).build();
+    }
 
     return Response.ok().build();
   }
@@ -195,6 +208,10 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(403).build();
     } catch (IllegalStateException e) {
       return Response.status(400).build();
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet  '"
+          + fundsRequest.getAddress() + "'", e);
+      return Response.status(500).build();
     }
 
     return Response.ok().build();
@@ -221,6 +238,10 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(403).build();
     } catch (IllegalStateException e) {
       return Response.status(400).build();
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while marking fund request with id '" + notificationId + "' for user '"
+          + getCurrentUserId() + "'", e);
+      return Response.status(500).build();
     }
 
     return Response.ok().build();
@@ -249,6 +270,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(403).build();
     } catch (IllegalStateException e) {
       return Response.status(400).build();
+    } catch (Exception e) {
+      LOG.warn("Error retrieving fund request status", e);
+      return Response.serverError().build();
     }
   }
 
@@ -287,7 +311,12 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     transactionMessage.setSender(getCurrentUserId());
-    ethereumWalletService.saveTransactionMessage(transactionMessage);
+    try {
+      ethereumWalletService.saveTransactionMessage(transactionMessage);
+    } catch (Exception e) {
+      LOG.warn("Error saving transaction message", e);
+      return Response.serverError().build();
+    }
     return Response.ok().build();
   }
 

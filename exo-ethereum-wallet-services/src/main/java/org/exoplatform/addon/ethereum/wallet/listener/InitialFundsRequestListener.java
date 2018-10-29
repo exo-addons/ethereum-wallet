@@ -1,6 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.USER_ACCOUNT_TYPE;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
 
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +66,13 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
       request.setReceipientType(settings.getFundsHolderType());
       request.setMessage(settings.getInitialFundsRequestMessage());
 
-      this.ethereumWalletService.requestFunds(request);
+      try {
+        this.ethereumWalletService.requestFunds(request);
+      } catch (Exception e) {
+        LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
+            + accountDetail.getType() + "' with id '" + accountDetail.getId() + "'", e);
+        throw e;
+      }
     }
   }
 }

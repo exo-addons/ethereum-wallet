@@ -91,7 +91,12 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    ethereumWalletService.saveSettings(globalSettings);
+    try {
+      ethereumWalletService.saveSettings(globalSettings);
+    } catch (Exception e) {
+      LOG.warn("Error saving global settings", e);
+      return Response.serverError().build();
+    }
     return Response.ok().build();
   }
 }
