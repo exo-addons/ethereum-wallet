@@ -854,6 +854,10 @@ export default {
         return;
       }
       const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === address);
+      const currentUserWallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === this.walletAddress);
+      if (currentUserWallet) {
+        this.computeBalance(accountDetails, currentUserWallet);
+      }
       if (wallet) {
         this.computeBalance(accountDetails, wallet);
       }
