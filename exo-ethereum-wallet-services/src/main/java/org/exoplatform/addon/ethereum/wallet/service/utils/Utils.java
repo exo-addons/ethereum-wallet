@@ -48,117 +48,119 @@ import org.exoplatform.webui.application.WebuiRequestContext;
  * Utils class to provide common tools and constants
  */
 public class Utils {
-  private static final Log                               LOG                                           =
-                                                             ExoLogger.getLogger(Utils.class);
+  private static final Log                               LOG                                   = ExoLogger.getLogger(Utils.class);
 
-  public static final String                             SPACE_ACCOUNT_TYPE                            = "space";
+  public static final String                             SPACE_ACCOUNT_TYPE                    = "space";
 
-  public static final String                             USER_ACCOUNT_TYPE                             = "user";
+  public static final String                             USER_ACCOUNT_TYPE                     = "user";
 
-  public static final String                             GLOAL_SETTINGS_CHANGED_EVENT                  =
+  public static final String                             GLOAL_SETTINGS_CHANGED_EVENT          =
                                                                                       "exo.addon.wallet.settings.changed";
 
-  public static final String                             NEW_ADDRESS_ASSOCIATED_EVENT                  =
+  public static final String                             NEW_ADDRESS_ASSOCIATED_EVENT          =
                                                                                       "exo.addon.wallet.addressAssociation.new";
 
-  public static final String                             MODIFY_ADDRESS_ASSOCIATED_EVENT               =
+  public static final String                             MODIFY_ADDRESS_ASSOCIATED_EVENT       =
                                                                                          "exo.addon.wallet.addressAssociation.modification";
 
-  public static final String                             NEW_TRANSACTION_EVENT                         =
+  public static final String                             UPGRADE_NOTIFICATION_SETTINGS         =
+                                                                                       "exo.addon.wallet.notification.upgrade";
+
+  public static final String                             NEW_TRANSACTION_EVENT                 =
                                                                                "exo.addon.wallet.transaction.loaded";
 
-  public static final String                             NEW_BLOCK_EVENT                               =
-                                                                         "exo.addon.wallet.block.loaded";
+  public static final String                             NEW_BLOCK_EVENT                       = "exo.addon.wallet.block.loaded";
 
-  public static final String                             TRANSACTION_SENDER_NOTIFICATION_ID            =
-                                                                                            "EtherSenderNotificationPlugin";
+  public static final String                             WALLET_SENDER_NOTIFICATION_ID         = "EtherSenderNotificationPlugin";
 
-  public static final String                             TRANSACTION_RECEIVER_NOTIFICATION_ID          =
-                                                                                              "EtherReceiverNotificationPlugin";
+  public static final String                             WALLET_RECEIVER_NOTIFICATION_ID       =
+                                                                                         "EtherReceiverNotificationPlugin";
 
-  public static final String                             TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID   =
-                                                                                                     "ContractSenderNotificationPlugin";
+  public static final String                             DEPRECATED_SENDER_NOTIFICATION_ID     =
+                                                                                           "ContractSenderNotificationPlugin";
 
-  public static final String                             TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID =
-                                                                                                       "ContractReceiverNotificationPlugin";
+  public static final String                             DEPRECATED_RECEIVER_NOTIFICATION_ID   =
+                                                                                             "ContractReceiverNotificationPlugin";
 
-  public static final String                             FUNDS_REQUEST_NOTIFICATION_ID                 =
-                                                                                       "FundsRequestNotificationPlugin";
+  public static final String                             FUNDS_REQUEST_NOTIFICATION_ID         = "FundsRequestNotificationPlugin";
 
-  public static final String                             FUNDS_REQUEST_SENT                            = "sent";
+  public static final String                             FUNDS_REQUEST_SENT                    = "sent";
 
-  public static final String                             AMOUNT                                        = "amount";
+  public static final String                             AMOUNT                                = "amount";
 
-  public static final String                             SYMBOL                                        = "symbol";
+  public static final String                             SYMBOL                                = "symbol";
 
-  public static final String                             MESSAGE                                       = "message";
+  public static final String                             MESSAGE                               = "message";
 
-  public static final String                             HASH                                          = "hash";
+  public static final String                             HASH                                  = "hash";
 
-  public static final String                             ACCOUNT_TYPE                                  = "account_type";
+  public static final String                             ACCOUNT_TYPE                          = "account_type";
 
-  public static final String                             AVATAR                                        = "avatar";
+  public static final String                             AVATAR                                = "avatar";
 
-  public static final String                             SENDER                                        = "sender";
+  public static final String                             SENDER                                = "sender";
 
-  public static final String                             USER                                          = "userFullname";
+  public static final String                             USER                                  = "userFullname";
 
-  public static final String                             USER_URL                                      = "userUrl";
+  public static final String                             USER_URL                              = "userUrl";
 
-  public static final String                             SENDER_URL                                    = "senderUrl";
+  public static final String                             SENDER_URL                            = "senderUrl";
 
-  public static final String                             RECEIVER                                      = "receiver";
+  public static final String                             RECEIVER                              = "receiver";
 
-  public static final String                             RECEIVER_URL                                  = "receiverUrl";
+  public static final String                             RECEIVER_URL                          = "receiverUrl";
 
-  public static final String                             FUNDS_ACCEPT_URL                              = "fundsAcceptUrl";
+  public static final String                             FUNDS_ACCEPT_URL                      = "fundsAcceptUrl";
 
-  public static final ArgumentLiteral<AccountDetail>     FUNDS_REQUEST_SENDER_DETAIL_PARAMETER         =
+  public static final ArgumentLiteral<AccountDetail>     FUNDS_REQUEST_SENDER_DETAIL_PARAMETER =
                                                                                                new ArgumentLiteral<>(AccountDetail.class,
                                                                                                                      "senderFullName");
 
-  public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER               =
+  public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER       =
                                                                                          new ArgumentLiteral<>(AccountDetail.class,
                                                                                                                "senderAccountDetail");
 
-  public static final ArgumentLiteral<AccountDetail>     RECEIVER_ACCOUNT_DETAIL_PARAMETER             =
+  public static final ArgumentLiteral<AccountDetail>     RECEIVER_ACCOUNT_DETAIL_PARAMETER     =
                                                                                            new ArgumentLiteral<>(AccountDetail.class,
                                                                                                                  "receiverAccountDetail");
 
-  public static final ArgumentLiteral<FundsRequest>      FUNDS_REQUEST_PARAMETER                       =
+  public static final ArgumentLiteral<FundsRequest>      FUNDS_REQUEST_PARAMETER               =
                                                                                  new ArgumentLiteral<>(FundsRequest.class,
                                                                                                        "fundsRequest");
 
-  public static final ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER                  =
+  public static final ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER          =
                                                                                       new ArgumentLiteral<>(TransactionStatus.class,
                                                                                                             "transactionStatus");
 
-  public static final ArgumentLiteral<ContractDetail>    CONTRACT_DETAILS_PARAMETER                    =
+  public static final ArgumentLiteral<ContractDetail>    CONTRACT_DETAILS_PARAMETER            =
                                                                                     new ArgumentLiteral<>(ContractDetail.class,
                                                                                                           "contractDetails");
 
-  public static final ArgumentLiteral<Double>            AMOUNT_PARAMETER                              =
+  public static final ArgumentLiteral<Double>            AMOUNT_PARAMETER                      =
                                                                           new ArgumentLiteral<>(Double.class, AMOUNT);
 
-  public static final ArgumentLiteral<String>            MESSAGE_PARAMETER                             =
+  public static final ArgumentLiteral<String>            MESSAGE_PARAMETER                     =
                                                                            new ArgumentLiteral<>(String.class, MESSAGE);
 
-  public static final ArgumentLiteral<String>            HASH_PARAMETER                                =
+  public static final ArgumentLiteral<String>            HASH_PARAMETER                        =
                                                                         new ArgumentLiteral<>(String.class, HASH);
 
-  public static final Event                              CONTRACT_TRANSFER_EVENT                       =
+  public static final ArgumentLiteral<String>            SYMBOL_PARAMETER                      =
+                                                                          new ArgumentLiteral<>(String.class, SYMBOL);
+
+  public static final Event                              CONTRACT_TRANSFER_EVENT               =
                                                                                  new Event("Transfer",
                                                                                            Arrays.asList(new TypeReference<Address>(true) {
-                                                                                                                                                                                                },
+                                                                                                                                                                                        },
                                                                                                          new TypeReference<Address>(true) {
                                                                                                          },
                                                                                                          new TypeReference<Uint256>() {
                                                                                                          }));
 
-  public static final Event                              CONTRACT_APPROVE_EVENT                        =
+  public static final Event                              CONTRACT_APPROVE_EVENT                =
                                                                                 new Event("Approval",
                                                                                           Arrays.asList(new TypeReference<Address>(true) {
-                                                                                                                                                                                               },
+                                                                                                                                                                                       },
                                                                                                         new TypeReference<Address>(true) {
                                                                                                         },
                                                                                                         new TypeReference<Uint256>() {

@@ -27,19 +27,17 @@ import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.container.xml.InitParams;
 
 @TemplateConfigs(templates = {
-    @TemplateConfig(pluginId = TRANSACTION_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/SenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/ReceiverPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/ContractSenderPlugin.gtmpl"),
-    @TemplateConfig(pluginId = TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/ContractReceiverPlugin.gtmpl"),
-    @TemplateConfig(pluginId = FUNDS_REQUEST_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/RequestFundsPlugin.gtmpl") })
+    @TemplateConfig(pluginId = WALLET_SENDER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletSenderWebPlugin.gtmpl"),
+    @TemplateConfig(pluginId = WALLET_RECEIVER_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletReceiverWebPlugin.gtmpl"),
+    @TemplateConfig(pluginId = FUNDS_REQUEST_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/web/WalletRequestFundsWebPlugin.gtmpl") })
 public class WebTemplateProvider extends TemplateProvider {
 
   public WebTemplateProvider(InitParams initParams) {
     super(initParams);
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
-    this.templateBuilders.put(PluginKey.key(TRANSACTION_CONTRACT_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(WALLET_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(WALLET_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(DEPRECATED_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this, true));
+    this.templateBuilders.put(PluginKey.key(DEPRECATED_SENDER_NOTIFICATION_ID), new TemplateBuilder(this, true));
     this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID), new RequestFundsTemplateBuilder(this));
   }
 

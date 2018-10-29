@@ -141,11 +141,9 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     // Send notification to sender if the address is recognized
     if (sender != null && sender.getId() != null) {
       if (sendNotification) {
-        TransactionStatus transactionStatus =
-                                            isContractTransaction ? TransactionStatus.CONTRACT_SENDER : TransactionStatus.SENDER;
         if (isContractTransaction || checkTransactionStatus(transaction) != null) {
           transactionStatusOk = true;
-          sendNotification(transaction.getHash(), sender, receiver, contractDetails, transactionStatus, amount);
+          sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.SENDER, amount);
         }
       }
 
@@ -161,10 +159,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     if (receiver != null && receiver.getId() != null
         && (sender == null || sender.getId() == null || !sender.getId().equals(receiver.getId()))) {
       if (sendNotification) {
-        TransactionStatus transactionStatus = isContractTransaction ? TransactionStatus.CONTRACT_RECEIVER
-                                                                    : TransactionStatus.RECEIVER;
         if (isContractTransaction || transactionStatusOk || checkTransactionStatus(transaction) != null) {
-          sendNotification(transaction.getHash(), sender, receiver, contractDetails, transactionStatus, amount);
+          sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.RECEIVER, amount);
         }
       }
 
@@ -195,8 +191,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     TransactionMessage transactionMessage = ethereumWalletService.getTransactionMessage(transactionHash);
     ctx.append(MESSAGE_PARAMETER, transactionMessage == null ? "" : transactionMessage.getMessage());
 
-    if (contractDetails != null) {
-      ctx.append(CONTRACT_DETAILS_PARAMETER, contractDetails);
+    if (contractDetails == null) {
+      ctx.append(SYMBOL_PARAMETER, "ether");
+    } else {
+      ctx.append(SYMBOL_PARAMETER, contractDetails.getSymbol());
     }
     ctx.append(AMOUNT_PARAMETER, amount);
 

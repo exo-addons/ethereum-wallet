@@ -18,6 +18,8 @@ import org.exoplatform.commons.api.notification.template.Element;
 import org.exoplatform.commons.notification.NotificationUtils;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.notification.template.TemplateUtils;
+import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.service.LinkProvider;
@@ -29,14 +31,32 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
 
   private TemplateProvider templateProvider;
 
+  private boolean          deprecated;
+
   public TemplateBuilder(TemplateProvider templateProvider) {
+    this(templateProvider, false);
+  }
+
+  public TemplateBuilder(TemplateProvider templateProvider, boolean deprecated) {
     this.templateProvider = templateProvider;
+    this.deprecated = deprecated;
   }
 
   @Override
   protected MessageInfo makeMessage(NotificationContext ctx) {
     NotificationInfo notification = ctx.getNotificationInfo();
     String pluginId = notification.getKey().getId();
+    if (isToUpgrade(pluginId)) {
+      pluginId = getNewId(pluginId);
+    }
+
+    if (deprecated) {
+      try {
+        CommonsUtils.getService(ListenerService.class).broadcast(UPGRADE_NOTIFICATION_SETTINGS, null, notification.getId());
+      } catch (Exception e) {
+        LOG.warn("Error while upgrading notification", e);
+      }
+    }
 
     String language = getLanguage(notification);
     TemplateContext templateContext =
@@ -79,9 +99,6 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
         throw new IllegalStateException("An error occurred while building message", templateContext.getException());
       }
       MessageInfo messageInfo = new MessageInfo();
-      messageInfo.to(notification.getTo());
-      messageInfo.from(notification.getFrom());
-      messageInfo.pluginId(pluginId);
       addMessageSubject(messageInfo, templateContext, type);
       return messageInfo.body(body).end();
     } catch (Exception e) {
@@ -93,6 +110,14 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
   @Override
   protected boolean makeDigest(NotificationContext ctx, Writer writer) {
     return false;
+  }
+
+  private boolean isToUpgrade(String pluginId) {
+    return DEPRECATED_RECEIVER_NOTIFICATION_ID.equals(pluginId) || DEPRECATED_RECEIVER_NOTIFICATION_ID.equals(pluginId);
+  }
+
+  private String getNewId(String pluginId) {
+    return DEPRECATED_RECEIVER_NOTIFICATION_ID.equals(pluginId) ? WALLET_RECEIVER_NOTIFICATION_ID : WALLET_SENDER_NOTIFICATION_ID;
   }
 
   private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext, String type) {

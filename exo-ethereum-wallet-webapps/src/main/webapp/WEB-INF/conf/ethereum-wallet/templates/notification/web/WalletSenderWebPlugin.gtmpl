@@ -2,14 +2,14 @@
 <li class="$READ clearfix" data-id="$NOTIFICATION_ID">
   <div class="media">
     <div class="avatarXSmall pull-left">
-      <img src="$AVATAR" alt="$SENDER" />
+      <img src="$AVATAR" alt="$RECEIVER" />
     </div> 
     <div class="media-body">
       <div class="contentSmall" data-link="$openURL">
         <div class="content">
         </div>
         <div class="status">
-          <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceEtherReceiverNotificationPlugin", RECEIVER_URL, AMOUNT, SENDER_URL) : _ctx.appRes("Notification.message.EtherReceiverNotificationPlugin", AMOUNT, SENDER_URL)%>
+          <%= ACCOUNT_TYPE.equals("space") ? _ctx.appRes("Notification.message.SpaceEtherSenderNotificationPlugin", SENDER_URL, AMOUNT, RECEIVER_URL, SYMBOL) : _ctx.appRes("Notification.message.EtherSenderNotificationPlugin", AMOUNT, RECEIVER_URL, SYMBOL)%>
         </div>
         <% if(org.apache.commons.lang.StringUtils.isNotBlank(MESSAGE)) { %>
           <div class="content">
