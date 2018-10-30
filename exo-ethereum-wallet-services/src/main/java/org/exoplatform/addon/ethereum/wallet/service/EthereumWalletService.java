@@ -41,6 +41,7 @@ import org.exoplatform.commons.utils.IOUtil;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.configuration.ConfigurationManager;
 import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.cache.ExoCache;
 import org.exoplatform.services.listener.ListenerService;
@@ -108,6 +109,8 @@ public class EthereumWalletService implements Startable {
 
   private SpaceService                         spaceService;
 
+  private UserACL                              userACL;
+
   private WebNotificationStorage               webNotificationStorage;
 
   private ListenerService                      listenerService;
@@ -133,6 +136,7 @@ public class EthereumWalletService implements Startable {
                                WebNotificationStorage webNotificationStorage,
                                IdentityManager identityManager,
                                ListenerService listenerService,
+                               UserACL userACL,
                                CacheService cacheService,
                                ConfigurationManager configurationManager,
                                InitParams params) {
@@ -142,6 +146,7 @@ public class EthereumWalletService implements Startable {
     this.spaceService = spaceService;
     this.webNotificationStorage = webNotificationStorage;
     this.listenerService = listenerService;
+    this.userACL = userACL;
     this.transactionMessagesCache = cacheService.getCacheInstance("exo.addon.wallet.transactions");
 
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
@@ -245,6 +250,8 @@ public class EthereumWalletService implements Startable {
 
     GlobalSettings oldGlobalSettings = getSettings();
 
+    LOG.debug("Saving new global settings", newGlobalSettings.toJSONString(false));
+
     settingService.set(WALLET_CONTEXT,
                        WALLET_SCOPE,
                        GLOBAL_SETTINGS_KEY_NAME,
@@ -311,7 +318,11 @@ public class EthereumWalletService implements Startable {
         }
         // Disable wallet for users not member of the permitted space members
         if (username != null && space != null
-            && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
+            && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))
+            && !userACL.isUserInGroup(ADMINISTRATORS_GROUP)) {
+
+          LOG.info("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
+
           globalSettings = new GlobalSettings();
           globalSettings.setWalletEnabled(false);
         }
@@ -344,10 +355,10 @@ public class EthereumWalletService implements Startable {
           userSettings.setPhrase(getUserPhrase(username));
         }
       }
+      globalSettings.setContractAbi(getContractAbi());
+      globalSettings.setContractBin(getContractBinary());
     }
 
-    globalSettings.setContractAbi(getContractAbi());
-    globalSettings.setContractBin(getContractBinary());
     return globalSettings;
   }
 

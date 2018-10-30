@@ -50,6 +50,8 @@ import org.exoplatform.webui.application.WebuiRequestContext;
 public class Utils {
   private static final Log                               LOG                                   = ExoLogger.getLogger(Utils.class);
 
+  public static final String                             ADMINISTRATORS_GROUP                  = "/platform/administrators";
+
   public static final String                             SPACE_ACCOUNT_TYPE                    = "space";
 
   public static final String                             USER_ACCOUNT_TYPE                     = "user";
