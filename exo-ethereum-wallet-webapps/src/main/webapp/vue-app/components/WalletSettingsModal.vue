@@ -325,6 +325,9 @@ export default {
         this.$refs.settingsTabs.callSlider();
 
         this.show = true;
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     },
     selectedPrincipalAccount() {

@@ -69,6 +69,9 @@ export default {
     open() {
       if (this.open) {
         this.show = true;
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     },
     show() {

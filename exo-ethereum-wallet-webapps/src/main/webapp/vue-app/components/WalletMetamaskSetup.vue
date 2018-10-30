@@ -192,6 +192,9 @@ export default {
   },
   created() {
     this.init();
+    this.$nextTick(() => {
+      setDraggable();
+    });
   },
   methods: {
     init() {

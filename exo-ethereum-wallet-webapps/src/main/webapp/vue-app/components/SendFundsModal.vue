@@ -146,6 +146,9 @@ export default {
             const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
             this.prepareSendForm(null, null, null, contractAddress, null, true);
           }
+          this.$nextTick(() => {
+            setDraggable();
+          });
         });
       } else {
         this.selectedOption = null;

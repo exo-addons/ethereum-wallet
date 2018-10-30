@@ -63,6 +63,9 @@ export default {
     dialog() {
       if (this.dialog) {
         this.$refs.qrCode.computeCanvas();
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     }
   }

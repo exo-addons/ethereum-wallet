@@ -118,6 +118,9 @@ export default {
       if (this.open) {
         this.show = true;
         this.computeCanvas();
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     },
     show() {

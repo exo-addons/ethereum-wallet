@@ -83,6 +83,9 @@ export default {
           this.$refs.form.reset();
         }
         this.resetForm();
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     }
   },

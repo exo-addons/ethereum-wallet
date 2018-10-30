@@ -85,6 +85,11 @@ export default {
   watch: {
     open() {
       this.dialog = this.open;
+      if (this.open) {
+        this.$nextTick(() => {
+          setDraggable();
+        });
+      }
     },
     dialog() {
       if (this.dialog) {

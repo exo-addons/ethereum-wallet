@@ -125,6 +125,9 @@ export default {
         if (!window.walletSettings.browserWalletExists) {
           this.errorMessage = 'Can\'t reset wallet because it doesn\'t exist in current browser';
         }
+        this.$nextTick(() => {
+          setDraggable();
+        });
       } else {
         if(this.rememberPasswordToChange) {
           this.rememberPasswordStored = window.walletSettings.storedPassword === true;

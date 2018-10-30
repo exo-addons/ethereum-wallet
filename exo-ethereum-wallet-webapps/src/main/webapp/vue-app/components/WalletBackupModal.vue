@@ -106,6 +106,9 @@ export default {
           this.$refs.form.reset();
         }
         this.init();
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     }
   },

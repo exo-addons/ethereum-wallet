@@ -160,6 +160,9 @@ export default {
         }
         const contractAddress = this.principalAccount === 'ether' || this.principalAccount === 'fiat' ? null : this.principalAccount;
         this.selectedOption = this.accountsList.find(account => account.value && account.value.address && ((account.value.isContract && account.value.address === contractAddress) || (!account.value.isContract && !contractAddress)));
+        this.$nextTick(() => {
+          setDraggable();
+        });
       }
     }
   },
