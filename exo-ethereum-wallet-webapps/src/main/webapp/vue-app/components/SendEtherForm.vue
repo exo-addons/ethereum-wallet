@@ -45,10 +45,10 @@
           label="Label (Optional)"
           placeholder="Enter label for your transaction" />
         <v-textarea
-          id="transactionMessage"
+          id="etherTransactionMessage"
           v-model="transactionMessage"
           :disabled="loading"
-          name="transactionMessage"
+          name="etherTransactionMessage"
           label="Message (Optional)"
           placeholder="Enter a custom message to send to the receiver with your transaction"
           class="mt-4"

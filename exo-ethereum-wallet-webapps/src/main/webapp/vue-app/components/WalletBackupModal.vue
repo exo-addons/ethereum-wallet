@@ -2,7 +2,7 @@
   <v-dialog v-model="dialog" :disabled="disabled" class="fixLinkHeight" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <a slot="activator" href="javascript:void(0);" @click="dialog = true">Backup your wallet</a>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix">
+      <div class="popupHeader ClearFix" draggable="true">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
         <span class="PopupTitle popupTitle">Backup wallet</span>
       </div>
@@ -70,7 +70,7 @@
 <script>
 import WalletAddress from './WalletAddress.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, getCurrentBrowerWallet, setWalletBackedUp, hashCode} from '../WalletUtils.js';
+import {setDraggable, unlockBrowerWallet, lockBrowerWallet, getCurrentBrowerWallet, setWalletBackedUp, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {

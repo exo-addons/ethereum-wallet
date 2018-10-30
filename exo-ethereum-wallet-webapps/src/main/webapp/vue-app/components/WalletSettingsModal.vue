@@ -174,7 +174,7 @@ import WalletBackupModal from './WalletBackupModal.vue';
 import WalletImportKeyModal from './WalletImportKeyModal.vue';
 import InformationBubble from './InformationBubble.vue';
 
-import {gasToFiat, enableMetamask, disableMetamask} from '../WalletUtils.js';
+import {setDraggable, gasToFiat, enableMetamask, disableMetamask} from '../WalletUtils.js';
 import {FIAT_CURRENCIES} from '../WalletConstants.js';
 
 export default {

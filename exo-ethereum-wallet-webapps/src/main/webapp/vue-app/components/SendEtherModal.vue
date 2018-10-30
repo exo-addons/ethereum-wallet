@@ -28,6 +28,8 @@
 <script>
 import SendEtherForm from './SendEtherForm.vue';
 
+import {setDraggable} from '../WalletUtils.js';
+
 export default {
   components: {
     SendEtherForm

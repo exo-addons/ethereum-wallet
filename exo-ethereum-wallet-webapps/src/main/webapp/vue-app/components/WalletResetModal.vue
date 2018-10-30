@@ -77,6 +77,8 @@
 <script>
 import {unlockBrowerWallet, saveBrowerWallet, hashCode, rememberPassword} from '../WalletUtils.js';
 
+import {setDraggable} from '../WalletUtils.js';
+
 export default {
   props: {
     displayRememberMe: {

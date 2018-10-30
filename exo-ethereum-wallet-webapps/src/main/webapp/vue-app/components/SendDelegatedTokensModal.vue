@@ -86,7 +86,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode} from '../WalletUtils.js';
+import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {

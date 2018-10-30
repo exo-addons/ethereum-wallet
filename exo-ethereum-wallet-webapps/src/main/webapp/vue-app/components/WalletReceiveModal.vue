@@ -33,6 +33,8 @@
 import WalletAddress from './WalletAddress.vue';
 import QrCode from './QRCode.vue';
 
+import {setDraggable} from '../WalletUtils.js';
+
 export default {
   components: {
     WalletAddress,

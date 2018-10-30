@@ -552,6 +552,10 @@ export function getWallets() {
     });
 }
 
+export function setDraggable(element) {
+  $(element).draggable();
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));

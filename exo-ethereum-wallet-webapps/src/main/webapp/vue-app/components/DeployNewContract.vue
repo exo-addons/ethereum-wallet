@@ -103,7 +103,7 @@ import WalletAddress from './WalletAddress.vue';
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
 import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, newContractInstance, deployContract} from '../WalletToken.js';
 import {searchAddress} from '../WalletAddressRegistry.js';
-import {gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode} from '../WalletUtils.js';
+import {setDraggable, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {

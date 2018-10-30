@@ -72,6 +72,9 @@
         <as>$</as>
       </depends>
       <depends>
+        <module>walletJQueryUI</module>
+      </depends>
+      <depends>
         <module>fetchPolyfill</module>
       </depends>
       <depends>
@@ -115,6 +118,9 @@
         <as>$</as>
       </depends>
       <depends>
+        <module>walletJQueryUI</module>
+      </depends>
+      <depends>
         <module>fetchPolyfill</module>
       </depends>
       <depends>
@@ -155,6 +161,9 @@
       <depends>
         <module>jquery</module>
         <as>$</as>
+      </depends>
+      <depends>
+        <module>walletJQueryUI</module>
       </depends>
       <depends>
         <module>fetchPolyfill</module>
@@ -237,6 +246,18 @@
         })();
       </adapter>
     </script>
+  </module>
+
+  <module>
+    <name>walletJQueryUI</name>
+    <as>JQueryUI</as>
+    <script>
+      <path>/js/lib/jquery-ui-1.18.12.min.js</path>
+    </script>
+    <depends>
+      <module>jquery</module>
+      <as>jQuery</as>
+    </depends>
   </module>
 
 </gatein-resources>

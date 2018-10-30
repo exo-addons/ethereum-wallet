@@ -27,6 +27,8 @@
 <script>
 import QrCode from './QRCode.vue';
 
+import {setDraggable} from '../WalletUtils.js';
+
 export default {
   components: {
     QrCode

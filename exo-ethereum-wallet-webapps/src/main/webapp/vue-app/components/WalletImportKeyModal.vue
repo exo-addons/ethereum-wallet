@@ -42,7 +42,7 @@
 <script>
 import WalletAddress from './WalletAddress.vue';
 
-import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWalletInstance, setWalletBackedUp, generatePassword} from '../WalletUtils.js';
+import {setDraggable, enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWalletInstance, setWalletBackedUp, generatePassword} from '../WalletUtils.js';
 import {saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {

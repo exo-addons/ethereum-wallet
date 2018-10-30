@@ -28,6 +28,8 @@
 <script>
 import SendTokensForm from './SendTokensForm.vue';
 
+import {setDraggable} from '../WalletUtils.js';
+
 export default {
   components: {
     SendTokensForm

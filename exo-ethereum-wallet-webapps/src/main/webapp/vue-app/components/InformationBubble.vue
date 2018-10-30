@@ -16,6 +16,8 @@
 </template>
 
 <script>
+import {setDraggable} from '../WalletUtils.js';
+
 export default {
   props: {
     title: {

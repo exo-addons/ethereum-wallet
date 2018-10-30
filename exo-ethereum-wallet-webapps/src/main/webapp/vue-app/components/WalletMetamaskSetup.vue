@@ -111,7 +111,7 @@
 import WalletAddress from './WalletAddress.vue';
 import * as constants from '../WalletConstants.js';
 
-import {disableMetamask} from '../WalletUtils.js';
+import {setDraggable, disableMetamask} from '../WalletUtils.js';
 import {searchFullName, searchUserOrSpaceObject, saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
