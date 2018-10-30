@@ -1,13 +1,14 @@
-var OwnedUpgradeabilityProxy = artifacts.require("OwnedUpgradeabilityProxy");
 var ERTToken = artifacts.require("ERTToken");
+var ERTTokenProxy = artifacts.require("ERTTokenProxy");
 
-
-contract('OwnedUpgradeabilityProxy', function(accounts) {
+/*
+contract('ERTToken', function(accounts) {
 
   let proxy;
+  let tokenV0 = ERTTokenV0.at(ERTToken.address);
 
   it('has an owner', function() {
-    return OwnedUpgradeabilityProxy.deployed().then(instance => {
+    return ERTToken.deployed().then(instance => {
         proxy = instance;
       return proxy.proxyOwner();
     }).then(function(proxyOwner) {
@@ -18,7 +19,7 @@ contract('OwnedUpgradeabilityProxy', function(accounts) {
 
 
   it('transfers the ownership', function() {
-    return OwnedUpgradeabilityProxy.deployed().then(instance => {
+    return ERTToken.deployed().then(instance => {
         proxy = instance;
       return proxy.transferProxyOwnership(accounts[1],{from : accounts[0]});
     }).then(function(receipt) {
@@ -46,7 +47,7 @@ contract('OwnedUpgradeabilityProxy', function(accounts) {
   
   
   it('when no initial implementation was provided', function() {
-    return OwnedUpgradeabilityProxy.deployed().then(instance => {
+    return ERTToken.deployed().then(instance => {
         proxy = instance;
       return proxy.implementation();
     }).then(function(result) {
@@ -56,20 +57,26 @@ contract('OwnedUpgradeabilityProxy', function(accounts) {
   
   
        it('when an implementation was provided', function() {
-    return OwnedUpgradeabilityProxy.deployed().then(instance => {
+    return ERTToken.deployed().then(instance => {
         proxy = instance; 
        return proxy.upgradeTo(ERTToken.address , {from : accounts[1]});
     }).then(function(result) {
         return proxy.implementation();
           }).then(function(implementation) {
               assert.equal(implementation, ERTToken.address, 'should return the given implementation');   
-   
+          })
+       }) 
+       
+       
+       
+       it('when a revert in  implementation', function() {
+    return ERTToken.deployed().then(instance => {
+        proxy = instance; 
               return proxy.upgradeTo(ERTToken.address , {from : accounts[1]});
           }).then(assert.fail).catch(function(error) {
             assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation is equal to the current one');
-            
-            
-            return proxy.upgradeTo(ERTToken.address , {from : accounts[2]});
+           
+            return proxy.upgradeTo(ERTTokenV0.address , {from : accounts[2]});
           }).then(assert.fail).catch(function(error) {
             assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the sender is not the proxy owner');
             
@@ -77,29 +84,30 @@ contract('OwnedUpgradeabilityProxy', function(accounts) {
           }).then(assert.fail).catch(function(error) {
             assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the new implementation is the zero address'); 
           }); 
-  })
+  }) 
   
   
   
-    it('upgrade and call', function() {
-    return OwnedUpgradeabilityProxy.deployed().then(instance => {
+   it('upgrade and call', function() {
+    return ERTToken.deployed().then(instance => {
         proxy = instance; 
-        return proxy.upgradeToAndCall(OwnedUpgradeabilityProxy.address , ERTToken.abi , {from : accounts[1]});
+        return proxy.upgradeToAndCall(ERTTokenV0.address , ERTTokenV0.abi , {from : accounts[1]});
     }).then(function(result) {
         return proxy.implementation();
           }).then(function(implementation) {
-              assert.equal(implementation, OwnedUpgradeabilityProxy.address , 'should upgrades to the given implementation');   
+              assert.equal(implementation, ERTTokenV0.address , 'should upgrades to the given implementation');   
      
-       
+              
+         
+            
           }); 
-  })
-
+  })  
+   
 
 })
 
 
-
-     
+*/
 
          
           
