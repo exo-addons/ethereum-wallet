@@ -20,6 +20,8 @@ public class GlobalSettings implements Serializable {
 
   private boolean                enableDelegation           = true;
 
+  private boolean                isAdmin                    = false;
+
   private String                 accessPermission           = null;
 
   private String                 fundsHolder                = null;
@@ -69,6 +71,7 @@ public class GlobalSettings implements Serializable {
     JSONObject jsonObject = new JSONObject();
     try {
       jsonObject.put("isWalletEnabled", walletEnabled);
+      jsonObject.put("isAdmin", isAdmin);
       jsonObject.put("enableDelegation", enableDelegation);
       jsonObject.put("accessPermission", accessPermission);
       jsonObject.put("initialFundsRequestMessage", initialFundsRequestMessage);

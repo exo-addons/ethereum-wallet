@@ -318,18 +318,17 @@ public class EthereumWalletService implements Startable {
         }
         // Disable wallet for users not member of the permitted space members
         if (username != null && space != null
-            && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))
-            && !userACL.isUserInGroup(ADMINISTRATORS_GROUP)) {
+            && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
 
           LOG.info("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
 
-          globalSettings = new GlobalSettings();
           globalSettings.setWalletEnabled(false);
         }
       }
+      globalSettings.setAdmin(userACL.isUserInGroup(ADMINISTRATORS_GROUP));
     }
 
-    if (globalSettings.isWalletEnabled()) {
+    if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
       if ((networkId == null || networkId == 0) && globalSettings.getDefaultNetworkId() != null) {
         networkId = globalSettings.getDefaultNetworkId();
       }
@@ -357,6 +356,9 @@ public class EthereumWalletService implements Startable {
       }
       globalSettings.setContractAbi(getContractAbi());
       globalSettings.setContractBin(getContractBinary());
+    } else {
+      globalSettings = new GlobalSettings();
+      globalSettings.setWalletEnabled(false);
     }
 
     return globalSettings;

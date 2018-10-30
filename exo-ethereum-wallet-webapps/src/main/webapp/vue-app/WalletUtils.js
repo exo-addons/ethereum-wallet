@@ -170,7 +170,7 @@ export function initSettings(isSpace) {
       }
     })
     .then(settings => {
-      if (settings && settings.isWalletEnabled) {
+      if (settings && (settings.isWalletEnabled ||  settings.isAdmin)) {
         window.walletSettings = window.walletSettings || {};
         window.walletSettings.userPreferences = {};
         window.walletSettings = $.extend(window.walletSettings, settings);
@@ -291,6 +291,9 @@ export function computeNetwork() {
 }
 
 export function computeBalance(account) {
+  if (!window.localWeb3) {
+    return Promise.reject(new Error("You don't have a wallet yet"));
+  }
   return window.localWeb3.eth.getBalance(account)
     .then((retrievedBalance, error) => {
       if (error) {

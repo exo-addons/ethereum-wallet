@@ -1,5 +1,5 @@
 <template>
-  <v-app v-if="isWalletEnabled" id="WalletAdminApp" color="transaprent" flat>
+  <v-app id="WalletAdminApp" color="transaprent" flat>
     <main>
       <v-layout>
         <v-flex class="white text-xs-center" flat>
@@ -453,7 +453,6 @@ export default {
   },
   data () {
     return {
-      isWalletEnabled: false,
       loading: false,
       loadingSettings: false,
       loadingContracts: false,
@@ -582,7 +581,7 @@ export default {
   },
   computed: {
     displaySettings() {
-      return !this.loading && !this.loadingSettings;
+      return !this.loading && !this.loadingSettings && this.walletAddress;
     },
     principalAccount() {
       if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
@@ -777,12 +776,9 @@ export default {
 
       return initSettings()
         .then(() => {
-          if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
-            this.isWalletEnabled = false;
+          if (!window.walletSettings) {
             this.forceUpdate();
-            throw new Error("Wallet disabled for current user");
-          } else {
-            this.isWalletEnabled = true;
+            throw new Error("Wallet settings are empty for current user");
           }
         })
         .then(() => ignoreContracts || initWeb3())
@@ -791,11 +787,12 @@ export default {
             console.debug("Error connecting to network", error);
             this.error = "Error connecting to network";
           } else {
+            this.error = "Please configure your wallet";
             throw error;
           }
         })
         .then(account => {
-          this.walletAddress = window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
+          this.walletAddress = window.localWeb3 && window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
           this.networkId = window.walletSettings.currentNetworkId;
         })
         .then(this.setDefaultValues)
@@ -808,10 +805,12 @@ export default {
             if (!this.error) {
               this.error = "Error retrieving contracts";
             }
+          } else {
+            this.error = "Please configure your wallet";
           }
         })
         .then(() => {
-          this.loadingContracts = this.loading = false;
+          this.loadingContracts = this.loadingSettings = this.loading = false;
           this.forceUpdate();
         })
         .catch(e => {
@@ -895,6 +894,9 @@ export default {
           }
           this.$set(wallet, "loadingBalance", false);
           this.$forceUpdate();
+        })
+        .catch(error => {
+          this.error = String(error);
         });
       if (accountDetails && accountDetails.contract && accountDetails.isContract) {
         accountDetails.contract.methods.balanceOf(wallet.address).call()
