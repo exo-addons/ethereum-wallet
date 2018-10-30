@@ -1,5 +1,4 @@
 var ERTToken = artifacts.require("ERTToken");
-var ERTTokenProxy = artifacts.require("ERTTokenProxy");
 
 /*
 contract('ERTToken', function(accounts) {

@@ -1,26 +1,56 @@
 pragma solidity ^0.4.24;
+import './Owned.sol';
 
+contract Proxy is Owned {
 
-contract Proxy {
+  address private implementation;
 
-  function implementation() public view returns (address);
+  bool isPayable;
 
+  bool preserveContext;
+
+  event Upgraded(address implementation);
+
+  constructor() internal{}
+
+  function upgradeTo(address newImplementation) public onlyOwner{
+    implementation = Owned(newImplementation);
+    if (!preserveContext) {
+        if (!implementation.delegatecall(bytes4(keccak256("transferOwnership(address)")), address(this))) {
+            revert();
+        }
+    }
+    emit Upgraded(newImplementation);
+  }
 
   function () payable public {
-    address _impl = implementation();
-    require(_impl != address(0));
+    // Avoid getting ether when contract doesn't allow it
+    if (msg.value > 0 && !isPayable) {
+        revert();
+    }
 
+    uint256 value = msg.value;
+    bool _preserveContext = preserveContext;
+    address _implementation = implementation;
     assembly {
-      let ptr := mload(0x40)
-      calldatacopy(ptr, 0, calldatasize)
-      let result := delegatecall(gas, _impl, ptr, calldatasize, 0, 0)
-      let size := returndatasize
-      returndatacopy(ptr, 0, size)
-
-
-      switch result
-      case 0 { revert(ptr, size) }
-      default { return(ptr, size) }
+      calldatacopy(0x0, 0x0, calldatasize)
+      let success := 0
+      switch _preserveContext
+      case 0 {
+          success := callcode(sub(gas, 10000), _implementation, value, 0x0, calldatasize, 0, 0)
+      }
+      default {
+          success := delegatecall(sub(gas, 10000), _implementation, 0x0, calldatasize, 0, 0)
+      }
+      let retSz := returndatasize
+      returndatacopy(0, 0, retSz)
+      switch success
+      case 0 {
+        revert(0, retSz)
+      }
+      default {
+        return(0, retSz)
+      }
     }
   }
 }

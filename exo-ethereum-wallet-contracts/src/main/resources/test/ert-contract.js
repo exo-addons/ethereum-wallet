@@ -15,13 +15,13 @@ contract('ERTToken', function(accounts) {
       return tokenInstance.name();
     }).then(function(name) {
       assert.equal(name, 'Curries', 'has not the correct name');
-      return tokenInstance.decimals();
-    }).then(function(decimals) {
-      assert.equal(decimals, 18, 'has not the correct decimals');
       return tokenInstance.symbol();
     }).then(function(symbol) {
       assert.equal(symbol, 'C', 'has not the correct symbol');
-      return tokenInstance.isApprovedAccount(accounts[0]);
+      return tokenInstance.decimals();
+    }).then(function(decimals) {
+      assert.equal(decimals, 18, 'has not the correct decimals');
+      return tokenInstance.approvedAccount(accounts[0]);
     }).then(function(ownerApproved) {
       assert.equal(true, ownerApproved, 'Contract owner has to be approved');
     });
@@ -118,26 +118,24 @@ contract('ERTToken', function(accounts) {
       return tokenInstance.approve(accounts[2], 5 * decimals, {
         from : accounts[0]
       });
-    }).then(
-        function(receipt) {
-          assert.equal(receipt.logs.length, 2,
-              'number of emitted event is wrong');
-          assert.equal(receipt.logs[0].event, 'ApprovedAccount',
-              'should be the "ApprovedAccount" event');
-          assert.equal(receipt.logs[1].event, 'Approval',
-              'should be the "Approval" event');
-          assert.equal(receipt.logs[1].args._owner, accounts[0],
-              'the account the tokens are authorized by is wrong');
-          assert.equal(receipt.logs[1].args._spender, accounts[2],
-              'the account the tokens are authorized to is wrong');
-          assert.equal(receipt.logs[1].args._value, 5 * decimals,
-              'the transfer amount is wrong');
-          return tokenInstance.allowed(accounts[0], accounts[2]);
-        }).then(
-        function(allowed) {
-          assert.equal(allowed.toNumber(), 5 * decimals,
-              'stores the allowance for delegated trasnfer');
-        });
+    }).then(receipt => {
+      assert.equal(receipt.logs.length, 2,
+          'number of emitted event is wrong');
+      assert.equal(receipt.logs[0].event, 'ApprovedAccount',
+          'should be the "ApprovedAccount" event');
+      assert.equal(receipt.logs[1].event, 'Approval',
+          'should be the "Approval" event');
+      assert.equal(receipt.logs[1].args._owner, accounts[0],
+          'the account the tokens are authorized by is wrong');
+      assert.equal(receipt.logs[1].args._spender, accounts[2],
+          'the account the tokens are authorized to is wrong');
+      assert.equal(receipt.logs[1].args._value, 5 * decimals,
+          'the transfer amount is wrong');
+      return tokenInstance.allowance(accounts[0], accounts[2]);
+    }).then(allowed => {
+      assert.equal(allowed.toNumber(), 5 * decimals,
+          'stores the allowance for delegated trasnfer');
+    });
   });
 
   let fromAccount = accounts[3], toAccount = accounts[4], spendingAccount = accounts[5];

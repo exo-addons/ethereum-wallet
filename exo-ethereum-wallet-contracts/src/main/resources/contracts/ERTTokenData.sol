@@ -1,11 +1,11 @@
 pragma solidity ^0.4.24;
-import './Proxy.sol';
+import "./Proxy.sol";
 
-contract ERTToken is Proxy {
+contract ERTTokenData is Proxy {
 
     constructor(address implementation) public{
-        isPayable = true;
-        preserveContext = true;
+        isPayable = false;
+        preserveContext = false;
         upgradeTo(implementation);
     }
 

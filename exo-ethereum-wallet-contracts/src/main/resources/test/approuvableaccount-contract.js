@@ -1,6 +1,4 @@
 const ERTToken = artifacts.require("ERTToken");
-
-
   
   contract('ApprouvableAccount', function(accounts) {
     let tokenInstance;
@@ -10,7 +8,8 @@ const ERTToken = artifacts.require("ERTToken");
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
         return tokenInstance.approveAccount(accounts[7],  {
-            from : accounts[0]});
+            from : accounts[0]
+        });
       }).then(receipt => {
         assert.equal(receipt.logs.length, 1, 'number of emitted event is wrong');
         assert.equal(receipt.logs[0].event,'ApprovedAccount', 'should be the "AppovedAccount" event');

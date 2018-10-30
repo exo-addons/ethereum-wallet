@@ -3,13 +3,15 @@ import "./ERC20Abstract.sol";
 import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 import "./Owned.sol";
+import "./ERTTokenDataProxy.sol";
 
-contract Mintable is Owned, SafeMath, ERC20Abstract {
+contract Mintable is Owned, ERTTokenDataProxy, SafeMath, ERC20Abstract {
 
     function mintToken(address target, uint256 mintedAmount) public onlyOwner{
-        balances[target] = super.safeAdd(balances[target], mintedAmount);
+        super.setBalance(target, super.safeAdd(super.balance(target), mintedAmount));
+        uint256 totalSupply = super.totalSupply();
         require(totalSupply + mintedAmount > totalSupply);
-        totalSupply += mintedAmount;
+        super.setTotalSupply(totalSupply + mintedAmount);
         emit Transfer(0, owner, mintedAmount);
         emit Transfer(owner, target, mintedAmount);
     }
