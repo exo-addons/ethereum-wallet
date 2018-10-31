@@ -82,5 +82,13 @@ contract ERTTokenDataProxy is Owned{
     function setGasPriceLimit(uint _gasPriceLimit) public {
         ERTTokenDataV1(dataAddress).setGasPriceLimit(_gasPriceLimit);
     }
+    
+    function addAdmin(address _target) public view returns(bool){
+        return ERTTokenDataV1(dataAddress).isAdmin(_target);
+    }
+
+    function setAdmin(address _target, bool _admin) public {
+        ERTTokenDataV1(dataAddress).setAdmin(_target, _admin);
+    }
 
 }

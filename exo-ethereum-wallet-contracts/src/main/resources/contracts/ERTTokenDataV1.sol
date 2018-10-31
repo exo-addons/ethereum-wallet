@@ -18,6 +18,9 @@ contract ERTTokenDataV1 is Owned {
 
     /* ApprouvableAccount.sol */
     mapping (address => bool) internal approvedAccount_;
+    
+    /* Admin.sol */
+    mapping (address => bool) internal admin_;
 
     /* GasPayableInToken.sol */
     uint internal tokenPriceInGas_;
@@ -94,6 +97,14 @@ contract ERTTokenDataV1 is Owned {
 
     function setGasPriceLimit(uint _gasPriceLimit) public onlyOwner{
         gasPriceLimit_ = _gasPriceLimit;
+    }
+    
+    function isAdmin(address _target) public view returns(bool){
+        return admin_[_target];
+    }
+
+    function setAdmin(address _target, bool _admin) public onlyOwner{
+        admin_[_target] = _admin;
     }
 
 }
