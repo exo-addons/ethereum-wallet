@@ -45,7 +45,7 @@ contract ERTTokenV1 is
         return super.getAllowance(_owner, _spender);
     }
 
-    function transfer(address _to, uint256 _value) public notExcessiveGasPrice whenApproved(msg.sender, _to) returns (bool success){
+    function transfer(address _to, uint256 _value) public whenNotPaused notExcessiveGasPrice whenApproved(msg.sender, _to) returns (bool success){
         uint gasLimit = gasleft();
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
@@ -60,7 +60,7 @@ contract ERTTokenV1 is
         return true;
     }
 
-    function approve(address _spender, uint256 _value) public whenApproved(msg.sender, _spender) returns (bool success){
+    function approve(address _spender, uint256 _value) public whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _spender);
         require(super.balance(msg.sender) >= _value);
@@ -72,7 +72,7 @@ contract ERTTokenV1 is
         return true;
     }
 
-    function transferFrom(address _from, address _to, uint256 _value) public whenApproved(_from, _to) returns (bool success){
+    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused whenApproved(_from, _to) returns (bool success){
         require(super.balance(_from) >= _value);
         uint256 _allowance = super.getAllowance(_from, msg.sender);
         require(_allowance >= _value);

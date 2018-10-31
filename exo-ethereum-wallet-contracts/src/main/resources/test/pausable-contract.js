@@ -1,15 +1,15 @@
 var ERTToken = artifacts.require("ERTToken");
 
-contract('Pausablee', function(accounts) {
+contract('Pausable', function(accounts) {
 
-  it('test pause ', function() {
+  it('test pause', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;
       return tokenInstance.pause({
         from : accounts[0]
       });
-    }).then(
-        function(receipt) {
+    }).then(receipt => {
+          console.log("receipt", receipt);
           assert.equal(receipt.logs.length, 1,
               'number of emitted event is wrong');
           assert.equal(receipt.logs[0].event, 'Pause',
