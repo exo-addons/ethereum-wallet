@@ -16,6 +16,8 @@ contract ERTTokenDataV1 is Owned {
 
     uint8 internal decimals_;
 
+    bool internal initialized_ = false;
+
     /* ApprouvableAccount.sol */
     mapping (address => bool) internal approvedAccount_;
     
@@ -23,9 +25,20 @@ contract ERTTokenDataV1 is Owned {
     mapping (address => bool) internal admin_;
 
     /* GasPayableInToken.sol */
-    uint internal tokenPriceInGas_;
+    uint256 internal tokenPriceInGas_;
 
-    uint internal gasPriceLimit_;
+    uint256 internal gasPriceLimit_ = 200000000000;
+
+    constructor() public{
+    }
+
+    function initialized() public view returns(bool){
+        return initialized_;
+    }
+
+    function setInitialized(bool _initialized) public onlyOwner{
+        initialized_ = _initialized;
+    }
 
     function name() public view returns(string){
         return name_;
@@ -83,7 +96,7 @@ contract ERTTokenDataV1 is Owned {
         approvedAccount_[_target] = _approved;
     }
 
-    function getTokenPriceInGas() public view returns(uint){
+    function getTokenPriceInGas() public view returns(uint256){
         return tokenPriceInGas_;
     }
 
@@ -91,7 +104,7 @@ contract ERTTokenDataV1 is Owned {
         tokenPriceInGas_ = _tokenPriceInGas;
     }
 
-    function getGasPriceLimit() public view returns(uint){
+    function getGasPriceLimit() public view returns(uint256){
         return gasPriceLimit_;
     }
 

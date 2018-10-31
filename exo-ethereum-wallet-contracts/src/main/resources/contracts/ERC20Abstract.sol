@@ -1,9 +1,9 @@
 pragma solidity ^0.4.24;
 import "./ERC20Interface.sol";
 import "./SafeMath.sol";
-import "./ERTTokenDataProxy.sol";
+import "./DataAccess.sol";
 
-contract ERC20Abstract is ERTTokenDataProxy, SafeMath, ERC20Interface {
+contract ERC20Abstract is DataAccess, SafeMath, ERC20Interface {
 
     constructor() internal{
     }

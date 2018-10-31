@@ -5,7 +5,6 @@ const decimals = Math.pow(10, 18);
 contract('ERTToken', function(accounts) {
 
   let tokenInstance;
-
   it('test contract initialization attributes', function() {
     return ERTToken.deployed().then(instance => {
       tokenInstance = instance;
@@ -66,15 +65,12 @@ contract('ERTToken', function(accounts) {
       balance = balance.toNumber();
       assert.equal(balance, 100000 * decimals, 'Wrong balance of contract owner');
 
-      return tokenInstance.transfer.call(accounts[1], 6 * decimals, {
-        from : accounts[0]
-      });
-    }).then(success => {
-      assert.equal(success, true, 'Transaction failed');
-      return tokenInstance.transfer(accounts[1], 10 * decimals, {
+      return tokenInstance.transfer(accounts[1], 6 * decimals, {
         from : accounts[0]
       });
     }).then(receipt => {
+      assert.equal(receipt && receipt.receipt && receipt.receipt.status, true, 'Transfer transaction failed');
+
       assert(receipt.logs.length >= 2,
           'number of emitted event is wrong');
       assert.equal(receipt.logs[0].event, 'ApprovedAccount',
@@ -85,15 +81,32 @@ contract('ERTToken', function(accounts) {
           'the account the tokens are transferred from is wrong');
       assert.equal(receipt.logs[1].args._to, accounts[1],
           'the account the tokens are transferred to is wrong');
-      assert.equal(receipt.logs[1].args._value, 10 * decimals,
+      assert.equal(receipt.logs[1].args._value.toNumber(), 6 * decimals,
+          'the transfer amount is wrong');
+
+      return tokenInstance.transfer(accounts[1], 10 * decimals, {
+        from : accounts[0]
+      });
+    }).then(receipt => {
+      assert.equal(receipt && receipt.receipt && receipt.receipt.status, true, 'Transfer transaction failed');
+
+      assert(receipt.logs.length >= 1,
+          'number of emitted event is wrong');
+      assert.equal(receipt.logs[0].event, 'Transfer',
+          'should be the "Transfer" event');
+      assert.equal(receipt.logs[0].args._from, accounts[0],
+          'the account the tokens are transferred from is wrong');
+      assert.equal(receipt.logs[0].args._to, accounts[1],
+          'the account the tokens are transferred to is wrong');
+      assert.equal(receipt.logs[0].args._value.toNumber(), 10 * decimals,
           'the transfer amount is wrong');
       return tokenInstance.balanceOf(accounts[1]);
     }).then(balance => {
-      assert.equal(balance.toNumber(), 10 * decimals,
+      assert.equal(balance.toNumber(), 16 * decimals,
           'token balance of receiver is wrong');
       return tokenInstance.balanceOf(accounts[0]);
     }).then(balance => {
-      assert.equal(balance.toNumber(), (100000 - 10) * decimals,
+      assert.equal(balance.toNumber(), (100000 - 16) * decimals,
           'token balance of sender is wrong');
     });
   });
@@ -152,13 +165,13 @@ contract('ERTToken', function(accounts) {
         from : accounts[0]
       });
     }).then(function(receipt) {
-      return tokenInstance.approve(spendingAccount, 10 * decimals, {
-        from : fromAccount
-      });
-    }).then(function(receipt) {
       // We have to approve 'toAccount' first before sending him some tokens
       return tokenInstance.approveAccount(toAccount, {
         from : accounts[0]
+      });
+    }).then(function(receipt) {
+      return tokenInstance.approve(spendingAccount, 10 * decimals, {
+        from : fromAccount
       });
     }).then(function(receipt) {
       return tokenInstance.transferFrom(fromAccount, toAccount, 10 * decimals, {

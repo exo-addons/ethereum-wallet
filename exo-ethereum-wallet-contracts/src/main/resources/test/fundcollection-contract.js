@@ -1,6 +1,6 @@
 var ERTToken = artifacts.require("ERTToken");
 
-contract('GasPayableInToken', function(accounts) {
+contract('FundCollection', function(accounts) {
   it('Send ether to contract', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;

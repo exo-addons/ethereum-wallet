@@ -11,7 +11,7 @@ function addTokenDecimals(number) {
   return number * decimals;
 }
 
-contract('FundCollection', function(accounts) {
+contract('GasPayableInToken', function(accounts) {
   let initialOwnerEtherBalance = 0;
   let initialOwnerTokenBalance = 0;
 
@@ -25,14 +25,14 @@ contract('FundCollection', function(accounts) {
   let tokenPriceInGas = 0;
 
   const tokensToTransferFromOwner = addTokenDecimals(1000);
-  const allowedEtherDelta = web3.toWei(0.0001, 'ether');
+  const allowedEtherDelta = web3.toWei(0.001, 'ether');
 
   it('Pay token transfer gas in tokens', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;
     }).then(() => {
       // Check accounts[1] to be able to send him tokens
-      return tokenInstance.tokenPriceInGas();
+      return tokenInstance.getTokenPriceInGas();
     }).then(tokenPrice => {
       tokenPriceInGas = tokenPrice;
     }).then(() => {

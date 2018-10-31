@@ -1,14 +1,21 @@
 pragma solidity ^0.4.24;
 import "./Owned.sol";
-import "./ERTTokenDataProxy.sol";
 import "./ERC20Abstract.sol";
 
-contract GasPayableInToken is Owned, ERTTokenDataProxy, ERC20Abstract {
+contract GasPayableInToken is Owned, ERC20Abstract {
 
     event TransactionFee(address from, uint tokenFee, uint etherFeeRefund);
     event NoSufficientFund(uint balance);
 
     constructor() internal{
+    }
+
+    /*
+     * This is to avoid refunding a lot of ethers from contract
+     */
+    modifier notExcessiveGasPrice(){
+        require(tx.gasprice < super.getGasPriceLimit());
+        _;
     }
 
     function setTokenPriceInGas(uint _value) public onlyOwner{
@@ -22,9 +29,13 @@ contract GasPayableInToken is Owned, ERTTokenDataProxy, ERC20Abstract {
     function _payGasInToken(uint256 gasLimit) internal{
         // Gas used = Gas limit - gas left + fixed gas amount to use
         // for the following transfer operations
-        uint tokenPriceInGas = super.getTokenPriceInGas();
+        uint256 tokenPriceInGas = super.getTokenPriceInGas();
         require(tokenPriceInGas > 0);
-        uint256 gasUsed = gasLimit - gasleft() + 45803;
+        uint256 gasToUse = 83844;
+        if (msg.sender == owner) {
+            gasToUse = 79437;
+        }
+        uint256 gasUsed = gasLimit - gasleft() + gasToUse;
         uint256 tokenFeeAmount = gasUsed * tokenPriceInGas;
         uint256 etherFeeRefund = gasUsed * tx.gasprice;
         uint256 contractBalance = address(this).balance;
@@ -37,13 +48,5 @@ contract GasPayableInToken is Owned, ERTTokenDataProxy, ERC20Abstract {
             msg.sender.transfer(etherFeeRefund);
             emit TransactionFee(msg.sender, tokenFeeAmount, etherFeeRefund);
         }
-    }
-
-    /*
-     * This is to avoid refunding a lot of ethers from contract
-     */
-    modifier notExcessiveGasPrice(){
-        require(tx.gasprice < super.getGasPriceLimit());
-        _;
     }
 }

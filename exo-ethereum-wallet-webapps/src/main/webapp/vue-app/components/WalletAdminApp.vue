@@ -7,6 +7,16 @@
             <i class="uiIconError"></i>{{ error }}
           </div>
 
+          <wallet-setup
+            ref="walletSetup"
+            :wallet-address="walletAddress"
+            :refresh-index="refreshIndex"
+            class="mb-3"
+            @loading="loadingContracts = true"
+            @end-loading="loadingContracts = false"
+            @refresh="init()"
+            @error="loadingContracts = false; error = $event" />
+
           <v-dialog v-model="loading" persistent width="300">
             <v-card color="primary" dark>
               <v-card-text>
@@ -264,15 +274,6 @@
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" key="contracts">
-              <wallet-setup
-                ref="walletSetup"
-                :wallet-address="walletAddress"
-                :refresh-index="refreshIndex"
-                class="mb-3"
-                @loading="loadingContracts = true"
-                @end-loading="loadingContracts = false"
-                @refresh="init()"
-                @error="loadingContracts = false; error = $event" />
               <v-card-title v-if="loadingContracts">
                 <v-spacer />
                 <v-progress-circular indeterminate color="primary" />

@@ -1,41 +1,39 @@
 pragma solidity ^0.4.24;
 
 import "./Owned.sol";
-import "./ERTTokenDataProxy.sol";
+import "./DataAccess.sol";
 
-contract Admin is Owned, ERTTokenDataProxy {
+contract Admin is Owned, DataAccess {
 
-    event AddAdmin(address target);
-    event RemoveAdmin(address target);
+    event AddedAdmin(address target);
+    event RemovedAdmin(address target);
 
     constructor() internal{
     }
 
     function addAdmin(address _target) public onlyOwner returns (bool){
-        if (!super.addAdmin(_target) && _target != address(0)) {
+        if (!super.isAdmin(_target) && _target != address(0)) {
             super.setAdmin(_target, true);
-            emit AddAdmin(_target);
+            emit AddedAdmin(_target);
         }
     }
 
     function removeAdmin(address _target) public onlyOwner returns (bool){
         require (owner != _target);
-        if (super.addAdmin(_target)) {
+        if (super.isAdmin(_target)) {
             super.setAdmin(_target, false);
-            emit RemoveAdmin(_target);
+            emit RemovedAdmin(_target);
         }
     }
 
     function isAdmin(address _target) public view returns (bool){
-        return super.addAdmin(_target);
+        return super.isAdmin(_target);
     }
 
-    modifier onlyAdmin(address _from, address _to){
-        require (owner == _from || super.addAdmin(_to));
+    modifier onlyAdmin(){
+        require (msg.sender == owner || super.isAdmin(msg.sender));
         _;
     }
-    
-   
 }
 
 

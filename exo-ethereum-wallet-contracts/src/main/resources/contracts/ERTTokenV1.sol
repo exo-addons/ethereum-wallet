@@ -1,7 +1,9 @@
 pragma solidity ^0.4.24;
 import "./ERC20Interface.sol";
 import "./Owned.sol";
-import "./ERTTokenDataProxy.sol";
+import "./DataAccess.sol";
+import "./Admin.sol";
+import "./Burnable.sol";
 import "./SafeMath.sol";
 import "./Pausable.sol";
 import "./ApprouvableAccount.sol";
@@ -9,11 +11,15 @@ import "./ERC20Abstract.sol";
 import "./FundCollection.sol";
 import "./GasPayableInToken.sol";
 import "./Mintable.sol";
+import "./TokenImplStorage.sol";
 
 contract ERTTokenV1 is 
+  TokenImplStorage,
   Owned,
-  ERTTokenDataProxy,
+  DataAccess,
+  Admin,
   SafeMath,
+  Burnable,
   Pausable,
   ApprouvableAccount,
   ERC20Interface,
@@ -24,10 +30,15 @@ contract ERTTokenV1 is
 
     string public constant VERSION = "1.0.0";
 
-    constructor(address _dataAddress, uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public{
+    constructor(address _dataAddress) public{
         super.upgradeData(_dataAddress);
-        super.setName(_tokenName);
+    }
+
+    function initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
+        require(!super.initialized());
+
         super.setDecimals(_decimalUnits);
+        super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);
         super.setTotalSupply(_initialAmount);
         super.setBalance(msg.sender, _initialAmount);
@@ -35,6 +46,7 @@ contract ERTTokenV1 is
         // TODO consider when ownership transferred twice,
         // the old owner should always be approved at first
         super.approveAccount(msg.sender);
+        super.setInitialized(true);
     }
 
     function balanceOf(address _owner) public view returns (uint256 balance){

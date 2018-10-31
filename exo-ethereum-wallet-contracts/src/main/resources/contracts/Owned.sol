@@ -1,9 +1,8 @@
 pragma solidity ^0.4.24;
+import "./TokenImplStorage.sol";
 
-contract Owned {
+contract Owned is TokenImplStorage {
     event TransferOwnership(address newOwner);
-
-    address public owner;
 
     constructor() internal{
         owner = msg.sender;
@@ -12,6 +11,10 @@ contract Owned {
     modifier onlyOwner(){
         require(msg.sender == owner);
         _;
+    }
+
+    function getOwner() public view returns(address){
+        return owner;
     }
 
     function transferOwnership(address _newOwner) public onlyOwner{

@@ -3,9 +3,8 @@ import "./ERC20Abstract.sol";
 import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 import "./Owned.sol";
-import "./ERTTokenDataProxy.sol";
 
-contract Mintable is Owned, ERTTokenDataProxy, SafeMath, ERC20Abstract {
+contract Mintable is Owned, SafeMath, ERC20Abstract {
 
     function mintToken(address target, uint256 mintedAmount) public onlyOwner{
         super.setBalance(target, super.safeAdd(super.balance(target), mintedAmount));

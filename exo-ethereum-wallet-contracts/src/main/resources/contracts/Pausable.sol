@@ -2,10 +2,8 @@ pragma solidity ^0.4.24;
 import "./Owned.sol";
 
 contract Pausable is Owned {
-    event Pause();
-    event UnPause();
-
-    bool public paused = false;
+    event ContractPaused();
+    event ContractUnPaused();
 
     constructor() internal{
     }
@@ -15,20 +13,24 @@ contract Pausable is Owned {
         _;
     }
 
-    modifier whenPaused{
+    modifier whenPaused(){
         require (paused);
         _;
     }
 
+    function isPaused() public view returns (bool){
+        return paused;
+    }
+
     function pause() public onlyOwner whenNotPaused returns (bool){
         paused = true;
-        emit Pause();
+        emit ContractPaused();
         return true;
     }
 
     function unPause() public onlyOwner whenPaused returns (bool){
         paused = false;
-        emit UnPause();
+        emit ContractUnPaused();
         return true;
     }
 }
