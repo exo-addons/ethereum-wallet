@@ -5,7 +5,7 @@ import "./Owned.sol";
 import "./ERTTokenDataProxy.sol";
 
 
-contract Burnable is ERTTokenDataProxy, Owned, SafeMath {
+contract Burnable is Owned, SafeMath, ERTTokenDataProxy {
 
   event Burn(address indexed burner, uint256 value);
 
