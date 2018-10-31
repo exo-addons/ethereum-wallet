@@ -1,12 +1,11 @@
 pragma solidity ^0.4.24;
 
 import "./SafeMath.sol";
-import "./ERC20Abstract";
 import "./Owned.sol";
 import "./ERTTokenDataProxy.sol";
 
 
-contract Burnable is ERTTokenDataProxy, Owned, SafeMath, ERC20Abstract {
+contract Burnable is ERTTokenDataProxy, Owned, SafeMath {
 
   event Burn(address indexed burner, uint256 value);
 
