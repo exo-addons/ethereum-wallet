@@ -14,10 +14,9 @@ contract Burnable is Owned, SafeMath, ERTTokenDataProxy {
   }
 
   function _burn(address _who, uint256 _value) internal onlyOwner{
-    require(_value <= super.balance[_who]);
+    require(_value <= super.balance(_who));
     super.setBalance(_who, super.safeSubtract(super.balance(_who), _value));
-    super.setTotalSupply(_who, super.safeSubtract(super.totalSupply(_who), _value)); 
-    totalSupply =  safeSubtract(totalSupply,_value);
+    super.setTotalSupply(super.safeSubtract(super.totalSupply(), _value)); 
     emit Burn(_who, _value);
  
   }
