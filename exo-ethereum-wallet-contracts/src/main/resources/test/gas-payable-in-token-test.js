@@ -22,20 +22,22 @@ contract('GasPayableInToken', function(accounts) {
   let senderUsedGas = 0;
   let gasPrice = 0;
 
-  let tokenPriceInGas = 0;
+  let gasPriceInToken = 0;
 
-  const tokensToTransferFromOwner = addTokenDecimals(1000);
+  const tokensToTransferOwnerNoDecimals = 1000;
+  const tokensToTransferFromOwner = addTokenDecimals(tokensToTransferOwnerNoDecimals);
   const allowedEtherDelta = web3.toWei(0.001, 'ether');
+  const initialEtherTokenBalance = web3.toWei(1,"ether");
+  const initialEtherTokenBalanceNumber = Number(initialEtherTokenBalance);
 
   it('Pay token transfer gas in tokens', function() {
     return ERTToken.deployed().then(function(instance) {
       tokenInstance = instance;
     }).then(() => {
       // Check accounts[1] to be able to send him tokens
-      return tokenInstance.getTokenPriceInGas();
+      return tokenInstance.getGasPriceInToken();
     }).then(tokenPrice => {
-      tokenPriceInGas = tokenPrice;
-    }).then(() => {
+      gasPriceInToken = tokenPrice;
       // Check accounts[1] to be able to send him tokens
       return tokenInstance.approveAccount(accounts[1], {from: accounts[0]});
     }).then(() => {
@@ -51,13 +53,13 @@ contract('GasPayableInToken', function(accounts) {
       return web3.eth.sendTransaction({
         from : accounts[0],
         to: tokenInstance.address,
-        value : web3.toWei(1,"ether")
+        value : initialEtherTokenBalance
       });
     }).then(() => {
       // Check contract balance is received by contract and not miner
       return web3.eth.getBalance(tokenInstance.address);
     }).then(balance => {
-      assert.equal(String(balance), String(web3.toWei(1,"ether")), 'Contract balance should be 1 ether');
+      assert.equal(String(balance), String(initialEtherTokenBalance), 'Contract balance should be 1 ether');
     }).then(() => {
       // Begin transfer and refund methods test for owner
       return web3.eth.getBalance(accounts[0]);
@@ -71,17 +73,6 @@ contract('GasPayableInToken', function(accounts) {
       return tokenInstance.transfer(accounts[1], tokensToTransferFromOwner, {from: accounts[0]});
     }).then(receipt => {
       assert.equal(receipt && receipt.receipt && receipt.receipt.status, true, "Transaction failure");
-      ownerUsedGas = receipt.receipt.gasUsed;
-      gasPrice = receipt.receipt.gasPrice;
-      // TODO test with gasUsed + gasPrice + tokenExchangeRate
-    }).then(() => {
-      return web3.eth.getBalance(accounts[0]);
-    }).then(balance => {
-      balance = balance.toNumber();
-      const etherBalanceDiff = initialOwnerEtherBalance - balance;
-      assert.equal(etherBalanceDiff < allowedEtherDelta, true, `ether balance shouldn't change a lot for sender even owner, diff: ${etherBalanceDiff}, usedGas: ${ownerUsedGas}`);
-      assert.equal(etherBalanceDiff >= 0, true, `shouldn't add ether to the balance of owner, diff: ${etherBalanceDiff}, usedGas: ${ownerUsedGas}`);
-    }).then(() => {
       return tokenInstance.balanceOf(accounts[0]);
     }).then(balance => {
       balance = deleteTokenDecimals(balance.toNumber());
@@ -120,11 +111,12 @@ contract('GasPayableInToken', function(accounts) {
       return tokenInstance.balanceOf(accounts[1]);
     }).then(balance => {
       balance = deleteTokenDecimals(balance.toNumber());
-      assert.equal(parseInt(initialSenderTokenBalance - balance), 100, "sender should have paid transaction fee in token");
+      assert.equal((initialSenderTokenBalance - 100) > balance, true, `sender should have paid transaction fee in token, initial balance: ${initialSenderTokenBalance}, balance now: ${balance}`);
     }).then(() => {
       return web3.eth.getBalance(tokenInstance.address);
+    }).then((tokenBalance) => {
+      assert.equal(initialEtherTokenBalanceNumber > tokenBalance.toNumber(), true, `transaction fee should have been paid from contract balance`);
     });
   });
 
-  // TODO test failure test cases
 });

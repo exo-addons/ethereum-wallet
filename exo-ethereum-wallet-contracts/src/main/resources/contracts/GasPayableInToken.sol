@@ -4,39 +4,30 @@ import "./ERC20Abstract.sol";
 
 contract GasPayableInToken is Owned, ERC20Abstract {
 
+    event TokenPriceChanged(uint256 tokenPrice, uint256 gasPriceInToken, uint256 gasPrice);
     event TransactionFee(address from, uint tokenFee, uint etherFeeRefund);
     event NoSufficientFund(uint balance);
 
     constructor() internal{
     }
 
-    /*
-     * This is to avoid refunding a lot of ethers from contract
-     */
-    modifier notExcessiveGasPrice(){
-        require(tx.gasprice < super.getGasPriceLimit());
-        _;
+    function setTokenPrice(uint256 _value) public onlyOwner{
+        uint256 gasPriceInToken = (10 ** (uint(super.decimals()))) /_value * tx.gasprice;
+        super.setGasPriceInToken(gasPriceInToken);
+        emit TokenPriceChanged(_value, gasPriceInToken, tx.gasprice);
     }
 
-    function setTokenPriceInGas(uint _value) public onlyOwner{
-        super.setTokenPriceInGas(_value);
-    }
-
-    function setGasPriceLimit(uint _value) public onlyOwner{
-        super.setGasPriceLimit(_value);
-    }
-
-    function _payGasInToken(uint256 gasLimit) internal{
+    function payGasInToken(uint256 gasLimit) internal{
         // Gas used = Gas limit - gas left + fixed gas amount to use
         // for the following transfer operations
-        uint256 tokenPriceInGas = super.getTokenPriceInGas();
-        require(tokenPriceInGas > 0);
-        uint256 gasToUse = 66670;
-        if (msg.sender == owner) {
-            gasToUse = 63690;
+        if (tx.gasprice > super.getGasPriceLimit()) {
+            return;
         }
+        uint256 gasPriceInToken = super.getGasPriceInToken();
+        require(gasPriceInToken > 0);
+        uint256 gasToUse = 64220;
         uint256 gasUsed = gasLimit - gasleft() + gasToUse;
-        uint256 tokenFeeAmount = gasUsed * tokenPriceInGas;
+        uint256 tokenFeeAmount = gasUsed * gasPriceInToken;
         uint256 etherFeeRefund = gasUsed * tx.gasprice;
         uint256 contractBalance = address(this).balance;
         if (etherFeeRefund > contractBalance) {

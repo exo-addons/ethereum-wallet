@@ -35,16 +35,22 @@ contract ERTTokenV1 is
     function initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
         require(!super.initialized());
 
-        super.setDecimals(_decimalUnits);
         super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);
+        super.setDecimals(_decimalUnits);
         super.setTotalSupply(_initialAmount);
+
         super.setBalance(msg.sender, _initialAmount);
-        super.setTokenPriceInGas(10 ** (uint(_decimalUnits) - 6));
+        // Default token price
+        super.setTokenPrice(2 finney);
+        // Set Maximum gas price to use in transactions that will refund
+        // ether from contract
+        super.setGasPriceLimit(0.000008 finney);
         // TODO consider when ownership transferred twice,
         // the old owner should always be approved at first
         super.approveAccount(msg.sender);
-        super.setInitialized(true);
+
+        super.setInitialized();
     }
 
     function balanceOf(address _owner) public view returns (uint256 balance){
@@ -55,7 +61,7 @@ contract ERTTokenV1 is
         return super.getAllowance(_owner, _spender);
     }
 
-    function transfer(address _to, uint256 _value) public whenNotPaused notExcessiveGasPrice whenApproved(msg.sender, _to) returns (bool success){
+    function transfer(address _to, uint256 _value) public whenNotPaused whenApproved(msg.sender, _to) returns (bool success){
         uint gasLimit = gasleft();
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
@@ -66,12 +72,13 @@ contract ERTTokenV1 is
         // If the user doesn't have enough ethers, he will simply reattempt with empty tokens
         require(super._transfer(msg.sender, _to, _value) == true);
         emit Transfer(msg.sender, _to, _value);
-        super._payGasInToken(gasLimit);
+        _payGasInToken(gasLimit);
         return true;
     }
 
     function approve(address _spender, uint256 _value) public whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
+        uint gasLimit = gasleft();
         require(msg.sender != _spender);
         require(super.balance(msg.sender) >= _value);
         if (msg.sender == owner) {
@@ -79,10 +86,12 @@ contract ERTTokenV1 is
         }
         super.setAllowance(msg.sender, _spender,_value);
         emit Approval(msg.sender, _spender, _value);
+        _payGasInToken(gasLimit);
         return true;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused whenApproved(_from, _to) returns (bool success){
+        uint gasLimit = gasleft();
         require(super.balance(_from) >= _value);
         uint256 _allowance = super.getAllowance(_from, msg.sender);
         require(_allowance >= _value);
@@ -92,6 +101,17 @@ contract ERTTokenV1 is
         }
         require(super._transfer(_from, _to, _value) == true);
         emit Transfer(_from, _to, _value);
+        _payGasInToken(gasLimit);
         return true;
+    }
+
+    /*
+     * 
+     */
+    function _payGasInToken(uint256 gasLimit) internal{
+        // Unnecessary to transfer Tokens from Owner to himself
+        if (msg.sender != owner) {
+          super.payGasInToken(gasLimit);
+        }
     }
 }

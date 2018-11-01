@@ -27,9 +27,9 @@ contract ERTTokenDataV1 is DataOwned {
     mapping (address => bool) internal admin_;
 
     /* GasPayableInToken.sol */
-    uint256 internal tokenPriceInGas_;
+    uint256 internal gasPriceInToken_;
 
-    uint256 internal gasPriceLimit_ = 200000000000;
+    uint256 internal gasPriceLimit_;
 
     constructor() public{
     }
@@ -52,28 +52,24 @@ contract ERTTokenDataV1 is DataOwned {
         return totalSupply_;
     }
 
-    function decimals() public view returns(uint8){
-        return decimals_;
-    }
-
     function balance(address _target) public view returns(uint256){
         return balances_[_target];
+    }
+
+    function decimals() public view returns(uint8){
+        return decimals_;
     }
 
     function getAllowance(address account, address spender) public view returns (uint256){
         return allowed_[account][spender];
     }
 
-    function setAllowance(address account, address spender, uint256 allowance) public{
-        allowed_[account][spender] = allowance;
-    }
-
     function isApprovedAccount(address _target) public view returns(bool){
         return approvedAccount_[_target];
     }
 
-    function getTokenPriceInGas() public view returns(uint256){
-        return tokenPriceInGas_;
+    function getGasPriceInToken() public view returns(uint256){
+        return gasPriceInToken_;
     }
 
     function getGasPriceLimit() public view returns(uint256){
@@ -90,8 +86,8 @@ contract ERTTokenDataV1 is DataOwned {
 
     /* Write methods accessible from Token Implementation Contract only */
 
-    function setInitialized(bool _initialized) public onlyOwner{
-        initialized_ = _initialized;
+    function setInitialized() public onlyOwner{
+        initialized_ = true;
     }
 
     function setPaused(bool _paused) public onlyOwner{
@@ -118,12 +114,16 @@ contract ERTTokenDataV1 is DataOwned {
         decimals_ = _decimals;
     }
 
+    function setAllowance(address account, address spender, uint256 allowance) public onlyOwner{
+        allowed_[account][spender] = allowance;
+    }
+
     function setApprovedAccount(address _target, bool _approved) public onlyOwner{
         approvedAccount_[_target] = _approved;
     }
 
-    function setTokenPriceInGas(uint _tokenPriceInGas) public onlyOwner{
-        tokenPriceInGas_ = _tokenPriceInGas;
+    function setGasPriceInToken(uint256 _gasPriceInToken) public onlyOwner{
+        gasPriceInToken_ = _gasPriceInToken;
     }
 
     function setGasPriceLimit(uint _gasPriceLimit) public onlyOwner{

@@ -1,26 +1,48 @@
 pragma solidity ^0.4.24;
 
+/*
+ * @title DataOwned
+ * Abstract contract for Data contracts ownership testing
+ */
 contract DataOwned {
+    // Event emitted when a new ownership has been made
     event TransferOwnership(address proxyAddress, address implementationAddress);
 
-    address public proxyAddress;
-    address public implementationAddress;
+    // ERC20 Proxy contract address
+    address public proxyAddress_;
 
+    // ERC20 Implementation contract address
+    address public implementationAddress_;
+
+    /*
+     * Made internal because this contract is abstract
+     */
     constructor() internal{
-        // Keep 
-        implementationAddress = msg.sender;
+        // Keep contract creator as an owner until it's modified
+        // When Token Proxy and Implementation contracts are deployed
+        implementationAddress_ = msg.sender;
     }
 
+    /*
+     * @dev Modifier that checks that the caller is either the proxy contract or
+     * the the ERC20 implementation contract
+     */
     modifier onlyOwner(){
         address sender = msg.sender;
-        require(sender == proxyAddress || sender == implementationAddress);
+        require(sender == proxyAddress_ || sender == implementationAddress_);
         _;
     }
 
-    function transferDataOwnership(address proxyAddress_, address implementationAddress_) public onlyOwner{
-        require (proxyAddress_ != address(0) && implementationAddress_ != address(0));
-        proxyAddress = proxyAddress_;
-        implementationAddress = implementationAddress_;
-        emit TransferOwnership(proxyAddress_, implementationAddress_);
+    /*
+     * @dev Modifier that checks that the caller is either the proxy contract or
+     * the the ERC20 implementation contract (can be called by owner only))
+     * @param _proxyAddress Proxy Contract address
+     * @param _implementationAddress ERC20 Implementation Contract address
+     */
+    function transferDataOwnership(address _proxyAddress, address _implementationAddress) public onlyOwner{
+        require (_proxyAddress != address(0) && _implementationAddress != address(0));
+        proxyAddress_ = _proxyAddress;
+        implementationAddress_ = _implementationAddress;
+        emit TransferOwnership(_proxyAddress, _implementationAddress);
     }
 }

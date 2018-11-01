@@ -2,6 +2,10 @@ pragma solidity ^0.4.24;
 import './TokenStorage.sol';
 import './Owned.sol';
 
+/*
+ * @dev Proxy contract that delegates calls to a dedicated ERC20 implementation
+ * contract. The needed data here are implementation address and owner.
+ */
 contract ERTToken is TokenStorage, Owned {
 
     event Upgraded(uint16 implementationVersion, address implementationAddress, uint16 dataVersion, address dataAddress);

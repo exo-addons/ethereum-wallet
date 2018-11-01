@@ -1,5 +1,4 @@
 pragma solidity ^0.4.24;
-
 import "./Owned.sol";
 import "./DataAccess.sol";
 
@@ -11,14 +10,14 @@ contract Admin is Owned, DataAccess {
     constructor() internal{
     }
 
-    function addAdmin(address _target) public onlyOwner returns (bool){
+    function addAdmin(address _target) public onlyOwner{
         if (!super.isAdmin(_target) && _target != address(0)) {
             super.setAdmin(_target, true);
             emit AddedAdmin(_target);
         }
     }
 
-    function removeAdmin(address _target) public onlyOwner returns (bool){
+    function removeAdmin(address _target) public onlyOwner{
         require (owner != _target);
         if (super.isAdmin(_target)) {
             super.setAdmin(_target, false);
@@ -37,5 +36,3 @@ contract Admin is Owned, DataAccess {
 }
 
 
-
- 

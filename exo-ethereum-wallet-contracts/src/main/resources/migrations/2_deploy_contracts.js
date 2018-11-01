@@ -17,6 +17,8 @@ module.exports =  function(deployer) {
      // Initialize Token Data with initial values
      .then(() => ERTTokenV1.deployed()) // Wait until ERTTokenV1 is deployed
      .then(ertTokenV1Instance => ertTokenV1Instance.initialize(100000 * Math.pow(10, 18), "Curries", 18, "C"))
+     .then(() => ERTTokenV1.deployed()) // Wait until ERTTokenV1 is deployed
+     .then(ertTokenV1Instance => ertTokenV1Instance.setGasPriceLimit(Number(web3.toWei("100", "Gwei"))))
      // Change ABI of Proxy by ABI of Token to access it methods
      .then(() => ERTToken.abi = ERTTokenV1.abi);
 };
