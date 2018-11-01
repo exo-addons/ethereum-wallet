@@ -80,7 +80,7 @@ contract('GasPayableInToken', function(accounts) {
       balance = balance.toNumber();
       const etherBalanceDiff = initialOwnerEtherBalance - balance;
       assert.equal(etherBalanceDiff < allowedEtherDelta, true, `ether balance shouldn't change a lot for sender even owner, diff: ${etherBalanceDiff}, usedGas: ${ownerUsedGas}`);
-      assert.equal(etherBalanceDiff >= 0, true, `shouldn't add ether to the balance of sender, diff: ${etherBalanceDiff}, usedGas: ${ownerUsedGas}`);
+      assert.equal(etherBalanceDiff >= 0, true, `shouldn't add ether to the balance of owner, diff: ${etherBalanceDiff}, usedGas: ${ownerUsedGas}`);
     }).then(() => {
       return tokenInstance.balanceOf(accounts[0]);
     }).then(balance => {

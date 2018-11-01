@@ -1,4 +1,5 @@
 pragma solidity ^0.4.24;
+import "./TokenStorage.sol";
 import "./ERC20Interface.sol";
 import "./Owned.sol";
 import "./DataAccess.sol";
@@ -11,10 +12,9 @@ import "./ERC20Abstract.sol";
 import "./FundCollection.sol";
 import "./GasPayableInToken.sol";
 import "./Mintable.sol";
-import "./TokenImplStorage.sol";
 
 contract ERTTokenV1 is 
-  TokenImplStorage,
+  TokenStorage,
   Owned,
   DataAccess,
   Admin,
@@ -28,10 +28,8 @@ contract ERTTokenV1 is
   GasPayableInToken,
   Mintable {
 
-    string public constant VERSION = "1.0.0";
-
     constructor(address _dataAddress) public{
-        super.upgradeData(_dataAddress);
+        super.setDataAddress(1, _dataAddress);
     }
 
     function initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{

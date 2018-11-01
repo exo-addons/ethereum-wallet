@@ -1,36 +1,34 @@
 pragma solidity ^0.4.24;
+import './TokenStorage.sol';
 import './Owned.sol';
 
-contract ERTToken is TokenImplStorage, Owned {
+contract ERTToken is TokenStorage, Owned {
 
-    address private implementation;
+    event Upgraded(uint16 implementationVersion, address implementationAddress, uint16 dataVersion, address dataAddress);
 
-    event Upgraded(address implementation);
-
-    constructor(address _implementation) public{
-        upgradeTo(_implementation);
+    constructor(address _implementationAddress, address _dataAddress) public{
+        upgradeTo(1, _implementationAddress, 1, _dataAddress);
     }
 
-    function upgradeTo(address newImplementation) public onlyOwner{
+    function upgradeTo(uint16 _implementationVersion, address _newImplementation, uint16 _dataVersion, address _dataAddress) public onlyOwner{
         // Change implementation reference and emit event
-        implementation = newImplementation;
-        emit Upgraded(newImplementation);
+        implementationAddress = _newImplementation;
+        dataAddress[_dataVersion] = _dataAddress;
+        emit Upgraded(_implementationVersion, _newImplementation, _dataVersion, _dataAddress);
     }
 
     function () payable public{
-        address _implementation = implementation;
-        assembly {
-        calldatacopy(0x0, 0x0, calldatasize)
-        let success := delegatecall(sub(gas, 10000), _implementation, 0x0, calldatasize, 0, 0)
-        let retSz := returndatasize
-        returndatacopy(0, 0, retSz)
-        switch success
-        case 0 {
-          revert(0, retSz)
-        }
-        default {
-          return(0, retSz)
-        }
+      address _impl = implementationAddress;
+      assembly {
+         let ptr := mload(0x40)
+         calldatacopy(ptr, 0, calldatasize)
+         let result := delegatecall(gas, _impl, ptr, calldatasize, 0, 0)
+         let size := returndatasize
+         returndatacopy(ptr, 0, size)
+
+         switch result
+         case 0 { revert(ptr, size) }
+         default { return(ptr, size) }
       }
     }
 }

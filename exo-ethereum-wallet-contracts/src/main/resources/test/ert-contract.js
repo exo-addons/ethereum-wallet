@@ -1,4 +1,6 @@
 var ERTToken = artifacts.require("ERTToken");
+var ERTTokenV1 = artifacts.require("ERTTokenV1");
+var ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
 
 const decimals = Math.pow(10, 18);
 
@@ -8,19 +10,22 @@ contract('ERTToken', function(accounts) {
   it('test contract initialization attributes', function() {
     return ERTToken.deployed().then(instance => {
       tokenInstance = instance;
-      return tokenInstance.totalSupply();
-    }).then(function(totalSupply) {
-      assert.equal(totalSupply, 100000 * decimals, 'has not the correct totalSupply');
+      return tokenInstance.getDataAddress(1);
+    }).then(function(dataAddress) {
+      assert.equal(dataAddress, ERTTokenDataV1.address, 'Token Implementation seems to have wrong data address');
       return tokenInstance.name();
     }).then(function(name) {
       assert.equal(name, 'Curries', 'has not the correct name');
       return tokenInstance.symbol();
     }).then(function(symbol) {
       assert.equal(symbol, 'C', 'has not the correct symbol');
+      return tokenInstance.totalSupply();
+    }).then(function(totalSupply) {
+      assert.equal(totalSupply, 100000 * decimals, 'has not the correct totalSupply');
       return tokenInstance.decimals();
     }).then(function(decimals) {
       assert.equal(decimals, 18, 'has not the correct decimals');
-      return tokenInstance.approvedAccount(accounts[0]);
+      return tokenInstance.isApprovedAccount(accounts[0]);
     }).then(function(ownerApproved) {
       assert.equal(true, ownerApproved, 'Contract owner has to be approved');
     });
@@ -29,11 +34,10 @@ contract('ERTToken', function(accounts) {
   it('put 100000 * 10 ^ 18 ERTToken in the admin account', function() {
     return ERTToken.deployed().then(function(instance) {
       return instance.balanceOf(accounts[0]);
-    }).then(
-        function(adminBalance) {
-          assert.equal(adminBalance.valueOf(), 100000 * decimals,
-              "100000 * 10 ^ 18 wasn't in the admin account");
-        });
+    }).then(adminBalance => {
+      assert.equal(adminBalance.toNumber(), 100000 * decimals,
+            "100000 * 10 ^ 18 wasn't in the admin account");
+      });
   });
 
   it('transfer tokens', function() {
@@ -44,7 +48,6 @@ contract('ERTToken', function(accounts) {
       return tokenInstance.transfer(accounts[1], 100001 * decimals);
     }).then(assert.fail).catch(function(error) {
       assert(error.message.indexOf('revert') >= 0, 'message must contain revert: no transfer with exceeded tokens is allowed');
-
       // Test error require msg.sender != _to
       return tokenInstance.transfer(accounts[0], 99 * decimals, {from : accounts[0]});
     }).then(assert.fail).catch(function(error) {
@@ -62,8 +65,7 @@ contract('ERTToken', function(accounts) {
 
       return tokenInstance.balanceOf(accounts[0]);
     }).then(balance => {
-      balance = balance.toNumber();
-      assert.equal(balance, 100000 * decimals, 'Wrong balance of contract owner');
+      assert.equal(balance.toNumber(), 100000 * decimals, 'Wrong balance of contract owner');
 
       return tokenInstance.transfer(accounts[1], 6 * decimals, {
         from : accounts[0]

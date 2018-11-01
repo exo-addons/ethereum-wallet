@@ -1,7 +1,8 @@
 pragma solidity ^0.4.24;
-import "./TokenImplStorage.sol";
+import './TokenStorage.sol';
 
-contract Owned is TokenImplStorage {
+contract Owned is TokenStorage {
+
     event TransferOwnership(address newOwner);
 
     constructor() internal{
