@@ -356,5 +356,30 @@
       </init-params>
     </component-plugin>
   </external-component-plugins>
-
+  <external-component-plugins>
+    <target-component>org.exoplatform.services.cache.CacheService</target-component>
+    <component-plugin>
+      <name>addExoCacheConfig</name>
+      <set-method>addExoCacheConfig</set-method>
+      <type>org.exoplatform.services.cache.ExoCacheConfigPlugin</type>
+      <description>Configures the cache for Wallet Transaction Messages Cache</description>
+      <init-params>
+        <object-param>
+          <name>wallet.transactionsMessages</name>
+          <description></description>
+          <object type="org.exoplatform.services.cache.impl.infinispan.generic.GenericExoCacheConfig">
+            <field name="name">
+              <string>wallet.transactionsMessages</string>
+            </field>
+            <field name="maxSize">
+              <int>${exo.cache.wallet.transactionsMessages.MaxNodes:1000}</int>
+            </field>
+            <field name="liveTime">
+              <long>${exo.cache.wallet.transactionsMessages.TimeToLive:-1}</long>
+            </field>
+          </object>
+        </object-param>
+      </init-params>
+    </component-plugin>
+  </external-component-plugins>
 </configuration>

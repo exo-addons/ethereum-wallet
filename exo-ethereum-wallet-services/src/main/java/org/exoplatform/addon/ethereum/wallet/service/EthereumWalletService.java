@@ -147,7 +147,7 @@ public class EthereumWalletService implements Startable {
     this.webNotificationStorage = webNotificationStorage;
     this.listenerService = listenerService;
     this.userACL = userACL;
-    this.transactionMessagesCache = cacheService.getCacheInstance("exo.addon.wallet.transactions");
+    this.transactionMessagesCache = cacheService.getCacheInstance("wallet.transactionsMessages");
 
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
       String value = params.getValueParam(DEFAULT_NETWORK_ID).getValue();
