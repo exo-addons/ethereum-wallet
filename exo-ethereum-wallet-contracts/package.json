@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "truffle": "^4.1.14",
-    "truffle-contract": "^3.0.6",
-    "truffle-core": "^4.1.14"
+    "truffle-contract": "^3.0.6"
   }
 }
