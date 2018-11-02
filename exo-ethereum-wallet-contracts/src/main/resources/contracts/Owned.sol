@@ -4,6 +4,7 @@ import './TokenStorage.sol';
 contract Owned is TokenStorage {
 
     event TransferOwnership(address newOwner);
+    event TransferProxyOwnership(address proxy);
 
     constructor() internal{
         owner = msg.sender;
@@ -11,6 +12,11 @@ contract Owned is TokenStorage {
 
     modifier onlyOwner(){
         require(msg.sender == owner);
+        _;
+    }
+
+    modifier onlyProxy(){
+        require(msg.sender == proxy);
         _;
     }
 
@@ -23,5 +29,11 @@ contract Owned is TokenStorage {
             owner = _newOwner;
             emit TransferOwnership(_newOwner);
         }
+    }
+
+    function setProxy(address _proxy) public onlyOwner{
+        require(_proxy != address(0));
+        proxy = _proxy;
+        emit TransferProxyOwnership(_proxy);
     }
 }

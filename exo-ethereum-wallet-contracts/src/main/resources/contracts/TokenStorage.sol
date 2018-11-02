@@ -17,10 +17,17 @@ contract TokenStorage {
     // Proxy and Token owner
     address public owner;
 
+    // Proxy address
+    address public proxy;
+
     // Map of data contracts by version number
     mapping(uint16 => address) internal dataAddress;
 
     // A local variable for each Token instance to pause old and useless
     // implementations when upgrading to a newer Token implementation version
     bool public paused;
+
+    // Current implementation version
+    uint16 public version;
+
 }

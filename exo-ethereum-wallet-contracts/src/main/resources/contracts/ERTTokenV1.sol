@@ -12,6 +12,7 @@ import "./ERC20Abstract.sol";
 import "./FundCollection.sol";
 import "./GasPayableInToken.sol";
 import "./Mintable.sol";
+import "./Upgradability.sol";
 
 contract ERTTokenV1 is 
   TokenStorage,
@@ -26,14 +27,22 @@ contract ERTTokenV1 is
   ERC20Abstract,
   FundCollection,
   GasPayableInToken,
-  Mintable {
+  Mintable,
+  Upgradability {
 
-    constructor(address _dataAddress) public{
-        super.setDataAddress(1, _dataAddress);
+    constructor(address _dataAddress, address _proxyAddress) public{
+        uint16 dataVersion = 1;
+        super.setDataAddress(dataVersion, _dataAddress);
+        // The proxy will be 0x address for the whole first instantiation,
+        // The future Token implementations should pass the correct proxy
+        // address
+        proxy = _proxyAddress;
     }
 
-    function initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
+    function initialize(address _proxyAddress, uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
         require(!super.initialized());
+
+        proxy = _proxyAddress;
 
         super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);
@@ -105,13 +114,28 @@ contract ERTTokenV1 is
         return true;
     }
 
-    /*
-     * 
-     */
     function _payGasInToken(uint256 gasLimit) internal{
         // Unnecessary to transfer Tokens from Owner to himself
         if (msg.sender != owner) {
           super.payGasInToken(gasLimit);
         }
     }
+
+    function _initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) internal{
+        super.setName(_tokenName);
+        super.setSymbol(_tokenSymbol);
+        super.setDecimals(_decimalUnits);
+        super.setTotalSupply(_initialAmount);
+
+        super.setBalance(msg.sender, _initialAmount);
+        // Default token price
+        super.setTokenPrice(2 finney);
+        // Set Maximum gas price to use in transactions that will refund
+        // ether from contract
+        super.setGasPriceLimit(0.000008 finney);
+        // TODO consider when ownership transferred twice,
+        // the old owner should always be approved at first
+        super.approveAccount(msg.sender);
+    }
+
 }

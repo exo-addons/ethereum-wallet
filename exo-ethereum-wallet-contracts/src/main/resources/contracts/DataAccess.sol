@@ -110,11 +110,12 @@ contract DataAccess is TokenStorage, Owned{
     }
 
     /*
-     * @dev Check if the specified address is an admin
+     * @dev Check if the specified address is an admin with the habilitation level
      * @return true if address is recognized as admin
+     * @param _level habilitation level
      */
-    function isAdmin(address _target) public view returns(bool){
-        return ERTTokenDataV1(dataAddress[1]).isAdmin(_target);
+    function isAdmin(address _target, uint8 _level) public view returns(bool){
+        return ERTTokenDataV1(dataAddress[1]).isAdmin(_target, _level);
     }
 
     /*
@@ -145,12 +146,14 @@ contract DataAccess is TokenStorage, Owned{
     }
 
     /*
-     * @dev sets an address as admin of the contract (only contract owner can set it)
+     * @dev sets an address as admin of the contract with a specified habilitation
+     * level. If _level == 0 , the address will not be admin anymore
+     * (only contract owner can set it)
      * @param _target address to be used
-     * @param _isAdmin set corresponding address as admin or revoke it
+     * @param _level habilitation level
      */
-    function setAdmin(address _target, bool _isAdmin) public onlyOwner{
-        ERTTokenDataV1(dataAddress[1]).setAdmin(_target, _isAdmin);
+    function setAdmin(address _target, uint8 _level) public onlyOwner{
+        ERTTokenDataV1(dataAddress[1]).setAdmin(_target, _level);
     }
 
     /*
@@ -169,19 +172,9 @@ contract DataAccess is TokenStorage, Owned{
      * @param _dataAddress address of data contract
      */
     function setDataAddress(uint16 _dataVersion, address _dataAddress) public onlyOwner{
+        // Make sure that we can't change a reference of an existing data reference
         require(dataAddress[_dataVersion] == address(0));
         dataAddress[_dataVersion] = _dataAddress;
-    }
-
-    /*
-     * @dev transfer data contract (identified by a version) ownership to proxyAddress and implementation address
-     * (only contract owner can set it)
-     * @param _dataVersion version number of data contract to transfer its ownership
-     * @param _proxyAddress proxy contract address
-     * @param _implementationAddress ERC20 Token implementation address
-     */
-    function transferDataOwnership(uint16 _dataVersion, address _proxyAddress, address _implementationAddress) public onlyOwner{
-        ERTTokenDataV1(dataAddress[_dataVersion]).transferDataOwnership(_proxyAddress, _implementationAddress);
     }
 
     /* Internal write methods */

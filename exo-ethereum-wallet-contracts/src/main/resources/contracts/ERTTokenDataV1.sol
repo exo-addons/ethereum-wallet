@@ -22,9 +22,10 @@ contract ERTTokenDataV1 is DataOwned {
 
     /* ApprouvableAccount.sol */
     mapping (address => bool) internal approvedAccount_;
-    
-    /* Admin.sol */
-    mapping (address => bool) internal admin_;
+
+    // Used in Admin.sol
+    // Map of admin address => administration level
+    mapping (address => uint8) internal admin_;
 
     /* GasPayableInToken.sol */
     uint256 internal gasPriceInToken_;
@@ -76,8 +77,8 @@ contract ERTTokenDataV1 is DataOwned {
         return gasPriceLimit_;
     }
 
-    function isAdmin(address _target) public view returns(bool){
-        return admin_[_target];
+    function isAdmin(address _target, uint8 level) public view returns(bool){
+        return admin_[_target] >= level;
     }
 
     function isPaused() public view returns (bool){
@@ -130,8 +131,8 @@ contract ERTTokenDataV1 is DataOwned {
         gasPriceLimit_ = _gasPriceLimit;
     }
 
-    function setAdmin(address _target, bool _admin) public onlyOwner{
-        admin_[_target] = _admin;
+    function setAdmin(address _target, uint8 _level) public onlyOwner{
+        admin_[_target] = _level;
     }
 
 }

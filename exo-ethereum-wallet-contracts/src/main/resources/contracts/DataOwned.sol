@@ -40,7 +40,7 @@ contract DataOwned {
      * @param _implementationAddress ERC20 Implementation Contract address
      */
     function transferDataOwnership(address _proxyAddress, address _implementationAddress) public onlyOwner{
-        require (_proxyAddress != address(0) && _implementationAddress != address(0));
+        require (_implementationAddress != address(0));
         proxyAddress_ = _proxyAddress;
         implementationAddress_ = _implementationAddress;
         emit TransferOwnership(_proxyAddress, _implementationAddress);
