@@ -7,6 +7,11 @@ const ERTToken = artifacts.require("ERTToken");
     it ('test approveAccount ' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
+        return tokenInstance.approveAccount(accounts[4],  {
+          from : accounts[1]});
+      }).then(assert.fail).catch(function(error) {
+        assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the sender is not the owner');  
+        
         return tokenInstance.approveAccount(accounts[7],  {
             from : accounts[0]
         });
@@ -19,12 +24,16 @@ const ERTToken = artifacts.require("ERTToken");
         assert.equal(approved, true, 'Account is not approved');
       }) 
     })
-    
+ 
     
     
     it ('test disapproveAccount ' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
+        return tokenInstance.disapproveAccount(accounts[0],  {
+          from : accounts[0]});
+      }).then(assert.fail).catch(function(error) {
+        assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the target is the token owner');  
         return tokenInstance.disapproveAccount(accounts[7],  {
             from : accounts[0]});
       }).then(receipt => {

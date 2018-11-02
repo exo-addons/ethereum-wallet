@@ -1,35 +1,13 @@
 var ERTToken = artifacts.require("ERTToken");
 var ERTTokenV1 = artifacts.require("ERTTokenV1");
-var ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
+
 
 const decimals = Math.pow(10, 18);
 
 contract('ERTToken', function(accounts) {
 
   let tokenInstance;
-  it('test contract initialization attributes', function() {
-    return ERTToken.deployed().then(instance => {
-      tokenInstance = instance;
-      return tokenInstance.getDataAddress(1);
-    }).then(function(dataAddress) {
-      assert.equal(dataAddress, ERTTokenDataV1.address, 'Token Implementation seems to have wrong data address');
-      return tokenInstance.name();
-    }).then(function(name) {
-      assert.equal(name, 'Curries', 'has not the correct name');
-      return tokenInstance.symbol();
-    }).then(function(symbol) {
-      assert.equal(symbol, 'C', 'has not the correct symbol');
-      return tokenInstance.totalSupply();
-    }).then(function(totalSupply) {
-      assert.equal(totalSupply, 100000 * decimals, 'has not the correct totalSupply');
-      return tokenInstance.decimals();
-    }).then(function(decimals) {
-      assert.equal(decimals, 18, 'has not the correct decimals');
-      return tokenInstance.isApprovedAccount(accounts[0]);
-    }).then(function(ownerApproved) {
-      assert.equal(true, ownerApproved, 'Contract owner has to be approved');
-    });
-  })
+
 
   it('put 100000 * 10 ^ 18 ERTToken in the admin account', function() {
     return ERTToken.deployed().then(function(instance) {
