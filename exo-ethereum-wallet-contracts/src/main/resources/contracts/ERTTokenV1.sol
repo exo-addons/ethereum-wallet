@@ -136,21 +136,4 @@ contract ERTTokenV1 is
         super._payGasInToken(gasLimit);
         return true;
     }
-
-    function _initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) private{
-        super.setName(_tokenName);
-        super.setSymbol(_tokenSymbol);
-        super._setDecimals(_decimalUnits);
-        super._setTotalSupply(_initialAmount);
-
-        super._setBalance(msg.sender, _initialAmount);
-        // Default token price
-        super.setTokenPrice(2 finney);
-        // Set Maximum gas price to use in transactions that will refund
-        // ether from contract
-        super.setGasPriceLimit(0.000008 finney);
-        // TODO consider when ownership transferred twice,
-        // the old owner should always be approved at first
-        super.approveAccount(msg.sender);
-    }
 }
