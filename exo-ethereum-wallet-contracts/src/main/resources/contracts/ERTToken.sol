@@ -10,24 +10,23 @@ import './Upgradability.sol';
  */
 contract ERTToken is TokenStorage, Owned {
 
-    event Upgraded(uint16 implementationVersion, uint16 dataVersion, address implementationAddress, address dataAddress);
+    event Upgraded(uint16 implementationVersion, address implementationAddress);
 
     constructor(address _implementationAddress, address _dataAddress) public{
-        version = 1;
-        implementationAddress = _implementationAddress;
-        dataAddresses_[1] = _dataAddress;
+        super.setDataAddress(1, _dataAddress);
+        upgradeTo(1, _implementationAddress);
     }
 
-    function upgradeTo(uint16 _version, uint16 _dataVersion, address _newImplementation, address _dataAddress) public onlyOwner{
+    function upgradeTo(uint16 _version, address _newImplementation) public onlyOwner{
         // Change implementation reference and emit event
         require(_version > version);
-        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(address(this), _newImplementation);
-        Upgradability(implementationAddress).upgradeTo(_newImplementation);
         version = _version;
+        if (implementationAddress != 0) {
+          Upgradability(implementationAddress).upgradeTo(_newImplementation);
+        }
         implementationAddress = _newImplementation;
-        dataAddresses_[_dataVersion] = _dataAddress;
 
-        emit Upgraded(_version, _dataVersion, _newImplementation, _dataAddress);
+        emit Upgraded(_version, _newImplementation);
     }
 
     function () payable public{

@@ -9,18 +9,6 @@ import "./DataOwned.sol";
 contract Upgradability is Owned{
 
     /*
-     * @dev transfer data contract (identified by a version) ownership to proxyAddress and implementation address
-     * (only contract owner can set it)
-     * @param _dataVersion version number of data contract to transfer its ownership
-     * @param _proxyAddress proxy contract address
-     * @param _implementationAddress ERC20 Token implementation address
-     */
-    function transferDataOwnership(uint16 _dataVersion, address _proxyAddress, address _implementationAddress) public onlyOwner{
-        require(dataAddresses_[_dataVersion] != address(0));
-        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(_proxyAddress, _implementationAddress);
-    }
-
-    /*
      * @dev Upgrade current implementation to the new one. This method can be called only through
      * proxy call to avoid calling this by error.
      * This method will make the current implementation unusable and it will send its funds to the new

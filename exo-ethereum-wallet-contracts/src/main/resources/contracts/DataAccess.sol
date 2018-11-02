@@ -1,5 +1,4 @@
 pragma solidity ^0.4.24;
-import "./TokenStorage.sol";
 import "./Owned.sol";
 import "./ERTTokenDataV1.sol";
 
@@ -10,7 +9,7 @@ import "./ERTTokenDataV1.sol";
  * added by contract DataOwned.sol where dataOwner = either current contract address or
  * proxy contract address.
  */
-contract DataAccess is TokenStorage, Owned{
+contract DataAccess is Owned{
 
     /*
      * Made internal because this contract is abstract
@@ -232,19 +231,6 @@ contract DataAccess is TokenStorage, Owned{
      */
     function _setAdmin(address _target, uint8 _level) internal {
         ERTTokenDataV1(dataAddresses_[1]).setAdmin(_target, _level);
-    }
-
-    /*
-     * @dev sets a new data contract address by version.
-     * Only new versions are accepted to avoid overriding an existing reference to a version
-     * (only contract owner can set it)
-     * @param _dataVersion version number of data contract
-     * @param _dataAddress address of data contract
-     */
-    function _setDataAddress(uint16 _dataVersion, address _dataAddress) internal{
-        // Make sure that we can't change a reference of an existing data reference
-        require(dataAddresses_[_dataVersion] == address(0));
-        dataAddresses_[_dataVersion] = _dataAddress;
     }
 
 }

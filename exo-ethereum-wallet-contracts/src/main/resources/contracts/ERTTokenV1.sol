@@ -32,7 +32,7 @@ contract ERTTokenV1 is
 
     constructor(address _dataAddress, address _proxyAddress) public{
         uint16 dataVersion = 1;
-        super._setDataAddress(dataVersion, _dataAddress);
+        super.setDataAddress(dataVersion, _dataAddress);
         // The proxy will be 0x address for the whole first instantiation,
         // The future Token implementations should pass the correct proxy
         // address
