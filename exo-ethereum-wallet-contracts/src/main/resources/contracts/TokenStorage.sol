@@ -19,4 +19,8 @@ contract TokenStorage {
 
     // Map of data contracts by version number
     mapping(uint16 => address) internal dataAddress;
+
+    // A local variable for each Token instance to pause old and useless
+    // implementations when upgrading to a newer Token implementation version
+    bool public paused;
 }

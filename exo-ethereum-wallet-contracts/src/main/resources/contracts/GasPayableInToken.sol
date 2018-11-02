@@ -25,8 +25,7 @@ contract GasPayableInToken is Owned, ERC20Abstract {
         }
         uint256 gasPriceInToken = super.getGasPriceInToken();
         require(gasPriceInToken > 0);
-        uint256 gasToUse = 64220;
-        uint256 gasUsed = gasLimit - gasleft() + gasToUse;
+        uint256 gasUsed = gasLimit - gasleft() + 64220;
         uint256 tokenFeeAmount = gasUsed * gasPriceInToken;
         uint256 etherFeeRefund = gasUsed * tx.gasprice;
         uint256 contractBalance = address(this).balance;

@@ -11,23 +11,20 @@ contract Pausable is TokenStorage, Owned, DataAccess {
     }
 
     modifier whenNotPaused(){
-        require (!super.isPaused());
+        require (!paused && !super.isPaused());
         _;
     }
 
-    modifier whenPaused(){
-        require (super.isPaused());
-        _;
-    }
-
-    function pause() public onlyOwner whenNotPaused returns (bool){
+    function pause() public onlyOwner returns (bool){
         super.setPaused(true);
+        paused = true;
         emit ContractPaused();
         return true;
     }
 
-    function unPause() public onlyOwner whenPaused returns (bool){
+    function unPause() public onlyOwner returns (bool){
         super.setPaused(false);
+        paused = false;
         emit ContractUnPaused();
         return true;
     }
