@@ -14,6 +14,10 @@ import "./GasPayableInToken.sol";
 import "./Mintable.sol";
 import "./Upgradability.sol";
 
+/**
+ * @title ERTTokenV1.sol
+ * @dev ERC20 Token implementation
+ */
 contract ERTTokenV1 is 
   TokenStorage,
   Owned,
@@ -30,7 +34,15 @@ contract ERTTokenV1 is
   Mintable,
   Upgradability {
 
+    /**
+     * @dev Sets the data address and proxy address if given
+     * @param _dataAddress address of ERC20 Contract address (mandatory)
+     * @param _proxyAddress optional proxy contract address
+     */
     constructor(address _dataAddress, address _proxyAddress) public{
+        require(_dataAddress != address(0));
+
+        // Set data address in ERC20 implementation storage only
         uint16 dataVersion = 1;
         super.setDataAddress(dataVersion, _dataAddress);
         // The proxy will be 0x address for the whole first instantiation,
@@ -41,10 +53,20 @@ contract ERTTokenV1 is
         }
     }
 
+    /**
+     * @dev initialize the ERC20 Token attributes when it's the first time that we deploy the first version of contract.
+     * Once deployed, this method couldn''t be called again and shouldn't be inherited from future versions of Token
+     * contracts
+     * @param _proxyAddress proxy contract address
+     * @param _initialAmount initial amount of tokens
+     * @param _tokenName ERC20 token name
+     * @param _decimalUnits token decimals
+     * @param _tokenSymbol ERC20 token symbol
+     */
     function initialize(address _proxyAddress, uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
         require(!super.initialized());
 
-        setProxy(_proxyAddress);
+        super.setProxy(_proxyAddress);
 
         super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);
@@ -57,8 +79,7 @@ contract ERTTokenV1 is
         // Set Maximum gas price to use in transactions that will refund
         // ether from contract
         super.setGasPriceLimit(0.000008 finney);
-        // TODO consider when ownership transferred twice,
-        // the old owner should always be approved at first
+        // Set owner as approved account
         super.approveAccount(msg.sender);
 
         super._setInitialized();
@@ -132,5 +153,4 @@ contract ERTTokenV1 is
         // the old owner should always be approved at first
         super.approveAccount(msg.sender);
     }
-
 }

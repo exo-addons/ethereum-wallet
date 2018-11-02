@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
-/*
- * @title DataOwned
- * Abstract contract for Data contracts ownership testing
+/**
+ * @title DataOwned.sol
+ * @dev Abstract contract for Data contracts ownership testing
  */
 contract DataOwned {
     // Event emitted when a new ownership has been made
@@ -14,8 +14,8 @@ contract DataOwned {
     // ERC20 Implementation contract address
     address public implementationAddress_;
 
-    /*
-     * Made internal because this contract is abstract
+    /**
+     * @dev Made internal because this contract is abstract
      */
     constructor() internal{
         // Keep contract creator as an owner until it's modified
@@ -23,23 +23,23 @@ contract DataOwned {
         implementationAddress_ = msg.sender;
     }
 
-    /*
+    /**
      * @dev Modifier that checks that the caller is either the proxy contract or
      * the the ERC20 implementation contract
      */
-    modifier onlyOwner(){
+    modifier onlyContracts(){
         address sender = msg.sender;
         require(sender == proxyAddress_ || sender == implementationAddress_);
         _;
     }
 
-    /*
+    /**
      * @dev Modifier that checks that the caller is either the proxy contract or
      * the the ERC20 implementation contract (can be called by owner only))
      * @param _proxyAddress Proxy Contract address
      * @param _implementationAddress ERC20 Implementation Contract address
      */
-    function transferDataOwnership(address _proxyAddress, address _implementationAddress) public onlyOwner{
+    function transferDataOwnership(address _proxyAddress, address _implementationAddress) public onlyContracts{
         require (_implementationAddress != address(0));
         proxyAddress_ = _proxyAddress;
         implementationAddress_ = _implementationAddress;

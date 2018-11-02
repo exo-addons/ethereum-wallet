@@ -2,8 +2,8 @@ pragma solidity ^0.4.24;
 import "./Owned.sol";
 import "./DataAccess.sol";
 
-/*
- * @title ApprouvableAccount
+/**
+ * @title ApprouvableAccount.sol
  * @dev This is an abstract contract that is used to approve and disapprove addresses.
  * The modifier whenApproved is used from ERC20 Token contract to test if the receiver
  * and sender are approved accounts or not. This mechanism will avoid to send accidently
@@ -17,10 +17,13 @@ contract ApprouvableAccount is Owned, DataAccess {
     // emitted only when a approved account is disapproved
     event DisapprovedAccount(address target);
 
+    /**
+     * @dev Made internal because this contract is abstract
+     */
     constructor() internal{
     }
 
-    /*
+    /**
      * @dev Modifier to make a function callable only when
      * the receiver and the sender are approved or one of them
      * is the owner of the ERC20 Token Contract
@@ -32,7 +35,7 @@ contract ApprouvableAccount is Owned, DataAccess {
         _;
     }
 
-    /*
+    /**
      * @dev Sets an account as approved to receive and send ERC20 tokens
      * @param _target address to approve
      */
@@ -43,7 +46,7 @@ contract ApprouvableAccount is Owned, DataAccess {
         }
     }
 
-    /*
+    /**
      * @dev Sets an account as disapproved to receive and send ERC20 tokens
      * @param _target address to disapprove
      */
@@ -55,7 +58,7 @@ contract ApprouvableAccount is Owned, DataAccess {
         }
     }
 
-    /*
+    /**
      * @dev Checks if an address is approved to receive and send ERC20 tokens
      * @param _target address to check if it's approved
      * @return true is the address is approved

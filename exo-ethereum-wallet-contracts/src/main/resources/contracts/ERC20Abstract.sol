@@ -3,20 +3,20 @@ import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 import "./DataAccess.sol";
 
-/*
- * @title ERC20Abstract
- * An abstract contract to define internally a common operation
+/**
+ * @title ERC20Abstract.sol
+ * @dev An abstract contract to define internally a common operation
  * with a common logic for transfer operation
  */
 contract ERC20Abstract is DataAccess, SafeMath, ERC20Interface {
 
-    /*
-     * Made internal because this contract is abstract
+    /**
+     * @dev Made internal because this contract is abstract
      */
     constructor() internal{
     }
 
-    /*
+    /**
      * @dev Transfers an amount of ERC20 tokens from an address to another.
      * @param _from address of sender
      * @param _to address of receiver

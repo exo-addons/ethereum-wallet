@@ -55,7 +55,7 @@ const decimals = Math.pow(10, 18);
         
         return tokenInstance.getGasPriceInToken();
       }).then(function(gaspriceintoken) {
-        assert.equal(gaspriceintoken, 50000000000000 , 'gas price in token is wrong');
+        assert.equal(gaspriceintoken.toNumber(), 50000000000000 , 'gas price in token is wrong');
         
         return tokenInstance.getGasPriceLimit();
       }).then(function(gaspricelimit) {

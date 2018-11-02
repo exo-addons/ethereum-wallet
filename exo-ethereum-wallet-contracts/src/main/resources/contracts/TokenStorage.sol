@@ -1,12 +1,14 @@
 pragma solidity ^0.4.24;
 
-/*
- * The variables that are shared between implementation and Proxy contracts
+/**
+ * @title TokenStorage.sol
+ * @dev This is an abstract contract that holds the variables that are shared between
+ * implementation and Proxy contracts
  */
 contract TokenStorage {
 
-    /*
-     * Made internal because this contract is abstract
+    /**
+     * @dev Made internal because this contract is abstract
      */
     constructor() internal{
     }
@@ -30,17 +32,18 @@ contract TokenStorage {
     // Map of data contracts by version number
     mapping(uint16 => address) internal dataAddresses_;
 
-    /*
+    /**
      * @dev sets a new data contract address by version.
      * Only new versions are accepted to avoid overriding an existing reference to a version
      * (only contract owner can set it)
      * @param _dataVersion version number of data contract
      * @param _dataAddress address of data contract
      */
-    function setDataAddress(uint16 _dataVersion, address _dataAddress){
+    function setDataAddress(uint16 _dataVersion, address _dataAddress) public{
+        // Owner and proxy check
         require(msg.sender == owner || msg.sender == proxy);
         // Make sure that we can't change a reference of an existing data reference
-        if(dataAddresses_[_dataVersion] != address(0)) {
+        if(dataAddresses_[_dataVersion] == address(0)) {
             dataAddresses_[_dataVersion] = _dataAddress;
         }
         if (implementationAddress != address(0)) {

@@ -2,8 +2,7 @@ const ERTToken = artifacts.require("ERTToken");
   
   contract('Admin', function(accounts) {
     let tokenInstance;
-    
-    
+
     it ('test addAdmin ' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
@@ -28,30 +27,23 @@ const ERTToken = artifacts.require("ERTToken");
         assert.equal(admin, true, 'Account is not admin');
       }) 
     })
-    
-    
+
     it ('test removeAdmin ' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
         return tokenInstance.removeAdmin(accounts[0],  {
           from : accounts[0]});
-      }).then(assert.fail).catch(function(error) {
-        assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the target is the token owner');    
-        return tokenInstance.removeAdmin(accounts[5],  {
-            from : accounts[0]});
+      }).then(receipt => {
+        assert.equal(receipt && receipt.receipt && receipt.receipt.status, true, 'Should be able to remove owner as admin');
+        return tokenInstance.removeAdmin(accounts[5],  {from : accounts[0]});
       }).then(receipt => {
         assert.equal(receipt.logs.length, 1, 'number of emitted event is wrong');
         assert.equal(receipt.logs[0].event,'RemovedAdmin', 'should be the "RemovedAdmin" event');
-        assert.equal(receipt.logs[0].args.target, accounts[5], 'accounts[5] is again an admin ');
+        assert.equal(receipt.logs[0].args.target, accounts[5], 'Removed admin account is not the same as invoked one');
         return tokenInstance.isAdmin(accounts[5], 5);
       }).then(notAdmin => {
-        assert.equal(notAdmin, false, 'Account is admin');
+        assert.equal(notAdmin, false, 'Remove account habilitation is still admin with accreditation level 5');
       }) 
     })
-  
-  
-
-  
-  
 });
 
