@@ -32,9 +32,9 @@ contract ERC20Abstract is DataAccess, SafeMath, ERC20Interface {
         uint256 fromBalance = super.balance(_from);
         require(fromBalance >= _value);
         // Subtract from the sender
-        super.setBalance(_from, safeSubtract(fromBalance, _value));
+        super._setBalance(_from, super.safeSubtract(fromBalance, _value));
         // Add the same to the recipient
-        super.setBalance(_to, safeAdd(super.balance(_to), _value));
+        super._setBalance(_to, super.safeAdd(super.balance(_to), _value));
         return true;
     }
 

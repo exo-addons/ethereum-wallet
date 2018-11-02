@@ -16,8 +16,8 @@ contract Upgradability is Owned{
      * @param _implementationAddress ERC20 Token implementation address
      */
     function transferDataOwnership(uint16 _dataVersion, address _proxyAddress, address _implementationAddress) public onlyOwner{
-        require(dataAddress[_dataVersion] != address(0));
-        DataOwned(dataAddress[_dataVersion]).transferDataOwnership(_proxyAddress, _implementationAddress);
+        require(dataAddresses_[_dataVersion] != address(0));
+        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(_proxyAddress, _implementationAddress);
     }
 
     /*

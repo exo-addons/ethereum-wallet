@@ -30,7 +30,7 @@ contract DataAccess is TokenStorage, Owned{
      * @return the corresponding data contract address to the indicated version
      */
     function getDataAddress(uint16 _version) public view returns(address){
-        return dataAddress[_version];
+        return dataAddresses_[_version];
     }
 
     /*
@@ -38,56 +38,56 @@ contract DataAccess is TokenStorage, Owned{
      * @return true if the Token contract has bee initialized
      */
     function initialized() public view returns(bool){
-        return ERTTokenDataV1(dataAddress[1]).initialized();
+        return ERTTokenDataV1(dataAddresses_[1]).initialized();
     }
 
     /*
      * @return ERC20 Token name
      */
     function name() public view returns(string){
-        return ERTTokenDataV1(dataAddress[1]).name();
+        return ERTTokenDataV1(dataAddresses_[1]).name();
     }
 
     /*
      * @return ERC20 Token symbol
      */
     function symbol() public view returns(string){
-        return ERTTokenDataV1(dataAddress[1]).symbol();
+        return ERTTokenDataV1(dataAddresses_[1]).symbol();
     }
 
     /*
      * @return ERC20 tokens total supply
      */
     function totalSupply() public view returns(uint256){
-        return ERTTokenDataV1(dataAddress[1]).totalSupply();
+        return ERTTokenDataV1(dataAddresses_[1]).totalSupply();
     }
 
     /*
      * @return ERC20 tokens decimals
      */
     function decimals() public view returns(uint8){
-        return ERTTokenDataV1(dataAddress[1]).decimals();
+        return ERTTokenDataV1(dataAddresses_[1]).decimals();
     }
 
     /*
      * @return ERC20 tokens balance of an address
      */
     function balance(address _target) public view returns(uint256){
-        return ERTTokenDataV1(dataAddress[1]).balance(_target);
+        return ERTTokenDataV1(dataAddresses_[1]).balance(_target);
     }
 
     /*
      * @return ERC20 tokens allowance from an account to another spender account
      */
     function getAllowance(address _account, address _spender) public view returns (uint256){
-        return ERTTokenDataV1(dataAddress[1]).getAllowance(_account, _spender);
+        return ERTTokenDataV1(dataAddresses_[1]).getAllowance(_account, _spender);
     }
 
     /*
      * @return true if account is allowed to receive and send tokens
      */
     function isApprovedAccount(address _target) public view returns(bool){
-        return ERTTokenDataV1(dataAddress[1]).isApprovedAccount(_target);
+        return ERTTokenDataV1(dataAddresses_[1]).isApprovedAccount(_target);
     }
 
     /*
@@ -96,7 +96,7 @@ contract DataAccess is TokenStorage, Owned{
      * @return amount of tokens per one gas
      */
     function getGasPriceInToken() public view returns(uint256){
-        return ERTTokenDataV1(dataAddress[1]).getGasPriceInToken();
+        return ERTTokenDataV1(dataAddresses_[1]).getGasPriceInToken();
     }
 
     /*
@@ -106,7 +106,7 @@ contract DataAccess is TokenStorage, Owned{
      * @return gas price limit that an issuer can use in an ERC20 operation by paying using tokens
      */
     function getGasPriceLimit() public view returns(uint256){
-        return ERTTokenDataV1(dataAddress[1]).getGasPriceLimit();
+        return ERTTokenDataV1(dataAddresses_[1]).getGasPriceLimit();
     }
 
     /*
@@ -115,7 +115,7 @@ contract DataAccess is TokenStorage, Owned{
      * @param _level habilitation level
      */
     function isAdmin(address _target, uint8 _level) public view returns(bool){
-        return ERTTokenDataV1(dataAddress[1]).isAdmin(_target, _level);
+        return ERTTokenDataV1(dataAddresses_[1]).isAdmin(_target, _level);
     }
 
     /*
@@ -123,7 +123,7 @@ contract DataAccess is TokenStorage, Owned{
      * @return true if ERC20 operations are paused
      */
     function isPaused() public view returns (bool){
-        return ERTTokenDataV1(dataAddress[1]).isPaused();
+        return ERTTokenDataV1(dataAddresses_[1]).isPaused();
     }
 
     // Public owner write methods
@@ -133,7 +133,15 @@ contract DataAccess is TokenStorage, Owned{
      * @param _name name of ERC20 Token
      */
     function setName(string _name) public onlyOwner{
-        ERTTokenDataV1(dataAddress[1]).setName(_name);
+        ERTTokenDataV1(dataAddresses_[1]).setName(_name);
+    }
+
+    /*
+     * @dev sets the ERC20 symbol (only contract owner can set it)
+     * @param _symbol symbol to use for ERC20 Contract
+     */
+    function setSymbol(string _symbol) public onlyOwner{
+        ERTTokenDataV1(dataAddresses_[1]).setSymbol(_symbol);
     }
 
     /*
@@ -142,39 +150,7 @@ contract DataAccess is TokenStorage, Owned{
      * the issuer will pay the contract owner by tokens. (only contract owner can set it)
      */
     function setGasPriceLimit(uint _gasPriceLimit) public onlyOwner{
-        ERTTokenDataV1(dataAddress[1]).setGasPriceLimit(_gasPriceLimit);
-    }
-
-    /*
-     * @dev sets an address as admin of the contract with a specified habilitation
-     * level. If _level == 0 , the address will not be admin anymore
-     * (only contract owner can set it)
-     * @param _target address to be used
-     * @param _level habilitation level
-     */
-    function setAdmin(address _target, uint8 _level) public onlyOwner{
-        ERTTokenDataV1(dataAddress[1]).setAdmin(_target, _level);
-    }
-
-    /*
-     * @dev sets the ERC20 symbol (only contract owner can set it)
-     * @param _symbol symbol to use for ERC20 Contract
-     */
-    function setSymbol(string _symbol) public onlyOwner{
-        ERTTokenDataV1(dataAddress[1]).setSymbol(_symbol);
-    }
-
-    /*
-     * @dev sets a new data contract address by version.
-     * Only new versions are accepted to avoid overriding an existing reference to a version
-     * (only contract owner can set it)
-     * @param _dataVersion version number of data contract
-     * @param _dataAddress address of data contract
-     */
-    function setDataAddress(uint16 _dataVersion, address _dataAddress) public onlyOwner{
-        // Make sure that we can't change a reference of an existing data reference
-        require(dataAddress[_dataVersion] == address(0));
-        dataAddress[_dataVersion] = _dataAddress;
+        ERTTokenDataV1(dataAddresses_[1]).setGasPriceLimit(_gasPriceLimit);
     }
 
     /* Internal write methods */
@@ -183,32 +159,32 @@ contract DataAccess is TokenStorage, Owned{
      * @dev Mark Token as initialized. This is used only once all the duration of ERC20 Token,
      * thus it's stored in data contract.
      */
-    function setInitialized() internal{
-        ERTTokenDataV1(dataAddress[1]).setInitialized();
+    function _setInitialized() internal{
+        ERTTokenDataV1(dataAddresses_[1]).setInitialized();
     }
 
     /*
      * @dev mark ERC20 as paused or not. If paused, the ERC20 operations will be frozen until
      * the contract gets un-paused.
      */
-    function setPaused(bool _paused) internal{
-        ERTTokenDataV1(dataAddress[1]).setPaused(_paused);
+    function _setPaused(bool _paused) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setPaused(_paused);
     }
 
     /*
      * @dev Sets the total supply of Tokens. This must be used only internally.
      * @param _totalSupply amount of total supply
      */
-    function setTotalSupply(uint256 _totalSupply) internal{
-        ERTTokenDataV1(dataAddress[1]).setTotalSupply(_totalSupply);
+    function _setTotalSupply(uint256 _totalSupply) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setTotalSupply(_totalSupply);
     }
 
     /*
      * @dev Sets the decimals to use in ERC20 contract
      * @param _decimals number of decimals
      */
-    function setDecimals(uint8 _decimals) internal{
-        ERTTokenDataV1(dataAddress[1]).setDecimals(_decimals);
+    function _setDecimals(uint8 _decimals) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setDecimals(_decimals);
     }
 
     /*
@@ -216,8 +192,8 @@ contract DataAccess is TokenStorage, Owned{
      * @param _target addres to change its tokens balance
      * @param _balance new tokens amount affected to address
      */
-    function setBalance(address _target, uint256 _balance) internal{
-        ERTTokenDataV1(dataAddress[1]).setBalance(_target, _balance);
+    function _setBalance(address _target, uint256 _balance) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setBalance(_target, _balance);
     }
 
     /*
@@ -227,8 +203,8 @@ contract DataAccess is TokenStorage, Owned{
      * @param _spender address of the potentiel spender
      * @param _allowance the amount of allowed tokens to spend
      */
-    function setAllowance(address _account, address _spender, uint256 _allowance) internal{
-        ERTTokenDataV1(dataAddress[1]).setAllowance(_account, _spender, _allowance);
+    function _setAllowance(address _account, address _spender, uint256 _allowance) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setAllowance(_account, _spender, _allowance);
     }
 
     /*
@@ -236,16 +212,39 @@ contract DataAccess is TokenStorage, Owned{
      * @param _target address of the account to approve/disapprove
      * @param _approved true if it's about approving the account, else false
      */
-    function setApprovedAccount(address _target, bool _approved) internal{
-        ERTTokenDataV1(dataAddress[1]).setApprovedAccount(_target, _approved);
+    function _setApprovedAccount(address _target, bool _approved) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setApprovedAccount(_target, _approved);
     }
 
     /*
      * @dev Sets the equivalent of 1 gas in term of ERC20 tokens.
      * @param _gasPriceInToken amount of tokens representing 1 gas
      */
-    function setGasPriceInToken(uint256 _gasPriceInToken) internal{
-        ERTTokenDataV1(dataAddress[1]).setGasPriceInToken(_gasPriceInToken);
+    function _setGasPriceInToken(uint256 _gasPriceInToken) internal{
+        ERTTokenDataV1(dataAddresses_[1]).setGasPriceInToken(_gasPriceInToken);
+    }
+
+    /*
+     * @dev sets an address as admin of the contract with a specified habilitation
+     * level. If _level == 0 , the address will not be admin anymore
+     * @param _target address to be used
+     * @param _level habilitation level
+     */
+    function _setAdmin(address _target, uint8 _level) internal {
+        ERTTokenDataV1(dataAddresses_[1]).setAdmin(_target, _level);
+    }
+
+    /*
+     * @dev sets a new data contract address by version.
+     * Only new versions are accepted to avoid overriding an existing reference to a version
+     * (only contract owner can set it)
+     * @param _dataVersion version number of data contract
+     * @param _dataAddress address of data contract
+     */
+    function _setDataAddress(uint16 _dataVersion, address _dataAddress) internal{
+        // Make sure that we can't change a reference of an existing data reference
+        require(dataAddresses_[_dataVersion] == address(0));
+        dataAddresses_[_dataVersion] = _dataAddress;
     }
 
 }

@@ -32,24 +32,26 @@ contract ERTTokenV1 is
 
     constructor(address _dataAddress, address _proxyAddress) public{
         uint16 dataVersion = 1;
-        super.setDataAddress(dataVersion, _dataAddress);
+        super._setDataAddress(dataVersion, _dataAddress);
         // The proxy will be 0x address for the whole first instantiation,
         // The future Token implementations should pass the correct proxy
         // address
-        proxy = _proxyAddress;
+        if (proxy != address(0)) {
+          setProxy(_proxyAddress);
+        }
     }
 
     function initialize(address _proxyAddress, uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
         require(!super.initialized());
 
-        proxy = _proxyAddress;
+        setProxy(_proxyAddress);
 
         super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);
-        super.setDecimals(_decimalUnits);
-        super.setTotalSupply(_initialAmount);
+        super._setDecimals(_decimalUnits);
+        super._setTotalSupply(_initialAmount);
 
-        super.setBalance(msg.sender, _initialAmount);
+        super._setBalance(msg.sender, _initialAmount);
         // Default token price
         super.setTokenPrice(2 finney);
         // Set Maximum gas price to use in transactions that will refund
@@ -59,7 +61,7 @@ contract ERTTokenV1 is
         // the old owner should always be approved at first
         super.approveAccount(msg.sender);
 
-        super.setInitialized();
+        super._setInitialized();
     }
 
     function balanceOf(address _owner) public view returns (uint256 balance){
@@ -81,7 +83,7 @@ contract ERTTokenV1 is
         // If the user doesn't have enough ethers, he will simply reattempt with empty tokens
         require(super._transfer(msg.sender, _to, _value) == true);
         emit Transfer(msg.sender, _to, _value);
-        _payGasInToken(gasLimit);
+        super._payGasInToken(gasLimit);
         return true;
     }
 
@@ -93,9 +95,9 @@ contract ERTTokenV1 is
         if (msg.sender == owner) {
             super.approveAccount(_spender);
         }
-        super.setAllowance(msg.sender, _spender,_value);
+        super._setAllowance(msg.sender, _spender,_value);
         emit Approval(msg.sender, _spender, _value);
-        _payGasInToken(gasLimit);
+        super._payGasInToken(gasLimit);
         return true;
     }
 
@@ -104,30 +106,23 @@ contract ERTTokenV1 is
         require(super.balance(_from) >= _value);
         uint256 _allowance = super.getAllowance(_from, msg.sender);
         require(_allowance >= _value);
-        super.setAllowance(_from, msg.sender, safeSubtract(_allowance, _value));
+        super._setAllowance(_from, msg.sender, super.safeSubtract(_allowance, _value));
         if (msg.sender == owner) {
             super.approveAccount(_to);
         }
         require(super._transfer(_from, _to, _value) == true);
         emit Transfer(_from, _to, _value);
-        _payGasInToken(gasLimit);
+        super._payGasInToken(gasLimit);
         return true;
     }
 
-    function _payGasInToken(uint256 gasLimit) internal{
-        // Unnecessary to transfer Tokens from Owner to himself
-        if (msg.sender != owner) {
-          super.payGasInToken(gasLimit);
-        }
-    }
-
-    function _initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) internal{
+    function _initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) private{
         super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);
-        super.setDecimals(_decimalUnits);
-        super.setTotalSupply(_initialAmount);
+        super._setDecimals(_decimalUnits);
+        super._setTotalSupply(_initialAmount);
 
-        super.setBalance(msg.sender, _initialAmount);
+        super._setBalance(msg.sender, _initialAmount);
         // Default token price
         super.setTokenPrice(2 finney);
         // Set Maximum gas price to use in transactions that will refund

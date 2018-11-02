@@ -24,7 +24,7 @@ contract('Mintable', function(accounts) {
               return tokenInstance.mintToken(accounts[1], 50 * decimals, {from : accounts[0]});
             }).then(
                 function(result) {
-                  assert.equal(result.logs.length, 2,
+                  assert.equal(result.logs.length, 3,
                   'number of emitted event is wrong');
                   assert.equal(result.logs[0].event, 'Transfer',
                   'should be the "Transfer" event');
@@ -41,7 +41,15 @@ contract('Mintable', function(accounts) {
                   assert.equal(result.logs[1].args._to, accounts[1],
                   'the account the tokens are transferred to is wrong');
                   assert.equal(result.logs[1].args._value, 50 * decimals,
-                  'the transfer amount is wrong');
+                  'the transfer amount is wrong')
+                  assert.equal(result.logs[2].event, 'MintedToken',
+                  'should be the "MintedToken" event');
+                  assert.equal(result.logs[2].args.minter, accounts[0],
+                  'the account the tokens are transferred from is wrong');
+                  assert.equal(result.logs[2].args.target, accounts[1],
+                  'the account the tokens are transferred to is wrong');
+                  assert.equal(result.logs[2].args.mintedAmount, 50 * decimals,
+                  'the minted amount is wrong');
            
                   
                   return tokenInstance.balanceOf(accounts[0]);

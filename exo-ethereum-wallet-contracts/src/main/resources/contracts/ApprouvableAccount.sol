@@ -38,7 +38,7 @@ contract ApprouvableAccount is Owned, DataAccess {
      */
     function approveAccount(address _target) public onlyOwner{
         if (!super.isApprovedAccount(_target)) {
-            super.setApprovedAccount(_target, true);
+            super._setApprovedAccount(_target, true);
             emit ApprovedAccount(_target);
         }
     }
@@ -50,7 +50,7 @@ contract ApprouvableAccount is Owned, DataAccess {
     function disapproveAccount(address _target) public onlyOwner{
         require (owner != _target);
         if (super.isApprovedAccount(_target)) {
-            super.setApprovedAccount(_target, false);
+            super._setApprovedAccount(_target, false);
             emit DisapprovedAccount(_target);
         }
     }

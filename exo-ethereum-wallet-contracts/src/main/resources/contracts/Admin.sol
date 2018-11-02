@@ -14,7 +14,7 @@ contract Admin is Owned, DataAccess {
         // Admin levels from 1 to 5 only
         require(_level > 0 && _level < 6);
         if (_target != address(0)) {
-            super.setAdmin(_target, _level);
+            super._setAdmin(_target, _level);
             emit AddedAdmin(_target, _level);
         }
     }
@@ -22,7 +22,7 @@ contract Admin is Owned, DataAccess {
     function removeAdmin(address _target) public onlyOwner{
         require (owner != _target);
         if (super.isAdmin(_target, 1)) {
-            super.setAdmin(_target, 0);
+            super._setAdmin(_target, 0);
             emit RemovedAdmin(_target);
         }
     }

@@ -13,11 +13,15 @@ contract GasPayableInToken is Owned, ERC20Abstract {
 
     function setTokenPrice(uint256 _value) public onlyOwner{
         uint256 gasPriceInToken = (10 ** (uint(super.decimals()))) /_value * tx.gasprice;
-        super.setGasPriceInToken(gasPriceInToken);
+        super._setGasPriceInToken(gasPriceInToken);
         emit TokenPriceChanged(_value, gasPriceInToken, tx.gasprice);
     }
 
-    function payGasInToken(uint256 gasLimit) internal{
+    function _payGasInToken(uint256 gasLimit) internal{
+        // Unnecessary to transfer Tokens from Owner to himself
+        if (msg.sender == owner) {
+            return;
+        }
         // Gas used = Gas limit - gas left + fixed gas amount to use
         // for the following transfer operations
         if (tx.gasprice > super.getGasPriceLimit()) {

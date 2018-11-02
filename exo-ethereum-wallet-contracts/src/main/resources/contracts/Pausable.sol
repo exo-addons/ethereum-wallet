@@ -16,14 +16,14 @@ contract Pausable is TokenStorage, Owned, DataAccess {
     }
 
     function pause() public onlyOwner returns (bool){
-        super.setPaused(true);
+        super._setPaused(true);
         paused = true;
         emit ContractPaused();
         return true;
     }
 
     function unPause() public onlyOwner returns (bool){
-        super.setPaused(false);
+        super._setPaused(false);
         paused = false;
         emit ContractUnPaused();
         return true;

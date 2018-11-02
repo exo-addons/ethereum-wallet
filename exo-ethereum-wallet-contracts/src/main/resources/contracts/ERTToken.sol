@@ -15,17 +15,17 @@ contract ERTToken is TokenStorage, Owned {
     constructor(address _implementationAddress, address _dataAddress) public{
         version = 1;
         implementationAddress = _implementationAddress;
-        dataAddress[1] = _dataAddress;
+        dataAddresses_[1] = _dataAddress;
     }
 
     function upgradeTo(uint16 _version, uint16 _dataVersion, address _newImplementation, address _dataAddress) public onlyOwner{
         // Change implementation reference and emit event
         require(_version > version);
-        DataOwned(dataAddress[_dataVersion]).transferDataOwnership(address(this), _newImplementation);
+        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(address(this), _newImplementation);
         Upgradability(implementationAddress).upgradeTo(_newImplementation);
         version = _version;
         implementationAddress = _newImplementation;
-        dataAddress[_dataVersion] = _dataAddress;
+        dataAddresses_[_dataVersion] = _dataAddress;
 
         emit Upgraded(_version, _dataVersion, _newImplementation, _dataAddress);
     }
@@ -34,7 +34,7 @@ contract ERTToken is TokenStorage, Owned {
       _delegateCall(implementationAddress);
     }
 
-    function _delegateCall(address _impl) internal{
+    function _delegateCall(address _impl) private{
       assembly {
          let ptr := mload(0x40)
          calldatacopy(ptr, 0, calldatasize)
