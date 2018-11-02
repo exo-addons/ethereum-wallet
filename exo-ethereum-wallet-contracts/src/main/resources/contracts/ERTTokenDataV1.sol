@@ -193,7 +193,7 @@ contract ERTTokenDataV1 is DataOwned {
      */
     function setDecimals(uint8 _decimals) public onlyContracts{
         require(!initialized_);
-        require(_decimals <= 18 && _decimals >= 0);
+        require(_decimals <= 18);
         decimals_ = _decimals;
     }
 

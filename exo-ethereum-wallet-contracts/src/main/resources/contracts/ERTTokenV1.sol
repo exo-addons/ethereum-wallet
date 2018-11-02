@@ -1,6 +1,5 @@
 pragma solidity ^0.4.24;
 import "./TokenStorage.sol";
-import "./ERC20Interface.sol";
 import "./Owned.sol";
 import "./DataAccess.sol";
 import "./Admin.sol";
@@ -27,7 +26,6 @@ contract ERTTokenV1 is
   Burnable,
   Pausable,
   ApprouvableAccount,
-  ERC20Interface,
   ERC20Abstract,
   FundCollection,
   GasPayableInToken,
@@ -85,14 +83,29 @@ contract ERTTokenV1 is
         super._setInitialized();
     }
 
-    function balanceOf(address _owner) public view returns (uint256 balance){
-        return super.balance(_owner);
+    /**
+     * @param _target The address from which the balance will be retrieved
+     * @return the amount of balance of the address
+     */
+    function balanceOf(address _target) public view returns (uint256 balance){
+        return super.balance(_target);
     }
 
-    function allowance(address _owner, address _spender) public view returns (uint256 remaining){
-        return super.getAllowance(_owner, _spender);
+    /**
+     * @param _target The address of the account owning tokens
+     * @param _spender The address of the account able to transfer the tokens
+     * @return Amount of remaining tokens allowed to spent
+     */
+    function allowance(address _target, address _spender) public view returns (uint256 remaining){
+        return super.getAllowance(_target, _spender);
     }
 
+    /**
+     * @dev send `_value` token to `_to` from `msg.sender`
+     * @param _to The address of the recipient
+     * @param _value The amount of token to be transferred
+     * @return Whether the transfer was successful or not
+     */
     function transfer(address _to, uint256 _value) public whenNotPaused whenApproved(msg.sender, _to) returns (bool success){
         uint gasLimit = gasleft();
         // Make sure that this is not about a fake transaction
@@ -108,6 +121,12 @@ contract ERTTokenV1 is
         return true;
     }
 
+    /**
+     * @dev `msg.sender` approves `_spender` to spend `_value` tokens
+     * @param _spender The address of the account able to transfer the tokens
+     * @param _value The amount of tokens to be approved for transfer
+     * @return Whether the approval was successful or not
+     */
     function approve(address _spender, uint256 _value) public whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
         uint gasLimit = gasleft();
@@ -122,6 +141,13 @@ contract ERTTokenV1 is
         return true;
     }
 
+    /**
+     * @dev send `_value` token to `_to` from `_from` on the condition it is approved by `_from`
+     * @param _from The address of the sender
+     * @param _to The address of the recipient
+     * @param _value The amount of token to be transferred
+     * @return Whether the transfer was successful or not
+     */
     function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused whenApproved(_from, _to) returns (bool success){
         uint gasLimit = gasleft();
         require(super.balance(_from) >= _value);

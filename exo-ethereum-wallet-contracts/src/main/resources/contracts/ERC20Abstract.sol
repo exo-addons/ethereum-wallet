@@ -1,5 +1,4 @@
 pragma solidity ^0.4.24;
-import "./ERC20Interface.sol";
 import "./SafeMath.sol";
 import "./DataAccess.sol";
 
@@ -8,7 +7,13 @@ import "./DataAccess.sol";
  * @dev An abstract contract to define internally a common operation
  * with a common logic for transfer operation
  */
-contract ERC20Abstract is DataAccess, SafeMath, ERC20Interface {
+contract ERC20Abstract is DataAccess, SafeMath {
+
+    // Event emited when a token transfer happens is made
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+
+    // Event emited when a token transfer Approval is made
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
      * @dev Made internal because this contract is abstract
