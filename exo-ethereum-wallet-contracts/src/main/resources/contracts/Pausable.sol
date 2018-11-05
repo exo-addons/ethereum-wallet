@@ -31,20 +31,18 @@ contract Pausable is TokenStorage, Owned, DataAccess {
     /**
      * @dev pause the contract
      */
-    function pause() public onlyOwner returns (bool){
+    function pause() public onlyOwner{
         super._setPaused(true);
         paused = true;
         emit ContractPaused();
-        return true;
     }
 
     /**
      * @dev unpause the contract
      */
-    function unPause() public onlyOwner returns (bool){
+    function unPause() public onlyOwner{
         super._setPaused(false);
         paused = false;
         emit ContractUnPaused();
-        return true;
     }
 }
