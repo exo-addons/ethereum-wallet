@@ -8,6 +8,12 @@ import "./DataOwned.sol";
  */
 contract Upgradability is Owned{
 
+    /**
+     * @dev Made internal because this contract is abstract
+     */
+    constructor() internal{
+    }
+
     /*
      * @dev Upgrade current implementation to the new one. This method can be called only through
      * proxy call to avoid calling this by error.

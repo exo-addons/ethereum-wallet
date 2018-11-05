@@ -38,6 +38,7 @@
           <exclude>org.exoplatform.addon.ethereum.wallet.contract/**</exclude>
           <exclude>**/Migrations.json</exclude>
           <exclude>**/Migrations.bin</exclude>
+          <exclude>**/Test*.*</exclude>
         </excludes>
       </resource>
     </resources>
@@ -62,6 +63,10 @@
                   <includes>
                       <include>**/*.sol</include>
                   </includes>
+		  <excludes>
+		      <exclude>**/Migrations.sol</exclude>
+		      <exclude>**/Test*.sol</exclude>
+		  </excludes>
               </soliditySourceFiles>
             </configuration>
           </execution>
