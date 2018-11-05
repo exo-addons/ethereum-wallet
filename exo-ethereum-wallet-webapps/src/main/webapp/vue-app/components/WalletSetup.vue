@@ -17,7 +17,7 @@
     <div v-if="displayWalletCreationToolbar" class="alert alert-info">
       <i class="uiIconInfo"></i>
       <span v-if="isSpace">No private key was found in current browser. <strong>Space wallet</strong> is displayed in readonly mode.</span>
-      <span v-else>No private key was found in current browser. <strong>Yopur wallet</strong> is displayed in readonly mode.</span>
+      <span v-else>No private key was found in current browser. <strong>Your wallet</strong> is displayed in readonly mode.</span>
       <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="displayWalletSetupActions()">More options</a>
     </div>
 
