@@ -1,112 +1,165 @@
 <template>
-  <v-dialog v-model="createNewToken" content-class="uiPopup createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent @keydown.esc="createNewToken = false">
+  <v-dialog v-model="createNewToken" content-class="uiPopup createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent>
     <button slot="activator" class="btn btn-primary mt-3" @click="createNewToken = true">
       Deploy new Token
     </button>
-    <v-card>
+    <v-card flat>
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="createNewToken = false"></a>
         <span class="PopupTitle popupTitle">Deploy new ERC20 Token contract</span>
       </div>
-      <v-form ref="form" v-model="valid" class="pl-5 pr-5 pt-3" @submit="$event.preventDefault();$event.stopPropagation();">
-        <div class="text-xs-center">
-          <v-progress-circular v-show="loading" indeterminate color="primary"></v-progress-circular>
-        </div>
+      <div v-if="error" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
+      <v-stepper v-model="step">
+        <v-stepper-header flat>
+          <v-stepper-step :complete="step > 1" step="1">Deployment of Data contract</v-stepper-step>
+          <v-divider />
+          <v-stepper-step :complete="step > 2" step="2">Deployment of Token contract</v-stepper-step>
+          <v-divider />
+          <v-stepper-step :complete="step > 3" step="3">Deployment of Proxy contract</v-stepper-step>
+          <v-divider />
+          <v-stepper-step :complete="step > 4" step="4">Transfer ownership</v-stepper-step>
+          <v-divider />
+          <v-stepper-step :complete="step > 5" step="5">ERC 20 initialization</v-stepper-step>
+          <v-divider />
+          <v-stepper-step :complete="step === 6" step="6">Completed</v-stepper-step>
+        </v-stepper-header>
+        <v-stepper-items>
+          <v-stepper-content step="1">
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :contract-address="contractAddressByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="transactionFeeByStep[step]"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Deploy"
+              @proceed="proceedStep($event)"
+              @next="step++" />
+          </v-stepper-content>
+          <v-stepper-content step="2">
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :contract-address="contractAddressByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="transactionFeeByStep[step]"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Deploy"
+              @proceed="proceedStep($event)"
+              @next="step++" />
+          </v-stepper-content>
+          <v-stepper-content step="3">
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :contract-address="contractAddressByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="transactionFeeByStep[step]"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Deploy"
+              @proceed="proceedStep($event)"
+              @next="step++" />
+          </v-stepper-content>
+          <v-stepper-content step="4">
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="transactionFeeByStep[step]"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Send"
+              @proceed="proceedStep($event)"
+              @next="step++" />
+          </v-stepper-content>
+          <v-stepper-content step="5">
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="transactionFeeByStep[step]"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Send"
+              @proceed="proceedStep($event)"
+              @next="step++">
 
-        <div v-if="newTokenAddress" class="alert alert-success v-content">
-          <i class="uiIconSuccess"></i>
-          Contract created under address: 
-          <wallet-address :value="newTokenAddress" />
-        </div>
-        <div v-if="error && !loading" class="alert alert-error v-content">
-          <i class="uiIconError"></i>{{ error }}
-        </div>
-        <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
-          <i class="uiIconWarning"></i>{{ warning }}
-        </div>
-
-        <h4>ERC20 Token contract details</h4>
-        <v-divider class="mb-4"/>
-        <v-text-field
-          v-model="newTokenName"
-          :rules="mandatoryRule"
-          label="Token name"
-          placeholder="Enter the ERC20 token name"
-          required />
-        <v-text-field
-          v-model="newTokenSymbol"
-          :rules="mandatoryRule"
-          label="Token symbol"
-          placeholder="Enter the token symbol to uses to display token amounts"
-          required />
-        <v-slider v-model="newTokenInitialCoins"
-                  :label="`Initial token coins supply: ${newTokenInitialCoins}`"
-                  :min="0"
-                  :max="1000000"
-                  :step="10000"
-                  type="number"
+              <v-form ref="form" class="pl-5 pr-5 pt-3 flex">
+                <v-text-field
+                  v-model="newTokenName"
+                  :rules="mandatoryRule"
+                  label="Token name"
+                  placeholder="Enter the ERC20 token name"
                   required />
-        <v-slider v-model="newTokenDecimals"
-                  :label="`Token coins decimals: ${newTokenDecimals}`"
-                  :min="6"
-                  :max="18"
-                  :step="1"
-                  type="number"
+                <v-text-field
+                  v-model="newTokenSymbol"
+                  :rules="mandatoryRule"
+                  label="Token symbol"
+                  placeholder="Enter the token symbol to uses to display token amounts"
                   required />
-
-        <h4>Contract creation transaction fee</h4>
-        <v-divider class="mb-4"/>
-        <v-slider v-model="newTokenGas"
-                  :label="`Gas limit: ${newTokenGas}${newTokenGasInFiat ? ' (' + newTokenGasInFiat + ' ' + fiatSymbol + ')' : ''}`"
-                  :min="50000"
-                  :max="800000"
-                  :step="1000"
-                  type="number"
+                <v-text-field
+                  v-model="newTokenInitialCoins"
+                  :rules="mandatoryRule"
+                  label="Initial token coins supply"
+                  placeholder="Enter an amount of initial token supply"
                   required />
-        <v-slider v-model="newTokenGasPrice"
-                  :label="`Gas price (Gwei): ${newTokenGasPriceGWEI}`"
-                  :min="0"
-                  :max="60000000000"
-                  :step="1000000000"
-                  type="number"
-                  required />
-
-        <h4 v-if="!storedPassword">Your wallet password</h4>
-        <v-text-field
-          v-if="!storedPassword"
-          v-model="walletPassword"
-          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
-          :type="walletPasswordShow ? 'text' : 'password'"
-          :disabled="loading"
-          name="walletPassword"
-          placeholder="Enter your wallet password"
-          counter
-          @click:append="walletPasswordShow = !walletPasswordShow"
-        />
-        <v-list>
-          <v-list-tile>
-            <v-spacer />
-            <v-list-tile-action>
-              <button :disabled="loading" class="btn btn-primary" @click="saveContract">Deploy</button>
-            </v-list-tile-action>
-            <v-spacer />
-          </v-list-tile>
-        </v-list>
-      </v-form>
+                <v-slider v-model="newTokenDecimals"
+                          :label="`Token coins decimals: ${newTokenDecimals}`"
+                          :min="0"
+                          :max="18"
+                          :step="1"
+                          type="number"
+                          required />
+              </v-form>
+            </contract-deployment-step>
+          </v-stepper-content>
+          <v-stepper-content step="6">
+            <v-card flat>
+              <v-card-title>
+                The Token has been deployed.
+                <a :href="tokenEtherscanLink" target="_blank"> See it on etherscan</a>
+              </v-card-title>
+              <v-card-actions>
+                <v-btn :loading="processingStep[step]" :disabled="processingStep[step]" color="primary" @click="finishInstallation">Finish installation</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-stepper-content>
+        </v-stepper-items>
+      </v-stepper>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
 import WalletAddress from './WalletAddress.vue';
+import ContractDeploymentStep from './ContractDeploymentStep.vue';
 
-import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from '../WalletConstants.js';
-import {getContractsAddresses, saveContractAddress, saveContractAddressAsDefault, newContractInstance, deployContract} from '../WalletToken.js';
-import {searchAddress} from '../WalletAddressRegistry.js';
-import {gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode} from '../WalletUtils.js';
+import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault} from '../WalletToken.js';
+import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {
+    ContractDeploymentStep,
     WalletAddress
   },
   props: {
@@ -131,44 +184,58 @@ export default {
   },
   data () {
     return {
-      loading: false,
-      errorMessage: '',
-      warning: null,
+      error: '',
       storedPassword: false,
       newTokenName: '',
       newTokenSymbol: '',
-      newTokenGas: 0,
-      newTokenGasPrice: 0,
-      newTokenGasPriceGWEI: 0,
-      newTokenGasInFiat: 0,
-      newTokenDecimals: 0,
+      newTokenDecimals: 18,
       newTokenInitialCoins: 0,
-      newTokenSetAsDefault: true,
-      newTokenAddress: '',
-      walletPassword: '',
-      walletPasswordShow: false,
       createNewToken: false,
       useMetamask: false,
+      transactionHashByStep: {},
+      contractAddressByStep: {},
+      processedStep: {},
+      step: 0,
+      contractInstancesByStep: {},
+      gasByStep: {},
+      transactionFeeByStep: {},
+      processingStep: {},
       mandatoryRule: [
         (v) => !!v || 'Field is required'
-      ],
-      valid: false
+      ]
     };
   },
   computed: {
-    error() {
-      if(this.loading) {
-        return null;
-      } else if (this.errorMessage) {
-        return this.errorMessage;
+    contractNameByStep() {
+      if (this.step === 1) {
+        return 'ERTTokenDataV1';
+      } else if (this.step === 2) {
+        return 'ERTTokenV1';
+      } else if (this.step === 3) {
+        return 'ERTToken';
       }
       return null;
+    },
+    tokenEtherscanLink() {
+      if (this.contractAddressByStep[2]) {
+        return getTokenEtherscanlink(this.networkId) + this.contractAddressByStep[2];
+      }
+    },
+    contractDeploymentParameters() {
+      if (this.step === 2) {
+        // ERTTokenV1 parameters
+        return [this.contractAddressByStep[1], '0x0000000000000000000000000000000000000000'];
+      } else if (this.step === 3) {
+        // ERTToken parameters
+        return [this.contractAddressByStep[2], this.contractAddressByStep[1]];
+      }
+      return [];
+    },
+    disabledButton() {
+      return !this.transactionFeeByStep[this.step] || this.contractAddressByStep[this.step] || this.processingStep[this.step];
     }
   },
   watch: {
-    newTokenGas() {
-      this.calculateGasPriceInFiat();
-    },
     newTokenGasPrice() {
       this.newTokenGasPriceGWEI = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'gwei');
       this.calculateGasPriceInFiat();
@@ -177,135 +244,214 @@ export default {
       if (this.createNewToken) {
         this.resetContractForm();
       }
+    },
+    step() {
+      this.initializeStep();
     }
   },
   methods: {
     resetContractForm() {
-      this.loading = false;
-      this.errorMessage = '';
-      this.warning = null;
+      this.step = 0;
+      this.error = '';
       this.newTokenName = '';
       this.newTokenSymbol = '';
-      this.newTokenGas = 700000;
-      this.newTokenGasPrice = window.walletSettings.gasPrice;
-      this.newTokenDecimals = 0;
-      this.newTokenInitialCoins = 10000;
-      this.newTokenSetAsDefault = true;
-      this.newTokenAddress = '';
-      this.valid = false;
-      this.contracts = [];
+      this.newTokenDecimals = 18;
+      this.newTokenInitialCoins = 1000000;
+      this.loadState();
+      this.contractInstancesByStep = {};
+      this.gasByStep = {};
+      this.transactionFeeByStep = {};
+      this.processingStep = {};
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
     },
-    calculateGasPriceInFiat() {
-      if (this.newTokenGas && this.newTokenGasPrice) {
-        const gasPriceInEther = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'ether');
-        this.newTokenGasInFiat = gasToFiat(this.newTokenGas, gasPriceInEther);
-      } else {
-        this.newTokenGasInFiat = 0;
-      }      
+    initializeStep() {
+      if (this.step && !this.gasByStep[this.step]) {
+        if (this.step < 4) {
+          if (this.contractAddressByStep[this.step]) {
+            return newContractInstanceByNameAndAddress(this.contractNameByStep, this.contractAddressByStep[this.step])
+              .then(instance => this.$set(this.contractInstancesByStep, this.step, instance) && this.$set(this.processedStep, this.step, true))
+              .catch(e => this.error = `Error getting contract with address ${this.contractAddressByStep[this.step]}: ${e}`);
+          } else {
+            return newContractInstanceByName(this.contractNameByStep, ...this.contractDeploymentParameters)
+              .then(instance => {
+                this.$set(this.contractInstancesByStep, this.step, instance);
+                return estimateContractDeploymentGas(instance);
+              })
+              .then(estimatedGas => {
+                this.$set(this.gasByStep, this.step, parseInt(estimatedGas * 1.1));
+                this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
+              })
+              .catch(e => this.error = `Error processing contract deployment estimation: ${e}`);
+          }
+        } else if(this.step === 4 && !this.processedStep[this.step]) {
+          this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
+            .estimateGas({
+              gas: 9000000,
+              gasPrice: window.walletSettings.gasPrice
+            })
+            .then(estimatedGas => {
+              this.$set(this.gasByStep, this.step, parseInt(estimatedGas * 1.1));
+              this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
+            });
+        } else if(this.step === 5 && !this.processedStep[this.step]) {
+          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], this.toBN(1000000).imul(this.toBN(10).pow(this.toBN(18))).toString(), "Token name", 18, "T")
+            .estimateGas({
+              gas: 9000000,
+              gasPrice: window.walletSettings.gasPrice
+            })
+            .then(estimatedGas => {
+              this.$set(this.gasByStep, this.step, parseInt(estimatedGas * 1.1));
+              this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
+            });
+        }
+      }
     },
-    saveContract(event) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      this.errorMessage = null;
-      this.warning = null;
-
-      if(!this.$refs.form.validate()) {
+    calculateGasPriceInFiat(gas) {
+      const gasPriceInEther = window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'ether');
+      return gasToFiat(gas, gasPriceInEther);
+    },
+    proceedStep(password) {
+      const gasLimit = this.gasByStep[this.step];
+      if (!gasLimit) {
+        this.error = 'Gas estimation isn\'t done';
         return;
       }
 
-      if (!this.storedPassword && (!this.walletPassword || !this.walletPassword.length)) {
-        this.errorMessage = "Password field is mandatory";
+      // Increase gas limit by 10% to ensure that the transaction doesn't go 'Out of Gas'
+      const gasPrice = window.walletSettings.gasPrice;
+
+      this.error = null;
+
+      if (!this.storedPassword && (!password || !password.length)) {
+        this.error = "Password field is mandatory";
         return;
       }
 
-      this.loading = true;
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
       if (!unlocked) {
         this.error = "Wrong password";
-        this.loading = false;
         return;
       }
 
       try {
-        const NEW_TOKEN_DEPLOYMENT_TX = newContractInstance(this.newTokenInitialCoins * Math.pow(10, this.newTokenDecimals), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol);
-        deployContract(NEW_TOKEN_DEPLOYMENT_TX, this.networkId, this.newTokenName, this.newTokenSymbol, this.newTokenSetAsDefault, this.account, this.newTokenGas, this.newTokenGasPrice, () => {
-          this.$emit("list-updated", null);
-          this.createNewToken = false;
-        })
-          .then((newTokenInstance, error) => {
-            if (error) {
-              throw error;
-            }
-            if (this.newTokenSetAsDefault && newTokenInstance.options.address && !this.error) {
-              if (!newTokenInstance || !newTokenInstance.options || !newTokenInstance.options.address) {
-                throw new Error("Contract deployed without a returned address");
+        const thiss = this;
+        if (this.step < 4) {
+          const contractInstance = this.contractInstancesByStep[this.step];
+          if (!contractInstance) {
+            this.error = 'Contract instance not initialized';
+            return;
+          }
+
+          deployContract(contractInstance, this.account, gasLimit, gasPrice, this.updateTransactionHash)
+            .then((newContractInstance, error) => {
+              if (error) {
+                throw error;
               }
-              newTokenInstance.options.address = newTokenInstance.options.address.toLowerCase();
-              const contractDetails = {
-                networkId: this.networkId,
-                address: newTokenInstance.options.address,
-                name: this.newTokenName,
-                symbol: this.newTokenSymbol
-              };
-              // Save conract address to display for all users
-              return saveContractAddressAsDefault(contractDetails)
-                .then(resp => {
-                  if (resp && resp.ok) {
-                    this.$emit("list-updated", newTokenInstance.options.address);
-                    this.loading = false;
-                    this.createNewToken = false;
-                  } else {
-                    this.loading = false;
-                    this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
-                    this.newTokenAddress = newTokenInstance.options.address;
-                  }
-                  lockBrowerWallet();
-                })
-                .catch(e => {
-                  console.debug("saveContractAddressAsDefault method - error", e);
-                  this.errorMessage = `Contract deployed, but an error occurred while saving it as default contract to display for all users: ${e}`;
-                  this.loading = false;
-                  this.newTokenAddress = newTokenInstance.options.address;
-                  lockBrowerWallet();
-                });
-            } else {
-              // Save contract address to display for current user only
-              return saveContractAddress(this.account, newTokenInstance.options.address, this.networkId)
-                .then((added, error) => {
-                  if (error) {
-                    throw error;
-                  }
-                  this.loading = false;
-                  if (added) {
-                    this.$emit("list-updated", newTokenInstance.options.address);
-                    this.newTokenAddress = newTokenInstance.options.address;
-                  } else {
-                    this.errorMessage = `Error during contract address saving for all users`;
-                  }
-                  lockBrowerWallet();
-                })
-                .catch(e => {
-                  lockBrowerWallet();
-                  console.debug("saveContractAddress method - error", e);
-                  this.loading = false;
-                  this.errorMessage = `Error during contract address saving for all users: ${e}`;
-                });
-            }
-          })
-          .catch(e => {
-            console.debug("saveContractAddress method - error", e);
-            this.loading = false;
-            this.errorMessage = `Error during contract deployment: ${e}`;
-          });
+              if (!newContractInstance || !newContractInstance.options || !newContractInstance.options.address) {
+                throw new Error('Cannot find address of newly deployed address');
+              }
+              this.$set(this.contractInstancesByStep, this.step, newContractInstance);
+              this.$set(this.contractAddressByStep, this.step, newContractInstance.options.address);
+              this.$set(this.processedStep, this.step, true);
+              this.saveState();
+            })
+            .catch(e => {
+              console.debug("deployContract method - error", e);
+              this.error = `Error during contract deployment: ${e}`;
+            })
+            .finally(() => this.$set(this.processingStep, this.step, false));
+        } else if(this.step === 4) {
+          this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
+            .send({
+              from: this.account,
+              gasPrice: window.walletSettings.gasPrice,
+              gas: gasLimit
+            })
+            .on('transactionHash', hash => {
+              this.updateTransactionHash(hash);
+            })
+            .then(() => {
+              this.$set(this.processedStep, this.step, true);
+              this.saveState();
+            })
+            .finally(() => this.$set(this.processingStep, this.step, false));
+        } else if(this.step === 5) {
+          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], this.toBN(this.newTokenInitialCoins).imul(this.toBN(10).pow(this.toBN(this.newTokenDecimals))).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
+            .send({
+              from: this.account,
+              gasPrice: window.walletSettings.gasPrice,
+              gas: gasLimit
+            })
+            .then(() => {
+              this.$set(this.processedStep, this.step, true);
+              this.saveState();
+            })
+            .finally(() => this.$set(this.processingStep, this.step, false));
+        } else if(this.step === 6) {
+          this.saveState();
+        }
       } catch(e) {
         lockBrowerWallet();
-        console.debug("saveContractAddress method - error", e);
-        this.loading = false;
-        this.errorMessage = `Error during contract deployment: ${e}`;
+        console.debug("proceedStep method - error", e);
+        this.$set(this.processingStep, this.step, false);
+        this.error = `Error during contract deployment: ${e}`;
       }
+    },
+    clearState() {
+      localStorage.removeItem(`exo-wallet-contract-deployment-${this.networkId}`);
+    },
+    loadState() {
+      this.contractAddressByStep = {};
+      this.processedStep = {};
+      this.transactionHashByStep = {};
+      this.step = 1;
+      if (localStorage.getItem(`exo-wallet-contract-deployment-${this.networkId}`) != null) {
+        const storedState = JSON.parse(localStorage.getItem(`exo-wallet-contract-deployment-${this.networkId}`));
+        this.contractAddressByStep = storedState.contractAddressByStep;
+        this.processedStep = storedState.processedStep;
+        this.transactionHashByStep = storedState.transactionHashByStep;
+        this.step = storedState.step;
+      }
+    },
+    saveState() {
+      localStorage.setItem(`exo-wallet-contract-deployment-${this.networkId}`, JSON.stringify({
+        step: this.step,
+        processedStep: this.processedStep,
+        transactionHashByStep: this.transactionHashByStep,
+        contractAddressByStep: this.contractAddressByStep
+      }));
+    },
+    updateTransactionHash(hash) {
+      this.$set(this.transactionHashByStep, this.step, hash);
+      this.$set(this.processingStep, this.step, true);
+    },
+    finishInstallation() {
+      const contractAddress = this.contractAddressByStep[3];
+      const contractDetails = {
+        networkId: this.networkId,
+        address: contractAddress,
+        name: this.newTokenName,
+        symbol: this.newTokenSymbol
+      };
+      this.$set(this.processingStep, this.step, true);
+      // Save conract address to display for all users
+      return saveContractAddressAsDefault(contractDetails)
+        .then(resp => {
+          if (resp && resp.ok) {
+            this.$emit("list-updated", contractAddress);
+            this.createNewToken = false;
+            this.clearState();
+          } else {
+            this.loading = false;
+            this.error = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
+          }
+        })
+        .catch(e => {
+          console.debug("saveContractAddressAsDefault method - error", e);
+          this.error = `An error occurred while saving it as default contract to display for all users: ${e}`;
+        })
+        .finally(() => this.$set(this.processingStep, this.step, false));
     }
   }
 };

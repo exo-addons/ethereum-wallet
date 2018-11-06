@@ -556,9 +556,26 @@ export function getWallets() {
       return resp && resp.ok && resp.json();
     });
 }
+
 export function setDraggable() {
-  $("#WalletApp .v-dialog").draggable();
-  $("#WalletAdminApp .v-dialog").draggable();
+  $("#WalletApp .v-dialog:not(.not-draggable)").draggable();
+  $("#WalletAdminApp .v-dialog:not(.not-draggable)").draggable();
+}
+
+/*
+ * return amount * 10 ^ decimals
+ */
+export function convertTokenAmountToSend(amount, decimals) {
+  const toBN = window.localWeb3.utils.toBN
+  return toBN(amount).imul(toBN(10).pow(toBN(decimals))).toString();
+}
+
+/*
+ * return amount * 10 ^ decimals
+ */
+export function convertTokenAmountReceived(amount, decimals) {
+  const toBN = window.localWeb3.utils.toBN
+  return toBN(amount).div(toBN(10).pow(toBN(decimals))).toString();
 }
 
 function createLocalWeb3Instance(isSpace, useMetamask) {

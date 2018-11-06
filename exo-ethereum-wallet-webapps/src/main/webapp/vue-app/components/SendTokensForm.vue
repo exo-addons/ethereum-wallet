@@ -87,7 +87,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
 import {saveTransactionMessage} from '../WalletTransactions.js';
 
 export default {
@@ -166,12 +166,22 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods.transfer(this.recipient, (this.amount * this.contractDetails.decimalsNumber).toString()).estimateGas({gas: window.walletSettings.userPreferences.defaultGas, gasPrice: window.walletSettings.gasPrice})
-          .then(result => {
-            if (result > window.walletSettings.userPreferences.defaultGas) {
-              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}`;
+        this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
+          .estimateGas({
+            gas: 9000000,
+            gasPrice: window.walletSettings.gasPrice
+          })
+          .then(estimatedGas => {
+            console.log("estimatedGas", estimatedGas, window.walletSettings.userPreferences.defaultGas);
+            if (estimatedGas > window.walletSettings.userPreferences.defaultGas) {
+              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${estimatedGas}`;
+              return;
             }
-            return this.contractDetails.contract.methods.transfer(this.recipient, (this.amount * this.contractDetails.decimalsNumber).toString()).send({from: this.account})
+            return this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
+              .send({
+                from: this.account,
+                gas: window.walletSettings.userPreferences.defaultGas
+              })
               .on('transactionHash', hash => {
                 saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;

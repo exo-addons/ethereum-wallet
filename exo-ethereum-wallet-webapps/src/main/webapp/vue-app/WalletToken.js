@@ -1,5 +1,5 @@
 import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from './WalletConstants.js';
-import {watchTransactionStatus} from './WalletUtils.js';
+import {watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 
 /*
  * Get the list of Contracts with details:
@@ -63,17 +63,16 @@ export function retrieveContractDetails(account, contractDetails) {
       return contractDetails.contract.methods.decimals().call()
         .then(decimals => {
           contractDetails.decimals = decimals || 0;
-          contractDetails.decimalsNumber = Math.pow(10, contractDetails.decimals);
         })
         .catch(e => {
           console.debug("no decimals operation found in contract ", contractDetails.address);
           contractDetails.decimals = 0;
-          contractDetails.decimalsNumber = 1;
         })
     })
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
     .then(balance => {
-      contractDetails.balance = parseFloat(`${balance / contractDetails.decimalsNumber}`);
+      contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+      console.log("balance", balance, contractDetails.balance);
       // TODO compute Token value in ether
       contractDetails.balanceInEther = 0;
 
@@ -125,42 +124,118 @@ export function getContractsAddresses(account, netId) {
 /*
  * Creates Web3 conract deployment transaction
  */
-export function newContractInstance(...args) {
-  return new window.localWeb3.eth.Contract(ERC20_COMPLIANT_CONTRACT_ABI).deploy({
-    data: ERC20_COMPLIANT_CONTRACT_BYTECODE,
-    arguments: args
-  });
+export function newBasicERC20ContractInstance(...args) {
+  return newContractInstance(ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE, args);
 }
 
 /*
  * Creates Web3 conract deployment transaction
  */
-export function deployContract(contractInstance, networkId, tokenName, tokenSymbol, isDefault, account, gasLimit, gasPrice, transactionHashedCallback) {
-  return contractInstance
-    .estimateGas((error, estimatedGas) => {
-      if (error) {
-        throw new Error(`Error while estimating contract deployment gas ${error}`);
+export function newContractInstance(abi, bin, ...args) {
+  if (!abi || !bin) {
+    return null;
+  }
+  if (args && args.length) {
+    return new window.localWeb3.eth.Contract(abi).deploy({
+      data: bin,
+      arguments: args
+    });
+  } else {
+    return new window.localWeb3.eth.Contract(abi).deploy({
+      data: bin
+    });
+  }
+}
+
+/*
+ * Creates Web3 conract deployment transaction
+ */
+export function deployContract(contractInstance, account, gasLimit, gasPrice, transactionHashCallback) {
+  let transactionHash;
+  return contractInstance.send({
+    from: account, 
+    gas: gasLimit,
+    gasPrice: gasPrice
+  })
+    .on('transactionHash', hash => {
+      return transactionHashCallback && transactionHashCallback(transactionHash = hash);
+    })
+    .on('receipt', receipt => {
+      return transactionHashCallback && transactionHashCallback(transactionHash);
+    });
+}
+
+/*
+ * Creates a Web3 conract instance
+ */
+export function newContractInstanceByName(tokenName, ...args) {
+  let contractBin, contractAbi;
+  return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
+       method: 'GET',
+       credentials: 'include'
+    })
+    .then(resp => {
+      if(resp && resp.ok) {
+        return resp.text();
+      } else {
+        throw new Error(`Cannot find contract BIN with name ${tokenName}`);
       }
-      return estimatedGas;
     })
-    .then(estimatedGas => {
-      if (estimatedGas > gasLimit) {
-        throw new Error(`You have set a low gas ${gasLimit} while the estimation of necessary gas is ${estimatedGas}. Please increase gas limit.`);
+    .then(bin => contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`)
+    .then(() => fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
+      method: 'GET',
+      credentials: 'include'
+    }))
+    .then(resp => {
+      if(resp && resp.ok) {
+        return resp.json();
+      } else {
+        throw new Error(`Cannot find contract ABI with name ${tokenName}`);
       }
     })
-    .then(() =>  contractInstance.send({
-      from: account, 
-      gas: gasLimit,
-      gasPrice: gasPrice
-    })
-      .on('error', function(error) {
-        throw error;
-      })
-      .on('transactionHash', transactionHash => {
-        saveContractDeploymentTransactionHash(networkId, tokenName, tokenSymbol, isDefault, transactionHash);
-        transactionHashedCallback(transactionHash);
-      })
-    );
+    .then(abi => contractAbi = abi)
+    .then(() => newContractInstance(contractAbi, contractBin, ...args));
+}
+
+/*
+ * Creates a Web3 conract instance
+ */
+export function newContractInstanceByNameAndAddress(tokenName, tokenAddress) {
+  let contractBin, contractAbi;
+  return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(resp => {
+    if(resp && resp.ok) {
+      return resp.text();
+    } else {
+      throw new Error(`Cannot find contract BIN with name ${tokenName}`);
+    }
+  })
+  .then(bin => contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`)
+  .then(() => fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
+    method: 'GET',
+    credentials: 'include'
+  }))
+  .then(resp => {
+    if(resp && resp.ok) {
+      return resp.json();
+    } else {
+      throw new Error(`Cannot find contract ABI with name ${tokenName}`);
+    }
+  })
+  .then(abi => contractAbi = abi)
+  .then(() => getContractInstance(window.walletSettings.userPreferences.walletAddress, tokenAddress, false, contractAbi, contractBin));
+}
+
+export function estimateContractDeploymentGas(instance) {
+  return instance.estimateGas((error, estimatedGas) => {
+    if (error) {
+      throw new Error(`Error while estimating contract deployment gas ${error}`);
+    }
+    return estimatedGas;
+  });
 }
 
 /*
@@ -289,16 +364,16 @@ export function removeContractDeploymentTransactionsInProgress(networkId, transa
   }
 }
 
-export function getContractInstance(account, address, usePromise) {
+export function getContractInstance(account, address, usePromise, abi, bin) {
   try {
     const contractInstance = new window.localWeb3.eth.Contract(
-        ERC20_COMPLIANT_CONTRACT_ABI, 
+        abi ? abi : ERC20_COMPLIANT_CONTRACT_ABI, 
         address,
         {
           from: account, 
           gas: window.walletSettings.userPreferences.defaultGas,
           gasPrice: window.walletSettings.gasPrice,
-          data: ERC20_COMPLIANT_CONTRACT_BYTECODE
+          data: bin ? bin : ERC20_COMPLIANT_CONTRACT_BYTECODE
         }
       );
     if (usePromise) {
@@ -321,24 +396,4 @@ function transformContracDetailsToFailed(contractDetails, e) {
   contractDetails.title = contractDetails.address;
   contractDetails.error = `Error retrieving contract at specified address ${e}`;
   return contractDetails;
-}
-
-function saveContractDeploymentTransactionHash(networkId, tokenName, tokenSymbol, isDefault, transactionHash) {
-  const STORAGE_KEY = `exo-wallet-contract-deployment-progress-${networkId}`;
-  let storageValue = localStorage.getItem(STORAGE_KEY);
-  if (storageValue === null) {
-    storageValue = {};
-  } else {
-    storageValue = JSON.parse(storageValue);
-  }
-
-  if (!storageValue[transactionHash]) {
-    storageValue[transactionHash] = {
-      name: tokenName,
-      symbol: tokenSymbol,
-      hash: transactionHash,
-      isDefault: isDefault
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storageValue));
-  }
 }

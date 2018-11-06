@@ -130,9 +130,6 @@ export default {
       }
     }
   },
-  created() {
-    this.init();
-  },
   methods: {
     refresh() {
       this.$emit("refresh");

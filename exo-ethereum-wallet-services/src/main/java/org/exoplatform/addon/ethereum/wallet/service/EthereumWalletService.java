@@ -18,9 +18,11 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
@@ -930,6 +932,22 @@ public class EthereumWalletService implements Startable {
    */
   public TransactionMessage removeTransactionMessageFromCache(String hash) {
     return this.transactionMessagesCache.remove(hash);
+  }
+
+  /**
+   * Retreive the ABI content of a contract
+   * 
+   * @param name
+   * @return
+   * @throws Exception
+   */
+  public String getContract(String name, String extension) throws Exception {
+    try (InputStream abiInputStream = this.getClass()
+                                          .getClassLoader()
+                                          .getResourceAsStream("org/exoplatform/addon/ethereum/wallet/contract/" + name + "."
+                                              + extension)) {
+      return IOUtils.toString(abiInputStream);
+    }
   }
 
   private Map<String, String> getListOfWalletsOfType(String walletType) throws Exception {

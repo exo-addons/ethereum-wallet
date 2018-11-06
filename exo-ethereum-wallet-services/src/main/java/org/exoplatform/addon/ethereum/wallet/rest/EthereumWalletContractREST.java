@@ -45,6 +45,49 @@ public class EthereumWalletContractREST implements ResourceContainer {
     this.ethereumWalletService = ethereumWalletService;
   }
 
+  @GET
+  @Path("bin/{name}")
+  @RolesAllowed("administrators")
+  public Response getBin(@PathParam("name") String name) {
+    if (StringUtils.isBlank(name)) {
+      LOG.warn("Empty resource name");
+      return Response.status(400).build();
+    }
+    if (name.contains("..")) {
+      LOG.error("Forbidden path character is used: '..'");
+      return Response.status(403).build();
+    }
+    try {
+      String contractAbi = ethereumWalletService.getContract(name, "bin");
+      return Response.ok(contractAbi).build();
+    } catch (Exception e) {
+      LOG.warn("Error retrieving contract BIN: " + name, e);
+      return Response.serverError().build();
+    }
+  }
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("abi/{name}")
+  @RolesAllowed("administrators")
+  public Response getAbi(@PathParam("name") String name) {
+    if (StringUtils.isBlank(name)) {
+      LOG.warn("Empty resource name");
+      return Response.status(400).build();
+    }
+    if (name.contains("..")) {
+      LOG.error("Forbidden path character is used: '..'");
+      return Response.status(403).build();
+    }
+    try {
+      String contractAbi = ethereumWalletService.getContract(name, "json");
+      return Response.ok(contractAbi).build();
+    } catch (Exception e) {
+      LOG.warn("Error retrieving contract ABI: " + name, e);
+      return Response.serverError().build();
+    }
+  }
+
   /**
    * Save a new contract address to display it in wallet of all users and save
    * contract name and symbol
@@ -55,6 +98,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("save")
+  @RolesAllowed("administrators")
   public Response saveContract(ContractDetail contractDetail) {
     if (contractDetail == null) {
       LOG.warn("Can't save empty contract");
@@ -88,6 +132,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
    */
   @POST
   @Path("remove")
+  @RolesAllowed("administrators")
   public Response removeContract(@FormParam("address") String address, @FormParam("networkId") Long networkId) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Can't remove empty address for contract");

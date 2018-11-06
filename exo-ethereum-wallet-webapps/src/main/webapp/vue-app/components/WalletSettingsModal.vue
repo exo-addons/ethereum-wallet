@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show" content-class="uiPopup" width="700px" max-width="100vw" persistent @keydown.esc="show = false">
+  <v-dialog v-model="show" content-class="uiPopup not-draggable" width="700px" max-width="100vw" persistent @keydown.esc="show = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>
@@ -127,7 +127,7 @@
                     <v-slider 
                       v-model="defaultGas"
                       :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
-                      :max="90000"
+                      :max="200000"
                       :min="35000"
                       :step="1000"
                       type="number" />

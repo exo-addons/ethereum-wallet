@@ -17,7 +17,8 @@
         "Vuetify": true,
         "EthereumQRPlugin": true,
         "isMaximized": true,
-        "abiDecoder": true
+        "abiDecoder": true,
+        "Redux": true
     },
     "parserOptions": {
         "sourceType": "module",

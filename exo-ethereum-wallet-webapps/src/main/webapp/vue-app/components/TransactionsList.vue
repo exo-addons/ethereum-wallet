@@ -319,7 +319,7 @@ export default {
   data () {
     return {
       // A trick to force update computed list
-      // since the attribute this.atransactions is modified outside the component
+      // since the attribute this.transactions is modified outside the component
       refreshIndex: 1,
       loading: false,
       transactions: {}
@@ -328,7 +328,7 @@ export default {
   computed: {
     sortedTransactions() {
       // A trick to force update computed list
-      // since the attribute this.atransactions is modified outside the component
+      // since the attribute this.transactions is modified outside the component
       if (!this.refreshIndex) {
         return {};
       }
@@ -456,7 +456,7 @@ export default {
     forceUpdateList() {
       try {
         // A trick to force update computed list
-        // since the attribute this.atransactions is modified outside the component
+        // since the attribute this.transactions is modified outside the component
         this.refreshIndex ++;
         this.$forceUpdate();
       } catch (e) {

@@ -1,5 +1,5 @@
 import {searchFullName, getContractFromStorage} from './WalletAddressRegistry.js';
-import {etherToFiat, watchTransactionStatus} from './WalletUtils.js';
+import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 import {getContractInstance} from './WalletToken.js';
 import {ERC20_COMPLIANT_CONTRACT_ABI} from './WalletConstants.js';
 
@@ -304,7 +304,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.contractName = contractDetails.name;
         transactionDetails.contractAddress = contractDetails.address;
         transactionDetails.contractSymbol = contractDetails.symbol;
-        transactionDetails.contractDecimalsNumber = contractDetails.decimalsNumber || 1;
+        transactionDetails.contractDecimals = contractDetails.decimals || 0;
         try {
           if (transactionDetails.isContractCreation) {
             return false;
@@ -317,15 +317,17 @@ export function addTransaction(networkId, account, accountDetails, transactions,
             transactionDetails.contractMethodName = method && method.name;
             if (transactionDetails.contractMethodName && decodedLogs && decodedLogs.length) {
               if (method.name === 'transfer' || method.name === 'approve') {
-                transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
-                transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
-                transactionDetails.contractAmount = decodedLogs[0].events[2].value / transactionDetails.contractDecimalsNumber;
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && (decodedLog.name == 'Transfer' || decodedLog.name == 'Approval'));
+                transactionDetails.fromAddress = methodLog.events[0].value.toLowerCase();
+                transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
+                transactionDetails.contractAmount = convertTokenAmountReceived(methodLog.events[2].value, transactionDetails.contractDecimals);
                 transactionDetails.isReceiver = transactionDetails.toAddress === account;
               } else if (method.name === 'transferFrom') {
-                transactionDetails.fromAddress = decodedLogs[0].events[0].value.toLowerCase();
-                transactionDetails.toAddress = decodedLogs[0].events[1].value.toLowerCase();
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && (decodedLog.name == 'Transfer'));
+                transactionDetails.fromAddress = methodLog.events[0].value.toLowerCase();
+                transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
                 transactionDetails.byAddress = transaction.from.toLowerCase();
-                transactionDetails.contractAmount = decodedLogs[0].events[2].value / transactionDetails.contractDecimalsNumber;
+                transactionDetails.contractAmount = convertTokenAmountReceived(methodLog.events[2].value, transactionDetails.contractDecimals);
                 transactionDetails.isReceiver = false;
               }
             }

@@ -61,6 +61,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Path("detailsById")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed("users")
   public Response getAccountByTypeAndID(@QueryParam("id") String id, @QueryParam("type") String type) {
     if (StringUtils.isBlank(id) || StringUtils.isBlank(type)
         || !(StringUtils.equals(type, USER_ACCOUNT_TYPE) || StringUtils.equals(type, SPACE_ACCOUNT_TYPE))) {
@@ -97,6 +98,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Path("detailsByAddress")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed("users")
   public Response getAccountByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Bad request sent to server with empty address {}", address);
@@ -118,6 +120,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("saveAddress")
+  @RolesAllowed("users")
   public Response saveAddress(AccountDetail accountDetail) {
     if (accountDetail == null) {
       LOG.warn("Bad request sent to server with empty data");
@@ -152,6 +155,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("savePreferences")
+  @RolesAllowed("users")
   public Response savePreferences(UserPreferences userPreferences) {
     if (userPreferences == null) {
       LOG.warn("Bad request sent to server with empty preferenes");
@@ -183,6 +187,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("requestFunds")
+  @RolesAllowed("users")
   public Response requestFunds(FundsRequest fundsRequest) {
     if (fundsRequest == null) {
       LOG.warn("Bad request sent to server with empty funds request");
@@ -225,6 +230,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
    */
   @GET
   @Path("markFundRequestAsSent")
+  @RolesAllowed("users")
   public Response markFundRequestAsSent(@QueryParam("notificationId") String notificationId) {
     if (StringUtils.isBlank(notificationId)) {
       LOG.warn("Bad request sent to server with empty notificationId");
@@ -256,6 +262,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @GET
   @Path("fundRequestSent")
   @Produces(MediaType.TEXT_PLAIN)
+  @RolesAllowed("users")
   public Response isFundRequestSent(@QueryParam("notificationId") String notificationId) {
     if (StringUtils.isBlank(notificationId)) {
       LOG.warn("Bad request sent to server with empty notificationId");
@@ -304,6 +311,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
    */
   @POST
   @Path("saveTransactionMessage")
+  @RolesAllowed("users")
   public Response saveTransactionMessage(TransactionMessage transactionMessage) {
     if (transactionMessage == null || StringUtils.isBlank(transactionMessage.getHash())) {
       LOG.warn("Bad request sent to server with empty transaction hash");
@@ -330,6 +338,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("getTransactions")
+  @RolesAllowed("users")
   public Response getTransactions(@QueryParam("networkId") long networkId, @QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Bad request sent to server with empty address {}", address);

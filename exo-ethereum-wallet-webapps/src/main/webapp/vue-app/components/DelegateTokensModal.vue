@@ -72,7 +72,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode} from '../WalletUtils.js';
+import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -203,12 +203,18 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods.approve(this.recipient, (this.amount * this.contractDetails.decimalsNumber).toString()).estimateGas({gas: window.walletSettings.userPreferences.defaultGas, gasPrice: window.walletSettings.gasPrice})
+        this.contractDetails.contract.methods.approve(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
+          .estimateGas({
+            gas: 9000000,
+            gasPrice: window.walletSettings.gasPrice
+          })
           .then(result => {
             if (result > window.walletSettings.userPreferences.defaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}`;
+              return;
             }
-            return this.contractDetails.contract.methods.approve(this.recipient, (this.amount * this.contractDetails.decimalsNumber).toString()).send({from: this.account})
+            return this.contractDetails.contract.methods.approve(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
+              .send({from: this.account})
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
