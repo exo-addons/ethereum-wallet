@@ -14,6 +14,12 @@ const ERTToken = artifacts.require("ERTToken");
           from : accounts[1]});
       }).then(assert.fail).catch(function(error) {
         assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the sender is not the owner');  
+        
+        return tokenInstance.addAdmin(accounts[0], 1 , {
+          from : accounts[0]});
+      }).then(assert.fail).catch(function(error) {
+        assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the target is the owner');  
+        
         return tokenInstance.addAdmin(accounts[5], 5, {
             from : accounts[0]
         });

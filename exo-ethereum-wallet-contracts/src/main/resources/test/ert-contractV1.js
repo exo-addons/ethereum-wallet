@@ -4,7 +4,7 @@ var ERTTokenV1 = artifacts.require("ERTTokenV1");
 
 const decimals = Math.pow(10, 18);
 
-contract('ERTToken', function(accounts) {
+contract('ERTTokenV1', function(accounts) {
 
   let tokenInstance;
 

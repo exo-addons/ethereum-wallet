@@ -1,6 +1,7 @@
 const ERTToken = artifacts.require("ERTToken");
 var ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
 
+
 const decimals = Math.pow(10, 18);
   
   contract('DataAccess', function(accounts) {
@@ -14,6 +15,7 @@ const decimals = Math.pow(10, 18);
         return tokenInstance.getDataAddress(1);
       }).then(function(dataAddress) {
         assert.equal(dataAddress, ERTTokenDataV1.address, 'Token Implementation seems to have wrong data address');
+      
         
         return tokenInstance.initialized();
       }).then(function(result) {
@@ -74,11 +76,7 @@ const decimals = Math.pow(10, 18);
       });
     })
     
-    
-    
-    
-    
-    
+       
     it('test setting Data', function() {
       return ERTToken.deployed().then(instance => {
         tokenInstance = instance;
