@@ -1,13 +1,13 @@
 pragma solidity ^0.4.24;
-import "./ERC20Abstract.sol";
-import "./SafeMath.sol";
-import "./Owned.sol";
+import "../ERC20Abstract.sol";
+import "../SafeMath.sol";
+import "../Owned.sol";
 
 /**
  * @title Mintable.sol
  * @dev Abstract contract to mint tokens
  */
-contract Mintable is Owned, SafeMath, ERC20Abstract {
+contract TestMintable is Owned, SafeMath, ERC20Abstract {
 
     // Event emitted when tokens are minted
     event MintedToken(address minter, address target, uint256 mintedAmount);

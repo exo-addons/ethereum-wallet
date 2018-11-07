@@ -1,4 +1,4 @@
-var ERTToken = artifacts.require("ERTToken");
+/*var ERTToken = artifacts.require("ERTToken");
 
 const decimals = Math.pow(10, 18);
 
@@ -75,4 +75,4 @@ contract('Mintable', function(accounts) {
 
   
 });
-
+*/

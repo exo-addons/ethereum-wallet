@@ -21,13 +21,15 @@ contract Upgradability is Owned{
      * contract implementation.
      * @param _newImplementation new implementation address
      */
-    function upgradeTo(address _newImplementation) public onlyProxy{
+    function upgradeImplementationTo(address _newImplementation) public onlyProxy{
         // Disable ownership
         owner = address(0);
         // Make the contract paused
         paused = true;
         // Transfer ether to new implementation
-        _newImplementation.transfer(address(this).balance);
+        if (address(this).balance > 0) {
+        	_newImplementation.transfer(address(this).balance);
+        }
     }
 
 }

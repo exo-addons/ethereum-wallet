@@ -27,7 +27,7 @@ contract ERTToken is TokenStorage, Owned {
         super.setDataAddress(1, _dataAddress);
 
         // Set implementation address and version
-        upgradeTo(1, _implementationAddress);
+        upgradeImplementation(1, _implementationAddress);
 
         // Set current proxy address so that ERC20 implementation can access it when calls are delegated to it
         proxy = address(this);
@@ -39,13 +39,14 @@ contract ERTToken is TokenStorage, Owned {
      * that current version
      * @param _newImplementation new ERC20 contract address
      */
-    function upgradeTo(uint16 _version, address _newImplementation) public onlyOwner{
+    function upgradeImplementation(uint16 _version, address _newImplementation) public onlyOwner{
         // Change implementation reference and emit event
+        require(implementationAddress != _newImplementation);
         require(_version > version);
         version = _version;
         // The current implementation can be = 0x address when deploying the contract at the first time
         if (implementationAddress != 0) {
-          Upgradability(implementationAddress).upgradeTo(_newImplementation);
+          Upgradability(implementationAddress).upgradeImplementationTo(_newImplementation);
         }
         implementationAddress = _newImplementation;
 

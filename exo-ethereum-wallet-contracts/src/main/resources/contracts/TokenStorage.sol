@@ -50,4 +50,5 @@ contract TokenStorage {
             TokenStorage(implementationAddress).setDataAddress(_dataVersion, _dataAddress);
         }
     }
+    
 }

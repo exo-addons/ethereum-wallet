@@ -3,14 +3,12 @@ import "./TokenStorage.sol";
 import "./Owned.sol";
 import "./DataAccess.sol";
 import "./Admin.sol";
-import "./Burnable.sol";
 import "./SafeMath.sol";
 import "./Pausable.sol";
 import "./ApprouvableAccount.sol";
 import "./ERC20Abstract.sol";
 import "./FundCollection.sol";
 import "./GasPayableInToken.sol";
-import "./Mintable.sol";
 import "./Upgradability.sol";
 
 /**
@@ -23,13 +21,11 @@ contract ERTTokenV1 is
   DataAccess,
   Admin,
   SafeMath,
-  Burnable,
   Pausable,
   ApprouvableAccount,
   ERC20Abstract,
   FundCollection,
   GasPayableInToken,
-  Mintable,
   Upgradability {
 
     /**

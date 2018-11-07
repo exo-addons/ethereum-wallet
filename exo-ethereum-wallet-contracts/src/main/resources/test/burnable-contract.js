@@ -1,4 +1,4 @@
-const ERTToken = artifacts.require("ERTToken");
+/*const ERTToken = artifacts.require("ERTToken");
   
   contract('Burnable', function(accounts) {
     let tokenInstance;
@@ -53,7 +53,7 @@ const ERTToken = artifacts.require("ERTToken");
     
  
 });
-  
+  */
   
   
   

@@ -1,8 +1,9 @@
 var ERTToken = artifacts.require("./ERTToken.sol");
+var TestERTToken = artifacts.require("../test/TestERTToken.sol");
 var ERTTokenV1 = artifacts.require("./ERTTokenV1.sol");
 var ERTTokenDataV1 = artifacts.require("./ERTTokenDataV1.sol");
-var TestERTTokenV2 = artifacts.require("./Testcontract/TestERTTokenV2.sol");
-var TestERTTokenDataV2 = artifacts.require("./Testcontract/TestERTTokenDataV2.sol");
+var TestERTTokenV2 = artifacts.require("./test/TestERTTokenV2.sol");
+var TestERTTokenDataV2 = artifacts.require("./test/TestERTTokenDataV2.sol");
 
 module.exports =  function(deployer) {
   // Deployment of tokens starting by ERTTokenDataV1: ERC20 Token data
@@ -21,11 +22,7 @@ module.exports =  function(deployer) {
      .then(() => ERTTokenV1.deployed())
      .then(ertTokenV1Instance => ertTokenV1Instance.setGasPriceLimit(Number(web3.toWei("100", "Gwei"))))
      // Change ABI of Proxy by ABI of Token to access it methods
-     .then(() => {
-       ERTToken.originalAbi = ERTToken.abi;
-       ERTToken.tokenAbi = ERTTokenV1.abi;
-       ERTToken.abi = ERTTokenV1.abi;
-     })
+     .then(() => ERTToken.abi = TestERTToken.abi)
     //deployment of TestERTTokenDataV2 
     .then(() => deployer.deploy(TestERTTokenDataV2))
     //Deployment of TestERTTokenV2 (with proxy address)

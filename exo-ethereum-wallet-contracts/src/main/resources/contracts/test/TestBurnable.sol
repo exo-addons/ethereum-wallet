@@ -1,14 +1,14 @@
 pragma solidity ^0.4.24;
-import "./SafeMath.sol";
-import "./Owned.sol";
-import "./DataAccess.sol";
+import "../SafeMath.sol";
+import "../Owned.sol";
+import "../DataAccess.sol";
 
 
 /**
  * @title Burnable.sol
  * @dev This is an abstract contract that is used to burn tokens from owner account
  */
-contract Burnable is Owned, DataAccess, SafeMath {
+contract TestBurnable is Owned, DataAccess, SafeMath {
 
     // Event emitted when the owner burnt some tokens
     event Burn(address burner, uint256 value);

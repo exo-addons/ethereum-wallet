@@ -23,10 +23,7 @@ contract('Owned', function(accounts) {
           assert.equal(result.logs[0].args.newOwner, accounts[2], 'the new owner is wrong');
         });
       }) 
-      
-      
-      
-      
+
      it('should set the address of the proxy', function() {
         return ERTToken.deployed().then(function(instance) {
           tokenInstance = instance;
@@ -37,19 +34,8 @@ contract('Owned', function(accounts) {
           return tokenInstance.setProxy(0x0, {from : accounts[0]});
         }).then(assert.fail).catch(function(error) {
           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the new proposed proxy is the zero address');
-          
-        /*  return tokenInstance.setProxy(ERTToken.address, {from : accounts[0]});
-        }).then(function(result) {
-          console.log(result);
-          assert.equal(result.logs.length, 1, 'number of emitted event is wrong');
-          assert.equal(result.logs[0].event,'TransferProxyOwnership', 'should be the "TransferProxyOwnership" event');
-          assert.equal(result.logs[0].args.proxy, ERTToken.address, 'the new proxy is wrong'); */
         });
       }) 
-       
-    
-    
-  
 });
 
 
