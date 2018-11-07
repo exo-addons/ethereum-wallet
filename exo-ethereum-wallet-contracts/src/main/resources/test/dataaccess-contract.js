@@ -6,8 +6,7 @@ const decimals = Math.pow(10, 18);
   
   contract('DataAccess', function(accounts) {
     let tokenInstance;
-    
-    
+
     it('test contract initialization attributes', function() {
       return ERTToken.deployed().then(instance => {
         tokenInstance = instance;
@@ -59,10 +58,6 @@ const decimals = Math.pow(10, 18);
       }).then(function(sellPrice) {
         assert.equal(sellPrice.toNumber(), 2000000000000000 , 'token sell price is wrong');
         
-        return tokenInstance.getGasPriceLimit();
-      }).then(function(gaspricelimit) {
-        assert.equal(gaspricelimit, 100000000000 , 'gas price limit is wrong');
-
         return tokenInstance.addAdmin(accounts[1], 1);
       }).then(receipt => {
         return tokenInstance.isAdmin(accounts[1], 1);
@@ -74,8 +69,7 @@ const decimals = Math.pow(10, 18);
         assert.equal(result, false , 'ERC20 operation is paused');
       });
     })
-    
-       
+
     it('test setting Data', function() {
       return ERTToken.deployed().then(instance => {
         tokenInstance = instance;
@@ -91,20 +85,8 @@ const decimals = Math.pow(10, 18);
         return tokenInstance.symbol();
       }).then(result => {
         assert.equal(result , "R", 'has not the correct symbol');
-        
-        return tokenInstance.setGasPriceLimit(2000);
-      }).then(receipt => {
-        return tokenInstance.getGasPriceLimit();
-      }).then(result => {
-        assert.equal(result , 2000, 'has not the correct gas price limit');
       });
     })
-    
-    
-    
-    
-
-  
 });
 
 

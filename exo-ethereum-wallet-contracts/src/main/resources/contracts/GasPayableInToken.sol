@@ -43,11 +43,6 @@ contract GasPayableInToken is Owned, ERC20Abstract {
         if (msg.sender == owner) {
             return;
         }
-        // Gas used = Gas limit - gas left + fixed gas amount to use
-        // for the following transfer operations
-        if (tx.gasprice > super.getGasPriceLimit()) {
-            return;
-        }
         uint256 tokenSellPrice = super.getSellPrice();
         require(tokenSellPrice > 0);
 

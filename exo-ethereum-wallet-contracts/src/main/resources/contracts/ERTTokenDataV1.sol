@@ -42,9 +42,6 @@ contract ERTTokenDataV1 is DataOwned {
     // Token sell price in WEI
     uint256 internal sellPrice_;
 
-    // gas price limit in WEI that is used when paying gas in token
-    uint256 internal gasPriceLimit_;
-
     constructor() public{
     }
 
@@ -115,13 +112,6 @@ contract ERTTokenDataV1 is DataOwned {
      */
     function getSellPrice() public view returns(uint256){
         return sellPrice_;
-    }
-
-    /**
-     * @return gas price limit in WEI that is used when paying gas in token
-     */
-    function getGasPriceLimit() public view returns(uint256){
-        return gasPriceLimit_;
     }
 
     /**
@@ -222,14 +212,6 @@ contract ERTTokenDataV1 is DataOwned {
      */
     function _setSellPrice(uint256 _value) public onlyContracts{
         sellPrice_ = _value;
-    }
-
-    /**
-     * @dev Sets the gas price limit for ERC20 methods
-     * @param _gasPriceLimit amount of gas price in WEI
-     */
-    function setGasPriceLimit(uint _gasPriceLimit) public onlyContracts{
-        gasPriceLimit_ = _gasPriceLimit;
     }
 
     /**

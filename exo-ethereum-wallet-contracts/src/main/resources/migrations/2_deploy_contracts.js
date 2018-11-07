@@ -18,9 +18,6 @@ module.exports =  function(deployer) {
      // Initialize Token Data with initial values
      .then(() => ERTTokenV1.deployed())
      .then(ertTokenV1Instance => ertTokenV1Instance.initialize(ERTToken.address, 100000 * Math.pow(10, 18), "Curries", 18, "C"))
-     // Change gas price limit to 100 Gwei because it's the the default gas price of truffle test network
-     .then(() => ERTTokenV1.deployed())
-     .then(ertTokenV1Instance => ertTokenV1Instance.setGasPriceLimit(Number(web3.toWei("100", "Gwei"))))
      // Change ABI of Proxy by ABI of Token to access it methods
      .then(() => ERTToken.abi = TestERTToken.abi)
     //deployment of TestERTTokenDataV2 

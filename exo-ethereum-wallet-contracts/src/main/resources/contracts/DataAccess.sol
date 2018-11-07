@@ -98,16 +98,6 @@ contract DataAccess is Owned{
     }
 
     /**
-     * @dev Gas price limit that is used to determine if the issuer will pay from contract
-     * ether balance or from his own ether balance. When paying from contract ether balance,
-     * the issuer will pay the contract owner by tokens.
-     * @return gas price limit that an issuer can use in an ERC20 operation by paying using tokens
-     */
-    function getGasPriceLimit() public view returns(uint256){
-        return ERTTokenDataV1(dataAddresses_[1]).getGasPriceLimit();
-    }
-
-    /**
      * @dev Check if the specified address is an admin with the habilitation level
      * @return true if address is recognized as admin
      * @param _level habilitation level
@@ -140,15 +130,6 @@ contract DataAccess is Owned{
      */
     function setSymbol(string _symbol) public onlyOwner{
         ERTTokenDataV1(dataAddresses_[1]).setSymbol(_symbol);
-    }
-
-    /**
-     * @dev set the gas price limit that is used to determine if the issuer will pay from contract
-     * ether balance or from his own ether balance. When paying from contract ether balance,
-     * the issuer will pay the contract owner by tokens. (only contract owner can set it)
-     */
-    function setGasPriceLimit(uint _gasPriceLimit) public onlyOwner{
-        ERTTokenDataV1(dataAddresses_[1]).setGasPriceLimit(_gasPriceLimit);
     }
 
     // Internal write methods
