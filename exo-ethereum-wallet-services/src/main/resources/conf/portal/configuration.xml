@@ -43,13 +43,13 @@
       </value-param>
       <value-param>
         <name>contract.abi.path</name>
-        <description>Contract ABI path</description>
-        <value>${exo.addon.wallet.contract.abi.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTToken.json}</value>
+        <description>Token Contract ABI path</description>
+        <value>${exo.addon.wallet.contract.abi.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.json}</value>
       </value-param>
       <value-param>
         <name>contract.bin.path</name>
-        <description>Contract BIN path</description>
-        <value>${exo.addon.wallet.contract.bin.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTToken.bin}</value>
+        <description>Token Contract BIN path</description>
+        <value>${exo.addon.wallet.contract.bin.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.bin}</value>
       </value-param>
     </init-params>
   </component>

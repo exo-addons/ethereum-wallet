@@ -172,7 +172,6 @@ export default {
             gasPrice: window.walletSettings.gasPrice
           })
           .then(estimatedGas => {
-            console.log("estimatedGas", estimatedGas, window.walletSettings.userPreferences.defaultGas);
             if (estimatedGas > window.walletSettings.userPreferences.defaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${estimatedGas}`;
               return;

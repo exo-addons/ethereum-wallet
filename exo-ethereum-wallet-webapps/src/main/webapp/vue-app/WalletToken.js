@@ -1,4 +1,3 @@
-import {ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE} from './WalletConstants.js';
 import {watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 
 /*
@@ -72,7 +71,6 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
     .then(balance => {
       contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-      console.log("balance", balance, contractDetails.balance);
       // TODO compute Token value in ether
       contractDetails.balanceInEther = 0;
 
@@ -119,13 +117,6 @@ export function getContractsAddresses(account, netId) {
     contractsAddresses = JSON.parse(contractsAddressesString);
   }
   return contractsAddresses;
-}
-
-/*
- * Creates Web3 conract deployment transaction
- */
-export function newBasicERC20ContractInstance(...args) {
-  return newContractInstance(ERC20_COMPLIANT_CONTRACT_ABI, ERC20_COMPLIANT_CONTRACT_BYTECODE, args);
 }
 
 /*
@@ -367,13 +358,13 @@ export function removeContractDeploymentTransactionsInProgress(networkId, transa
 export function getContractInstance(account, address, usePromise, abi, bin) {
   try {
     const contractInstance = new window.localWeb3.eth.Contract(
-        abi ? abi : ERC20_COMPLIANT_CONTRACT_ABI, 
+        abi ? abi : window.walletSettings.contractAbi,
         address,
         {
           from: account, 
           gas: window.walletSettings.userPreferences.defaultGas,
           gasPrice: window.walletSettings.gasPrice,
-          data: bin ? bin : ERC20_COMPLIANT_CONTRACT_BYTECODE
+          data: bin ? bin : window.walletSettings.contractBin
         }
       );
     if (usePromise) {

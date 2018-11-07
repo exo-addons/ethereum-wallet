@@ -237,7 +237,10 @@
 
             <v-list-tile v-if="item.fee">
               <v-list-tile-content>Transaction fee</v-list-tile-content>
-              <v-list-tile-content class="align-end">
+              <v-list-tile-content v-if="item.feeToken" class="align-end">
+                {{ item.feeToken }} {{ item.contractSymbol }}
+              </v-list-tile-content>
+              <v-list-tile-content v-else class="align-end">
                 {{ item.feeFiat }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>

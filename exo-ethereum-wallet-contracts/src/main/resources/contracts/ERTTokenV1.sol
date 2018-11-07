@@ -69,7 +69,7 @@ contract ERTTokenV1 is
 
         super._setBalance(msg.sender, _initialAmount);
         // Default token price
-        super.setTokenPrice(2 finney);
+        super.setSellPrice(2 finney);
         // Set Maximum gas price to use in transactions that will refund
         // ether from contract
         super.setGasPriceLimit(0.000008 finney);

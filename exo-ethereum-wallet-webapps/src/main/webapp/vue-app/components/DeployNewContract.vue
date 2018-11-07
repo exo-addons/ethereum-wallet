@@ -140,7 +140,7 @@
                 <a :href="tokenEtherscanLink" target="_blank"> See it on etherscan</a>
               </v-card-title>
               <v-card-actions>
-                <v-btn :loading="processingStep[step]" :disabled="processingStep[step]" color="primary" @click="finishInstallation">Finish installation</v-btn>
+                <v-btn :loading="processingStep[step]" :disabled="processingStep[step]" color="primary" @click="finishInstallation"><span class="ml-2 mr-2">Finish deployment</span></v-btn>
               </v-card-actions>
             </v-card>
           </v-stepper-content>
@@ -155,7 +155,7 @@ import WalletAddress from './WalletAddress.vue';
 import ContractDeploymentStep from './ContractDeploymentStep.vue';
 
 import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault} from '../WalletToken.js';
-import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode} from '../WalletUtils.js';
+import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -257,30 +257,33 @@ export default {
       this.newTokenSymbol = '';
       this.newTokenDecimals = 18;
       this.newTokenInitialCoins = 1000000;
-      this.loadState();
       this.contractInstancesByStep = {};
       this.gasByStep = {};
       this.transactionFeeByStep = {};
       this.processingStep = {};
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
+      this.loadState();
     },
     initializeStep() {
       if (this.step && !this.gasByStep[this.step]) {
         if (this.step < 4) {
           if (this.contractAddressByStep[this.step]) {
-            return newContractInstanceByNameAndAddress(this.contractNameByStep, this.contractAddressByStep[this.step])
-              .then(instance => this.$set(this.contractInstancesByStep, this.step, instance) && this.$set(this.processedStep, this.step, true))
-              .catch(e => this.error = `Error getting contract with address ${this.contractAddressByStep[this.step]}: ${e}`);
+            // Add it inside a constant in case it changes in parallel
+            const step = this.step;
+            return newContractInstanceByNameAndAddress(this.contractNameByStep, this.contractAddressByStep[step])
+              .then(instance => this.$set(this.contractInstancesByStep, step, instance) && this.$set(this.processedStep, step, true))
+              .catch(e => this.error = `Error getting contract with address ${this.contractAddressByStep[step]}: ${e}`);
           } else {
+            const step = this.step;
             return newContractInstanceByName(this.contractNameByStep, ...this.contractDeploymentParameters)
               .then(instance => {
-                this.$set(this.contractInstancesByStep, this.step, instance);
+                this.$set(this.contractInstancesByStep, step, instance);
                 return estimateContractDeploymentGas(instance);
               })
               .then(estimatedGas => {
-                this.$set(this.gasByStep, this.step, parseInt(estimatedGas * 1.1));
-                this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
+                this.$set(this.gasByStep, step, parseInt(estimatedGas * 1.1));
+                this.$set(this.transactionFeeByStep, step, this.calculateGasPriceInFiat(this.gasByStep[step]));
               })
               .catch(e => this.error = `Error processing contract deployment estimation: ${e}`);
           }
@@ -295,7 +298,7 @@ export default {
               this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
             });
         } else if(this.step === 5 && !this.processedStep[this.step]) {
-          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], this.toBN(1000000).imul(this.toBN(10).pow(this.toBN(18))).toString(), "Token name", 18, "T")
+          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
             .estimateGas({
               gas: 9000000,
               gasPrice: window.walletSettings.gasPrice
@@ -377,11 +380,14 @@ export default {
             })
             .finally(() => this.$set(this.processingStep, this.step, false));
         } else if(this.step === 5) {
-          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], this.toBN(this.newTokenInitialCoins).imul(this.toBN(10).pow(this.toBN(this.newTokenDecimals))).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
+          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], convertTokenAmountToSend(this.newTokenInitialCoins, this.newTokenDecimals).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
             .send({
               from: this.account,
               gasPrice: window.walletSettings.gasPrice,
               gas: gasLimit
+            })
+            .on('transactionHash', hash => {
+              this.updateTransactionHash(hash);
             })
             .then(() => {
               this.$set(this.processedStep, this.step, true);
@@ -411,7 +417,10 @@ export default {
         this.contractAddressByStep = storedState.contractAddressByStep;
         this.processedStep = storedState.processedStep;
         this.transactionHashByStep = storedState.transactionHashByStep;
-        this.step = storedState.step;
+        // To initialize steps
+        for (this.step = 0; this.step < storedState.step; this.step++){
+          this.initializeStep();
+        }
       }
     },
     saveState() {

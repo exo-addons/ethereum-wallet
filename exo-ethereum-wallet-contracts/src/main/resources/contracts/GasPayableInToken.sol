@@ -23,11 +23,12 @@ contract GasPayableInToken is Owned, ERC20Abstract {
     }
 
     /**
-     * @dev Set the token price in ether and calculate consequetly the gas price in
+     * @dev Set the token sell price in ether and calculate consequetly the gas price in
      * tokens. (determine the amount tokens for 1 gas)
      * @param _value the amount of 1 token price in WEI
      */
-    function setTokenPrice(uint256 _value) public onlyOwner{
+    function setSellPrice(uint256 _value) public onlyOwner{
+        super._setSellPrice(_value);
         uint256 gasPriceInToken = (10 ** (uint(super.decimals()))) /_value * tx.gasprice;
         super._setGasPriceInToken(gasPriceInToken);
         emit TokenPriceChanged(_value, gasPriceInToken, tx.gasprice);
