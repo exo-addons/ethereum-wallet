@@ -355,6 +355,10 @@ public class EthereumWalletService implements Startable {
           userSettings.setWalletAddress(getUserAddress(username));
           userSettings.setPhrase(getUserPhrase(username));
         }
+        // Switch previous default gas to new one
+        if (userSettings.getDefaultGas() == null || userSettings.getDefaultGas() == 65000) {
+          userSettings.setDefaultGas(defaultSettings.getDefaultGas());
+        }
       }
       globalSettings.setContractAbi(getContractAbi());
       globalSettings.setContractBin(getContractBinary());

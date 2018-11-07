@@ -1,4 +1,4 @@
-import {watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
+import {watchTransactionStatus, convertTokenAmountReceived, computeBalance} from './WalletUtils.js';
 
 /*
  * Get the list of Contracts with details:
@@ -68,6 +68,25 @@ export function retrieveContractDetails(account, contractDetails) {
           contractDetails.decimals = 0;
         })
     })
+    .then(() => computeBalance(contractDetails.address))
+    .then((contractBalance) => {
+      if (contractBalance) {
+        contractDetails.contractBalance = contractBalance.balance;
+        contractDetails.contractBalanceFiat = contractBalance.balanceFiat;
+      }
+    })
+    .then(() =>
+      contractDetails.contract.methods.getSellPrice().call()
+        .then(sellPrice => {
+          contractDetails.contractTypeLabel = 'ERT Token';
+          contractDetails.contractType = 1;
+          contractDetails.sellPrice = window.localWeb3.utils.fromWei(sellPrice, "ether");
+        })
+        .catch(e => {
+          contractDetails.contractTypeLabel = 'Standard ERC20 Token';
+          contractDetails.contractType = 0;
+        })
+    )
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
     .then(balance => {
       contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);

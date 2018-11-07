@@ -291,9 +291,21 @@
                 <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
                   <template slot="items" slot-scope="props">
                     <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>
+                    <td class="text-xs-center">{{ props.item.contractBalance }} ether</td>
+                    <td class="text-xs-center">{{ props.item.contractType > 0 ? `${props.item.sellPrice} ether` : "-" }}</td>
+                    <td class="text-xs-center">{{ props.item.contractTypeLabel }}</td>
                     <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
-                    <td v-else class="text-xs-right">{{ props.item.address }}</td>
+                    <td v-else class="text-xs-center">{{ props.item.address }}</td>
                     <td class="text-xs-right">
+                      <v-btn
+                        v-if="props.item.contractType && !props.item.isPending"
+                        class="bottomNavigationItem transparent"
+                        title="Send ether"
+                        flat
+                        icon
+                        @click="openSendFundsModal($event, props.item)">
+                        <v-icon>send</v-icon>
+                      </v-btn>
                       <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
                       <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
                         <i class="uiIconTrash uiIconBlue"></i>
@@ -492,6 +504,24 @@ export default {
           align: 'left',
           sortable: false,
           value: 'name'
+        },
+        {
+          text: 'Contract balance',
+          align: 'center',
+          sortable: false,
+          value: 'contractBalance'
+        },
+        {
+          text: 'Token sell price',
+          align: 'center',
+          sortable: false,
+          value: 'sellPrice'
+        },
+        {
+          text: 'Contract type',
+          align: 'center',
+          sortable: false,
+          value: 'contractType'
         },
         {
           text: 'Contract address',
@@ -825,27 +855,31 @@ export default {
       event.preventDefault();
       event.stopPropagation();
 
-      if (wallet && wallet.address && wallet.type) {
+      if (wallet && wallet.address && (wallet.type || wallet.contractType)) {
         if (principal) {
           if(this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
             const principalInitialFund = this.initialFunds.find(account => account.address === this.selectedPrincipalAccount.value);
-            this.$refs.sendFundsModal.prepareSendForm(wallet.id, wallet.type, principalInitialFund && principalInitialFund.amount, this.selectedPrincipalAccount.value);
+            this.$refs.sendFundsModal.prepareSendForm(wallet.type ? wallet.id : wallet.address, wallet.type, principalInitialFund && principalInitialFund.amount, this.selectedPrincipalAccount.value);
           } else {
             console.error("No selected principal account found");
           }
         } else {
           const etherInitialFund = this.initialFunds.find(account => account.address === 'ether');
-          this.$refs.sendFundsModal.prepareSendForm(wallet.id, wallet.type, etherInitialFund && etherInitialFund.amount);
+          this.$refs.sendFundsModal.prepareSendForm(wallet.type ? wallet.id : wallet.address, wallet.type, etherInitialFund && etherInitialFund.amount);
         }
+      } else {
+        console.debug("Wallet object doesn't have a type or an address", wallet);
       }
     },
     pendingTransaction(transaction) {
       const recipient = transaction.to.toLowerCase();
       const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === recipient);
-      if (transaction.contractAddress) {
-        this.$set(wallet, "loadingBalancePrincipal", true);
-      } else {
-        this.$set(wallet, "loadingBalance", true);
+      if (wallet) {
+        if (transaction.contractAddress) {
+          this.$set(wallet, "loadingBalancePrincipal", true);
+        } else {
+          this.$set(wallet, "loadingBalance", true);
+        }
       }
     },
     refreshBalance(accountDetails, address, error) {

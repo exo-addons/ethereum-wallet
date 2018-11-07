@@ -285,6 +285,7 @@ export default {
         if (this.$refs.walletAccountsList) {
           this.$refs.walletAccountsList.checkOpenTransaction();
         }
+        this.refreshIndex++;
       })
       .catch(error => {
         console.debug('An error occurred while on initialization', error);

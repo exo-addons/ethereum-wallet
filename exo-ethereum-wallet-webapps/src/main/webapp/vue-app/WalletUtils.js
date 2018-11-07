@@ -122,10 +122,7 @@ export function initWeb3(isSpace) {
     const tempWeb3 = new LocalWeb3(window.web3.currentProvider);
 
     return window.ethereum.enable()
-      .then(accounts => {
-        window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null;
-      })
-      .then(() => tempWeb3.eth.getCoinbase())
+      .then(accounts => window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null)
       .then(address => {
         if (address) {
           window.walletSettings.metamaskConnected = true;
@@ -575,7 +572,24 @@ export function convertTokenAmountToSend(amount, decimals) {
  */
 export function convertTokenAmountReceived(amount, decimals) {
   const toBN = window.localWeb3.utils.toBN
-  return toBN(amount).div(toBN(10).pow(toBN(decimals))).toString();
+  const amountBN = toBN(amount);
+  const negative = amountBN.lt(0);
+  const base = toBN(10).pow(toBN(decimals));
+
+  if (negative) {
+    amountBN = amountBN.mul(negative1);
+  }
+  var fraction = amountBN.mod(base).toString(10);
+  while (fraction.length < decimals) {
+    fraction = `0${fraction}`;
+  }
+  fraction = fraction.match(/^([0-9]*[1-9]|0)(0*)/)[1];
+  var whole = amountBN.div(base).toString(10);
+  var value = `${whole}${fraction == '0' ? '' : `.${fraction}`}`;
+  if (negative) {
+    value = `-${value}`;
+  }
+  return value;
 }
 
 function createLocalWeb3Instance(isSpace, useMetamask) {

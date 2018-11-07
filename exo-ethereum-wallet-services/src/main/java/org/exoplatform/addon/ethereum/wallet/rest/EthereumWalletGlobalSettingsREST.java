@@ -87,6 +87,7 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with empty setting 'defaultNetworkId'");
       return Response.status(400).build();
     }
+
     if (globalSettings.getDefaultGas() == null) {
       LOG.warn("Bad request sent to server with empty setting 'defaultGas'");
       return Response.status(400).build();

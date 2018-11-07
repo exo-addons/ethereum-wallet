@@ -10,7 +10,7 @@ import "./ERC20Abstract.sol";
 contract GasPayableInToken is Owned, ERC20Abstract {
 
     // Event emitted when the owner changes the token price
-    event TokenPriceChanged(uint256 tokenPrice, uint256 gasPriceInToken, uint256 gasPrice);
+    event TokenPriceChanged(uint256 tokenPrice);
     // Event emitted when the transaction fee is payed by contract ether balance
     event TransactionFee(address from, uint tokenFee, uint etherFeeRefund);
     // Event emitted when the contract doesn't have enough founds to pay gas
@@ -28,10 +28,9 @@ contract GasPayableInToken is Owned, ERC20Abstract {
      * @param _value the amount of 1 token price in WEI
      */
     function setSellPrice(uint256 _value) public onlyOwner{
+        require(_value != 0);
         super._setSellPrice(_value);
-        uint256 gasPriceInToken = (10 ** (uint(super.decimals()))) /_value * tx.gasprice;
-        super._setGasPriceInToken(gasPriceInToken);
-        emit TokenPriceChanged(_value, gasPriceInToken, tx.gasprice);
+        emit TokenPriceChanged(_value);
     }
 
     /**
@@ -49,14 +48,14 @@ contract GasPayableInToken is Owned, ERC20Abstract {
         if (tx.gasprice > super.getGasPriceLimit()) {
             return;
         }
-        uint256 gasPriceInToken = super.getGasPriceInToken();
-        require(gasPriceInToken > 0);
+        uint256 tokenSellPrice = super.getSellPrice();
+        require(tokenSellPrice > 0);
 
         // Used gas until this instruction + a fixed gas
         // that will be used to finish the transaction
         uint256 gasUsed = _gasLimit - gasleft() + 64220;
-        uint256 tokenFeeAmount = gasUsed * gasPriceInToken;
         uint256 etherFeeRefund = gasUsed * tx.gasprice;
+        uint256 tokenFeeAmount = super.safeMult(etherFeeRefund, (10 ** (uint(super.decimals())))) / tokenSellPrice;
         uint256 contractBalance = address(this).balance;
         if (etherFeeRefund > contractBalance) {
             // No sufficient funds on contract, thus the issuer will pay gas by himself using his ether

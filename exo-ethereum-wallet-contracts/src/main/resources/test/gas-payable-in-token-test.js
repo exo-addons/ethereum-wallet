@@ -22,7 +22,7 @@ contract('GasPayableInToken', function(accounts) {
   let senderUsedGas = 0;
   let gasPrice = 0;
 
-  let gasPriceInToken = 0;
+  let tokenSellPrice = 0;
 
   const tokensToTransferOwnerNoDecimals = 1000;
   const tokensToTransferFromOwner = addTokenDecimals(tokensToTransferOwnerNoDecimals);
@@ -35,9 +35,9 @@ contract('GasPayableInToken', function(accounts) {
       tokenInstance = instance;
     }).then(() => {
       // Check accounts[1] to be able to send him tokens
-      return tokenInstance.getGasPriceInToken();
+      return tokenInstance.getSellPrice();
     }).then(tokenPrice => {
-      gasPriceInToken = tokenPrice;
+      tokenSellPrice = tokenPrice;
       // Check accounts[1] to be able to send him tokens
       return tokenInstance.approveAccount(accounts[1], {from: accounts[0]});
     }).then(() => {

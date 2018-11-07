@@ -160,12 +160,18 @@ export default {
       this.error = null;
     },
     selectItem(id, type) {
-      searchUserOrSpaceObject(id, type)
+      if (type) {
+        searchUserOrSpaceObject(id, type)
         .then(item => {
           item.id_type = `${item.type}_${item.id}`;
           this.items.push(item);
           this.$refs.selectAutoComplete.selectItem(item);
         });
+      } else {
+        const item = {id_type: id, name: id};
+        this.items.push(item);
+        this.$refs.selectAutoComplete.selectItem(item);
+      }
     }
   }
 };

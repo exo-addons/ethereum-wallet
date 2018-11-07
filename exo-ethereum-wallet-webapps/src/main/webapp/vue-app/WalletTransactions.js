@@ -305,6 +305,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.contractAddress = contractDetails.address;
         transactionDetails.contractSymbol = contractDetails.symbol;
         transactionDetails.contractDecimals = contractDetails.decimals || 0;
+        console.warn("adding transaction", transactionDetails);
         try {
           if (transactionDetails.isContractCreation) {
             return false;
@@ -336,7 +337,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
               }
               const transactionFeeLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransactionFee');
               if (transactionFeeLog) {
-                transactionDetails.feeToken = transactionFeeLog.events[1].value.toLowerCase();
+                transactionDetails.feeToken = convertTokenAmountReceived(transactionFeeLog.events[1].value, transactionDetails.contractDecimals);
+                console.log("transactionDetails.feeToken", transactionDetails.feeToken, transactionFeeLog.events[1].value);
               }
             }
           }

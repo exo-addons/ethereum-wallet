@@ -29,7 +29,7 @@
       <value-param>
         <name>defaultGas</name>
         <description>Default used gas for transactions</description>
-        <value>${exo.addon.wallet.defaultGas:65000}</value>
+        <value>${exo.addon.wallet.defaultGas:150000}</value>
       </value-param>
       <value-param>
         <name>defaultBlocksToRetrieve</name>

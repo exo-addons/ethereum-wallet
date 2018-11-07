@@ -90,15 +90,6 @@ contract DataAccess is Owned{
     }
 
     /**
-     * @dev this attribute is used to allow issuers to pay gas by tokens instead
-     * of ether. The returned sum is used to convert usedGas to Tokens.
-     * @return amount of tokens per one gas
-     */
-    function getGasPriceInToken() public view returns(uint256){
-        return ERTTokenDataV1(dataAddresses_[1]).getGasPriceInToken();
-    }
-
-    /**
      * @dev Token sell price in WEI
      * @return amount Token selling price in WEI
      */
@@ -230,14 +221,6 @@ contract DataAccess is Owned{
      */
     function _setSellPrice(uint256 _value) internal{
         ERTTokenDataV1(dataAddresses_[1])._setSellPrice(_value);
-    }
-
-    /**
-     * @dev Sets the equivalent of 1 gas in term of ERC20 tokens.
-     * @param _gasPriceInToken amount of tokens representing 1 gas
-     */
-    function _setGasPriceInToken(uint256 _gasPriceInToken) internal{
-        ERTTokenDataV1(dataAddresses_[1]).setGasPriceInToken(_gasPriceInToken);
     }
 
     /**

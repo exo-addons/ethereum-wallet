@@ -39,9 +39,6 @@ contract ERTTokenDataV1 is DataOwned {
     // Map of admin addresses with habilitation level
     mapping (address => uint8) internal admin_;
 
-    // gas price in tokens amount (price of 1 gas in tokens)
-    uint256 internal gasPriceInToken_;
-
     // Token sell price in WEI
     uint256 internal sellPrice_;
 
@@ -111,13 +108,6 @@ contract ERTTokenDataV1 is DataOwned {
      */
     function isApprovedAccount(address _target) public view returns(bool){
         return approvedAccount_[_target];
-    }
-
-    /**
-     * @return gas price in tokens amount (price of 1 gas in tokens)
-     */
-    function getGasPriceInToken() public view returns(uint256){
-        return gasPriceInToken_;
     }
 
     /**
@@ -224,14 +214,6 @@ contract ERTTokenDataV1 is DataOwned {
      */
     function setApprovedAccount(address _target, bool _approved) public onlyContracts{
         approvedAccount_[_target] = _approved;
-    }
-
-    /**
-     * @dev Sets gas price in tokens amount (price of 1 gas in tokens)
-     * @param _gasPriceInToken 1 gas price amount in tokens
-     */
-    function setGasPriceInToken(uint256 _gasPriceInToken) public onlyContracts{
-        gasPriceInToken_ = _gasPriceInToken;
     }
 
     /**
