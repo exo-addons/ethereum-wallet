@@ -18,6 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.listener;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -87,7 +88,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         sendNotification = false;
       } else {
         try {
-          ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(settings, transaction);
+          contractDetails = ethereumWalletService.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
+          ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(settings,
+                                                                                                   contractDetails,
+                                                                                                   transaction);
           if (contractTransactionDetail == null) {
             // The contract information couldn't be parsed
             sendNotification = false;
@@ -111,13 +115,6 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
     if (receiverAddress != null) {
       receiver = getAccountDetail(receiverAddress);
-    }
-
-    if (contractAddress != null && isContractTransaction) {
-      contractDetails = ethereumWalletService.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
-      if (contractDetails == null) {
-        contractDetails = new ContractDetail(settings.getDefaultNetworkId(), contractAddress, contractAddress, contractAddress);
-      }
     }
 
     if (sendNotification && senderAddress != null && receiverAddress != null
@@ -204,8 +201,9 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
   }
 
   private ContractTransactionDetail getReceiverAddressFromContractData(GlobalSettings settings,
+                                                                       ContractDetail contractDetail,
                                                                        Transaction transaction) throws Exception {
-    if (transaction == null || transaction.getTo() == null) {
+    if (transaction == null || transaction.getTo() == null || contractDetail == null) {
       // Contract Transaction type is not considered for notifications
       return null;
     }
@@ -235,12 +233,15 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
               && eventValues.getIndexedValues().size() == 2 && eventValues.getNonIndexedValues().size() == 1) {
             String senderAddress = eventValues.getIndexedValues().get(0).getValue().toString();
             String receiverAddress = eventValues.getIndexedValues().get(1).getValue().toString();
-            String amountBigInteger = eventValues.getNonIndexedValues().get(0).getValue().toString();
+            BigInteger amountBigInteger = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
+            String amountString = BigDecimal.valueOf(Double.parseDouble(amountBigInteger.toString()))
+                                            .divide(BigDecimal.valueOf(10).pow(contractDetail.getDecimals()))
+                                            .toString();
 
             return new ContractTransactionDetail(contractAddress,
                                                  senderAddress,
                                                  receiverAddress,
-                                                 Double.parseDouble(amountBigInteger));
+                                                 Double.parseDouble(amountString));
           }
         } catch (Throwable e) {
           LOG.warn("Error occurred while parsing transaction", e);

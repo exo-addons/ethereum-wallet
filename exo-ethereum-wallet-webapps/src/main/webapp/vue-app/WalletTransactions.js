@@ -133,6 +133,8 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
   account = account.toLowerCase();
   // Load Transfer events for user as sender
   return contractDetails.contract.getPastEvents("Transfer", {
+    fromBlock: 0,
+    toBlock: 'latest',
     filter: {
       isError: 0,
       txreceipt_status: 1
@@ -146,6 +148,8 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Transfer events for user as receiver
     .then(() => contractDetails.contract.getPastEvents("Transfer", {
+        fromBlock: 0,
+        toBlock: 'latest',
         filter: {
           isError: 0,
           txreceipt_status: 1
@@ -159,6 +163,8 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Approval events for user as receiver
     .then(() => contractDetails.contract.getPastEvents("Approval", {
+      fromBlock: 0,
+      toBlock: 'latest',
       filter: {
         isError: 0,
         txreceipt_status: 1
@@ -172,6 +178,8 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
     // Load Approval events for user as sender
     .then(() => contractDetails.contract.getPastEvents("Approval", {
+      fromBlock: 0,
+      toBlock: 'latest',
       filter: {
         isError: 0,
         txreceipt_status: 1
@@ -253,7 +261,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     gasPrice: transaction.gasPrice,
     fee: transactionFeeInEth,
     feeFiat: transactionFeeInFiat,
-    feeToken: null,
+    feeToken: transaction.feeToken,
     date: timestamp ? new Date(timestamp) : transaction.timestamp,
     pending: transaction.pending
   };
@@ -305,7 +313,6 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.contractAddress = contractDetails.address;
         transactionDetails.contractSymbol = contractDetails.symbol;
         transactionDetails.contractDecimals = contractDetails.decimals || 0;
-        console.warn("adding transaction", transactionDetails);
         try {
           if (transactionDetails.isContractCreation) {
             return false;
@@ -338,7 +345,6 @@ export function addTransaction(networkId, account, accountDetails, transactions,
               const transactionFeeLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransactionFee');
               if (transactionFeeLog) {
                 transactionDetails.feeToken = convertTokenAmountReceived(transactionFeeLog.events[1].value, transactionDetails.contractDecimals);
-                console.log("transactionDetails.feeToken", transactionDetails.feeToken, transactionFeeLog.events[1].value);
               }
             }
           }

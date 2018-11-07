@@ -55,15 +55,14 @@ const decimals = Math.pow(10, 18);
       }).then(function(ownerApproved) {
         assert.equal(true, ownerApproved, 'Contract owner has to be approved');
         
-        return tokenInstance.getGasPriceInToken();
-      }).then(function(gaspriceintoken) {
-        assert.equal(gaspriceintoken.toNumber(), 50000000000000 , 'gas price in token is wrong');
+        return tokenInstance.getSellPrice();
+      }).then(function(sellPrice) {
+        assert.equal(sellPrice.toNumber(), 2000000000000000 , 'token sell price is wrong');
         
         return tokenInstance.getGasPriceLimit();
       }).then(function(gaspricelimit) {
         assert.equal(gaspricelimit, 100000000000 , 'gas price limit is wrong');
-        
-        
+
         return tokenInstance.addAdmin(accounts[1], 1);
       }).then(receipt => {
         return tokenInstance.isAdmin(accounts[1], 1);

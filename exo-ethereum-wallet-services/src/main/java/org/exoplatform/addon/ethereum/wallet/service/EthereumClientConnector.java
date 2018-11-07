@@ -71,6 +71,8 @@ public class EthereumClientConnector implements Startable {
 
   private long                     lastWatchedBlockNumber   = 0;
 
+  private boolean                  initializing             = false;
+
   public EthereumClientConnector(EthereumWalletService ethereumWalletService,
                                  ListenerService listenerService,
                                  ExoContainer container) {
@@ -100,7 +102,10 @@ public class EthereumClientConnector implements Startable {
     // Transactions Queue processing
     scheduledExecutorService.scheduleWithFixedDelay(() -> {
       try {
-        initWeb3Connection();
+        if (!initWeb3Connection()) {
+          LOG.info("Web3 connection initialization in progress, skip transaction processing until it's initialized");
+          return;
+        }
       } catch (Throwable e) {
         LOG.error("Error while checking connection status to Etherreum Websocket endpoint", e);
         closeConnection();
@@ -243,22 +248,31 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
-  private synchronized void initWeb3Connection() throws Exception {
-    if (getWebsocketProviderURL() == null) {
-      throw new IllegalStateException("No configured URL for Ethereum Websocket connection");
+  private boolean initWeb3Connection() throws Exception {
+    if (initializing) {
+      return false;
     }
-
-    if (this.web3j == null || this.webSocketClient == null || this.webSocketClient.isClosed()
-        || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed()) {
-
-      if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
-        stopListeninigToTransactions();
-        establishConnection();
-        startListeninigToTransactions();
-      } else {
-        throw new IllegalStateException("Bad format for configured URL " + getWebsocketProviderURL()
-            + " for Ethereum Websocket connection");
+    initializing = true;
+    try {
+      if (getWebsocketProviderURL() == null) {
+        throw new IllegalStateException("No configured URL for Ethereum Websocket connection");
       }
+
+      if (this.web3j == null || this.webSocketClient == null || this.webSocketClient.isClosed()
+          || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed()) {
+
+        if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
+          stopListeninigToTransactions();
+          establishConnection();
+          startListeninigToTransactions();
+        } else {
+          throw new IllegalStateException("Bad format for configured URL " + getWebsocketProviderURL()
+              + " for Ethereum Websocket connection");
+        }
+      }
+      return true;
+    } finally {
+      initializing = false;
     }
   }
 

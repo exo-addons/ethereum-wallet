@@ -555,8 +555,14 @@ export function getWallets() {
 }
 
 export function setDraggable() {
-  $("#WalletApp .v-dialog:not(.not-draggable)").draggable();
-  $("#WalletAdminApp .v-dialog:not(.not-draggable)").draggable();
+  if (!$.draggable) {
+    return;
+  }
+  if ($("#WalletApp .v-dialog:not(.not-draggable)").length) {
+    $("#WalletApp .v-dialog:not(.not-draggable)").draggable();
+  } else if ($("#WalletAdminApp .v-dialog:not(.not-draggable)").length) {
+    $("#WalletAdminApp .v-dialog:not(.not-draggable)").draggable();
+  }
 }
 
 /*
@@ -564,7 +570,28 @@ export function setDraggable() {
  */
 export function convertTokenAmountToSend(amount, decimals) {
   const toBN = window.localWeb3.utils.toBN
-  return toBN(amount).imul(toBN(10).pow(toBN(decimals))).toString();
+  const base = toBN(10).pow(toBN(decimals));
+  const negative = String(amount).substring(0, 1) === '-';
+
+  if (negative) {
+    ether = ether.substring(1);
+  }
+  const comps = String(amount).split('.');
+  let integer = comps[0];
+  let fraction = comps[1] ? comps[1] : '0';
+  if (fraction.length > decimals) {
+    throw new Error(`Fractions number ${fraction.length} exceed number of decimals ${decimals}`);
+  }
+  while (fraction.length < decimals) {
+    fraction += '0';
+  }
+  integer = toBN(integer);
+  fraction = toBN(fraction);
+  let result = (integer.mul(base)).add(fraction);
+  if (negative) {
+    result = result.mul(negative1);
+  }
+  return result.toString(10);
 }
 
 /*

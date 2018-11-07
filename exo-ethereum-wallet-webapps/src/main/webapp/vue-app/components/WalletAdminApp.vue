@@ -298,7 +298,7 @@
                     <td v-else class="text-xs-center">{{ props.item.address }}</td>
                     <td class="text-xs-right">
                       <v-btn
-                        v-if="props.item.contractType && !props.item.isPending"
+                        v-if="props.item.isOwner && props.item.contractType && !props.item.isPending"
                         class="bottomNavigationItem transparent"
                         title="Send ether"
                         flat

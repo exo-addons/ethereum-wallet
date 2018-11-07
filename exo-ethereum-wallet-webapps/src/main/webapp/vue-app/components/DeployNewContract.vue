@@ -266,15 +266,15 @@ export default {
       this.loadState();
     },
     initializeStep() {
-      if (this.step && !this.gasByStep[this.step]) {
+      if (this.step > 0 && !this.gasByStep[this.step]) {
         if (this.step < 4) {
-          if (this.contractAddressByStep[this.step]) {
+          if (this.contractAddressByStep[this.step] && this.contractNameByStep) {
             // Add it inside a constant in case it changes in parallel
             const step = this.step;
             return newContractInstanceByNameAndAddress(this.contractNameByStep, this.contractAddressByStep[step])
               .then(instance => this.$set(this.contractInstancesByStep, step, instance) && this.$set(this.processedStep, step, true))
               .catch(e => this.error = `Error getting contract with address ${this.contractAddressByStep[step]}: ${e}`);
-          } else {
+          } else if(this.contractNameByStep){
             const step = this.step;
             return newContractInstanceByName(this.contractNameByStep, ...this.contractDeploymentParameters)
               .then(instance => {
@@ -441,7 +441,8 @@ export default {
         networkId: this.networkId,
         address: contractAddress,
         name: this.newTokenName,
-        symbol: this.newTokenSymbol
+        symbol: this.newTokenSymbol,
+        decimals: this.newTokenDecimals
       };
       this.$set(this.processingStep, this.step, true);
       // Save conract address to display for all users

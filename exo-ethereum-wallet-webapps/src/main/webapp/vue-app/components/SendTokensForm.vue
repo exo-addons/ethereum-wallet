@@ -58,6 +58,9 @@
           rows="3"
           flat
           no-resize />
+        <div v-if="contractDetails && contractDetails.sellPrice && transactionFee[contractDetails.address]">
+          Estimated transaction fee: <code>{{ transactionFee[contractDetails.address] }} {{ contractDetails.symbol }}</code>
+        </div>
       </v-form>
       <qr-code-modal 
         :to="recipient"
@@ -118,6 +121,7 @@ export default {
       transactionMessage: '',
       walletPassword: '',
       walletPasswordShow: false,
+      transactionFee: {},
       useMetamask: false,
       recipient: null,
       amount: null,
@@ -127,7 +131,9 @@ export default {
   },
   methods: {
     init() {
-      this.$refs.autocomplete.clear();
+      if (this.$refs.autocomplete) {
+        this.$refs.autocomplete.clear();
+      }
       this.loading = false;
       this.showQRCodeModal = false;
       this.recipient = null;
@@ -138,6 +144,22 @@ export default {
       this.transactionLabel = null;
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
+      this.estimateTransactionFee();
+    },
+    estimateTransactionFee() {
+      if (this.contractDetails && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.account && this.contractDetails.owner.toLowerCase() !== this.account.toLowerCase()) {
+        // Estimate gas
+        this.contractDetails.contract.methods.transfer(this.contractDetails.owner, "2")
+          .estimateGas({
+            gas: 900000,
+            gasPrice: window.walletSettings.gasPrice
+          })
+          .then(estimatedGas => {
+            const transactionFeeInWei = parseInt(estimatedGas * 1.1 * window.walletSettings.gasPrice);
+            const sellPriceInWei = window.localWeb3.utils.toWei(String(this.contractDetails.sellPrice), "ether");
+            this.$set(this.transactionFee, this.contractDetails.address, transactionFeeInWei / sellPriceInWei);
+          });
+      }
     },
     sendTokens() {
       this.error = null;
@@ -199,14 +221,13 @@ export default {
                   contractAmount : this.amount,
                   label: this.transactionLabel,
                   message: this.transactionMessage,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
+                  feeToken: this.transactionFee[this.contractDetails.address]
                 }, this.contractDetails);
                 this.$emit("close");
               })
               .on('error', (error, receipt) => {
                 console.debug("Web3 contract.transferFrom method - error", error);
-                this.loading = false;
-
                 // The transaction has failed
                 this.error = `Error sending tokens: ${truncateError(error)}`;
                 // Display error on main screen only when dialog is not opened
@@ -217,11 +238,14 @@ export default {
           })
           .catch (e => {
             console.debug("Web3 contract.transfer method - error", e);
-            this.loading = false;
-
             this.error = `Error sending tokens: ${truncateError(e)}`;
           })
-          .finally(() => this.useMetamask || lockBrowerWallet());
+          .finally(() => {
+            this.loading = false;
+            if(!this.useMetamask) {
+              lockBrowerWallet();
+            }
+          });
       } catch(e) {
         console.debug("Web3 contract.transfer method - error", e);
         this.loading = false;

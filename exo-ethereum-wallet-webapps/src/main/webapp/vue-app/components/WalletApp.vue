@@ -251,6 +251,15 @@ export default {
 
         this.seeAccountDetailsPermanent = false;
       }
+    },
+    refreshIndex(newValue, oldValue) {
+      if (newValue > oldValue) {
+        this.$nextTick(() => {
+          if (this.$refs.walletSetup) {
+            this.$refs.walletSetup.init();
+          }
+        });
+      }
     }
   },
   created() {
@@ -360,8 +369,6 @@ export default {
           if (error) {
             throw error;
           }
-          this.forceUpdate();
-          this.loading = false;
         })
         .catch(e => {
           console.debug("init method - error", e);
@@ -379,6 +386,8 @@ export default {
           } else {
             this.errorMessage = error;
           }
+        })
+        .finally(() => {
           this.forceUpdate();
           this.loading = false;
         });

@@ -86,6 +86,16 @@ export function retrieveContractDetails(account, contractDetails) {
           contractDetails.contractTypeLabel = 'Standard ERC20 Token';
           contractDetails.contractType = 0;
         })
+        .then(() => contractDetails.contract.methods.owner().call())
+        .then(owner =>  {
+          if (owner) {
+            contractDetails.owner = owner;
+            contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
+          }
+        })
+        .catch(e => {
+          console.debug("Error getting owner of contract", e);
+        })
     )
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
     .then(balance => {
@@ -342,7 +352,8 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
                  name: contractDetails.name,
                  symbol: contractDetails.symbol,
                  address: contractDetails.address,
-                 networkId: netId
+                 networkId: netId,
+                 decimals: contractDetails.decimals
                }).then(() => contractDetails);
       }
       return contractDetails;

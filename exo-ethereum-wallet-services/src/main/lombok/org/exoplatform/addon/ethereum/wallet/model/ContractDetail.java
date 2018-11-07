@@ -19,12 +19,14 @@ public class ContractDetail implements Serializable {
 
   private String            symbol;
 
+  private Integer           decimals;
+
   private Long              networkId;
 
   public ContractDetail() {
   }
 
-  public ContractDetail(Long networkId, String address, String name, String symbol) {
+  public ContractDetail(Long networkId, String address, String name, String symbol, Integer decimals) {
     this.networkId = networkId;
     this.address = address;
     this.name = name;
@@ -41,6 +43,7 @@ public class ContractDetail implements Serializable {
       jsonObject.put("address", address);
       jsonObject.put("name", name);
       jsonObject.put("symbol", symbol);
+      jsonObject.put("decimals", decimals);
       jsonObject.put("networkId", networkId);
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
@@ -59,6 +62,7 @@ public class ContractDetail implements Serializable {
       contractDetail.setAddress(jsonObject.getString("address"));
       contractDetail.setName(jsonObject.getString("name"));
       contractDetail.setSymbol(jsonObject.getString("symbol"));
+      contractDetail.setDecimals(jsonObject.has("decimals") ? jsonObject.getInt("decimals") : 0);
       return contractDetail;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);
