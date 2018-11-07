@@ -569,6 +569,9 @@ export function setDraggable() {
  * return amount * 10 ^ decimals
  */
 export function convertTokenAmountToSend(amount, decimals) {
+  if (decimals == 0) {
+    return amount;
+  }
   const toBN = window.localWeb3.utils.toBN
   const base = toBN(10).pow(toBN(decimals));
   const negative = String(amount).substring(0, 1) === '-';
@@ -580,7 +583,7 @@ export function convertTokenAmountToSend(amount, decimals) {
   let integer = comps[0];
   let fraction = comps[1] ? comps[1] : '0';
   if (fraction.length > decimals) {
-    throw new Error(`Fractions number ${fraction.length} exceed number of decimals ${decimals}`);
+    throw new Error(`number Fractions ${fraction.length} exceed number of decimals ${decimals}`);
   }
   while (fraction.length < decimals) {
     fraction += '0';
@@ -598,6 +601,9 @@ export function convertTokenAmountToSend(amount, decimals) {
  * return amount * 10 ^ decimals
  */
 export function convertTokenAmountReceived(amount, decimals) {
+  if (decimals == 0) {
+    return amount;
+  }
   const toBN = window.localWeb3.utils.toBN
   const amountBN = toBN(amount);
   const negative = amountBN.lt(0);
