@@ -232,7 +232,7 @@ export default {
           })
           .then(result => {
             if (result > window.walletSettings.userPreferences.defaultGas) {
-              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}`;
+              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}. Please change it in your preferences.`;
               return;
             }
             this.$emit("loading");

@@ -195,7 +195,7 @@ export default {
           })
           .then(estimatedGas => {
             if (estimatedGas > window.walletSettings.userPreferences.defaultGas) {
-              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${estimatedGas}`;
+              this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${estimatedGas}. Please change it in your preferences.`;
               return;
             }
             return this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
