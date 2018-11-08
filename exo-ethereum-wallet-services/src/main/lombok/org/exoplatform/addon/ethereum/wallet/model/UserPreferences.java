@@ -15,6 +15,8 @@ public class UserPreferences implements Serializable {
 
   private static final long serialVersionUID = -5725443183560646198L;
 
+  private Integer           dataVersion      = 0;
+
   private Integer           defaultGas       = 0;
 
   private String            currency         = "usd";
@@ -40,6 +42,7 @@ public class UserPreferences implements Serializable {
       jsonObject.put("defaultGas", defaultGas);
       jsonObject.put("walletAddress", walletAddress);
       jsonObject.put("phrase", phrase);
+      jsonObject.put("dataVersion", dataVersion);
       if (enableDelegation != null) {
         jsonObject.put("enableDelegation", enableDelegation);
       }
@@ -79,6 +82,9 @@ public class UserPreferences implements Serializable {
       }
       if (jsonObject.has("enableDelegation")) {
         userPreferences.setEnableDelegation(jsonObject.getBoolean("enableDelegation"));
+      }
+      if (jsonObject.has("dataVersion")) {
+        userPreferences.setDataVersion(jsonObject.getInt("dataVersion"));
       }
       userPreferences.setOverviewAccounts(jsonArrayToList(jsonObject, "overviewAccounts"));
       return userPreferences;

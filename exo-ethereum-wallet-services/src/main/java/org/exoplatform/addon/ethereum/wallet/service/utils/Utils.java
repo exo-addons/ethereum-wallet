@@ -50,6 +50,10 @@ import org.exoplatform.webui.application.WebuiRequestContext;
 public class Utils {
   private static final Log                               LOG                                   = ExoLogger.getLogger(Utils.class);
 
+  public static final int                                DATA_VERSION                          = 1;
+
+  public static final int                                DEFAULT_GAS_UPGRADE_VERSION           = 1;
+
   public static final String                             ADMINISTRATORS_GROUP                  = "/platform/administrators";
 
   public static final String                             SPACE_ACCOUNT_TYPE                    = "space";

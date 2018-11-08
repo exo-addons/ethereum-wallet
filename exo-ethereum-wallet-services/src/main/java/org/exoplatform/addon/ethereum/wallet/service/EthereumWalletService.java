@@ -343,6 +343,7 @@ public class EthereumWalletService implements Startable {
         UserPreferences userSettings = null;
         if (userSettingsValue != null && userSettingsValue.getValue() != null) {
           userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
+          checkDataToUpgrade(username, userSettings);
         } else {
           userSettings = new UserPreferences();
         }
@@ -354,10 +355,6 @@ public class EthereumWalletService implements Startable {
         } else {
           userSettings.setWalletAddress(getUserAddress(username));
           userSettings.setPhrase(getUserPhrase(username));
-        }
-        // Switch previous default gas to new one
-        if (userSettings.getDefaultGas() == null || userSettings.getDefaultGas() == 65000) {
-          userSettings.setDefaultGas(defaultSettings.getDefaultGas());
         }
       }
       globalSettings.setContractAbi(getContractAbi());
@@ -998,6 +995,25 @@ public class EthereumWalletService implements Startable {
       } while (spaces != null && spaces.length == pageSize);
     }
     return names;
+  }
+
+  private void checkDataToUpgrade(String username, UserPreferences userPreferences) {
+    try {
+      int userDataVersion = userPreferences.getDataVersion() == null ? 0 : userPreferences.getDataVersion();
+      if (userDataVersion < DATA_VERSION) {
+
+        // Upgrade default gas for new contract to upgrade
+        if (userDataVersion < DEFAULT_GAS_UPGRADE_VERSION) {
+          userPreferences.setDefaultGas(defaultSettings.getDefaultGas());
+        }
+
+        userPreferences.setDataVersion(DATA_VERSION);
+        saveUserPreferences(username, userPreferences);
+        LOG.info("User {} preferences upgraded to version {}", username, DATA_VERSION);
+      }
+    } catch (Exception e) {
+      LOG.warn("Can't upgrade data of user preferences: " + username, e);
+    }
   }
 
   private String getSpaceId(Space space) {
