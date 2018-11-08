@@ -204,14 +204,18 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     return;
   }
 
-  const gasUsed = receipt && receipt.gasUsed ? receipt.gasUsed : transaction.gas;
-
   const status = receipt ? receipt.status : true;
+  const gasUsed = receipt && receipt.gasUsed ? receipt.gasUsed : transaction.gas;
+  let transactionFeeInEth = 0;
+  if (receipt) {
+    // Calculate Transaction fees
+    const transactionFeeInWei = gasUsed * transaction.gasPrice;
+    transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
+  } else if(transaction.fee) {
+    transactionFeeInEth = transaction.fee || 0;
+  }
 
-  // Calculate Transaction fees
-  const transactionFeeInWei = gasUsed * transaction.gasPrice;
-  const transactionFeeInEth = window.localWeb3.utils.fromWei(transactionFeeInWei.toString(), 'ether');
-  const transactionFeeInFiat = etherToFiat(transactionFeeInEth);
+  const transactionFeeInFiat = transactionFeeInEth && etherToFiat(transactionFeeInEth);
 
   const fromAddress = transaction.from && transaction.from.toLowerCase();
   const toAddress = transaction.to && transaction.to.toLowerCase();

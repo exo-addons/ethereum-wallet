@@ -59,7 +59,15 @@
           flat
           no-resize />
         <div v-if="contractDetails && contractDetails.sellPrice && transactionFee[contractDetails.address]">
-          Estimated transaction fee: <code>{{ transactionFee[contractDetails.address] }} {{ contractDetails.symbol }}</code>
+          <div v-if="contractDetails.isOwner" class="alert alert-info">
+            <i class="uiIconInfo"></i>You are using the address of the contract owner, thus, the transaction fee will be payed in ether
+          </div>
+          <span v-if="contractDetails.isOwner">
+            Estimated transaction fee: <code>{{ transactionFeeFiat[contractDetails.address] }} {{ fiatSymbol }}</code>
+          </span>
+          <span v-else>
+            Estimated transaction fee: <code>{{ transactionFeeToken[contractDetails.address] }} {{ contractDetails.symbol }}</code>
+          </span>
         </div>
       </v-form>
       <qr-code-modal 
@@ -90,7 +98,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionMessage} from '../WalletTransactions.js';
 
 export default {
@@ -122,9 +130,13 @@ export default {
       walletPassword: '',
       walletPasswordShow: false,
       transactionFee: {},
+      transactionFeeToken: {},
+      transactionFeeEther: {},
+      transactionFeeFiat: {},
       useMetamask: false,
       recipient: null,
       amount: null,
+      fiatSymbol: null,
       warning: null,
       error: null
     };
@@ -143,13 +155,15 @@ export default {
       this.transactionMessage = null;
       this.transactionLabel = null;
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+      this.fiatSymbol = window.walletSettings.fiatSymbol;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.estimateTransactionFee();
     },
     estimateTransactionFee() {
-      if (this.contractDetails && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.account && this.contractDetails.owner.toLowerCase() !== this.account.toLowerCase()) {
+      if (this.contractDetails && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
+        const recipient = this.contractDetails.isOwner ? "0x1111111111111111111111111111111111111111" : this.contractDetails.owner;
         // Estimate gas
-        this.contractDetails.contract.methods.transfer(this.contractDetails.owner, "2")
+        this.contractDetails.contract.methods.transfer(recipient, "1")
           .estimateGas({
             gas: 900000,
             gasPrice: window.walletSettings.gasPrice
@@ -157,7 +171,16 @@ export default {
           .then(estimatedGas => {
             const transactionFeeInWei = parseInt(estimatedGas * 1.1 * window.walletSettings.gasPrice);
             const sellPriceInWei = window.localWeb3.utils.toWei(String(this.contractDetails.sellPrice), "ether");
-            this.$set(this.transactionFee, this.contractDetails.address, transactionFeeInWei / sellPriceInWei);
+
+            const transactionFeeInEther = window.localWeb3.utils.fromWei(String(transactionFeeInWei), "ether");
+            this.$set(this.transactionFeeEther, this.contractDetails.address, transactionFeeInEther);
+            this.$set(this.transactionFeeFiat, this.contractDetails.address, etherToFiat(transactionFeeInEther));
+            if (!this.contractDetails.isOwner) {
+              this.$set(this.transactionFeeToken, this.contractDetails.address, transactionFeeInWei / sellPriceInWei);
+            }
+            this.$set(this.transactionFee, this.contractDetails.address, transactionFeeInWei);
+
+            
           });
       }
     },
@@ -222,7 +245,9 @@ export default {
                   label: this.transactionLabel,
                   message: this.transactionMessage,
                   timestamp: Date.now(),
-                  feeToken: this.transactionFee[this.contractDetails.address]
+                  fee: this.transactionFeeEther[this.contractDetails.address],
+                  feeFiat: this.transactionFeeFiat[this.contractDetails.address],
+                  feeToken: this.transactionFeeToken[this.contractDetails.address]
                 }, this.contractDetails);
                 this.$emit("close");
               })

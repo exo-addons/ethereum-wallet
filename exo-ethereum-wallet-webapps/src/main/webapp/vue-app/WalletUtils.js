@@ -86,14 +86,15 @@ export function computeGasPrice() {
     console.debug("Retrieving gas price");
     return window.localWeb3.eth.getGasPrice()
       .then(gasPrice => {
-        console.debug("detected Gas price:", gasPrice);
+        console.debug("Detected Gas price:", window.localWeb3.utils.fromWei(gasPrice, 'gwei').toString(), 'gwei');
 
-        // Ad 10% of gas price to avoid "transaction underpriced" errors
+        // Add 10% of gas price to avoid "transaction underpriced" errors
         window.walletSettings.gasPrice = Math.floor(gasPrice * 1.1);
         // Avoid adding excessive gas price
-        if (window.walletSettings.gasPrice > 200000000000) {
-          window.walletSettings.gasPrice = 200000000000;
+        if (window.walletSettings.gasPrice > 5000000000) {
+          window.walletSettings.gasPrice = 5000000000;
         }
+        console.debug("Used Gas price:", window.localWeb3.utils.fromWei(window.walletSettings.gasPrice, 'gwei').toString(), 'gwei');
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
       })
       .catch(error => {
