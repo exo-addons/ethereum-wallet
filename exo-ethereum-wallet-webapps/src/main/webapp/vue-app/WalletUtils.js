@@ -94,7 +94,7 @@ export function computeGasPrice() {
         if (window.walletSettings.gasPrice > 5000000000) {
           window.walletSettings.gasPrice = 5000000000;
         }
-        console.debug("Used Gas price:", window.localWeb3.utils.fromWei(window.walletSettings.gasPrice, 'gwei').toString(), 'gwei');
+        console.debug("Used Gas price:", window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'gwei').toString(), 'gwei');
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
       })
       .catch(error => {

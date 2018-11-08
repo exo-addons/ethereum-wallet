@@ -87,8 +87,8 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
-      <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
+      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -135,11 +135,35 @@ export default {
       transactionFeeFiat: {},
       useMetamask: false,
       recipient: null,
+      isApprovedRecipient: true,
       amount: null,
       fiatSymbol: null,
       warning: null,
       error: null
     };
+  },
+  watch: {
+    recipient(newValue, oldValue) {
+      if (oldValue !== newValue) {
+        this.warning = null;
+      }
+      console.log("recipient changed", newValue, oldValue);
+      if (newValue && oldValue !== newValue) {
+        this.isApprovedRecipient = true;
+        // Owner will implicitly approve account, so not necessary
+        // to check if the receiver is approved or not
+        if (!this.contractDetails.isOwner && this.contractDetails.contractType > 0) {
+          this.contractDetails.contract.methods.isApprovedAccount(this.recipient).call()
+            .then(isApproved => {
+              console.log("isApproved", isApproved);
+              this.isApprovedRecipient = isApproved;
+              if (!this.isApprovedRecipient) {
+                this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
+              }
+            });
+        }
+      }
+    }
   },
   methods: {
     init() {
@@ -157,7 +181,7 @@ export default {
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.fiatSymbol = window.walletSettings.fiatSymbol;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
-      this.estimateTransactionFee();
+      this.$nextTick(this.estimateTransactionFee);
     },
     estimateTransactionFee() {
       if (this.contractDetails && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
@@ -179,8 +203,6 @@ export default {
               this.$set(this.transactionFeeToken, this.contractDetails.address, transactionFeeInWei / sellPriceInWei);
             }
             this.$set(this.transactionFee, this.contractDetails.address, transactionFeeInWei);
-
-            
           });
       }
     },
@@ -206,6 +228,10 @@ export default {
       const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
       if (!unlocked) {
         this.error = "Wrong password";
+        return;
+      }
+
+      if (!this.isApprovedRecipient) {
         return;
       }
 
