@@ -291,7 +291,12 @@
                 <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
                   <template slot="items" slot-scope="props">
                     <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>
-                    <td class="text-xs-center">{{ props.item.contractBalance }} ether</td>
+                    <td class="text-xs-center">
+                      <v-progress-circular v-if="props.item.loadingBalance" color="primary" indeterminate size="20" />
+                      <span v-else>
+                        {{ props.item.contractBalance }} ether
+                      </span>
+                    </td>
                     <td class="text-xs-center">{{ props.item.contractType > 0 ? `${props.item.sellPrice} ether` : "-" }}</td>
                     <td class="text-xs-center">{{ props.item.contractTypeLabel }}</td>
                     <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
@@ -880,20 +885,55 @@ export default {
         } else {
           this.$set(wallet, "loadingBalance", true);
         }
+      } else {
+        const contract = this.contracts.find(contract => contract && contract.address && contract.address.toLowerCase() === recipient.toLowerCase());
+        if (contract) {
+          this.$set(contract, "loadingBalance", true);
+        }
       }
     },
     refreshBalance(accountDetails, address, error) {
       if (error) {
         console.debug("Error while proceeding transaction", error);
+        this.contracts.forEach(contract => {
+          if (contract.loadingBalance) {
+            this.$set(contract, "loadingBalance", false);
+          }
+        });
+        this.wallets.forEach(wallet => {
+          if (wallet.loadingBalance || wallet.loadingBalancePrincipal) {
+            this.$set(wallet, "loadingBalance", false);
+            this.$set(wallet, "loadingBalancePrincipal", false);
+            this.$set(wallet, 'icon', 'warning');
+            this.$set(wallet, 'error', `Error proceeding transaction: ${error}`);
+          }
+        });
         return;
       }
-      const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === address);
-      const currentUserWallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === this.walletAddress);
-      if (currentUserWallet) {
-        this.computeBalance(accountDetails, currentUserWallet);
-      }
-      if (wallet) {
-        this.computeBalance(accountDetails, wallet);
+      const contract = this.contracts.find(contract => contract && address && contract.address && contract.address.toLowerCase() === address.toLowerCase());
+      if (contract) {
+        computeBalance(address)
+          .then((balanceDetails, error) => {
+            if (!error) {
+              this.$set(contract, 'contractBalance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
+            }
+            this.$forceUpdate();
+          })
+          .catch(error => {
+            this.error = String(error);
+          })
+          .finally(() =>{
+            this.$set(contract, "loadingBalance", false);
+          });
+      } else {
+        const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === address);
+        const currentUserWallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === this.walletAddress);
+        if (currentUserWallet) {
+          this.computeBalance(accountDetails, currentUserWallet);
+        }
+        if (wallet) {
+          this.computeBalance(accountDetails, wallet);
+        }
       }
     },
     loadWallets() {
