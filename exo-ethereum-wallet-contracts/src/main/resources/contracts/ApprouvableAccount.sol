@@ -1,5 +1,5 @@
 pragma solidity ^0.4.24;
-import "./Owned.sol";
+import "./Admin.sol";
 import "./DataAccess.sol";
 
 /**
@@ -9,7 +9,7 @@ import "./DataAccess.sol";
  * and sender are approved accounts or not. This mechanism will avoid to send accidently
  * tokens outside a known community of users.
  */
-contract ApprouvableAccount is Owned, DataAccess {
+contract ApprouvableAccount is DataAccess, Admin {
 
     // emitted only when a disapproved account is approved
     event ApprovedAccount(address target);
@@ -39,7 +39,7 @@ contract ApprouvableAccount is Owned, DataAccess {
      * @dev Sets an account as approved to receive and send ERC20 tokens
      * @param _target address to approve
      */
-    function approveAccount(address _target) public onlyOwner{
+    function approveAccount(address _target) public onlyAdmin(1){
         if (!super.isApprovedAccount(_target)) {
             super._setApprovedAccount(_target, true);
             emit ApprovedAccount(_target);
@@ -50,7 +50,7 @@ contract ApprouvableAccount is Owned, DataAccess {
      * @dev Sets an account as disapproved to receive and send ERC20 tokens
      * @param _target address to disapprove
      */
-    function disapproveAccount(address _target) public onlyOwner{
+    function disapproveAccount(address _target) public onlyAdmin(1){
         require (owner != _target);
         if (super.isApprovedAccount(_target)) {
             super._setApprovedAccount(_target, false);

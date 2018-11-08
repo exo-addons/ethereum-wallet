@@ -1,5 +1,5 @@
 pragma solidity ^0.4.24;
-import "./Owned.sol";
+import "./Admin.sol";
 import "./ERC20Abstract.sol";
 
 /**
@@ -7,7 +7,7 @@ import "./ERC20Abstract.sol";
  * @dev An abstract contract to pay gas using ether collected on contract
  * instead of letting users pay the transaction fee
  */
-contract GasPayableInToken is Owned, ERC20Abstract {
+contract GasPayableInToken is Admin, ERC20Abstract {
 
     // Event emitted when the owner changes the token price
     event TokenPriceChanged(uint256 tokenPrice);
@@ -27,7 +27,7 @@ contract GasPayableInToken is Owned, ERC20Abstract {
      * tokens. (determine the amount tokens for 1 gas)
      * @param _value the amount of 1 token price in WEI
      */
-    function setSellPrice(uint256 _value) public onlyOwner{
+    function setSellPrice(uint256 _value) public onlyAdmin(5){
         require(_value != 0);
         super._setSellPrice(_value);
         emit TokenPriceChanged(_value);

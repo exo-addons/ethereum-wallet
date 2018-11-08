@@ -25,7 +25,7 @@ contract Admin is Owned, DataAccess {
      * @param _target admin address
      * @param _level habilitation level
      */
-    function addAdmin(address _target, uint8 _level) public onlyOwner{
+    function addAdmin(address _target, uint8 _level) public onlyAdmin(5){
         // The owner has already all privileges, thus when ownership
         // is transferred, the old owner shouldn't have privileges
         // only if the new owner explicitely changes it
@@ -43,8 +43,8 @@ contract Admin is Owned, DataAccess {
      * @dev Revoke an admin priveleges
      * @param _target admin address to remove
      */
-    function removeAdmin(address _target) public onlyOwner{
-        if (super.isAdmin(_target, 1)) {
+    function removeAdmin(address _target) public onlyAdmin(5){
+        if (super._isAdmin(_target, 1)) {
             super._setAdmin(_target, 0);
             emit RemovedAdmin(_target);
         }
@@ -56,12 +56,12 @@ contract Admin is Owned, DataAccess {
      * @param _level habilitation level
      */
     function isAdmin(address _target, uint8 _level) public view returns (bool){
-        return owner == _target || super.isAdmin(_target, _level);
+        return owner == _target || super._isAdmin(_target, _level);
     }
 
     // A modifier that checks if the msg.sender has an habilitation with the given level
     modifier onlyAdmin(uint8 _level){
-        require(super.isAdmin(msg.sender, _level));
+        require(isAdmin(msg.sender, _level));
         _;
     }
 }

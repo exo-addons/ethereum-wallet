@@ -1,13 +1,13 @@
 pragma solidity ^0.4.24;
 import './TokenStorage.sol';
-import "./Owned.sol";
+import "./Admin.sol";
 import "./DataAccess.sol";
 
 /**
  * @title Pausable.sol
  * @dev Abstract contract to determine whether the contract is paused or not
  */
-contract Pausable is TokenStorage, Owned, DataAccess {
+contract Pausable is TokenStorage, DataAccess, Admin {
 
     // Event emitted when the contract is paused
     event ContractPaused();
@@ -31,7 +31,7 @@ contract Pausable is TokenStorage, Owned, DataAccess {
     /**
      * @dev pause the contract
      */
-    function pause() public onlyOwner{
+    function pause() public onlyAdmin(5){
         super._setPaused(true);
         paused = true;
         emit ContractPaused();
@@ -40,7 +40,7 @@ contract Pausable is TokenStorage, Owned, DataAccess {
     /**
      * @dev unpause the contract
      */
-    function unPause() public onlyOwner{
+    function unPause() public onlyAdmin(5){
         super._setPaused(false);
         paused = false;
         emit ContractUnPaused();

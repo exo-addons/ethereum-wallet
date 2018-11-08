@@ -859,13 +859,13 @@ export default {
         if (principal) {
           if(this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
             const principalInitialFund = this.initialFunds.find(account => account.address === this.selectedPrincipalAccount.value);
-            this.$refs.sendFundsModal.prepareSendForm(wallet.type ? wallet.id : wallet.address, wallet.type, principalInitialFund && principalInitialFund.amount, this.selectedPrincipalAccount.value);
+            this.$refs.sendFundsModal.prepareSendForm(wallet.type ? wallet.id : wallet.address, wallet.type, wallet.type ? principalInitialFund && principalInitialFund.amount : null, this.selectedPrincipalAccount.value);
           } else {
             console.error("No selected principal account found");
           }
         } else {
           const etherInitialFund = this.initialFunds.find(account => account.address === 'ether');
-          this.$refs.sendFundsModal.prepareSendForm(wallet.type ? wallet.id : wallet.address, wallet.type, etherInitialFund && etherInitialFund.amount);
+          this.$refs.sendFundsModal.prepareSendForm(wallet.type ? wallet.id : wallet.address, wallet.type, wallet.type ? etherInitialFund && etherInitialFund.amount : null);
         }
       } else {
         console.debug("Wallet object doesn't have a type or an address", wallet);

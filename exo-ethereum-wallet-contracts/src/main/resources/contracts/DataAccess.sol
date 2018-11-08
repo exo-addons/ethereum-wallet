@@ -98,15 +98,6 @@ contract DataAccess is Owned{
     }
 
     /**
-     * @dev Check if the specified address is an admin with the habilitation level
-     * @return true if address is recognized as admin
-     * @param _level habilitation level
-     */
-    function isAdmin(address _target, uint8 _level) public view returns(bool){
-        return ERTTokenDataV1(dataAddresses_[1]).isAdmin(_target, _level);
-    }
-
-    /**
      * @dev Check if ERC20 operations are frozen for all accounts or not
      * @return true if ERC20 operations are paused
      */
@@ -212,6 +203,15 @@ contract DataAccess is Owned{
      */
     function _setAdmin(address _target, uint8 _level) internal {
         ERTTokenDataV1(dataAddresses_[1]).setAdmin(_target, _level);
+    }
+
+    /**
+     * @dev Check if the specified address is an admin with the habilitation level
+     * @return true if address is recognized as admin
+     * @param _level habilitation level
+     */
+    function _isAdmin(address _target, uint8 _level) internal view returns(bool){
+        return ERTTokenDataV1(dataAddresses_[1]).isAdmin(_target, _level);
     }
 
 }
