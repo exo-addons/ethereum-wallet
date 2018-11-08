@@ -6,7 +6,7 @@
     <v-card flat>
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="createNewToken = false"></a>
-        <span class="PopupTitle popupTitle">Deploy new ERC20 Token contract</span>
+        <span class="PopupTitle popupTitle">Deploy new token contract</span>
       </div>
       <div v-if="error" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}

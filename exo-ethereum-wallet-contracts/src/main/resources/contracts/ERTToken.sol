@@ -15,9 +15,6 @@ contract ERTToken is TokenStorage, Owned {
     event Upgraded(uint16 implementationVersion, address implementationAddress);
      // Event emitted when an upgrade is made to a new data
     event UpgradedData(uint16 dataVersion, address DataAddress);
-    
-    
-    
 
     /**
      * @param _implementationAddress First version of the ERC20 Token implementation address
