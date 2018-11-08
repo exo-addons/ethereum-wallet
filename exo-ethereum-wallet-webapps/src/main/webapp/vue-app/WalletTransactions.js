@@ -407,16 +407,16 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     .then(() => {
       if (transactionDetails.pending
           || isLoadingAll
-          || transaction.from.toLowerCase() === account
-          || (transaction.to && transaction.to.toLowerCase() === account)
-          || transactionDetails.fromAddress.toLowerCase() === account
-          || transactionDetails.toAddress.toLowerCase() === account) {
+          || transaction.from.toLowerCase() === account.toLowerCase()
+          || (transaction.to && transaction.to.toLowerCase() === account.toLowerCase())
+          || transactionDetails.fromAddress.toLowerCase() === account.toLowerCase()
+          || transactionDetails.toAddress.toLowerCase() === account.toLowerCase()) {
         // If user/space details wasn't found on sessionStorage,
         // then display the transaction details and in // load name and avatar with a promise
         // From eXo Platform Server
         return transactions[transactionDetails.hash] = transactionDetails;
       } else {
-        console.error("It seems that the transaction is added into list by error, skipping.", account, transactionDetails);
+        console.warn("It seems that the transaction is added into list by error, skipping.", account, transactionDetails);
       }
       return null;
     })
