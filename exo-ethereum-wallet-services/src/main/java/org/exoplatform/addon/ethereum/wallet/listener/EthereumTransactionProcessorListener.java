@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventValues;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -140,6 +141,16 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       if (sendNotification) {
         if (isContractTransaction || checkTransactionStatus(transaction) != null) {
           transactionStatusOk = true;
+          // Chack if ether was sent to contract
+          if (!isContractTransaction && StringUtils.isBlank(receiver.getId())) {
+            ContractDetail receiverContractDetail =
+                                                  ethereumWalletService.getDefaultContractDetail(receiver.getAddress(),
+                                                                                                 settings.getDefaultNetworkId());
+            if (receiverContractDetail != null) {
+              receiver.setName("Contract: " + receiverContractDetail.getName());
+            }
+          }
+          // Send notification
           sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.SENDER, amount);
         }
       }
