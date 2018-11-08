@@ -34,8 +34,7 @@ contract DataOwned {
     }
 
     /**
-     * @dev Modifier that checks that the caller is either the proxy contract or
-     * the the ERC20 implementation contract (can be called by owner only))
+     * @dev transfers data ownership to a proxy and token implementation
      * @param _proxyAddress Proxy Contract address
      * @param _implementationAddress ERC20 Implementation Contract address
      */

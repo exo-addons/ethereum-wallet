@@ -10,14 +10,14 @@ contract TestAccountFreeze is Owned, TestDataAccess{
     constructor() internal{
     }
 
-    function freeze(address _target) public onlyOwner returns (bool){
+    function freeze(address _target) public onlyOwner{
         if (!super.isFrozen(_target)) {
             super._setFrozenAccount(_target, true);
             emit FrozenAccount(_target);
         }
     }
 
-    function unFreeze(address _target) public onlyOwner returns (bool){
+    function unFreeze(address _target) public onlyOwner{
         if (super.isFrozen(_target)) {
             super._setFrozenAccount(_target, false);
             emit UnFrozenAccount(_target);

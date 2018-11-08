@@ -38,7 +38,7 @@ contract ERTTokenV1 is
 
         // Set data address in ERC20 implementation storage only
         uint16 dataVersion = 1;
-        super.setDataAddress(dataVersion, _dataAddress);
+        super._setDataAddress(dataVersion, _dataAddress);
         // The proxy will be 0x address for the whole first instantiation,
         // The future Token implementations should pass the correct proxy
         // address

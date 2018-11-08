@@ -20,8 +20,11 @@ module.exports =  function(deployer) {
      .then(ertTokenV1Instance => ertTokenV1Instance.initialize(ERTToken.address, 100000 * Math.pow(10, 18), "Curries", 18, "C"))
      // Change ABI of Proxy by ABI of Token to access it methods
      .then(() => ERTToken.abi = TestERTToken.abi)
+     
+     // For Upgrade tests
+
     //deployment of TestERTTokenDataV2 
-    .then(() => deployer.deploy(TestERTTokenDataV2))
+    .then(() => deployer.deploy(TestERTTokenDataV2, ERTToken.address))
     //Deployment of TestERTTokenV2 (with proxy address)
     .then(() => deployer.deploy(TestERTTokenV2, ERTTokenDataV1.address ,TestERTTokenDataV2.address, ERTToken.address));
 };

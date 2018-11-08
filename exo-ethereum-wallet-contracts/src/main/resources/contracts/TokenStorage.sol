@@ -1,4 +1,5 @@
 pragma solidity ^0.4.24;
+import './DataOwned.sol';
 
 /**
  * @title TokenStorage.sol
@@ -32,6 +33,9 @@ contract TokenStorage {
     // Map of data contracts by version number
     mapping(uint16 => address) internal dataAddresses_;
 
+    // An array of data versions
+    uint16[] internal dataVersions_;
+
     /**
      * @dev sets a new data contract address by version.
      * Only new versions are accepted to avoid overriding an existing reference to a version
@@ -39,16 +43,24 @@ contract TokenStorage {
      * @param _dataVersion version number of data contract
      * @param _dataAddress address of data contract
      */
-    function setDataAddress(uint16 _dataVersion, address _dataAddress) public{
+    function _setDataAddress(uint16 _dataVersion, address _dataAddress) internal{
         // Owner and proxy check
         require(msg.sender == owner || msg.sender == proxy);
         // Make sure that we can't change a reference of an existing data reference
         if(dataAddresses_[_dataVersion] == address(0)) {
             dataAddresses_[_dataVersion] = _dataAddress;
-        }
-        if (implementationAddress != address(0)) {
-            TokenStorage(implementationAddress).setDataAddress(_dataVersion, _dataAddress);
+            dataVersions_.push(_dataVersion);
         }
     }
-    
+
+    /**
+     * @dev transfers data ownership to a proxy and token implementation
+     * @param _dataVersion Data version to transfer its ownership
+     */
+    function _transferDataOwnership(uint16 _dataVersion) internal{
+        // Owner and proxy check
+        require(msg.sender == owner || msg.sender == proxy);
+        require(dataAddresses_[_dataVersion] != address(0));
+        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(proxy, implementationAddress);
+    }
 }

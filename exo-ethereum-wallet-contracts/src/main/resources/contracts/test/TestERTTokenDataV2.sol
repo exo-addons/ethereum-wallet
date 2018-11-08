@@ -7,7 +7,8 @@ contract TestERTTokenDataV2 is DataOwned {
 
     bool internal initialized_ = false;
 
-    constructor() public{
+    constructor(address _proxyAddress) public{
+        proxyAddress_ = _proxyAddress;
     }
 
     function initialized() public view returns(bool){

@@ -47,7 +47,6 @@ const ERTToken = artifacts.require("ERTToken");
     })
   
   
-
   
   
 });

@@ -13,6 +13,11 @@ contract ERTToken is TokenStorage, Owned {
 
     // Event emitted when an upgrade is made to a new implementation
     event Upgraded(uint16 implementationVersion, address implementationAddress);
+     // Event emitted when an upgrade is made to a new data
+    event UpgradedData(uint16 dataVersion, address DataAddress);
+    
+    
+    
 
     /**
      * @param _implementationAddress First version of the ERC20 Token implementation address
@@ -22,12 +27,11 @@ contract ERTToken is TokenStorage, Owned {
         require(_dataAddress != address(0));
         require(_implementationAddress != address(0));
 
-        // Update data address before setting implementation
-        // to not call setDataAddress on ERC20 implementation too
-        super.setDataAddress(1, _dataAddress);
-
         // Set implementation address and version
         upgradeImplementation(1, _implementationAddress);
+
+        // Set data address
+        super._setDataAddress(1, _dataAddress);
 
         // Set current proxy address so that ERC20 implementation can access it when calls are delegated to it
         proxy = address(this);
@@ -49,10 +53,23 @@ contract ERTToken is TokenStorage, Owned {
           Upgradability(implementationAddress).upgradeImplementationTo(_newImplementation);
         }
         implementationAddress = _newImplementation;
-
+        
         emit Upgraded(_version, _newImplementation);
     }
 
+    /**
+     * @dev Upgrade to a new data contract
+     * @param _dataVersion version number of data contract
+     * @param _dataAddress address of data contract
+     */
+    function upgradeData(uint16 _dataVersion, address _dataAddress) public onlyOwner{
+         super._setDataAddress(_dataVersion, _dataAddress);
+         for (uint i=0; i< dataVersions_.length; i++) {
+          super._transferDataOwnership(dataVersions_[i]);
+   		 }
+         emit UpgradedData(_dataVersion, _dataAddress);
+    }
+    
     /**
      * @dev Called for all calls that aren't implemented on proxy, like
      * ERC20 methods. This is payable to enable owner to give money to
