@@ -126,6 +126,15 @@ contract ERTTokenDataV1 is DataOwned {
     }
 
     /**
+     * @dev return the habilitation level of an address
+     * @param _target address of the account to check
+     * @return habilitation level
+     */
+    function getAdminLevel(address _target) public view returns(uint8){
+        return admin_[_target];
+    }
+
+    /**
      * @return true if ERC20 methods are frozen
      */
     function isPaused() public view returns (bool){

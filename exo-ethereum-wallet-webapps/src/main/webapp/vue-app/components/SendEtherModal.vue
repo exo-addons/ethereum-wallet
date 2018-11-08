@@ -18,6 +18,7 @@
                        :account="account"
                        :balance="balance"
                        class="pt-4"
+                       @success="$emit('success', $event)"
                        @sent="$emit('sent', $event)"
                        @close="dialog = false"
                        @error="$emit('error', $event)" />
@@ -70,6 +71,12 @@ export default {
       default: function() {
         return 0;
       }
+    },
+    recipient: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
     }
   },
   data () {
@@ -94,6 +101,9 @@ export default {
     dialog() {
       if (this.dialog) {
         this.$refs.sendEtherForm.init();
+        if (this.recipient && this.$refs.sendEtherForm.$refs.autocomplete) {
+          this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.recipient);
+        }
       } else {
         this.$emit('close');
       }

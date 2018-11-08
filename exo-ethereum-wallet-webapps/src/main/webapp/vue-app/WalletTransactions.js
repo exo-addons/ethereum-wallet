@@ -131,6 +131,7 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
 
 export function loadContractTransactions(networkId, account, contractDetails, transactions, progressionCallback) {
   account = account.toLowerCase();
+  const isLoadingAll = contractDetails.address && contractDetails.address.toLowerCase() === account;
   // Load Transfer events for user as sender
   return contractDetails.contract.getPastEvents("Transfer", {
     fromBlock: 0,
@@ -141,13 +142,13 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     },
     topics: [
       window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
-      window.localWeb3.utils.padLeft(account, 64),
+      isLoadingAll ? null : window.localWeb3.utils.padLeft(account, 64),
       null
     ]
   })
-    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
+    .then(events => events && addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Transfer events for user as receiver
-    .then(() => contractDetails.contract.getPastEvents("Transfer", {
+    .then(() => !isLoadingAll && contractDetails.contract.getPastEvents("Transfer", {
         fromBlock: 0,
         toBlock: 'latest',
         filter: {
@@ -160,7 +161,7 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
           window.localWeb3.utils.padLeft(account, 64)
         ]
     }))
-    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
+    .then(events => events && addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Approval events for user as receiver
     .then(() => contractDetails.contract.getPastEvents("Approval", {
       fromBlock: 0,
@@ -171,13 +172,13 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
       },
       topics: [
         window.localWeb3.utils.sha3("Approval(address,address,uint256)"),
-        window.localWeb3.utils.padLeft(account, 64),
+        isLoadingAll ? null : window.localWeb3.utils.padLeft(account, 64),
         null
       ]
     }))
-    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
+    .then(events => events && addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
     // Load Approval events for user as sender
-    .then(() => contractDetails.contract.getPastEvents("Approval", {
+    .then(() => !isLoadingAll && contractDetails.contract.getPastEvents("Approval", {
       fromBlock: 0,
       toBlock: 'latest',
       filter: {
@@ -190,7 +191,7 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
         window.localWeb3.utils.padLeft(account, 64)
       ]
     }))
-    .then(events => addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
+    .then(events => events && addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_owner", "_spender", progressionCallback))
     .then(() => transactions)
     .catch(e => {
       console.debug("Error occurred while retrieving contract transactions", e);
@@ -309,9 +310,11 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     transactionDetails.type = 'ether';
   }
 
+  let isLoadingAll = false;
   return getContractFromStorage(transactionDetails.contractAddress)
     .then(contractDetails => {
       if (contractDetails) {
+        isLoadingAll = contractDetails.address && contractDetails.address.toLowerCase() === account;
         transactionDetails.type = 'contract';
         transactionDetails.contractName = contractDetails.name;
         transactionDetails.contractAddress = contractDetails.address;
@@ -403,6 +406,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     })
     .then(() => {
       if (transactionDetails.pending
+          || isLoadingAll
           || transaction.from.toLowerCase() === account
           || (transaction.to && transaction.to.toLowerCase() === account)
           || transactionDetails.fromAddress.toLowerCase() === account
@@ -598,6 +602,7 @@ export function saveTransactionMessage(transactionHash, transactionMessage, tran
 }
 
 function addEventsToTransactions(networkId, account, contractDetails, transactions, events, fieldFrom, fieldTo, progressionCallback) {
+  const isLoadingAll = contractDetails.address && contractDetails.address.toLowerCase() === account;
   if (events && events.length) {
     const promises = [];
     for (let i = 0; i < events.length; i++) {
@@ -607,7 +612,7 @@ function addEventsToTransactions(networkId, account, contractDetails, transactio
         const from = event.returnValues[fieldFrom].toLowerCase();
         const to = event.returnValues[fieldTo].toLowerCase();
 
-        if (to === account || from === account) {
+        if (isLoadingAll || to === account || from === account) {
           promises.push(window.localWeb3.eth.getTransaction(event.transactionHash));
         }
       }

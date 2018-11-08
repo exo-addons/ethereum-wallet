@@ -290,17 +290,25 @@
                 </div>
                 <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
                   <template slot="items" slot-scope="props">
-                    <td :class="props.item.error ? 'red--text' : ''">{{ props.item.error ? props.item.error : props.item.name }}</td>
-                    <td class="text-xs-center">
+                    <td :class="props.item.error ? 'red--text' : ''" @click="openContractDetails(props.item)">
+                      {{ props.item.error ? props.item.error : props.item.name }}
+                    </td>
+                    <td class="text-xs-center" @click="openContractDetails(props.item)">
                       <v-progress-circular v-if="props.item.loadingBalance" color="primary" indeterminate size="20" />
                       <span v-else>
                         {{ props.item.contractBalance }} ether
                       </span>
                     </td>
-                    <td class="text-xs-center">{{ props.item.contractType > 0 ? `${props.item.sellPrice} ether` : "-" }}</td>
-                    <td class="text-xs-center">{{ props.item.contractTypeLabel }}</td>
+                    <td class="text-xs-center" @click="openContractDetails(props.item)">
+                      {{ props.item.contractType > 0 ? `${props.item.sellPrice} ether` : "-" }}
+                    </td>
+                    <td class="text-xs-center" @click="openContractDetails(props.item)">
+                      {{ props.item.contractTypeLabel }}
+                    </td>
                     <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
-                    <td v-else class="text-xs-center">{{ props.item.address }}</td>
+                    <td v-else class="text-xs-center" @click="openContractDetails(props.item)">
+                      {{ props.item.address }}
+                    </td>
                     <td class="text-xs-right">
                       <v-btn
                         v-if="props.item.isOwner && props.item.contractType && !props.item.isPending"
@@ -337,6 +345,24 @@
                     @added="contractsModified"
                     @close="showAddContractModal = false" />
                 </div>
+                <!-- The selected account detail -->
+                <v-navigation-drawer
+                  id="contractDetailsDrawer"
+                  v-model="seeContractDetails"
+                  fixed
+                  temporary
+                  right
+                  stateless
+                  width="700"
+                  max-width="100vw">
+                  <contract-detail
+                    :wallet-address="walletAddress"
+                    :contract-details="selectedContractDetails"
+                    :network-id="networkId"
+                    :is-display-only="!selectedContractDetails || !selectedContractDetails.isAdmin"
+                    :fiat-symbol="fiatSymbol"
+                    @back="back()" />
+                </v-navigation-drawer>
               </v-card>
             </v-tab-item>
 
@@ -454,6 +480,7 @@ import WalletAddress from './WalletAddress.vue';
 import WalletSetup from './WalletSetup.vue';
 import AccountDetail from './AccountDetail.vue';
 import SendFundsModal from './SendFundsModal.vue';
+import ContractDetail from './ContractDetail.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
@@ -467,6 +494,7 @@ export default {
     WalletAddress,
     AccountDetail,
     SendFundsModal,
+    ContractDetail,
     WalletSetup
   },
   data () {
@@ -496,9 +524,12 @@ export default {
       selectedOverviewAccounts: [],
       selectedPrincipalAccount: null,
       enableDelegation: true,
+      seeContractDetails: false,
+      seeContractDetailsPermanent: false,
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
       selectedWalletAddress: null,
+      selectedContractDetails: null,
       selectedWalletDetails: null,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
@@ -722,17 +753,27 @@ export default {
           this.isLoadingSuggestions = false;
         });
     },
+    seeContractDetails() {
+      if (this.seeContractDetails) {
+        $("body").addClass("hide-scroll");
+        const thiss = this;
+        setTimeout(() => {
+          thiss.seeContractDetailsPermanent = true;
+        }, 200);
+      } else {
+        $("body").removeClass("hide-scroll");
+        this.seeContractDetailsPermanent = false;
+      }
+    },
     seeAccountDetails() {
       if (this.seeAccountDetails) {
         $("body").addClass("hide-scroll");
-
         const thiss = this;
         setTimeout(() => {
           thiss.seeAccountDetailsPermanent = true;
         }, 200);
       } else {
         $("body").removeClass("hide-scroll");
-
         this.seeAccountDetailsPermanent = false;
       }
     },
@@ -999,6 +1040,17 @@ export default {
 
       this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
     },
+    openContractDetails(contractDetails) {
+      this.selectedContractDetails = contractDetails;
+      this.seeContractDetails = true;
+
+      this.$nextTick(() => {
+        const thiss = this;
+        $('.v-overlay').off('click').on('click', event => {
+          thiss.back();
+        });
+      });
+    },
     openAccountDetail(accountDetails) {
       this.selectedWalletAddress = accountDetails.address;
       this.computeWalletDetails(accountDetails);
@@ -1006,7 +1058,7 @@ export default {
 
       this.$nextTick(() => {
         const thiss = this;
-        $('.v-overlay').on('click', event => {
+        $('.v-overlay').off('click').on('click', event => {
           thiss.back();
         });
       });
@@ -1027,10 +1079,13 @@ export default {
       };
     },
     back() {
+      this.seeContractDetails = false;
+      this.seeContractDetailsPermanent = false;
       this.seeAccountDetails = false;
       this.seeAccountDetailsPermanent = false;
       this.selectedWalletAddress = null;
       this.selectedWalletDetails = null;
+      this.selectedContractDetails = null;
     },
     getOverviewAccountObject(selectedValue) {
       if (selectedValue === 'fiat') {

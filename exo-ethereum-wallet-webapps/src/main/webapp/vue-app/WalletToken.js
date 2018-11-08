@@ -86,12 +86,23 @@ export function retrieveContractDetails(account, contractDetails) {
           contractDetails.contractTypeLabel = 'Standard ERC20 Token';
           contractDetails.contractType = 0;
         })
-        .then(() => contractDetails.contract.methods.owner().call())
+        .then(() => contractDetails.contractType && contractDetails.contract.methods.owner().call())
         .then(owner =>  {
           if (owner) {
             contractDetails.owner = owner;
             contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
           }
+        })
+        .then(() => contractDetails.contractType && contractDetails.contract.methods.getAdminLevel && contractDetails.contract.methods.getAdminLevel(account).call())
+        .then(habilitationLevel =>  {
+          if (habilitationLevel) {
+            contractDetails.adminLevel = habilitationLevel;
+            contractDetails.isAdmin = habilitationLevel > 0;
+          }
+        })
+        .then(() => contractDetails.contractType && contractDetails.contract.methods.isPaused && contractDetails.contract.methods.isPaused().call())
+        .then(isPaused =>  {
+          contractDetails.isPaused = isPaused;
         })
         .catch(e => {
           console.debug("Error getting owner of contract", e);

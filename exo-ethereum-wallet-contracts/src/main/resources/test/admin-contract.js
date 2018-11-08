@@ -3,7 +3,7 @@ const ERTToken = artifacts.require("ERTToken");
   contract('Admin', function(accounts) {
     let tokenInstance;
 
-    it ('test addAdmin ' , function(){
+    it ('test addAdmin and getAdminLevel' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
         return tokenInstance.addAdmin(accounts[6], 7 , {
@@ -31,6 +31,12 @@ const ERTToken = artifacts.require("ERTToken");
         return tokenInstance.isAdmin(accounts[5], 5);
       }).then(admin => {
         assert.equal(admin, true, 'Account is not admin');
+        return tokenInstance.getAdminLevel(accounts[5]);
+      }).then(level => {
+        assert.equal(level, 5, 'Account should be admin with habilitation level 5');
+        return tokenInstance.getAdminLevel(accounts[4]);
+      }).then(level => {
+        assert.equal(level, 0, 'Account shouldn\'t be not admin');
       }) 
     })
 

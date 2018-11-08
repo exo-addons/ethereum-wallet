@@ -97,14 +97,6 @@ contract DataAccess is Owned{
         return ERTTokenDataV1(dataAddresses_[1]).getSellPrice();
     }
 
-    /**
-     * @dev Check if ERC20 operations are frozen for all accounts or not
-     * @return true if ERC20 operations are paused
-     */
-    function isPaused() public view returns (bool){
-        return ERTTokenDataV1(dataAddresses_[1]).isPaused();
-    }
-
     // Public owner write methods
 
     /**
@@ -207,11 +199,29 @@ contract DataAccess is Owned{
 
     /**
      * @dev Check if the specified address is an admin with the habilitation level
-     * @return true if address is recognized as admin
+     * @param _target account address
      * @param _level habilitation level
+     * @return true if address is recognized as admin
      */
     function _isAdmin(address _target, uint8 _level) internal view returns(bool){
         return ERTTokenDataV1(dataAddresses_[1]).isAdmin(_target, _level);
+    }
+
+    /**
+     * @dev Check if the specified address is an admin with the habilitation level
+     * @param _target account address
+     * @return habilitation level
+     */
+    function _getAdminLevel(address _target) internal view returns(uint8){
+        return ERTTokenDataV1(dataAddresses_[1]).getAdminLevel(_target);
+    }
+
+    /**
+     * @dev Check if ERC20 operations are frozen for all accounts or not
+     * @return true if ERC20 operations are paused
+     */
+    function _isPaused() internal view returns (bool){
+        return ERTTokenDataV1(dataAddresses_[1]).isPaused();
     }
 
 }

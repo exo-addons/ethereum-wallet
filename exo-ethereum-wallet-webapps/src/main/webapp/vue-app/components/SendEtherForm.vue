@@ -106,6 +106,7 @@ export default {
       storedPassword: false,
       transactionLabel: '',
       transactionMessage: '',
+      transactionHash: null,
       walletPassword: '',
       walletPasswordShow: false,
       useMetamask: false,
@@ -123,6 +124,7 @@ export default {
       this.amount = null;
       this.error = null;
       this.transactionMessage = null;
+      this.transactionHash = null;
       this.transactionLabel = null;
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
@@ -169,6 +171,7 @@ export default {
         // Send an amount of ether to a third person
         window.localWeb3.eth.sendTransaction(transaction)
           .on('transactionHash', hash => {
+            this.transactionHash = hash;
             saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
             // The transaction has been hashed and will be sent
             this.$emit("sent", {
@@ -194,7 +197,8 @@ export default {
             if (!this.dialog) {
               this.$emit("error", this.error);
             }
-          });
+          })
+          .then(() => this.$emit('success', this.transactionHash));
       } catch(e) {
         console.debug("Web3.eth.sendTransaction method - error", e);
         this.loading = false;

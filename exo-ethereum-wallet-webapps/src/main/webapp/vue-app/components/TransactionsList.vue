@@ -39,6 +39,23 @@
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'ether'">
+                  <profile-chip
+                    v-if="displayFullTransaction && item.isReceiver"
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <profile-chip
+                    v-else-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+
                   <span v-if="item.isReceiver">Received from</span>
                   <span v-else>Sent to</span>
 
@@ -88,6 +105,23 @@
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && (item.contractMethodName === 'transfer' || item.contractMethodName === 'approve')">
+                  <profile-chip
+                    v-if="displayFullTransaction && item.isReceiver"
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <profile-chip
+                    v-else-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+
                   <span v-if="item.contractMethodName === 'transfer' && item.isReceiver">Received from</span>
                   <span v-else-if="item.contractMethodName === 'transfer' && !item.isReceiver">Sent to</span>
                   <span v-else-if="item.contractMethodName === 'approve' && item.isReceiver">Delegated from</span>
@@ -316,6 +350,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    displayFullTransaction: {
+      type: Boolean,
+      default: function() {
+        return false;
       }
     },
     selectedTransactionHash: {

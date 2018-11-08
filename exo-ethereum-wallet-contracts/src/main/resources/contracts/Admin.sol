@@ -54,9 +54,23 @@ contract Admin is Owned, DataAccess {
      * @dev check if the user is an admin with the given level
      * @param _target admin address
      * @param _level habilitation level
+     * @return true if the account is admin with the dedicated level
      */
     function isAdmin(address _target, uint8 _level) public view returns (bool){
         return owner == _target || super._isAdmin(_target, _level);
+    }
+
+    /**
+     * @dev check if the user is an admin with the given level
+     * @param _target admin address
+     * @return habilitation level
+     */
+    function getAdminLevel(address _target) public view returns (uint8){
+        if(owner == _target) {
+            return 5;
+        } else {
+            return super._getAdminLevel(_target);
+        }
     }
 
     // A modifier that checks if the msg.sender has an habilitation with the given level

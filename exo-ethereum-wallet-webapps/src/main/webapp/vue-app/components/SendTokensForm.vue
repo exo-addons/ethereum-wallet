@@ -87,8 +87,8 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
-      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || contractDetails.isPaused" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
+      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || contractDetails.isPaused" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -143,11 +143,12 @@ export default {
     };
   },
   watch: {
-    recipient(newValue, oldValue) {
-      if (oldValue !== newValue) {
-        this.warning = null;
+    contractDetails() {
+      if (this.contractDetails && this.contractDetails.isPaused) {
+        this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
       }
-      console.log("recipient changed", newValue, oldValue);
+    },
+    recipient(newValue, oldValue) {
       if (newValue && oldValue !== newValue) {
         this.isApprovedRecipient = true;
         // Owner will implicitly approve account, so not necessary
@@ -155,10 +156,13 @@ export default {
         if (!this.contractDetails.isOwner && this.contractDetails.contractType > 0) {
           this.contractDetails.contract.methods.isApprovedAccount(this.recipient).call()
             .then(isApproved => {
-              console.log("isApproved", isApproved);
               this.isApprovedRecipient = isApproved;
               if (!this.isApprovedRecipient) {
                 this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
+              } else if (this.contractDetails && this.contractDetails.isPaused) {
+                this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
+              } else {
+                this.warning = null;
               }
             });
         }
@@ -181,10 +185,17 @@ export default {
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.fiatSymbol = window.walletSettings.fiatSymbol;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
-      this.$nextTick(this.estimateTransactionFee);
+      this.$nextTick(() => {
+        this.estimateTransactionFee();
+        if (this.contractDetails && this.contractDetails.isPaused) {
+          this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
+        } else {
+          this.warning = null;
+        }
+      });
     },
     estimateTransactionFee() {
-      if (this.contractDetails && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
+      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
         const recipient = this.contractDetails.isOwner ? "0x1111111111111111111111111111111111111111" : this.contractDetails.owner;
         // Estimate gas
         this.contractDetails.contract.methods.transfer(recipient, "1")
@@ -209,6 +220,11 @@ export default {
     sendTokens() {
       this.error = null;
       this.warning = null;
+
+      if (this.contractDetails && this.contractDetails.isPaused) {
+        this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
+        return;
+      }
 
       if (!window.localWeb3.utils.isAddress(this.recipient)) {
         this.error = "Invalid recipient address";
@@ -278,7 +294,7 @@ export default {
                 this.$emit("close");
               })
               .on('error', (error, receipt) => {
-                console.debug("Web3 contract.transferFrom method - error", error);
+                console.debug("Web3 contract.transfer method - error", error);
                 // The transaction has failed
                 this.error = `Error sending tokens: ${truncateError(error)}`;
                 // Display error on main screen only when dialog is not opened
