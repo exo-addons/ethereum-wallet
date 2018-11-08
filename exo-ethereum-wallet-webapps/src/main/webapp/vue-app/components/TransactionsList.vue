@@ -168,16 +168,22 @@
               </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile v-if="item.amount">
+            <v-list-tile v-if="item.contractAmount">
+              <v-list-tile-content>Amount</v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ item.contractAmount }} {{ item.contractSymbol }}
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile v-else-if="item.amountFiat">
               <v-list-tile-content>Amount</v-list-tile-content>
               <v-list-tile-content class="align-end">
                 {{ item.amountFiat }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile v-else-if="item.contractAmount">
+            <v-list-tile v-else-if="item.amount">
               <v-list-tile-content>Amount</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ item.contractAmount }} {{ item.contractSymbol }}
+                {{ item.amount }} ether
               </v-list-tile-content>
             </v-list-tile>
 
