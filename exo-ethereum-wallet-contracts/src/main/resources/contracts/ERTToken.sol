@@ -10,7 +10,6 @@ import './Upgradability.sol';
  * contract. The needed data here are implementation address and owner.
  */
 contract ERTToken is TokenStorage, Owned {
-
     // Event emitted when an upgrade is made to a new implementation
     event Upgraded(uint16 implementationVersion, address implementationAddress);
      // Event emitted when an upgrade is made to a new data

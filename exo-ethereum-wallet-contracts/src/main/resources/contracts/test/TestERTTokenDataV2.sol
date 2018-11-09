@@ -5,22 +5,12 @@ contract TestERTTokenDataV2 is DataOwned {
 
     mapping (address => bool) internal frozenAccount_;
 
-    bool internal initialized_ = false;
-
     constructor(address _proxyAddress) public{
         proxyAddress_ = _proxyAddress;
     }
 
-    function initialized() public view returns(bool){
-        return initialized_;
-    }
-
     function isFrozen(address _target) public view returns(bool){
         return frozenAccount_[_target];
-    }
-
-    function setInitialized() public onlyContracts{
-        initialized_ = true;
     }
 
     function setFrozenAccount(address _target, bool _frozen) public onlyContracts{

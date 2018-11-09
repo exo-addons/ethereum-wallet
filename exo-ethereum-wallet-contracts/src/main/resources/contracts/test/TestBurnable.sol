@@ -5,7 +5,7 @@ import "../DataAccess.sol";
 
 
 /**
- * @title Burnable.sol
+ * @title TestBurnable.sol
  * @dev This is an abstract contract that is used to burn tokens from owner account
  */
 contract TestBurnable is Owned, DataAccess, SafeMath {

@@ -4,6 +4,7 @@ var ERTTokenV1 = artifacts.require("./ERTTokenV1.sol");
 var ERTTokenDataV1 = artifacts.require("./ERTTokenDataV1.sol");
 var TestERTTokenV2 = artifacts.require("./test/TestERTTokenV2.sol");
 var TestERTTokenDataV2 = artifacts.require("./test/TestERTTokenDataV2.sol");
+var TestERTTokenV3 = artifacts.require("./test/TestERTTokenV3.sol");
 
 module.exports =  function(deployer) {
   // Deployment of tokens starting by ERTTokenDataV1: ERC20 Token data
@@ -26,5 +27,8 @@ module.exports =  function(deployer) {
     //deployment of TestERTTokenDataV2 
     .then(() => deployer.deploy(TestERTTokenDataV2, ERTToken.address))
     //Deployment of TestERTTokenV2 (with proxy address)
-    .then(() => deployer.deploy(TestERTTokenV2, ERTTokenDataV1.address ,TestERTTokenDataV2.address, ERTToken.address));
+    .then(() => deployer.deploy(TestERTTokenV2, ERTTokenDataV1.address ,TestERTTokenDataV2.address, ERTToken.address))
+  
+    //Deployment of TestERTTokenV3 (with proxy address)
+    .then(() => deployer.deploy(TestERTTokenV3, ERTTokenDataV1.address ,TestERTTokenDataV2.address, ERTToken.address));
 };

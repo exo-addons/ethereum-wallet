@@ -4,7 +4,7 @@ import "../SafeMath.sol";
 import "../Owned.sol";
 
 /**
- * @title Mintable.sol
+ * @title TestMintable.sol
  * @dev Abstract contract to mint tokens
  */
 contract TestMintable is Owned, SafeMath, ERC20Abstract {
