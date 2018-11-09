@@ -308,7 +308,7 @@
               </v-list-tile-content>
 
               <v-list-tile-content v-if="item.type === 'ether' && item.amount && Number(item.amount)" class="transactionDetailActions">
-                <v-list-tile-title :class="item.isReceiver ? 'green--text' : 'red--text'">
+                <v-list-tile-title :class="item.adminIcon ? '' : item.isReceiver ? 'green--text' : 'red--text'">
                   <span>{{ Number(item.amount) }} ETH</span>
                 </v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat">
@@ -317,7 +317,7 @@
               </v-list-tile-content>
 
               <v-list-tile-content v-else class="transactionDetailActions">
-                <v-list-tile-title v-if="item.contractAmount" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number.isInteger(item.contractAmount) ? Number(item.contractAmount) : item.contractAmount }} {{ item.contractSymbol }}</span></v-list-tile-title>
+                <v-list-tile-title v-if="item.contractAmount" :class="item.adminIcon ? '' : item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number.isInteger(item.contractAmount) ? Number(item.contractAmount) : item.contractAmount }} {{ item.contractSymbol }}</span></v-list-tile-title>
                 <v-list-tile-title v-else-if="item.amount && Number(item.amount)" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ item.amount ? Number(item.amount) : 0 }} ether</span></v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
                 <v-list-tile-sub-title v-else />
