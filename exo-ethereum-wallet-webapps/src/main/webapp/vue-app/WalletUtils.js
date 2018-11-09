@@ -109,7 +109,7 @@ export function initEmptyWeb3Instance() {
   window.localWeb3 = new LocalWeb3();
 }
 
-export function initWeb3(isSpace) {
+export function initWeb3(isSpace, isAdmin) {
   if (!window.walletSettings || !window.walletSettings.userPreferences) {
     // User settings aren't loaded
     throw new Error(constants.ERROR_WALLET_SETTINGS_NOT_LOADED);
@@ -133,7 +133,7 @@ export function initWeb3(isSpace) {
 
         // Display wallet in read only mode when selected Metamask account is
         // not the associated one
-        if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
+        if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (!isAdmin && window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
           createLocalWeb3Instance(isSpace, true);
         } else {
           window.localWeb3 = tempWeb3;

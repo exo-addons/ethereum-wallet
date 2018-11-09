@@ -859,7 +859,7 @@ export default {
             throw new Error("Wallet settings are empty for current user");
           }
         })
-        .then(() => ignoreContracts || initWeb3())
+        .then(() => ignoreContracts || initWeb3(false, true))
         .catch(error => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
             console.debug("Error connecting to network", error);
