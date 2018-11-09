@@ -28,7 +28,7 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
       })
       .then(receipt => {
         if (receipt) {
-          removePendingTransactionFromStorage(networkId, account, contractDetails, transactionHash);
+          transaction.loadedFromPending = true;
           return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
             .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
             .then(transactionDetails => {
@@ -269,7 +269,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     feeFiat: transactionFeeInFiat,
     feeToken: transaction.feeToken,
     date: timestamp ? new Date(timestamp) : transaction.timestamp,
-    pending: transaction.pending
+    pending: transaction.pending,
+    adminIcon: transaction.adminIcon
   };
 
   if (transaction.pending) {
@@ -283,8 +284,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
           tx.label = transaction.label;
           tx.message = transaction.message;
           transaction = tx;
-
-          removePendingTransactionFromStorage(networkId, account, accountDetails, transaction.hash);
+          transaction.loadedFromPending = true;
 
           return addTransaction(networkId, account, accountDetails, transactions, transaction, receipt, block && block.timestamp * 1000, watchLoadSuccess, watchLoadError);
         })
@@ -300,6 +300,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
           }
         });
     });
+  } else if(!transaction.loadedFromPending) {
+    removePendingTransactionFromStorage(networkId, account, accountDetails, transaction.hash);
   }
 
   // Test if address corresponds to a contract
@@ -344,9 +346,15 @@ export function addTransaction(networkId, account, accountDetails, transactions,
             const method = abiDecoder.decodeMethod(transaction.input);
             const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
             transactionDetails.contractMethodName = method && method.name;
-            if (transactionDetails.contractMethodName && decodedLogs && decodedLogs.length) {
+            if (transactionDetails.contractMethodName !== 'transfer'
+                && transactionDetails.contractMethodName !== 'transferFrom'
+                && transactionDetails.contractMethodName !== 'approve') {
+              transactionDetails.adminIcon = true;
+              transactionDetails.isReceiver = false;
+            }
+            if (transactionDetails.contractMethodName) {
               if (method.name === 'transfer' || method.name === 'approve') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && (decodedLog.name == 'Transfer' || decodedLog.name == 'Approval'));
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && (decodedLog.name == 'Transfer' || decodedLog.name == 'Approval'));
                 if (methodLog) {
                   transactionDetails.fromAddress = methodLog.events[0].value.toLowerCase();
                   transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
@@ -354,7 +362,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.isReceiver = transactionDetails.toAddress === account;
                 }
               } else if (method.name === 'transferFrom') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'Transfer');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'Transfer');
                 if (methodLog) {
                   transactionDetails.fromAddress = methodLog.events[0].value.toLowerCase();
                   transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
@@ -363,44 +371,43 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.isReceiver = false;
                 }
               } else if (method.name === 'approveAccount') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'ApprovedAccount');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'ApprovedAccount');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
-                  transactionDetails.isReceiver = false;
+                } else {
+                  transactionDetails.toDisplayName = 'previously approved';
                 }
               } else if (method.name === 'disapproveAccount') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'DisapprovedAccount');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'DisapprovedAccount');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
-                  transactionDetails.isReceiver = false;
+                } else {
+                  transactionDetails.toDisplayName = 'previously disapproved';
                 }
               } else if (method.name === 'addAdmin') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'AddedAdmin');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'AddedAdmin');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                   transactionDetails.contractAmount = methodLog.events[1].value;
                   transactionDetails.contractSymbol = 'Level';
                   transactionDetails.contractAmountLabel = 'Level';
-                  transactionDetails.isReceiver = false;
                 }
               } else if (method.name === 'removeAdmin') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'RemovedAdmin');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'RemovedAdmin');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
-                  transactionDetails.isReceiver = false;
                 }
               } else if (method.name === 'setSellPrice') {
-                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TokenPriceChanged');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TokenPriceChanged');
                 if (methodLog) {
                   transactionDetails.contractAmount = methodLog.events[0].value.toLowerCase();
                   if (transactionDetails.contractAmount) {
                     transactionDetails.contractAmount = window.localWeb3.utils.fromWei(String(transactionDetails.contractAmount), 'ether');
                   }
                   transactionDetails.contractSymbol = 'eth';
-                  transactionDetails.isReceiver = false;
                 }
               }
-              const transactionFeeLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransactionFee');
+              const transactionFeeLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransactionFee');
               if (transactionFeeLog) {
                 transactionDetails.feeToken = convertTokenAmountReceived(transactionFeeLog.events[1].value, transactionDetails.contractDecimals);
               }

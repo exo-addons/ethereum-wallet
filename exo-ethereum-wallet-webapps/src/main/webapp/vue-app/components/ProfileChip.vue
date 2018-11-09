@@ -2,6 +2,7 @@
   <a v-if="profileId" :id="id" :title="profileId" :href="url" rel="nofollow" target="_blank">
     <span v-html="displayName"></span>
   </a>
+  <span v-else-if="displayName" v-html="displayName"></span>
   <wallet-address v-else :value="address" />
 </template>
 

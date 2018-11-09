@@ -302,6 +302,7 @@ export default {
                   contractAmount : this.inputValue,
                   contractSymbol : this.contractSymbol,
                   contractAmountLabel : this.contractAmountLabel,
+                  adminIcon: true,
                   timestamp: Date.now(),
                   feeFiat: this.transactionFeeFiat[this.contractDetails.address]
                 }, this.contractDetails);

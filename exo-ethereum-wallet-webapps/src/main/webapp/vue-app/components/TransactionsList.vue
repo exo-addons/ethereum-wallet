@@ -23,6 +23,9 @@
               <v-list-tile-avatar v-else-if="item.error" :title="item.error">
                 <v-icon color="red">warning</v-icon>
               </v-list-tile-avatar>
+              <v-list-tile-avatar v-else-if="item.adminIcon">
+                <v-icon color="grey">fa-cog</v-icon>
+              </v-list-tile-avatar>
               <v-list-tile-avatar v-else-if="item.isReceiver">
                 <v-icon color="green">fa-arrow-down</v-icon>
               </v-list-tile-avatar>
@@ -276,7 +279,15 @@
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.amount && Number(item.amount) && item.amountFiat">
-                  <span>Ether sent to contract</span>
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Sent ether to contract</span>
                   <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
                   <wallet-address v-else :value="item.contractAddress" allow-copy />
                 </v-list-tile-title>
