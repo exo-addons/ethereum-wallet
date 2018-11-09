@@ -82,12 +82,6 @@ public class Utils {
   public static final String                             WALLET_RECEIVER_NOTIFICATION_ID       =
                                                                                          "EtherReceiverNotificationPlugin";
 
-  public static final String                             DEPRECATED_SENDER_NOTIFICATION_ID     =
-                                                                                           "ContractSenderNotificationPlugin";
-
-  public static final String                             DEPRECATED_RECEIVER_NOTIFICATION_ID   =
-                                                                                             "ContractReceiverNotificationPlugin";
-
   public static final String                             FUNDS_REQUEST_NOTIFICATION_ID         = "FundsRequestNotificationPlugin";
 
   public static final String                             FUNDS_REQUEST_SENT                    = "sent";

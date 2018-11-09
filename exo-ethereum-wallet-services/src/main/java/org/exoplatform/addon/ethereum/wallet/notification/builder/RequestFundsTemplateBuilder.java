@@ -29,8 +29,11 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
 
   private TemplateProvider templateProvider;
 
-  public RequestFundsTemplateBuilder(TemplateProvider templateProvider) {
+  private boolean          pushNotification;
+
+  public RequestFundsTemplateBuilder(TemplateProvider templateProvider, boolean pushNotification) {
     this.templateProvider = templateProvider;
+    this.pushNotification = pushNotification;
   }
 
   @Override
@@ -87,7 +90,11 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
       messageInfo.to(notification.getTo());
       messageInfo.from(notification.getFrom());
       messageInfo.pluginId(pluginId);
-      addMessageSubject(messageInfo, templateContext, type);
+      if (this.pushNotification) {
+        messageInfo.subject(fundsAcceptURL);
+      } else {
+        addMessageSubject(messageInfo, templateContext, type);
+      }
       return messageInfo.body(body).end();
     } catch (Exception e) {
       LOG.warn("An error occurred while building notification message", e);

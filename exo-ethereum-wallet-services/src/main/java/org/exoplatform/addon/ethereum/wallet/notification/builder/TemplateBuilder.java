@@ -6,6 +6,8 @@ import java.io.Writer;
 import java.util.Calendar;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.NotificationMessageUtils;
 import org.exoplatform.commons.api.notification.channel.template.AbstractTemplateBuilder;
@@ -18,8 +20,6 @@ import org.exoplatform.commons.api.notification.template.Element;
 import org.exoplatform.commons.notification.NotificationUtils;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.notification.template.TemplateUtils;
-import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.service.LinkProvider;
@@ -31,33 +31,17 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
 
   private TemplateProvider templateProvider;
 
-  private boolean          deprecated;
+  private boolean          pushNotification;
 
-  public TemplateBuilder(TemplateProvider templateProvider) {
-    this(templateProvider, false);
-  }
-
-  public TemplateBuilder(TemplateProvider templateProvider, boolean deprecated) {
+  public TemplateBuilder(TemplateProvider templateProvider, boolean pushNotification) {
     this.templateProvider = templateProvider;
-    this.deprecated = deprecated;
+    this.pushNotification = pushNotification;
   }
 
   @Override
   protected MessageInfo makeMessage(NotificationContext ctx) {
     NotificationInfo notification = ctx.getNotificationInfo();
     String pluginId = notification.getKey().getId();
-    if (isToUpgrade(pluginId)) {
-      pluginId = getNewId(pluginId);
-    }
-
-    if (deprecated) {
-      try {
-        CommonsUtils.getService(ListenerService.class).broadcast(UPGRADE_NOTIFICATION_SETTINGS, null, notification.getId());
-      } catch (Exception e) {
-        LOG.warn("Error while upgrading notification", e);
-      }
-    }
-
     String language = getLanguage(notification);
     TemplateContext templateContext =
                                     TemplateContext.newChannelInstance(this.templateProvider.getChannelKey(), pluginId, language);
@@ -86,7 +70,8 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("READ", Boolean.valueOf(notificationRead) ? "read" : "unread");
       templateContext.put("MESSAGE", message);
       templateContext.put("HASH", hash);
-      templateContext.put("BASE_URL", getAbsoluteMyWalletLink());
+      String absoluteMyWalletLink = getAbsoluteMyWalletLink();
+      templateContext.put("BASE_URL", absoluteMyWalletLink);
       try {
         templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
       } catch (Exception e) {
@@ -99,7 +84,12 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
         throw new IllegalStateException("An error occurred while building message", templateContext.getException());
       }
       MessageInfo messageInfo = new MessageInfo();
-      addMessageSubject(messageInfo, templateContext, type);
+      if (pushNotification) {
+        String pushNotificationLink = StringUtils.isBlank(hash) ? absoluteMyWalletLink : absoluteMyWalletLink + "?hash=" + hash;
+        messageInfo.subject(pushNotificationLink);
+      } else {
+        addMessageSubject(messageInfo, templateContext, type);
+      }
       return messageInfo.body(body).end();
     } catch (Exception e) {
       LOG.warn("An error occurred while building notification message", e);
@@ -110,14 +100,6 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
   @Override
   protected boolean makeDigest(NotificationContext ctx, Writer writer) {
     return false;
-  }
-
-  private boolean isToUpgrade(String pluginId) {
-    return DEPRECATED_RECEIVER_NOTIFICATION_ID.equals(pluginId) || DEPRECATED_RECEIVER_NOTIFICATION_ID.equals(pluginId);
-  }
-
-  private String getNewId(String pluginId) {
-    return DEPRECATED_RECEIVER_NOTIFICATION_ID.equals(pluginId) ? WALLET_RECEIVER_NOTIFICATION_ID : WALLET_SENDER_NOTIFICATION_ID;
   }
 
   private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext, String type) {

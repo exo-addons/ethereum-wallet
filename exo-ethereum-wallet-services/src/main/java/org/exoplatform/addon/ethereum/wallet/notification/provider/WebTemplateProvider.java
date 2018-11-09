@@ -34,11 +34,9 @@ public class WebTemplateProvider extends TemplateProvider {
 
   public WebTemplateProvider(InitParams initParams) {
     super(initParams);
-    this.templateBuilders.put(PluginKey.key(WALLET_SENDER_NOTIFICATION_ID), new TemplateBuilder(this));
-    this.templateBuilders.put(PluginKey.key(WALLET_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this));
-    this.templateBuilders.put(PluginKey.key(DEPRECATED_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this, true));
-    this.templateBuilders.put(PluginKey.key(DEPRECATED_SENDER_NOTIFICATION_ID), new TemplateBuilder(this, true));
-    this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID), new RequestFundsTemplateBuilder(this));
+    this.templateBuilders.put(PluginKey.key(WALLET_SENDER_NOTIFICATION_ID), new TemplateBuilder(this, false));
+    this.templateBuilders.put(PluginKey.key(WALLET_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this, false));
+    this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID), new RequestFundsTemplateBuilder(this, false));
   }
 
 }

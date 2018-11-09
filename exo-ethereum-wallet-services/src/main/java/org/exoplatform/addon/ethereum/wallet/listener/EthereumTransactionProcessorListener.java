@@ -154,11 +154,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
           transactionStatusOk = true;
           // Chack if ether was sent to contract
           if (!isContractTransaction && StringUtils.isBlank(receiver.getId())) {
-            ContractDetail receiverContractDetail =
-                                                  ethereumWalletService.getDefaultContractDetail(receiver.getAddress(),
-                                                                                                 settings.getDefaultNetworkId());
-            if (receiverContractDetail != null) {
-              receiver.setName("Contract: " + receiverContractDetail.getName());
+            if (contractDetails != null) {
+              receiver.setName("Contract: " + contractDetails.getName());
             }
           }
           // Send notification
