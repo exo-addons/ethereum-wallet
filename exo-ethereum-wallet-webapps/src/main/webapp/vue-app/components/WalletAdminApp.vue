@@ -1278,6 +1278,7 @@ export default {
             window.walletSettings.fundsHolder = this.fundsHolder;
             window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
             window.walletSettings.defaultGas = this.defaultGas;
+            window.walletSettings.defaultPrincipalAccount = this.selectedPrincipalAccount && this.selectedPrincipalAccount.value;
             this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
   
             this.loadingSettings = this.loading = false;
