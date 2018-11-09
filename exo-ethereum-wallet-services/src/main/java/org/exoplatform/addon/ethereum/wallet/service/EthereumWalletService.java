@@ -182,10 +182,10 @@ public class EthereumWalletService implements Startable {
     if (params.containsKey(DEFAULT_CONTRACTS_ADDRESSES)) {
       String defaultContractsToDisplay = params.getValueParam(DEFAULT_CONTRACTS_ADDRESSES).getValue();
       if (StringUtils.isNotBlank(defaultContractsToDisplay)) {
-        List<String> defaultContracts = Arrays.stream(defaultContractsToDisplay.split(","))
-                                              .map(contractAddress -> contractAddress.trim().toLowerCase())
-                                              .filter(contractAddress -> !contractAddress.isEmpty())
-                                              .collect(Collectors.toList());
+        Set<String> defaultContracts = Arrays.stream(defaultContractsToDisplay.split(","))
+                                             .map(contractAddress -> contractAddress.trim().toLowerCase())
+                                             .filter(contractAddress -> !contractAddress.isEmpty())
+                                             .collect(Collectors.toSet());
         defaultSettings.setDefaultContractsToDisplay(defaultContracts);
       }
     }
@@ -275,11 +275,11 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public GlobalSettings getSettings() {
-    if (storedSettings != null) {
+    if (this.storedSettings != null) {
       // Retrieve stored global settings from memory
-      return storedSettings;
+      return this.storedSettings;
     }
-    return storedSettings = getSettings(null);
+    return this.storedSettings = getSettings(null);
   }
 
   /**
@@ -449,11 +449,16 @@ public class EthereumWalletService implements Startable {
    */
   public ContractDetail getDefaultContractDetail(String address, Long networkId) {
     if (StringUtils.isBlank(address)) {
-      LOG.warn("Can't remove empty address for contract");
+      LOG.warn("Can't get default contract detail with empty address");
       return null;
     }
     if (networkId == null || networkId == 0) {
       LOG.warn("Can't remove empty network id for contract");
+      return null;
+    }
+
+    Set<String> defaultContracts = getDefaultContractsAddresses(networkId);
+    if (defaultContracts != null && !defaultContracts.contains(address)) {
       return null;
     }
 
@@ -470,21 +475,24 @@ public class EthereumWalletService implements Startable {
    * @param networkId
    * @return
    */
-  public List<String> getDefaultContractsAddresses(Long networkId) {
+  public Set<String> getDefaultContractsAddresses(Long networkId) {
     if (networkId == null || networkId == 0) {
-      return Collections.emptyList();
+      return Collections.emptySet();
     }
-    List<String> contractAddressList = null;
+
+    if (this.storedSettings != null && networkId == this.storedSettings.getDefaultNetworkId()
+        && this.storedSettings.getDefaultContractsToDisplay() != null) {
+      return this.storedSettings.getDefaultContractsToDisplay();
+    }
+
     String defaultContractsParamKey = WALLET_DEFAULT_CONTRACTS_NAME + networkId;
     SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
     if (defaultContractsAddressesValue != null) {
       String defaultContractsAddressesString = defaultContractsAddressesValue.getValue().toString().toLowerCase();
       String[] contractAddresses = defaultContractsAddressesString.split(",");
-      contractAddressList = Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toList());
-    } else {
-      contractAddressList = Collections.emptyList();
+      return Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toSet());
     }
-    return contractAddressList;
+    return null;
   }
 
   /**

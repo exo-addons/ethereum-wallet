@@ -1,6 +1,6 @@
 <template>
-  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white">
-    <v-card-title class="align-start">
+  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white layout column">
+    <v-card-title class="align-start accountDetailSummary">
       <v-layout column>
         <v-flex id="accountDetailTitle">
           <div class="headline title align-start">

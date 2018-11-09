@@ -224,7 +224,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
 
   account = account.toLowerCase();
 
-  const isReceiver = toAddress === account;
+  const isReceiver = transaction.isSender ? false : toAddress === account;
 
   // Calculate sent/received amount
   const amount = transaction.value ? parseFloat(window.localWeb3.utils.fromWei(transaction.value, 'ether')) : 0;
@@ -243,7 +243,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     contractDetails: null,
     contractAddress: transaction.contractAddress,
     contractName: null,
-    contractSymbol: null,
+    contractSymbol: transaction.contractSymbol,
+    contractAmountLabel: transaction.contractAmountLabel,
     contractMethodName: transaction.contractMethodName,
     contractAmount: transaction.contractAmount,
     byAddress: byAddress,
@@ -318,7 +319,20 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.type = 'contract';
         transactionDetails.contractName = contractDetails.name;
         transactionDetails.contractAddress = contractDetails.address;
-        transactionDetails.contractSymbol = contractDetails.symbol;
+        if (!transactionDetails.contractAmountLabel) {
+          transactionDetails.contractAmountLabel = 'Amount';
+        }
+        if (!transactionDetails.contractSymbol) {
+          transactionDetails.contractSymbol = contractDetails.symbol;
+        }
+        if (transactionDetails.contractMethodName === 'addAdmin') {
+          transactionDetails.contractSymbol = 'Level';
+          transactionDetails.contractAmountLabel = 'Level';
+        }
+        if (transactionDetails.contractMethodName === 'setSellPrice') {
+          transactionDetails.contractSymbol = 'eth';
+        }
+
         transactionDetails.contractDecimals = contractDetails.decimals || 0;
         try {
           if (transactionDetails.isContractCreation) {
@@ -346,6 +360,43 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
                   transactionDetails.byAddress = transaction.from.toLowerCase();
                   transactionDetails.contractAmount = convertTokenAmountReceived(methodLog.events[2].value, transactionDetails.contractDecimals);
+                  transactionDetails.isReceiver = false;
+                }
+              } else if (method.name === 'approveAccount') {
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'ApprovedAccount');
+                if (methodLog) {
+                  transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
+                  transactionDetails.isReceiver = false;
+                }
+              } else if (method.name === 'disapproveAccount') {
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'DisapprovedAccount');
+                if (methodLog) {
+                  transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
+                  transactionDetails.isReceiver = false;
+                }
+              } else if (method.name === 'addAdmin') {
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'AddedAdmin');
+                if (methodLog) {
+                  transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
+                  transactionDetails.contractAmount = methodLog.events[1].value;
+                  transactionDetails.contractSymbol = 'Level';
+                  transactionDetails.contractAmountLabel = 'Level';
+                  transactionDetails.isReceiver = false;
+                }
+              } else if (method.name === 'removeAdmin') {
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'RemovedAdmin');
+                if (methodLog) {
+                  transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
+                  transactionDetails.isReceiver = false;
+                }
+              } else if (method.name === 'setSellPrice') {
+                const methodLog = decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TokenPriceChanged');
+                if (methodLog) {
+                  transactionDetails.contractAmount = methodLog.events[0].value.toLowerCase();
+                  if (transactionDetails.contractAmount) {
+                    transactionDetails.contractAmount = window.localWeb3.utils.fromWei(String(transactionDetails.contractAmount), 'ether');
+                  }
+                  transactionDetails.contractSymbol = 'eth';
                   transactionDetails.isReceiver = false;
                 }
               }
@@ -580,7 +631,7 @@ export function getPendingTransactionFromStorage(networkId, account, contractDet
   }
 }
 
-export function saveTransactionMessage(transactionHash, transactionMessage, transactionLabel) {
+export function saveTransactionMessage(transactionHash, transactionMessage, transactionLabel, address) {
   if (transactionHash && (transactionMessage || transactionLabel)) {
     transactionLabel = transactionLabel || '';
     transactionMessage = transactionMessage || '';
@@ -596,6 +647,7 @@ export function saveTransactionMessage(transactionHash, transactionMessage, tran
         hash: transactionHash,
         label: transactionLabel,
         message: transactionMessage,
+        sender: address
       })
     });
   }

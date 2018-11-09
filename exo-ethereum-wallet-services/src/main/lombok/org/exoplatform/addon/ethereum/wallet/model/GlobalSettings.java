@@ -14,54 +14,54 @@ import lombok.Data;
 @Data
 public class GlobalSettings implements Serializable {
 
-  private static final long      serialVersionUID           = -4672745644323864680L;
+  private static final long     serialVersionUID           = -4672745644323864680L;
 
-  private boolean                walletEnabled              = true;
+  private boolean               walletEnabled              = true;
 
-  private boolean                enableDelegation           = true;
+  private boolean               enableDelegation           = true;
 
-  private boolean                isAdmin                    = false;
+  private boolean               isAdmin                    = false;
 
-  private String                 accessPermission           = null;
+  private String                accessPermission           = null;
 
-  private String                 fundsHolder                = null;
+  private String                fundsHolder                = null;
 
-  private String                 initialFundsRequestMessage = null;
+  private String                initialFundsRequestMessage = null;
 
-  private String                 fundsHolderType            = USER_ACCOUNT_TYPE;
+  private String                fundsHolderType            = USER_ACCOUNT_TYPE;
 
-  private String                 providerURL                = "https://ropsten.infura.io";
+  private String                providerURL                = "https://ropsten.infura.io";
 
-  private String                 websocketProviderURL       = "wss://ropsten.infura.io/ws";
+  private String                websocketProviderURL       = "wss://ropsten.infura.io/ws";
 
-  private Integer                defaultBlocksToRetrieve    = 100;
+  private Integer               defaultBlocksToRetrieve    = 100;
 
-  private Long                   defaultNetworkId           = 3L;
+  private Long                  defaultNetworkId           = 3L;
 
-  private Integer                defaultGas                 = 65000;
+  private Integer               defaultGas                 = 65000;
 
-  private String                 defaultPrincipalAccount    = null;
+  private String                defaultPrincipalAccount    = null;
 
-  private List<String>           defaultOverviewAccounts    = null;
+  private List<String>          defaultOverviewAccounts    = null;
 
-  private Map<String, Double>    initialFunds;
+  private Map<String, Double>   initialFunds;
 
-  private UserPreferences        userPreferences;
+  private UserPreferences       userPreferences;
 
   /**
    * Managed in other storage location
    */
-  private transient List<String> defaultContractsToDisplay;
+  private transient Set<String> defaultContractsToDisplay;
 
   /**
    * Managed by code
    */
-  private transient JSONArray    contractAbi                = null;
+  private transient JSONArray   contractAbi                = null;
 
   /**
    * Managed by code
    */
-  private transient String       contractBin                = null;
+  private transient String      contractBin                = null;
 
   public String toJSONString(boolean includeTransient) {
     return toJSONObject(includeTransient).toString();

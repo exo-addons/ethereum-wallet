@@ -280,11 +280,31 @@ export default {
               })
               .on('transactionHash', hash => {
                 this.transactionHash = hash;
-                saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
+                // save transaction message for current user
+                saveTransactionMessage(hash, null, null);
+                // save transaction message for contract
+                saveTransactionMessage(hash, null, null, this.contractDetails.address);
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
                 // The transaction has been hashed and will be sent
-                this.$emit("sent", this.contractDetails);
+                this.$emit("sent", {
+                  hash: hash,
+                  from: this.walletAddress,
+                  to: this.autocompleteValue ? this.autocompleteValue : this.contractDetails.address,
+                  type: 'contract',
+                  value : 0,
+                  gas: window.walletSettings.userPreferences.defaultGas,
+                  gasPrice: window.walletSettings.gasPrice,
+                  pending: true,
+                  isSender: true,
+                  contractAddress: this.contractDetails.address,
+                  contractMethodName: this.methodName,
+                  contractAmount : this.inputValue,
+                  contractSymbol : this.contractSymbol,
+                  contractAmountLabel : this.contractAmountLabel,
+                  timestamp: Date.now(),
+                  feeFiat: this.transactionFeeFiat[this.contractDetails.address]
+                }, this.contractDetails);
                 const thiss = this;
                 // FIXME workaround when can't execute .then(...) method, especially in pause, unpause.
                 watchTransactionStatus(hash, () => {

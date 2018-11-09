@@ -20,7 +20,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventValues;
@@ -68,19 +68,31 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     String senderAddress = transaction.getFrom();
     String receiverAddress = null;
 
-    String contractAddress = null;
-
     AccountDetail sender = null;
     AccountDetail receiver = null;
-    ContractDetail contractDetails = null;
+
+    GlobalSettings settings = ethereumWalletService.getSettings();
+
+    ContractDetail contractDetails =
+                                   StringUtils.isBlank(transaction.getTo()) ? null
+                                                                            : ethereumWalletService.getDefaultContractDetail(transaction.getTo(),
+                                                                                                                             settings.getDefaultNetworkId());
+    // Save transaction in contract transactions list
+    if (contractDetails != null) {
+      if (StringUtils.isNotBlank(contractDetails.getName())) {
+        ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(),
+                                                     transaction.getTo(),
+                                                     transaction.getHash(),
+                                                     false);
+      }
+    }
 
     BigInteger amountBigInteger = transaction.getValue();
     double amount = Convert.fromWei(amountBigInteger.toString(), Convert.Unit.ETHER).doubleValue();
     boolean isContractTransaction = amount == 0;
     boolean sendNotification = true;
 
-    GlobalSettings settings = ethereumWalletService.getSettings();
-
+    String contractAddress = null;
     // Compute receiver address switch transaction type
     if (isContractTransaction) {
       contractAddress = transaction.getTo();
@@ -89,7 +101,6 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         sendNotification = false;
       } else {
         try {
-          contractDetails = ethereumWalletService.getDefaultContractDetail(contractAddress, settings.getDefaultNetworkId());
           ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(settings,
                                                                                                    contractDetails,
                                                                                                    transaction);
@@ -220,7 +231,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     String contractAddress = transaction.getTo();
-    List<String> defaultContracts = settings.getDefaultContractsToDisplay();
+    Set<String> defaultContracts = settings.getDefaultContractsToDisplay();
     if (defaultContracts != null && defaultContracts.contains(contractAddress)) {
       // Default contract transaction, need to check receiver address if
       // he's recognized

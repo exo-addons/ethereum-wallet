@@ -356,6 +356,7 @@
                   width="700"
                   max-width="100vw">
                   <contract-detail
+                    ref="contractDetail"
                     :wallet-address="walletAddress"
                     :contract-details="selectedContractDetails"
                     :network-id="networkId"
@@ -930,6 +931,9 @@ export default {
         const contract = this.contracts.find(contract => contract && contract.address && contract.address.toLowerCase() === recipient.toLowerCase());
         if (contract) {
           this.$set(contract, "loadingBalance", true);
+          if (this.$refs.contractDetail) {
+            this.$refs.contractDetail.newTransactionPending(transaction);
+          }
         }
       }
     },

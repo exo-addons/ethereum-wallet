@@ -318,7 +318,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    transactionMessage.setSender(getCurrentUserId());
+    if (StringUtils.isBlank(transactionMessage.getSender())) {
+      transactionMessage.setSender(getCurrentUserId());
+    }
     try {
       ethereumWalletService.saveTransactionMessage(transactionMessage);
     } catch (Exception e) {

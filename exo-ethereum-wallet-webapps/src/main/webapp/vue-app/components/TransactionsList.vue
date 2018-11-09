@@ -18,7 +18,7 @@
           :value="item.selected">
 
           <v-list slot="header" :class="item.selected && 'blue lighten-5'" two-line class="pt-0 pb-0">
-            <v-list-tile :key="item.hash" avatar>
+            <v-list-tile :key="item.hash" class="transactionDetailItem" avatar>
               <v-progress-circular v-if="item.pending" indeterminate color="primary" class="mr-4" />
               <v-list-tile-avatar v-else-if="item.error" :title="item.error">
                 <v-icon color="red">warning</v-icon>
@@ -145,6 +145,142 @@
                     :avatar="item.toAvatar" />
                 </v-list-tile-title>
 
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'addAdmin'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Added</span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <span>as administrator on contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'removeAdmin'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Removed</span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <span>as administrator from contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approveAccount'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Approved</span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <span>account on contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'disapproveAccount'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Disapproved</span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <span>account on contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'pause'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Paused contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'unPause'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Un-paused contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'setSellPrice'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Modified sell price to contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.amount && Number(item.amount) && item.amountFiat">
+                  <span>Ether sent to contract</span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
+
                 <v-list-tile-title v-else>
                   <span>Contract transaction</span>
                   <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
@@ -160,7 +296,7 @@
 
               </v-list-tile-content>
 
-              <v-list-tile-content v-if="item.type === 'ether'" class="transactionDetailActions">
+              <v-list-tile-content v-if="item.type === 'ether' && item.amount && Number(item.amount)" class="transactionDetailActions">
                 <v-list-tile-title :class="item.isReceiver ? 'green--text' : 'red--text'">
                   <span>{{ Number(item.amount) }} ETH</span>
                 </v-list-tile-title>
@@ -169,9 +305,9 @@
                 </v-list-tile-sub-title>
               </v-list-tile-content>
 
-              <v-list-tile-content v-else-if="item.type === 'contract' && !item.isContractCreation" class="transactionDetailActions">
-                <v-list-tile-title v-if="item.contractAmount" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number(item.contractAmount) }} {{ item.contractSymbol }}</span></v-list-tile-title>
-                <v-list-tile-title v-else :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ item.amount ? Number(item.amount) : 0 }} ether</span></v-list-tile-title>
+              <v-list-tile-content v-else class="transactionDetailActions">
+                <v-list-tile-title v-if="item.contractAmount" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number.isInteger(item.contractAmount) ? Number(item.contractAmount) : item.contractAmount }} {{ item.contractSymbol }}</span></v-list-tile-title>
+                <v-list-tile-title v-else-if="item.amount && Number(item.amount)" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ item.amount ? Number(item.amount) : 0 }} ether</span></v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
                 <v-list-tile-sub-title v-else />
               </v-list-tile-content>
@@ -203,7 +339,7 @@
             </v-list-tile>
 
             <v-list-tile v-if="Number(item.contractAmount)">
-              <v-list-tile-content>Amount</v-list-tile-content>
+              <v-list-tile-content>{{ item.contractAmountLabel }}</v-list-tile-content>
               <v-list-tile-content class="align-end">
                 {{ item.contractAmount }} {{ item.contractSymbol }}
               </v-list-tile-content>

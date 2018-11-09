@@ -103,6 +103,8 @@ export default {
         this.$refs.sendEtherForm.init();
         if (this.recipient && this.$refs.sendEtherForm.$refs.autocomplete) {
           this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.recipient);
+          // To force update
+          this.$refs.sendEtherForm.recipient = this.recipient;
         }
       } else {
         this.$emit('close');

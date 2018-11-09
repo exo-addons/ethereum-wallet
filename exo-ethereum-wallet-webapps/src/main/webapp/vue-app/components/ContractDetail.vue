@@ -1,13 +1,12 @@
 <template>
-  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white">
-    <v-card-title class="align-start">
+  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white layout column">
+    <v-card-title class="align-start accountDetailSummary">
       <v-layout column>
         <v-flex id="accountDetailTitle" class="mt-3">
           <div class="headline title align-start">
             <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
             Contract Details: {{ contractDetails.title }}
           </div>
-          <v-progress-circular v-if="detailsLoading" :width="3" indeterminate color="primary" />
           <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Balance: {{ contractDetails.contractBalanceFiat }} {{ fiatSymbol }} / {{ contractDetails.contractBalance }} ether</h3>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
         </v-flex>
@@ -21,8 +20,8 @@
             :recipient="contractDetails.address"
             use-navigation
             @success="successSendingEther"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; error = $event" />
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- add/remove admin -->
           <contract-admin-modal
@@ -35,9 +34,9 @@
             autocomplete-placeholder="Choose an administrator account to add"
             input-label="Hibilitation level"
             input-placeholder="Choose a value between 1 and 5"
-            @success="detailsLoading = false; $forceUpdate()"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @success="$forceUpdate()"
+            @sent="newTransactionPending"
+            @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 5"
             :contract-details="contractDetails"
@@ -46,9 +45,9 @@
             title="Remove administrator"
             autocomplete-label="Administrator account"
             autocomplete-placeholder="Choose an administrator account to remove"
-            @success="detailsLoading = false; $forceUpdate()"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @success="$forceUpdate()"
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- approve/disapprove account -->
           <contract-admin-modal
@@ -59,9 +58,9 @@
             title="Approve account"
             autocomplete-label="Account"
             autocomplete-placeholder="Choose a user or space to approve"
-            @success="detailsLoading = false; $forceUpdate()"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @success="$forceUpdate()"
+            @sent="newTransactionPending"
+            @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 1"
             :contract-details="contractDetails"
@@ -70,9 +69,9 @@
             title="Disapprove account"
             autocomplete-label="Account"
             autocomplete-placeholder="Choose a user or space to disapprove"
-            @success="detailsLoading = false; $forceUpdate()"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @success="$forceUpdate()"
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- pause/unpause contract -->
           <contract-admin-modal
@@ -82,8 +81,8 @@
             method-name="pause"
             title="Pause contract"
             @success="refresh"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @sent="newTransactionPending"
+            @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.isPaused && contractDetails.adminLevel >= 5"
             :contract-details="contractDetails"
@@ -91,8 +90,8 @@
             method-name="unPause"
             title="Unpause contract"
             @success="refresh"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- set sell price -->
           <contract-admin-modal
@@ -105,8 +104,8 @@
             input-placeholder="Token sell price in ether"
             convert-wei
             @success="refresh"
-            @sent="detailsLoading = true; $forceUpdate()"
-            @error="detailsLoading = false; $forceUpdate(); error = $event" />
+            @sent="newTransactionPending"
+            @error="transactionError" />
         </v-flex>
         <v-btn icon class="rightIcon" @click="$emit('back')">
           <v-icon>close</v-icon>
@@ -192,16 +191,21 @@ export default {
           this.$forceUpdate();
         });
     },
-    refresh() {
-      if (this.detailsLoading) {
-        return retrieveContractDetails(this.walletAddress, this.contractDetails)
-          .then(() => {
-            this.detailsLoading = false;
-            this.$forceUpdate();
-          });
-      } else {
-        return Promise.resolve(false);
+    newTransactionPending(transaction, contractDetails) {
+      if (this.$refs.transactionsList) {
+        this.$refs.transactionsList.addTransaction(transaction, contractDetails);
       }
+      this.$forceUpdate();
+    },
+    transactionError(error) {
+      this.error = String(error);
+      this.$forceUpdate();
+    },
+    refresh() {
+      return retrieveContractDetails(this.walletAddress, this.contractDetails)
+        .then(() => {
+          this.$forceUpdate();
+        });
     }
   }
 };
