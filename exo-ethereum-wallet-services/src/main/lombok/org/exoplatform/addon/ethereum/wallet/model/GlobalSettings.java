@@ -16,6 +16,8 @@ public class GlobalSettings implements Serializable {
 
   private static final long     serialVersionUID           = -4672745644323864680L;
 
+  private Integer               dataVersion                = 0;
+
   private boolean               walletEnabled              = true;
 
   private boolean               enableDelegation           = true;
@@ -82,6 +84,7 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
+      jsonObject.put("dataVersion", dataVersion);
 
       if (initialFunds != null && !initialFunds.isEmpty()) {
         JSONArray array = new JSONArray();
@@ -177,6 +180,7 @@ public class GlobalSettings implements Serializable {
                                                                                      : null;
       globalSettings.setDefaultPrincipalAccount(storedDefaultPrincipalAccount);
       globalSettings.setDefaultOverviewAccounts(jsonArrayToList(jsonObject, "defaultOverviewAccounts"));
+      globalSettings.setDataVersion(jsonObject.has("dataVersion") ? jsonObject.getInt("dataVersion") : 0);
       return globalSettings;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);

@@ -247,7 +247,7 @@
                   v-model="defaultGas"
                   :label="`Maximum transaction fee: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
                   :min="35000"
-                  :max="100000"
+                  :max="200000"
                   :step="1000"
                   type="number"
                   class="mt-4"

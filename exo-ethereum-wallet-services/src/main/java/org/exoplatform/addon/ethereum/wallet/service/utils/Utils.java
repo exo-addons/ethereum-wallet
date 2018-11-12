@@ -29,6 +29,8 @@ import org.web3j.abi.datatypes.generated.Uint256;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
+import org.exoplatform.commons.api.settings.data.Context;
+import org.exoplatform.commons.api.settings.data.Scope;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.portal.application.PortalApplication;
@@ -50,7 +52,54 @@ import org.exoplatform.webui.application.WebuiRequestContext;
 public class Utils {
   private static final Log                               LOG                                   = ExoLogger.getLogger(Utils.class);
 
-  public static final int                                DATA_VERSION                          = 1;
+  public static final char[]                             SIMPLE_CHARS                          = new char[] { 'A', 'B', 'C', 'D',
+      'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
+      'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1',
+      '2', '3', '4', '5', '6', '7', '8', '9' };
+
+  public static final String                             DEFAULT_NETWORK_ID                    = "defaultNetworkId";
+
+  public static final String                             DEFAULT_NETWORK_URL                   = "defaultNetworkURL";
+
+  public static final String                             DEFAULT_NETWORK_WS_URL                = "defaultNetworkWSURL";
+
+  public static final String                             DEFAULT_ACCESS_PERMISSION             = "defaultAccessPermission";
+
+  public static final String                             DEFAULT_GAS                           = "defaultGas";
+
+  public static final String                             DEFAULT_BLOCKS_TO_RETRIEVE            = "defaultBlocksToRetrieve";
+
+  public static final String                             DEFAULT_CONTRACTS_ADDRESSES           = "defaultContractAddresses";
+
+  public static final String                             SCOPE_NAME                            = "ADDONS_ETHEREUM_WALLET";
+
+  public static final String                             GLOBAL_SETTINGS_KEY_NAME              = "GLOBAL_SETTINGS";
+
+  public static final String                             ADDRESS_KEY_NAME                      = "ADDONS_ETHEREUM_WALLET_ADDRESS";
+
+  public static final String                             LAST_BLOCK_NUMBER_KEY_NAME            =
+                                                                                    "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
+
+  public static final String                             SETTINGS_KEY_NAME                     =
+                                                                           "ADDONS_ETHEREUM_WALLET_SETTINGS";
+
+  public static final Context                            WALLET_CONTEXT                        = Context.GLOBAL;
+
+  public static final Scope                              WALLET_SCOPE                          = Scope.APPLICATION.id(SCOPE_NAME);
+
+  public static final String                             WALLET_DEFAULT_CONTRACTS_NAME         = "WALLET_DEFAULT_CONTRACTS";
+
+  public static final String                             WALLET_USER_TRANSACTION_NAME          = "WALLET_USER_TRANSACTION";
+
+  public static final String                             WALLET_BROWSER_PHRASE_NAME            = "WALLET_BROWSER_PHRASE";
+
+  public static final String                             ABI_PATH_PARAMETER                    = "contract.abi.path";
+
+  public static final String                             BIN_PATH_PARAMETER                    = "contract.bin.path";
+
+  public static final int                                GLOBAL_DATA_VERSION                   = 1;
+
+  public static final int                                USER_DATA_VERSION                     = 1;
 
   public static final int                                DEFAULT_GAS_UPGRADE_VERSION           = 1;
 

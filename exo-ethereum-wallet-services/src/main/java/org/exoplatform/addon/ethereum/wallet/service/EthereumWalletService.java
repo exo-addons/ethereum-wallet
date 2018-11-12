@@ -40,7 +40,6 @@ import org.exoplatform.commons.api.notification.service.storage.WebNotificationS
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
-import org.exoplatform.commons.api.settings.data.Scope;
 import org.exoplatform.commons.cache.future.FutureExoCache;
 import org.exoplatform.commons.cache.future.Loader;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
@@ -68,84 +67,8 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
-  private static final char[]                                                                SIMPLE_CHARS                  =
-                                                                                                          new char[] { 'A', 'B',
-                                                                                                              'C', 'D', 'E', 'F',
-                                                                                                              'G', 'H', 'I', 'J',
-                                                                                                              'K', 'L', 'M', 'N',
-                                                                                                              'O', 'P', 'Q', 'R',
-                                                                                                              'S', 'T', 'U', 'V',
-                                                                                                              'W', 'X', 'Y', 'Z',
-                                                                                                              'a', 'b', 'c', 'd',
-                                                                                                              'e', 'f', 'g', 'h',
-                                                                                                              'i', 'j', 'k', 'l',
-                                                                                                              'm', 'n', 'o', 'p',
-                                                                                                              'q', 'r', 's', 't',
-                                                                                                              'u', 'v', 'w', 'x',
-                                                                                                              'y', 'z', '0', '1',
-                                                                                                              '2', '3', '4', '5',
-                                                                                                              '6', '7', '8',
-                                                                                                              '9' };
-
-  private static final Log                                                                   LOG                           =
+  private static final Log                                                                   LOG                      =
                                                                                                  ExoLogger.getLogger(EthereumWalletService.class);
-
-  public static final String                                                                 DEFAULT_NETWORK_ID            =
-                                                                                                                "defaultNetworkId";
-
-  public static final String                                                                 DEFAULT_NETWORK_URL           =
-                                                                                                                 "defaultNetworkURL";
-
-  public static final String                                                                 DEFAULT_NETWORK_WS_URL        =
-                                                                                                                    "defaultNetworkWSURL";
-
-  public static final String                                                                 DEFAULT_ACCESS_PERMISSION     =
-                                                                                                                       "defaultAccessPermission";
-
-  public static final String                                                                 DEFAULT_GAS                   =
-                                                                                                         "defaultGas";
-
-  public static final String                                                                 DEFAULT_BLOCKS_TO_RETRIEVE    =
-                                                                                                                        "defaultBlocksToRetrieve";
-
-  public static final String                                                                 DEFAULT_CONTRACTS_ADDRESSES   =
-                                                                                                                         "defaultContractAddresses";
-
-  public static final String                                                                 SCOPE_NAME                    =
-                                                                                                        "ADDONS_ETHEREUM_WALLET";
-
-  public static final String                                                                 GLOBAL_SETTINGS_KEY_NAME      =
-                                                                                                                      "GLOBAL_SETTINGS";
-
-  public static final String                                                                 ADDRESS_KEY_NAME              =
-                                                                                                              "ADDONS_ETHEREUM_WALLET_ADDRESS";
-
-  public static final String                                                                 LAST_BLOCK_NUMBER_KEY_NAME    =
-                                                                                                                        "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
-
-  public static final String                                                                 SETTINGS_KEY_NAME             =
-                                                                                                               "ADDONS_ETHEREUM_WALLET_SETTINGS";
-
-  public static final Context                                                                WALLET_CONTEXT                =
-                                                                                                            Context.GLOBAL;
-
-  public static final Scope                                                                  WALLET_SCOPE                  =
-                                                                                                          Scope.APPLICATION.id(SCOPE_NAME);
-
-  public static final String                                                                 WALLET_DEFAULT_CONTRACTS_NAME =
-                                                                                                                           "WALLET_DEFAULT_CONTRACTS";
-
-  public static final String                                                                 WALLET_USER_TRANSACTION_NAME  =
-                                                                                                                          "WALLET_USER_TRANSACTION";
-
-  public static final String                                                                 WALLET_BROWSER_PHRASE_NAME    =
-                                                                                                                        "WALLET_BROWSER_PHRASE";
-
-  public static final String                                                                 ABI_PATH_PARAMETER            =
-                                                                                                                "contract.abi.path";
-
-  public static final String                                                                 BIN_PATH_PARAMETER            =
-                                                                                                                "contract.bin.path";
 
   private ExoContainer                                                                       container;
 
@@ -163,7 +86,7 @@ public class EthereumWalletService implements Startable {
 
   private ConfigurationManager                                                               configurationManager;
 
-  private GlobalSettings                                                                     defaultSettings               =
+  private GlobalSettings                                                                     defaultSettings          =
                                                                                                              new GlobalSettings();
 
   private GlobalSettings                                                                     storedSettings;
@@ -176,21 +99,21 @@ public class EthereumWalletService implements Startable {
 
   private String                                                                             contractBinary;
 
-  private ExoCache<String, TransactionMessage>                                               transactionMessagesCache      = null;
+  private ExoCache<String, TransactionMessage>                                               transactionMessagesCache = null;
 
   // Added as cache instead of Set<AccountDetail> for future usage in clustered
   // environments
-  private ExoCache<AccountDetailCacheId, AccountDetail>                                      accountDetailCache            = null;
+  private ExoCache<AccountDetailCacheId, AccountDetail>                                      accountDetailCache       = null;
 
   /*
    * Key: Address or id of entity (space group id prefix or username). Value:
    * account details. Context: Type of entity or address if null.
    */
-  private FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>> accountDetailFutureCache      = null;
+  private FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>> accountDetailFutureCache = null;
 
-  private long                                                                               walletsCount                  = 0;
+  private long                                                                               walletsCount             = 0;
 
-  private ScheduledExecutorService                                                           scheduledExecutorService      = null;
+  private ScheduledExecutorService                                                           scheduledExecutorService = null;
 
   public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
@@ -283,6 +206,10 @@ public class EthereumWalletService implements Startable {
       if (!contractBinary.startsWith("0x")) {
         contractBinary = "0x" + contractBinary;
       }
+
+      // check global settings upgrade
+      checkDataToUpgrade(getSettings());
+
       ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-cache-populator-%d").build();
       scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
       // Transactions Queue processing
@@ -1082,19 +1009,38 @@ public class EthereumWalletService implements Startable {
   private void checkDataToUpgrade(String username, UserPreferences userPreferences) {
     try {
       int userDataVersion = userPreferences.getDataVersion() == null ? 0 : userPreferences.getDataVersion();
-      if (userDataVersion < DATA_VERSION) {
+      if (userDataVersion < USER_DATA_VERSION) {
 
         // Upgrade default gas for new contract to upgrade
-        if (userDataVersion < DEFAULT_GAS_UPGRADE_VERSION) {
+        if (userPreferences.getDataVersion() < DEFAULT_GAS_UPGRADE_VERSION) {
           userPreferences.setDefaultGas(defaultSettings.getDefaultGas());
         }
 
-        userPreferences.setDataVersion(DATA_VERSION);
+        userPreferences.setDataVersion(USER_DATA_VERSION);
         saveUserPreferences(username, userPreferences);
-        LOG.info("User {} preferences upgraded to version {}", username, DATA_VERSION);
+        LOG.info("User {} preferences has been upgraded to version {}", username, USER_DATA_VERSION);
       }
     } catch (Exception e) {
       LOG.warn("Can't upgrade data of user preferences: " + username, e);
+    }
+  }
+
+  private void checkDataToUpgrade(GlobalSettings globalSettings) {
+    try {
+      int globalDataVersion = globalSettings.getDataVersion() == null ? 0 : globalSettings.getDataVersion();
+      if (globalDataVersion < GLOBAL_DATA_VERSION) {
+
+        // Upgrade default gas for new contract to upgrade
+        if (globalSettings.getDataVersion() < DEFAULT_GAS_UPGRADE_VERSION) {
+          globalSettings.setDefaultGas(defaultSettings.getDefaultGas());
+        }
+
+        globalSettings.setDataVersion(GLOBAL_DATA_VERSION);
+        saveSettings(globalSettings);
+        LOG.info("Global preferences has been upgraded to version {}", GLOBAL_DATA_VERSION);
+      }
+    } catch (Exception e) {
+      LOG.warn("Can't upgrade global settings", e);
     }
   }
 

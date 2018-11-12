@@ -208,6 +208,10 @@ public class EthereumClientConnector implements Startable {
     if (newGlobalSettings == null) {
       throw new IllegalArgumentException("GlobalSettings argument is mandatory");
     }
+    if (this.globalSettings == null) {
+      // not yet initialized
+      return;
+    }
     GlobalSettings oldGlobalSettings = this.globalSettings;
     this.globalSettings = newGlobalSettings;
 
