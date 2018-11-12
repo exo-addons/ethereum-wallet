@@ -46,7 +46,24 @@ const ERTToken = artifacts.require("ERTToken");
       }) 
     })
   
-  
+    
+    
+    it ('test approveAccount by admin level 5 when the onlyAdmin(1) ' , function(){
+      return ERTToken.deployed().then(function(instance){
+        tokenInstance = instance;
+        return tokenInstance.addAdmin(accounts[1], 5, {from : accounts[0]});
+      }).then(receipt => {
+        return tokenInstance.approveAccount(accounts[7], {from : accounts[1]});
+      }).then(receipt => {
+        return tokenInstance.isApprovedAccount(accounts[7]);
+      }).then(approved => {
+        assert.equal(approved, true, 'Account is not approved by admin with level 5');
+      }) 
+    })
+ 
+    
+    
+    
   
   
 });

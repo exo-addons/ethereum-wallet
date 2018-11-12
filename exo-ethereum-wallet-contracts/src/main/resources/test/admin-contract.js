@@ -43,8 +43,7 @@ const ERTToken = artifacts.require("ERTToken");
     it ('test removeAdmin ' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
-        return tokenInstance.removeAdmin(accounts[0],  {
-          from : accounts[0]});
+        return tokenInstance.removeAdmin(accounts[0],  {from : accounts[0]});
       }).then(receipt => {
         assert.equal(receipt && receipt.receipt && receipt.receipt.status, true, 'Should be able to remove owner as admin');
         return tokenInstance.removeAdmin(accounts[5],  {from : accounts[0]});
@@ -62,21 +61,32 @@ const ERTToken = artifacts.require("ERTToken");
      it ('addAdmin two times without removing the first time, should affect the last level' , function(){
       return ERTToken.deployed().then(function(instance){
         tokenInstance = instance;
-        return tokenInstance.addAdmin(accounts[6], 5, {
-            from : accounts[0]});
+        return tokenInstance.addAdmin(accounts[6], 5, {from : accounts[0]});
       }).then(receipt => {
         return tokenInstance.getAdminLevel(accounts[6]);
       }).then(level => {
         assert.equal(level, 5, 'Account shouldn\'t be not admin');
-        return tokenInstance.addAdmin(accounts[6], 2, {
-          from : accounts[0]});
-    }).then(receipt => {
-      return tokenInstance.getAdminLevel(accounts[6]);
-    }).then(level => {
-      assert.equal(level, 2, 'level of accounts[6] is wrong : should be the final level added');
+        return tokenInstance.addAdmin(accounts[6], 2, {from : accounts[0]});
+      }).then(receipt => {
+        return tokenInstance.getAdminLevel(accounts[6]);
+      }).then(level => {
+        assert.equal(level, 2, 'level of accounts[6] is wrong : should be the last level added');
       }) 
     })
     
+    
+    it ('admin with level 4 can\'t add admin ' , function(){
+      return ERTToken.deployed().then(function(instance){
+        tokenInstance = instance;
+        return tokenInstance.addAdmin(accounts[7], 4, {from : accounts[0]});
+      }).then(receipt => {
+        return tokenInstance.addAdmin(accounts[3], 1, {from : accounts[7]});
+      }).then(receipt => {
+      }).then(assert.fail).catch(function(error) {
+        assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the level does not allow to add admin');  
+       
+      }) 
+    })
     
     
     
