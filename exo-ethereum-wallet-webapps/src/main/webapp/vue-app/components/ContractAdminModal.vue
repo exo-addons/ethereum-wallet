@@ -51,6 +51,7 @@
               placeholder="Enter your wallet password"
               counter
               class="mt-3"
+              autocomplete="current-passord"
               @click:append="walletPasswordShow = !walletPasswordShow"
             />
     

@@ -68,6 +68,7 @@
             label="Wallet password"
             placeholder="Enter your wallet password"
             counter
+            autocomplete="current-passord"
             @click:append="walletPasswordShow = !walletPasswordShow"
           />
         </v-form>

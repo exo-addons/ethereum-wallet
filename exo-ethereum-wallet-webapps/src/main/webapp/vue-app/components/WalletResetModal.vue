@@ -44,6 +44,7 @@
             name="walletPassword"
             placeholder="Enter your wallet password"
             counter
+            autocomplete="current-passord"
             @click:append="walletPasswordShow = !walletPasswordShow"
           />
 
@@ -58,6 +59,7 @@
             label="New wallet password"
             placeholder="Enter your new wallet password"
             counter
+            autocomplete="new-passord"
             @click:append="newWalletPasswordShow = !newWalletPasswordShow"
           />
       

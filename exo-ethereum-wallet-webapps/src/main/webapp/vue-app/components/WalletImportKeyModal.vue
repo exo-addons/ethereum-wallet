@@ -25,6 +25,7 @@
             name="walletPrivateKey"
             label="Wallet private key"
             placeholder="Enter your wallet private key"
+            autocomplete="off"
             @click:append="walletPrivateKeyShow = !walletPrivateKeyShow"
           />
         </v-form>
