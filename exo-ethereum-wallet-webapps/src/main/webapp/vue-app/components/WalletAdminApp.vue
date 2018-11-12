@@ -253,15 +253,6 @@
                   class="mt-4"
                   required />
 
-                <v-slider
-                  v-model="defaultBlocksToRetrieve"
-                  :label="`Default blocks to retrieve for ether transactions: ${defaultBlocksToRetrieve}`"
-                  :min="100"
-                  :max="10000"
-                  :step="100"
-                  type="number"
-                  required />
-
                 <v-card-actions>
                   <v-spacer />
                   <button class="btn btn-primary mb-3" @click="saveGlobalSettings">
@@ -510,7 +501,6 @@ export default {
       accessPermissionOptions: [],
       accessPermissionSearchTerm: null,
       isLoadingSuggestions: false,
-      defaultBlocksToRetrieve: 1000,
       defaultGas: 50000,
       defaultGasFiatPrice: 0,
       fiatSymbol: '$',
@@ -1139,9 +1129,6 @@ export default {
         this.networks[2].httpLink = window.walletSettings.providerURL;
         this.selectedNetwork = this.networks[2];
       }
-      if (window.walletSettings.defaultBlocksToRetrieve) {
-        this.defaultBlocksToRetrieve = window.walletSettings.defaultBlocksToRetrieve;
-      }
       if (window.walletSettings.defaultGas) {
         this.defaultGas = window.walletSettings.defaultGas;
       }
@@ -1257,7 +1244,6 @@ export default {
           initialFundsRequestMessage: this.initialFundsRequestMessage,
           providerURL: this.selectedNetwork.httpLink,
           websocketProviderURL: this.selectedNetwork.wsLink,
-          defaultBlocksToRetrieve: this.defaultBlocksToRetrieve,
           defaultNetworkId: this.selectedNetwork.value,
           defaultPrincipalAccount: this.selectedPrincipalAccount && this.selectedPrincipalAccount.value,
           defaultOverviewAccounts: this.selectedOverviewAccounts && this.selectedOverviewAccounts.map(item => item.value),
@@ -1273,7 +1259,6 @@ export default {
             window.walletSettings.websocketProviderURL = this.selectedNetwork.wsLink;
             window.walletSettings.accessPermission = this.accessPermission;
             window.walletSettings.fundsHolder = this.fundsHolder;
-            window.walletSettings.defaultBlocksToRetrieve = this.defaultBlocksToRetrieve;
             window.walletSettings.defaultGas = this.defaultGas;
             window.walletSettings.defaultPrincipalAccount = this.selectedPrincipalAccount && this.selectedPrincipalAccount.value;
             this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
