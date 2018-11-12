@@ -13,6 +13,8 @@ public class AccountDetail implements Serializable {
 
   private String            technicalId;
 
+  // A string is used instead of enum, because of cache clustering
+  // problems with enums
   private String            type;
 
   private String            name;

@@ -293,10 +293,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Path("list")
   @RolesAllowed("administrators")
   public Response getWallets() {
-    List<AccountDetail> accounts;
     try {
-      accounts = ethereumWalletService.lisWallets();
-      return Response.ok(accounts).build();
+      return Response.ok(ethereumWalletService.listWallets()).build();
     } catch (Exception e) {
       LOG.warn("Error retrieving list of wallets", e);
       return Response.serverError().build();

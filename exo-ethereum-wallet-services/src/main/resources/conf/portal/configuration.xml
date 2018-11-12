@@ -299,6 +299,21 @@
             </field>
           </object>
         </object-param>
+        <object-param>
+          <name>wallet.accountDetailCache</name>
+          <description></description>
+          <object type="org.exoplatform.services.cache.impl.infinispan.generic.GenericExoCacheConfig">
+            <field name="name">
+              <string>wallet.accountDetailCache</string>
+            </field>
+            <field name="maxSize">
+              <int>${exo.cache.wallet.accountDetailCache.MaxNodes:2000}</int>
+            </field>
+            <field name="liveTime">
+              <long>${exo.cache.wallet.accountDetailCache.TimeToLive:-1}</long>
+            </field>
+          </object>
+        </object-param>
       </init-params>
     </component-plugin>
   </external-component-plugins>

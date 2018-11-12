@@ -17,6 +17,14 @@ public class TransactionMessage implements Serializable {
 
   private static final long serialVersionUID = 658273092293607458L;
 
+  private String            hash;
+
+  private String            label;
+
+  private String            message;
+
+  private String            sender;
+
   public TransactionMessage(String transactionDetails) {
     if (StringUtils.isNotBlank(transactionDetails)) {
       String[] transactionDetailsArray = transactionDetails.split(";");
@@ -25,14 +33,6 @@ public class TransactionMessage implements Serializable {
       this.message = transactionDetailsArray.length > 2 ? decode(transactionDetailsArray[2]) : null;
     }
   }
-
-  private String hash;
-
-  private String label;
-
-  private String message;
-
-  private String sender;
 
   public String toJSONString() {
     return toJSONObject().toString();

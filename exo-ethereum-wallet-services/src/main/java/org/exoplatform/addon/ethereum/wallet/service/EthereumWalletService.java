@@ -20,6 +20,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -28,6 +29,8 @@ import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.picocontainer.Startable;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.NotificationContext;
@@ -38,9 +41,14 @@ import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.api.settings.data.Scope;
+import org.exoplatform.commons.cache.future.FutureExoCache;
+import org.exoplatform.commons.cache.future.Loader;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.utils.IOUtil;
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.container.configuration.ConfigurationManager;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.portal.config.UserACL;
@@ -60,78 +68,129 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
-  private static final char[]                  SIMPLE_CHARS                  = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-      'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4',
-      '5', '6', '7', '8', '9' };
+  private static final char[]                                                                SIMPLE_CHARS                  =
+                                                                                                          new char[] { 'A', 'B',
+                                                                                                              'C', 'D', 'E', 'F',
+                                                                                                              'G', 'H', 'I', 'J',
+                                                                                                              'K', 'L', 'M', 'N',
+                                                                                                              'O', 'P', 'Q', 'R',
+                                                                                                              'S', 'T', 'U', 'V',
+                                                                                                              'W', 'X', 'Y', 'Z',
+                                                                                                              'a', 'b', 'c', 'd',
+                                                                                                              'e', 'f', 'g', 'h',
+                                                                                                              'i', 'j', 'k', 'l',
+                                                                                                              'm', 'n', 'o', 'p',
+                                                                                                              'q', 'r', 's', 't',
+                                                                                                              'u', 'v', 'w', 'x',
+                                                                                                              'y', 'z', '0', '1',
+                                                                                                              '2', '3', '4', '5',
+                                                                                                              '6', '7', '8',
+                                                                                                              '9' };
 
-  private static final Log                     LOG                           = ExoLogger.getLogger(EthereumWalletService.class);
+  private static final Log                                                                   LOG                           =
+                                                                                                 ExoLogger.getLogger(EthereumWalletService.class);
 
-  public static final String                   DEFAULT_NETWORK_ID            = "defaultNetworkId";
+  public static final String                                                                 DEFAULT_NETWORK_ID            =
+                                                                                                                "defaultNetworkId";
 
-  public static final String                   DEFAULT_NETWORK_URL           = "defaultNetworkURL";
+  public static final String                                                                 DEFAULT_NETWORK_URL           =
+                                                                                                                 "defaultNetworkURL";
 
-  public static final String                   DEFAULT_NETWORK_WS_URL        = "defaultNetworkWSURL";
+  public static final String                                                                 DEFAULT_NETWORK_WS_URL        =
+                                                                                                                    "defaultNetworkWSURL";
 
-  public static final String                   DEFAULT_ACCESS_PERMISSION     = "defaultAccessPermission";
+  public static final String                                                                 DEFAULT_ACCESS_PERMISSION     =
+                                                                                                                       "defaultAccessPermission";
 
-  public static final String                   DEFAULT_GAS                   = "defaultGas";
+  public static final String                                                                 DEFAULT_GAS                   =
+                                                                                                         "defaultGas";
 
-  public static final String                   DEFAULT_BLOCKS_TO_RETRIEVE    = "defaultBlocksToRetrieve";
+  public static final String                                                                 DEFAULT_BLOCKS_TO_RETRIEVE    =
+                                                                                                                        "defaultBlocksToRetrieve";
 
-  public static final String                   DEFAULT_CONTRACTS_ADDRESSES   = "defaultContractAddresses";
+  public static final String                                                                 DEFAULT_CONTRACTS_ADDRESSES   =
+                                                                                                                         "defaultContractAddresses";
 
-  public static final String                   SCOPE_NAME                    = "ADDONS_ETHEREUM_WALLET";
+  public static final String                                                                 SCOPE_NAME                    =
+                                                                                                        "ADDONS_ETHEREUM_WALLET";
 
-  public static final String                   GLOBAL_SETTINGS_KEY_NAME      = "GLOBAL_SETTINGS";
+  public static final String                                                                 GLOBAL_SETTINGS_KEY_NAME      =
+                                                                                                                      "GLOBAL_SETTINGS";
 
-  public static final String                   ADDRESS_KEY_NAME              = "ADDONS_ETHEREUM_WALLET_ADDRESS";
+  public static final String                                                                 ADDRESS_KEY_NAME              =
+                                                                                                              "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
-  public static final String                   LAST_BLOCK_NUMBER_KEY_NAME    = "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
+  public static final String                                                                 LAST_BLOCK_NUMBER_KEY_NAME    =
+                                                                                                                        "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
 
-  public static final String                   SETTINGS_KEY_NAME             = "ADDONS_ETHEREUM_WALLET_SETTINGS";
+  public static final String                                                                 SETTINGS_KEY_NAME             =
+                                                                                                               "ADDONS_ETHEREUM_WALLET_SETTINGS";
 
-  public static final Context                  WALLET_CONTEXT                = Context.GLOBAL;
+  public static final Context                                                                WALLET_CONTEXT                =
+                                                                                                            Context.GLOBAL;
 
-  public static final Scope                    WALLET_SCOPE                  = Scope.APPLICATION.id(SCOPE_NAME);
+  public static final Scope                                                                  WALLET_SCOPE                  =
+                                                                                                          Scope.APPLICATION.id(SCOPE_NAME);
 
-  public static final String                   WALLET_DEFAULT_CONTRACTS_NAME = "WALLET_DEFAULT_CONTRACTS";
+  public static final String                                                                 WALLET_DEFAULT_CONTRACTS_NAME =
+                                                                                                                           "WALLET_DEFAULT_CONTRACTS";
 
-  public static final String                   WALLET_USER_TRANSACTION_NAME  = "WALLET_USER_TRANSACTION";
+  public static final String                                                                 WALLET_USER_TRANSACTION_NAME  =
+                                                                                                                          "WALLET_USER_TRANSACTION";
 
-  public static final String                   WALLET_BROWSER_PHRASE_NAME    = "WALLET_BROWSER_PHRASE";
+  public static final String                                                                 WALLET_BROWSER_PHRASE_NAME    =
+                                                                                                                        "WALLET_BROWSER_PHRASE";
 
-  public static final String                   ABI_PATH_PARAMETER            = "contract.abi.path";
+  public static final String                                                                 ABI_PATH_PARAMETER            =
+                                                                                                                "contract.abi.path";
 
-  public static final String                   BIN_PATH_PARAMETER            = "contract.bin.path";
+  public static final String                                                                 BIN_PATH_PARAMETER            =
+                                                                                                                "contract.bin.path";
 
-  private SettingService                       settingService;
+  private ExoContainer                                                                       container;
 
-  private IdentityManager                      identityManager;
+  private SettingService                                                                     settingService;
 
-  private SpaceService                         spaceService;
+  private IdentityManager                                                                    identityManager;
 
-  private UserACL                              userACL;
+  private SpaceService                                                                       spaceService;
 
-  private WebNotificationStorage               webNotificationStorage;
+  private UserACL                                                                            userACL;
 
-  private ListenerService                      listenerService;
+  private WebNotificationStorage                                                             webNotificationStorage;
 
-  private ConfigurationManager                 configurationManager;
+  private ListenerService                                                                    listenerService;
 
-  private GlobalSettings                       defaultSettings               = new GlobalSettings();
+  private ConfigurationManager                                                               configurationManager;
 
-  private GlobalSettings                       storedSettings;
+  private GlobalSettings                                                                     defaultSettings               =
+                                                                                                             new GlobalSettings();
 
-  private String                               contractAbiPath;
+  private GlobalSettings                                                                     storedSettings;
 
-  private JSONArray                            contractAbi;
+  private String                                                                             contractAbiPath;
 
-  private String                               contractBinaryPath;
+  private JSONArray                                                                          contractAbi;
 
-  private String                               contractBinary;
+  private String                                                                             contractBinaryPath;
 
-  private ExoCache<String, TransactionMessage> transactionMessagesCache      = null;
+  private String                                                                             contractBinary;
+
+  private ExoCache<String, TransactionMessage>                                               transactionMessagesCache      = null;
+
+  // Added as cache instead of Set<AccountDetail> for future usage in clustered
+  // environments
+  private ExoCache<AccountDetailCacheId, AccountDetail>                                      accountDetailCache            = null;
+
+  /*
+   * Key: Address or id of entity (space group id prefix or username). Value:
+   * account details. Context: Type of entity or address if null.
+   */
+  private FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>> accountDetailFutureCache      = null;
+
+  private long                                                                               walletsCount                  = 0;
+
+  private ScheduledExecutorService                                                           scheduledExecutorService      = null;
 
   public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
@@ -140,8 +199,10 @@ public class EthereumWalletService implements Startable {
                                ListenerService listenerService,
                                UserACL userACL,
                                CacheService cacheService,
+                               ExoContainer exoContainer,
                                ConfigurationManager configurationManager,
                                InitParams params) {
+    this.container = exoContainer;
     this.configurationManager = configurationManager;
     this.settingService = settingService;
     this.identityManager = identityManager;
@@ -150,6 +211,7 @@ public class EthereumWalletService implements Startable {
     this.listenerService = listenerService;
     this.userACL = userACL;
     this.transactionMessagesCache = cacheService.getCacheInstance("wallet.transactionsMessages");
+    this.accountDetailCache = cacheService.getCacheInstance("wallet.accountDetailCache");
 
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
       String value = params.getValueParam(DEFAULT_NETWORK_ID).getValue();
@@ -202,6 +264,14 @@ public class EthereumWalletService implements Startable {
     if (StringUtils.isBlank(contractBinaryPath)) {
       LOG.warn("Contract BIN path is empty, thus no contract deployment is possible");
     }
+    this.accountDetailFutureCache =
+                                  new FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>>(new Loader<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>>() {
+                                    @Override
+                                    public AccountDetail retrieve(ServiceContext<AccountDetail> context,
+                                                                  AccountDetailCacheId key) throws Exception {
+                                      return context.execute();
+                                    }
+                                  }, accountDetailCache);
   }
 
   @Override
@@ -213,6 +283,21 @@ public class EthereumWalletService implements Startable {
       if (!contractBinary.startsWith("0x")) {
         contractBinary = "0x" + contractBinary;
       }
+      ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-cache-populator-%d").build();
+      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
+      // Transactions Queue processing
+      scheduledExecutorService.scheduleWithFixedDelay(() -> {
+        ExoContainerContext.setCurrentContainer(container);
+        RequestLifeCycle.begin(this.container);
+        try {
+          this.walletsCount = 0;
+          this.listWallets();
+        } catch (Exception e) {
+          LOG.error("Error while retrieving list of wallets for cache population", e);
+        } finally {
+          RequestLifeCycle.end();
+        }
+      }, 10, 86400, TimeUnit.SECONDS);
     } catch (Exception e) {
       LOG.warn("Can't read ABI/BIN files content", e);
     }
@@ -220,6 +305,7 @@ public class EthereumWalletService implements Startable {
 
   @Override
   public void stop() {
+    scheduledExecutorService.shutdown();
   }
 
   /**
@@ -524,22 +610,9 @@ public class EthereumWalletService implements Startable {
       throw new IllegalArgumentException("id parameter is mandatory");
     }
 
-    Space space = getSpace(id);
-    if (space == null) {
-      return null;
-    }
-
-    String avatarUrl = space.getAvatarUrl();
-    if (StringUtils.isBlank(avatarUrl)) {
-      avatarUrl = "/rest/v1/social/spaces/" + id + "/avatar";
-    }
-    return new AccountDetail(id,
-                             space.getId(),
-                             SPACE_ACCOUNT_TYPE,
-                             space.getDisplayName(),
-                             null,
-                             spaceService.isManager(space, getCurrentUserId()) || spaceService.isSuperManager(getCurrentUserId()),
-                             avatarUrl);
+    AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(SPACE_ACCOUNT_TYPE, id));
+    putInCache(accountDetails);
+    return accountDetails;
   }
 
   /**
@@ -552,23 +625,9 @@ public class EthereumWalletService implements Startable {
     if (id == null) {
       throw new IllegalArgumentException("id parameter is mandatory");
     }
-
-    Identity identity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, id, true);
-    if (identity == null || identity.getProfile() == null) {
-      return null;
-    }
-
-    String avatarUrl = identity.getProfile().getAvatarUrl();
-    if (StringUtils.isBlank(avatarUrl)) {
-      avatarUrl = "/rest/v1/social/users/" + id + "/avatar";
-    }
-    return new AccountDetail(id,
-                             identity.getId(),
-                             USER_ACCOUNT_TYPE,
-                             identity.getProfile().getFullName(),
-                             null,
-                             false,
-                             avatarUrl);
+    AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(USER_ACCOUNT_TYPE, id));
+    putInCache(accountDetails);
+    return accountDetails;
   }
 
   /**
@@ -581,29 +640,9 @@ public class EthereumWalletService implements Startable {
     if (address == null) {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
-
-    address = address.toLowerCase();
-
-    AccountDetail accountDetail = null;
-
-    SettingValue<?> walletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address);
-    if (walletAddressValue != null && walletAddressValue.getValue() != null) {
-      String idAndType = walletAddressValue.getValue().toString();
-      String id = null;
-      if (idAndType.startsWith(USER_ACCOUNT_TYPE)) {
-        id = idAndType.replaceFirst(USER_ACCOUNT_TYPE, "");
-        accountDetail = getUserDetails(id);
-      } else if (idAndType.startsWith(SPACE_ACCOUNT_TYPE)) {
-        id = idAndType.replaceFirst(SPACE_ACCOUNT_TYPE, "");
-        accountDetail = getSpaceDetails(id);
-      }
-      if (accountDetail == null) {
-        LOG.info("Can't find the user/space with id {} associated to address {}", id, address);
-      } else {
-        accountDetail.setAddress(address);
-      }
-    }
-    return accountDetail;
+    AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(address.toLowerCase()));
+    putInCache(accountDetails);
+    return accountDetails;
   }
 
   /**
@@ -613,12 +652,12 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public String getSpaceAddress(String id) {
-    SettingValue<?> spaceWalletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, id);
-    String address = null;
-    if (spaceWalletAddressValue != null && spaceWalletAddressValue.getValue() != null) {
-      address = spaceWalletAddressValue.getValue().toString().toLowerCase();
+    AccountDetail accountDetail = getAccountDetailsFromCache(new AccountDetailCacheId(SPACE_ACCOUNT_TYPE, id));
+    if (accountDetail != null) {
+      return accountDetail.getAddress();
     }
-    return address;
+
+    return getSpaceAddressFromStorage(id);
   }
 
   /**
@@ -628,12 +667,12 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public String getUserAddress(String id) {
-    SettingValue<?> userWalletAddressValue = settingService.get(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME);
-    String address = null;
-    if (userWalletAddressValue != null && userWalletAddressValue.getValue() != null) {
-      address = userWalletAddressValue.getValue().toString().toLowerCase();
+    AccountDetail accountDetail = getAccountDetailsFromCache(new AccountDetailCacheId(USER_ACCOUNT_TYPE, id));
+    if (accountDetail != null) {
+      return accountDetail.getAddress();
     }
-    return address;
+
+    return getUserAddressFromStorage(id);
   }
 
   /**
@@ -651,6 +690,8 @@ public class EthereumWalletService implements Startable {
     String address = accountDetail.getAddress();
     address = address.toLowerCase();
 
+    removeFromCache(address);
+
     if (StringUtils.isBlank(id) || StringUtils.isBlank(type)
         || !(StringUtils.equals(type, USER_ACCOUNT_TYPE) || StringUtils.equals(type, SPACE_ACCOUNT_TYPE))) {
       LOG.warn("Bad request sent to server with id '{}', type '{}' and address '{}'", id, type, address);
@@ -658,7 +699,6 @@ public class EthereumWalletService implements Startable {
     }
 
     String oldAddress = null;
-
     if (StringUtils.equals(type, USER_ACCOUNT_TYPE)) {
       if (!StringUtils.equals(currentUserId, id)) {
         LOG.error("User '{}' attempts to modify wallet address of user '{}'", currentUserId, id);
@@ -679,6 +719,10 @@ public class EthereumWalletService implements Startable {
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
 
+      if (StringUtils.isNotBlank(oldAddress)) {
+        removeFromCache(oldAddress);
+      }
+
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       settingService.set(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME, SettingValue.create(address));
     } else if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
@@ -689,11 +733,17 @@ public class EthereumWalletService implements Startable {
         settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldAddress);
       }
 
+      if (StringUtils.isNotBlank(oldAddress)) {
+        removeFromCache(oldAddress);
+      }
+
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, address, SettingValue.create(type + id));
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, id, SettingValue.create(address));
     } else {
+      LOG.warn("Account type {} is not recognized", type);
       return null;
     }
+    removeFromCache(type, id);
 
     if (StringUtils.isBlank(oldAddress)) {
       this.listenerService.broadcast(NEW_ADDRESS_ASSOCIATED_EVENT, this, accountDetail);
@@ -701,6 +751,14 @@ public class EthereumWalletService implements Startable {
       this.listenerService.broadcast(MODIFY_ADDRESS_ASSOCIATED_EVENT, this, accountDetail);
     }
 
+    // Populate cache to keep all items into it to ease the wallets listing in
+    // administration UI
+    getAccountDetailsFromCache(new AccountDetailCacheId(accountDetail.getAddress()));
+    getAccountDetailsFromCache(new AccountDetailCacheId(accountDetail.getType(), accountDetail.getId()));
+
+    if (StringUtils.isBlank(oldAddress)) {
+      this.walletsCount += 1;
+    }
     return generateSecurityPhrase(accountDetail);
   }
 
@@ -892,26 +950,42 @@ public class EthereumWalletService implements Startable {
    * @return
    * @throws Exception
    */
-  public List<AccountDetail> lisWallets() throws Exception {
-    List<AccountDetail> accounts = new ArrayList<>();
+  public Set<AccountDetail> listWallets() throws Exception {
+    int cacheSize = this.accountDetailCache.getCacheSize();
+    if (cacheSize > 0 && cacheSize >= this.walletsCount) {
+      List<? extends AccountDetail> cachedObjects = this.accountDetailCache.getCachedObjects();
+      // Using HashSet to remove duplicated objects
+      return new HashSet<>(cachedObjects);
+    }
+
+    LOG.info("Retrieve list of wallets");
+    Set<AccountDetail> wallets = new HashSet<>();
     Map<String, String> usernames = getListOfWalletsOfType(USER_ACCOUNT_TYPE);
     for (String username : usernames.keySet()) {
       AccountDetail details = getUserDetails(username);
       if (details != null) {
         details.setAddress(usernames.get(username));
-        accounts.add(details);
+        wallets.add(details);
       }
     }
+    this.walletsCount = this.accountDetailCache.getCacheSize() / 2;
+    LOG.info("{} user wallets has been loaded", this.walletsCount);
 
     Map<String, String> spaces = getListOfWalletsOfType(SPACE_ACCOUNT_TYPE);
     for (String spaceId : spaces.keySet()) {
       AccountDetail details = getSpaceDetails(spaceId);
       if (details != null) {
         details.setAddress(spaces.get(spaceId));
-        accounts.add(details);
+        wallets.add(details);
       }
     }
-    return accounts;
+    long spaceWalletsCount = this.accountDetailCache.getCacheSize() / 2 - this.walletsCount;
+    LOG.info("{} space wallets has been loaded", spaceWalletsCount);
+
+    this.walletsCount = this.accountDetailCache.getCacheSize() / 2;
+    LOG.info("{} total wallets has been loaded", this.walletsCount);
+
+    return wallets;
   }
 
   /**
@@ -1106,4 +1180,119 @@ public class EthereumWalletService implements Startable {
     return true;
   }
 
+  private AccountDetail getAccountDetailsFromCache(AccountDetailCacheId accountDetailCacheId) {
+    if (accountDetailCacheId == null
+        || (StringUtils.isBlank(accountDetailCacheId.getAddress()) && StringUtils.isBlank(accountDetailCacheId.getId()))) {
+      LOG.warn("cache key is mandatory");
+      return null;
+    }
+    return accountDetailFutureCache.get(new ServiceContext<AccountDetail>() {
+      @Override
+      public AccountDetail execute() {
+        AccountDetail accountDetail = null;
+        if (StringUtils.isNotBlank(accountDetailCacheId.getAddress())) {
+          String address = accountDetailCacheId.getAddress();
+          // Search by address
+          SettingValue<?> walletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, address);
+          if (walletAddressValue != null && walletAddressValue.getValue() != null) {
+            String idAndType = walletAddressValue.getValue().toString();
+            String id = null;
+            if (idAndType.startsWith(USER_ACCOUNT_TYPE)) {
+              id = idAndType.replaceFirst(USER_ACCOUNT_TYPE, "");
+              accountDetail = getUserDetails(id);
+            } else if (idAndType.startsWith(SPACE_ACCOUNT_TYPE)) {
+              id = idAndType.replaceFirst(SPACE_ACCOUNT_TYPE, "");
+              accountDetail = getSpaceDetails(id);
+            }
+            if (accountDetail == null) {
+              LOG.info("Can't find the user/space with id {} associated to address {}", id, address);
+            } else {
+              accountDetail.setAddress(address);
+            }
+          }
+        } else if (USER_ACCOUNT_TYPE.equals(accountDetailCacheId.getType())) {
+          String id = accountDetailCacheId.getId();
+          Identity identity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, id, true);
+          if (identity == null || identity.getProfile() == null) {
+            return null;
+          }
+
+          String avatarUrl = identity.getProfile().getAvatarUrl();
+          if (StringUtils.isBlank(avatarUrl)) {
+            avatarUrl = "/rest/v1/social/users/" + id + "/avatar";
+          }
+          return new AccountDetail(id,
+                                   identity.getId(),
+                                   USER_ACCOUNT_TYPE,
+                                   identity.getProfile().getFullName(),
+                                   getUserAddressFromStorage(id),
+                                   false,
+                                   avatarUrl);
+        } else if (SPACE_ACCOUNT_TYPE.equals(accountDetailCacheId.getType())) {
+          String id = accountDetailCacheId.getId();
+          Space space = getSpace(id);
+          if (space == null) {
+            return null;
+          }
+
+          String avatarUrl = space.getAvatarUrl();
+          if (StringUtils.isBlank(avatarUrl)) {
+            avatarUrl = "/rest/v1/social/spaces/" + id + "/avatar";
+          }
+          return new AccountDetail(id,
+                                   space.getId(),
+                                   SPACE_ACCOUNT_TYPE,
+                                   space.getDisplayName(),
+                                   getSpaceAddressFromStorage(id),
+                                   spaceService.isManager(space, getCurrentUserId())
+                                       || spaceService.isSuperManager(getCurrentUserId()),
+                                   avatarUrl);
+        }
+        return accountDetail;
+      }
+    }, accountDetailCacheId);
+  }
+
+  private String getUserAddressFromStorage(String id) {
+    SettingValue<?> userWalletAddressValue = settingService.get(Context.USER.id(id), WALLET_SCOPE, ADDRESS_KEY_NAME);
+    if (userWalletAddressValue != null && userWalletAddressValue.getValue() != null) {
+      return userWalletAddressValue.getValue().toString().toLowerCase();
+    }
+    return null;
+  }
+
+  private String getSpaceAddressFromStorage(String id) {
+    SettingValue<?> spaceWalletAddressValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, id);
+    if (spaceWalletAddressValue != null && spaceWalletAddressValue.getValue() != null) {
+      return spaceWalletAddressValue.getValue().toString().toLowerCase();
+    }
+    return null;
+  }
+
+  private void removeFromCache(String oldAddress) {
+    if (StringUtils.isBlank(oldAddress)) {
+      LOG.warn("Enmpty cache key address");
+      return;
+    }
+    accountDetailFutureCache.remove(new AccountDetailCacheId(oldAddress));
+  }
+
+  private void removeFromCache(String type, String id) {
+    if (StringUtils.isBlank(type) || StringUtils.isBlank(id)) {
+      LOG.warn("Enmpty cache key: {}/{}", type, id);
+      return;
+    }
+    accountDetailFutureCache.remove(new AccountDetailCacheId(type, id));
+  }
+
+  private void putInCache(AccountDetail details) {
+    if (details != null) {
+      accountDetailCache.putLocal(new AccountDetailCacheId(details.getAddress()), details);
+      accountDetailCache.putLocal(new AccountDetailCacheId(details.getType(), details.getId()), details);
+    }
+  }
+
+  public interface ServiceContext<V> {
+    V execute();
+  }
 }

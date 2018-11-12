@@ -309,7 +309,7 @@ export default {
                 const thiss = this;
                 // FIXME workaround when can't execute .then(...) method, especially in pause, unpause.
                 watchTransactionStatus(hash, () => {
-                  thiss.$emit("success", thiss.transactionHash, thiss.contractDetails);
+                  thiss.$emit("success", thiss.transactionHash, thiss.contractDetails, thiss.methodName, thiss.autocompleteValue, thiss.inputValue);
                 });
                 this.dialog = false;
               })
@@ -323,7 +323,7 @@ export default {
                 }
               })
               .then(() => {
-                this.$emit("success", this.transactionHash, this.contractDetails);
+                this.$emit("success", this.transactionHash, this.contractDetails, this.methodName, this.autocompleteValue, this.inputValue);
               })
               .finally(() => {
                 this.loading = false;

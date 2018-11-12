@@ -362,19 +362,16 @@
                     :network-id="networkId"
                     :is-display-only="!selectedContractDetails || !selectedContractDetails.isAdmin"
                     :fiat-symbol="fiatSymbol"
+                    :wallets="wallets"
+                    :loading-wallets="loadingWallets"
                     @back="back()" />
                 </v-navigation-drawer>
               </v-card>
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" key="wallets">
-              <v-card-title v-if="loadingWallets">
-                <v-spacer />
-                <v-progress-circular indeterminate color="primary" />
-                <v-spacer />
-              </v-card-title>
-              <v-card v-else flat>
-                <v-data-table :headers="walletHeaders" :items="wallets">
+              <v-card flat>
+                <v-data-table :headers="walletHeaders" :items="wallets" :loading="loadingWallets" hide-actions>
                   <template slot="items" slot-scope="props">
                     <tr class="clickable" @click="openAccountDetail(props.item)">
                       <td>
@@ -932,7 +929,7 @@ export default {
         if (contract) {
           this.$set(contract, "loadingBalance", true);
           if (this.$refs.contractDetail) {
-            this.$refs.contractDetail.newTransactionPending(transaction);
+            this.$refs.contractDetail.newTransactionPending(transaction, contract);
           }
         }
       }
