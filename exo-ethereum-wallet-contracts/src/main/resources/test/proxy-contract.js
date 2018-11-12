@@ -22,6 +22,19 @@ contract('Proxy', function(accounts) {
           assert.equal(result, 5 * decimals, 'the balance of ERTToken is wrong ');
         });
   });
+  
+  
+  it('test ownership of current impl', function() {
+    return ERTTokenV1.deployed()
+      .then(instance => {
+        tokenInstance = instance;
+         return tokenInstance.owner.call();
+        }).then(function(result) {
+          assert.equal(result, accounts[0] , 'the owner of ERTTokenV1 is wrong'); 
+        });
+  })
+  
+   
    
    it('when new implementation V2 was provided', function() {
      return ERTToken.deployed()
@@ -51,6 +64,28 @@ contract('Proxy', function(accounts) {
           assert.equal(implementation, TestERTTokenV2.address, 'should return the given implementation');
          });
    })
+   
+   
+   
+  it('test transfer old impl ownership for 0x address', function() {
+    return ERTTokenV1.deployed()
+      .then(instance => {
+        tokenInstance = instance;
+         return tokenInstance.owner.call();
+        }).then(function(result) {
+          assert.equal(result, 0x0 , 'the owner of ERTTokenV1 is wrong after new impl'); 
+        });
+  })
+   
+   it('test ownership of new current impl', function() {
+    return TestERTTokenV2.deployed()
+      .then(instance => {
+        tokenInstance = instance;
+         return tokenInstance.owner.call();
+        }).then(function(result) {
+          assert.equal(result, accounts[0] , 'the owner of TestERTTokenV2 is wrong after new impl'); 
+        });
+  })
    
    it('check the balances of contracts after upgrading impl ', function() {
     return ERTToken.deployed()
@@ -201,13 +236,34 @@ contract('Proxy', function(accounts) {
           assert.equal(implementation, TestERTTokenV3.address, 'should return the given implementation'); 
          });
       })
+      
+      
+       it('Old implementation should be paused', function() {
+      return TestERTTokenV2.deployed()
+        .then(instance => {
+          tokenInstance = instance;
+           return tokenInstance.paused.call();
+          }).then(function(result) {
+            assert.equal(result, true , 'old and useless implementation should be paused'); 
+          });
+    })
+    
+    
+     it('new implementation should be not paused', function() {
+      return TestERTTokenV3.deployed()
+        .then(instance => {
+          tokenInstance = instance;
+           return tokenInstance.paused.call();
+          }).then(function(result) {
+            assert.equal(result, false, 'new implementation should be not paused'); 
+          });
+    })
    
       
       it('access to data and use Imp 2 and 1', function() {
         return ERTToken.deployed()
           .then(instance => {
             tokenInstance = instance;
-           
             return tokenInstance.totalSupply();
           }).then(function(totalSupply) {
             assert.equal(totalSupply, 100000 * decimals, 'has not the correct totalSupply');
@@ -227,8 +283,77 @@ contract('Proxy', function(accounts) {
             assert.equal(balance.toNumber(), 30 * decimals, 'Wrong balance of accounts[6], the sender is not Frozen so he made the transfer');
         });
       }); 
-   
-   
+    
+    it('should Burn tokens', function () {
+      return ERTToken.deployed().
+      then(instance => {
+        tokenInstance = instance ;
+        return tokenInstance.burn(100001 * decimals);
+      }).then(assert.fail).catch(function(error) {
+        assert(error.message.indexOf('revert') >= 0, 'message must contain revert: no burn with value larger than the sender s balance');
+        return tokenInstance.balanceOf(accounts[0]);
+      }).then(balance => {
+        assert.equal(balance.toNumber(), (100000-5-50+20-50+20) * decimals, 'Wrong balance of contract owner');
+        return tokenInstance.totalSupply();
+      }).then(function (totalSupply){
+        assert.equal(totalSupply.toNumber(), 100000  * decimals , 'the current total supply is wrong');
+        return tokenInstance.burn(35 * decimals , {from : accounts[0]});
+      }).then(function (receipt){
+        assert(receipt.logs.length = 1,'number of emitted event is wrong');
+        assert.equal(receipt.logs[0].event, 'Burn','should be the "Burn" event');
+        assert.equal(receipt.logs[0].args.burner, accounts[0],'the account the tokens are burned from is wrong');
+        assert.equal(receipt.logs[0].args.value, 35 * decimals,'the burned amount is wrong');
+        return tokenInstance.totalSupply();
+      }).then(function (totalSupply){
+        assert.equal(totalSupply, (100000- 35 ) * decimals, 'the total Supply is wrong');
+        return tokenInstance.balanceOf(accounts[0]);
+      }).then(balance => {
+        assert.equal(balance.toNumber(), (100000-5-50+20-50+20-35) * decimals,'token balance of burner is wrong');
+      });
+    });
+ 
+    it("should mint token ", function() {
+      return ERTToken.deployed().then(function(instance) {
+        tokenInstance = instance;
+             return tokenInstance.balanceOf(accounts[1]);
+            }).then(function(balance) {
+              assert.equal(balance.valueOf(), 0, "it shouled be 0");
+              return tokenInstance.mintToken(accounts[1], 50 * decimals, {from : accounts[0]});
+            }).then(function(result) {
+              assert.equal(result.logs.length, 3,'number of emitted event is wrong');
+              assert.equal(result.logs[0].event, 'Transfer','should be the "Transfer" event');
+              assert.equal(result.logs[0].args._from, 0,'the account the tokens are transferred from is wrong');
+              assert.equal(result.logs[0].args._to, accounts[0],'the account the tokens are transferred to is wrong');
+              assert.equal(result.logs[0].args._value, 50 * decimals,'the transfer amount is wrong');
+              assert.equal(result.logs[1].event, 'Transfer','should be the "Transfer" event');
+              assert.equal(result.logs[1].args._from, accounts[0],'the account the tokens are transferred from is wrong');
+              assert.equal(result.logs[1].args._to, accounts[1],'the account the tokens are transferred to is wrong');
+              assert.equal(result.logs[1].args._value, 50 * decimals,'the transfer amount is wrong')
+              assert.equal(result.logs[2].event, 'MintedToken','should be the "MintedToken" event');
+              assert.equal(result.logs[2].args.minter, accounts[0],'the account the tokens are transferred from is wrong');
+              assert.equal(result.logs[2].args.target, accounts[1],'the account the tokens are transferred to is wrong');
+              assert.equal(result.logs[2].args.mintedAmount, 50 * decimals,'the minted amount is wrong');
+              return tokenInstance.balanceOf(accounts[0]);
+            }).then(function(adminebalance) {
+              assert.equal(adminebalance.valueOf(), (100000-5-50+20-50+20-35) * decimals,"the balance of the admin is wrong");
+              return tokenInstance.balanceOf(accounts[1]);
+            }).then(function(balance) {
+              assert.equal(balance.valueOf(), 50 * decimals, "it shouled be 50 * 10 ^ 18");
+              return tokenInstance.totalSupply();
+            }).then(function(totalSupply) {
+              assert.equal(totalSupply, (100000-35+50) * decimals, 'has not the correct totalSupply');  
+      });
+    });
+    
+    it('owner of TestERTTokenV2 again after another new impl', function() {
+      return TestERTTokenV2.deployed()
+        .then(instance => {
+          tokenInstance = instance;
+           return tokenInstance.owner.call();
+          }).then(function(result) {
+            assert.equal(result, 0x0 , 'the owner of TestERTTokenV2 should be 0x0 after imp to TestERTTokenV3'); 
+          });
+    });
    
 });
 
