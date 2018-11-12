@@ -224,7 +224,7 @@ public class EthereumWalletService implements Startable {
         } finally {
           RequestLifeCycle.end();
         }
-      }, 10, accountDetailCache.getLiveTime(), TimeUnit.SECONDS);
+      }, 10, accountDetailCache.getLiveTime() > 0 ? accountDetailCache.getLiveTime() : 86400, TimeUnit.SECONDS);
     } catch (Exception e) {
       LOG.warn("Can't read ABI/BIN files content", e);
     }
