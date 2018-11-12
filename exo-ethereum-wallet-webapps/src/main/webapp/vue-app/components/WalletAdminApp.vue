@@ -260,7 +260,6 @@
                   </button>
                   <v-spacer />
                 </v-card-actions>
-
               </v-card>
             </v-tab-item>
 
