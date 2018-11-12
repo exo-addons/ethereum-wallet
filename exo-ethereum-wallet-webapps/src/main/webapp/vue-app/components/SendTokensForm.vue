@@ -152,9 +152,9 @@ export default {
     recipient(newValue, oldValue) {
       if (newValue && oldValue !== newValue) {
         this.isApprovedRecipient = true;
-        // Owner will implicitly approve account, so not necessary
+        // Admin will implicitly approve account, so not necessary
         // to check if the receiver is approved or not
-        if (!this.contractDetails.isOwner && this.contractDetails.contractType > 0) {
+        if (this.contractDetails.adminLevel > 0 && this.contractDetails.contractType > 0) {
           this.contractDetails.contract.methods.isApprovedAccount(this.recipient).call()
             .then(isApproved => {
               this.isApprovedRecipient = isApproved;

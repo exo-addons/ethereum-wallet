@@ -473,7 +473,7 @@ import ContractDetail from './ContractDetail.vue';
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
-import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance} from '../WalletUtils.js';
+import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -1012,7 +1012,7 @@ export default {
               throw new Error('Invalid contract address');
             }
             balance = String(balance);
-            this.$set(wallet, 'balancePrincipal', balance);
+            this.$set(wallet, 'balancePrincipal', convertTokenAmountReceived(balance, accountDetails.decimals));
             this.$set(wallet, "loadingBalancePrincipal", false);
           });
       } else {

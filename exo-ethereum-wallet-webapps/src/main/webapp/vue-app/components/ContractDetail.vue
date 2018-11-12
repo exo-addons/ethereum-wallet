@@ -319,7 +319,7 @@ export default {
           [],
           transaction);
       }
-      if (this.contractDetails) {
+      if (this.contractDetails && transaction.value > 0) {
         this.$set(this.contractDetails, "loadingBalance", true);
       }
       this.$forceUpdate();
@@ -376,6 +376,7 @@ export default {
       this.$forceUpdate();
     },
     refreshBalance() {
+      this.$set(this.contractDetails, "loadingBalance", false);
       return computeBalance(this.contractDetails.address)
         .then(contractBalance => {
           if (contractBalance) {
