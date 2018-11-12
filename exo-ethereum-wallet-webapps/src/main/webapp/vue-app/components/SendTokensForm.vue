@@ -87,8 +87,8 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || (contractDetails && contractDetails.isPaused)" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
-      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || (contractDetails && contractDetails.isPaused)" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || !contractDetails || contractDetails.isPaused" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
+      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || !contractDetails || contractDetails.isPaused" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       <v-spacer />
     </v-card-actions>
   </v-card>

@@ -102,7 +102,7 @@ export function retrieveContractDetails(account, contractDetails) {
         })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.isPaused && contractDetails.contract.methods.isPaused().call())
         .then(isPaused =>  {
-          contractDetails.isPaused = isPaused;
+          contractDetails.isPaused = isPaused ? true: false;
         })
         .catch(e => {
           console.debug("Error getting owner of contract", e);
