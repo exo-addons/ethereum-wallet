@@ -267,12 +267,7 @@
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" key="contracts">
-              <v-card-title v-if="loadingContracts">
-                <v-spacer />
-                <v-progress-circular indeterminate color="primary" />
-                <v-spacer />
-              </v-card-title>
-              <v-card v-else flat>
+              <v-card flat>
                 <v-subheader class="text-xs-center">Default contracts</v-subheader>
                 <v-divider />
 
@@ -281,7 +276,7 @@
                   Contract created under address: 
                   <wallet-address :value="newTokenAddress" />
                 </div>
-                <v-data-table :headers="headers" :items="contracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
+                <v-data-table :headers="headers" :items="contracts" :loading="loadingContracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
                   <template slot="items" slot-scope="props">
                     <td :class="props.item.error ? 'red--text' : ''" @click="openContractDetails(props.item)">
                       {{ props.item.error ? props.item.error : props.item.name }}
@@ -823,6 +818,9 @@ export default {
         this.$refs.fundsHolderAutoComplete.isFocused = false;
       }
     },
+    contracts() {
+      this.loadWallets();
+    },
     defaultGas() {
       this.defaultGasFiatPrice = gasToFiat(this.defaultGas);
     }
@@ -864,7 +862,7 @@ export default {
         })
         .then(this.setDefaultValues)
         .then(() => this.loadingSettings = false)
-        .then(() => ignoreContracts || this.refreshContractsList())
+        .then(() => this.refreshContractsList(ignoreContracts))
         .then(this.setSelectedValues)
         .catch(error => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
@@ -1152,8 +1150,10 @@ export default {
           this.error = `Error encountered: ${e}`;
         });
     },
-    refreshContractsList() {
-      return getContractsDetails(this.walletAddress, this.networkId, true)
+    refreshContractsList(avoidReloading) {
+      const previouslyRetrievedContracts = this.contracts;
+      this.contracts = [];
+      return (avoidReloading ? Promise.resolve(previouslyRetrievedContracts) : getContractsDetails(this.walletAddress, this.networkId, true))
         .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
         .then(() => getContractDeploymentTransactionsInProgress(this.networkId))
         .then(contractsInProgress => {
