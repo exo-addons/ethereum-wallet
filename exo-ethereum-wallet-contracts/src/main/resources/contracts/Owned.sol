@@ -9,8 +9,6 @@ contract Owned is TokenStorage {
 
     // Event emitted when owner changes
     event TransferOwnership(address newOwner);
-    // Event emitted when proxy address changes
-    event TransferProxyOwnership(address proxy);
 
     /**
      * @dev Made internal because this contract is abstract
@@ -28,14 +26,6 @@ contract Owned is TokenStorage {
     }
 
     /**
-     * @dev a modifier to check if the transaction issuer is the proxy contract
-     */
-    modifier onlyProxy(){
-        require(msg.sender == proxy);
-        _;
-    }
-
-    /**
      * @dev Modifies the owner of the contract
      * @param _newOwner new owner
      */
@@ -44,15 +34,5 @@ contract Owned is TokenStorage {
             owner = _newOwner;
             emit TransferOwnership(_newOwner);
         }
-    }
-
-    /**
-     * @dev Modifies the proxy of the contract
-     * @param _proxy new proxy contract address
-     */
-    function setProxy(address _proxy) public onlyOwner{
-        require(_proxy != address(0));
-        proxy = _proxy;
-        emit TransferProxyOwnership(_proxy);
     }
 }

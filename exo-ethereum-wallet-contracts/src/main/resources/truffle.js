@@ -6,6 +6,6 @@ module.exports = {
       port: 9545,
       network_id: '*'
     }
-  */
+    */
   }
 };

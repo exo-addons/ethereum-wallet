@@ -20,11 +20,12 @@ contract Upgradability is Owned{
 
     /**
      * @dev Upgrade to a new implementation of ERC20 contract
+     * @param _proxy proxy contract address
      * @param _version the version of the new implementation that should be higher
      * that current version
      * @param _newImplementation new ERC20 contract address
      */
-    function upgradeImplementation(uint16 _version, address _newImplementation) public onlyOwner{
+    function upgradeImplementation(address _proxy, uint16 _version, address _newImplementation) public onlyOwner{
         require(_version > version);
         require(implementationAddress != _newImplementation);
 
@@ -32,7 +33,7 @@ contract Upgradability is Owned{
         implementationAddress = _newImplementation;
 
         for (uint i=0; i< dataVersions_.length; i++) {
-          super._transferDataOwnership(dataVersions_[i], proxy, _newImplementation);
+          _transferDataOwnership(dataVersions_[i], _proxy, _newImplementation);
         }
 
         emit Upgraded(_version, _newImplementation);
@@ -40,17 +41,18 @@ contract Upgradability is Owned{
 
     /**
      * @dev Upgrade to a new implementation of ERC20 contract
+     * @param _proxy proxy contract address
      * @param _version the version of the new implementation that should be higher
      * that current version
      * @param _newImplementation new ERC20 contract address
      * @param _dataVersion version number of data contract
      * @param _dataAddress address of data contract
      */
-    function upgradeDataAndImplementation(uint16 _version, address _newImplementation, uint16 _dataVersion, address _dataAddress) public onlyOwner{
+    function upgradeDataAndImplementation(address _proxy, uint16 _version, address _newImplementation, uint16 _dataVersion, address _dataAddress) public onlyOwner{
         // Upgrade data before implementation to perform ownership
         // transfer for new implementation just after
         upgradeData(_dataVersion, _dataAddress);
-        upgradeImplementation(_version, _newImplementation);
+        upgradeImplementation(_proxy, _version, _newImplementation);
     }
 
     /**
@@ -63,4 +65,14 @@ contract Upgradability is Owned{
          emit UpgradedData(_dataVersion, _dataAddress);
     }
 
+    /**
+     * @dev transfers data ownership to a proxy and token implementation
+     * @param _dataVersion Data version to transfer its ownership
+     */
+    function _transferDataOwnership(uint16 _dataVersion, address _proxy, address _implementation) internal{
+        require(dataAddresses_[_dataVersion] != address(0));
+        require(_proxy != address(0));
+        require(_implementation != address(0));
+        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(_proxy, _implementation);
+    }
 }

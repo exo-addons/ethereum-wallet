@@ -28,17 +28,7 @@ contract ERTTokenV1 is
   GasPayableInToken,
   Upgradability {
 
-    /**
-     * @dev Sets the proxy address if given
-     * @param _proxyAddress optional proxy contract address
-     */
-    constructor(address _proxyAddress) public{
-        // The proxy will be 0x address for the whole first instantiation,
-        // The future Token implementations should pass the correct proxy
-        // address
-        if (proxy != address(0)) {
-          setProxy(_proxyAddress);
-        }
+    constructor() public{
         // Pause contract to disallow using it directly without passing by proxy
         paused = true;
     }
@@ -47,16 +37,13 @@ contract ERTTokenV1 is
      * @dev initialize the ERC20 Token attributes when it's the first time that we deploy the first version of contract.
      * Once deployed, this method couldn''t be called again and shouldn't be inherited from future versions of Token
      * contracts
-     * @param _proxyAddress proxy contract address
      * @param _initialAmount initial amount of tokens
      * @param _tokenName ERC20 token name
      * @param _decimalUnits token decimals
      * @param _tokenSymbol ERC20 token symbol
      */
-    function initialize(address _proxyAddress, uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
+    function initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) public onlyOwner{
         require(!super.initialized());
-
-        super.setProxy(_proxyAddress);
 
         super.setName(_tokenName);
         super.setSymbol(_tokenSymbol);

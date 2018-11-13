@@ -25,9 +25,6 @@ contract ERTToken is TokenStorage, Owned {
 
         // Set data address
         super._setDataAddress(1, _dataAddress);
-
-        // Set current proxy address so that ERC20 implementation can access it when calls are delegated to it
-        proxy = address(this);
     }
 
     /**

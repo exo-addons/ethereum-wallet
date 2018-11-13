@@ -17,9 +17,6 @@ contract('TokenStorage', function(accounts) {
             return tokenInstance.owner.call();
           }).then(function(owner) {
             assert.equal(owner, accounts[0], 'should return the owner address of the contract');  
-            return tokenInstance.proxy.call();
-          }).then(function(proxy) {
-            assert.equal(proxy, ERTToken.address, 'should return the proxy address'); 
             return tokenInstance.version.call();
           }).then(function(version) {
             assert.equal(version, 1 , 'should return the version of the iplementation'); 

@@ -17,11 +17,8 @@ contract TokenStorage {
     // Reference to the Token implementation reference
     address public implementationAddress;
 
-    // Proxy and Token owner
+    // Proxy and Token owner address
     address public owner;
-
-    // Proxy address
-    address public proxy;
 
     // A local variable for each Token instance to pause old and useless
     // implementations when upgrading to a newer Token implementation version
@@ -49,16 +46,5 @@ contract TokenStorage {
             dataAddresses_[_dataVersion] = _dataAddress;
             dataVersions_.push(_dataVersion);
         }
-    }
-
-    /**
-     * @dev transfers data ownership to a proxy and token implementation
-     * @param _dataVersion Data version to transfer its ownership
-     */
-    function _transferDataOwnership(uint16 _dataVersion, address _proxy, address _implementation) internal{
-        require(dataAddresses_[_dataVersion] != address(0));
-        require(_proxy != address(0));
-        require(_implementation != address(0));
-        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(_proxy, _implementation);
     }
 }

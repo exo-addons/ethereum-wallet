@@ -27,19 +27,19 @@ contract('Proxy', function(accounts) {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
-          return tokenInstance.upgradeImplementation(1, TestERTTokenV2.address );
+          return tokenInstance.upgradeImplementation(ERTToken.address, 1, TestERTTokenV2.address);
         }).then(assert.fail).catch(function(error) {
           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation version is equal to the current one');
-          return tokenInstance.upgradeImplementation(2, ERTTokenV1.address );
+          return tokenInstance.upgradeImplementation(ERTToken.address, 2, ERTTokenV1.address);
         }).then(assert.fail).catch(function(error) {
           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation is equal to the current one');
-          return tokenInstance.upgradeImplementation(2, TestERTTokenV2.address, {from: accounts[5]} );
+          return tokenInstance.upgradeImplementation(ERTToken.address, 2, TestERTTokenV2.address, {from: accounts[5]});
         }).then(assert.fail).catch(function(error) {
           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the sender was not the owner');
           return tokenInstance.implementationAddress.call();
         }).then(function(implementation) {
           assert.equal(implementation, ERTTokenV1.address, 'should return the current implementation');    
-          return tokenInstance.upgradeImplementation(2, TestERTTokenV2.address);
+          return tokenInstance.upgradeImplementation(ERTToken.address, 2, TestERTTokenV2.address);
         }).then(function(receipt) {
           assert(receipt.logs.length > 0, 'number of emitted event is wrong');
           const upgradedEvent = receipt.logs.find(log => log && log.event && log.event === 'Upgraded');
@@ -132,7 +132,7 @@ contract('Proxy', function(accounts) {
           assert.equal(data, ERTTokenDataV1.address, 'should return the new data address added');
          });
    })
-   
+
    it('when access to data from previous and new contracts', function() {
        return ERTToken.deployed()
          .then(instance => {
@@ -214,7 +214,7 @@ contract('Proxy', function(accounts) {
            return tokenInstance.implementationAddress.call();
          }).then(function(implementation) {
            assert.equal(implementation, TestERTTokenV2.address, 'should return the current implementation');    
-           return tokenInstance.upgradeImplementation(3, TestERTTokenV3.address);
+           return tokenInstance.upgradeImplementation(ERTToken.address, 3, TestERTTokenV3.address);
          }).then(function(receipt) {
           return tokenInstance.implementationAddress.call();
          }).then(function(implementation) {
