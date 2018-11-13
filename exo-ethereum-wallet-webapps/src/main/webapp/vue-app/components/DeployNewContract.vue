@@ -19,7 +19,7 @@
           <v-divider />
           <v-stepper-step :complete="step > 3" step="3">Deployment of Proxy contract</v-stepper-step>
           <v-divider />
-          <v-stepper-step :complete="step > 4" step="4">Transfer ownership</v-stepper-step>
+          <v-stepper-step :complete="step > 4" step="4">Transfer data ownership</v-stepper-step>
           <v-divider />
           <v-stepper-step :complete="step > 5" step="5">ERC 20 initialization</v-stepper-step>
           <v-divider />
@@ -222,10 +222,7 @@ export default {
       }
     },
     contractDeploymentParameters() {
-      if (this.step === 2) {
-        // ERTTokenV1 parameters
-        return [this.contractAddressByStep[1], '0x0000000000000000000000000000000000000000'];
-      } else if (this.step === 3) {
+      if (this.step === 3) {
         // ERTToken parameters
         return [this.contractAddressByStep[2], this.contractAddressByStep[1]];
       }
@@ -298,7 +295,7 @@ export default {
               this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
             });
         } else if(this.step === 5 && !this.processedStep[this.step]) {
-          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
+          this.contractInstancesByStep[2].methods.initialize(convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
             .estimateGas({
               gas: 9000000,
               gasPrice: window.walletSettings.gasPrice
