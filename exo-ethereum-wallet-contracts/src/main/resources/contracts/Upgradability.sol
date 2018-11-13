@@ -7,6 +7,10 @@ import "./DataOwned.sol";
  * @dev This contract will allow to do Data and Impl upgrade operations
  */
 contract Upgradability is Owned{
+    // Event emitted when an upgrade is made to a new implementation
+    event Upgraded(uint16 implementationVersion, address implementationAddress);
+     // Event emitted when an upgrade is made to a new data
+    event UpgradedData(uint16 dataVersion, address DataAddress);
 
     /**
      * @dev Made internal because this contract is abstract
@@ -14,22 +18,49 @@ contract Upgradability is Owned{
     constructor() internal{
     }
 
-    /*
-     * @dev Upgrade current implementation to the new one. This method can be called only through
-     * proxy call to avoid calling this by error.
-     * This method will make the current implementation unusable and it will send its funds to the new
-     * contract implementation.
-     * @param _newImplementation new implementation address
+    /**
+     * @dev Upgrade to a new implementation of ERC20 contract
+     * @param _version the version of the new implementation that should be higher
+     * that current version
+     * @param _newImplementation new ERC20 contract address
      */
-    function upgradeImplementationTo(address _newImplementation) public onlyProxy{
-        // Disable ownership
-        owner = address(0);
-        // Make the contract paused
-        paused = true;
-        // Transfer ether to new implementation
-        if (address(this).balance > 0) {
-        	_newImplementation.transfer(address(this).balance);
+    function upgradeImplementation(uint16 _version, address _newImplementation) public onlyOwner{
+        require(_version > version);
+        require(implementationAddress != _newImplementation);
+
+        version = _version;
+        implementationAddress = _newImplementation;
+
+        for (uint i=0; i< dataVersions_.length; i++) {
+          super._transferDataOwnership(dataVersions_[i], proxy, _newImplementation);
         }
+
+        emit Upgraded(_version, _newImplementation);
+    }
+
+    /**
+     * @dev Upgrade to a new implementation of ERC20 contract
+     * @param _version the version of the new implementation that should be higher
+     * that current version
+     * @param _newImplementation new ERC20 contract address
+     * @param _dataVersion version number of data contract
+     * @param _dataAddress address of data contract
+     */
+    function upgradeDataAndImplementation(uint16 _version, address _newImplementation, uint16 _dataVersion, address _dataAddress) public onlyOwner{
+        // Upgrade data before implementation to perform ownership
+        // transfer for new implementation just after
+        upgradeData(_dataVersion, _dataAddress);
+        upgradeImplementation(_version, _newImplementation);
+    }
+
+    /**
+     * @dev Upgrade to a new data contract
+     * @param _dataVersion version number of data contract
+     * @param _dataAddress address of data contract
+     */
+    function upgradeData(uint16 _dataVersion, address _dataAddress) public onlyOwner{
+         super._setDataAddress(_dataVersion, _dataAddress);
+         emit UpgradedData(_dataVersion, _dataAddress);
     }
 
 }

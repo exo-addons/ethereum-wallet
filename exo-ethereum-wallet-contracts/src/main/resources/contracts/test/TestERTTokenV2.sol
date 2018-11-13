@@ -5,10 +5,7 @@ import "./TestDataAccess.sol";
 
 contract TestERTTokenV2 is ERTTokenV1, TestDataAccess, TestAccountFreeze{
 
-    constructor(address _dataAddressV1, address _dataAddressV2 ,address _proxyAddress) ERTTokenV1(_dataAddressV1, _proxyAddress) public{
-        require(_dataAddressV2 != address(0));
-        super._setDataAddress(2, _dataAddressV2);
-        super.setProxy(_proxyAddress);
+    constructor(address _proxyAddress) ERTTokenV1(_proxyAddress) public{
     }
 
     function transfer(address _to, uint256 _value) public whenNotFrozen returns (bool success){

@@ -6,12 +6,8 @@ import "./TestMint.sol";
 
 contract TestERTTokenV3 is TestERTTokenV2, TestBurn, TestMint {
 
-    constructor(address _dataAddressV1, address _dataAddressV2 ,address _proxyAddress)  TestERTTokenV2(_dataAddressV1,_dataAddressV2,_proxyAddress)  public
-    {
-     super.setProxy(_proxyAddress);
+    constructor(address _proxyAddress)  TestERTTokenV2(_proxyAddress)  public{
     }
-    
-  
 }
 
 

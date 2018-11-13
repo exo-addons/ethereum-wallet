@@ -22,61 +22,46 @@ contract('Proxy', function(accounts) {
           assert.equal(result, 5 * decimals, 'the balance of ERTToken is wrong ');
         });
   });
-  
-  
-  it('test ownership of current impl', function() {
-    return ERTTokenV1.deployed()
+
+  it('when new implementation V2 was provided', function() {
+    return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
-         return tokenInstance.owner.call();
-        }).then(function(result) {
-          assert.equal(result, accounts[0] , 'the owner of ERTTokenV1 is wrong'); 
-        });
-  })
-  
-   
-   
-   it('when new implementation V2 was provided', function() {
-     return ERTToken.deployed()
-       .then(instance => {
-         tokenInstance = instance;
-         return tokenInstance.upgradeImplementation(1, TestERTTokenV2.address );
-         }).then(assert.fail).catch(function(error) {
-           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation version is equal to the current one');
+          return tokenInstance.upgradeImplementation(1, TestERTTokenV2.address );
+        }).then(assert.fail).catch(function(error) {
+          assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation version is equal to the current one');
           return tokenInstance.upgradeImplementation(2, ERTTokenV1.address );
-         }).then(assert.fail).catch(function(error) {
-           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation is equal to the current one');
-           return tokenInstance.upgradeImplementation(2, TestERTTokenV2.address, {from: accounts[5]} );
-         }).then(assert.fail).catch(function(error) {
-           assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the sender was not the owner');
-           return tokenInstance.implementationAddress.call();
-         }).then(function(implementation) {
-           assert.equal(implementation, ERTTokenV1.address, 'should return the current implementation');    
+        }).then(assert.fail).catch(function(error) {
+          assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the given implementation is equal to the current one');
+          return tokenInstance.upgradeImplementation(2, TestERTTokenV2.address, {from: accounts[5]} );
+        }).then(assert.fail).catch(function(error) {
+          assert(error.message.indexOf('revert') >= 0, 'message must contain revert: when the sender was not the owner');
+          return tokenInstance.implementationAddress.call();
+        }).then(function(implementation) {
+          assert.equal(implementation, ERTTokenV1.address, 'should return the current implementation');    
           return tokenInstance.upgradeImplementation(2, TestERTTokenV2.address);
-         }).then(function(receipt) {
+        }).then(function(receipt) {
           assert(receipt.logs.length > 0, 'number of emitted event is wrong');
           const upgradedEvent = receipt.logs.find(log => log && log.event && log.event === 'Upgraded');
           assert.notEqual(upgradedEvent, null ,'should be the "Upgraded" event');
           assert.equal(receipt.logs[0].args.implementationVersion, 2, 'the implementation version is wrong');
           assert.equal(receipt.logs[0].args.implementationAddress, TestERTTokenV2.address,'the implementation address is wrong');
           return tokenInstance.implementationAddress.call();
-         }).then(function(implementation) {
+        }).then(function(implementation) {
           assert.equal(implementation, TestERTTokenV2.address, 'should return the given implementation');
-         });
+        });
    })
-   
-   
-   
+
   it('test transfer old impl ownership for 0x address', function() {
     return ERTTokenV1.deployed()
       .then(instance => {
         tokenInstance = instance;
-         return tokenInstance.owner.call();
+          return tokenInstance.getDataAddress(1);
         }).then(function(result) {
-          assert.equal(result, 0x0 , 'the owner of ERTTokenV1 is wrong after new impl'); 
+          assert.equal(result, 0x0 , 'the ERTTokenV1 shouldn\'t have a reference to new address'); 
         });
   })
-   
+
    it('test ownership of new current impl', function() {
     return TestERTTokenV2.deployed()
       .then(instance => {
@@ -113,13 +98,13 @@ contract('Proxy', function(accounts) {
          });
    })
    
-    it('new implementation should be not paused', function() {
+    it('new implementation should be paused', function() {
      return TestERTTokenV2.deployed()
        .then(instance => {
          tokenInstance = instance;
           return tokenInstance.paused.call();
          }).then(function(result) {
-           assert.equal(result, false, 'new implementation should be not paused'); 
+           assert.equal(result, true, 'new implementation should be paused to avoid calling the contract impl directly'); 
          });
    })
    
@@ -255,7 +240,7 @@ contract('Proxy', function(accounts) {
           tokenInstance = instance;
            return tokenInstance.paused.call();
           }).then(function(result) {
-            assert.equal(result, false, 'new implementation should be not paused'); 
+            assert.equal(result, true, 'new implementation should be paused to avoid calling the contract impl directly'); 
           });
     })
    
@@ -349,10 +334,10 @@ contract('Proxy', function(accounts) {
       return TestERTTokenV2.deployed()
         .then(instance => {
           tokenInstance = instance;
-           return tokenInstance.owner.call();
-          }).then(function(result) {
-            assert.equal(result, 0x0 , 'the owner of TestERTTokenV2 should be 0x0 after imp to TestERTTokenV3'); 
-          });
+          return tokenInstance.getDataAddress(1);
+        }).then(function(result) {
+          assert.equal(result, 0x0 , 'the TestERTTokenV2 shouldn\'t have a reference to new address'); 
+        });
     });
    
 });

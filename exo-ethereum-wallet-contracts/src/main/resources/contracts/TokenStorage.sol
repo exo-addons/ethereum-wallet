@@ -44,8 +44,6 @@ contract TokenStorage {
      * @param _dataAddress address of data contract
      */
     function _setDataAddress(uint16 _dataVersion, address _dataAddress) internal{
-        // Owner and proxy check
-        require(msg.sender == owner || msg.sender == proxy);
         // Make sure that we can't change a reference of an existing data reference
         if(dataAddresses_[_dataVersion] == address(0)) {
             dataAddresses_[_dataVersion] = _dataAddress;
@@ -57,10 +55,10 @@ contract TokenStorage {
      * @dev transfers data ownership to a proxy and token implementation
      * @param _dataVersion Data version to transfer its ownership
      */
-    function _transferDataOwnership(uint16 _dataVersion) internal{
-        // Owner and proxy check
-        require(msg.sender == owner || msg.sender == proxy);
+    function _transferDataOwnership(uint16 _dataVersion, address _proxy, address _implementation) internal{
         require(dataAddresses_[_dataVersion] != address(0));
-        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(proxy, implementationAddress);
+        require(_proxy != address(0));
+        require(_implementation != address(0));
+        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(_proxy, _implementation);
     }
 }

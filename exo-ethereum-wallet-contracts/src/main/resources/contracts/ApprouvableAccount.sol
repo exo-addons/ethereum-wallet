@@ -31,7 +31,7 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @param _to transaction receiver
      */
     modifier whenApproved(address _from, address _to){
-        require (owner == _from || owner == _to || (super.isApprovedAccount(_to) && super.isApprovedAccount(_from)));
+        require (super.isAdmin(_from, 1) || super.isAdmin(_to, 1) || (super._isApprovedAccount(_from) && super._isApprovedAccount(_to)));
         _;
     }
 
@@ -40,7 +40,7 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @param _target address to approve
      */
     function approveAccount(address _target) public onlyAdmin(1){
-        if (!super.isApprovedAccount(_target)) {
+        if (!super._isApprovedAccount(_target)) {
             super._setApprovedAccount(_target, true);
             emit ApprovedAccount(_target);
         }
@@ -51,8 +51,10 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @param _target address to disapprove
      */
     function disapproveAccount(address _target) public onlyAdmin(1){
-        require (owner != _target);
-        if (super.isApprovedAccount(_target)) {
+        // If the address is an admin, disapproving it shouldn't work
+        // until revoking its privileges
+        require (!super.isAdmin(_target, 1));
+        if (super._isApprovedAccount(_target)) {
             super._setApprovedAccount(_target, false);
             emit DisapprovedAccount(_target);
         }
@@ -64,7 +66,7 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @return true is the address is approved
      */
     function isApprovedAccount(address _target) public view returns (bool){
-        return super.isApprovedAccount(_target);
+        return super.isAdmin(_target, 1) || super._isApprovedAccount(_target);
     }
 
 }

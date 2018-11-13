@@ -83,13 +83,6 @@ contract DataAccess is Owned{
     }
 
     /**
-     * @return true if account is allowed to receive and send tokens
-     */
-    function isApprovedAccount(address _target) public view returns(bool){
-        return ERTTokenDataV1(dataAddresses_[1]).isApprovedAccount(_target);
-    }
-
-    /**
      * @dev Token sell price in WEI
      * @return amount Token selling price in WEI
      */
@@ -222,6 +215,13 @@ contract DataAccess is Owned{
      */
     function _isPaused() internal view returns (bool){
         return ERTTokenDataV1(dataAddresses_[1]).isPaused();
+    }
+
+    /**
+     * @return true if account is allowed to receive and send tokens
+     */
+    function _isApprovedAccount(address _target) internal view returns(bool){
+        return ERTTokenDataV1(dataAddresses_[1]).isApprovedAccount(_target);
     }
 
 }

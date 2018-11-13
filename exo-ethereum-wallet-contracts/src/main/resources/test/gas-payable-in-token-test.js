@@ -26,7 +26,7 @@ contract('GasPayableInToken', function(accounts) {
 
   const tokensToTransferOwnerNoDecimals = 1000;
   const tokensToTransferFromOwner = addTokenDecimals(tokensToTransferOwnerNoDecimals);
-  const allowedEtherDelta = web3.toWei(0.001, 'ether');
+  const allowedEtherDelta = web3.toWei(0.0001, 'ether');
   const initialEtherTokenBalance = web3.toWei(1,"ether");
   const initialEtherTokenBalanceNumber = Number(initialEtherTokenBalance);
 

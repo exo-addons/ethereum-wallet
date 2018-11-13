@@ -29,22 +29,18 @@ contract ERTTokenV1 is
   Upgradability {
 
     /**
-     * @dev Sets the data address and proxy address if given
-     * @param _dataAddress address of ERC20 Contract address (mandatory)
+     * @dev Sets the proxy address if given
      * @param _proxyAddress optional proxy contract address
      */
-    constructor(address _dataAddress, address _proxyAddress) public{
-        require(_dataAddress != address(0));
-
-        // Set data address in ERC20 implementation storage only
-        uint16 dataVersion = 1;
-        super._setDataAddress(dataVersion, _dataAddress);
+    constructor(address _proxyAddress) public{
         // The proxy will be 0x address for the whole first instantiation,
         // The future Token implementations should pass the correct proxy
         // address
         if (proxy != address(0)) {
           setProxy(_proxyAddress);
         }
+        // Pause contract to disallow using it directly without passing by proxy
+        paused = true;
     }
 
     /**
@@ -103,7 +99,7 @@ contract ERTTokenV1 is
         uint gasLimit = gasleft();
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
-        if (msg.sender == owner) {
+        if (super.isAdmin(msg.sender, 1)) {
             super.approveAccount(_to);
         }
         // This is to avoid calling this function with empty tokens transfer
@@ -125,7 +121,7 @@ contract ERTTokenV1 is
         uint gasLimit = gasleft();
         require(msg.sender != _spender);
         require(super.balance(msg.sender) >= _value);
-        if (msg.sender == owner) {
+        if (super.isAdmin(msg.sender, 1)) {
             super.approveAccount(_spender);
         }
         super._setAllowance(msg.sender, _spender,_value);
@@ -141,13 +137,13 @@ contract ERTTokenV1 is
      * @param _value The amount of token to be transferred
      * @return Whether the transfer was successful or not
      */
-    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused whenApproved(_from, _to) returns (bool success){
+    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused whenApproved(msg.sender, _to) whenApproved(_from, _to) returns (bool success){
         uint gasLimit = gasleft();
         require(super.balance(_from) >= _value);
         uint256 _allowance = super.getAllowance(_from, msg.sender);
         require(_allowance >= _value);
         super._setAllowance(_from, msg.sender, super.safeSubtract(_allowance, _value));
-        if (msg.sender == owner) {
+        if (super.isAdmin(msg.sender, 1)) {
             super.approveAccount(_to);
         }
         require(super._transfer(_from, _to, _value) == true);
