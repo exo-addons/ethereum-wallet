@@ -40,6 +40,8 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @param _target address to approve
      */
     function approveAccount(address _target) public onlyAdmin(1){
+        // Shouldn't approve a contract address
+        require(!_isContract(_target));
         if (!super._isApprovedAccount(_target)) {
             super._setApprovedAccount(_target, true);
             emit ApprovedAccount(_target);
@@ -69,4 +71,11 @@ contract ApprouvableAccount is DataAccess, Admin {
         return super.isAdmin(_target, 1) || super._isApprovedAccount(_target);
     }
 
+    function _isContract(address _addr) private view returns (bool){
+        uint32 size;
+        assembly {
+          size := extcodesize(_addr)
+        }
+        return (size > 0);
+    }
 }

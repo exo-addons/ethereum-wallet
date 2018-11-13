@@ -56,20 +56,6 @@ contract DataAccess is Owned{
     }
 
     /**
-     * @return ERC20 tokens balance of an address
-     */
-    function balance(address _target) public view returns(uint256){
-        return ERTTokenDataV1(dataAddresses_[1]).balance(_target);
-    }
-
-    /**
-     * @return ERC20 tokens allowance from an account to another spender account
-     */
-    function getAllowance(address _account, address _spender) public view returns (uint256){
-        return ERTTokenDataV1(dataAddresses_[1]).getAllowance(_account, _spender);
-    }
-
-    /**
      * @dev Token sell price in WEI
      * @return amount Token selling price in WEI
      */
@@ -209,6 +195,20 @@ contract DataAccess is Owned{
      */
     function _isApprovedAccount(address _target) internal view returns(bool){
         return ERTTokenDataV1(dataAddresses_[1]).isApprovedAccount(_target);
+    }
+
+    /**
+     * @return ERC20 tokens balance of an address
+     */
+    function _balanceOf(address _target) internal view returns(uint256){
+        return ERTTokenDataV1(dataAddresses_[1]).balance(_target);
+    }
+
+    /**
+     * @return ERC20 tokens allowance from an account to another spender account
+     */
+    function _getAllowance(address _account, address _spender) internal view returns (uint256){
+        return ERTTokenDataV1(dataAddresses_[1]).getAllowance(_account, _spender);
     }
 
 }

@@ -29,6 +29,8 @@ contract TestAccountFreeze is Owned, TestDataAccess{
     }
 
     modifier whenNotFrozen(){
+        // TODO *********** Check on sender and receiver
+        // ************ If this implementation will be used
         require (!super.isFrozen(msg.sender));
         _;
     }

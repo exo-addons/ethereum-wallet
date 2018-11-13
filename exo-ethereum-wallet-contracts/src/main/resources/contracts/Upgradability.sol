@@ -10,7 +10,7 @@ contract Upgradability is Owned{
     // Event emitted when an upgrade is made to a new implementation
     event Upgraded(uint16 implementationVersion, address implementationAddress);
     // Event emitted when an upgrade is made to a new data
-    event UpgradedData(uint16 dataVersion, address DataAddress);
+    event UpgradedData(uint16 dataVersion, address dataAddress);
 
     /**
      * @dev Made internal because this contract is abstract

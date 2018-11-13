@@ -47,6 +47,9 @@ contract('ERC20', function(accounts) {
         return tokenInstance.transfer(0x0, 7 * decimals, {from : accounts[0]});
       }).then(assert.fail).catch(function(error) {
         assert(error.message.indexOf('revert') >= 0, 'No transfer to 0x address is allowed');
+        return tokenInstance.transfer(ERTTokenV1.address, 7 * decimals, {from : accounts[0]});
+      }).then(assert.fail).catch(function(error) {
+        assert(error.message.indexOf('revert') >= 0, 'No transfer to a contract address is allowed');
         return tokenInstance.balanceOf(accounts[0]);
       }).then(balance => {
         assert.equal(balance.toNumber(), 100000 * decimals, 'Wrong balance of contract owner');

@@ -31,6 +31,11 @@ contract ERTTokenV1 is
     constructor() public{
         // Pause contract to disallow using it directly without passing by proxy
         paused = true;
+        // Make sure that all funds are sent to owner if it's not null
+        uint256 balanceOfContract = address(this).balance;
+        if (balanceOfContract > 0) {
+            msg.sender.transfer(balanceOfContract);
+        }
     }
 
     /**
@@ -64,7 +69,7 @@ contract ERTTokenV1 is
      * @return the amount of balance of the address
      */
     function balanceOf(address _target) public view returns (uint256 balance){
-        return super.balance(_target);
+        return super._balanceOf(_target);
     }
 
     /**
@@ -73,7 +78,7 @@ contract ERTTokenV1 is
      * @return Amount of remaining tokens allowed to spent
      */
     function allowance(address _target, address _spender) public view returns (uint256 remaining){
-        return super.getAllowance(_target, _spender);
+        return super._getAllowance(_target, _spender);
     }
 
     /**
@@ -133,7 +138,7 @@ contract ERTTokenV1 is
     function _approveWithGas(uint256 gasLimit, address _spender, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _spender);
-        require(super.balance(msg.sender) >= _value);
+        require(super._balanceOf(msg.sender) >= _value);
         if (super.isAdmin(msg.sender, 1)) {
             super.approveAccount(_spender);
         }
@@ -144,8 +149,8 @@ contract ERTTokenV1 is
     }
 
     function _transferFromWithGas(uint256 gasLimit, address _from, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _to) whenApproved(_from, _to) returns (bool success){
-        require(super.balance(_from) >= _value);
-        uint256 _allowance = super.getAllowance(_from, msg.sender);
+        require(super._balanceOf(_from) >= _value);
+        uint256 _allowance = super._getAllowance(_from, msg.sender);
         require(_allowance >= _value);
         super._setAllowance(_from, msg.sender, super.safeSubtract(_allowance, _value));
         if (super.isAdmin(msg.sender, 1)) {

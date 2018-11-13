@@ -43,6 +43,11 @@ contract ERTTokenDataV1 is DataOwned {
     uint256 internal sellPrice_;
 
     constructor() public{
+        // Make sure that all funds are sent to owner if it's not null
+        uint256 balanceOfContract = address(this).balance;
+        if (balanceOfContract > 0) {
+            msg.sender.transfer(balanceOfContract);
+        }
     }
 
     /**
@@ -232,4 +237,7 @@ contract ERTTokenDataV1 is DataOwned {
         admin_[_target] = _level;
     }
 
+    function() public payable {
+        revert();
+    }
 }

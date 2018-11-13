@@ -44,7 +44,9 @@ contract GasPayableInToken is Admin, ERC20Abstract {
             return;
         }
         uint256 tokenSellPrice = super.getSellPrice();
-        require(tokenSellPrice > 0);
+        if(tokenSellPrice == 0) {
+            return;
+        }
 
         // Used gas until this instruction + a fixed gas
         // that will be used to finish the transaction

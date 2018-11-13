@@ -43,14 +43,14 @@ contract('DataAccess', function(accounts) {
       return tokenInstance.decimals();
     }).then(function(decimals) {
       assert.equal(decimals, 18, 'has not the correct decimals');
-      return tokenInstance.balance(accounts[1]);
+      return tokenInstance.balanceOf(accounts[1]);
     }).then(function(balance) {
       assert.equal(balance, 0, 'has not the correct balance');
       return tokenInstance.approve(accounts[1], 1 * decimals, {
         from : accounts[0]
       });
     }).then(receipt => {
-      return tokenInstance.getAllowance(accounts[0], accounts[1]);
+      return tokenInstance.allowance(accounts[0], accounts[1]);
     }).then(allowed => {
       assert.equal(allowed.toNumber(), 1 * decimals, 'stores the allowance for delegated trasnfer');
       return tokenInstance.isApprovedAccount(accounts[0]);
@@ -143,6 +143,25 @@ contract('DataAccess', function(accounts) {
       assert.equal(result , originalSymbol, 'has not the correct Symbol');
     });
   })
+
+  it('send ether to data contract should be forbidden ', function() {
+    return ERTToken.deployed()
+      .then(instance => {
+        tokenInstance = instance;
+        return web3.eth.sendTransaction({
+          from : accounts[0],
+          to: ERTTokenDataV1.address,
+          value : web3.toWei(1, 'ether')
+        });
+      })
+      .then(assert.fail).catch(error => {
+        assert.isTrue(String(error).indexOf('revert') >= 0, "Ether transfer should be reverted");
+        return web3.eth.getBalance(ERTTokenDataV1.address);
+      }).then(result => 
+        assert.equal(Number(String(result)), 0, `The data contract should have 0 ether in its balance`)
+      );
+  });
+
 });
 
 

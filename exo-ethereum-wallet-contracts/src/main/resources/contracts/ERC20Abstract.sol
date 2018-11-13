@@ -34,12 +34,12 @@ contract ERC20Abstract is DataAccess, SafeMath {
         // Prevent transfer to 0x0 address. Use burn() instead
         require(_to != 0x0);
         // Check if the sender has enough
-        uint256 fromBalance = super.balance(_from);
+        uint256 fromBalance = super._balanceOf(_from);
         require(fromBalance >= _value);
         // Subtract from the sender
         super._setBalance(_from, super.safeSubtract(fromBalance, _value));
         // Add the same to the recipient
-        super._setBalance(_to, super.safeAdd(super.balance(_to), _value));
+        super._setBalance(_to, super.safeAdd(super._balanceOf(_to), _value));
         return true;
     }
 
