@@ -20,6 +20,4 @@ contract('FundCollection', function(accounts) {
       assert.equal(String(balance), String(web3.toWei(1,"ether")), 'Contract balance should be 1 ether');
     });
   });
-
-  // TODO test failure test cases
 });

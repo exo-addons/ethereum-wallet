@@ -177,7 +177,7 @@ contract DataAccess is Owned{
      * @param _value amount of tokens representing 1 gas
      */
     function _setSellPrice(uint256 _value) internal{
-        ERTTokenDataV1(dataAddresses_[1])._setSellPrice(_value);
+        ERTTokenDataV1(dataAddresses_[1]).setSellPrice(_value);
     }
 
     /**

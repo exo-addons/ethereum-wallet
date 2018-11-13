@@ -219,7 +219,7 @@ contract ERTTokenDataV1 is DataOwned {
      * @dev Sets token selling price in WEI
      * @param _value token selling price in WEI
      */
-    function _setSellPrice(uint256 _value) public onlyContracts{
+    function setSellPrice(uint256 _value) public onlyContracts{
         sellPrice_ = _value;
     }
 

@@ -9,10 +9,10 @@ contract DataOwned {
     event TransferOwnership(address proxyAddress, address implementationAddress);
 
     // ERC20 Proxy contract address
-    address public proxyAddress_;
+    address public proxy;
 
     // ERC20 Implementation contract address
-    address public implementationAddress_;
+    address public implementation;
 
     /**
      * @dev Made internal because this contract is abstract
@@ -20,7 +20,7 @@ contract DataOwned {
     constructor() internal{
         // Keep contract creator as an owner until it's modified
         // When Token Proxy and Implementation contracts are deployed
-        implementationAddress_ = msg.sender;
+        implementation = msg.sender;
     }
 
     /**
@@ -29,7 +29,7 @@ contract DataOwned {
      */
     modifier onlyContracts(){
         address sender = msg.sender;
-        require(sender == proxyAddress_ || sender == implementationAddress_);
+        require(sender == proxy || sender == implementation);
         _;
     }
 
@@ -40,8 +40,8 @@ contract DataOwned {
      */
     function transferDataOwnership(address _proxyAddress, address _implementationAddress) public onlyContracts{
         require (_implementationAddress != address(0));
-        proxyAddress_ = _proxyAddress;
-        implementationAddress_ = _implementationAddress;
+        proxy = _proxyAddress;
+        implementation = _implementationAddress;
         emit TransferOwnership(_proxyAddress, _implementationAddress);
     }
 }
