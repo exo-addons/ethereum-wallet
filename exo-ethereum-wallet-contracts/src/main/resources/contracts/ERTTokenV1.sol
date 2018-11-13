@@ -82,8 +82,41 @@ contract ERTTokenV1 is
      * @param _value The amount of token to be transferred
      * @return Whether the transfer was successful or not
      */
-    function transfer(address _to, uint256 _value) public whenNotPaused whenApproved(msg.sender, _to) returns (bool success){
+    function transfer(address _to, uint256 _value) public returns (bool success){
+        uint256 gasLimit = gasleft();
+        // The effective checks with modifiers and effective method implementation
+        // is added to an internal method to retrieve gas before doing additional checks
+        return _transferWithGas(gasLimit, _to, _value);
+    }
+
+    /**
+     * @dev `msg.sender` approves `_spender` to spend `_value` tokens
+     * @param _spender The address of the account able to transfer the tokens
+     * @param _value The amount of tokens to be approved for transfer
+     * @return Whether the approval was successful or not
+     */
+    function approve(address _spender, uint256 _value) public returns (bool success){
         uint gasLimit = gasleft();
+        // The effective checks with modifiers and effective method implementation
+        // is added to an internal method to retrieve gas before doing additional checks
+        return _approveWithGas(gasLimit, _spender, _value);
+    }
+
+    /**
+     * @dev send `_value` token to `_to` from `_from` on the condition it is approved by `_from`
+     * @param _from The address of the sender
+     * @param _to The address of the recipient
+     * @param _value The amount of token to be transferred
+     * @return Whether the transfer was successful or not
+     */
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success){
+        uint gasLimit = gasleft();
+        // The effective checks with modifiers and effective method implementation
+        // is added to an internal method to retrieve gas before doing additional checks
+        return _transferFromWithGas(gasLimit, _from, _to, _value);
+    }
+
+    function _transferWithGas(uint256 gasLimit, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _to) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
         if (super.isAdmin(msg.sender, 1)) {
@@ -97,15 +130,8 @@ contract ERTTokenV1 is
         return true;
     }
 
-    /**
-     * @dev `msg.sender` approves `_spender` to spend `_value` tokens
-     * @param _spender The address of the account able to transfer the tokens
-     * @param _value The amount of tokens to be approved for transfer
-     * @return Whether the approval was successful or not
-     */
-    function approve(address _spender, uint256 _value) public whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
+    function _approveWithGas(uint256 gasLimit, address _spender, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
         // Make sure that this is not about a fake transaction
-        uint gasLimit = gasleft();
         require(msg.sender != _spender);
         require(super.balance(msg.sender) >= _value);
         if (super.isAdmin(msg.sender, 1)) {
@@ -117,15 +143,7 @@ contract ERTTokenV1 is
         return true;
     }
 
-    /**
-     * @dev send `_value` token to `_to` from `_from` on the condition it is approved by `_from`
-     * @param _from The address of the sender
-     * @param _to The address of the recipient
-     * @param _value The amount of token to be transferred
-     * @return Whether the transfer was successful or not
-     */
-    function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused whenApproved(msg.sender, _to) whenApproved(_from, _to) returns (bool success){
-        uint gasLimit = gasleft();
+    function _transferFromWithGas(uint256 gasLimit, address _from, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _to) whenApproved(_from, _to) returns (bool success){
         require(super.balance(_from) >= _value);
         uint256 _allowance = super.getAllowance(_from, msg.sender);
         require(_allowance >= _value);
@@ -138,4 +156,5 @@ contract ERTTokenV1 is
         super._payGasInToken(gasLimit);
         return true;
     }
+
 }

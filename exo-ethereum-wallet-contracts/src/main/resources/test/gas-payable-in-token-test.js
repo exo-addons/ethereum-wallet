@@ -94,7 +94,7 @@ contract('GasPayableInToken', function(accounts) {
           `accounts[1] should have received ${tokensToTransferFromOwner} tokens`);
       initialSenderTokenBalance = deleteTokenDecimals(balance);
     }).then(() => {
-      return tokenInstance.transfer(accounts[2], addTokenDecimals(100), {from: accounts[1]});
+      return tokenInstance.transfer(accounts[2], addTokenDecimals(1), {from: accounts[1]});
     }).then(receipt => {
       assert.equal(receipt && receipt.receipt && receipt.receipt.status, true, "Transaction failure");
       senderUsedGas = receipt.receipt.gasUsed;
@@ -111,7 +111,7 @@ contract('GasPayableInToken', function(accounts) {
       return tokenInstance.balanceOf(accounts[1]);
     }).then(balance => {
       balance = deleteTokenDecimals(balance.toNumber());
-      assert.equal((initialSenderTokenBalance - 100) > balance, true, `sender should have paid transaction fee in token, initial balance: ${initialSenderTokenBalance}, balance now: ${balance}`);
+      assert.equal((initialSenderTokenBalance - 1) > balance, true, `sender should have paid transaction fee in token, initial balance: ${initialSenderTokenBalance}, balance now: ${balance}`);
     }).then(() => {
       return web3.eth.getBalance(tokenInstance.address);
     }).then((tokenBalance) => {
