@@ -20,19 +20,6 @@ contract DataAccess is Owned{
     // View methods
 
     /**
-     * @dev returns the data contract address switch version.
-     * Each time a new contract version is added, it can be added
-     * to dataAddress map indexed by the version number.
-     * The code implementation can be changed consequently by referencing
-     * the new data contract address, for example change getDataAddress(1)
-     * by getDataAddress(2)
-     * @return the corresponding data contract address to the indicated version
-     */
-    function getDataAddress(uint16 _version) public view returns(address){
-        return dataAddresses_[_version];
-    }
-
-    /**
      * @dev Check if the Token implementation has been initialized once
      * @return true if the Token contract has bee initialized
      */

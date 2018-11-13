@@ -1,23 +1,39 @@
 var ERTToken = artifacts.require("ERTToken");
+var ERTTokenV1 = artifacts.require("ERTTokenV1");
 
 contract('Pausable', function(accounts) {
 
-  it('test pause', function() {
-    return ERTToken.deployed()
-      .then(instance => {
-        tokenInstance = instance;
-        return tokenInstance.isPaused();
+  let tokenInstance;
+  let tokenV1Instance;
+
+  async function setTokenInstance() {
+    tokenInstance = await ERTToken.deployed();
+    tokenV1Instance = await ERTTokenV1.deployed();
+    const paused = await tokenInstance.isPaused();
+    if (paused)  {
+      await tokenInstance.unPause();
+    }
+  }
+
+  beforeEach(async function () {
+    await setTokenInstance();
+  });
+
+  it('test pause status of contracts', function() {
+    return tokenInstance.isPaused()
+      .then(paused => {
+        assert.equal(paused, false, 'Proxy contract seems to be unexpectedly paused');
+        return tokenV1Instance.isPaused();
       }).then(paused => {
-        assert.equal(paused, false,
-            'Contract seems to be unexpectedly paused');
-        return tokenInstance.pause({
-          from : accounts[0]
-        });
-      }).then(receipt => {
-        assert.equal(receipt.logs.length, 1,
-            'number of emitted event is wrong');
-        assert.equal(receipt.logs[0].event, 'ContractPaused',
-            'should be the "ContractPaused" event');
+        assert.equal(paused, true, 'Implementation contract should be paused to not allow users to use it directly but through the proxy contract');
+      });
+  });
+
+  it('test pause', function() {
+    return tokenInstance.pause()
+      .then(receipt => {
+        const pauseLog = receipt.logs.find(log => log.event === 'ContractPaused');
+        assert.isDefined(pauseLog, 'ContractPaused event is expected');
         return tokenInstance.isPaused();
       }).then(paused => {
         assert.equal(paused, true,
@@ -26,23 +42,19 @@ contract('Pausable', function(accounts) {
   });
 
   it('test unPause ', function() {
-    return ERTToken.deployed().then(function(instance) {
-      tokenInstance = instance;
-      return tokenInstance.isPaused();
-    }).then(paused => {
-      assert.equal(paused, true,
-          'Contract seems to be unexpectedly unpaused');
-      return tokenInstance.unPause();
-    }).then(receipt => {
-          assert.equal(receipt.logs.length, 1,
-              'number of emitted event is wrong');
-          assert.equal(receipt.logs[0].event, 'ContractUnPaused',
-              'should be the "ContractUnPaused" event');
-
+    return tokenInstance.isPaused()
+      .then(paused => {
+        assert.equal(paused, false, 'Proxy contract seems to be unexpectedly paused');
+        return tokenInstance.pause();
+      }).then(() => {
+        return tokenInstance.unPause();
+      }).then(receipt => {
+        const unpauseLog = receipt.logs.find(log => log.event === 'ContractUnPaused');
+        assert.isDefined(unpauseLog, 'ContractUnPaused event is expected');
         return tokenInstance.isPaused();
-    }).then(paused => {
-      assert.equal(paused, false,
-          'Contract seems to be unexpectedly paused after using unPause() method');
-    });
+      }).then(paused => {
+        assert.equal(paused, false,
+            'Contract seems to be unexpectedly paused after using unPause() method');
+      });
   });
 });

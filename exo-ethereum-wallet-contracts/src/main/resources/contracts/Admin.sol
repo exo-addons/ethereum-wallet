@@ -44,6 +44,8 @@ contract Admin is Owned, DataAccess {
      * @param _target admin address to remove
      */
     function removeAdmin(address _target) public onlyAdmin(5){
+        // An admin shouldn't be able to dele himself
+        require(msg.sender != _target);
         if (super._isAdmin(_target, 1)) {
             super._setAdmin(_target, 0);
             emit RemovedAdmin(_target);

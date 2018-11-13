@@ -6,7 +6,23 @@ const decimals = Math.pow(10, 18);
 contract('DataAccess', function(accounts) {
   let tokenInstance;
 
-  it('test contract initialization attributes', function() {
+  async function setInitialApprovedAccounts(accounts) {
+    tokenInstance = await ERTToken.deployed();
+    for (account in accounts) {
+      await tokenInstance.removeAdmin(account);
+      await tokenInstance.disapproveAccount(account);
+    }
+  }
+
+  beforeEach(async function () {
+    await setInitialApprovedAccounts();
+  });
+
+  afterEach(async function () {
+    await setInitialApprovedAccounts();
+  });
+
+  it('test contract initialization attributes', () => {
     return ERTToken.deployed().then(instance => {
       tokenInstance = instance;
       return tokenInstance.getDataAddress(1);

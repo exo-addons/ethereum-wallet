@@ -9,7 +9,7 @@ import "./DataOwned.sol";
 contract Upgradability is Owned{
     // Event emitted when an upgrade is made to a new implementation
     event Upgraded(uint16 implementationVersion, address implementationAddress);
-     // Event emitted when an upgrade is made to a new data
+    // Event emitted when an upgrade is made to a new data
     event UpgradedData(uint16 dataVersion, address DataAddress);
 
     /**
@@ -26,16 +26,16 @@ contract Upgradability is Owned{
      * @param _newImplementation new ERC20 contract address
      */
     function upgradeImplementation(address _proxy, uint16 _version, address _newImplementation) public onlyOwner{
+        // To ensure that the owner doesn't call this method from implementation directly
+        // but through Proxy contract
+        require(version > 0);
         require(_version > version);
         require(implementationAddress != _newImplementation);
-
         version = _version;
         implementationAddress = _newImplementation;
-
-        for (uint i=0; i< dataVersions_.length; i++) {
-          _transferDataOwnership(dataVersions_[i], _proxy, _newImplementation);
+        for (uint16 i = 0; i< dataVersions_.length; i++){
+            _transferDataOwnership(dataVersions_[i], _proxy, _newImplementation);
         }
-
         emit Upgraded(_version, _newImplementation);
     }
 
@@ -61,8 +61,11 @@ contract Upgradability is Owned{
      * @param _dataAddress address of data contract
      */
     function upgradeData(uint16 _dataVersion, address _dataAddress) public onlyOwner{
-         super._setDataAddress(_dataVersion, _dataAddress);
-         emit UpgradedData(_dataVersion, _dataAddress);
+        // To ensure that the owner doesn't call this method from implementation directly
+        // but through Proxy contract
+        require(version > 0);
+        super._setDataAddress(_dataVersion, _dataAddress);
+        emit UpgradedData(_dataVersion, _dataAddress);
     }
 
     /**
