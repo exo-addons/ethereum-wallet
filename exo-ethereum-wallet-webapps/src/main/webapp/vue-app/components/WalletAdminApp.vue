@@ -70,7 +70,10 @@
                   name="websocketProviderURL"
                   label="Ethereum Network Websocket URL used for notifications" />
 
-                <v-flex id="accessPermissionAutoComplete" class="contactAutoComplete mt-4">
+                <v-flex
+                  id="accessPermissionAutoComplete"
+                  class="contactAutoComplete mt-4">
+
                   <v-autocomplete
                     v-if="sameConfiguredNetwork"
                     ref="accessPermissionAutoComplete"
@@ -1262,12 +1265,16 @@ export default {
             window.walletSettings.defaultPrincipalAccount = this.selectedPrincipalAccount && this.selectedPrincipalAccount.value;
             this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
   
-            this.loadingSettings = this.loading = false;
+            return resp.text();
           } else {
             this.error = 'Error saving global settings';
           }
         })
-        .then(this.init(!reloadContract))
+        .then(() => {
+          window.setTimeout(() => {
+            this.init(!reloadContract);
+          }, 200);
+        })
         .catch(e => {
           this.loading = false;
           console.debug("fetch global-settings - error", e);
