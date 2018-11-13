@@ -48,7 +48,7 @@ contract GasPayableInToken is Admin, ERC20Abstract {
 
         // Used gas until this instruction + a fixed gas
         // that will be used to finish the transaction
-        uint256 gasUsed = _gasLimit - gasleft() + 76544;
+        uint256 gasUsed = _gasLimit - gasleft() + 75862;
         uint256 etherFeeRefund = gasUsed * tx.gasprice;
         uint256 tokenFeeAmount = super.safeMult(etherFeeRefund, (10 ** (uint(super.decimals())))) / tokenSellPrice;
         uint256 contractBalance = address(this).balance;
