@@ -171,14 +171,14 @@ export default {
           return;
         }
 
-        window.ethereum.enable()
-          .then(accounts => {
-            window.walletSettings.detectedMetamaskAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null;
-            if (window.walletSettings.detectedMetamaskAccount && window.walletSettings.detectedMetamaskAccount.toLowerCase() !== thiss.detectedMetamaskAccount) {
-              thiss.$emit('refresh');
-              return;
-            }
-          });
+        window.walletSettings.detectedMetamaskAccount = window.web3
+                                                        && window.web3.eth
+                                                        && window.web3.eth.defaultAccount
+                                                        && window.web3.eth.defaultAccount.toLowerCase();
+        if (window.walletSettings.detectedMetamaskAccount && window.walletSettings.detectedMetamaskAccount !== thiss.detectedMetamaskAccount) {
+          thiss.$emit('refresh');
+          return;
+        }
       }, 2000);
     }
   }

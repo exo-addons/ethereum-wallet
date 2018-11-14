@@ -206,28 +206,28 @@ public class EthereumWalletService implements Startable {
       if (!contractBinary.startsWith("0x")) {
         contractBinary = "0x" + contractBinary;
       }
-
-      // check global settings upgrade
-      checkDataToUpgrade(getSettings());
-
-      ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-cache-populator-%d").build();
-      scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
-      // Transactions Queue processing
-      scheduledExecutorService.scheduleWithFixedDelay(() -> {
-        ExoContainerContext.setCurrentContainer(container);
-        RequestLifeCycle.begin(this.container);
-        try {
-          this.walletsCount = 0;
-          this.listWallets();
-        } catch (Exception e) {
-          LOG.error("Error while retrieving list of wallets for cache population", e);
-        } finally {
-          RequestLifeCycle.end();
-        }
-      }, 10, accountDetailCache.getLiveTime() > 0 ? accountDetailCache.getLiveTime() : 86400, TimeUnit.SECONDS);
     } catch (Exception e) {
-      LOG.warn("Can't read ABI/BIN files content", e);
+      LOG.error("Can't read ABI/BIN files content", e);
     }
+
+    // check global settings upgrade
+    checkDataToUpgrade(getSettings());
+
+    ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-cache-populator-%d").build();
+    scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
+    // Transactions Queue processing
+    scheduledExecutorService.scheduleWithFixedDelay(() -> {
+      ExoContainerContext.setCurrentContainer(container);
+      RequestLifeCycle.begin(this.container);
+      try {
+        this.walletsCount = 0;
+        this.listWallets();
+      } catch (Exception e) {
+        LOG.error("Error while retrieving list of wallets for cache population", e);
+      } finally {
+        RequestLifeCycle.end();
+      }
+    }, 10, accountDetailCache.getLiveTime() > 0 ? accountDetailCache.getLiveTime() : 86400, TimeUnit.SECONDS);
   }
 
   @Override

@@ -75,7 +75,7 @@
                 :is-space="isSpace"
                 :is-space-administrator="isSpaceAdministrator"
                 :accounts-details="accountsDetails"
-                :overview-accounts="overviewAccounts"
+                :overview-accounts="overviewAccountsToDisplay"
                 :principal-account="principalAccount"
                 :refresh-index="refreshIndex"
                 :network-id="networkId"
@@ -94,7 +94,7 @@
                 ref="walletAccountsList"
                 :is-read-only="isReadOnly"
                 :accounts-details="accountsDetails"
-                :overview-accounts="overviewAccounts"
+                :overview-accounts="overviewAccountsToDisplay"
                 :wallet-address="walletAddress"
                 :network-id="networkId"
                 :refresh-index="refreshIndex"
@@ -159,7 +159,7 @@ import WalletSettingsModal from './WalletSettingsModal.vue';
 import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
-import {getContractsDetails, retrieveContractDetails, deleteContractFromStorage} from '../WalletToken.js';
+import {getContractsDetails, retrieveContractDetails} from '../WalletToken.js';
 import {initWeb3, initSettings, computeBalance, etherToFiat, gasToEther} from '../WalletUtils.js';
 
 export default {
@@ -190,6 +190,7 @@ export default {
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
       overviewAccounts: [],
+      overviewAccountsToDisplay: [],
       principalAccount: null,
       showSettingsModal: false,
       showAddContractModal: false,
@@ -353,7 +354,9 @@ export default {
 
           this.isReadOnly = window.walletSettings.isReadOnly;
           this.browserWalletExists = window.walletSettings.browserWalletExists;
-          this.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts;
+          this.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
+          this.overviewAccountsToDisplay = window.walletSettings.userPreferences.overviewAccountsToDisplay;
+
           this.principalAccount = window.walletSettings.userPreferences.principalAccount;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
 

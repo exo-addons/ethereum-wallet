@@ -267,7 +267,7 @@ export default {
     retrieveAccountsDetails() {
       this.approvedAccounts = [];
       this.adminAccounts = [];
-      if (this.wallets && this.contractDetails) {
+      if (this.wallets && this.contractDetails && this.contractDetails.isContractType > 0) {
         this.wallets.forEach(wallet => {
           if (!wallet.approved) {
             wallet.approved = {};

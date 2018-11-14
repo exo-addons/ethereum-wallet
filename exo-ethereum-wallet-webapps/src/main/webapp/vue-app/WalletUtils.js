@@ -193,7 +193,22 @@ export function initSettings(isSpace) {
         window.walletSettings.userPreferences.principalAccount = window.walletSettings.userPreferences.principalAccount
           || window.walletSettings.defaultPrincipalAccount;
         window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts
-          || window.walletSettings.defaultOverviewAccounts;
+          || window.walletSettings.defaultOverviewAccounts || [];
+
+        // Remove contracts that are removed from administration
+        if(window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.length) {
+          window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts.filter(contractAddress =>  contractAddress && (contractAddress.trim().indexOf("0x") < 0 || window.walletSettings.defaultContractsToDisplay.indexOf(contractAddress.trim()) >= 0));
+        }
+
+        // Display configured default contracts to display in administration
+        window.walletSettings.userPreferences.overviewAccountsToDisplay = window.walletSettings.userPreferences.overviewAccounts.slice(0);
+        if (window.walletSettings.defaultOverviewAccounts && window.walletSettings.defaultOverviewAccounts.length) {
+          window.walletSettings.defaultOverviewAccounts.forEach(defaultOverviewAccount => {
+            if (defaultOverviewAccount && defaultOverviewAccount.indexOf("0x") === 0 && window.walletSettings.userPreferences.overviewAccountsToDisplay.indexOf(defaultOverviewAccount) < 0) {
+              window.walletSettings.userPreferences.overviewAccountsToDisplay.unshift(defaultOverviewAccount);
+            }
+          });
+        }
 
         const username = eXo.env.portal.userName;
         const spaceGroup = eXo.env.portal.spaceGroup;

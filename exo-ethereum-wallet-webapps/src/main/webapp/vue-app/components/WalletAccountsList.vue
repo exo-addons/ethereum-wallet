@@ -122,7 +122,6 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import {deleteContractFromStorage} from '../WalletToken.js';
 import {watchTransactionStatus} from '../WalletUtils.js';
 import {addTransaction} from '../WalletTransactions.js';
 
@@ -246,14 +245,6 @@ export default {
         transaction);
 
       this.$emit('transaction-sent', transaction);
-    },
-    deleteContract(item, event) {
-      if(deleteContractFromStorage(this.walletAddress, this.networkId, item.address)) {
-        delete this.accountsDetails[item.address];
-        this.$emit('refresh-contracts');
-      }
-      event.preventDefault();
-      event.stopPropagation();
     }
   }
 };

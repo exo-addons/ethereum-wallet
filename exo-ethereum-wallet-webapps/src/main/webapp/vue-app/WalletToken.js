@@ -14,12 +14,13 @@ import {watchTransactionStatus, convertTokenAmountReceived, computeBalance} from
  * }
  */
 export function getContractsDetails(account, netId, onlyDefault) {
-  let contractsAddresses = onlyDefault ? [] : getContractsAddresses(account, netId);
-  if(window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.length) {
-    contractsAddresses = contractsAddresses.concat(window.walletSettings.defaultContractsToDisplay);
+  let contractsAddresses = [];
+  if (onlyDefault) {
+    contractsAddresses = window.walletSettings.defaultContractsToDisplay || [];
+  } else {
+    let overviewAccounts = window.walletSettings.userPreferences.overviewAccountsToDisplay || [];
+    contractsAddresses = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
   }
-  // Remove duplicates and empty strings if existing
-  contractsAddresses = contractsAddresses.filter((contractAddress, pos ,tmpArray) =>  contractAddress && contractAddress.trim().length && tmpArray.indexOf(contractAddress) === pos);
 
   const contractsDetailsPromises = [];
   for (let i = 0; i < contractsAddresses.length; i++) {
@@ -105,7 +106,8 @@ export function retrieveContractDetails(account, contractDetails) {
           contractDetails.isPaused = isPaused ? true: false;
         })
         .catch(e => {
-          console.debug("Error getting owner of contract", e);
+          contractDetails.contractTypeLabel = 'Standard ERC20 Token';
+          contractDetails.contractType = 0;
         })
     )
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
@@ -125,38 +127,6 @@ export function retrieveContractDetails(account, contractDetails) {
       transformContracDetailsToFailed(contractDetails, e);
       return contractDetails;
     });
-}
-
-/*
- * Deletes contract from list on contracts displayed by the user in wallet application
- */
-export function deleteContractFromStorage(account, netId, address) {
-  address = address.toLowerCase();
-  let contractAddresses = localStorage.getItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase());
-  if (contractAddresses) {
-    contractAddresses = JSON.parse(contractAddresses);
-    if (contractAddresses.indexOf(address) >= 0) {
-      contractAddresses.splice(contractAddresses.indexOf(address), 1);
-      localStorage.setItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase(), JSON.stringify(contractAddresses));
-      return true;
-    }
-  }
-  return false;
-}
-
-/*
- * Gets the list of contracts to display for current account on a chosen network.
- * This information is retrieved from localStorage
- */
-export function getContractsAddresses(account, netId) {
-  const contractsAddressesString = localStorage.getItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase());
-  let contractsAddresses = null;
-  if (!contractsAddressesString) {
-    contractsAddresses = [];
-  } else {
-    contractsAddresses = JSON.parse(contractsAddressesString);
-  }
-  return contractsAddresses;
 }
 
 /*
@@ -336,19 +306,15 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
         throw new Error('Invalid contract address');
       }
 
-      const contractsAddresses = getContractsAddresses(account, netId);
-      if (isDefaultContract || contractsAddresses.indexOf(address) < 0) {
+      let overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
+      overviewAccounts = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
+      if (isDefaultContract || overviewAccounts.indexOf(address) < 0) {
         return retrieveContractDetails(account, {address: address})
           .then((contractDetails, error) => {
             if (error) {
               throw error;
             }
             if (contractDetails && !contractDetails.error) {
-              address = address.toLowerCase();
-              if(contractsAddresses.indexOf(address) < 0) {
-                contractsAddresses.push(address);
-                localStorage.setItem(`exo-wallet-contracts-${account}-${netId}`.toLowerCase(), JSON.stringify(contractsAddresses));
-              }
               return contractDetails;
             } else {
               return false;
