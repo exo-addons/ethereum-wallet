@@ -88,8 +88,8 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || !contractDetails || contractDetails.isPaused" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
-      <button :disabled="loading || !recipient || !amount || !isApprovedRecipient || !contractDetails || contractDetails.isPaused" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <button :disabled="loading || !recipient || !amount || !canSendToDisapproved || !contractDetails || contractDetails.isPaused" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
+      <button :disabled="loading || !recipient || !amount || !canSendToDisapproved || !contractDetails || contractDetails.isPaused" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -137,6 +137,7 @@ export default {
       useMetamask: false,
       recipient: null,
       isApprovedRecipient: true,
+      canSendToDisapproved: true,
       amount: null,
       fiatSymbol: null,
       warning: null,
@@ -152,14 +153,20 @@ export default {
     recipient(newValue, oldValue) {
       if (newValue && oldValue !== newValue) {
         this.isApprovedRecipient = true;
+        this.canSendToDisapproved = true;
         // Admin will implicitly approve account, so not necessary
         // to check if the receiver is approved or not
-        if (this.contractDetails.adminLevel > 0 && this.contractDetails.contractType > 0) {
+        if (this.contractDetails.contractType > 0) {
           this.contractDetails.contract.methods.isApprovedAccount(this.recipient).call()
             .then(isApproved => {
               this.isApprovedRecipient = isApproved;
               if (!this.isApprovedRecipient) {
-                this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
+                if (!this.contractDetails.adminLevel) {
+                  this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
+                  this.canSendToDisapproved = false;
+                } else {
+                  this.warning = `The recipient isn't approved. You are an administrator of contract, thus the recipient will be implicitely approved.`;
+                }
               } else if (this.contractDetails && this.contractDetails.isPaused) {
                 this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
               } else {
@@ -219,9 +226,6 @@ export default {
       }
     },
     sendTokens() {
-      this.error = null;
-      this.warning = null;
-
       if (this.contractDetails && this.contractDetails.isPaused) {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
         return;
@@ -248,9 +252,11 @@ export default {
         return;
       }
 
-      if (!this.isApprovedRecipient) {
+      if (!this.canSendToDisapproved) {
         return;
       }
+
+      this.error = null;
 
       this.loading = true;
       try {

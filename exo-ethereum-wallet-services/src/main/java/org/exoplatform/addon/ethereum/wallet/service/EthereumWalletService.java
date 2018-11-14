@@ -544,7 +544,9 @@ public class EthereumWalletService implements Startable {
     }
 
     AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(SPACE_ACCOUNT_TYPE, id));
-    putInCache(accountDetails);
+    if (accountDetails != null && StringUtils.isNotBlank(accountDetails.getAddress())) {
+      putInCache(accountDetails);
+    }
     return accountDetails;
   }
 
@@ -559,7 +561,9 @@ public class EthereumWalletService implements Startable {
       throw new IllegalArgumentException("id parameter is mandatory");
     }
     AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(USER_ACCOUNT_TYPE, id));
-    putInCache(accountDetails);
+    if (accountDetails != null && StringUtils.isNotBlank(accountDetails.getAddress())) {
+      putInCache(accountDetails);
+    }
     return accountDetails;
   }
 
@@ -574,7 +578,9 @@ public class EthereumWalletService implements Startable {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
     AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(address.toLowerCase()));
-    putInCache(accountDetails);
+    if (accountDetails != null && StringUtils.isNotBlank(accountDetails.getAddress())) {
+      putInCache(accountDetails);
+    }
     return accountDetails;
   }
 

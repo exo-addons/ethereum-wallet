@@ -34,7 +34,7 @@
             title="Add administrator"
             autocomplete-label="Administrator account"
             autocomplete-placeholder="Choose an administrator account to add"
-            input-label="Hibilitation level"
+            input-label="Habilitation level"
             input-placeholder="Choose a value between 1 and 5"
             @success="successTransaction"
             @sent="newTransactionPending"
@@ -275,8 +275,8 @@ export default {
     retrieveAccountsDetails() {
       this.approvedAccounts = [];
       this.adminAccounts = [];
-      if (this.wallets && this.contractDetails && this.contractDetails.isContractType > 0) {
-        this.wallets.forEach(wallet => {
+      if (this.wallets && this.contractDetails && this.contractDetails.contractType > 0) {
+        this.wallets.filter(wallet => wallet.address).forEach(wallet => {
           if (!wallet.approved) {
             wallet.approved = {};
           }
@@ -340,6 +340,9 @@ export default {
       if (methodName === 'approveAccount') {
         const wallet = this.wallets.find(wallet => wallet.address === autoCompleteValue);
         if (wallet && wallet.address) {
+          if (!wallet.approved) {
+            wallet.approved = {};
+          }
           wallet.approved[contractDetails.address] = 'approved';
           this.approvedAccounts.push(wallet);
         }
@@ -352,6 +355,9 @@ export default {
       } else if (methodName === 'addAdmin') {
         const wallet = this.wallets.find(wallet => wallet.address === autoCompleteValue);
         if (wallet && wallet.address) {
+          if (!wallet.accountAdminLevel) {
+            wallet.accountAdminLevel = {};
+          }
           wallet.accountAdminLevel[contractDetails.address] = inputValue;
           if (inputValue) {
             const adminAccount = this.adminAccounts.find(wallet => wallet.address === autoCompleteValue);
