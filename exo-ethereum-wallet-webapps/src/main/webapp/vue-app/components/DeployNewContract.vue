@@ -224,7 +224,7 @@ export default {
       return [];
     },
     disabledButton() {
-      return !this.transactionFeeByStep[this.step] || this.contractAddressByStep[this.step] || this.processingStep[this.step];
+      return /* !this.transactionFeeByStep[this.step] || */ this.contractAddressByStep[this.step] || this.processingStep[this.step];
     }
   },
   watch: {
@@ -356,23 +356,27 @@ export default {
 
           deployContract(contractInstance, this.account, gasLimit, gasPrice, this.updateTransactionHash)
             .then((newContractInstance, error) => {
-              if (error) {
-                throw error;
-              }
-              if (!newContractInstance || !newContractInstance.options || !newContractInstance.options.address) {
-                throw new Error('Cannot find address of newly deployed address');
-              }
-              this.$set(this.contractAddressByStep, step, newContractInstance.options.address);
-              this.$set(this.processedStep, step, true);
-              this.saveState();
-              if (step === 3) {
-                // For Proxy contract, use ABI and BIN files of Implementation instead
-                return newContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[3])
-                  .then(newContractInstance => {
-                    this.$set(this.contractInstancesByStep, step, newContractInstance);
-                  });
-              } else {
-                this.$set(this.contractInstancesByStep, step, newContractInstance);
+              try {
+                if (error) {
+                  throw error;
+                }
+                if (!newContractInstance || !newContractInstance.options || !newContractInstance.options.address) {
+                  throw new Error('Cannot find address of newly deployed address');
+                }
+                this.$set(this.contractAddressByStep, step, newContractInstance.options.address);
+                this.$set(this.processedStep, step, true);
+                this.saveState();
+                if (step === 3) {
+                  // For Proxy contract, use ABI and BIN files of Implementation instead
+                  return newContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[3])
+                    .then(newContractInstance => {
+                      this.$set(this.contractInstancesByStep, step, newContractInstance);
+                    });
+                } else {
+                  this.$set(this.contractInstancesByStep, step, newContractInstance);
+                }
+              } catch(e) {
+                console.error("Error while setting step as proceeded", e);
               }
             })
             .catch(e => {
@@ -438,7 +442,7 @@ export default {
           this.initializeStepsFromStorage(1, storedState.step)
             .then(() => {
               this.step = storedState.step;
-            })
+            });
         }
       }
     },
@@ -470,11 +474,11 @@ export default {
         });
       } else if (this.transactionHashByStep[step] && this.processedStep[step]) {
         return this.initializeStep(step)
-            .then(() => {
-              if (step < maxStep) {
-                return this.initializeStepsFromStorage(step + 1, maxStep);
-              }
-            });
+          .then(() => {
+            if (step < maxStep) {
+              return this.initializeStepsFromStorage(step + 1, maxStep);
+            }
+          });
       }
       return Promise.resolve(false);
     },
