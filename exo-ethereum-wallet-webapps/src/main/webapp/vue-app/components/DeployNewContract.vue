@@ -224,7 +224,7 @@ export default {
       return [];
     },
     disabledButton() {
-      return /* !this.transactionFeeByStep[this.step] || */ this.contractAddressByStep[this.step] || this.processingStep[this.step];
+      return !this.transactionFeeByStep[this.step] || this.contractAddressByStep[this.step] || this.processingStep[this.step];
     }
   },
   watch: {
