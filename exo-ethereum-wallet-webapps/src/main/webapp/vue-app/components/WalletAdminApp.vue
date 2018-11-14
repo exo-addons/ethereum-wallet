@@ -313,15 +313,6 @@
                       <span v-else>{{ props.item.address }}</span>
                     </td>
                     <td class="text-xs-right">
-                      <v-btn
-                        v-if="props.item.isOwner && props.item.contractType && !props.item.isPending"
-                        class="bottomNavigationItem transparent"
-                        title="Send ether"
-                        flat
-                        icon
-                        @click="openSendFundsModal($event, props.item)">
-                        <v-icon>send</v-icon>
-                      </v-btn>
                       <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
                       <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
                         <i class="uiIconTrash uiIconBlue"></i>

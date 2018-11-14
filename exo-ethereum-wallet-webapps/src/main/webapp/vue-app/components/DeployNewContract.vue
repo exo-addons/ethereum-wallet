@@ -154,7 +154,7 @@
 import WalletAddress from './WalletAddress.vue';
 import ContractDeploymentStep from './ContractDeploymentStep.vue';
 
-import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault} from '../WalletToken.js';
+import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault, retrieveContractDetails} from '../WalletToken.js';
 import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend, watchTransactionStatus} from '../WalletUtils.js';
 
 export default {
@@ -281,6 +281,7 @@ export default {
         } else if(step === 4 && !this.processedStep[step]) {
           return this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
             .estimateGas({
+              from: this.contractInstancesByStep[1].options.from,
               gas: 4700000,
               gasPrice: window.walletSettings.gasPrice
             })
@@ -291,6 +292,7 @@ export default {
         } else if(step === 5 && !this.processedStep[step]) {
           return this.contractInstancesByStep[3].methods.initialize(convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
             .estimateGas({
+              from: this.contractInstancesByStep[3].options.from,
               gas: 4700000,
               gasPrice: window.walletSettings.gasPrice
             })
@@ -387,7 +389,7 @@ export default {
         } else if(step === 4) {
           this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
             .send({
-              from: this.account,
+              from: this.contractInstancesByStep[1].options.from,
               gasPrice: window.walletSettings.gasPrice,
               gas: gasLimit
             })
@@ -402,7 +404,7 @@ export default {
         } else if(step === 5) {
           this.contractInstancesByStep[3].methods.initialize(convertTokenAmountToSend(this.newTokenInitialCoins, this.newTokenDecimals).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
             .send({
-              from: this.account,
+              from: this.contractInstancesByStep[3].options.from,
               gasPrice: window.walletSettings.gasPrice,
               gas: gasLimit
             })
@@ -500,28 +502,37 @@ export default {
       const contractDetails = {
         networkId: this.networkId,
         address: contractAddress,
-        name: this.newTokenName,
-        symbol: this.newTokenSymbol,
-        decimals: this.newTokenDecimals
+        isContract: true
       };
-      this.$set(this.processingStep, this.step, true);
-      // Save conract address to display for all users
-      return saveContractAddressAsDefault(contractDetails)
-        .then(resp => {
-          if (resp && resp.ok) {
-            this.$emit("list-updated", contractAddress);
-            this.createNewToken = false;
-            this.clearState();
-          } else {
-            this.loading = false;
-            this.error = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
-          }
-        })
-        .catch(e => {
-          console.debug("saveContractAddressAsDefault method - error", e);
-          this.error = `An error occurred while saving it as default contract to display for all users: ${e}`;
-        })
-        .finally(() => this.$set(this.processingStep, this.step, false));
+
+      return retrieveContractDetails(this.account, contractDetails)
+        .then(() => {
+          this.$set(this.processingStep, this.step, true);
+          // Save conract address to display for all users
+          return saveContractAddressAsDefault({
+            networkId: this.networkId,
+            address: contractAddress,
+            isContract: true,
+            name: contractDetails.name,
+            symbol: contractDetails.symbol,
+            decimals: contractDetails.decimals
+          })
+            .then(resp => {
+              if (resp && resp.ok) {
+                this.$emit("list-updated", contractAddress);
+                this.createNewToken = false;
+                this.clearState();
+              } else {
+                this.loading = false;
+                this.error = `Contract deployed, but an error occurred while saving it as default contract to display for all users`;
+              }
+            })
+            .catch(e => {
+              console.debug("saveContractAddressAsDefault method - error", e);
+              this.error = `An error occurred while saving it as default contract to display for all users: ${e}`;
+            })
+            .finally(() => this.$set(this.processingStep, this.step, false));
+        });
     }
   }
 };

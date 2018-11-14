@@ -240,27 +240,15 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
           return null;
         }
 
-        if (transactionReceipt.getLogs().size() > 1) {
-          LOG.info("Transaction logs count is more than expected: {}", transactionReceipt.getLogs().size());
-        }
-
         try {
-          EventValues eventValues = ContractUtils.staticExtractEventParameters(CONTRACT_TRANSFER_EVENT,
-                                                                               transactionReceipt.getLogs().get(0));
-
-          if (eventValues != null && eventValues.getIndexedValues() != null && eventValues.getNonIndexedValues() != null
-              && eventValues.getIndexedValues().size() == 2 && eventValues.getNonIndexedValues().size() == 1) {
-            String senderAddress = eventValues.getIndexedValues().get(0).getValue().toString();
-            String receiverAddress = eventValues.getIndexedValues().get(1).getValue().toString();
-            BigInteger amountBigInteger = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
-            String amountString = BigDecimal.valueOf(Double.parseDouble(amountBigInteger.toString()))
-                                            .divide(BigDecimal.valueOf(10).pow(contractDetail.getDecimals()))
-                                            .toString();
-
-            return new ContractTransactionDetail(contractAddress,
-                                                 senderAddress,
-                                                 receiverAddress,
-                                                 Double.parseDouble(amountString));
+          for (int i = 0; i < transactionReceipt.getLogs().size(); i++) {
+            ContractTransactionDetail contractTransactionDetail = getContractTransactiondetail(contractDetail,
+                                                                                               contractAddress,
+                                                                                               transactionReceipt,
+                                                                                               i);
+            if (contractTransactionDetail != null) {
+              return contractTransactionDetail;
+            }
           }
         } catch (Throwable e) {
           LOG.warn("Error occurred while parsing transaction", e);
@@ -268,6 +256,27 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       }
     }
     // Contract address is not recognized
+    return null;
+  }
+
+  private ContractTransactionDetail getContractTransactiondetail(ContractDetail contractDetail,
+                                                                 String contractAddress,
+                                                                 TransactionReceipt transactionReceipt,
+                                                                 int i) {
+    EventValues eventValues = ContractUtils.staticExtractEventParameters(CONTRACT_TRANSFER_EVENT,
+                                                                         transactionReceipt.getLogs().get(i));
+
+    if (eventValues != null && eventValues.getIndexedValues() != null && eventValues.getNonIndexedValues() != null
+        && eventValues.getIndexedValues().size() == 2 && eventValues.getNonIndexedValues().size() == 1) {
+      String senderAddress = eventValues.getIndexedValues().get(0).getValue().toString();
+      String receiverAddress = eventValues.getIndexedValues().get(1).getValue().toString();
+      BigInteger amountBigInteger = (BigInteger) eventValues.getNonIndexedValues().get(0).getValue();
+      String amountString = BigDecimal.valueOf(Double.parseDouble(amountBigInteger.toString()))
+                                      .divide(BigDecimal.valueOf(10).pow(contractDetail.getDecimals()))
+                                      .toString();
+
+      return new ContractTransactionDetail(contractAddress, senderAddress, receiverAddress, Double.parseDouble(amountString));
+    }
     return null;
   }
 
