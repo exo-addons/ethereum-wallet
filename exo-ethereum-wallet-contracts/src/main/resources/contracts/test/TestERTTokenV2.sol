@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "../ERTTokenV1.sol";
 import "./TestAccountFreeze.sol";
 import "./TestDataAccess.sol";

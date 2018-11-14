@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "./SafeMath.sol";
 import "./DataAccess.sol";
 
@@ -31,8 +31,8 @@ contract ERC20Abstract is DataAccess, SafeMath {
     function _transfer(address _from, address _to, uint _value) internal returns (bool){
         // Prevent transfer transaction with no tokens
         require(_value > 0);
-        // Prevent transfer to 0x0 address. Use burn() instead
-        require(_to != 0x0);
+        // Prevent transfer to 0x address. Use burn() instead
+        require(_to != address(0));
         // Check if the sender has enough
         uint256 fromBalance = super._balanceOf(_from);
         require(fromBalance >= _value);

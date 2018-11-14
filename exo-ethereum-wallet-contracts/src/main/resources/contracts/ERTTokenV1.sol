@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "./TokenStorage.sol";
 import "./Owned.sol";
 import "./DataAccess.sol";
@@ -47,7 +47,7 @@ contract ERTTokenV1 is
      * @param _decimalUnits token decimals
      * @param _tokenSymbol ERC20 token symbol
      */
-    function initialize(uint256 _initialAmount, string _tokenName, uint8 _decimalUnits, string _tokenSymbol) whenNotPaused public onlyOwner{
+    function initialize(uint256 _initialAmount, string memory _tokenName, uint8 _decimalUnits, string memory _tokenSymbol) whenNotPaused public onlyOwner{
         require(!super.initialized());
 
         super.setName(_tokenName);

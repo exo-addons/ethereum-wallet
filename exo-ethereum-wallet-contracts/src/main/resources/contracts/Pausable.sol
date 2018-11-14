@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import './TokenStorage.sol';
 import "./Admin.sol";
 import "./DataAccess.sol";

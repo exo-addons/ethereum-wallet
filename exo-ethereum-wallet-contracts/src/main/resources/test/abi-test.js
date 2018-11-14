@@ -10,8 +10,8 @@ contract('ERTTokenV1 ABI', function() {
   it (`Abi elements count` , function(){
     assert.equal(abi.length, 51, `Token Abi isn't coherent`);
     assert.equal(abi.filter(element => element.stateMutability === 'view').length, 17, `Token Abi doesn't have exact match functions in view mode`);
-    assert.equal(abi.filter(element => element.stateMutability === 'nonpayable').length, 18, `Token Abi doesn't have exact match functions in write mode`);
-    assert.equal(abi.filter(element => element.stateMutability === 'payable').length, 1, `Token Abi doesn't have exact match functions in write mode`);
+    assert.equal(abi.filter(element => element.stateMutability === 'nonpayable').length, 18, `Token Abi doesn't have exact match for nonpayable functions`);
+    assert.equal(abi.filter(element => element.stateMutability === 'payable').length, 1, `Token Abi doesn't have exact match for payable functions`);
     assert.equal(abi.filter(element => element.type === 'function').length, 34, `Token Abi doesn't have exact match functions with type 'function'`);
     assert.equal(abi.filter(element => element.type === 'fallback').length, 1, `Token Abi doesn't have exact match functions with type 'fallback'`);
     assert.equal(abi.filter(element => element.type === 'constructor').length, 1, `Token Abi doesn't have exact match functions with type 'constructor'`);
@@ -97,13 +97,13 @@ contract('ERTTokenDataV1 ABI', function() {
 
   it (`Data abi elements count` , function(){
     assert.equal(dataAbi.length, 29, `Token Abi isn't coherent`);
-    assert.equal(dataAbi.filter(element => element.stateMutability === 'view').length, 14, `Token Abi doesn't have exact match functions in view mode`);
-    assert.equal(dataAbi.filter(element => element.stateMutability === 'nonpayable').length, 13, `Token Abi doesn't have exact match functions in write mode`);
-    assert.equal(dataAbi.filter(element => element.stateMutability === 'payable').length, 1, `Token Abi doesn't have exact match functions in write mode`);
-    assert.equal(dataAbi.filter(element => element.type === 'function').length, 26, `Token Abi doesn't have exact match functions with type 'function'`);
-    assert.equal(dataAbi.filter(element => element.type === 'fallback').length, 1, `Token Abi doesn't have exact match functions with type 'fallback'`);
-    assert.equal(dataAbi.filter(element => element.type === 'constructor').length, 1, `Token Abi doesn't have exact match functions with type 'constructor'`);
-    assert.equal(dataAbi.filter(element => element.type === 'event').length, 1, `Token Abi doesn't have exact match functions with type 'event'`);
+    assert.equal(dataAbi.filter(element => element.stateMutability === 'view').length, 14, `Token Data Abi doesn't have exact match functions in view mode`);
+    assert.equal(dataAbi.filter(element => element.stateMutability === 'nonpayable').length, 14, `Token Data Abi doesn't have exact match for nonpayable functions`);
+    assert.equal(dataAbi.filter(element => element.stateMutability === 'payable').length, 0, `Token Data Abi doesn't have exact match for payable functions`);
+    assert.equal(dataAbi.filter(element => element.type === 'function').length, 26, `Token Data Abi doesn't have exact match functions with type 'function'`);
+    assert.equal(dataAbi.filter(element => element.type === 'fallback').length, 1, `Token Data Abi doesn't have exact match functions with type 'fallback'`);
+    assert.equal(dataAbi.filter(element => element.type === 'constructor').length, 1, `Token Data Abi doesn't have exact match functions with type 'constructor'`);
+    assert.equal(dataAbi.filter(element => element.type === 'event').length, 1, `Token Data Abi doesn't have exact match functions with type 'event'`);
   });
 
   it (`Data abi doesn't expose internal methods` , function(){

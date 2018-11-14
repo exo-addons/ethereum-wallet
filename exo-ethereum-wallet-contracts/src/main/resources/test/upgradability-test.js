@@ -161,7 +161,7 @@ contract('Upgradability', function(accounts) {
      });
   })
 
-  it("proxy contract shouldn't be paused", function() {
+  it("Proxy contract shouldn't be paused", function() {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
@@ -187,7 +187,19 @@ contract('Upgradability', function(accounts) {
       });
   })
 
-  it('test data write using new contract Implementation', function() {
+  it('Test Data write on proxy ', function() {
+    return ERTToken.deployed()
+      .then(instance => {
+        tokenInstance = instance;  
+        return tokenInstance.setSellPrice(web3.toWei(3, 'finney'));
+      }).then(function(result) {
+        return tokenInstance.getSellPrice();
+      }).then(function(sellPrice) {
+        assert.equal(sellPrice.toNumber(), web3.toWei(3, 'finney').toString(), 'writing for old implementation is wrong should be the new setting ');
+      });
+  })
+
+  it('Test freeze feature added in V2 implementation', function() {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;  
@@ -201,13 +213,6 @@ contract('Upgradability', function(accounts) {
         return tokenInstance.isFrozen(accounts[5]);
       }).then(function(result) {
         assert.equal(result, false, "accounts shouldn't be frozen");
-      });
-  })
-
-  it('should not make transfer token after freeze accounts ', function() {
-    return ERTToken.deployed()
-      .then(instance => {
-        tokenInstance = instance;
         return tokenInstance.freeze(accounts[5]);
       }).then(() => {
         return tokenInstance.transfer(accounts[5], 50 * decimals);
@@ -232,19 +237,7 @@ contract('Upgradability', function(accounts) {
       });
   })
 
-  it('Test Data write for OLD implementation ', function() {
-    return ERTToken.deployed()
-      .then(instance => {
-        tokenInstance = instance;  
-        return tokenInstance.setSellPrice(web3.toWei(3, 'finney'));
-      }).then(function(result) {
-        return tokenInstance.getSellPrice();
-      }).then(function(sellPrice) {
-        assert.equal(sellPrice.toNumber(), web3.toWei(3, 'finney').toString(), 'writing for old implementation is wrong should be the new setting ');
-      });
-  })
-
-  it('when new implementation V3 was provided', function() {
+  it('Upgrade implementation to V3', function() {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
@@ -258,6 +251,16 @@ contract('Upgradability', function(accounts) {
           assert.equal(implementation, TestERTTokenV3.address, 'should return the given implementation'); 
         });
   })
+
+  it('Test data addresses referenced in old V2 implementation', function() {
+    return TestERTTokenV2.deployed()
+      .then(instance => {
+        tokenInstance = instance;
+        return tokenInstance.getDataAddress(1);
+      }).then(function(result) {
+        assert.equal(result, 0x0 , 'the TestERTTokenV2 shouldn\'t have a reference to new address'); 
+      });
+  });
 
   it('Old implementation should be paused', function() {
     return TestERTTokenV2.deployed()
@@ -303,7 +306,7 @@ contract('Upgradability', function(accounts) {
       });
   });
 
-  it('should Burn tokens', function () {
+  it('Test new V3 implementation features: should Burn tokens', function () {
     return ERTToken.deployed().
       then(instance => {
         tokenInstance = instance ;
@@ -325,7 +328,7 @@ contract('Upgradability', function(accounts) {
       });
   });
 
-  it("should mint token ", function() {
+  it("Test new V3 implementation features: should mint token ", function() {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
@@ -356,15 +359,4 @@ contract('Upgradability', function(accounts) {
       });
   });
 
-  it('owner of TestERTTokenV2 again after another new impl', function() {
-    return TestERTTokenV2.deployed()
-      .then(instance => {
-        tokenInstance = instance;
-        return tokenInstance.getDataAddress(1);
-      }).then(function(result) {
-        assert.equal(result, 0x0 , 'the TestERTTokenV2 shouldn\'t have a reference to new address'); 
-      });
-  });
 });
-
-

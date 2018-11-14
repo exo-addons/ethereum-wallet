@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import './DataOwned.sol';
 
 /**
@@ -60,14 +60,14 @@ contract ERTTokenDataV1 is DataOwned {
     /**
      * @return ERC20 token name
      */
-    function name() public view returns(string){
+    function name() public view returns(string memory){
         return name_;
     }
 
     /**
      * @return ERC20 token symbol
      */
-    function symbol() public view returns(string){
+    function symbol() public view returns(string memory){
         return symbol_;
     }
 
@@ -164,14 +164,14 @@ contract ERTTokenDataV1 is DataOwned {
     /*
      * @param _name ERC20 token name
      */
-    function setName(string _name) public onlyContracts{
+    function setName(string memory _name) public onlyContracts{
         name_ = _name;
     }
 
     /*
      * @param _symbol ERC20 token symbol
      */
-    function setSymbol(string _symbol) public onlyContracts{
+    function setSymbol(string memory _symbol) public onlyContracts{
         symbol_ = _symbol;
     }
 
@@ -237,7 +237,7 @@ contract ERTTokenDataV1 is DataOwned {
         admin_[_target] = _level;
     }
 
-    function() public payable {
+    function() external {
         revert();
     }
 }

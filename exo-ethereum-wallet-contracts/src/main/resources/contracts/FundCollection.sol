@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "./Admin.sol";
 
 /**
@@ -20,7 +20,7 @@ contract FundCollection is Admin {
      * @dev receive funds from owner to pay necessary gas for ERC20 methods
      * (see GasPayableInToken.sol)
      */
-    function() public payable onlyAdmin(5) {
+    function() external payable onlyAdmin(5) {
         require(msg.data.length == 0);
         require(msg.value > 0);
         emit DepositReceived(msg.sender, msg.value);

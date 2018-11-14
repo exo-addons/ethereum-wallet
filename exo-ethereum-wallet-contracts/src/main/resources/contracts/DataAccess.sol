@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "./Owned.sol";
 import "./ERTTokenDataV1.sol";
 
@@ -30,14 +30,14 @@ contract DataAccess is Owned{
     /**
      * @return ERC20 Token name
      */
-    function name() public view returns(string){
+    function name() public view returns(string memory){
         return ERTTokenDataV1(dataAddresses_[1]).name();
     }
 
     /**
      * @return ERC20 Token symbol
      */
-    function symbol() public view returns(string){
+    function symbol() public view returns(string memory){
         return ERTTokenDataV1(dataAddresses_[1]).symbol();
     }
 
@@ -69,7 +69,7 @@ contract DataAccess is Owned{
      * @dev set the name of ERC20 Token (only contract owner can set it)
      * @param _name name of ERC20 Token
      */
-    function setName(string _name) public onlyOwner{
+    function setName(string memory _name) public onlyOwner{
         ERTTokenDataV1(dataAddresses_[1]).setName(_name);
     }
 
@@ -77,7 +77,7 @@ contract DataAccess is Owned{
      * @dev sets the ERC20 symbol (only contract owner can set it)
      * @param _symbol symbol to use for ERC20 Contract
      */
-    function setSymbol(string _symbol) public onlyOwner{
+    function setSymbol(string memory _symbol) public onlyOwner{
         ERTTokenDataV1(dataAddresses_[1]).setSymbol(_symbol);
     }
 

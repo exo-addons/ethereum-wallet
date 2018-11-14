@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "./TestERTTokenV2.sol";
 import "../ERTToken.sol";
 import "./TestERTTokenV3.sol";

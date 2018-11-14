@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import "./Owned.sol";
 import "./DataOwned.sol";
 
@@ -73,9 +73,10 @@ contract Upgradability is Owned{
      * @param _dataVersion Data version to transfer its ownership
      */
     function _transferDataOwnership(uint16 _dataVersion, address _proxy, address _implementation) internal{
-        require(dataAddresses_[_dataVersion] != address(0));
+        address dataAddress = super.getDataAddress(_dataVersion);
+        require(dataAddress != address(0));
         require(_proxy != address(0));
         require(_implementation != address(0));
-        DataOwned(dataAddresses_[_dataVersion]).transferDataOwnership(_proxy, _implementation);
+        DataOwned(dataAddress).transferDataOwnership(_proxy, _implementation);
     }
 }

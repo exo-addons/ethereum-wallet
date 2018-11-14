@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.24;
 import './TokenStorage.sol';
 import './Owned.sol';
 import './DataOwned.sol';
@@ -32,7 +32,7 @@ contract ERTToken is TokenStorage, Owned {
      * ERC20 methods. This is payable to enable owner to give money to
      * the ERC20 contract
      */
-    function () payable public{
+    function() payable external{
       _delegateCall(implementationAddress);
     }
 
