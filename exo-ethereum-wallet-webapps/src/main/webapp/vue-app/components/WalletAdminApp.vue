@@ -248,10 +248,20 @@
 
                 <v-slider
                   v-model="defaultGas"
-                  :label="`Maximum transaction fee: ${defaultGas} ${defaultGasFiatPrice ? '(' + defaultGasFiatPrice + ' ' + fiatSymbol + ')' : ''}`"
+                  :label="`Maximum gas: ${defaultGas} ${defaultGasFee}`"
                   :min="35000"
                   :max="200000"
                   :step="1000"
+                  type="number"
+                  class="mt-4"
+                  required />
+
+                <v-slider
+                  v-model="defaultGasPrice"
+                  :label="`Maximum gas price: ${defaultGasPriceGwei} Gwei ${defaultGasFee}`"
+                  :min="1000000000"
+                  :max="20000000000"
+                  :step="1000000000"
                   type="number"
                   class="mt-4"
                   required />
@@ -294,8 +304,13 @@
                       {{ props.item.contractTypeLabel }}
                     </td>
                     <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
-                    <td v-else class="text-xs-center" @click="openContractDetails(props.item)">
-                      {{ props.item.address }}
+                    <td v-else class="text-xs-center">
+                      <a
+                        v-if="tokenEtherscanLink"
+                        :href="`${tokenEtherscanLink}${props.item.address}`"
+                        target="_blank"
+                        title="Open on etherscan">{{ props.item.address }}</a>
+                      <span v-else>{{ props.item.address }}</span>
                     </td>
                     <td class="text-xs-right">
                       <v-btn
@@ -471,7 +486,7 @@ import ContractDetail from './ContractDetail.vue';
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
-import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
+import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -499,11 +514,12 @@ export default {
       accessPermissionSearchTerm: null,
       isLoadingSuggestions: false,
       defaultGas: 50000,
-      defaultGasFiatPrice: 0,
+      defaultGasPrice: 0,
       fiatSymbol: '$',
       refreshIndex: 1,
       walletAddress: null,
       networkId: null,
+      tokenEtherscanLink: null,
       newTokenAddress: null,
       showAddContractModal: false,
       selectedOverviewAccounts: [],
@@ -634,6 +650,38 @@ export default {
   computed: {
     displaySettings() {
       return !this.loading && !this.loadingSettings && this.walletAddress;
+    },
+    principalContract() {
+      let principalContract = null;
+      if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value && this.selectedPrincipalAccount.value !== 'ether') {
+        principalContract = this.contracts.find(contract => contract.isContract && contract.address === this.selectedPrincipalAccount.value);
+      }
+      return principalContract;
+    },
+    defaultGasFee() {
+      if (this.defaultGasFiatPrice && this.defaultGasPriceToken > 0) {
+        return ` (${this.defaultGasFiatPrice} ${this.fiatSymbol} | ${this.defaultGasPriceToken} ${this.principalContract.symbol})`;
+      } else if (this.defaultGasFiatPrice) {
+        return ` (${this.defaultGasFiatPrice} ${this.fiatSymbol})`;
+      } else if (this.defaultGasFiatPrice) {
+        return ` (${this.defaultGasPriceToken} ${this.principalContract.symbol})`;
+      }
+      return '';
+    },
+    defaultGasPriceToken() {
+      if (this.defaultGas && this.defaultGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
+        return Number(this.defaultGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
+      }
+      return 0;
+    },
+    defaultGasPriceEther() {
+      return this.defaultGasPrice && window.localWeb3.utils.fromWei(String(this.defaultGasPrice), 'ether').toString();
+    },
+    defaultGasPriceGwei() {
+      return this.defaultGasPrice && window.localWeb3.utils.fromWei(String(this.defaultGasPrice), 'gwei').toString();
+    },
+    defaultGasFiatPrice() {
+      return this.defaultGas && this.defaultGasPriceEther && gasToFiat(this.defaultGas,  this.defaultGasPriceEther);
     },
     principalAccount() {
       if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
@@ -820,14 +868,12 @@ export default {
     },
     contracts() {
       this.loadWallets();
-    },
-    defaultGas() {
-      this.defaultGasFiatPrice = gasToFiat(this.defaultGas);
     }
   },
   created() {
     this.init()
-      .then(() => this.loadWallets());
+      .then(() => this.loadWallets())
+      .then(() => this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId));
   },
   methods: {
     init(ignoreContracts) {
@@ -949,7 +995,7 @@ export default {
             if (!error) {
               this.$set(contract, 'contractBalance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
             }
-            this.$forceUpdate();
+            this.forceUpdate();
           })
           .catch(error => {
             this.error = String(error);
@@ -973,15 +1019,11 @@ export default {
       getWallets()
         .then(wallets => this.wallets = wallets)
         .then(() => {
-          let principalContract = null;
-          if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value && this.selectedPrincipalAccount.value !== 'ether') {
-            principalContract = this.contracts.find(contract => contract.isContract && contract.address === this.selectedPrincipalAccount.value);
-          }
           this.wallets.forEach(wallet => {
             if(wallet && wallet.address) {
               this.$set(wallet, "loadingBalance", true);
               this.$set(wallet, "loadingBalancePrincipal", true);
-              this.computeBalance(principalContract, wallet);
+              this.computeBalance(this.principalContract, wallet);
             }
           });
         })
@@ -1000,7 +1042,7 @@ export default {
             this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
           }
           this.$set(wallet, "loadingBalance", false);
-          this.$forceUpdate();
+          this.forceUpdate();
         })
         .catch(error => {
           this.error = String(error);
@@ -1032,6 +1074,9 @@ export default {
       this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
     },
     openContractDetails(contractDetails) {
+      if (contractDetails.error) {
+        return;
+      }
       this.selectedContractDetails = contractDetails;
       this.seeContractDetails = true;
 
@@ -1131,6 +1176,9 @@ export default {
       }
       if (window.walletSettings.defaultGas) {
         this.defaultGas = window.walletSettings.defaultGas;
+      }
+      if (window.walletSettings.defaultGasPrice) {
+        this.defaultGasPrice = window.walletSettings.defaultGasPrice;
       }
       this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
       this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);

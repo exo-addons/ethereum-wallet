@@ -17,7 +17,7 @@ public class UserPreferences implements Serializable {
 
   private Integer           dataVersion      = 0;
 
-  private Integer           defaultGas       = 0;
+  private Long              defaultGas       = 0L;
 
   private String            currency         = "usd";
 
@@ -69,7 +69,7 @@ public class UserPreferences implements Serializable {
         userPreferences.setCurrency(jsonObject.getString("currency"));
       }
       if (jsonObject.has("defaultGas")) {
-        userPreferences.setDefaultGas(jsonObject.getInt("defaultGas"));
+        userPreferences.setDefaultGas(jsonObject.getLong("defaultGas"));
       }
       if (jsonObject.has("walletAddress")) {
         userPreferences.setWalletAddress(jsonObject.getString("walletAddress"));

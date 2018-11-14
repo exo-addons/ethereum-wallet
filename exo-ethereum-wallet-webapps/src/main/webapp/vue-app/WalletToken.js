@@ -154,7 +154,7 @@ export function newContractInstance(abi, bin, ...args) {
 export function deployContract(contractInstance, account, gasLimit, gasPrice, transactionHashCallback) {
   let transactionHash;
   return contractInstance.send({
-    from: account, 
+    from: account,
     gas: gasLimit,
     gasPrice: gasPrice
   })

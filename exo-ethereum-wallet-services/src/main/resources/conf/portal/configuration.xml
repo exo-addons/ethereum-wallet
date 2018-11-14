@@ -32,6 +32,11 @@
         <value>${exo.addon.wallet.defaultGas:150000}</value>
       </value-param>
       <value-param>
+        <name>defaultGasPrice</name>
+        <description>Default used gas for transactions</description>
+        <value>${exo.addon.wallet.defaultGasPrice:4000000000}</value>
+      </value-param>
+      <value-param>
         <name>defaultBlocksToRetrieve</name>
         <description>Default number of blocks to retrieve to list user's ether transactions</description>
         <value>${exo.addon.wallet.defaultBlocksToRetrieve:100}</value>

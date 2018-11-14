@@ -67,6 +67,8 @@ public class Utils {
 
   public static final String                             DEFAULT_GAS                           = "defaultGas";
 
+  public static final String                             DEFAULT_GAS_PRICE                     = "defaultGasPrice";
+
   public static final String                             DEFAULT_BLOCKS_TO_RETRIEVE            = "defaultBlocksToRetrieve";
 
   public static final String                             DEFAULT_CONTRACTS_ADDRESSES           = "defaultContractAddresses";
@@ -97,11 +99,13 @@ public class Utils {
 
   public static final String                             BIN_PATH_PARAMETER                    = "contract.bin.path";
 
-  public static final int                                GLOBAL_DATA_VERSION                   = 1;
+  public static final int                                GLOBAL_DATA_VERSION                   = 2;
 
   public static final int                                USER_DATA_VERSION                     = 1;
 
   public static final int                                DEFAULT_GAS_UPGRADE_VERSION           = 1;
+
+  public static final int                                DEFAULT_GAS_PRICE_UPGRADE_VERSION     = 1;
 
   public static final String                             ADMINISTRATORS_GROUP                  = "/platform/administrators";
 

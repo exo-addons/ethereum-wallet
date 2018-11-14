@@ -154,8 +154,14 @@ public class EthereumWalletService implements Startable {
 
     if (params.containsKey(DEFAULT_GAS)) {
       String value = params.getValueParam(DEFAULT_GAS).getValue();
-      int defaultGas = Integer.parseInt(value);
+      long defaultGas = Long.parseLong(value);
       defaultSettings.setDefaultGas(defaultGas);
+    }
+
+    if (params.containsKey(DEFAULT_GAS_PRICE)) {
+      String value = params.getValueParam(DEFAULT_GAS_PRICE).getValue();
+      long defaultGasPrice = Long.parseLong(value);
+      defaultSettings.setDefaultGasPrice(defaultGasPrice);
     }
 
     if (params.containsKey(DEFAULT_BLOCKS_TO_RETRIEVE)) {
@@ -1033,6 +1039,11 @@ public class EthereumWalletService implements Startable {
         // Upgrade default gas for new contract to upgrade
         if (globalSettings.getDataVersion() < DEFAULT_GAS_UPGRADE_VERSION) {
           globalSettings.setDefaultGas(defaultSettings.getDefaultGas());
+        }
+
+        // Upgrade default gas price to avoid excessive gas price on Main Net
+        if (globalSettings.getDataVersion() < DEFAULT_GAS_PRICE_UPGRADE_VERSION) {
+          globalSettings.setDefaultGasPrice(defaultSettings.getDefaultGasPrice());
         }
 
         globalSettings.setDataVersion(GLOBAL_DATA_VERSION);

@@ -161,5 +161,4 @@ contract ERTTokenV1 is
         super._payGasInToken(gasLimit);
         return true;
     }
-
 }

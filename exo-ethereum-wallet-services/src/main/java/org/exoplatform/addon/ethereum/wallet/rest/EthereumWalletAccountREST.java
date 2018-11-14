@@ -161,7 +161,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with empty preferenes");
       return Response.status(400).build();
     }
-    Integer defaultGas = userPreferences.getDefaultGas();
+    Long defaultGas = userPreferences.getDefaultGas();
     if (defaultGas == null || defaultGas == 0) {
       LOG.warn("Bad request sent to server with invalid preferenes defaultGas '{}'", defaultGas);
       return Response.status(400).build();

@@ -81,5 +81,3 @@ contract Admin is Owned, DataAccess {
         _;
     }
 }
-
-

@@ -210,5 +210,4 @@ contract DataAccess is Owned{
     function _getAllowance(address _account, address _spender) internal view returns (uint256){
         return ERTTokenDataV1(dataAddresses_[1]).getAllowance(_account, _spender);
     }
-
 }

@@ -629,6 +629,9 @@ export default {
 
           this.loading = false;
           this.$emit("error", `${e}`);
+        })
+        .finally(() => {
+          this.$emit("loaded", this.transactions);
         });
     },
     addTransaction(transaction, contactDetails) {
@@ -640,6 +643,7 @@ export default {
         null,
         null,
         () => {
+          this.$emit("loaded", this.transactions);
           this.$emit("refresh-balance");
           this.forceUpdateList();
         },

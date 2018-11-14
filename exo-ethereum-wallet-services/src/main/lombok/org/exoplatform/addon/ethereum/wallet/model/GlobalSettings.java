@@ -40,7 +40,9 @@ public class GlobalSettings implements Serializable {
 
   private Long                  defaultNetworkId           = 3L;
 
-  private Integer               defaultGas                 = 65000;
+  private Long                  defaultGas                 = 65000L;
+
+  private Long                  defaultGasPrice            = 4000000000L;
 
   private String                defaultPrincipalAccount    = null;
 
@@ -84,6 +86,7 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
+      jsonObject.put("defaultGasPrice", defaultGasPrice);
       jsonObject.put("dataVersion", dataVersion);
 
       if (initialFunds != null && !initialFunds.isEmpty()) {
@@ -171,8 +174,11 @@ public class GlobalSettings implements Serializable {
       long storedDefaultNetworkId = jsonObject.has("defaultNetworkId") ? jsonObject.getLong("defaultNetworkId") : 0;
       globalSettings.setDefaultNetworkId(storedDefaultNetworkId == 0L ? defaultSettings.getDefaultBlocksToRetrieve()
                                                                       : storedDefaultNetworkId);
-      int storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getInt("defaultGas") : 0;
+      long storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getLong("defaultGas") : 0;
       globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
+      long storedDefaultGasPrice = jsonObject.has("defaultGasPrice") ? jsonObject.getLong("defaultGasPrice") : 0;
+      globalSettings.setDefaultGasPrice(storedDefaultGasPrice == 0 ? defaultSettings.getDefaultGasPrice()
+                                                                   : storedDefaultGasPrice);
       boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation") : true;
       globalSettings.setEnableDelegation(storedEnableDelegation);
       String storedDefaultPrincipalAccount =

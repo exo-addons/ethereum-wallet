@@ -6,7 +6,7 @@
     <v-card flat>
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="createNewToken = false"></a>
-        <span class="PopupTitle popupTitle">Deploy new token contract</span>
+        <span class="PopupTitle popupTitle">Deploy new token contracts</span>
       </div>
       <div v-if="error" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}
@@ -155,7 +155,7 @@ import WalletAddress from './WalletAddress.vue';
 import ContractDeploymentStep from './ContractDeploymentStep.vue';
 
 import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault} from '../WalletToken.js';
-import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
+import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend, watchTransactionStatus} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -200,22 +200,17 @@ export default {
       gasByStep: {},
       transactionFeeByStep: {},
       processingStep: {},
+      contractNameByStep: {
+        1 : 'ERTTokenDataV1',
+        2 : 'ERTTokenV1',
+        3 : 'ERTToken'
+      },
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ]
     };
   },
   computed: {
-    contractNameByStep() {
-      if (this.step === 1) {
-        return 'ERTTokenDataV1';
-      } else if (this.step === 2) {
-        return 'ERTTokenV1';
-      } else if (this.step === 3) {
-        return 'ERTToken';
-      }
-      return null;
-    },
     tokenEtherscanLink() {
       if (this.contractAddressByStep[2]) {
         return getTokenEtherscanlink(this.networkId) + this.contractAddressByStep[2];
@@ -262,18 +257,17 @@ export default {
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.loadState();
     },
-    initializeStep() {
-      if (this.step > 0 && !this.gasByStep[this.step]) {
-        if (this.step < 4) {
-          if (this.contractAddressByStep[this.step] && this.contractNameByStep) {
-            // Add it inside a constant in case it changes in parallel
-            const step = this.step;
-            return newContractInstanceByNameAndAddress(this.contractNameByStep, this.contractAddressByStep[step])
+    initializeStep(stepToInitialize) {
+      // Add it inside a constant in case it changes in parallel
+      const step = stepToInitialize ? stepToInitialize : this.step;
+      if (step > 0 && !this.gasByStep[step]) {
+        if (step < 4) {
+          if (this.contractAddressByStep[step] && this.contractNameByStep[step]) {
+            return newContractInstanceByNameAndAddress(this.contractNameByStep[step === 3 ? 2 : step], this.contractAddressByStep[step])
               .then(instance => this.$set(this.contractInstancesByStep, step, instance) && this.$set(this.processedStep, step, true))
               .catch(e => this.error = `Error getting contract with address ${this.contractAddressByStep[step]}: ${e}`);
-          } else if(this.contractNameByStep){
-            const step = this.step;
-            return newContractInstanceByName(this.contractNameByStep, ...this.contractDeploymentParameters)
+          } else if(this.contractNameByStep[step]){
+            return newContractInstanceByName(this.contractNameByStep[step], ...this.contractDeploymentParameters)
               .then(instance => {
                 this.$set(this.contractInstancesByStep, step, instance);
                 return estimateContractDeploymentGas(instance);
@@ -284,28 +278,44 @@ export default {
               })
               .catch(e => this.error = `Error processing contract deployment estimation: ${e}`);
           }
-        } else if(this.step === 4 && !this.processedStep[this.step]) {
-          this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
+        } else if(step === 4 && !this.processedStep[step]) {
+          return this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
             .estimateGas({
-              gas: 9000000,
+              gas: 4700000,
               gasPrice: window.walletSettings.gasPrice
             })
             .then(estimatedGas => {
-              this.$set(this.gasByStep, this.step, parseInt(estimatedGas * 1.1));
-              this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
+              this.$set(this.gasByStep, step, parseInt(estimatedGas * 1.1));
+              this.$set(this.transactionFeeByStep, step, this.calculateGasPriceInFiat(this.gasByStep[step]));
             });
-        } else if(this.step === 5 && !this.processedStep[this.step]) {
-          this.contractInstancesByStep[2].methods.initialize(convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
+        } else if(step === 5 && !this.processedStep[step]) {
+          return this.contractInstancesByStep[3].methods.initialize(convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
             .estimateGas({
-              gas: 9000000,
+              gas: 4700000,
               gasPrice: window.walletSettings.gasPrice
             })
             .then(estimatedGas => {
-              this.$set(this.gasByStep, this.step, parseInt(estimatedGas * 1.1));
-              this.$set(this.transactionFeeByStep, this.step, this.calculateGasPriceInFiat(this.gasByStep[this.step]));
+              this.$set(this.gasByStep, step, parseInt(estimatedGas * 1.1));
+              this.$set(this.transactionFeeByStep, step, this.calculateGasPriceInFiat(this.gasByStep[step]));
+            })
+            .catch(e => {
+              console.error("Error while estimating initialization gas. Try to display contracts details", this.contractInstancesByStep, this.contractAddressByStep, e);
+              return this.contractInstancesByStep[1].methods.implementation().call()
+                .then(implementationAddress => {
+                  console.warn(`Detected implementation address in Data contract ${implementationAddress}, effective implementation address: ${this.contractAddressByStep[2]}`, implementationAddress === this.contractAddressByStep[2] ? ': OK' : ': KO');
+                  return this.contractInstancesByStep[1].methods.proxy().call();
+                })
+                .then(proxyAddress => {
+                  console.warn(`Detected proxy address in Data contract ${proxyAddress}, effective proxy address: ${this.contractAddressByStep[3]}`, proxyAddress === this.contractAddressByStep[3] ? ': OK' : ': KO' );
+                  return this.contractInstancesByStep[3].methods.getDataAddress(1).call();
+                })
+                .then(dataAddress => {
+                  console.warn(`Detected data address in Proxy contract ${dataAddress}, effective proxy address: ${this.contractAddressByStep[1]}`, dataAddress === this.contractAddressByStep[1] ? ': OK' : ': KO');
+                });
             });
         }
       }
+      return Promise.resolve(false);
     },
     calculateGasPriceInFiat(gas) {
       const gasPriceInEther = window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'ether');
@@ -314,7 +324,7 @@ export default {
     proceedStep(password) {
       const gasLimit = this.gasByStep[this.step];
       if (!gasLimit) {
-        this.error = 'Gas estimation isn\'t done';
+        this.error = "Gas estimation isn't done";
         return;
       }
 
@@ -334,10 +344,11 @@ export default {
         return;
       }
 
+      const step = this.step;
       try {
         const thiss = this;
-        if (this.step < 4) {
-          const contractInstance = this.contractInstancesByStep[this.step];
+        if (step < 4) {
+          const contractInstance = this.contractInstancesByStep[step];
           if (!contractInstance) {
             this.error = 'Contract instance not initialized';
             return;
@@ -351,17 +362,25 @@ export default {
               if (!newContractInstance || !newContractInstance.options || !newContractInstance.options.address) {
                 throw new Error('Cannot find address of newly deployed address');
               }
-              this.$set(this.contractInstancesByStep, this.step, newContractInstance);
-              this.$set(this.contractAddressByStep, this.step, newContractInstance.options.address);
-              this.$set(this.processedStep, this.step, true);
+              this.$set(this.contractAddressByStep, step, newContractInstance.options.address);
+              this.$set(this.processedStep, step, true);
               this.saveState();
+              if (step === 3) {
+                // For Proxy contract, use ABI and BIN files of Implementation instead
+                return newContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[3])
+                  .then(newContractInstance => {
+                    this.$set(this.contractInstancesByStep, step, newContractInstance);
+                  });
+              } else {
+                this.$set(this.contractInstancesByStep, step, newContractInstance);
+              }
             })
             .catch(e => {
               console.debug("deployContract method - error", e);
               this.error = `Error during contract deployment: ${e}`;
             })
-            .finally(() => this.$set(this.processingStep, this.step, false));
-        } else if(this.step === 4) {
+            .finally(() => this.$set(this.processingStep, step, false));
+        } else if(step === 4) {
           this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
             .send({
               from: this.account,
@@ -372,12 +391,12 @@ export default {
               this.updateTransactionHash(hash);
             })
             .then(() => {
-              this.$set(this.processedStep, this.step, true);
+              this.$set(this.processedStep, step, true);
               this.saveState();
             })
-            .finally(() => this.$set(this.processingStep, this.step, false));
-        } else if(this.step === 5) {
-          this.contractInstancesByStep[2].methods.initialize(this.contractAddressByStep[3], convertTokenAmountToSend(this.newTokenInitialCoins, this.newTokenDecimals).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
+            .finally(() => this.$set(this.processingStep, step, false));
+        } else if(step === 5) {
+          this.contractInstancesByStep[3].methods.initialize(convertTokenAmountToSend(this.newTokenInitialCoins, this.newTokenDecimals).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
             .send({
               from: this.account,
               gasPrice: window.walletSettings.gasPrice,
@@ -387,17 +406,17 @@ export default {
               this.updateTransactionHash(hash);
             })
             .then(() => {
-              this.$set(this.processedStep, this.step, true);
+              this.$set(this.processedStep, step, true);
               this.saveState();
             })
-            .finally(() => this.$set(this.processingStep, this.step, false));
-        } else if(this.step === 6) {
+            .finally(() => this.$set(this.processingStep, step, false));
+        } else if(step === 6) {
           this.saveState();
         }
       } catch(e) {
         lockBrowerWallet();
         console.debug("proceedStep method - error", e);
-        this.$set(this.processingStep, this.step, false);
+        this.$set(this.processingStep, step, false);
         this.error = `Error during contract deployment: ${e}`;
       }
     },
@@ -415,10 +434,49 @@ export default {
         this.processedStep = storedState.processedStep;
         this.transactionHashByStep = storedState.transactionHashByStep;
         // To initialize steps
-        for (this.step = 0; this.step < storedState.step; this.step++){
-          this.initializeStep();
+        if (storedState.step > 0) {
+          this.initializeStepsFromStorage(1, storedState.step)
+            .then(() => {
+              this.step = storedState.step;
+            })
         }
       }
+    },
+    initializeStepsFromStorage(step, maxStep) {
+      if (this.transactionHashByStep[step] && ((step < 4 && !this.contractAddressByStep[step]) || !this.processedStep[step]) ) {
+        this.$set(this.processingStep, step, true);
+        watchTransactionStatus(this.transactionHashByStep[step], receipt => {
+          if (!receipt || !receipt.status) {
+            this.error = 'Error processing contract deployment';
+            return;
+          }
+          if (step < 4) {
+            if (receipt.contractAddress) {
+              this.$set(this.contractAddressByStep, step, receipt.contractAddress);
+            } else {
+              this.error = 'Error processing contract deployment, not associated contract address in transaction receipt';
+              return;
+            }
+          }
+          this.$set(this.processedStep, step, true);
+          this.$set(this.processingStep, step, false);
+          this.initializeStep(step)
+            .then(() => {
+              this.saveState();
+              if (step < maxStep) {
+                return this.initializeStepsFromStorage(step + 1, maxStep);
+              }
+            });
+        });
+      } else if (this.transactionHashByStep[step] && this.processedStep[step]) {
+        return this.initializeStep(step)
+            .then(() => {
+              if (step < maxStep) {
+                return this.initializeStepsFromStorage(step + 1, maxStep);
+              }
+            });
+      }
+      return Promise.resolve(false);
     },
     saveState() {
       localStorage.setItem(`exo-wallet-contract-deployment-${this.networkId}`, JSON.stringify({
@@ -431,6 +489,7 @@ export default {
     updateTransactionHash(hash) {
       this.$set(this.transactionHashByStep, this.step, hash);
       this.$set(this.processingStep, this.step, true);
+      this.saveState();
     },
     finishInstallation() {
       const contractAddress = this.contractAddressByStep[3];

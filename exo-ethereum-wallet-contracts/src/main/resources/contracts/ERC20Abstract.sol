@@ -42,5 +42,4 @@ contract ERC20Abstract is DataAccess, SafeMath {
         super._setBalance(_to, super.safeAdd(super._balanceOf(_to), _value));
         return true;
     }
-
 }

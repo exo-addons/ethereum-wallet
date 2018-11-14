@@ -9,6 +9,8 @@
           </div>
           <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Balance: {{ contractDetails.contractBalanceFiat }} {{ fiatSymbol }} / {{ contractDetails.contractBalance }} ether</h3>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
+          <h4 v-if="transferTransactionsCount" class="grey--text font-weight-light">Transfer transactions: {{ transferTransactionsCount }}</h4>
+          <h4 v-if="totalTransactionsCount" class="grey--text font-weight-light">Total transactions: {{ totalTransactionsCount }}</h4>
         </v-flex>
 
         <v-flex v-if="!isDisplayOnly" id="accountDetailActions">
@@ -130,6 +132,7 @@
           :fiat-symbol="fiatSymbol"
           :error="error"
           display-full-transaction
+          @loaded="computeTransactionsCount"
           @error="error = $event" />
       </v-tab-item>
       <v-tab-item key="approvedAccountsTable">
@@ -176,6 +179,7 @@
       :fiat-symbol="fiatSymbol"
       :error="error"
       display-full-transaction
+      @loaded="computeTransactionsCount"
       @error="error = $event" />
   </v-flex>
 </template>
@@ -242,6 +246,8 @@ export default {
   data() {
     return {
       selectedTab: 0,
+      transferTransactionsCount: 0,
+      totalTransactionsCount: 0,
       approvedAccounts: [],
       adminAccounts: [],
       error: null
@@ -253,6 +259,8 @@ export default {
     },
     contractDetails() {
       this.error = null;
+      this.totalTransactionsCount = 0;
+      this.transferTransactionsCount = 0;
       this.retrieveAccountsDetails();
     }
   },
@@ -374,6 +382,10 @@ export default {
           });
       }
       this.$forceUpdate();
+    },
+    computeTransactionsCount(transactions) {
+      this.totalTransactionsCount = Object.values(transactions).length;
+      this.transferTransactionsCount = Object.values(transactions).filter(transaction => transaction.contractMethodName && transaction.contractMethodName === 'transfer').length;
     },
     refreshBalance() {
       this.$set(this.contractDetails, "loadingBalance", false);
