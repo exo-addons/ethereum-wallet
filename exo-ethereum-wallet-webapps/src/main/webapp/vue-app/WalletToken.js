@@ -227,7 +227,7 @@ export function newContractInstanceByNameAndAddress(tokenName, tokenAddress) {
     }
   })
   .then(abi => contractAbi = abi)
-  .then(() => getContractInstance(window.walletSettings.userPreferences.walletAddress, tokenAddress, false, contractAbi, contractBin));
+  .then(() => getContractInstance(window.localWeb3.defaultAccount, tokenAddress, false, contractAbi, contractBin));
 }
 
 export function estimateContractDeploymentGas(instance) {

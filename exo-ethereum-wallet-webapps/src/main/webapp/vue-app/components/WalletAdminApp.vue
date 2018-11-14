@@ -9,7 +9,7 @@
 
           <wallet-setup
             ref="walletSetup"
-            :wallet-address="walletAddress"
+            :wallet-address="originalWalletAddress"
             :refresh-index="refreshIndex"
             class="mb-3"
             @loading="loadingContracts = true"
@@ -517,6 +517,7 @@ export default {
       defaultGasPrice: 0,
       fiatSymbol: '$',
       refreshIndex: 1,
+      originalWalletAddress: null,
       walletAddress: null,
       networkId: null,
       tokenEtherscanLink: null,
@@ -904,6 +905,7 @@ export default {
         })
         .then(account => {
           this.walletAddress = window.localWeb3 && window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
+          this.originalWalletAddress = window.walletSettings.userPreferences.walletAddress;
           this.networkId = window.walletSettings.currentNetworkId;
         })
         .then(this.setDefaultValues)

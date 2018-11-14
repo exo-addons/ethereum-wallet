@@ -1143,7 +1143,7 @@ public class EthereumWalletService implements Startable {
       LOG.warn("cache key is mandatory");
       return null;
     }
-    return accountDetailFutureCache.get(new ServiceContext<AccountDetail>() {
+    AccountDetail accountDetail = accountDetailFutureCache.get(new ServiceContext<AccountDetail>() {
       @Override
       public AccountDetail execute() {
         AccountDetail accountDetail = null;
@@ -1208,6 +1208,11 @@ public class EthereumWalletService implements Startable {
         return accountDetail;
       }
     }, accountDetailCacheId);
+    // don't keep in cache only users with addresses
+    if (accountDetail != null && StringUtils.isBlank(accountDetail.getAddress())) {
+      removeFromCache(accountDetail.getType(), accountDetail.getId());
+    }
+    return accountDetail;
   }
 
   private String getUserAddressFromStorage(String id) {

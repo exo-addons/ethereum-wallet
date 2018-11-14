@@ -164,6 +164,7 @@ export default {
       if (this.watchMetamaskAccountInterval) {
         clearInterval(this.watchMetamaskAccountInterval);
       }
+
       // In case account switched in Metamask
       // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
       this.watchMetamaskAccountInterval = setInterval(function() {

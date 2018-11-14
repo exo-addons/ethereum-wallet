@@ -90,9 +90,9 @@ export function computeGasPrice() {
 
         // Avoid adding excessive gas price
         window.walletSettings.gasPrice = gasPrice;
-        if (window.walletSettings.gasPrice > window.walletSettings.defaultGasPrice) {
+        if (window.walletSettings.defaultGasPrice && window.walletSettings.gasPrice > window.walletSettings.defaultGasPrice) {
           console.warn(`Detected gas price ${window.walletSettings.gasPrice} is heigher than default gas price ${window.walletSettings.defaultGasPrice}`);
-          window.walletSettings.gasPrice = window.walletSettings.defaultGasPrice;
+          window.walletSettings.gasPrice = String(window.walletSettings.defaultGasPrice);
         }
         console.debug("Used Gas price:", window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'gwei').toString(), 'gwei');
         window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
