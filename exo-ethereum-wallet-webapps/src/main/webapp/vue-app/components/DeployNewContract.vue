@@ -35,12 +35,22 @@
               :contract-address="contractAddressByStep[step]"
               :processing="processingStep[step]"
               :processed="processedStep[step]"
-              :transaction-fee="transactionFeeByStep[step]"
+              :transaction-fee="gasFee"
               :disabled-button="disabledButton"
               :fiat-symbol="fiatSymbol"
               button-title="Deploy"
               @proceed="proceedStep($event)"
-              @next="step++" />
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="2">
             <contract-deployment-step
@@ -51,12 +61,22 @@
               :contract-address="contractAddressByStep[step]"
               :processing="processingStep[step]"
               :processed="processedStep[step]"
-              :transaction-fee="transactionFeeByStep[step]"
+              :transaction-fee="gasFee"
               :disabled-button="disabledButton"
               :fiat-symbol="fiatSymbol"
               button-title="Deploy"
               @proceed="proceedStep($event)"
-              @next="step++" />
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="3">
             <contract-deployment-step
@@ -67,12 +87,22 @@
               :contract-address="contractAddressByStep[step]"
               :processing="processingStep[step]"
               :processed="processedStep[step]"
-              :transaction-fee="transactionFeeByStep[step]"
+              :transaction-fee="gasFee"
               :disabled-button="disabledButton"
               :fiat-symbol="fiatSymbol"
               button-title="Deploy"
               @proceed="proceedStep($event)"
-              @next="step++" />
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="4">
             <contract-deployment-step
@@ -82,12 +112,22 @@
               :gas="gasByStep[step]"
               :processing="processingStep[step]"
               :processed="processedStep[step]"
-              :transaction-fee="transactionFeeByStep[step]"
+              :transaction-fee="gasFee"
               :disabled-button="disabledButton"
               :fiat-symbol="fiatSymbol"
               button-title="Send"
               @proceed="proceedStep($event)"
-              @next="step++" />
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="5">
             <contract-deployment-step
@@ -97,12 +137,22 @@
               :gas="gasByStep[step]"
               :processing="processingStep[step]"
               :processed="processedStep[step]"
-              :transaction-fee="transactionFeeByStep[step]"
+              :transaction-fee="gasFee"
               :disabled-button="disabledButton"
               :fiat-symbol="fiatSymbol"
               button-title="Send"
               @proceed="proceedStep($event)"
               @next="step++">
+
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee} ${fiatSymbol}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
 
               <v-form ref="form" class="pl-5 pr-5 pt-3 flex">
                 <v-text-field
@@ -196,9 +246,9 @@ export default {
       contractAddressByStep: {},
       processedStep: {},
       step: 0,
+      gasPrice: 0,
       contractInstancesByStep: {},
       gasByStep: {},
-      transactionFeeByStep: {},
       processingStep: {},
       contractNameByStep: {
         1 : 'ERTTokenDataV1',
@@ -211,6 +261,12 @@ export default {
     };
   },
   computed: {
+    gasPriceGwei() {
+      return this.gasPrice && window.localWeb3.utils.fromWei(String(this.gasPrice), 'gwei');
+    },
+    gasFee() {
+      return this.calculateGasPriceInFiat(this.gasByStep[this.step], this.gasPrice);
+    },
     tokenEtherscanLink() {
       if (this.contractAddressByStep[2]) {
         return getTokenEtherscanlink(this.networkId) + this.contractAddressByStep[2];
@@ -224,7 +280,7 @@ export default {
       return [];
     },
     disabledButton() {
-      return !this.transactionFeeByStep[this.step] || this.contractAddressByStep[this.step] || this.processingStep[this.step];
+      return !this.gasByStep[this.step] || this.contractAddressByStep[this.step] || this.processingStep[this.step];
     }
   },
   watch: {
@@ -251,9 +307,9 @@ export default {
       this.newTokenInitialCoins = 1000000;
       this.contractInstancesByStep = {};
       this.gasByStep = {};
-      this.transactionFeeByStep = {};
       this.processingStep = {};
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+      this.gasPrice = window.walletSettings.gasPrice;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.loadState();
     },
@@ -274,7 +330,6 @@ export default {
               })
               .then(estimatedGas => {
                 this.$set(this.gasByStep, step, parseInt(estimatedGas * 1.1));
-                this.$set(this.transactionFeeByStep, step, this.calculateGasPriceInFiat(this.gasByStep[step]));
               })
               .catch(e => this.error = `Error processing contract deployment estimation: ${e}`);
           }
@@ -283,22 +338,20 @@ export default {
             .estimateGas({
               from: this.contractInstancesByStep[1].options.from,
               gas: 4700000,
-              gasPrice: window.walletSettings.gasPrice
+              gasPrice: this.gasPrice
             })
             .then(estimatedGas => {
               this.$set(this.gasByStep, step, parseInt(estimatedGas * 1.1));
-              this.$set(this.transactionFeeByStep, step, this.calculateGasPriceInFiat(this.gasByStep[step]));
             });
         } else if(step === 5 && !this.processedStep[step]) {
           return this.contractInstancesByStep[3].methods.initialize(convertTokenAmountToSend(1000000, 18).toString(), "Token name", 18, "T")
             .estimateGas({
               from: this.contractInstancesByStep[3].options.from,
               gas: 4700000,
-              gasPrice: window.walletSettings.gasPrice
+              gasPrice: this.gasPrice
             })
             .then(estimatedGas => {
               this.$set(this.gasByStep, step, parseInt(estimatedGas * 1.1));
-              this.$set(this.transactionFeeByStep, step, this.calculateGasPriceInFiat(this.gasByStep[step]));
             })
             .catch(e => {
               console.error("Error while estimating initialization gas. Try to display contracts details", this.contractInstancesByStep, this.contractAddressByStep, e);
@@ -319,8 +372,9 @@ export default {
       }
       return Promise.resolve(false);
     },
-    calculateGasPriceInFiat(gas) {
-      const gasPriceInEther = window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'ether');
+    calculateGasPriceInFiat(gas, gasPrice) {
+      gasPrice = gasPrice ? gasPrice : this.gasPrice;
+      const gasPriceInEther = window.localWeb3.utils.fromWei(String(gasPrice), 'ether');
       return gasToFiat(gas, gasPriceInEther);
     },
     proceedStep(password) {
@@ -331,7 +385,7 @@ export default {
       }
 
       // Increase gas limit by 10% to ensure that the transaction doesn't go 'Out of Gas'
-      const gasPrice = window.walletSettings.gasPrice;
+      const gasPrice = this.gasPrice;
 
       this.error = null;
 
@@ -390,7 +444,7 @@ export default {
           this.contractInstancesByStep[1].methods.transferDataOwnership(this.contractAddressByStep[3], this.contractAddressByStep[2])
             .send({
               from: this.contractInstancesByStep[1].options.from,
-              gasPrice: window.walletSettings.gasPrice,
+              gasPrice: this.gasPrice,
               gas: gasLimit
             })
             .on('transactionHash', hash => {
@@ -405,7 +459,7 @@ export default {
           this.contractInstancesByStep[3].methods.initialize(convertTokenAmountToSend(this.newTokenInitialCoins, this.newTokenDecimals).toString(), this.newTokenName, this.newTokenDecimals, this.newTokenSymbol)
             .send({
               from: this.contractInstancesByStep[3].options.from,
-              gasPrice: window.walletSettings.gasPrice,
+              gasPrice: this.gasPrice,
               gas: gasLimit
             })
             .on('transactionHash', hash => {

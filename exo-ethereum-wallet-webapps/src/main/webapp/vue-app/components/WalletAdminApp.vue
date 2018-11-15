@@ -669,7 +669,7 @@ export default {
         return ` (${this.defaultGasFiatPrice} ${this.fiatSymbol} | ${this.defaultGasPriceToken} ${this.principalContract.symbol})`;
       } else if (this.defaultGasFiatPrice) {
         return ` (${this.defaultGasFiatPrice} ${this.fiatSymbol})`;
-      } else if (this.defaultGasFiatPrice) {
+      } else if (this.defaultGasPriceToken) {
         return ` (${this.defaultGasPriceToken} ${this.principalContract.symbol})`;
       }
       return '';
