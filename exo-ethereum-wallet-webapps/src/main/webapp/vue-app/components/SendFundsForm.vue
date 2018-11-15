@@ -52,6 +52,12 @@ export default {
         return null;
       }
     },
+    addPendingToReceiver: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {
@@ -145,6 +151,7 @@ export default {
       // This assignement should be kept to avoid conflit in parallet execution
       const selectedAccount = this.selectedAccount;
       const recipient = transaction.to.toLowerCase();
+      transaction.addLoadingToRecipient = this.addPendingToReceiver;
       addTransaction(this.networkId,
         this.walletAddress,
         selectedAccount,

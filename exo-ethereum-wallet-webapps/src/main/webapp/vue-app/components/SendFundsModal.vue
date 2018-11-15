@@ -22,6 +22,7 @@
         :wallet-address="walletAddress"
         :network-id="networkId"
         :selected-account="selectedOption && selectedOption.value"
+        :add-pending-to-receiver="addPendingToReceiver"
         @success="success"
         @error="$emit('error', $event)"
         @dialog-error="error = $event"
@@ -97,6 +98,12 @@ export default {
       }
     },
     disabled: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    addPendingToReceiver: {
       type: Boolean,
       default: function() {
         return false;

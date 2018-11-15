@@ -604,6 +604,10 @@ export function addPendingTransactionToStorage(networkId, account, contractDetai
   if (contractDetails && contractDetails.isContract) {
     addPendingTransactionToStorage(networkId, account, null, transaction);
   }
+
+  if (transaction.addLoadingToRecipient && transaction.to && transaction.to !== account) {
+    addPendingTransactionToStorage(networkId, transaction.to, contractDetails, transaction);
+  }
 }
 
 export function removePendingTransactionFromStorage(networkId, account, contractDetails, transactionHash) {

@@ -293,19 +293,19 @@
                 </div>
                 <v-data-table :headers="headers" :items="contracts" :loading="loadingContracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
                   <template slot="items" slot-scope="props">
-                    <td :class="props.item.error ? 'red--text' : ''" @click="openContractDetails(props.item)">
+                    <td :class="props.item.error ? 'red--text' : ''" class="clickable" @click="openContractDetails(props.item)">
                       {{ props.item.error ? props.item.error : props.item.name }}
                     </td>
-                    <td class="text-xs-center" @click="openContractDetails(props.item)">
+                    <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
                       <v-progress-circular v-if="props.item.loadingBalance" color="primary" indeterminate size="20" />
                       <span v-else>
                         {{ props.item.contractBalance }} ether
                       </span>
                     </td>
-                    <td class="text-xs-center" @click="openContractDetails(props.item)">
+                    <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
                       {{ props.item.contractType > 0 ? `${props.item.sellPrice} ether` : "-" }}
                     </td>
-                    <td class="text-xs-center" @click="openContractDetails(props.item)">
+                    <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
                       {{ props.item.contractTypeLabel }}
                     </td>
                     <td v-if="props.item.error" class="text-xs-right"><del>{{ props.item.address }}</del></td>
@@ -372,58 +372,61 @@
               <v-card flat>
                 <v-data-table :headers="walletHeaders" :items="wallets" :loading="loadingWallets" hide-actions>
                   <template slot="items" slot-scope="props">
-                    <tr class="clickable" @click="openAccountDetail(props.item)">
-                      <td>
-                        <v-avatar size="36px">
-                          <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-                        </v-avatar>
-                      </td>
-                      <td>
-                        {{ props.item.name }}
-                      </td>
-                      <td>
-                        {{ props.item.address }}
-                      </td>
-                      <td class="text-xs-right">
-                        <v-card-title v-if="props.item.loadingBalancePrincipal" primary-title class="pb-0">
-                          <v-spacer />
-                          <v-badge color="red" right title="A transaction is in progress">
-                            <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
-                          </v-badge>
-                        </v-card-title>
-                        <template v-else-if="props.item.balancePrincipal">
-                          {{ props.item.balancePrincipal }}
-                          <v-btn 
-                            class="bottomNavigationItem transparent"
-                            title="Send funds"
-                            flat
-                            icon
-                            @click="openSendFundsModal($event, props.item, true)">
-                            <v-icon>send</v-icon>
-                          </v-btn>
-                        </template>
-                        <template v-else>-</template>
-                      </td>
-                      <td class="text-xs-right">
-                        <v-card-title v-if="props.item.loadingBalance" primary-title class="pb-0">
-                          <v-spacer />
-                          <v-badge color="red" right title="A transaction is in progress">
-                            <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
-                          </v-badge>
-                        </v-card-title>
-                        <template v-else>
-                          {{ props.item.balance }}
-                          <v-btn 
-                            class="bottomNavigationItem transparent"
-                            title="Send funds"
-                            flat
-                            icon
-                            @click="openSendFundsModal($event, props.item)">
-                            <v-icon>send</v-icon>
-                          </v-btn>
-                        </template>
-                      </td>
-                    </tr>
+                    <td class="clickable" @click="openAccountDetail(props.item)">
+                      <v-avatar size="36px">
+                        <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                      </v-avatar>
+                    </td>
+                    <td class="clickable" @click="openAccountDetail(props.item)">
+                      {{ props.item.name }}
+                    </td>
+                    <td>
+                      <a
+                        v-if="addressEtherscanLink"
+                        :href="`${addressEtherscanLink}${props.item.address}`"
+                        target="_blank"
+                        title="Open on etherscan">{{ props.item.address }}</a>
+                      <span v-else>{{ props.item.address }}</span>
+                    </td>
+                    <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
+                      <v-card-title v-if="props.item.loadingBalancePrincipal" primary-title class="pb-0">
+                        <v-spacer />
+                        <v-badge color="red" right title="A transaction is in progress">
+                          <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+                        </v-badge>
+                      </v-card-title>
+                      <template v-else-if="props.item.balancePrincipal">
+                        {{ props.item.balancePrincipal }}
+                        <v-btn 
+                          class="bottomNavigationItem transparent"
+                          title="Send funds"
+                          flat
+                          icon
+                          @click="openSendFundsModal($event, props.item, true)">
+                          <v-icon>send</v-icon>
+                        </v-btn>
+                      </template>
+                      <template v-else>-</template>
+                    </td>
+                    <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
+                      <v-card-title v-if="props.item.loadingBalance" primary-title class="pb-0">
+                        <v-spacer />
+                        <v-badge color="red" right title="A transaction is in progress">
+                          <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+                        </v-badge>
+                      </v-card-title>
+                      <template v-else>
+                        {{ props.item.balance }}
+                        <v-btn 
+                          class="bottomNavigationItem transparent"
+                          title="Send funds"
+                          flat
+                          icon
+                          @click="openSendFundsModal($event, props.item)">
+                          <v-icon>send</v-icon>
+                        </v-btn>
+                      </template>
+                    </td>
                   </template>
                 </v-data-table>
 
@@ -458,6 +461,7 @@
                   :network-id="networkId"
                   :wallet-address="walletAddress"
                   no-button
+                  add-pending-to-receiver
                   @success="refreshBalance"
                   @pending="pendingTransaction"
                   @error="refreshBalance(null, null, $event)" />
@@ -482,7 +486,7 @@ import ContractDetail from './ContractDetail.vue';
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
-import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink} from '../WalletUtils.js';
+import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -519,6 +523,7 @@ export default {
       walletAddressFiatBalance: null,
       networkId: null,
       tokenEtherscanLink: null,
+      addressEtherscanLink: null,
       newTokenAddress: null,
       showAddContractModal: false,
       selectedOverviewAccounts: [],
@@ -872,7 +877,8 @@ export default {
   created() {
     this.init()
       .then(() => this.loadWallets())
-      .then(() => this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId));
+      .then(() => this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId))
+      .then(() => this.addressEtherscanLink = getAddressEtherscanlink(this.networkId));
   },
   methods: {
     init(ignoreContracts) {
@@ -972,6 +978,7 @@ export default {
         if (contract) {
           this.$set(contract, "loadingBalance", true);
           if (this.$refs.contractDetail) {
+            transaction.addLoadingToRecipient = true;
             this.$refs.contractDetail.newTransactionPending(transaction, contract);
           }
         }
