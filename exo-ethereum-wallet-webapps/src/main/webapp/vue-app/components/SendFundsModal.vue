@@ -97,6 +97,12 @@ export default {
         return false;
       }
     },
+    displayAllAccounts: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     disabled: {
       type: Boolean,
       default: function() {
@@ -129,11 +135,10 @@ export default {
       if (this.accountsDetails && this.refreshIndex > 0) {
         Object.keys(this.accountsDetails).forEach(key => {
           // Check list of accounts to display switch user preferences
-          const isContractOption = this.overviewAccounts.indexOf(key) > -1;
+          const isContractOption = this.overviewAccounts && this.overviewAccounts.indexOf(key) > -1;
           // Always allow to display ether option
-          // const isEtherOption = isContractOption || (key === this.walletAddress && (this.overviewAccounts.indexOf('ether') > -1 || this.overviewAccounts.indexOf('fiat') > -1));
           const isEtherOption = isContractOption || (key === this.walletAddress);
-          if (isContractOption || isEtherOption) {
+          if (this.displayAllAccounts || isContractOption || isEtherOption) {
             accountsList.push({
               text: this.accountsDetails[key].title,
               value: this.accountsDetails[key]

@@ -455,12 +455,12 @@
                 <send-funds-modal
                   ref="sendFundsModal"
                   :accounts-details="accountsDetails"
-                  :overview-accounts="overviewAccounts"
                   :principal-account="principalAccount"
                   :refresh-index="refreshIndex"
                   :network-id="networkId"
                   :wallet-address="walletAddress"
                   no-button
+                  display-all-accounts
                   add-pending-to-receiver
                   @success="refreshBalance"
                   @pending="pendingTransaction"
@@ -715,17 +715,14 @@ export default {
           accountsDetails[contract.address] = contract;
         });
       }
-      const currentUserWallet = this.wallets.find(wallet => wallet.address === this.walletAddress);
-      if (currentUserWallet) {
-        accountsDetails[this.walletAddress] = {
-          title : 'ether',
-          icon : 'warning',
-          balance : currentUserWallet.balance,
-          symbol : 'ether',
-          isContract : false,
-          address : this.walletAddress
-        };
-      }
+      accountsDetails[this.walletAddress] = {
+        title : 'ether',
+        icon : 'ether',
+        balance : this.walletAddressEtherBalance,
+        symbol : 'ether',
+        isContract : false,
+        address : this.walletAddress
+      };
       return accountsDetails;
     },
     showSpecificNetworkFields() {
