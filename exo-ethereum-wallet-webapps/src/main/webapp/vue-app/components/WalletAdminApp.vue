@@ -12,6 +12,7 @@
             :wallet-address="originalWalletAddress"
             :refresh-index="refreshIndex"
             class="mb-3"
+            is-administration
             @loading="loadingContracts = true"
             @end-loading="loadingContracts = false"
             @refresh="init()"
@@ -913,15 +914,13 @@ export default {
             this.error = "Please configure your wallet";
           }
         })
-        .then(() => {
-          this.loadingContracts = this.loadingSettings = this.loading = false;
-          this.forceUpdate();
-        })
         .catch(e => {
           console.debug("init method - error", e);
-          this.loadingContracts = this.loadingSettings = this.loadingWallets = this.loading = false;
-          this.loadingSettings = false;
           this.error = `Error encountered: ${e}`;
+        })
+        .finally(() => {
+          this.loadingContracts = this.loadingSettings = this.loadingWallets = this.loading = false;
+          this.forceUpdate();
         });
     },
     openSendFundsModal(event, wallet, principal) {

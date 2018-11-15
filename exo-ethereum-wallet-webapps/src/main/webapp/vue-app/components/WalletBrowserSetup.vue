@@ -38,6 +38,12 @@ export default {
         return false;
       }
     },
+    isAdministration: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     refreshIndex: {
       type: Number,
       default: function() {
@@ -54,7 +60,7 @@ export default {
   watch: {
     refreshIndex(newValue, oldValue) {
       if (newValue > oldValue) {
-        this.init();
+        this.nextTick(this.init);
       }
     }
   },

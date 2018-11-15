@@ -59,10 +59,11 @@
     <div v-else-if="newAddressDetected">
       <div v-if="associatedWalletAddress" class="alert alert-warning">
         <i class="uiIconWarning"></i>
-        <span>Please switch metamask to {{ walletAddress }} account to be able to send transactions</span>
+        <span v-if="isAdministration">Attention: you are using a different metamask account from your associated address {{ associatedWalletAddress }}</span>
+        <span v-else>Please switch metamask to {{ associatedWalletAddress }} account to be able to send transactions</span>
       </div>
       <br />
-      <div class="alert alert-info">
+      <div v-if="!isAdministration" class="alert alert-info">
         <i class="uiIconInfo"></i>
         <span>A new wallet has been detected on Metamask!</span>
         <br />
@@ -131,6 +132,12 @@ export default {
         return false;
       }
     },
+    isAdministration: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {
@@ -159,35 +166,29 @@ export default {
   },
   computed: {
     displayNotSameNetworkWarning() {
-      return !this.sameConfiguredNetwork && (!this.isSpace || !this.associatedWalletAddress);
+      return this.refreshIndex && !this.sameConfiguredNetwork && (!this.isSpace || !this.associatedWalletAddress);
     },
     displaySpaceAccountAssociationHelp() {
-      return this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
+      return this.refreshIndex && this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
     },
     displayUserAccountAssociationHelp() {
-      return !this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
+      return this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
     },
     displayUserAccountChangeHelp() {
-      return !this.isSpace && this.sameConfiguredNetwork && this.associatedWalletAddress && this.detectedMetamaskAccount;
+      return this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && this.associatedWalletAddress && this.detectedMetamaskAccount;
     },
     displayAccountHelpActions() {
-      return this.sameConfiguredNetwork && !this.currentAccountAlreadyInUse && (this.displayUserAccountChangeHelp || this.displayUserAccountAssociationHelp || this.displaySpaceAccountAssociationHelp);
+      return this.refreshIndex && this.sameConfiguredNetwork && !this.currentAccountAlreadyInUse && (this.displayUserAccountChangeHelp || this.displayUserAccountAssociationHelp || this.displaySpaceAccountAssociationHelp);
     },
     displaySpaceMetamaskEnableHelp() {
-      return this.isSpace && !this.associatedWalletAddress && !this.detectedMetamaskAccount;
+      return this.refreshIndex && this.isSpace && !this.associatedWalletAddress && !this.detectedMetamaskAccount;
     },
     newAddressDetected() {
-      return this.sameConfiguredNetwork
+      return this.refreshIndex
+        && this.sameConfiguredNetwork
         && this.detectedMetamaskAccount
         && this.associatedWalletAddress !== this.detectedMetamaskAccount
         && (!this.isSpace || this.isSpaceAdministrator);
-    }
-  },
-  watch: {
-    refreshIndex(newValue, oldValue) {
-      if (newValue > oldValue) {
-        this.init();
-      }
     }
   },
   created() {

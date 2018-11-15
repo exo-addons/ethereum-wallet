@@ -117,37 +117,46 @@ export function initWeb3(isSpace, isAdmin) {
 
   if (window.walletSettings.userPreferences.useMetamask
       && window.ethereum
+      && window.ethereum.isMetaMask
       && window.web3
-      && window.web3.isConnected && window.web3.isConnected()) {
+      && window.web3.isConnected
+      && window.web3.isConnected()) {
 
     const tempWeb3 = new LocalWeb3(window.web3.currentProvider);
 
-    return window.ethereum.enable()
-      .then(accounts => window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length ? accounts[0].toLowerCase() : null)
-      .then(address => {
-        if (address) {
-          window.walletSettings.metamaskConnected = true;
-        } else {
+    try {
+      return checkMetamaskEnabled()
+        .then(accounts => window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length && accounts[0] && accounts[0].toLowerCase())
+        .then(address => {
+          if (address) {
+            window.walletSettings.metamaskConnected = true;
+          } else {
+            window.walletSettings.metamaskConnected = false;
+          }
+  
+          // Display wallet in read only mode when selected Metamask account is
+          // not the associated one
+          if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (!isAdmin && window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
+            createLocalWeb3Instance(isSpace, true);
+          } else {
+            window.localWeb3 = tempWeb3;
+            window.walletSettings.isReadOnly = false;
+          }
+          return checkNetworkStatus();
+        })
+        .catch(e => {
+          console.debug("error retrieving metamask connection status. Consider Metamask as disconnected", e);
+  
           window.walletSettings.metamaskConnected = false;
-        }
-
-        // Display wallet in read only mode when selected Metamask account is
-        // not the associated one
-        if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (!isAdmin && window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
           createLocalWeb3Instance(isSpace, true);
-        } else {
-          window.localWeb3 = tempWeb3;
-          window.walletSettings.isReadOnly = false;
-        }
-        return checkNetworkStatus();
-      })
-      .catch(e => {
-        console.debug("error retrieving metamask connection status. Consider Metamask as disconnected", e);
-
-        window.walletSettings.metamaskConnected = false;
-        createLocalWeb3Instance(isSpace, true);
-        return checkNetworkStatus();
+          return checkNetworkStatus();
+        })
+      .finally(() => {
+        window.walletSettings.enablingMetamaskAccountDone = true;
       });
+    } catch(e) {
+      console.error("Error while enabling Metamask", e);
+    }
   } else {
     createLocalWeb3Instance(isSpace, window.walletSettings.userPreferences.useMetamask);
     return checkNetworkStatus();
@@ -692,6 +701,40 @@ function checkNetworkStatus(waitTime) {
       waitTime = waitTime * 2;
       console.debug("Reattempt to connect with wait time:", waitTime);
       return checkNetworkStatus(waitTime);
+    });
+}
+
+function checkMetamaskEnabled(waitTime) {
+  if (!waitTime) {
+    waitTime = 100;
+  }
+  // Test if Metamask is enabled: ethereum.enable operation can hang up forever
+  let accounts = null;
+  let accountsRetrieved = false;
+  window.ethereum.enable()
+    .then(enableAccounts => {
+      accounts = enableAccounts;
+      accountsRetrieved = true;
+    })
+    .catch(e => {
+      // If enablement discarded by user
+      accountsRetrieved = true;
+    });
+  console.debug("Checking ethereum.enable");
+  return new Promise((resolve) => setTimeout(resolve, waitTime))
+    .then(() => {
+      if (!accountsRetrieved) {
+        console.debug("The ethereum.enable seems to hang up");
+        throw new Error();
+      } else {
+        console.debug("Metamask enable status: OK");
+        return accounts;
+      }
+    })
+    .catch(error => {
+      waitTime = waitTime > 1000 ? waitTime : waitTime * 2;
+      console.debug("Reattempt to enable Metamask, wait time:", waitTime);
+      return checkMetamaskEnabled(waitTime);
     });
 }
 

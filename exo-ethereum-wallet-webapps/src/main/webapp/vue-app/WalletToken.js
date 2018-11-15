@@ -123,7 +123,7 @@ export function retrieveContractDetails(account, contractDetails) {
       return contractDetails;
     })
     .catch(e => {
-      console.debug("retrieveContractDetails method - error", contractDetails, e);
+      console.debug("retrieveContractDetails method - error", account, contractDetails, e);
       transformContracDetailsToFailed(contractDetails, e);
       return contractDetails;
     });

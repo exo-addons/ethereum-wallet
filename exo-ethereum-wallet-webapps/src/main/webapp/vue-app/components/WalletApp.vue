@@ -46,7 +46,7 @@
                 @settings-changed="init()" />
             </v-toolbar>
 
-            <v-toolbar v-if="!loading" class="additionalToolbar" color="white" flat dense>
+            <v-toolbar class="additionalToolbar" color="white" flat dense>
               <wallet-setup
                 ref="walletSetup"
                 :is-space="isSpace"
@@ -252,15 +252,6 @@ export default {
 
         this.seeAccountDetailsPermanent = false;
       }
-    },
-    refreshIndex(newValue, oldValue) {
-      if (newValue > oldValue) {
-        this.$nextTick(() => {
-          if (this.$refs.walletSetup) {
-            this.$refs.walletSetup.init();
-          }
-        });
-      }
     }
   },
   created() {
@@ -295,7 +286,7 @@ export default {
         if (this.$refs.walletAccountsList) {
           this.$refs.walletAccountsList.checkOpenTransaction();
         }
-        this.refreshIndex++;
+        this.forceUpdate();
       })
       .catch(error => {
         console.debug('An error occurred while on initialization', error);
@@ -391,8 +382,8 @@ export default {
           }
         })
         .finally(() => {
-          this.forceUpdate();
           this.loading = false;
+          this.forceUpdate();
         });
     },
     forceUpdate() {
