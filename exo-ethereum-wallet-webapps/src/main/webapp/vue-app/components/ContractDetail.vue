@@ -9,8 +9,8 @@
           </div>
           <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Balance: {{ contractDetails.contractBalanceFiat }} {{ fiatSymbol }} / {{ contractDetails.contractBalance }} ether</h3>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
+          <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ totalSupply }} {{ contractDetails.symbol }}</h4>
           <h4 v-if="transferTransactionsCount" class="grey--text font-weight-light">Transfer transactions: {{ transferTransactionsCount }}</h4>
-          <h4 v-if="totalTransactionsCount" class="grey--text font-weight-light">Total transactions: {{ totalTransactionsCount }}</h4>
         </v-flex>
 
         <v-flex v-if="!isDisplayOnly" id="accountDetailActions">
@@ -117,7 +117,7 @@
 
     <v-tabs v-if="contractDetails.contractType > 0" v-model="selectedTab" grow>
       <v-tabs-slider color="primary" />
-      <v-tab key="transactions">Transactions</v-tab>
+      <v-tab key="transactions">Transactions{{ totalTransactionsCount ? ` (${totalTransactionsCount})` : '' }}</v-tab>
       <v-tab key="approvedAccounts">Approved accounts</v-tab>
       <v-tab key="adminAccounts">Admin accounts</v-tab>
     </v-tabs>
@@ -191,7 +191,7 @@ import TransactionsList from './TransactionsList.vue';
 
 import {retrieveContractDetails} from '../WalletToken.js';
 import {addTransaction} from '../WalletTransactions.js';
-import {etherToFiat, computeBalance} from '../WalletUtils.js';
+import {etherToFiat, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -252,6 +252,11 @@ export default {
       adminAccounts: [],
       error: null
     };
+  },
+  computed: {
+    totalSupply() {
+      return this.contractDetails && this.contractDetails.totalSupply ? convertTokenAmountReceived(this.contractDetails.totalSupply, this.contractDetails.decimals) : 0;
+    }
   },
   watch: {
     wallets() {

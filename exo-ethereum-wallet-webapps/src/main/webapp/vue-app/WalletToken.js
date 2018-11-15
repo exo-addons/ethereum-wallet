@@ -94,6 +94,12 @@ export function retrieveContractDetails(account, contractDetails) {
             contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
           }
         })
+        .then(() => contractDetails.contractType && contractDetails.contract.methods.totalSupply().call())
+        .then(totalSupply =>  {
+          if (totalSupply) {
+            contractDetails.totalSupply = totalSupply;
+          }
+        })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.getAdminLevel && contractDetails.contract.methods.getAdminLevel(account).call())
         .then(habilitationLevel =>  {
           if (habilitationLevel) {

@@ -978,6 +978,15 @@ export default {
       }
     },
     refreshBalance(accountDetails, address, error) {
+      if(this.walletAddress) {
+        computeBalance(this.walletAddress)
+          .then(balanceDetails => {
+            if (balanceDetails) {
+              this.walletAddressEtherBalance = balanceDetails.balance;
+              this.walletAddressFiatBalance = balanceDetails.balanceFiat;
+            }
+          });
+      }
       if (error) {
         console.debug("Error while proceeding transaction", error);
         this.contracts.forEach(contract => {
