@@ -54,7 +54,9 @@
               autocomplete="current-passord"
               @click:append="walletPasswordShow = !walletPasswordShow"
             />
-    
+
+            <slot></slot>
+
             <div v-if="contractDetails && transactionFeeFiat[contractDetails.address]" class="mt-3">
               <span>
                 Estimated transaction fee: <code>{{ transactionFeeFiat[contractDetails.address] }} {{ fiatSymbol }}</code>

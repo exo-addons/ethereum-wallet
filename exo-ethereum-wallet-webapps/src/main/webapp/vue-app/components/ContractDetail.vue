@@ -38,7 +38,15 @@
             input-placeholder="Choose a value between 1 and 5"
             @success="successTransaction"
             @sent="newTransactionPending"
-            @error="transactionError" />
+            @error="transactionError">
+            <div class="alert alert-info">
+              <i class="uiIconInfo"></i>Habilitation levels:
+              <ul>
+                <li><strong>Level 1 to 4</strong>: add/remove approved accounts</li>
+                <li><strong>Level 5</strong>: manage approved accounts, set sell price, manage administrators, pause/unpause contract and send ether to contract.</li>
+              </ul>
+            </div>
+          </contract-admin-modal>
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 5"
             :contract-details="contractDetails"
