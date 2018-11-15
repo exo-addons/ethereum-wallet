@@ -21,7 +21,7 @@
             :balance="contractDetails.balance"
             :recipient="contractDetails.address"
             use-navigation
-            @success="refreshBalance"
+            @success="successSendingEther"
             @sent="newTransactionPending"
             @error="transactionError" />
 
@@ -145,34 +145,38 @@
       </v-tab-item>
       <v-tab-item key="approvedAccountsTable">
         <v-progress-linear v-if="loadingWallets" indeterminate color="primary" class="mb-0 mt-0" />
-        <v-data-table :items="approvedAccounts" hide-actions hide-headers>
+        <v-data-table v-if="contractDetails" :items="wallets" hide-actions hide-headers>
           <template slot="items" slot-scope="props">
-            <td>
-              <v-avatar size="36px">
-                <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-              </v-avatar>
-            </td>
-            <td>
-              {{ props.item.name }}
-            </td>
+            <tr v-if="props.item.approved && props.item.approved[contractDetails.address] === 'approved'">
+              <td>
+                <v-avatar size="36px">
+                  <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                </v-avatar>
+              </td>
+              <td>
+                {{ props.item.name }}
+              </td>
+            </tr>
           </template>
         </v-data-table>
       </v-tab-item>
       <v-tab-item key="adminAccountsTable">
         <v-progress-linear v-if="loadingWallets" indeterminate color="primary" class="mb-0 mt-0" />
-        <v-data-table :items="adminAccounts" hide-actions hide-headers>
+        <v-data-table v-if="contractDetails" :items="wallets" hide-actions hide-headers>
           <template slot="items" slot-scope="props">
-            <td>
-              <v-avatar size="36px">
-                <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-              </v-avatar>
-            </td>
-            <td>
-              {{ props.item.name }}
-            </td>
-            <td>
-              {{ props.item.accountAdminLevel[contractDetails.address] }} level
-            </td>
+            <tr v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
+              <td>
+                <v-avatar size="36px">
+                  <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                </v-avatar>
+              </td>
+              <td>
+                {{ props.item.name }}
+              </td>
+              <td>
+                {{ props.item.accountAdminLevel[contractDetails.address] }} level
+              </td>
+            </tr>
           </template>
         </v-data-table>
       </v-tab-item>
@@ -226,6 +230,12 @@ export default {
         return 0;
       }
     },
+    refreshIndex: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
     walletAddress: {
       type: String,
       default: function() {
@@ -256,8 +266,6 @@ export default {
       selectedTab: 0,
       transferTransactionsCount: 0,
       totalTransactionsCount: 0,
-      approvedAccounts: [],
-      adminAccounts: [],
       error: null
     };
   },
@@ -267,6 +275,9 @@ export default {
     }
   },
   watch: {
+    refreshIndex() {
+      this.retrieveAccountsDetails();
+    },
     wallets() {
       this.retrieveAccountsDetails();
     },
@@ -279,7 +290,7 @@ export default {
   },
   methods: {
     successSendingEther() {
-      this.refreshB
+      this.refreshBalance()
         .then(() => {
           this.$emit('success', this.contractDetails);
           this.$forceUpdate();
@@ -292,11 +303,7 @@ export default {
       if (!wallet.accountAdminLevel) {
         wallet.accountAdminLevel = {};
       }
-      if (wallet.approved[this.contractDetails.address]) {
-        if (wallet.approved[this.contractDetails.address] === 'approved') {
-          this.approvedAccounts.push(wallet);
-        }
-      } else {
+      if (!wallet.approved[this.contractDetails.address]) {
         this.contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
           .then(approved => {
             wallet.approved[this.contractDetails.address] = approved ? 'approved' : 'disapproved';
@@ -305,11 +312,7 @@ export default {
             }
           });
       }
-      if (wallet.accountAdminLevel[this.contractDetails.address]) {
-        if (wallet.accountAdminLevel[this.contractDetails.address] > 0 && wallet.accountAdminLevel[this.contractDetails.address] !== 'not admin') {
-          this.adminAccounts.push(wallet);
-        }
-      } else {
+      if (!wallet.accountAdminLevel[this.contractDetails.address]) {
         this.contractDetails.contract.methods.getAdminLevel(wallet.address).call()
           .then(level => {
             level = Number(level);
@@ -344,6 +347,7 @@ export default {
       if (this.contractDetails && transaction.value > 0) {
         this.$set(this.contractDetails, "loadingBalance", true);
       }
+      this.$emit("pending-transaction", transaction, contractDetails);
       this.$forceUpdate();
     },
     transactionError(error) {

@@ -239,7 +239,7 @@ export default {
             }
             this.$emit("loading");
             return this.contractDetails.contract.methods.transferFrom(this.from, this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
-              .send({from: this.walletAddress})
+              .send({from: this.contractDetails.contract.options.from})
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 

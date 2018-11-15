@@ -290,7 +290,7 @@ export default {
             }
             return this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
               .send({
-                from: this.account,
+                from: this.contractDetails.contract.options.from,
                 gas: window.walletSettings.userPreferences.defaultGas
               })
               .on('transactionHash', hash => {
@@ -300,7 +300,7 @@ export default {
                 // The transaction has been hashed and will be sent
                 this.$emit("sent", {
                   hash: hash,
-                  from: this.account,
+                  from: this.contractDetails.contract.options.from.toLowerCase(),
                   to: this.recipient,
                   value : 0,
                   gas: window.walletSettings.userPreferences.defaultGas,

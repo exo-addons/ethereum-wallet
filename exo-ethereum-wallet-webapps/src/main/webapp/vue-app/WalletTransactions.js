@@ -375,14 +375,14 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                 } else {
-                  transactionDetails.toDisplayName = 'previously approved';
+                  transactionDetails.toDisplayName = 'a previously approved';
                 }
               } else if (method.name === 'disapproveAccount') {
                 const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'DisapprovedAccount');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                 } else {
-                  transactionDetails.toDisplayName = 'previously disapproved';
+                  transactionDetails.toDisplayName = 'a previously disapproved';
                 }
               } else if (method.name === 'addAdmin') {
                 const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'AddedAdmin');
@@ -396,6 +396,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                 const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'RemovedAdmin');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
+                } else {
+                  transactionDetails.toDisplayName = 'a not admin account';
                 }
               } else if (method.name === 'setSellPrice') {
                 const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TokenPriceChanged');

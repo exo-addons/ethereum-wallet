@@ -363,7 +363,9 @@
                     :fiat-symbol="fiatSymbol"
                     :wallets="wallets"
                     :loading-wallets="loadingWallets"
-                    @back="back()" />
+                    :refresh-index="refreshIndex"
+                    @back="back()"
+                    @pending-transaction="watchPendingAdminTransaction" />
                 </v-navigation-drawer>
               </v-card>
             </v-tab-item>
@@ -1222,6 +1224,38 @@ export default {
           this.loading = false;
           this.error = `Error encountered: ${e}`;
         });
+    },
+    watchPendingAdminTransaction(transaction, contractDetails) {
+      watchTransactionStatus(transaction.hash, receipt => {
+        if (receipt.status) {
+          if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {
+            const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
+            if (wallet) {
+              contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
+                .then(approved => {
+                  if (!wallet.approved) {
+                    wallet.approved = {};
+                  }
+                  this.$set(wallet.approved, contractDetails.address, approved ? 'approved' : 'disapproved');
+                  this.$nextTick(this.forceUpdate);
+                });
+            }
+          } else if (transaction.contractMethodName === 'addAdmin' || transaction.contractMethodName === 'removeAdmin') {
+            const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
+            if (wallet) {
+              contractDetails.contract.methods.getAdminLevel(wallet.address).call()
+                .then(level => {
+                  if (!wallet.accountAdminLevel) {
+                    wallet.accountAdminLevel = {};
+                  }
+                  level = Number(level);
+                  this.$set(wallet.accountAdminLevel, contractDetails.address, level ? level : 'not admin');
+                  this.$nextTick(this.forceUpdate);
+                });
+            }
+          }
+        }
+      });
     },
     refreshContractsList(avoidReloading) {
       const previouslyRetrievedContracts = this.contracts;

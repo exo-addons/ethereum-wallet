@@ -381,7 +381,7 @@ export function getContractInstance(account, address, usePromise, abi, bin) {
         abi ? abi : window.walletSettings.contractAbi,
         address,
         {
-          from: account, 
+          from: account && account.toLowerCase(),
           gas: window.walletSettings.userPreferences.defaultGas,
           gasPrice: window.walletSettings.gasPrice,
           data: bin ? bin : window.walletSettings.contractBin

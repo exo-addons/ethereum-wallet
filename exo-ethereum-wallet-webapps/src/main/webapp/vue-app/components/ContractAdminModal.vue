@@ -280,7 +280,7 @@ export default {
             }
             return this.method(...this.arguments)
               .send({
-                from: this.walletAddress,
+                from: this.contractDetails.contract.options.from,
                 gas: window.walletSettings.userPreferences.defaultGas
               })
               .on('transactionHash', hash => {
@@ -294,7 +294,7 @@ export default {
                 // The transaction has been hashed and will be sent
                 this.$emit("sent", {
                   hash: hash,
-                  from: this.walletAddress,
+                  from: this.contractDetails.contract.options.from,
                   to: this.autocompleteValue ? this.autocompleteValue : this.contractDetails.address,
                   type: 'contract',
                   value : 0,
@@ -321,7 +321,7 @@ export default {
               .on('error', (error, receipt) => {
                 console.debug("Error while sending admin transaction", error);
                 // The transaction has failed
-                this.error = `Error sending tokens: ${truncateError(error)}`;
+                this.error = truncateError(error);
                 // Display error on main screen only when dialog is not opened
                 if (!this.dialog) {
                   this.$emit("error", this.error);
@@ -336,7 +336,7 @@ export default {
           })
           .catch (e => {
             console.debug("Error while sending admin transaction", e);
-            this.error = `Error sending tokens: ${truncateError(e)}`;
+            this.error = truncateError(e);
           })
           .finally(() => {
             this.loading = false;
@@ -347,8 +347,7 @@ export default {
       } catch(e) {
         console.debug("Error while sending admin transaction", e);
         this.loading = false;
-
-        this.error = `Error sending tokens: ${truncateError(e)}`;
+        this.error = truncateError(e);
       }
     }
   }
