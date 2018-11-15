@@ -607,6 +607,11 @@ export function addPendingTransactionToStorage(networkId, account, contractDetai
 
   if (transaction.addLoadingToRecipient && transaction.to && transaction.to !== account) {
     addPendingTransactionToStorage(networkId, transaction.to, contractDetails, transaction);
+
+    // Add to general token transactions list
+    if (contractDetails && contractDetails.isContract && contractDetails.address != account) {
+      addPendingTransactionToStorage(networkId, contractDetails.address, contractDetails, transaction);
+    }
   }
 }
 

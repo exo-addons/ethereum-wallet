@@ -117,6 +117,15 @@ export default {
       error: null
     };
   },
+  watch: {
+    amount() {
+      if (this.amount && $.isNumeric(this.amount)) {
+        this.error = this.balance >= this.amount ? null : 'Unsufficient funds';
+      } else {
+        this.error = null;
+      }
+    },
+  },
   methods: {
     init() {
       this.$refs.autocomplete.clear();

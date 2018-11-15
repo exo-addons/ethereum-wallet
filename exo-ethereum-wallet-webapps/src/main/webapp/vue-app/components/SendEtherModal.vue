@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup with-overflow" width="600px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
       <v-btn :disabled="disabled" flat value="send">
         <span>Send Ether</span>

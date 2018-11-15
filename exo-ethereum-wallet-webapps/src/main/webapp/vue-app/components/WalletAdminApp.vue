@@ -1004,6 +1004,11 @@ export default {
             this.$set(wallet, "loadingBalancePrincipal", false);
             this.$set(wallet, 'icon', 'warning');
             this.$set(wallet, 'error', `Error proceeding transaction: ${error}`);
+            // Update wallet stateus: admin, approved ...
+            console.log("this.$refs.contractDetail", this.$refs.contractDetail, wallet);
+            if (this.$refs.contractDetail) {
+              this.$refs.contractDetail.retrieveAccountDetails(wallet);
+            }
           }
         });
         return;

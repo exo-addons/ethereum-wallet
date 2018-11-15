@@ -14,7 +14,7 @@
         Switch to use browser wallet
       </button>
 
-      <v-dialog v-model="installInstructionDialog" content-class="uiPopup" width="500px" max-width="100wv" @keydown.esc="installInstructionDialog = false">
+      <v-dialog v-model="installInstructionDialog" content-class="uiPopup with-overflow" width="500px" max-width="100wv" @keydown.esc="installInstructionDialog = false">
         <v-card>
           <div class="popupHeader ClearFix">
             <a class="uiIconClose pull-right" aria-hidden="true" @click="installInstructionDialog = false"></a>
@@ -70,7 +70,7 @@
         <button class="btn" @click.stop="addressAssociationDialog = true">
           See details
         </button>
-        <v-dialog v-model="addressAssociationDialog" content-class="uiPopup" width="500px" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
+        <v-dialog v-model="addressAssociationDialog" content-class="uiPopup with-overflow" width="500px" max-width="100wv" @keydown.esc="addressAssociationDialog = false">
           <v-card>
             <div class="popupHeader ClearFix">
               <a class="uiIconClose pull-right" aria-hidden="true" @click="addressAssociationDialog = false"></a>

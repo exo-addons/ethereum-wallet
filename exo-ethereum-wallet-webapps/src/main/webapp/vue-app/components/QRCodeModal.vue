@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="show" content-class="uiPopup" width="500px" max-width="100vw" @keydown.esc="show = false">
+  <v-dialog v-model="show" content-class="uiPopup with-overflow" width="500px" max-width="100vw" @keydown.esc="show = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a>

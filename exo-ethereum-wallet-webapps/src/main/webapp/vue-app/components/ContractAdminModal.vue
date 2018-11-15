@@ -230,6 +230,7 @@ export default {
       // Estimate gas
       this.method(...this.argumentsForEstimation)
         .estimateGas({
+          from: this.contractDetails.contract.options.from,
           gas: 900000,
           gasPrice: window.walletSettings.gasPrice
         })
@@ -268,6 +269,7 @@ export default {
       try {
         this.method(...this.argumentsForEstimation)
           .estimateGas({
+            from: this.contractDetails.contract.options.from,
             gas: 9000000,
             gasPrice: window.walletSettings.gasPrice
           })

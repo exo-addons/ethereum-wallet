@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" draggable="true" @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="500px" max-width="100vw" draggable="true" @keydown.esc="dialog = false">
     <v-btn v-if="icon" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Request funds" flat value="request">
       <span>Request</span>
       <v-icon>fa-comment-dollar</v-icon>

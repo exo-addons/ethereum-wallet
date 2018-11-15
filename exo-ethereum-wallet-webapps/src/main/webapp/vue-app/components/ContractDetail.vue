@@ -285,45 +285,46 @@ export default {
           this.$forceUpdate();
         });
     },
+    retrieveAccountDetails(wallet) {
+      if (!wallet.approved) {
+        wallet.approved = {};
+      }
+      if (!wallet.accountAdminLevel) {
+        wallet.accountAdminLevel = {};
+      }
+      if (wallet.approved[this.contractDetails.address]) {
+        if (wallet.approved[this.contractDetails.address] === 'approved') {
+          this.approvedAccounts.push(wallet);
+        }
+      } else {
+        this.contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
+          .then(approved => {
+            wallet.approved[this.contractDetails.address] = approved ? 'approved' : 'disapproved';
+            if (approved) {
+              this.approvedAccounts.push(wallet);
+            }
+          });
+      }
+      if (wallet.accountAdminLevel[this.contractDetails.address]) {
+        if (wallet.accountAdminLevel[this.contractDetails.address] > 0 && wallet.accountAdminLevel[this.contractDetails.address] !== 'not admin') {
+          this.adminAccounts.push(wallet);
+        }
+      } else {
+        this.contractDetails.contract.methods.getAdminLevel(wallet.address).call()
+          .then(level => {
+            level = Number(level);
+            wallet.accountAdminLevel[this.contractDetails.address] = level ? level : 'not admin';
+            if (level) {
+              this.adminAccounts.push(wallet);
+            }
+          });
+      }
+    },
     retrieveAccountsDetails() {
       this.approvedAccounts = [];
       this.adminAccounts = [];
       if (this.wallets && this.contractDetails && this.contractDetails.contractType > 0) {
-        this.wallets.filter(wallet => wallet.address).forEach(wallet => {
-          if (!wallet.approved) {
-            wallet.approved = {};
-          }
-          if (!wallet.accountAdminLevel) {
-            wallet.accountAdminLevel = {};
-          }
-          if (wallet.approved[this.contractDetails.address]) {
-            if (wallet.approved[this.contractDetails.address] === 'approved') {
-              this.approvedAccounts.push(wallet);
-            }
-          } else {
-            this.contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
-              .then(approved => {
-                wallet.approved[this.contractDetails.address] = approved ? 'approved' : 'disapproved';
-                if (approved) {
-                  this.approvedAccounts.push(wallet);
-                }
-              });
-          }
-          if (wallet.accountAdminLevel[this.contractDetails.address]) {
-            if (wallet.accountAdminLevel[this.contractDetails.address] > 0 && wallet.accountAdminLevel[this.contractDetails.address] !== 'not admin') {
-              this.adminAccounts.push(wallet);
-            }
-          } else {
-            this.contractDetails.contract.methods.getAdminLevel(wallet.address).call()
-              .then(level => {
-                level = Number(level);
-                wallet.accountAdminLevel[this.contractDetails.address] = level ? level : 'not admin';
-                if (level) {
-                  this.adminAccounts.push(wallet);
-                }
-              });
-          }
-        });
+        this.wallets.filter(wallet => wallet.address).forEach(this.retrieveAccountDetails);
       }
     },
     newTransactionPending(transaction, contractDetails) {
@@ -357,7 +358,9 @@ export default {
             wallet.approved = {};
           }
           wallet.approved[contractDetails.address] = 'approved';
-          this.approvedAccounts.push(wallet);
+          if (this.approvedAccounts.findIndex(approvedAccount => approvedAccount.address === wallet.address) < 0) {
+            this.approvedAccounts.push(wallet);
+          }
         }
       } else if (methodName === 'disapproveAccount') {
         const walletIndex = this.approvedAccounts.findIndex(wallet => wallet.address === autoCompleteValue);

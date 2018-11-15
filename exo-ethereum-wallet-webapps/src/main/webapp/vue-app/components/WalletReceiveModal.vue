@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup" width="500px" max-width="100vw" @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="500px" max-width="100vw" @keydown.esc="dialog = false">
     <v-btn v-if="icon" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Receive funds" flat value="receive">
       <span>Receive</span>
       <v-icon>fa-hand-holding-usd</v-icon>

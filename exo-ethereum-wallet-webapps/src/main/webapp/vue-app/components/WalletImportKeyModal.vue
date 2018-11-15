@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="importWalletDialog" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
+  <v-dialog v-model="importWalletDialog" content-class="uiPopup with-overflow" width="500px" max-width="100vw" persistent @keydown.esc="importWalletDialog = false">
     <a slot="activator" href="javascript:void(0);" @click="importWalletDialog = true;">{{ walletAddress ? 'Restore your wallet' : 'Restore existing wallet' }}</a>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">

@@ -100,11 +100,18 @@ export function retrieveContractDetails(account, contractDetails) {
             contractDetails.totalSupply = totalSupply;
           }
         })
+        .then(() => contractDetails.contractType && contractDetails.contract.methods.isApprovedAccount && contractDetails.contract.methods.isApprovedAccount(account).call())
+        .then(approvedAccount =>  {
+          contractDetails.isApproved = approvedAccount;
+        })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.getAdminLevel && contractDetails.contract.methods.getAdminLevel(account).call())
         .then(habilitationLevel =>  {
           if (habilitationLevel) {
             contractDetails.adminLevel = habilitationLevel;
             contractDetails.isAdmin = habilitationLevel > 0;
+            if (contractDetails.isAdmin) {
+              contractDetails.isApproved = true;
+            }
           }
         })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.isPaused && contractDetails.contract.methods.isPaused().call())

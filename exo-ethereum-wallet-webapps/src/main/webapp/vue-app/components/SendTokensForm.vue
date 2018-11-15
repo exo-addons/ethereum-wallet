@@ -150,6 +150,13 @@ export default {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
       }
     },
+    amount() {
+      if (this.amount && $.isNumeric(this.amount)) {
+        this.error = this.contractDetails.balance >= this.amount ? null : 'Unsufficient funds';
+      } else {
+        this.error = null;
+      }
+    },
     recipient(newValue, oldValue) {
       if (newValue && oldValue !== newValue) {
         this.isApprovedRecipient = true;
@@ -203,11 +210,12 @@ export default {
       });
     },
     estimateTransactionFee() {
-      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
+      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.isApproved && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
         const recipient = this.contractDetails.isOwner ? "0x1111111111111111111111111111111111111111" : this.contractDetails.owner;
         // Estimate gas
-        this.contractDetails.contract.methods.transfer(recipient, "1")
+        this.contractDetails.contract.methods.transfer(recipient, String(Math.pow(10, this.contractDetails.decimals ? this.contractDetails.decimals : 0)))
           .estimateGas({
+            from: this.contractDetails.contract.options.from,
             gas: 900000,
             gasPrice: window.walletSettings.gasPrice
           })
@@ -252,6 +260,11 @@ export default {
         return;
       }
 
+      if (this.contractDetails.balance < this.amount) {
+        this.error = "Unsufficient funds";
+        return;
+      }
+
       if (!this.canSendToDisapproved) {
         return;
       }
@@ -262,8 +275,13 @@ export default {
       try {
         this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
           .estimateGas({
+            from: this.contractDetails.contract.options.from,
             gas: 9000000,
             gasPrice: window.walletSettings.gasPrice
+          })
+          .catch(e => {
+            console.error("Error estimating necessary gas", e);
+            return 0;
           })
           .then(estimatedGas => {
             if (estimatedGas > window.walletSettings.userPreferences.defaultGas) {
