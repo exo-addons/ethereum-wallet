@@ -18,6 +18,10 @@
             @refresh="init()"
             @error="loadingContracts = false; error = $event" />
 
+          <v-card-text v-if="accountsDetails && !loading" class="text-xs-center">
+            <h3>Ether balance: {{ walletAddressEtherBalance }} eth / {{ walletAddressFiatBalance }} {{ fiatSymbol }}</h3>
+            <h4 v-if="principalContract">Principal contract balance: {{ principalContract.balance }} {{ principalContract.symbol }}</h4>
+          </v-card-text>
           <v-dialog v-model="loading" persistent width="300">
             <v-card color="primary" dark>
               <v-card-text>
@@ -511,6 +515,8 @@ export default {
       refreshIndex: 1,
       originalWalletAddress: null,
       walletAddress: null,
+      walletAddressEtherBalance: null,
+      walletAddressFiatBalance: null,
       networkId: null,
       tokenEtherscanLink: null,
       newTokenAddress: null,
@@ -899,6 +905,15 @@ export default {
           this.walletAddress = window.localWeb3 && window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
           this.originalWalletAddress = window.walletSettings.userPreferences.walletAddress;
           this.networkId = window.walletSettings.currentNetworkId;
+          if(this.walletAddress) {
+            return computeBalance(this.walletAddress);
+          }
+        })
+        .then(balanceDetails => {
+          if (balanceDetails) {
+            this.walletAddressEtherBalance = balanceDetails.balance;
+            this.walletAddressFiatBalance = balanceDetails.balanceFiat;
+          }
         })
         .then(this.setDefaultValues)
         .then(() => this.loadingSettings = false)
