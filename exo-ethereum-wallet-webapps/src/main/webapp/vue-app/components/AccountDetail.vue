@@ -149,6 +149,9 @@ export default {
   },
   methods: {
     refreshBalance() {
+      if (!this.contractDetails) {
+        return Promise.resolve(null);
+      }
       return window.localWeb3.eth.getBalance(this.walletAddress)
         .then(balance => {
           balance = window.localWeb3.utils.fromWei(balance, "ether");

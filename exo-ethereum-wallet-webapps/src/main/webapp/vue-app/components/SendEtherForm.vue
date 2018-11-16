@@ -172,7 +172,7 @@ export default {
       try {
         const amount = window.localWeb3.utils.toWei(this.amount.toString(), "ether");
         const transaction = {
-          from: this.contractDetails.contract.options.from.toLowerCase(),
+          from: this.account,
           to: this.recipient,
           value: window.localWeb3.utils.toWei(this.amount.toString(), "ether"),
           gas: gas,
