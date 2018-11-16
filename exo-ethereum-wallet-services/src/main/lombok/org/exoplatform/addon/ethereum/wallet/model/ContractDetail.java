@@ -23,14 +23,30 @@ public class ContractDetail implements Serializable {
 
   private Long              networkId;
 
+  private String            owner;
+
+  private String            sellPrice;
+
+  private String            contractType;
+
   public ContractDetail() {
   }
 
-  public ContractDetail(Long networkId, String address, String name, String symbol, Integer decimals) {
+  public ContractDetail(Long networkId,
+                        String address,
+                        String name,
+                        String symbol,
+                        Integer decimals,
+                        String owner,
+                        String sellPrice,
+                        String contractType) {
     this.networkId = networkId;
     this.address = address;
     this.name = name;
     this.symbol = symbol;
+    this.owner = owner;
+    this.sellPrice = sellPrice;
+    this.contractType = contractType;
   }
 
   public String toJSONString() {
@@ -45,6 +61,9 @@ public class ContractDetail implements Serializable {
       jsonObject.put("symbol", symbol);
       jsonObject.put("decimals", decimals);
       jsonObject.put("networkId", networkId);
+      jsonObject.put("owner", owner);
+      jsonObject.put("sellPrice", sellPrice);
+      jsonObject.put("contractType", contractType);
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
     }
@@ -63,6 +82,9 @@ public class ContractDetail implements Serializable {
       contractDetail.setName(jsonObject.getString("name"));
       contractDetail.setSymbol(jsonObject.getString("symbol"));
       contractDetail.setDecimals(jsonObject.has("decimals") ? jsonObject.getInt("decimals") : 0);
+      contractDetail.setOwner(jsonObject.has("owner") ? jsonObject.getString("owner") : null);
+      contractDetail.setSellPrice(jsonObject.has("sellPrice") ? jsonObject.getString("sellPrice") : null);
+      contractDetail.setContractType(jsonObject.has("contractType") ? jsonObject.getString("contractType") : null);
       return contractDetail;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);

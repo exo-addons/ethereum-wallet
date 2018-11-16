@@ -158,10 +158,22 @@ public class EthereumWalletService implements Startable {
       defaultSettings.setDefaultGas(defaultGas);
     }
 
-    if (params.containsKey(DEFAULT_GAS_PRICE)) {
-      String value = params.getValueParam(DEFAULT_GAS_PRICE).getValue();
-      long defaultGasPrice = Long.parseLong(value);
-      defaultSettings.setDefaultGasPrice(defaultGasPrice);
+    if (params.containsKey(MIN_GAS_PRICE)) {
+      String value = params.getValueParam(MIN_GAS_PRICE).getValue();
+      long minGasPrice = Long.parseLong(value);
+      defaultSettings.setMinGasPrice(minGasPrice);
+    }
+
+    if (params.containsKey(NORMAL_GAS_PRICE)) {
+      String value = params.getValueParam(NORMAL_GAS_PRICE).getValue();
+      long normalGasPrice = Long.parseLong(value);
+      defaultSettings.setNormalGasPrice(normalGasPrice);
+    }
+
+    if (params.containsKey(MAX_GAS_PRICE)) {
+      String value = params.getValueParam(MAX_GAS_PRICE).getValue();
+      long maxGasPrice = Long.parseLong(value);
+      defaultSettings.setMaxGasPrice(maxGasPrice);
     }
 
     if (params.containsKey(DEFAULT_BLOCKS_TO_RETRIEVE)) {
@@ -471,9 +483,10 @@ public class EthereumWalletService implements Startable {
       LOG.warn("Can't get default contract detail with empty address");
       return null;
     }
+
     if (networkId == null || networkId == 0) {
-      LOG.warn("Can't remove empty network id for contract");
-      return null;
+      GlobalSettings settings = getSettings();
+      networkId = settings == null ? 0 : settings.getDefaultNetworkId();
     }
 
     Set<String> defaultContracts = getDefaultContractsAddresses(networkId);
@@ -1049,7 +1062,9 @@ public class EthereumWalletService implements Startable {
 
         // Upgrade default gas price to avoid excessive gas price on Main Net
         if (globalSettings.getDataVersion() < DEFAULT_GAS_PRICE_UPGRADE_VERSION) {
-          globalSettings.setDefaultGasPrice(defaultSettings.getDefaultGasPrice());
+          globalSettings.setMinGasPrice(defaultSettings.getMinGasPrice());
+          globalSettings.setNormalGasPrice(defaultSettings.getNormalGasPrice());
+          globalSettings.setMaxGasPrice(defaultSettings.getMaxGasPrice());
         }
 
         globalSettings.setDataVersion(GLOBAL_DATA_VERSION);

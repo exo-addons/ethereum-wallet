@@ -42,7 +42,11 @@ public class GlobalSettings implements Serializable {
 
   private Long                  defaultGas                 = 65000L;
 
-  private Long                  defaultGasPrice            = 4000000000L;
+  private Long                  minGasPrice                = 4000000000L;
+
+  private Long                  normalGasPrice             = 8000000000L;
+
+  private Long                  maxGasPrice                = 15000000000L;
 
   private String                defaultPrincipalAccount    = null;
 
@@ -86,7 +90,9 @@ public class GlobalSettings implements Serializable {
       jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
       jsonObject.put("defaultNetworkId", defaultNetworkId);
       jsonObject.put("defaultGas", defaultGas);
-      jsonObject.put("defaultGasPrice", defaultGasPrice);
+      jsonObject.put("minGasPrice", minGasPrice);
+      jsonObject.put("normalGasPrice", normalGasPrice);
+      jsonObject.put("maxGasPrice", maxGasPrice);
       jsonObject.put("dataVersion", dataVersion);
 
       if (initialFunds != null && !initialFunds.isEmpty()) {
@@ -176,9 +182,14 @@ public class GlobalSettings implements Serializable {
                                                                       : storedDefaultNetworkId);
       long storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getLong("defaultGas") : 0;
       globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
-      long storedDefaultGasPrice = jsonObject.has("defaultGasPrice") ? jsonObject.getLong("defaultGasPrice") : 0;
-      globalSettings.setDefaultGasPrice(storedDefaultGasPrice == 0 ? defaultSettings.getDefaultGasPrice()
-                                                                   : storedDefaultGasPrice);
+      long storedMinGasPrice = jsonObject.has("minGasPrice") ? jsonObject.getLong("minGasPrice") : 0;
+      globalSettings.setMinGasPrice(storedMinGasPrice == 0 ? defaultSettings.getMinGasPrice() : storedMinGasPrice);
+      long storedNormalGasPrice = jsonObject.has("normalGasPrice") ? jsonObject.getLong("normalGasPrice") : 0;
+      globalSettings.setNormalGasPrice(storedNormalGasPrice == 0 ? defaultSettings.getNormalGasPrice()
+                                                                   : storedNormalGasPrice);
+      long storedMaxGasPrice = jsonObject.has("maxGasPrice") ? jsonObject.getLong("maxGasPrice") : 0;
+      globalSettings.setMaxGasPrice(storedMaxGasPrice == 0 ? defaultSettings.getMaxGasPrice()
+                                                                   : storedMaxGasPrice);
       boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation") : true;
       globalSettings.setEnableDelegation(storedEnableDelegation);
       String storedDefaultPrincipalAccount =

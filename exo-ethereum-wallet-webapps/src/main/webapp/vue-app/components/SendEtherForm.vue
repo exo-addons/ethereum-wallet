@@ -56,6 +56,7 @@
           rows="3"
           flat
           no-resize />
+        <gas-price-choice @changed="gasPrice = $event" />
       </v-form>
 
       <qr-code-modal 
@@ -79,12 +80,15 @@
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
-import {unlockBrowerWallet, lockBrowerWallet, gasToEther, hashCode, truncateError} from '../WalletUtils.js';
+import GasPriceChoice from './GasPriceChoice.vue';
+
+import {unlockBrowerWallet, lockBrowerWallet, hashCode, truncateError} from '../WalletUtils.js';
 import {saveTransactionMessage} from '../WalletTransactions.js';
 
 export default {
   components: {
     QrCodeModal,
+    GasPriceChoice,
     AddressAutoComplete
   },
   props: {
@@ -114,6 +118,7 @@ export default {
       loading: false,
       recipient: null,
       amount: null,
+      gasPrice: 0,
       error: null
     };
   },
@@ -136,6 +141,9 @@ export default {
       this.transactionMessage = null;
       this.transactionHash = null;
       this.transactionLabel = null;
+      if (!this.gasPrice) {
+        this.gasPrice = window.walletSettings.minGasPrice;
+      }
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
     },
@@ -157,7 +165,7 @@ export default {
       }
 
       const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
-      if (this.amount + gasToEther(gas) >= this.balance) {
+      if (this.amount >= this.balance) {
         this.error = "Unsufficient funds";
         return;
       }
@@ -176,7 +184,7 @@ export default {
           to: this.recipient,
           value: window.localWeb3.utils.toWei(this.amount.toString(), "ether"),
           gas: gas,
-          gasPrice: window.walletSettings.gasPrice
+          gasPrice: this.gasPrice
         };
         // Send an amount of ether to a third person
         window.localWeb3.eth.sendTransaction(transaction)

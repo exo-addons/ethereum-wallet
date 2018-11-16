@@ -86,16 +86,15 @@ export function computeGasPrice() {
     console.debug("Retrieving gas price");
     return window.localWeb3.eth.getGasPrice()
       .then(gasPrice => {
-        console.debug("Detected Gas price:", window.localWeb3.utils.fromWei(gasPrice, 'gwei').toString(), 'gwei');
+        console.debug("Detected Gas price:", window.localWeb3.utils.fromWei(String(gasPrice), 'gwei').toString(), 'gwei');
 
         // Avoid adding excessive gas price
         window.walletSettings.gasPrice = gasPrice;
-        if (window.walletSettings.defaultGasPrice && window.walletSettings.gasPrice > window.walletSettings.defaultGasPrice) {
-          console.warn(`Detected gas price ${window.walletSettings.gasPrice} is heigher than default gas price ${window.walletSettings.defaultGasPrice}`);
-          window.walletSettings.gasPrice = String(window.walletSettings.defaultGasPrice);
+        if (window.walletSettings.normalGasPrice && window.walletSettings.gasPrice > window.walletSettings.normalGasPrice) {
+          console.warn(`Detected gas price ${window.walletSettings.gasPrice} is heigher than default gas price ${window.walletSettings.normalGasPrice}`);
         }
         console.debug("Used Gas price:", window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'gwei').toString(), 'gwei');
-        window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(gasPrice, 'ether'): 0;
+        window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(String(gasPrice), 'ether'): 0;
       })
       .catch(error => {
         console.debug("computeGasPrice method error: ", error);
@@ -199,8 +198,6 @@ export function initSettings(isSpace) {
           }
         }
         window.walletSettings.defaultPrincipalAccount = window.walletSettings.defaultPrincipalAccount || window.walletSettings.defaultOverviewAccounts[0];
-        window.walletSettings.userPreferences.principalAccount = window.walletSettings.userPreferences.principalAccount
-          || window.walletSettings.defaultPrincipalAccount;
         window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts
           || window.walletSettings.defaultOverviewAccounts || [];
 
@@ -318,10 +315,15 @@ export function computeBalance(account) {
   }
   return window.localWeb3.eth.getBalance(account)
     .then((retrievedBalance, error) => {
-      if (error) {
+      if (error && !retrievedBalance) {
+        console.debug(`error retrieving balance of ${account}`, new Error(error));
         throw error;
       }
-      return retrievedBalance = window.localWeb3.utils.fromWei(retrievedBalance, "ether");
+      if (retrievedBalance) {
+        return window.localWeb3.utils.fromWei(String(retrievedBalance), "ether");
+      } else {
+        return 0;
+      }
     })
     .then((retrievedBalance, error) => {
       if (error) {
@@ -331,6 +333,10 @@ export function computeBalance(account) {
         balance: retrievedBalance,
         balanceFiat: etherToFiat(retrievedBalance)
       };
+    })
+    .catch(e => {
+      console.debug("Error retrieving balance of account", account, e);
+      return null;
     });
 }
 
@@ -650,6 +656,21 @@ export function convertTokenAmountReceived(amount, decimals) {
   return value;
 }
 
+export function estimateTransactionFeeEther(gas, gasPrice) {
+  if (!gasPrice || !gas) {
+    return 0;
+  }
+  const gasFeeWei = parseInt(gas * gasPrice);
+  return window.localWeb3.utils.fromWei(String(gasFeeWei), "ether");
+}
+
+export function estimateTransactionFeeFiat(gas, gasPrice) {
+  if (!gasPrice || !gas) {
+    return 0;
+  }
+  return etherToFiat(estimateTransactionFeeEther(gas, gasPrice));
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
@@ -683,7 +704,7 @@ function checkNetworkStatus(waitTime) {
   let isListening = false;
   window.localWeb3.eth.net.isListening()
     .then(listening => isListening = listening);
-  return new Promise((resolve) => setTimeout(resolve, waitTime))
+  return new Promise(resolve => setTimeout(resolve, waitTime))
     .then(() => {
       if (!isListening) {
         console.debug("The network seems to be disconnected");
@@ -706,24 +727,29 @@ function checkNetworkStatus(waitTime) {
 
 function checkMetamaskEnabled(waitTime) {
   if (!waitTime) {
-    waitTime = 100;
+    waitTime = 200;
+  }
+  if (!window.walletsSettings) {
+    window.walletsSettings = {};
+  }
+  if (window.walletsSettings.metamaskEnableResponseRetrieved) {
+    return Promise.resolve([window.web3.eth.defaultAccount]);
   }
   // Test if Metamask is enabled: ethereum.enable operation can hang up forever
   let accounts = null;
-  let accountsRetrieved = false;
   window.ethereum.enable()
     .then(enableAccounts => {
-      accounts = enableAccounts;
-      accountsRetrieved = true;
+      accounts = enableAccounts ? enableAccounts : null;
     })
-    .catch(e => {
+    .finally(() => {
       // If enablement discarded by user
-      accountsRetrieved = true;
+      window.walletsSettings.metamaskEnableResponseRetrieved = true;
+      console.debug("Response received from user");
     });
   console.debug("Checking ethereum.enable");
-  return new Promise((resolve) => setTimeout(resolve, waitTime))
+  return new Promise(resolve => setTimeout(resolve, waitTime))
     .then(() => {
-      if (!accountsRetrieved) {
+      if (!window.walletsSettings.metamaskEnableResponseRetrieved) {
         console.debug("The ethereum.enable seems to hang up");
         throw new Error();
       } else {
@@ -732,7 +758,8 @@ function checkMetamaskEnabled(waitTime) {
       }
     })
     .catch(error => {
-      waitTime = waitTime > 1000 ? waitTime : waitTime * 2;
+      // Wait for the second time for 10 seconds
+      waitTime = 10000;
       console.debug("Reattempt to enable Metamask, wait time:", waitTime);
       return checkMetamaskEnabled(waitTime);
     });

@@ -41,8 +41,10 @@
       </v-dialog>
     </div>
     <div v-else-if="!metamaskConnected" class="alert alert-warning">
-      <i class="uiIconWarning"></i>
-      Please connect to Metamask
+      <div v-if="!loading" class="alert alert-warning">
+        <i class="uiIconWarning"></i>
+        Please connect to Metamask
+      </div>
     </div>
     <div v-else-if="errorMessage" class="alert alert-error">
       <i class="uiIconError"></i>

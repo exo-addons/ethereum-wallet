@@ -7,7 +7,7 @@
             <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
             Contract Details: {{ contractDetails.title }}
           </div>
-          <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Balance: {{ contractDetails.contractBalanceFiat }} {{ fiatSymbol }} / {{ contractDetails.contractBalance }} ether</h3>
+          <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Contract balance: {{ contractDetails.contractBalanceFiat }} {{ fiatSymbol }} / {{ contractDetails.contractBalance }} ether</h3>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
           <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ totalSupply }} {{ contractDetails.symbol }}</h4>
           <h4 v-if="transferTransactionsCount" class="grey--text font-weight-light">Transfer transactions: {{ transferTransactionsCount }}</h4>
@@ -28,6 +28,7 @@
           <!-- add/remove admin -->
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 5"
+            ref="addAdminModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="addAdmin"
@@ -49,6 +50,7 @@
           </contract-admin-modal>
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 5"
+            ref="removeAdminModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="removeAdmin"
@@ -62,6 +64,7 @@
           <!-- approve/disapprove account -->
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 1"
+            ref="approveAccountModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="approveAccount"
@@ -73,6 +76,7 @@
             @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 1"
+            ref="disapproveAccountModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="disapproveAccount"
@@ -86,6 +90,7 @@
           <!-- pause/unpause contract -->
           <contract-admin-modal
             v-if="!contractDetails.isPaused && contractDetails.adminLevel >= 5"
+            ref="pauseModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="pause"
@@ -95,6 +100,7 @@
             @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.isPaused && contractDetails.adminLevel >= 5"
+            ref="unPauseModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="unPause"
@@ -106,6 +112,7 @@
           <!-- set sell price -->
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 5"
+            ref="setSellPriceModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
             method-name="setSellPrice"
@@ -113,7 +120,6 @@
             input-label="Token sell price"
             input-placeholder="Token sell price in ether"
             convert-wei
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
         </v-flex>
@@ -147,7 +153,7 @@
         <v-progress-linear v-if="loadingWallets" indeterminate color="primary" class="mb-0 mt-0" />
         <v-data-table v-if="contractDetails" :items="wallets" hide-actions hide-headers>
           <template slot="items" slot-scope="props">
-            <tr v-if="props.item.approved && props.item.approved[contractDetails.address] === 'approved'">
+            <tr v-if="(props.item.approved && props.item.approved[contractDetails.address] === 'approved') || (props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1)">
               <td>
                 <v-avatar size="36px">
                   <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
@@ -155,6 +161,11 @@
               </td>
               <td>
                 {{ props.item.name }}
+              </td>
+              <td v-if="$refs.disapproveAccountModal">
+                <v-btn icon right @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type)">
+                  <v-icon>close</v-icon>
+                </v-btn>
               </td>
             </tr>
           </template>
@@ -175,6 +186,11 @@
               </td>
               <td>
                 {{ props.item.accountAdminLevel[contractDetails.address] }} level
+              </td>
+              <td v-if="$refs.removeAdminModal">
+                <v-btn icon right @click="$refs.removeAdminModal.preselectAutocomplete(props.item.id, props.item.type)">
+                  <v-icon>close</v-icon>
+                </v-btn>
               </td>
             </tr>
           </template>
@@ -201,7 +217,7 @@ import SendEtherModal from './SendEtherModal.vue';
 import ContractAdminModal from './ContractAdminModal.vue';
 import TransactionsList from './TransactionsList.vue';
 
-import {retrieveContractDetails} from '../WalletToken.js';
+import {retrieveContractDetails, saveContractAddressAsDefault} from '../WalletToken.js';
 import {addTransaction} from '../WalletTransactions.js';
 import {etherToFiat, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
 
@@ -306,26 +322,26 @@ export default {
       if (!wallet.approved[this.contractDetails.address]) {
         this.contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
           .then(approved => {
-            wallet.approved[this.contractDetails.address] = approved ? 'approved' : 'disapproved';
-            if (approved) {
-              this.approvedAccounts.push(wallet);
-            }
+            this.$set(wallet.approved, this.contractDetails.address, approved ? 'approved' : 'disapproved');
+          })
+          .catch(e => {
+            console.debug("Error getting approval of account", wallet.address);
+            this.$set(wallet.approved, this.contractDetails.address, 'disapproved');
           });
       }
       if (!wallet.accountAdminLevel[this.contractDetails.address]) {
         this.contractDetails.contract.methods.getAdminLevel(wallet.address).call()
           .then(level => {
             level = Number(level);
-            wallet.accountAdminLevel[this.contractDetails.address] = level ? level : 'not admin';
-            if (level) {
-              this.adminAccounts.push(wallet);
-            }
+            this.$set(wallet.accountAdminLevel, this.contractDetails.address, level ? level : 'not admin');
+          })
+          .catch(e => {
+            console.debug("Error getting admin level of account", wallet.address);
+            this.$set(wallet.accountAdminLevel, this.contractDetails.address, 'not admin');
           });
       }
     },
     retrieveAccountsDetails() {
-      this.approvedAccounts = [];
-      this.adminAccounts = [];
       if (this.wallets && this.contractDetails && this.contractDetails.contractType > 0) {
         this.wallets.filter(wallet => wallet.address).forEach(this.retrieveAccountDetails);
       }
@@ -352,61 +368,6 @@ export default {
     },
     transactionError(error) {
       this.error = String(error);
-      this.$forceUpdate();
-    },
-    successTransaction(txHash, contractDetails, methodName, autoCompleteValue, inputValue) {
-      if (methodName === 'approveAccount') {
-        const wallet = this.wallets.find(wallet => wallet.address === autoCompleteValue);
-        if (wallet && wallet.address) {
-          if (!wallet.approved) {
-            wallet.approved = {};
-          }
-          wallet.approved[contractDetails.address] = 'approved';
-          if (this.approvedAccounts.findIndex(approvedAccount => approvedAccount.address === wallet.address) < 0) {
-            this.approvedAccounts.push(wallet);
-          }
-        }
-      } else if (methodName === 'disapproveAccount') {
-        const walletIndex = this.approvedAccounts.findIndex(wallet => wallet.address === autoCompleteValue);
-        if (walletIndex >= 0) {
-          this.approvedAccounts[walletIndex].approved[contractDetails.address] = 'disapproved';
-          this.approvedAccounts.splice(walletIndex, 1);
-        }
-      } else if (methodName === 'addAdmin') {
-        const wallet = this.wallets.find(wallet => wallet.address === autoCompleteValue);
-        if (wallet && wallet.address) {
-          if (!wallet.accountAdminLevel) {
-            wallet.accountAdminLevel = {};
-          }
-          wallet.accountAdminLevel[contractDetails.address] = inputValue;
-          if (inputValue) {
-            const adminAccount = this.adminAccounts.find(wallet => wallet.address === autoCompleteValue);
-            if (!adminAccount) {
-              this.adminAccounts.push(wallet);
-            }
-          }
-        }
-      } else if (methodName === 'removeAdmin') {
-        const walletIndex = this.adminAccounts.findIndex(wallet => wallet.address === autoCompleteValue);
-        if (walletIndex >= 0) {
-          this.adminAccounts[walletIndex].approved[contractDetails.address] = 'not admin';
-          this.adminAccounts.splice(walletIndex, 1);
-        }
-      } else if (methodName === 'pause' || methodName === 'unPause') {
-        this.contractDetails.contract.methods.isPaused().call()
-          .then(isPaused =>  {
-            this.$set(this.contractDetails, "isPaused", isPaused);
-          });
-      } else if (methodName === 'setSellPrice') {
-        this.contractDetails.contract.methods.getSellPrice().call()
-          .then(sellPrice => {
-            if (sellPrice) {
-              this.$set(this.contractDetails, "sellPrice", window.localWeb3.utils.fromWei(sellPrice, "ether"));
-            } else {
-              this.$set(this.contractDetails, "sellPrice", 0);
-            }
-          });
-      }
       this.$forceUpdate();
     },
     computeTransactionsCount(transactions) {

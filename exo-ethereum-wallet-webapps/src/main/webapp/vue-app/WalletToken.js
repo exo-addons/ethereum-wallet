@@ -30,6 +30,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
       contractDetails.address = address;
       contractDetails.icon = 'fa-file-contract';
       contractDetails.isContract = true;
+      contractDetails.networkId = netId;
       contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
                                   && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
       contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails));
@@ -42,6 +43,9 @@ export function getContractsDetails(account, netId, onlyDefault) {
  * Retrieve an ERC20 contract instance at specified address
  */
 export function retrieveContractDetails(account, contractDetails) {
+  console.debug(`retrieve contract at address ${contractDetails && contractDetails.address} with account ${account}`);
+  let adminLevelComputed, approveAccountComputed, computeContractType = !contractDetails.contractType;
+  let hasSellPrice;
   return getContractInstance(account, contractDetails.address, true)
     .then((contractInstance, error) => {
       if (error) {
@@ -52,12 +56,33 @@ export function retrieveContractDetails(account, contractDetails) {
       }
       return contractDetails.contract = contractInstance;
     })
+    .catch(e => {
+      console.debug("retrieveContractDetails method - error retrieving instance", contractDetails.address, new Error(e));
+    })
+    .then(() => getSavedContractDetails(contractDetails.address, contractDetails.networkId))
+    .then(savedDetails => {
+      if (savedDetails) {
+        hasSellPrice = savedDetails.sellPrice;
+        Object.keys(savedDetails).forEach(key => {
+          contractDetails[key] = savedDetails[key];
+        });
+      }
+    })
+    .catch(e => {
+      console.debug("retrieveContractDetails method - error retrieving saved details", contractDetails.address, new Error(e));
+    })
     .then(() => contractDetails.contract.methods.symbol().call())
     .then(symbol => contractDetails.symbol = symbol)
+    .catch(e => {
+      console.debug("retrieveContractDetails method - error retrieving symbol", contractDetails.address, new Error(e));
+    })
     .then(() => contractDetails.contract.methods.name().call())
     .then(name => {
       contractDetails.name = name;
       contractDetails.title = name;
+    })
+    .catch(e => {
+      console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
     })
     .then(() => {
       return contractDetails.contract.methods.decimals().call()
@@ -69,6 +94,9 @@ export function retrieveContractDetails(account, contractDetails) {
           contractDetails.decimals = 0;
         })
     })
+    .catch(e => {
+      console.debug("retrieveContractDetails method - error retrieving decimals", contractDetails.address, new Error(e));
+    })
     .then(() => computeBalance(contractDetails.address))
     .then((contractBalance) => {
       if (contractBalance) {
@@ -79,13 +107,11 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(() =>
       contractDetails.contract.methods.getSellPrice().call()
         .then(sellPrice => {
-          contractDetails.contractTypeLabel = 'ERT Token';
           contractDetails.contractType = 1;
-          contractDetails.sellPrice = window.localWeb3.utils.fromWei(sellPrice, "ether");
+          contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), "ether");
         })
         .catch(e => {
-          contractDetails.contractTypeLabel = 'Standard ERC20 Token';
-          contractDetails.contractType = 0;
+          console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.owner().call())
         .then(owner =>  {
@@ -94,50 +120,70 @@ export function retrieveContractDetails(account, contractDetails) {
             contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
           }
         })
+        .catch(e => {
+          console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
+        })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.totalSupply().call())
         .then(totalSupply =>  {
           if (totalSupply) {
             contractDetails.totalSupply = totalSupply;
           }
         })
+        .catch(e => {
+          console.debug("retrieveContractDetails method - error retrieving totalSupply", contractDetails.address, new Error(e));
+        })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.isApprovedAccount && contractDetails.contract.methods.isApprovedAccount(account).call())
         .then(approvedAccount =>  {
+          contractDetails.contractType = 1;
           contractDetails.isApproved = approvedAccount;
+          approveAccountComputed = true;
+        })
+        .catch(e => {
+          console.debug("retrieveContractDetails method - error retrieving isApprovedAccount", contractDetails.address, new Error(e));
         })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.getAdminLevel && contractDetails.contract.methods.getAdminLevel(account).call())
         .then(habilitationLevel =>  {
+          contractDetails.contractType = 1;
           if (habilitationLevel) {
-            contractDetails.adminLevel = habilitationLevel;
+            adminLevelComputed = true;
+            contractDetails.adminLevel = Number(habilitationLevel);
             contractDetails.isAdmin = habilitationLevel > 0;
             if (contractDetails.isAdmin) {
               contractDetails.isApproved = true;
             }
           }
         })
+        .catch(e => {
+          console.debug("retrieveContractDetails method - error retrieving getAdminLevel", contractDetails.address, new Error(e));
+        })
         .then(() => contractDetails.contractType && contractDetails.contract.methods.isPaused && contractDetails.contract.methods.isPaused().call())
         .then(isPaused =>  {
           contractDetails.isPaused = isPaused ? true: false;
         })
         .catch(e => {
-          contractDetails.contractTypeLabel = 'Standard ERC20 Token';
-          contractDetails.contractType = 0;
+          console.debug("retrieveContractDetails method - error retrieving isPaused", contractDetails.address, new Error(e));
+        }).
+        finally(() => {
+          if (computeContractType && !adminLevelComputed && !approveAccountComputed) {
+            contractDetails.contractType = 0;
+          }
+          if (contractDetails.contractType === 1) {
+            contractDetails.contractTypeLabel = 'ERT Token';
+            if (!hasSellPrice && contractDetails.sellPrice && contractDetails.isDefault) {
+              saveContractAddressAsDefault(contractDetails);
+            }
+          } else {
+            contractDetails.contractTypeLabel = 'Standard ERC20 Token';
+          }
         })
     )
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
     .then(balance => {
       contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-      // TODO compute Token value in ether
-      contractDetails.balanceInEther = 0;
-
-      // Store contract persistent details in localStorage
-      const toStoreContractDetails = Object.assign({}, contractDetails);
-      delete toStoreContractDetails.contract;
-      localStorage.setItem(`exo-wallet-contract-${contractDetails.address}`.toLowerCase(), JSON.stringify(toStoreContractDetails));
       return contractDetails;
     })
     .catch(e => {
-      console.debug("retrieveContractDetails method - error", account, contractDetails, e);
-      transformContracDetailsToFailed(contractDetails, e);
+      console.debug("retrieveContractDetails method - error", account, contractDetails, new Error(e), e);
       return contractDetails;
     });
 }
@@ -177,6 +223,27 @@ export function deployContract(contractInstance, account, gasLimit, gasPrice, tr
     .on('receipt', receipt => {
       return transactionHashCallback && transactionHashCallback(transactionHash);
     });
+}
+
+/*
+ * Retrieve contract details from eXo Platform server if exists
+ */
+export function getSavedContractDetails(address, networkId) {
+  return fetch(`/portal/rest/wallet/api/contract/getContract?address=${address}&networkId=${networkId}`, {
+    method: 'GET',
+    credentials: 'include'
+ })
+ .then(resp => {
+   if(resp && resp.ok) {
+     return resp.json();
+   } else {
+     throw new Error(`Error getting contract details from server with address ${address} on network with id ${networkId}`);
+   }
+ })
+ .catch(e => {
+   console.debug("Error getting contract details from server", e);
+   return null; 
+ });
 }
 
 /*
@@ -274,12 +341,13 @@ export function removeContractAddressFromDefault(address) {
     }
   });
 }
-  
+
 /*
  * Save a new Contract address as default contract to display for all users
  */
 export function saveContractAddressAsDefault(contractDetails) {
   contractDetails.address = contractDetails.address.toLowerCase();
+  console.debug("save contract as default", contractDetails);
   return fetch('/portal/rest/wallet/api/contract/save', {
     method: 'POST',
     credentials: 'include',
@@ -287,7 +355,16 @@ export function saveContractAddressAsDefault(contractDetails) {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(contractDetails)
+    body: JSON.stringify({
+      name: contractDetails.name,
+      symbol: contractDetails.symbol,
+      address: contractDetails.address,
+      networkId: contractDetails.networkId,
+      owner: contractDetails.address,
+      contractType: contractDetails.contractType,
+      sellPrice: contractDetails.sellPrice,
+      decimals: contractDetails.decimals
+    })
   })
     .then(resp => {
       if (!window.walletSettings.defaultContractsToDisplay) {
@@ -322,7 +399,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       let overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
       overviewAccounts = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
       if (isDefaultContract || overviewAccounts.indexOf(address) < 0) {
-        return retrieveContractDetails(account, {address: address})
+        return retrieveContractDetails(account, {address: address, networkId: netId})
           .then((contractDetails, error) => {
             if (error) {
               throw error;
@@ -338,13 +415,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       }
     }).then(contractDetails => {
       if (contractDetails && isDefaultContract) {
-        return saveContractAddressAsDefault({
-                 name: contractDetails.name,
-                 symbol: contractDetails.symbol,
-                 address: contractDetails.address,
-                 networkId: netId,
-                 decimals: contractDetails.decimals
-               }).then(() => contractDetails);
+        return saveContractAddressAsDefault(contractDetails).then(() => contractDetails);
       }
       return contractDetails;
     })
@@ -383,7 +454,7 @@ export function getContractInstance(account, address, usePromise, abi, bin) {
         {
           from: account && account.toLowerCase(),
           gas: window.walletSettings.userPreferences.defaultGas,
-          gasPrice: window.walletSettings.gasPrice,
+          gasPrice: window.walletSettings.normalGasPrice,
           data: bin ? bin : window.walletSettings.contractBin
         }
       );
@@ -393,7 +464,7 @@ export function getContractInstance(account, address, usePromise, abi, bin) {
       return contractInstance;
     }
   } catch (e) {
-    console.debug('An error occurred while retrieving contract instance', e);
+    console.debug('An error occurred while retrieving contract instance', new Error(e));
     if (usePromise) {
       return Promise.reject(e);
     } else {

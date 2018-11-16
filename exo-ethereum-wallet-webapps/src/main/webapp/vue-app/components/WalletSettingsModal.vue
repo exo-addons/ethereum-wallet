@@ -28,13 +28,13 @@
                     v-model="selectedCurrency"
                     :items="currencies"
                     label="Select fiat currency used to display ether amounts conversion" />
-                  <v-combobox
+                  <!-- v-combobox
                     v-model="selectedPrincipalAccount"
                     :items="accountsList"
                     item-disabled="itemDisabled"
                     label="Select principal currency displayed in wallet summary"
                     placeholder="Select principal currency displayed in wallet summary"
-                    chips />
+                    chips /-->
                   <v-combobox
                     v-model="selectedOverviewAccounts"
                     :items="accountsList"
@@ -382,8 +382,8 @@ export default {
             body: JSON.stringify({
               defaultGas: this.defaultGas,
               currency: this.selectedCurrency.value,
-              principalAccount: this.selectedPrincipalAccount.value,
-              overviewAccounts: this.selectedOverviewAccounts.map(item => item.value),
+              principalAccount: this.selectedPrincipalAccount ? this.selectedPrincipalAccount.value : null,
+              overviewAccounts: this.selectedOverviewAccounts ? this.selectedOverviewAccounts.map(item => item.value) : null,
               enableDelegation: this.enableDelegation
             })
           }).then(resp => {

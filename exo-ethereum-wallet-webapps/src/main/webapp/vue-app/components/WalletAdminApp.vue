@@ -11,6 +11,7 @@
             ref="walletSetup"
             :wallet-address="originalWalletAddress"
             :refresh-index="refreshIndex"
+            :loading="loading"
             class="mb-3"
             is-administration
             @loading="loadingContracts = true"
@@ -253,7 +254,7 @@
 
                 <v-slider
                   v-model="defaultGas"
-                  :label="`Maximum gas: ${defaultGas} ${defaultGasFee}`"
+                  :label="`Maximum gas: ${defaultGas}`"
                   :min="35000"
                   :max="200000"
                   :step="1000"
@@ -262,8 +263,28 @@
                   required />
 
                 <v-slider
-                  v-model="defaultGasPrice"
-                  :label="`Maximum gas price: ${defaultGasPriceGwei} Gwei ${defaultGasFee}`"
+                  v-model="minGasPrice"
+                  :label="`Cheap transaction gas price: ${minGasPriceGwei} Gwei ${minGasFiatPrice}${minGasPriceToken}`"
+                  :min="1000000000"
+                  :max="20000000000"
+                  :step="1000000000"
+                  type="number"
+                  class="mt-4"
+                  required />
+
+                <v-slider
+                  v-model="normalGasPrice"
+                  :label="`Normal transaction gas price: ${normalGasPriceGwei} Gwei ${normalGasFiatPrice}${normalGasPriceToken}`"
+                  :min="1000000000"
+                  :max="20000000000"
+                  :step="1000000000"
+                  type="number"
+                  class="mt-4"
+                  required />
+
+                <v-slider
+                  v-model="maxGasPrice"
+                  :label="` Fast transaction gas price: ${maxGasPriceGwei} Gwei ${maxGasFiatPrice}${maxGasPriceToken}`"
                   :min="1000000000"
                   :max="20000000000"
                   :step="1000000000"
@@ -487,7 +508,7 @@ import ContractDetail from './ContractDetail.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
-import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
+import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress, saveContractAddressAsDefault} from '../WalletToken.js';
 import {initWeb3,initSettings, retrieveFiatExchangeRate, computeNetwork, getTransactionReceipt, watchTransactionStatus, gasToFiat, getWallets, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../WalletUtils.js';
 
 export default {
@@ -516,7 +537,9 @@ export default {
       accessPermissionSearchTerm: null,
       isLoadingSuggestions: false,
       defaultGas: 50000,
-      defaultGasPrice: 0,
+      minGasPrice: 4000000000,
+      normalGasPrice: 8000000000,
+      maxGasPrice: 15000000000,
       fiatSymbol: '$',
       refreshIndex: 1,
       originalWalletAddress: null,
@@ -664,30 +687,56 @@ export default {
       }
       return principalContract;
     },
-    defaultGasFee() {
-      if (this.defaultGasFiatPrice && this.defaultGasPriceToken > 0) {
-        return ` (${this.defaultGasFiatPrice} ${this.fiatSymbol} | ${this.defaultGasPriceToken} ${this.principalContract.symbol})`;
-      } else if (this.defaultGasFiatPrice) {
-        return ` (${this.defaultGasFiatPrice} ${this.fiatSymbol})`;
-      } else if (this.defaultGasPriceToken) {
-        return ` (${this.defaultGasPriceToken} ${this.principalContract.symbol})`;
+    minGasPriceToken() {
+      if (this.defaultGas && this.minGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
+        const amount = Number(this.minGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
+        return amount ? ` / ${amount} ${this.principalContract.symbol}` : '';
       }
       return '';
     },
-    defaultGasPriceToken() {
-      if (this.defaultGas && this.defaultGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
-        return Number(this.defaultGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
+    minGasPriceEther() {
+      return this.minGasPrice && window.localWeb3.utils.fromWei(String(this.minGasPrice), 'ether').toString();
+    },
+    minGasPriceGwei() {
+      return this.minGasPrice && window.localWeb3.utils.fromWei(String(this.minGasPrice), 'gwei').toString();
+    },
+    minGasFiatPrice() {
+      const amount = this.defaultGas && this.minGasPriceEther && gasToFiat(this.defaultGas,  this.minGasPriceEther);
+      return amount ? `${amount} ${this.fiatSymbol}` : '';
+    },
+    normalGasPriceToken() {
+      if (this.defaultGas && this.normalGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
+        const amount = Number(this.normalGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
+        return amount ? ` / ${amount} ${this.principalContract.symbol}` : '';
       }
-      return 0;
+      return '';
     },
-    defaultGasPriceEther() {
-      return this.defaultGasPrice && window.localWeb3.utils.fromWei(String(this.defaultGasPrice), 'ether').toString();
+    normalGasPriceEther() {
+      return this.normalGasPrice && window.localWeb3.utils.fromWei(String(this.normalGasPrice), 'ether').toString();
     },
-    defaultGasPriceGwei() {
-      return this.defaultGasPrice && window.localWeb3.utils.fromWei(String(this.defaultGasPrice), 'gwei').toString();
+    normalGasPriceGwei() {
+      return this.normalGasPrice && window.localWeb3.utils.fromWei(String(this.normalGasPrice), 'gwei').toString();
     },
-    defaultGasFiatPrice() {
-      return this.defaultGas && this.defaultGasPriceEther && gasToFiat(this.defaultGas,  this.defaultGasPriceEther);
+    normalGasFiatPrice() {
+      const amount = this.defaultGas && this.normalGasPriceEther && gasToFiat(this.defaultGas,  this.normalGasPriceEther);
+      return amount ? `${amount} ${this.fiatSymbol}` : '';
+    },
+    maxGasPriceToken() {
+      if (this.defaultGas && this.maxGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
+        const amount = Number(this.maxGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
+        return amount ? ` / ${amount} ${this.principalContract.symbol}` : '';
+      }
+      return '';
+    },
+    maxGasPriceEther() {
+      return this.maxGasPrice && window.localWeb3.utils.fromWei(String(this.maxGasPrice), 'ether').toString();
+    },
+    maxGasPriceGwei() {
+      return this.maxGasPrice && window.localWeb3.utils.fromWei(String(this.maxGasPrice), 'gwei').toString();
+    },
+    maxGasFiatPrice() {
+      const amount = this.defaultGas && this.maxGasPriceEther && gasToFiat(this.defaultGas,  this.maxGasPriceEther);
+      return amount ? `${amount} ${this.fiatSymbol}` : '';
     },
     principalAccount() {
       if (this.selectedPrincipalAccount && this.selectedPrincipalAccount.value) {
@@ -1007,7 +1056,6 @@ export default {
             this.$set(wallet, 'icon', 'warning');
             this.$set(wallet, 'error', `Error proceeding transaction: ${error}`);
             // Update wallet stateus: admin, approved ...
-            console.log("this.$refs.contractDetail", this.$refs.contractDetail, wallet);
             if (this.$refs.contractDetail) {
               this.$refs.contractDetail.retrieveAccountDetails(wallet);
             }
@@ -1204,8 +1252,14 @@ export default {
       if (window.walletSettings.defaultGas) {
         this.defaultGas = window.walletSettings.defaultGas;
       }
-      if (window.walletSettings.defaultGasPrice) {
-        this.defaultGasPrice = window.walletSettings.defaultGasPrice;
+      if (window.walletSettings.minGasPrice) {
+        this.minGasPrice = window.walletSettings.minGasPrice;
+      }
+      if (window.walletSettings.normalGasPrice) {
+        this.normalGasPrice = window.walletSettings.normalGasPrice;
+      }
+      if (window.walletSettings.maxGasPrice) {
+        this.maxGasPrice = window.walletSettings.maxGasPrice;
       }
       this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
       this.sameConfiguredNetwork = String(this.networkId) === String(this.selectedNetwork.value);
@@ -1253,6 +1307,13 @@ export default {
                   this.$nextTick(this.forceUpdate);
                 });
             }
+          } else if (transaction.contractMethodName === 'unPause' || transaction.contractMethodName === 'pause') {
+            this.$set(contractDetails, "isPaused", transaction.contractMethodName === 'pause' ? true : false);
+            this.$nextTick(this.forceUpdate);
+          } else if (transaction.contractMethodName === 'setSellPrice') {
+            this.$set(contractDetails, "sellPrice", transaction.contractAmount);
+            this.$nextTick(this.forceUpdate);
+            saveContractAddressAsDefault(contractDetails);
           }
         }
       });
@@ -1357,6 +1418,9 @@ export default {
           defaultPrincipalAccount: this.selectedPrincipalAccount && this.selectedPrincipalAccount.value,
           defaultOverviewAccounts: this.selectedOverviewAccounts && this.selectedOverviewAccounts.map(item => item.value),
           defaultGas: this.defaultGas,
+          minGasPrice: this.minGasPrice,
+          normalGasPrice: this.normalGasPrice,
+          maxGasPrice: this.maxGasPrice,
           enableDelegation: this.enableDelegation,
           initialFunds: initialFundsMap
         })

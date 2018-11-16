@@ -33,6 +33,7 @@
       :wallet-address="walletAddress"
       :refresh-index="refreshIndex"
       :is-administration="isAdministration"
+      :loading="loading"
       @loading="$emit('loading')"
       @refresh="refresh()"
       @end-loading="$emit('end-loading')"
@@ -74,6 +75,12 @@ export default {
       }
     },
     isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    loading: {
       type: Boolean,
       default: function() {
         return false;

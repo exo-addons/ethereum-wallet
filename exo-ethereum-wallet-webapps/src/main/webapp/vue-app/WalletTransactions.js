@@ -227,7 +227,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
   const isReceiver = transaction.isSender ? false : toAddress === account;
 
   // Calculate sent/received amount
-  const amount = transaction.value ? parseFloat(window.localWeb3.utils.fromWei(transaction.value, 'ether')) : 0;
+  const amount = transaction.value ? parseFloat(window.localWeb3.utils.fromWei(String(transaction.value), 'ether')) : 0;
   const amountFiat = amount ? etherToFiat(amount) : 0;
   const isFeeTransaction = amount === 0;
 
@@ -485,7 +485,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         return window.localWeb3.eth.getBalance(account, transaction.blockNumber - 1)
           .then(balanceAtDate => {
             if (balanceAtDate) {
-              transactionDetails.balanceAtDate = window.localWeb3.utils.fromWei(balanceAtDate, 'ether');
+              transactionDetails.balanceAtDate = window.localWeb3.utils.fromWei(String(balanceAtDate), 'ether');
               transactionDetails.balanceAtDateFiat = etherToFiat(transactionDetails.balanceAtDate);
             }
             return transactionDetails;

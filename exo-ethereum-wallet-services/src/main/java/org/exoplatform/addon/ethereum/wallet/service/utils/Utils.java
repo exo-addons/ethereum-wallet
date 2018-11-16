@@ -67,7 +67,11 @@ public class Utils {
 
   public static final String                             DEFAULT_GAS                           = "defaultGas";
 
-  public static final String                             DEFAULT_GAS_PRICE                     = "defaultGasPrice";
+  public static final String                             MIN_GAS_PRICE                         = "minGasPrice";
+
+  public static final String                             NORMAL_GAS_PRICE                      = "normalGasPrice";
+
+  public static final String                             MAX_GAS_PRICE                         = "maxGasPrice";
 
   public static final String                             DEFAULT_BLOCKS_TO_RETRIEVE            = "defaultBlocksToRetrieve";
 

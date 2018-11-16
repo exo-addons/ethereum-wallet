@@ -57,6 +57,7 @@
             autocomplete="current-passord"
             @click:append="walletPasswordShow = !walletPasswordShow"
           />
+          <gas-price-choice @changed="gasPrice = $event" />
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -72,12 +73,14 @@
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
+import GasPriceChoice from './GasPriceChoice.vue';
 
 import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
 
 export default {
   components: {
     QrCodeModal,
+    GasPriceChoice,
     AddressAutoComplete
   },
   props: {
@@ -128,6 +131,7 @@ export default {
       recipient: null,
       loading: false,
       amount: null,
+      gasPrice: 0,
       dialog: null,
       warning: null,
       error: null
@@ -176,6 +180,9 @@ export default {
         this.amount = null;
         this.warning = null;
         this.error = null;
+        if (!this.gasPrice) {
+          this.gasPrice = window.walletSettings.minGasPrice;
+        }
         this.useMetamask = window.walletSettings.userPreferences.useMetamask;
         this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       } else {
@@ -219,8 +226,8 @@ export default {
         this.contractDetails.contract.methods.approve(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
           .estimateGas({
             from: this.contractDetails.contract.options.from,
-            gas: 9000000,
-            gasPrice: window.walletSettings.gasPrice
+            gas: window.walletSettings.userPreferences.defaultGas,
+            gasPrice: this.gasPrice
           })
           .then(result => {
             if (result > window.walletSettings.userPreferences.defaultGas) {
@@ -228,7 +235,11 @@ export default {
               return;
             }
             return this.contractDetails.contract.methods.approve(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
-              .send({from: this.account})
+              .send({
+                from: this.contractDetails.contract.options.from,
+                gas: window.walletSettings.userPreferences.defaultGas,
+                gasPrice: this.gasPrice
+              })
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
@@ -239,7 +250,7 @@ export default {
                   to: this.recipient,
                   value : 0,
                   gas: gas,
-                  gasPrice: window.walletSettings.gasPrice,
+                  gasPrice: this.gasPrice,
                   contractAddress: this.contractDetails.address,
                   contractMethodName: 'approve',
                   contractAmount : this.amount,

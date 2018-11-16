@@ -15,6 +15,7 @@
       <div v-if="error && !loading" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}
       </div>
+
       <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
         <i class="uiIconWarning"></i>{{ warning }}
       </div>
@@ -57,11 +58,10 @@
 
             <slot></slot>
 
-            <div v-if="contractDetails && transactionFeeFiat[contractDetails.address]" class="mt-3">
-              <span>
-                Estimated transaction fee: <code>{{ transactionFeeFiat[contractDetails.address] }} {{ fiatSymbol }}</code>
-              </span>
-            </div>
+            <gas-price-choice
+              :estimated-fee="`${transactionFeeFiat} ${fiatSymbol}`"
+              @changed="gasPrice = $event" />
+
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -77,13 +77,15 @@
 
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
+import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, etherToFiat, setDraggable, watchTransactionStatus} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, etherToFiat, setDraggable, watchTransactionStatus, estimateTransactionFeeFiat} from '../WalletUtils.js';
 import {saveTransactionMessage} from '../WalletTransactions.js';
 
 export default {
   components: {
-    AddressAutoComplete
+    AddressAutoComplete,
+    GasPriceChoice
   },
   props: {
     title: {
@@ -149,16 +151,20 @@ export default {
       storedPassword: false,
       walletPassword: '',
       walletPasswordShow: false,
-      transactionFeeFiat: {},
       useMetamask: false,
       autocompleteValue: null,
       inputValue: null,
       fiatSymbol: null,
+      gasEstimation: null,
+      gasPrice: 0,
       warning: null,
       error: null
     };
   },
   computed: {
+    transactionFeeFiat() {
+      return estimateTransactionFeeFiat(this.gasEstimation, this.gasPrice);
+    },
     disableSend() {
       return this.loading || (this.inputLabel && this.inputValue !== 0 && !this.inputValue) || (this.autocompleteLabel && !this.autocompleteValue);
     },
@@ -197,7 +203,7 @@ export default {
       } else {
         return this.inputValue;
       }
-    }
+    },
   },
   watch: {
     dialog() {
@@ -221,23 +227,38 @@ export default {
       this.inputValue = null;
       this.warning = null;
       this.error = null;
+      this.gasEstimation = null;
+      if (!this.gasPrice) {
+        this.gasPrice = window.walletSettings.minGasPrice;
+      }
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.fiatSymbol = window.walletSettings.fiatSymbol;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.$nextTick(this.estimateTransactionFee);
+    },
+    preselectAutocomplete(id, type) {
+      if (!id || !type) {
+        console.debug("preselectAutocomplete - empty parameters", id, type);
+        return;
+      }
+      this.dialog = true;
+      this.$nextTick(() => {
+        if (this.$refs.autocompleteInput) {
+          this.$refs.autocompleteInput.selectItem(id, type);
+        }
+      });
     },
     estimateTransactionFee() {
       // Estimate gas
       this.method(...this.argumentsForEstimation)
         .estimateGas({
           from: this.contractDetails.contract.options.from,
-          gas: 900000,
-          gasPrice: window.walletSettings.gasPrice
+          gas: window.walletSettings.userPreferences.defaultGas,
+          gasPrice: this.gasPrice
         })
         .then(estimatedGas => {
-          const transactionFeeInWei = parseInt(estimatedGas * 1.1 * window.walletSettings.gasPrice);
-          const transactionFeeInEther = window.localWeb3.utils.fromWei(String(transactionFeeInWei), "ether");
-          this.$set(this.transactionFeeFiat, this.contractDetails.address, etherToFiat(transactionFeeInEther));
+          // Add 10% of estimated gas
+          this.gasEstimation = estimatedGas * 1.1;
         });
     },
     send() {
@@ -270,8 +291,8 @@ export default {
         this.method(...this.argumentsForEstimation)
           .estimateGas({
             from: this.contractDetails.contract.options.from,
-            gas: 9000000,
-            gasPrice: window.walletSettings.gasPrice
+            gas: window.walletSettings.userPreferences.defaultGas,
+            gasPrice: this.gasPrice
           })
           .then(estimatedGas => {
             if (estimatedGas > window.walletSettings.userPreferences.defaultGas) {
@@ -281,7 +302,8 @@ export default {
             return this.method(...this.arguments)
               .send({
                 from: this.contractDetails.contract.options.from,
-                gas: window.walletSettings.userPreferences.defaultGas
+                gas: window.walletSettings.userPreferences.defaultGas,
+                gasPrice: this.gasPrice
               })
               .on('transactionHash', hash => {
                 this.transactionHash = hash;
@@ -299,7 +321,7 @@ export default {
                   type: 'contract',
                   value : 0,
                   gas: window.walletSettings.userPreferences.defaultGas,
-                  gasPrice: window.walletSettings.gasPrice,
+                  gasPrice: this.gasPrice,
                   pending: true,
                   isSender: true,
                   contractAddress: this.contractDetails.address,
@@ -309,7 +331,7 @@ export default {
                   contractAmountLabel : this.contractAmountLabel,
                   adminIcon: true,
                   timestamp: Date.now(),
-                  feeFiat: this.transactionFeeFiat[this.contractDetails.address]
+                  feeFiat: this.transactionFeeFiat
                 }, this.contractDetails);
                 const thiss = this;
                 // FIXME workaround when can't execute .then(...) method, especially in pause, unpause.

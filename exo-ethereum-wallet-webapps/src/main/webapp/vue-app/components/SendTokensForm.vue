@@ -7,6 +7,9 @@
       <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
         <i class="uiIconWarning"></i>{{ warning }}
       </div>
+      <div v-if="!error && !warning && information && information.length" class="alert alert-info v-content">
+        <i class="uiIconInfo"></i>{{ information }}
+      </div>
       <v-form @submit="$event.preventDefault();$event.stopPropagation();">
         <address-auto-complete
           ref="autocomplete"
@@ -41,6 +44,9 @@
           autocomplete="current-passord"
           @click:append="walletPasswordShow = !walletPasswordShow"
         />
+        <gas-price-choice
+          :estimated-fee="transactionFeeString"
+          @changed="gasPrice = $event" />
         <v-text-field
           v-model="transactionLabel"
           :disabled="loading"
@@ -49,7 +55,6 @@
           label="Label (Optional)"
           placeholder="Enter label for your transaction" />
         <v-textarea
-          id="tokenTransactionMessage"
           v-model="transactionMessage"
           :disabled="loading"
           name="tokenTransactionMessage"
@@ -59,17 +64,6 @@
           rows="3"
           flat
           no-resize />
-        <div v-if="contractDetails && contractDetails.sellPrice && transactionFee[contractDetails.address]">
-          <div v-if="contractDetails.isOwner" class="alert alert-info">
-            <i class="uiIconInfo"></i>You are using the address of the contract owner, thus, the transaction fee will be payed in ether
-          </div>
-          <span v-if="contractDetails.isOwner">
-            Estimated transaction fee: <code>{{ transactionFeeFiat[contractDetails.address] }} {{ fiatSymbol }}</code>
-          </span>
-          <span v-else>
-            Estimated transaction fee: <code>{{ transactionFeeToken[contractDetails.address] }} {{ contractDetails.symbol }}</code>
-          </span>
-        </div>
       </v-form>
       <qr-code-modal 
         :to="recipient"
@@ -88,8 +82,8 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !recipient || !amount || !canSendToDisapproved || !contractDetails || contractDetails.isPaused" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
-      <button :disabled="loading || !recipient || !amount || !canSendToDisapproved || !contractDetails || contractDetails.isPaused" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <button :disabled="loading || !recipient || !amount || !canSendToken" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button>
+      <button :disabled="loading || !recipient || !amount || !canSendToken" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -98,6 +92,7 @@
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
+import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionMessage} from '../WalletTransactions.js';
@@ -105,6 +100,7 @@ import {saveTransactionMessage} from '../WalletTransactions.js';
 export default {
   components: {
     QrCodeModal,
+    GasPriceChoice,
     AddressAutoComplete
   },
   props: {
@@ -130,19 +126,47 @@ export default {
       transactionMessage: '',
       walletPassword: '',
       walletPasswordShow: false,
-      transactionFee: {},
-      transactionFeeToken: {},
-      transactionFeeEther: {},
-      transactionFeeFiat: {},
       useMetamask: false,
       recipient: null,
       isApprovedRecipient: true,
-      canSendToDisapproved: true,
+      canSendToken: true,
       amount: null,
+      gasPrice: 0,
+      estimatedGas: 0,
       fiatSymbol: null,
       warning: null,
+      information: null,
       error: null
     };
+  },
+  computed: {
+    transactionFeeString() {
+      if (this.transactionFeeToken) {
+        if (!this.contractDetails) {
+          return '';
+        } else {
+          return `${this.transactionFeeToken} ${this.contractDetails.symbol}`;
+        }
+      } else if (this.transactionFeeFiat) {
+        return `${this.transactionFeeFiat} ${this.fiatSymbol}`;
+      }
+      return '';
+    },
+    sellPriceInWei() {
+      return this.contractDetails && this.contractDetails.sellPrice ? window.localWeb3.utils.toWei(String(this.contractDetails.sellPrice), "ether") : 0;
+    },
+    transactionFeeInWei() { 
+      return this.estimatedGas && this.gasPrice ? parseInt(this.estimatedGas * 1.1 * this.gasPrice) : 0;
+    },
+    transactionFeeEther() {
+      return this.transactionFeeInWei ? window.localWeb3.utils.fromWei(String(this.transactionFeeInWei), "ether") : 0;
+    },
+    transactionFeeFiat() {
+      return this.transactionFeeEther ? etherToFiat(this.transactionFeeEther) : 0;
+    },
+    transactionFeeToken() {
+      return !this.contractDetails || this.contractDetails.isOwner || !this.transactionFeeInWei || !this.sellPriceInWei ? 0 : this.transactionFeeInWei / this.sellPriceInWei;
+    }
   },
   watch: {
     contractDetails() {
@@ -160,24 +184,25 @@ export default {
     recipient(newValue, oldValue) {
       if (newValue && oldValue !== newValue) {
         this.isApprovedRecipient = true;
-        this.canSendToDisapproved = true;
+        this.canSendToken = true;
         // Admin will implicitly approve account, so not necessary
         // to check if the receiver is approved or not
         if (this.contractDetails.contractType > 0) {
           this.contractDetails.contract.methods.isApprovedAccount(this.recipient).call()
             .then(isApproved => {
               this.isApprovedRecipient = isApproved;
-              if (!this.isApprovedRecipient) {
-                if (!this.contractDetails.adminLevel) {
-                  this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
-                  this.canSendToDisapproved = false;
-                } else {
-                  this.warning = `The recipient isn't approved. You are an administrator of contract, thus the recipient will be implicitely approved.`;
-                }
-              } else if (this.contractDetails && this.contractDetails.isPaused) {
-                this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
+              if (this.contractDetails && this.contractDetails.isPaused) {
+                this.warning = `Contract '${this.contractDetails.name}' is paused, thus you can't send tokens`;
+                this.canSendToken = false;
+              } else if (!this.isApprovedRecipient && !this.contractDetails.adminLevel) {
+                this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
+                this.canSendToken = false;
+              } else if (!this.isApprovedRecipient && Number(this.contractDetails.adminLevel) > 0) {
+                this.information = `The recipient isn't approved. You are an administrator of contract, thus the recipient will be implicitely approved.`;
+                this.canSendToken = true;
               } else {
                 this.warning = null;
+                this.canSendToken = true;
               }
             });
         }
@@ -197,39 +222,34 @@ export default {
       this.error = null;
       this.transactionMessage = null;
       this.transactionLabel = null;
+      if (!this.gasPrice) {
+        this.gasPrice = window.walletSettings.minGasPrice;
+      }
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.fiatSymbol = window.walletSettings.fiatSymbol;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.$nextTick(() => {
-        this.estimateTransactionFee();
         if (this.contractDetails && this.contractDetails.isPaused) {
           this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
         } else {
+          this.estimateTransactionFee();
           this.warning = null;
         }
       });
     },
     estimateTransactionFee() {
-      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.isApproved && this.contractDetails.sellPrice && !this.transactionFee[this.contractDetails.address] && this.contractDetails.owner && this.contractDetails.contractType) {
+      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.isApproved && this.contractDetails.sellPrice && this.contractDetails.owner && this.contractDetails.contractType) {
         const recipient = this.contractDetails.isOwner ? "0x1111111111111111111111111111111111111111" : this.contractDetails.owner;
         // Estimate gas
         this.contractDetails.contract.methods.transfer(recipient, String(Math.pow(10, this.contractDetails.decimals ? this.contractDetails.decimals : 0)))
           .estimateGas({
             from: this.contractDetails.contract.options.from,
-            gas: 900000,
-            gasPrice: window.walletSettings.gasPrice
+            gas: window.walletSettings.userPreferences.defaultGas,
+            gasPrice: this.gasPrice
           })
           .then(estimatedGas => {
-            const transactionFeeInWei = parseInt(estimatedGas * 1.1 * window.walletSettings.gasPrice);
-            const sellPriceInWei = window.localWeb3.utils.toWei(String(this.contractDetails.sellPrice), "ether");
-
-            const transactionFeeInEther = window.localWeb3.utils.fromWei(String(transactionFeeInWei), "ether");
-            this.$set(this.transactionFeeEther, this.contractDetails.address, transactionFeeInEther);
-            this.$set(this.transactionFeeFiat, this.contractDetails.address, etherToFiat(transactionFeeInEther));
-            if (!this.contractDetails.isOwner) {
-              this.$set(this.transactionFeeToken, this.contractDetails.address, transactionFeeInWei / sellPriceInWei);
-            }
-            this.$set(this.transactionFee, this.contractDetails.address, transactionFeeInWei);
+            this.estimatedGas = estimatedGas;
+            this.$forceUpdate();
           });
       }
     },
@@ -265,7 +285,8 @@ export default {
         return;
       }
 
-      if (!this.canSendToDisapproved) {
+      if (!this.canSendToken) {
+        this.error = "Can't send token, please verify previous errors or contact your administrator";
         return;
       }
 
@@ -276,8 +297,8 @@ export default {
         this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
-            gas: 9000000,
-            gasPrice: window.walletSettings.gasPrice
+            gas: window.walletSettings.userPreferences.defaultGas,
+            gasPrice: this.gasPrice
           })
           .catch(e => {
             console.error("Error estimating necessary gas", e);
@@ -291,7 +312,8 @@ export default {
             return this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
               .send({
                 from: this.contractDetails.contract.options.from,
-                gas: window.walletSettings.userPreferences.defaultGas
+                gas: window.walletSettings.userPreferences.defaultGas,
+                gasPrice: this.gasPrice
               })
               .on('transactionHash', hash => {
                 saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
@@ -304,7 +326,7 @@ export default {
                   to: this.recipient,
                   value : 0,
                   gas: window.walletSettings.userPreferences.defaultGas,
-                  gasPrice: window.walletSettings.gasPrice,
+                  gasPrice: this.gasPrice,
                   pending: true,
                   contractAddress: this.contractDetails.address,
                   contractMethodName: 'transfer',
@@ -312,9 +334,9 @@ export default {
                   label: this.transactionLabel,
                   message: this.transactionMessage,
                   timestamp: Date.now(),
-                  fee: this.transactionFeeEther[this.contractDetails.address],
-                  feeFiat: this.transactionFeeFiat[this.contractDetails.address],
-                  feeToken: this.transactionFeeToken[this.contractDetails.address]
+                  fee: this.transactionFeeEther,
+                  feeFiat: this.transactionFeeFiat,
+                  feeToken: this.transactionFeeToken
                 }, this.contractDetails);
                 this.$emit("close");
               })
@@ -341,7 +363,6 @@ export default {
       } catch(e) {
         console.debug("Web3 contract.transfer method - error", e);
         this.loading = false;
-
         this.error = `Error sending tokens: ${truncateError(e)}`;
       }
     }

@@ -52,6 +52,7 @@
                 :is-space="isSpace"
                 :wallet-address="walletAddress"
                 :refresh-index="refreshIndex"
+                :loading="loading"
                 class="mb-3"
                 @loading="loading = true"
                 @end-loading="loading = false"
@@ -348,7 +349,7 @@ export default {
           this.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
           this.overviewAccountsToDisplay = window.walletSettings.userPreferences.overviewAccountsToDisplay;
 
-          this.principalAccount = window.walletSettings.userPreferences.principalAccount;
+          this.principalAccount = window.walletSettings.defaultPrincipalAccount;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
 
           return this.refreshBalance();

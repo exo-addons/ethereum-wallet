@@ -309,7 +309,7 @@ export default {
       this.gasByStep = {};
       this.processingStep = {};
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
-      this.gasPrice = window.walletSettings.gasPrice;
+      this.gasPrice = window.walletSettings.normalGasPrice;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.loadState();
     },
@@ -424,12 +424,16 @@ export default {
                 this.saveState();
                 if (step === 3) {
                   // For Proxy contract, use ABI and BIN files of Implementation instead
-                  return newContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[3])
+                  return newContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[step])
                     .then(newContractInstance => {
                       this.$set(this.contractInstancesByStep, step, newContractInstance);
                     });
                 } else {
-                  this.$set(this.contractInstancesByStep, step, newContractInstance);
+                  // For Proxy contract, use ABI and BIN files of Implementation instead
+                  return newContractInstanceByNameAndAddress(this.contractNameByStep[step], this.contractAddressByStep[step])
+                    .then(newContractInstance => {
+                      this.$set(this.contractInstancesByStep, step, newContractInstance);
+                    });
                 }
               } catch(e) {
                 console.error("Error while setting step as proceeded", e);

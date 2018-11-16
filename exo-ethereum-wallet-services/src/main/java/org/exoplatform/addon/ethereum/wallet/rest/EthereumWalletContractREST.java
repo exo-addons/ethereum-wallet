@@ -34,7 +34,7 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
  * displayed contracts for end users
  */
 @Path("/wallet/api/contract")
-@RolesAllowed("administrators")
+@RolesAllowed("users")
 public class EthereumWalletContractREST implements ResourceContainer {
 
   private static final Log      LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
@@ -120,6 +120,30 @@ public class EthereumWalletContractREST implements ResourceContainer {
       return Response.serverError().build();
     }
     return Response.ok().build();
+  }
+
+  /**
+   * Return saved contract details by address
+   * 
+   * @param address
+   * @param networkId
+   * @return
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("getContract")
+  @RolesAllowed("users")
+  public Response getContract(@QueryParam("address") String address, @QueryParam("networkId") Long networkId) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Empty contract address");
+      return Response.status(400).build();
+    }
+    try {
+      return Response.ok(ethereumWalletService.getDefaultContractDetail(address, networkId)).build();
+    } catch (Exception e) {
+      LOG.warn("Error getting contract details: " + address + " on network with id " + networkId, e);
+      return Response.serverError().build();
+    }
   }
 
   /**
