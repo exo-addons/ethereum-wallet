@@ -102,12 +102,16 @@ public class EthereumClientConnector implements Startable {
     // Transactions Queue processing
     scheduledExecutorService.scheduleWithFixedDelay(() -> {
       try {
+        if (StringUtils.isBlank(getWebsocketProviderURL())) {
+          closeConnection();
+          return;
+        }
         if (!initWeb3Connection()) {
           LOG.info("Web3 connection initialization in progress, skip transaction processing until it's initialized");
           return;
         }
       } catch (Throwable e) {
-        LOG.error("Error while checking connection status to Etherreum Websocket endpoint", e);
+        LOG.error("Error while checking connection status to Etherreum Websocket endpoint: {}", e.getMessage());
         closeConnection();
         return;
       }
@@ -195,7 +199,8 @@ public class EthereumClientConnector implements Startable {
    * @return
    */
   public String getWebsocketProviderURL() {
-    return globalSettings.getWebsocketProviderURL();
+    GlobalSettings settings = ethereumWalletService.getSettings();
+    return settings == null ? null : settings.getWebsocketProviderURL();
   }
 
   /**
@@ -222,8 +227,8 @@ public class EthereumClientConnector implements Startable {
     }
 
     // If web socket connection changed, then init new connection
-    if (newGlobalSettings.getWebsocketProviderURL() != null
-        && !StringUtils.equals(newGlobalSettings.getWebsocketProviderURL(), oldGlobalSettings.getWebsocketProviderURL())) {
+    if (StringUtils.isBlank(newGlobalSettings.getWebsocketProviderURL())
+        || !StringUtils.equals(newGlobalSettings.getWebsocketProviderURL(), oldGlobalSettings.getWebsocketProviderURL())) {
       closeConnection();
     }
   }

@@ -46,7 +46,6 @@
           label="Label (Optional)"
           placeholder="Enter label for your transaction" />
         <v-textarea
-          id="etherTransactionMessage"
           v-model="transactionMessage"
           :disabled="loading"
           name="etherTransactionMessage"
@@ -83,7 +82,7 @@ import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, hashCode, truncateError} from '../WalletUtils.js';
-import {saveTransactionMessage} from '../WalletTransactions.js';
+import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -179,9 +178,11 @@ export default {
       this.loading = true;
       try {
         const amount = window.localWeb3.utils.toWei(this.amount.toString(), "ether");
+        const sender = this.account;
+        const receiver = this.recipient;
         const transaction = {
-          from: this.account,
-          to: this.recipient,
+          from: sender,
+          to: receiver,
           value: window.localWeb3.utils.toWei(this.amount.toString(), "ether"),
           gas: gas,
           gasPrice: this.gasPrice
@@ -190,9 +191,8 @@ export default {
         window.localWeb3.eth.sendTransaction(transaction)
           .on('transactionHash', hash => {
             this.transactionHash = hash;
-            saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
-            // The transaction has been hashed and will be sent
-            this.$emit("sent", {
+
+            const pendingTransaction = {
               hash: hash,
               from: transaction.from,
               to: transaction.to,
@@ -204,7 +204,13 @@ export default {
               message: this.transactionMessage,
               type: 'sendEther',
               timestamp: Date.now()
-            });
+            };
+
+            // *async* save transaction message for contract, sender and receiver
+            saveTransactionDetails(pendingTransaction);
+
+            // The transaction has been hashed and will be sent
+            this.$emit("sent", pendingTransaction);
             this.$emit("close");
           })
           .on('error', (error, receipt) => {
@@ -230,4 +236,3 @@ export default {
   }
 };
 </script>
-

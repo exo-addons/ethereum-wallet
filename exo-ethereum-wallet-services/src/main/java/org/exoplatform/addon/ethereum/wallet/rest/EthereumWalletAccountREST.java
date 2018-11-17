@@ -302,25 +302,24 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
-   * Store transaction custom label and message
+   * Store transaction hash in sender, receiver and contract accounts
    * 
    * @param transactionMessage
    * @return
    */
   @POST
-  @Path("saveTransactionMessage")
+  @Path("saveTransactionDetails")
   @RolesAllowed("users")
-  public Response saveTransactionMessage(TransactionMessage transactionMessage) {
-    if (transactionMessage == null || StringUtils.isBlank(transactionMessage.getHash())) {
-      LOG.warn("Bad request sent to server with empty transaction hash");
+  public Response saveTransactionDetails(TransactionDetail transactionMessage) {
+    if (transactionMessage == null || StringUtils.isBlank(transactionMessage.getHash())
+        || StringUtils.isBlank(transactionMessage.getFrom())) {
+      LOG.warn("Bad request sent to server with empty transaction details: {}",
+               transactionMessage == null ? "" : transactionMessage.toString());
       return Response.status(400).build();
     }
 
-    if (StringUtils.isBlank(transactionMessage.getSender())) {
-      transactionMessage.setSender(getCurrentUserId());
-    }
     try {
-      ethereumWalletService.saveTransactionMessage(transactionMessage);
+      ethereumWalletService.saveTransactionDetail(transactionMessage);
     } catch (Exception e) {
       LOG.warn("Error saving transaction message", e);
       return Response.serverError().build();

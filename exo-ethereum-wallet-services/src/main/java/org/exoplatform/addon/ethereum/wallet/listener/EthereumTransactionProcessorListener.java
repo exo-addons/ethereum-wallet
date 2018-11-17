@@ -101,15 +101,14 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         sendNotification = false;
       } else {
         try {
-          ContractTransactionDetail contractTransactionDetail = getReceiverAddressFromContractData(settings,
-                                                                                                   contractDetails,
-                                                                                                   transaction);
+          TransactionDetail contractTransactionDetail =
+                                                      getReceiverAddressFromContractData(settings, contractDetails, transaction);
           if (contractTransactionDetail == null) {
             // The contract information couldn't be parsed
             sendNotification = false;
           } else {
-            amount = contractTransactionDetail.getAmount();
-            receiverAddress = contractTransactionDetail.getReceiver();
+            amount = contractTransactionDetail.getContractAmount();
+            receiverAddress = contractTransactionDetail.getTo();
           }
         } catch (IllegalStateException e) {
           isContractTransaction = false;
@@ -189,7 +188,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     if (transactionSaved) {
-      ethereumWalletService.removeTransactionMessageFromCache(transaction.getHash());
+      ethereumWalletService.removeTransactionDetailFromCache(transaction.getHash());
     }
   }
 
@@ -204,7 +203,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, senderAccountDetails);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, receiverAccountDetails);
 
-    TransactionMessage transactionMessage = ethereumWalletService.getTransactionMessage(transactionHash);
+    TransactionDetail transactionMessage = ethereumWalletService.getTransactionDetailFromCache(transactionHash);
     ctx.append(MESSAGE_PARAMETER, transactionMessage == null ? "" : transactionMessage.getMessage());
 
     if (contractDetails == null) {
@@ -219,9 +218,9 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(transactionStatus.getNotificationId()))).execute(ctx);
   }
 
-  private ContractTransactionDetail getReceiverAddressFromContractData(GlobalSettings settings,
-                                                                       ContractDetail contractDetail,
-                                                                       Transaction transaction) throws Exception {
+  private TransactionDetail getReceiverAddressFromContractData(GlobalSettings settings,
+                                                               ContractDetail contractDetail,
+                                                               Transaction transaction) throws Exception {
     if (transaction == null || transaction.getTo() == null || contractDetail == null) {
       // Contract Transaction type is not considered for notifications
       return null;
@@ -242,10 +241,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
         try {
           for (int i = 0; i < transactionReceipt.getLogs().size(); i++) {
-            ContractTransactionDetail contractTransactionDetail = getContractTransactiondetail(contractDetail,
-                                                                                               contractAddress,
-                                                                                               transactionReceipt,
-                                                                                               i);
+            TransactionDetail contractTransactionDetail = getContractTransactiondetail(contractDetail,
+                                                                                       contractAddress,
+                                                                                       transactionReceipt,
+                                                                                       i);
             if (contractTransactionDetail != null) {
               return contractTransactionDetail;
             }
@@ -259,10 +258,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     return null;
   }
 
-  private ContractTransactionDetail getContractTransactiondetail(ContractDetail contractDetail,
-                                                                 String contractAddress,
-                                                                 TransactionReceipt transactionReceipt,
-                                                                 int i) {
+  private TransactionDetail getContractTransactiondetail(ContractDetail contractDetail,
+                                                         String contractAddress,
+                                                         TransactionReceipt transactionReceipt,
+                                                         int i) {
     EventValues eventValues = ContractUtils.staticExtractEventParameters(CONTRACT_TRANSFER_EVENT,
                                                                          transactionReceipt.getLogs().get(i));
 
@@ -275,7 +274,13 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
                                       .divide(BigDecimal.valueOf(10).pow(contractDetail.getDecimals()))
                                       .toString();
 
-      return new ContractTransactionDetail(contractAddress, senderAddress, receiverAddress, Double.parseDouble(amountString));
+      TransactionDetail transactionDetail = new TransactionDetail();
+      transactionDetail.setContractAddress(contractAddress);
+      transactionDetail.setFrom(senderAddress);
+      transactionDetail.setTo(receiverAddress);
+      transactionDetail.setContractAmount(Double.parseDouble(amountString));
+      transactionDetail.setHash(transactionReceipt.getTransactionHash());
+      return transactionDetail;
     }
     return null;
   }

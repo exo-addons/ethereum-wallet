@@ -95,7 +95,7 @@ import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
-import {saveTransactionMessage} from '../WalletTransactions.js';
+import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -309,21 +309,21 @@ export default {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${estimatedGas}. Please change it in your preferences.`;
               return;
             }
-            return this.contractDetails.contract.methods.transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
+            const sender = this.contractDetails.contract.options.from;
+            const receiver = this.recipient;
+            return this.contractDetails.contract.methods.transfer(receiver, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
               .send({
-                from: this.contractDetails.contract.options.from,
+                from: sender,
                 gas: window.walletSettings.userPreferences.defaultGas,
                 gasPrice: this.gasPrice
               })
               .on('transactionHash', hash => {
-                saveTransactionMessage(hash, this.transactionMessage, this.transactionLabel);
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
-                // The transaction has been hashed and will be sent
-                this.$emit("sent", {
+                const pendingTransaction = {
                   hash: hash,
-                  from: this.contractDetails.contract.options.from.toLowerCase(),
-                  to: this.recipient,
+                  from: sender.toLowerCase(),
+                  to: receiver,
                   value : 0,
                   gas: window.walletSettings.userPreferences.defaultGas,
                   gasPrice: this.gasPrice,
@@ -337,7 +337,13 @@ export default {
                   fee: this.transactionFeeEther,
                   feeFiat: this.transactionFeeFiat,
                   feeToken: this.transactionFeeToken
-                }, this.contractDetails);
+                };
+
+                // *async* save transaction message for contract, sender and receiver
+                saveTransactionDetails(pendingTransaction);
+
+                // The transaction has been hashed and will be sent
+                this.$emit("sent", pendingTransaction, this.contractDetails);
                 this.$emit("close");
               })
               .on('error', (error, receipt) => {

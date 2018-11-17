@@ -9,8 +9,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.*;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class UserPreferences implements Serializable {
 
   private static final long serialVersionUID = -5725443183560646198L;

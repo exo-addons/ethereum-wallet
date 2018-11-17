@@ -99,7 +99,7 @@ public class EthereumWalletService implements Startable {
 
   private String                                                                             contractBinary;
 
-  private ExoCache<String, TransactionMessage>                                               transactionMessagesCache = null;
+  private ExoCache<String, TransactionDetail>                                                transactionDetailsCache  = null;
 
   // Added as cache instead of Set<AccountDetail> for future usage in clustered
   // environments
@@ -133,7 +133,7 @@ public class EthereumWalletService implements Startable {
     this.webNotificationStorage = webNotificationStorage;
     this.listenerService = listenerService;
     this.userACL = userACL;
-    this.transactionMessagesCache = cacheService.getCacheInstance("wallet.transactionsMessages");
+    this.transactionDetailsCache = cacheService.getCacheInstance("wallet.transactionsMessages");
     this.accountDetailCache = cacheService.getCacheInstance("wallet.accountDetailCache");
 
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
@@ -766,13 +766,9 @@ public class EthereumWalletService implements Startable {
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     if (!addressTransactions.contains(hash)) {
       String content = hash;
-      TransactionMessage transactionMessage = transactionMessagesCache.get(hash);
+      TransactionDetail transactionMessage = transactionDetailsCache.get(hash);
       if (transactionMessage != null) {
-        if (!sender) {
-          // Avoid saving label only for sender
-          transactionMessage = new TransactionMessage(transactionMessage.getHash(), null, transactionMessage.getMessage(), null);
-        }
-        content = transactionMessage.toString();
+        content = transactionMessage.getToStoreValue(sender);
       }
       addressTransactions = addressTransactions.isEmpty() ? content : content + "," + addressTransactions;
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName, SettingValue.create(addressTransactions));
@@ -791,9 +787,14 @@ public class EthereumWalletService implements Startable {
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
-    return Arrays.stream(addressTransactionsArray)
-                 .map(transaction -> new TransactionMessage(transaction).toJSONObject())
-                 .collect(Collectors.toList());
+    return Arrays.stream(addressTransactionsArray).map(transaction -> {
+      TransactionDetail transactionDetail = TransactionDetail.fromStoredValue(transaction);
+      TransactionDetail cachedTransactionDetail = getTransactionDetailFromCache(transactionDetail.getHash());
+      if (cachedTransactionDetail != null) {
+        transactionDetail = cachedTransactionDetail;
+      }
+      return transactionDetail.toJSONObject();
+    }).collect(Collectors.toList());
   }
 
   /**
@@ -941,22 +942,53 @@ public class EthereumWalletService implements Startable {
   }
 
   /**
-   * Save temporary transaction label and message
-   * 
+   * Save temporary transaction label and message and save transaction hash in
+   * sender and receiver account
+   *
    * @param transactionMessage
    */
-  public void saveTransactionMessage(TransactionMessage transactionMessage) {
-    this.transactionMessagesCache.put(transactionMessage.getHash(), transactionMessage);
+  public void saveTransactionDetail(TransactionDetail transactionMessage) {
+    GlobalSettings settings = getSettings();
+    if (settings != null && (transactionMessage.getNetworkId() == null || transactionMessage.getNetworkId() == 0)) {
+      transactionMessage.setNetworkId(settings.getDefaultNetworkId());
+    }
+    this.transactionDetailsCache.put(transactionMessage.getHash(), transactionMessage);
+
+    if (StringUtils.isNotBlank(transactionMessage.getFrom())
+        && getAccountDetailsByAddress(transactionMessage.getFrom()) != null) {
+      this.saveAccountTransaction(transactionMessage.getNetworkId(),
+                                  transactionMessage.getFrom(),
+                                  transactionMessage.getHash(),
+                                  true);
+    }
+
+    // Avoid notifying receiver for admin transaction until it's mined
+    if (!transactionMessage.isAdminOperation() && StringUtils.isNotBlank(transactionMessage.getTo())
+        && getAccountDetailsByAddress(transactionMessage.getTo()) != null) {
+      this.saveAccountTransaction(transactionMessage.getNetworkId(),
+                                  transactionMessage.getTo(),
+                                  transactionMessage.getHash(),
+                                  false);
+    }
+
+    if (StringUtils.isNotBlank(transactionMessage.getContractAddress())
+        && !StringUtils.equalsIgnoreCase(transactionMessage.getTo(), transactionMessage.getContractAddress())
+        && getDefaultContractDetail(transactionMessage.getContractAddress(), transactionMessage.getNetworkId()) != null) {
+      this.saveAccountTransaction(transactionMessage.getNetworkId(),
+                                  transactionMessage.getContractAddress(),
+                                  transactionMessage.getHash(),
+                                  true);
+    }
   }
 
   /**
-   * Get temporary transaction label and message
+   * Get temporary stored transaction details from cache
    * 
    * @param transactionHash
    * @return
    */
-  public TransactionMessage getTransactionMessage(String transactionHash) {
-    return this.transactionMessagesCache.get(transactionHash);
+  public TransactionDetail getTransactionDetailFromCache(String transactionHash) {
+    return this.transactionDetailsCache.get(transactionHash);
   }
 
   /**
@@ -965,8 +997,8 @@ public class EthereumWalletService implements Startable {
    * @param hash
    * @return
    */
-  public TransactionMessage removeTransactionMessageFromCache(String hash) {
-    return this.transactionMessagesCache.remove(hash);
+  public TransactionDetail removeTransactionDetailFromCache(String hash) {
+    return this.transactionDetailsCache.remove(hash);
   }
 
   /**

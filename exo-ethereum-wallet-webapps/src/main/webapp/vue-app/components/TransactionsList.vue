@@ -278,7 +278,7 @@
                   <wallet-address v-else :value="item.contractAddress" allow-copy />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.amount && Number(item.amount) && item.amountFiat">
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.amount && Number(item.amount) && item.amountFiat">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"

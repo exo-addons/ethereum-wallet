@@ -350,7 +350,6 @@ export default {
       }
     },
     newTransactionPending(transaction, contractDetails) {
-      transaction.isSender = true;
       if (!contractDetails) {
         contractDetails = this.contractDetails;
       }

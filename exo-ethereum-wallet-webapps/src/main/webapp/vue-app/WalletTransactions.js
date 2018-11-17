@@ -1,59 +1,76 @@
-import {searchFullName, getContractFromStorage} from './WalletAddressRegistry.js';
+import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
-import {getContractInstance} from './WalletToken.js';
+import {getContractInstance, getSavedContractDetails} from './WalletToken.js';
 
 export function loadPendingTransactions(networkId, account, contractDetails, transactions, refreshCallback, removeIfNotFound) {
-  const pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
-  if (!pendingTransactions || !Object.keys(pendingTransactions).length) {
-    return Promise.resolve({});
+  let loadingPromises = [];
+
+  let pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
+  if (!pendingTransactions) {
+    pendingTransactions = {};
   }
 
-  const loadingPromises = [];
-
   Object.keys(pendingTransactions).forEach(transactionHash => {
-    let transaction;
-    loadingPromises.push(window.localWeb3.eth.getTransaction(transactionHash)
-      .then(transactionTmp => {
-        transaction = transactionTmp;
-        if (transactionTmp) {
-          transaction.label = pendingTransactions[transactionHash].label;
-          transaction.message = pendingTransactions[transactionHash].message;
-          return window.localWeb3.eth.getTransactionReceipt(transactionHash)
-        } else {
-          if (removeIfNotFound) {
-            removePendingTransactionFromStorage(networkId, account, contractDetails, transactionHash);
-          }
-          throw new Error("Invalid transaction hash, it will be removed", transactionHash);
-        }
-      })
-      .then(receipt => {
-        if (receipt) {
-          transaction.loadedFromPending = true;
-          return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
-            .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
-            .then(transactionDetails => {
-              refreshCallback(transactionDetails);
-              return transactionDetails;
-            });
-        } else {
-          return addTransaction(networkId, account, contractDetails, transactions, pendingTransactions[transactionHash], null, null, refreshCallback);
-        }
-      })
-      .catch(error => {
-        console.debug("Error while retrieving transaction details", transactionHash, error);
-      })
-    );
+    let pendingTransaction = pendingTransactions[transactionHash];
+    loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, refreshCallback));
   });
 
-  return Promise.all(loadingPromises)
-    .catch(error => {
-      if (`${error}`.indexOf('stopLoading') < 0) {
-        throw error;
+  return getStoredTransactionsHashes(networkId, account)
+    .then(storedPendingTransactions => {
+      if (storedPendingTransactions && storedPendingTransactions.length) {
+        storedPendingTransactions.forEach(pendingTransaction => {
+          loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, refreshCallback));
+        });
       }
+      return Promise.all(loadingPromises)
+        .catch(error => {
+          if (`${error}`.indexOf('stopLoading') < 0) {
+            throw error;
+          }
+        });
     });
 }
 
-export function loadStoredTransactions(networkId, account, contractDetails, transactions, refreshCallback) {
+export function loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, refreshCallback) {
+  let transaction;
+  return window.localWeb3.eth.getTransaction(pendingTransaction.hash)
+    .then(transactionTmp => {
+      transaction = transactionTmp;
+      if (transactionTmp) {
+        transaction.label = pendingTransaction.label;
+        transaction.message = pendingTransaction.message;
+        return window.localWeb3.eth.getTransactionReceipt(pendingTransaction.hash)
+      } else {
+        if (removeIfNotFound) {
+          removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
+        }
+        throw new Error("Invalid transaction hash, it will be removed", pendingTransaction.hash);
+      }
+    })
+    .then(receipt => {
+      if (receipt) {
+        transaction.loadedFromPending = true;
+        return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
+          .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
+          .then(transactionDetails => {
+            // Only if the retrieved transaction was marked as pending
+            if (pendingTransaction.pending) {
+              removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
+              refreshCallback(transactionDetails);
+            }
+            return transactionDetails;
+          });
+      } else {
+        return addTransaction(networkId, account, contractDetails, transactions, pendingTransaction, null, null, refreshCallback);
+      }
+    })
+    .catch(error => {
+      console.debug("Error while retrieving transaction details", pendingTransaction.hash, error);
+    })
+}
+
+export function getStoredTransactionsHashes(networkId, account, noPending) {
+  noPending = Boolean(noPending);
   return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
     .then(resp =>  {
       if (resp && resp.ok) {
@@ -62,14 +79,25 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
         return null;
       }
     })
+    .then(transactions =>
+      transactions && transactions.length ? transactions.filter(transaction => !noPending || Boolean(transaction.pending)) : []
+    )
+    .catch(error => {
+      throw new Error("Error fetching stored transactions", error);
+    });
+}
+
+
+export function loadStoredTransactions(networkId, account, contractDetails, transactions, refreshCallback) {
+  return getStoredTransactionsHashes(networkId, account, true)
     .then(transactionDetails => {
       if (transactionDetails && transactionDetails.length) {
-        const loadingPromises = [];
+        let loadingPromises = [];
 
         transactionDetails.forEach(transactionDetail => {
           if (!transactionDetail || !transactionDetail.hash || !transactionDetail.hash.length) {
             console.debug("Can't parse transaction detail", transactionDetail);
-          } else {
+          } else if (!transactionDetail.pending) {
             let transaction,receipt;
 
             const transactionHash = transactionDetail.hash;
@@ -78,7 +106,7 @@ export function loadStoredTransactions(networkId, account, contractDetails, tran
                 transaction = transactionTmp;
 
                 // if this is about loading a contract transactions, ignore other transactions
-                if (!transaction || (contractDetails.isContract && (!transaction.to || transaction.to.toLowerCase() !== contractDetails.address))) {
+                if (!transaction || !transaction.from || (contractDetails.isContract && (!transaction.to || transaction.to.toLowerCase() !== contractDetails.address))) {
                   transaction.ignore = true;
                 } else {
                   transaction.label = transactionDetail.label;
@@ -224,7 +252,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
 
   account = account.toLowerCase();
 
-  const isReceiver = transaction.isSender ? false : toAddress === account;
+  const isReceiver = toAddress === account;
 
   // Calculate sent/received amount
   const amount = transaction.value ? parseFloat(window.localWeb3.utils.fromWei(String(transaction.value), 'ether')) : 0;
@@ -273,6 +301,14 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     adminIcon: transaction.adminIcon
   };
 
+  if (transactionDetails.contractMethodName
+    &&  transactionDetails.contractMethodName !== 'transfer'
+    && transactionDetails.contractMethodName !== 'transferFrom'
+    && transactionDetails.contractMethodName !== 'approve') {
+    transactionDetails.adminIcon = true;
+    transactionDetails.isReceiver = false;
+  }
+
   if (transaction.pending) {
     addPendingTransactionToStorage(networkId, account, accountDetails, transaction);
 
@@ -314,7 +350,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
   }
 
   let isLoadingAll = false;
-  return getContractFromStorage(transactionDetails.contractAddress)
+
+  return getSavedContractDetails(transactionDetails.contractAddress, networkId)
     .then(contractDetails => {
       if (contractDetails) {
         isLoadingAll = contractDetails.address && contractDetails.address.toLowerCase() === account;
@@ -346,7 +383,8 @@ export function addTransaction(networkId, account, accountDetails, transactions,
             const method = abiDecoder.decodeMethod(transaction.input);
             const decodedLogs = abiDecoder.decodeLogs(receipt.logs);
             transactionDetails.contractMethodName = method && method.name;
-            if (transactionDetails.contractMethodName !== 'transfer'
+            if (transactionDetails.contractMethodName
+                && transactionDetails.contractMethodName !== 'transfer'
                 && transactionDetails.contractMethodName !== 'transferFrom'
                 && transactionDetails.contractMethodName !== 'approve') {
               transactionDetails.adminIcon = true;
@@ -502,7 +540,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
 export function formatTransactionsWithDetails(networkId, account, contractDetails, transactionsDetails, transactions, timestamp, progressionCallback) {
   account = account.toLowerCase();
 
-  const loadingPromises = [];
+  let loadingPromises = [];
 
   if (transactions && transactions.length) {
     // Iterate over transactions from retrieved from block
@@ -649,12 +687,9 @@ export function getPendingTransactionFromStorage(networkId, account, contractDet
   }
 }
 
-export function saveTransactionMessage(transactionHash, transactionMessage, transactionLabel, address) {
-  if (transactionHash && (transactionMessage || transactionLabel)) {
-    transactionLabel = transactionLabel || '';
-    transactionMessage = transactionMessage || '';
-
-    fetch('/portal/rest/wallet/api/account/saveTransactionMessage', {
+export function saveTransactionDetails(transaction) {
+  try {
+    fetch('/portal/rest/wallet/api/account/saveTransactionDetails', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -662,12 +697,23 @@ export function saveTransactionMessage(transactionHash, transactionMessage, tran
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        hash: transactionHash,
-        label: transactionLabel,
-        message: transactionMessage,
-        sender: address
+        networkId: transaction.networkId ? transaction.networkId : window.walletSettings.defaultNetworkId,
+        hash: transaction.hash ? transaction.hash : '',
+        contractAddress: transaction.contractAddress,
+        contractMethodName: transaction.contractMethodName,
+        pending: transaction.pending ? Boolean(transaction.pending) : false,
+        from: transaction.from ? transaction.from : '',
+        to: transaction.to ? transaction.to : '',
+        label: transaction.label ? transaction.label : '',
+        message: transaction.message ? transaction.message : '',
+        value: transaction.value ? Number(transaction.value) : 0,
+        contractAmount: transaction.contractAmount ? Number(transaction.contractAmount) : 0,
+        isAdminOperation: transaction.isAdminOperation ? Boolean(transaction.isAdminOperation) : false,
+        timestamp: transaction.timestamp ? Number(transaction.timestamp) : 0
       })
     });
+  } catch(e) {
+    console.debug("Error saving pending transaction", e);
   }
 }
 

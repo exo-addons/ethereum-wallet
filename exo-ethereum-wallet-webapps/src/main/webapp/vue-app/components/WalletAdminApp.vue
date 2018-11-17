@@ -1162,9 +1162,9 @@ export default {
         });
       });
     },
-    openAccountDetail(accountDetails) {
-      this.selectedWalletAddress = accountDetails.address;
-      this.computeWalletDetails(accountDetails);
+    openAccountDetail(wallet) {
+      this.selectedWalletAddress = wallet.address;
+      this.computeWalletDetails(wallet);
       this.seeAccountDetails = true;
 
       this.$nextTick(() => {
@@ -1174,7 +1174,7 @@ export default {
         });
       });
     },
-    computeWalletDetails(accountDetails) {
+    computeWalletDetails(wallet) {
       if (!this.selectedWalletAddress) {
         this.selectedWalletDetails = null;
         return;
@@ -1185,8 +1185,9 @@ export default {
         symbol : 'ether',
         isContract : false,
         address : this.selectedWalletAddress,
-        balance : accountDetails.balance,
-        balanceFiat : accountDetails.balanceFiat
+        balance : wallet.balance,
+        balanceFiat : wallet.balanceFiat,
+        details: wallet
       };
     },
     back() {

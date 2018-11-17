@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup with-overflow" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <v-bottom-nav slot="activator" :value="true" color="white" class="elevation-0 buttomNavigation">
       <v-btn flat value="send">
         <span>{{ title }}</span>
@@ -58,6 +58,25 @@
 
             <slot></slot>
 
+            <v-text-field
+              v-model="transactionLabel"
+              :disabled="loading"
+              :class="inputLabel || 'mt-3'"
+              type="text"
+              name="transactionLabel"
+              label="Label (Optional)"
+              placeholder="Enter label for your transaction" />
+            <v-textarea
+              v-model="transactionMessage"
+              :disabled="loading"
+              name="transactionMessage"
+              label="Message (Optional)"
+              placeholder="Enter a custom message to send with your transaction"
+              class="mt-4"
+              rows="3"
+              flat
+              no-resize />
+
             <gas-price-choice
               :estimated-fee="`${transactionFeeFiat} ${fiatSymbol}`"
               @changed="gasPrice = $event" />
@@ -80,7 +99,7 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, etherToFiat, setDraggable, watchTransactionStatus, estimateTransactionFeeFiat} from '../WalletUtils.js';
-import {saveTransactionMessage} from '../WalletTransactions.js';
+import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -154,6 +173,8 @@ export default {
       useMetamask: false,
       autocompleteValue: null,
       inputValue: null,
+      transactionLabel: '',
+      transactionMessage: '',
       fiatSymbol: null,
       gasEstimation: null,
       gasPrice: 0,
@@ -228,6 +249,9 @@ export default {
       this.warning = null;
       this.error = null;
       this.gasEstimation = null;
+      this.transactionLabel = '';
+      this.transactionMessage = '';
+      this.transactionHash = null;
       if (!this.gasPrice) {
         this.gasPrice = window.walletSettings.minGasPrice;
       }
@@ -307,32 +331,37 @@ export default {
               })
               .on('transactionHash', hash => {
                 this.transactionHash = hash;
-                // save transaction message for current user
-                saveTransactionMessage(hash, null, null);
-                // save transaction message for contract
-                saveTransactionMessage(hash, null, null, this.contractDetails.address);
+                const sender = this.contractDetails.contract.options.from;
+                const receiver = this.autocompleteValue ? this.autocompleteValue : this.contractDetails.address;
+
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
-                // The transaction has been hashed and will be sent
-                this.$emit("sent", {
+                const pendingTransaction = {
                   hash: hash,
-                  from: this.contractDetails.contract.options.from,
-                  to: this.autocompleteValue ? this.autocompleteValue : this.contractDetails.address,
+                  from: sender,
+                  to: receiver,
                   type: 'contract',
                   value : 0,
                   gas: window.walletSettings.userPreferences.defaultGas,
                   gasPrice: this.gasPrice,
                   pending: true,
-                  isSender: true,
+                  isAdminOperation: true,
                   contractAddress: this.contractDetails.address,
                   contractMethodName: this.methodName,
                   contractAmount : this.inputValue,
                   contractSymbol : this.contractSymbol,
                   contractAmountLabel : this.contractAmountLabel,
-                  adminIcon: true,
+                  label: this.transactionLabel,
+                  message: this.transactionMessage,
                   timestamp: Date.now(),
                   feeFiat: this.transactionFeeFiat
-                }, this.contractDetails);
+                };
+
+                // *async* save transaction message for contract, sender and (avoid alarm receiver for admin operations)
+                saveTransactionDetails(pendingTransaction);
+
+                // The transaction has been hashed and will be sent
+                this.$emit("sent", pendingTransaction, this.contractDetails);
                 const thiss = this;
                 // FIXME workaround when can't execute .then(...) method, especially in pause, unpause.
                 watchTransactionStatus(hash, () => {

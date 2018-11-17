@@ -143,24 +143,6 @@ export function searchFullName(address) {
 }
 
 /*
- * Retrieves Contract details from localStorage
- * 
- * Return {
- *  symbol: Contract symbol,
- *  name: Contract name,
- *  address: Ethereum contract address
- * }
- */
-export function getContractFromStorage(address) {
-  let contractDetails = localStorage.getItem(`exo-wallet-contract-${address}`.toLowerCase());
-  if (contractDetails) {
-    contractDetails = JSON.parse(contractDetails);
-    return Promise.resolve(contractDetails);
-  }
-  return Promise.resolve(null);
-}
-
-/*
  * Search users from eXo Platform, used for suggester
  */
 export function searchUsers(filter, includeCurrentUserInResults) {

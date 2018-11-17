@@ -45,7 +45,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
 export function retrieveContractDetails(account, contractDetails) {
   console.debug(`retrieve contract at address ${contractDetails && contractDetails.address} with account ${account}`);
   let adminLevelComputed, approveAccountComputed, computeContractType = !contractDetails.contractType;
-  let hasSellPrice;
+  contractDetails.retrievedAttributes = 0;
   return getContractInstance(account, contractDetails.address, true)
     .then((contractInstance, error) => {
       if (error) {
@@ -62,7 +62,6 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(() => getSavedContractDetails(contractDetails.address, contractDetails.networkId))
     .then(savedDetails => {
       if (savedDetails) {
-        hasSellPrice = savedDetails.sellPrice;
         Object.keys(savedDetails).forEach(key => {
           contractDetails[key] = savedDetails[key];
         });
@@ -79,7 +78,10 @@ export function retrieveContractDetails(account, contractDetails) {
       console.debug("retrieveContractDetails method - error retrieving saved details", contractDetails.address, new Error(e));
     })
     .then(() => contractDetails.contract.methods.symbol().call())
-    .then(symbol => contractDetails.symbol = symbol)
+    .then(symbol => {
+      contractDetails.symbol = symbol;
+      contractDetails.retrievedAttributes++;
+    })
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving symbol", contractDetails.address, new Error(e));
     })
@@ -87,6 +89,7 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(name => {
       contractDetails.name = name;
       contractDetails.title = name;
+      contractDetails.retrievedAttributes++;
     })
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
@@ -95,6 +98,7 @@ export function retrieveContractDetails(account, contractDetails) {
       return contractDetails.contract.methods.decimals().call()
         .then(decimals => {
           contractDetails.decimals = decimals || 0;
+          contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("no decimals operation found in contract ", contractDetails.address);
@@ -116,6 +120,7 @@ export function retrieveContractDetails(account, contractDetails) {
         .then(sellPrice => {
           contractDetails.contractType = 1;
           contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), "ether");
+          contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
@@ -126,6 +131,7 @@ export function retrieveContractDetails(account, contractDetails) {
             contractDetails.owner = owner;
             contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
           }
+          contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
@@ -135,6 +141,7 @@ export function retrieveContractDetails(account, contractDetails) {
           if (totalSupply) {
             contractDetails.totalSupply = totalSupply;
           }
+          contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving totalSupply", contractDetails.address, new Error(e));
@@ -166,19 +173,24 @@ export function retrieveContractDetails(account, contractDetails) {
         .then(() => contractDetails.contractType && contractDetails.contract.methods.isPaused && contractDetails.contract.methods.isPaused().call())
         .then(isPaused =>  {
           contractDetails.isPaused = isPaused ? true: false;
+          contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving isPaused", contractDetails.address, new Error(e));
         }).
         finally(() => {
-          if (computeContractType && !adminLevelComputed && !approveAccountComputed) {
+          if (contractDetails.retrievedAttributes === 0) {
+            transformContracDetailsToFailed(contractDetails);
+          } else if (contractDetails.retrievedAttributes > 4) {
+            if (contractDetails.contractType === 0) {
+              saveContractAddressAsDefault(contractDetails);
+            }
+            contractDetails.contractType = 1;
+          } else if (computeContractType && !adminLevelComputed && !approveAccountComputed) {
             contractDetails.contractType = 0;
           }
           if (contractDetails.contractType === 1) {
             contractDetails.contractTypeLabel = 'ERT Token';
-            if (!hasSellPrice && contractDetails.sellPrice && contractDetails.isDefault) {
-              saveContractAddressAsDefault(contractDetails);
-            }
           } else {
             contractDetails.contractTypeLabel = 'Standard ERC20 Token';
           }
@@ -192,6 +204,9 @@ export function retrieveContractDetails(account, contractDetails) {
     .catch(e => {
       console.debug("retrieveContractDetails method - error", account, contractDetails, new Error(e), e);
       return contractDetails;
+    })
+    .finally(() => {
+      console.debug(`finished retrieving contract at address ${contractDetails && contractDetails.address} with account ${account}`);
     });
 }
 
@@ -247,6 +262,7 @@ export function getSavedContractDetails(address, networkId) {
      throw new Error(`Error getting contract details from server with address ${address} on network with id ${networkId}`);
    }
  })
+ .then(contractDetails => contractDetails && contractDetails.address ? contractDetails : null)
  .catch(e => {
    console.debug("Error getting contract details from server", e);
    return null; 
@@ -483,6 +499,6 @@ export function getContractInstance(account, address, usePromise, abi, bin) {
 function transformContracDetailsToFailed(contractDetails, e) {
   contractDetails.icon = 'warning';
   contractDetails.title = contractDetails.address;
-  contractDetails.error = `Error retrieving contract at specified address ${e}`;
+  contractDetails.error = `Error retrieving contract at specified address ${e ? e : ''}`;
   return contractDetails;
 }

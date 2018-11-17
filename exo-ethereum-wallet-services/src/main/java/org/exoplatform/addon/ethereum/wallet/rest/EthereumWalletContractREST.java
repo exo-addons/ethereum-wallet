@@ -139,7 +139,11 @@ public class EthereumWalletContractREST implements ResourceContainer {
       return Response.status(400).build();
     }
     try {
-      return Response.ok(ethereumWalletService.getDefaultContractDetail(address, networkId)).build();
+      ContractDetail contractDetail = ethereumWalletService.getDefaultContractDetail(address, networkId);
+      if (contractDetail == null) {
+        contractDetail = new ContractDetail();
+      }
+      return Response.ok(contractDetail).build();
     } catch (Exception e) {
       LOG.warn("Error getting contract details: " + address + " on network with id " + networkId, e);
       return Response.serverError().build();

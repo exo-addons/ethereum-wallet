@@ -6,9 +6,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class ContractDetail implements Serializable {
 
   private static final long serialVersionUID = 1459881604949041768L;
@@ -28,26 +30,6 @@ public class ContractDetail implements Serializable {
   private String            sellPrice;
 
   private String            contractType;
-
-  public ContractDetail() {
-  }
-
-  public ContractDetail(Long networkId,
-                        String address,
-                        String name,
-                        String symbol,
-                        Integer decimals,
-                        String owner,
-                        String sellPrice,
-                        String contractType) {
-    this.networkId = networkId;
-    this.address = address;
-    this.name = name;
-    this.symbol = symbol;
-    this.owner = owner;
-    this.sellPrice = sellPrice;
-    this.contractType = contractType;
-  }
 
   public String toJSONString() {
     return toJSONObject().toString();

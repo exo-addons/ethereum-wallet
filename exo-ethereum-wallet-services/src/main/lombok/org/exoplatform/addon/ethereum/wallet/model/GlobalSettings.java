@@ -10,8 +10,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.*;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class GlobalSettings implements Serializable {
 
   private static final long     serialVersionUID           = -4672745644323864680L;
@@ -32,15 +34,15 @@ public class GlobalSettings implements Serializable {
 
   private String                fundsHolderType            = USER_ACCOUNT_TYPE;
 
-  private String                providerURL                = "https://ropsten.infura.io";
+  private String                providerURL                = null;
 
-  private String                websocketProviderURL       = "wss://ropsten.infura.io/ws";
+  private String                websocketProviderURL       = null;
 
-  private Integer               defaultBlocksToRetrieve    = 100;
+  private Integer               defaultBlocksToRetrieve    = 0;
 
-  private Long                  defaultNetworkId           = 3L;
+  private Long                  defaultNetworkId           = 0L;
 
-  private Long                  defaultGas                 = 65000L;
+  private Long                  defaultGas                 = 0L;
 
   private Long                  minGasPrice                = 4000000000L;
 
@@ -167,12 +169,10 @@ public class GlobalSettings implements Serializable {
           || storedInitialfundsRequestMessage.isEmpty() ? defaultSettings.getInitialFundsRequestMessage()
                                                         : storedInitialfundsRequestMessage);
       String storedProviderURL = jsonObject.has("providerURL") ? jsonObject.getString("providerURL") : null;
-      globalSettings.setProviderURL(storedProviderURL == null || storedProviderURL.isEmpty() ? defaultSettings.getProviderURL()
-                                                                                             : storedProviderURL);
+      globalSettings.setProviderURL(storedProviderURL);
       String storedWebsocketProviderURL = jsonObject.has("websocketProviderURL") ? jsonObject.getString("websocketProviderURL")
                                                                                  : null;
-      globalSettings.setWebsocketProviderURL(storedWebsocketProviderURL == null
-          || storedWebsocketProviderURL.isEmpty() ? defaultSettings.getProviderURL() : storedWebsocketProviderURL);
+      globalSettings.setWebsocketProviderURL(storedWebsocketProviderURL);
       int storedDefaultBlocksToRetrieve = jsonObject.has("defaultBlocksToRetrieve") ? jsonObject.getInt("defaultBlocksToRetrieve")
                                                                                     : 0;
       globalSettings.setDefaultBlocksToRetrieve(storedDefaultBlocksToRetrieve == 0 ? defaultSettings.getDefaultBlocksToRetrieve()
@@ -185,11 +185,9 @@ public class GlobalSettings implements Serializable {
       long storedMinGasPrice = jsonObject.has("minGasPrice") ? jsonObject.getLong("minGasPrice") : 0;
       globalSettings.setMinGasPrice(storedMinGasPrice == 0 ? defaultSettings.getMinGasPrice() : storedMinGasPrice);
       long storedNormalGasPrice = jsonObject.has("normalGasPrice") ? jsonObject.getLong("normalGasPrice") : 0;
-      globalSettings.setNormalGasPrice(storedNormalGasPrice == 0 ? defaultSettings.getNormalGasPrice()
-                                                                   : storedNormalGasPrice);
+      globalSettings.setNormalGasPrice(storedNormalGasPrice == 0 ? defaultSettings.getNormalGasPrice() : storedNormalGasPrice);
       long storedMaxGasPrice = jsonObject.has("maxGasPrice") ? jsonObject.getLong("maxGasPrice") : 0;
-      globalSettings.setMaxGasPrice(storedMaxGasPrice == 0 ? defaultSettings.getMaxGasPrice()
-                                                                   : storedMaxGasPrice);
+      globalSettings.setMaxGasPrice(storedMaxGasPrice == 0 ? defaultSettings.getMaxGasPrice() : storedMaxGasPrice);
       boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation") : true;
       globalSettings.setEnableDelegation(storedEnableDelegation);
       String storedDefaultPrincipalAccount =
