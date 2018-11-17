@@ -1,5 +1,5 @@
 <template>
-  <v-flex id="walletMetamaskSetup">
+  <v-flex v-if="!loading" id="walletMetamaskSetup">
     <div v-if="!metamaskEnabled" class="alert alert-info">
       <i class="uiIconInfo"></i>
       <span v-if="walletAddress">Current wallet is in readonly mode.</span>
@@ -41,10 +41,8 @@
       </v-dialog>
     </div>
     <div v-else-if="!metamaskConnected" class="alert alert-warning">
-      <div v-if="!loading" class="alert alert-warning">
-        <i class="uiIconWarning"></i>
-        Please connect to Metamask
-      </div>
+      <i class="uiIconWarning"></i>
+      Please connect to Metamask
     </div>
     <div v-else-if="errorMessage" class="alert alert-error">
       <i class="uiIconError"></i>
@@ -129,6 +127,12 @@ export default {
       }
     },
     isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    loading: {
       type: Boolean,
       default: function() {
         return false;
