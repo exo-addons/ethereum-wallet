@@ -19,10 +19,6 @@
             @refresh="init()"
             @error="loadingContracts = false; error = $event" />
 
-          <v-card-text v-if="accountsDetails && !loading" class="text-xs-center">
-            <h3>Ether balance: {{ walletAddressEtherBalance }} eth / {{ walletAddressFiatBalance }} {{ fiatSymbol }}</h3>
-            <h4 v-if="principalContract">Principal contract balance: {{ principalContract.balance }} {{ principalContract.symbol }}</h4>
-          </v-card-text>
           <v-dialog v-model="loading" persistent width="300">
             <v-card color="primary" dark>
               <v-card-text>
@@ -31,6 +27,24 @@
               </v-card-text>
             </v-card>
           </v-dialog>
+
+          <wallet-summary
+            v-if="walletAddress && !loading && accountsDetails"
+            ref="walletSummary"
+            :accounts-details="accountsDetails"
+            :overview-accounts="overviewAccounts"
+            :principal-account="principalAccount"
+            :refresh-index="refreshIndex"
+            :network-id="networkId"
+            :wallet-address="walletAddress"
+            :ether-balance="walletAddressEtherBalance"
+            :total-balance="walletAddressEtherBalance"
+            :total-fiat-balance="walletAddressFiatBalance"
+            :fiat-symbol="fiatSymbol"
+            is-maximized
+            hide-actions
+            @refresh-balance="refreshBalance"
+            @error="error = $event" />
 
           <v-tabs v-if="displaySettings" v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
@@ -505,6 +519,7 @@ import WalletSetup from './WalletSetup.vue';
 import AccountDetail from './AccountDetail.vue';
 import SendFundsModal from './SendFundsModal.vue';
 import ContractDetail from './ContractDetail.vue';
+import WalletSummary from './WalletSummary.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
@@ -519,6 +534,7 @@ export default {
     AccountDetail,
     SendFundsModal,
     ContractDetail,
+    WalletSummary,
     WalletSetup
   },
   data () {
@@ -1031,6 +1047,9 @@ export default {
           }
         }
       }
+      if (this.$refs.walletSummary) {
+        this.$refs.walletSummary.loadPendingTransactions();
+      }
     },
     refreshBalance(accountDetails, address, error) {
       if(this.walletAddress) {
@@ -1281,6 +1300,9 @@ export default {
         });
     },
     watchPendingAdminTransaction(transaction, contractDetails) {
+      if (this.$refs.walletSummary) {
+        this.$refs.walletSummary.loadPendingTransactions();
+      }
       watchTransactionStatus(transaction.hash, receipt => {
         if (receipt.status) {
           if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {

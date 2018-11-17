@@ -583,7 +583,7 @@ export default {
       this.error = null;
 
       // Get transactions to latest block with maxBlocks to load
-      return loadPendingTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
+      return loadPendingTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, () => {
         this.$emit("refresh-balance");
         this.forceUpdateList();
       }, true)

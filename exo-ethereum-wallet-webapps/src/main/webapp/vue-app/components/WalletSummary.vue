@@ -26,7 +26,7 @@
       </v-flex>
     </v-card-title>
 
-    <v-card-actions>
+    <v-card-actions v-if="!hideActions">
       <v-spacer />
       <v-layout row wrap>
         <v-flex>
@@ -113,6 +113,12 @@ export default {
       }
     },
     isSpaceAdministrator: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    hideActions: {
       type: Boolean,
       default: function() {
         return false;
@@ -236,7 +242,7 @@ export default {
     loadPendingTransactions() {
       Object.keys(this.pendingTransactions).forEach(key => delete this.pendingTransactions[key]);
 
-      return loadPendingTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, transaction => {
+      return loadPendingTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, true, transaction => {
         const contractDetails = transaction.to && this.accountsDetails[transaction.to.toLowerCase()];
         this.refreshBalance(contractDetails);
         if (this.pendingTransactions[transaction.hash]) {
@@ -251,7 +257,10 @@ export default {
         }
         this.updatePendingTransactionsIndex++;
       })
-        .then(() => this.updatePendingTransactionsIndex++);
+        .then(() => {
+          console.log("this.pendingTransactions", this.pendingTransactions && Object.keys(this.pendingTransactions).length,this.pendingTransactions);
+          this.updatePendingTransactionsIndex++;
+        });
     }
   }
 };

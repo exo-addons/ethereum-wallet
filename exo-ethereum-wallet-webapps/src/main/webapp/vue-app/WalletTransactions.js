@@ -2,7 +2,7 @@ import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 import {getContractInstance, getSavedContractDetails} from './WalletToken.js';
 
-export function loadPendingTransactions(networkId, account, contractDetails, transactions, refreshCallback, removeIfNotFound) {
+export function loadPendingTransactions(networkId, account, contractDetails, transactions, excludeFinished, refreshCallback, removeIfNotFound) {
   let loadingPromises = [];
 
   let pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
@@ -12,14 +12,16 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
 
   Object.keys(pendingTransactions).forEach(transactionHash => {
     let pendingTransaction = pendingTransactions[transactionHash];
-    loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, refreshCallback));
+    loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback));
   });
 
   return getStoredTransactionsHashes(networkId, account)
     .then(storedPendingTransactions => {
       if (storedPendingTransactions && storedPendingTransactions.length) {
         storedPendingTransactions.forEach(pendingTransaction => {
-          loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, refreshCallback));
+          if (pendingTransaction.pending) {
+            loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback));
+          }
         });
       }
       return Promise.all(loadingPromises)
@@ -31,7 +33,7 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
     });
 }
 
-export function loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, refreshCallback) {
+export function loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback) {
   let transaction;
   return window.localWeb3.eth.getTransaction(pendingTransaction.hash)
     .then(transactionTmp => {
@@ -49,6 +51,9 @@ export function loadPendingTransaction(networkId, account, contractDetails, tran
     })
     .then(receipt => {
       if (receipt) {
+        if (excludeFinished) {
+          return;
+        }
         transaction.loadedFromPending = true;
         return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
           .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
@@ -57,8 +62,8 @@ export function loadPendingTransaction(networkId, account, contractDetails, tran
             if (pendingTransaction.pending) {
               removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
               refreshCallback(transactionDetails);
+              return transactionDetails;
             }
-            return transactionDetails;
           });
       } else {
         return addTransaction(networkId, account, contractDetails, transactions, pendingTransaction, null, null, refreshCallback);
@@ -66,7 +71,7 @@ export function loadPendingTransaction(networkId, account, contractDetails, tran
     })
     .catch(error => {
       console.debug("Error while retrieving transaction details", pendingTransaction.hash, error);
-    })
+    });
 }
 
 export function getStoredTransactionsHashes(networkId, account, noPending) {
