@@ -66,6 +66,13 @@ export function retrieveContractDetails(account, contractDetails) {
         Object.keys(savedDetails).forEach(key => {
           contractDetails[key] = savedDetails[key];
         });
+        // Convert to numbers
+        if(contractDetails.contractType) {
+          contractDetails.contractType = Number(contractDetails.contractType);
+        }
+        if(contractDetails.sellPrice) {
+          contractDetails.sellPrice = Number(contractDetails.sellPrice);
+        }
       }
     })
     .catch(e => {

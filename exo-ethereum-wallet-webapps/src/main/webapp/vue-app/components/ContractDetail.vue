@@ -163,7 +163,10 @@
                 {{ props.item.name }}
               </td>
               <td v-if="$refs.disapproveAccountModal">
-                <v-btn icon right @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type)">
+                <span v-if="(props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1)">
+                  Admin level: {{ props.item.accountAdminLevel[contractDetails.address] }} 
+                </span>
+                <v-btn v-else icon right @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type)">
                   <v-icon>close</v-icon>
                 </v-btn>
               </td>
@@ -325,7 +328,7 @@ export default {
             this.$set(wallet.approved, this.contractDetails.address, approved ? 'approved' : 'disapproved');
           })
           .catch(e => {
-            console.debug("Error getting approval of account", wallet.address);
+            console.debug("Error getting approval of account", wallet.address, e);
             this.$set(wallet.approved, this.contractDetails.address, 'disapproved');
           });
       }
@@ -336,7 +339,7 @@ export default {
             this.$set(wallet.accountAdminLevel, this.contractDetails.address, level ? level : 'not admin');
           })
           .catch(e => {
-            console.debug("Error getting admin level of account", wallet.address);
+            console.debug("Error getting admin level of account", wallet.address, e);
             this.$set(wallet.accountAdminLevel, this.contractDetails.address, 'not admin');
           });
       }

@@ -600,6 +600,7 @@ export default {
           this.$emit("error", `${e}`);
         })
         .then(() => {
+          this.forceUpdateList();
           if (this.contractDetails.isContract) {
             return loadContractTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
               this.forceUpdateList();
