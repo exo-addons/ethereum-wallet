@@ -601,11 +601,11 @@ export default {
         })
         .then(() => {
           this.forceUpdateList();
-          if (this.contractDetails.isContract) {
+          /*if (this.contractDetails.isContract) {
             return loadContractTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
               this.forceUpdateList();
             });
-          }
+          }*/
         })
         .then(() => {
           if (this.selectedTransactionHash) {
