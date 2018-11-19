@@ -460,7 +460,7 @@ import WalletAddress from './WalletAddress.vue';
 import ProfileChip from './ProfileChip.vue';
 
 import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
-import {loadPendingTransactions, loadStoredTransactions, loadContractTransactions, addTransaction} from '../WalletTransactions.js';
+import {loadTransactions, loadContractTransactions, addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -582,30 +582,26 @@ export default {
       this.loading = true;
       this.error = null;
 
+      const thiss = this;
       // Get transactions to latest block with maxBlocks to load
-      return loadPendingTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, () => {
-        this.$emit("refresh-balance");
-        this.forceUpdateList();
-      }, true)
+      return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, () => {
+        thiss.$emit("refresh-balance");
+        thiss.forceUpdateList();
+      })
         .catch(e => {
-          console.debug("loadPendingTransactions - method error", e);
+          console.debug("loadTransactions - method error", e);
           this.$emit("error", `${e}`);
         })
         .then(() => {
           this.forceUpdateList();
-          return loadStoredTransactions(this.networkId, this.account, this.contractDetails, this.transactions);
-        })
-        .catch(e => {
-          console.debug("loadStoredTransactions - method error", e);
-          this.$emit("error", `${e}`);
-        })
-        .then(() => {
-          this.forceUpdateList();
-          /*if (this.contractDetails.isContract) {
+          if (this.contractDetails.isContract) {
             return loadContractTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
-              this.forceUpdateList();
-            });
-          }*/
+              thiss.forceUpdateList();
+            })
+              .catch(e => {
+                console.debug(`Error loading transactions from contract ${this.contractDetails && this.contractDetails.address} for account ${this.account} on network ${this.networkId}`, this.contractDetails, e);
+              });
+          }
         })
         .then(() => {
           if (this.selectedTransactionHash) {

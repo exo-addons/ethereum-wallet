@@ -2,7 +2,7 @@ import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 import {getContractInstance, getSavedContractDetails} from './WalletToken.js';
 
-export function loadPendingTransactions(networkId, account, contractDetails, transactions, excludeFinished, refreshCallback, removeIfNotFound) {
+export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, refreshCallback) {
   let loadingPromises = [];
 
   let pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
@@ -16,11 +16,13 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
   });
 
   return getStoredTransactionsHashes(networkId, account)
-    .then(storedPendingTransactions => {
-      if (storedPendingTransactions && storedPendingTransactions.length) {
-        storedPendingTransactions.forEach(pendingTransaction => {
-          if (pendingTransaction.pending) {
-            loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback));
+    .then(storedTransactions => {
+      if (storedTransactions && storedTransactions.length) {
+        storedTransactions.forEach(storedTransaction => {
+          if (storedTransaction.pending) {
+            loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, storedTransaction, excludeFinished, refreshCallback));
+          } else if(!excludeFinished) {
+            loadingPromises.push(loadCompletedTransaction(networkId, account, contractDetails, transactions, storedTransaction));
           }
         });
       }
@@ -30,135 +32,6 @@ export function loadPendingTransactions(networkId, account, contractDetails, tra
             throw error;
           }
         });
-    });
-}
-
-export function loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback) {
-  let transaction;
-  return window.localWeb3.eth.getTransaction(pendingTransaction.hash)
-    .then(transactionTmp => {
-      transaction = transactionTmp;
-      if (transactionTmp) {
-        transaction.label = pendingTransaction.label;
-        transaction.message = pendingTransaction.message;
-        return window.localWeb3.eth.getTransactionReceipt(pendingTransaction.hash)
-      } else {
-        if (removeIfNotFound) {
-          removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
-        }
-        throw new Error("Invalid transaction hash, it will be removed", pendingTransaction.hash);
-      }
-    })
-    .then(receipt => {
-      if (receipt) {
-        if (excludeFinished) {
-          return;
-        }
-        transaction.loadedFromPending = true;
-        return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
-          .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
-          .then(transactionDetails => {
-            // Only if the retrieved transaction was marked as pending
-            if (pendingTransaction.pending) {
-              removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
-              refreshCallback(transactionDetails);
-              return transactionDetails;
-            }
-          });
-      } else {
-        return addTransaction(networkId, account, contractDetails, transactions, pendingTransaction, null, null, refreshCallback);
-      }
-    })
-    .catch(error => {
-      console.debug("Error while retrieving transaction details", pendingTransaction.hash, error);
-    });
-}
-
-export function getStoredTransactionsHashes(networkId, account, noPending) {
-  noPending = Boolean(noPending);
-  return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
-    .then(resp =>  {
-      if (resp && resp.ok) {
-        return resp.json();
-      } else {
-        return null;
-      }
-    })
-    .then(transactions =>
-      transactions && transactions.length ? transactions.filter(transaction => !noPending || Boolean(transaction.pending)) : []
-    )
-    .catch(error => {
-      throw new Error("Error fetching stored transactions", error);
-    });
-}
-
-
-export function loadStoredTransactions(networkId, account, contractDetails, transactions, refreshCallback) {
-  return getStoredTransactionsHashes(networkId, account, true)
-    .then(transactionDetails => {
-      if (transactionDetails && transactionDetails.length) {
-        let loadingPromises = [];
-
-        transactionDetails.forEach(transactionDetail => {
-          if (!transactionDetail || !transactionDetail.hash || !transactionDetail.hash.length) {
-            console.debug("Can't parse transaction detail", transactionDetail);
-          } else if (!transactionDetail.pending) {
-            let transaction,receipt;
-
-            const transactionHash = transactionDetail.hash;
-            const loadingPromise = window.localWeb3.eth.getTransaction(transactionHash)
-              .then(transactionTmp => {
-                transaction = transactionTmp;
-
-                // if this is about loading a contract transactions, ignore other transactions
-                if (!transaction || !transaction.from || (contractDetails.isContract && (!transaction.to || transaction.to.toLowerCase() !== contractDetails.address))) {
-                  transaction.ignore = true;
-                } else {
-                  transaction.label = transactionDetail.label;
-                  transaction.message = transactionDetail.message;
-                  return window.localWeb3.eth.getTransactionReceipt(transactionHash);
-                }
-              })
-              .then(receiptTmp => {
-                if (transaction.ignore) {
-                  return;
-                }
-
-                receipt = receiptTmp;
-                return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
-              })
-              .then(block => {
-                if (transaction.ignore) {
-                  return;
-                }
-
-                return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000);
-              })
-              .then(transactionDetails => {
-                if (transaction.ignore) {
-                  return;
-                }
-
-                if (transactionDetails && refreshCallback) {
-                  return refreshCallback(transactionDetails);
-                }
-
-                return transactionDetails;
-              })
-              .catch(error => {
-                throw error;
-              });
-            loadingPromises.push(loadingPromise);
-          }
-        });
-
-        return Promise.all(loadingPromises);
-      }
-    })
-    .catch(error => {
-      if (`${error}`.indexOf('stopLoading') < 0) {
-        throw error;
-      }
     });
 }
 
@@ -524,7 +397,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
       return null;
     })
     .then(transactionDetails => {
-      if (transaction.blockNumber && transactionDetails.status && !transactionDetails.pending) {
+      if (transaction.blockNumber && transactionDetails && transactionDetails.status && !transactionDetails.pending) {
         return window.localWeb3.eth.getBalance(account, transaction.blockNumber - 1)
           .then(balanceAtDate => {
             if (balanceAtDate) {
@@ -572,61 +445,6 @@ export function formatTransactionsWithDetails(networkId, account, contractDetail
 
   // Continue searching in previous block
   return Promise.all(loadingPromises);
-}
-
-export function getFromBlock(fromBlock, toBlock, maxBlocks) {
-  if (fromBlock != null) {
-    return Promise.resolve(fromBlock);
-  } else if (toBlock != null && maxBlocks != null) {
-    fromBlock = toBlock - maxBlocks;
-    if (fromBlock < 0) {
-      fromBlock = 0;
-    }
-    return Promise.resolve(fromBlock);
-  } else if (maxBlocks != null) {
-    return window.localWeb3.eth.getBlockNumber()
-      .then(lastBlock => {
-        fromBlock = lastBlock - maxBlocks;
-        if (fromBlock < 0) {
-          fromBlock = 0;
-        }
-        return fromBlock;
-      });
-  } else {
-    return Promise.resolve(0);
-  }
-}
-
-export function getToBlock(fromBlock, toBlock, maxBlocks) {
-  if (toBlock != null) {
-    return Promise.resolve(toBlock);
-  } else {
-    let lastReturnedBlock = 0;
-
-    return window.localWeb3.eth.getBlockNumber()
-      .then(lastBlock => {
-        const toBlockTmp = fromBlock + maxBlocks;
-        if (toBlockTmp < lastBlock) {
-          toBlock = toBlockTmp;
-        } else {
-          toBlock = lastBlock;
-        }
-        return toBlock;
-      })
-      .then(toBlock => {
-        lastReturnedBlock = toBlock;
-        return window.localWeb3.eth.getBlock(lastReturnedBlock, false);
-      })
-      .then(block => {
-        if (block) {
-          return lastReturnedBlock;
-        } else {
-          console.debug("Error getting last block, the block before will be used", lastReturnedBlock);
-          // Sometimes returned last block isn't yet readable, so return the block before
-          return lastReturnedBlock - 1;
-        }
-      });
-  }
 }
 
 export function addPendingTransactionToStorage(networkId, account, contractDetails, transaction) {
@@ -722,6 +540,120 @@ export function saveTransactionDetails(transaction) {
   }
 }
 
+function loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback) {
+  let transaction;
+  return window.localWeb3.eth.getTransaction(pendingTransaction.hash)
+    .then(transactionTmp => {
+      transaction = transactionTmp;
+      if (transactionTmp) {
+        transaction.label = pendingTransaction.label;
+        transaction.message = pendingTransaction.message;
+        return window.localWeb3.eth.getTransactionReceipt(pendingTransaction.hash)
+      } else {
+        removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
+        throw new Error("Invalid transaction hash, it will be removed", pendingTransaction.hash);
+      }
+    })
+    .then(receipt => {
+      if (receipt) {
+        if (excludeFinished) {
+          return;
+        }
+        transaction.loadedFromPending = true;
+        return window.localWeb3.eth.getBlock(transaction.blockNumber, false)
+          .then(block => addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000))
+          .then(transactionDetails => {
+            // Only if the retrieved transaction was marked as pending
+            if (pendingTransaction.pending) {
+              removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
+              refreshCallback(transactionDetails);
+              return transactionDetails;
+            }
+          });
+      } else {
+        return addTransaction(networkId, account, contractDetails, transactions, pendingTransaction, null, null, refreshCallback);
+      }
+    })
+    .catch(error => {
+      console.debug("Error while retrieving transaction details", pendingTransaction, error);
+    });
+}
+
+function loadCompletedTransaction(networkId, account, contractDetails, transactions, transactionDetail) {
+  if (!transactionDetail || !transactionDetail.hash || !transactionDetail.hash.length) {
+    console.debug("Can't parse transaction detail", transactionDetail);
+    return Promise.resolve(null);
+  } else if (!transactionDetail.pending) {
+    let transaction,receipt;
+
+    const transactionHash = transactionDetail.hash;
+    const label = transactionDetail.label;
+    const message = transactionDetail.message;
+    return window.localWeb3.eth.getTransaction(transactionHash)
+      .then(transactionTmp => {
+        transaction = transactionTmp;
+
+        // if this is about loading a contract transactions, ignore other ether transactions
+        if (!transaction
+            || !transaction.from
+            || (contractDetails.isContract
+                && (!transaction.to
+                    || !contractDetails.address 
+                    || (!transaction.contractAddress // Not loaded transaction, but coming from blockchain
+                        && transaction.to.toLowerCase() !== contractDetails.address.toLowerCase())))) {
+          transaction.ignore = true;
+        } else {
+          transaction.label = label;
+          transaction.message = message;
+          return window.localWeb3.eth.getTransactionReceipt(transactionHash);
+        }
+      })
+      .then(receiptTmp => {
+        if (transaction.ignore) {
+          return;
+        }
+
+        receipt = receiptTmp;
+        return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
+      })
+      .then(block => {
+        if (transaction.ignore) {
+          return;
+        }
+        return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000);
+      })
+      .then(transactionDetails => {
+        if (transaction.ignore) {
+          return;
+        }
+        return transactionDetails;
+      })
+      .catch(error => {
+        if (`${error}`.indexOf('stopLoading') < 0) {
+          console.debug("Error while retrieving transaction details", transactionDetails, error);
+        }
+      });
+  }
+}
+
+function getStoredTransactionsHashes(networkId, account, noPending) {
+  noPending = Boolean(noPending);
+  return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
+    .then(resp =>  {
+      if (resp && resp.ok) {
+        return resp.json();
+      } else {
+        return null;
+      }
+    })
+    .then(transactions =>{
+      return transactions && transactions.length ? transactions.filter(transaction => !noPending || !Boolean(transaction.pending)) : []
+    })
+    .catch(error => {
+      throw new Error("Error fetching stored transactions", error);
+    });
+}
+
 function addEventsToTransactions(networkId, account, contractDetails, transactions, events, fieldFrom, fieldTo, progressionCallback) {
   const isLoadingAll = contractDetails.address && contractDetails.address.toLowerCase() === account;
   if (events && events.length) {
@@ -760,5 +692,60 @@ function addEventsToTransactions(networkId, account, contractDetails, transactio
       })
   } else {
     return [];
+  }
+}
+
+function getFromBlock(fromBlock, toBlock, maxBlocks) {
+  if (fromBlock != null) {
+    return Promise.resolve(fromBlock);
+  } else if (toBlock != null && maxBlocks != null) {
+    fromBlock = toBlock - maxBlocks;
+    if (fromBlock < 0) {
+      fromBlock = 0;
+    }
+    return Promise.resolve(fromBlock);
+  } else if (maxBlocks != null) {
+    return window.localWeb3.eth.getBlockNumber()
+      .then(lastBlock => {
+        fromBlock = lastBlock - maxBlocks;
+        if (fromBlock < 0) {
+          fromBlock = 0;
+        }
+        return fromBlock;
+      });
+  } else {
+    return Promise.resolve(0);
+  }
+}
+
+function getToBlock(fromBlock, toBlock, maxBlocks) {
+  if (toBlock != null) {
+    return Promise.resolve(toBlock);
+  } else {
+    let lastReturnedBlock = 0;
+
+    return window.localWeb3.eth.getBlockNumber()
+      .then(lastBlock => {
+        const toBlockTmp = fromBlock + maxBlocks;
+        if (toBlockTmp < lastBlock) {
+          toBlock = toBlockTmp;
+        } else {
+          toBlock = lastBlock;
+        }
+        return toBlock;
+      })
+      .then(toBlock => {
+        lastReturnedBlock = toBlock;
+        return window.localWeb3.eth.getBlock(lastReturnedBlock, false);
+      })
+      .then(block => {
+        if (block) {
+          return lastReturnedBlock;
+        } else {
+          console.debug("Error getting last block, the block before will be used", lastReturnedBlock);
+          // Sometimes returned last block isn't yet readable, so return the block before
+          return lastReturnedBlock - 1;
+        }
+      });
   }
 }

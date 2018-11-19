@@ -45,6 +45,7 @@
       :is-space-administrator="isSpaceAdministrator"
       :refresh-index="refreshIndex"
       :is-administration="isAdministration"
+      :loading="loading"
       @configured="refresh()"
       @loading="$emit('loading')"
       @end-loading="$emit('end-loading')"

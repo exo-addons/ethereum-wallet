@@ -1,7 +1,7 @@
 <template>
-  <v-flex class="text-xs-center white">
+  <v-flex v-if="!loading" class="text-xs-center white">
     <div id="walletBrowserSetup">
-      <button v-if="!walletAddress" :disabled="loading" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
+      <button v-if="!walletAddress" :disabled="loadingWalletBrowser" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>
 
       <wallet-import-key-modal
@@ -44,6 +44,12 @@ export default {
         return false;
       }
     },
+    loading: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     refreshIndex: {
       type: Number,
       default: function() {
@@ -54,7 +60,7 @@ export default {
   data() {
     return {
       walletAddress: null,
-      loading: false
+      loadingWalletBrowser: false
     };
   },
   watch: {
@@ -77,7 +83,7 @@ export default {
       }
     },
     createWallet() {
-      this.loading = true;
+      this.loadingWalletBrowser = true;
 
       const password = generatePassword();
       const entropy = password + Math.random();
@@ -86,12 +92,12 @@ export default {
       saveBrowerWalletInstance(wallet[0], password, this.isSpace, true, false)
         .then(() => {
           this.$emit("configured");
-          this.loading = false;
+          this.loadingWalletBrowser = false;
         })
         .catch(e => {
           console.debug("saveBrowerWalletInstance method - error", e);
           this.$emit('error', 'Error saving new Wallet address');
-          this.loading = false;
+          this.loadingWalletBrowser = false;
         });
     },
     switchToMetamask() {

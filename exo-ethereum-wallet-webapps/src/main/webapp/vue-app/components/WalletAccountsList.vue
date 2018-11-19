@@ -122,7 +122,6 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import {watchTransactionStatus} from '../WalletUtils.js';
 import {addTransaction} from '../WalletTransactions.js';
 
 export default {

@@ -509,26 +509,27 @@ export default {
     initializeStepsFromStorage(step, maxStep) {
       if (this.transactionHashByStep[step] && ((step < 4 && !this.contractAddressByStep[step]) || !this.processedStep[step]) ) {
         this.$set(this.processingStep, step, true);
+        const thiss = this;
         watchTransactionStatus(this.transactionHashByStep[step], receipt => {
           if (!receipt || !receipt.status) {
-            this.error = 'Error processing contract deployment';
+            thiss.error = 'Error processing contract deployment';
             return;
           }
           if (step < 4) {
             if (receipt.contractAddress) {
-              this.$set(this.contractAddressByStep, step, receipt.contractAddress);
+              thiss.$set(thiss.contractAddressByStep, step, receipt.contractAddress);
             } else {
-              this.error = 'Error processing contract deployment, not associated contract address in transaction receipt';
+              thiss.error = 'Error processing contract deployment, not associated contract address in transaction receipt';
               return;
             }
           }
-          this.$set(this.processedStep, step, true);
-          this.$set(this.processingStep, step, false);
-          this.initializeStep(step)
+          thiss.$set(thiss.processedStep, step, true);
+          thiss.$set(thiss.processingStep, step, false);
+          thiss.initializeStep(step)
             .then(() => {
-              this.saveState();
+              thiss.saveState();
               if (step < maxStep) {
-                return this.initializeStepsFromStorage(step + 1, maxStep);
+                return thiss.initializeStepsFromStorage(step + 1, maxStep);
               }
             });
         });

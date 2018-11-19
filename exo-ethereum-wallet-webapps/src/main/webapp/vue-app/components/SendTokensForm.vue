@@ -156,7 +156,7 @@ export default {
       return this.contractDetails && this.contractDetails.sellPrice ? window.localWeb3.utils.toWei(String(this.contractDetails.sellPrice), "ether") : 0;
     },
     transactionFeeInWei() { 
-      return this.estimatedGas && this.gasPrice ? parseInt(this.estimatedGas * 1.1 * this.gasPrice) : 0;
+      return this.estimatedGas && this.gasPrice ? parseInt(this.estimatedGas * this.gasPrice) : 0;
     },
     transactionFeeEther() {
       return this.transactionFeeInWei ? window.localWeb3.utils.fromWei(String(this.transactionFeeInWei), "ether") : 0;
@@ -165,7 +165,7 @@ export default {
       return this.transactionFeeEther ? etherToFiat(this.transactionFeeEther) : 0;
     },
     transactionFeeToken() {
-      return !this.contractDetails || this.contractDetails.isOwner || !this.transactionFeeInWei || !this.sellPriceInWei ? 0 : this.transactionFeeInWei / this.sellPriceInWei;
+      return !this.contractDetails || this.contractDetails.isOwner || !this.transactionFeeInWei || !this.sellPriceInWei ? 0 : Number(this.transactionFeeInWei / this.sellPriceInWei).toFixed(4);
     }
   },
   watch: {
@@ -248,8 +248,8 @@ export default {
             gasPrice: this.gasPrice
           })
           .then(estimatedGas => {
-            this.estimatedGas = estimatedGas;
-            this.$forceUpdate();
+            // Add 10% to ensure that the operation doesn't take more than the estimation
+            this.estimatedGas = estimatedGas * 1.1;
           });
       }
     },
@@ -311,7 +311,8 @@ export default {
             }
             const sender = this.contractDetails.contract.options.from;
             const receiver = this.recipient;
-            return this.contractDetails.contract.methods.transfer(receiver, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
+            const contractDetails = this.contractDetails;
+            return contractDetails.contract.methods.transfer(receiver, convertTokenAmountToSend(this.amount, contractDetails.decimals).toString())
               .send({
                 from: sender,
                 gas: window.walletSettings.userPreferences.defaultGas,
@@ -328,7 +329,7 @@ export default {
                   gas: window.walletSettings.userPreferences.defaultGas,
                   gasPrice: this.gasPrice,
                   pending: true,
-                  contractAddress: this.contractDetails.address,
+                  contractAddress: contractDetails.address,
                   contractMethodName: 'transfer',
                   contractAmount : this.amount,
                   label: this.transactionLabel,
@@ -343,7 +344,7 @@ export default {
                 saveTransactionDetails(pendingTransaction);
 
                 // The transaction has been hashed and will be sent
-                this.$emit("sent", pendingTransaction, this.contractDetails);
+                this.$emit("sent", pendingTransaction, contractDetails);
                 this.$emit("close");
               })
               .on('error', (error, receipt) => {
@@ -375,4 +376,3 @@ export default {
   }
 };
 </script>
-

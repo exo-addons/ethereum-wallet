@@ -1303,22 +1303,23 @@ export default {
       if (this.$refs.walletSummary) {
         this.$refs.walletSummary.loadPendingTransactions();
       }
+      const thiss = this;
       watchTransactionStatus(transaction.hash, receipt => {
         if (receipt.status) {
           if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {
-            const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
+            const wallet = thiss.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
             if (wallet) {
               contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
                 .then(approved => {
                   if (!wallet.approved) {
                     wallet.approved = {};
                   }
-                  this.$set(wallet.approved, contractDetails.address, approved ? 'approved' : 'disapproved');
-                  this.$nextTick(this.forceUpdate);
+                  thiss.$set(wallet.approved, contractDetails.address, approved ? 'approved' : 'disapproved');
+                  thiss.$nextTick(() => thiss.forceUpdate());
                 });
             }
           } else if (transaction.contractMethodName === 'addAdmin' || transaction.contractMethodName === 'removeAdmin') {
-            const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
+            const wallet = thiss.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
             if (wallet) {
               contractDetails.contract.methods.getAdminLevel(wallet.address).call()
                 .then(level => {
@@ -1326,16 +1327,16 @@ export default {
                     wallet.accountAdminLevel = {};
                   }
                   level = Number(level);
-                  this.$set(wallet.accountAdminLevel, contractDetails.address, level ? level : 'not admin');
-                  this.$nextTick(this.forceUpdate);
+                  thiss.$set(wallet.accountAdminLevel, contractDetails.address, level ? level : 'not admin');
+                  thiss.$nextTick(() => thiss.forceUpdate());
                 });
             }
           } else if (transaction.contractMethodName === 'unPause' || transaction.contractMethodName === 'pause') {
-            this.$set(contractDetails, "isPaused", transaction.contractMethodName === 'pause' ? true : false);
-            this.$nextTick(this.forceUpdate);
+            thiss.$set(contractDetails, "isPaused", transaction.contractMethodName === 'pause' ? true : false);
+            thiss.$nextTick(thiss.forceUpdate);
           } else if (transaction.contractMethodName === 'setSellPrice') {
-            this.$set(contractDetails, "sellPrice", transaction.contractAmount);
-            this.$nextTick(this.forceUpdate);
+            thiss.$set(contractDetails, "sellPrice", transaction.contractAmount);
+            thiss.$nextTick(() => thiss.forceUpdate());
             saveContractAddressAsDefault(contractDetails);
           }
         }
@@ -1360,8 +1361,9 @@ export default {
                     address: 'Transaction in progress...',
                     isPending: true
                   });
+                  const thiss = this;
                   watchTransactionStatus(contractInProgress.hash, () => {
-                    this.refreshContractsList();
+                    thiss.refreshContractsList();
                   });
                 } else if(receipt.status && receipt.contractAddress) {
                   const contractAddress = receipt.contractAddress.toLowerCase();

@@ -1,4 +1,4 @@
-import {watchTransactionStatus, convertTokenAmountReceived, computeBalance} from './WalletUtils.js';
+import {convertTokenAmountReceived, computeBalance} from './WalletUtils.js';
 
 /*
  * Get the list of Contracts with details:

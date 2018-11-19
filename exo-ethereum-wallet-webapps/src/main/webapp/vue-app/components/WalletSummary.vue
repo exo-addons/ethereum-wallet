@@ -73,7 +73,7 @@ import WalletReceiveModal from './WalletReceiveModal.vue';
 import WalletRequestFundsModal from './WalletRequestFundsModal.vue';
 import SendFundsModal from './SendFundsModal.vue';
 
-import {loadPendingTransactions} from '../WalletTransactions.js';
+import {loadTransactions} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -242,7 +242,7 @@ export default {
     loadPendingTransactions() {
       Object.keys(this.pendingTransactions).forEach(key => delete this.pendingTransactions[key]);
 
-      return loadPendingTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, true, transaction => {
+      return loadTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, true, transaction => {
         const contractDetails = transaction.to && this.accountsDetails[transaction.to.toLowerCase()];
         this.refreshBalance(contractDetails);
         if (this.pendingTransactions[transaction.hash]) {
@@ -258,7 +258,6 @@ export default {
         this.updatePendingTransactionsIndex++;
       })
         .then(() => {
-          console.log("this.pendingTransactions", this.pendingTransactions && Object.keys(this.pendingTransactions).length,this.pendingTransactions);
           this.updatePendingTransactionsIndex++;
         });
     }

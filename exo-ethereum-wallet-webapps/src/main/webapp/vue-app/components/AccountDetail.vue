@@ -7,8 +7,8 @@
             <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
             {{ contractDetails.title }}
           </div>
-          <h3 v-if="fiatBalance" class="font-weight-light">{{ fiatBalance }}</h3>
-          <h4 v-if="fiatBalance" class="grey--text font-weight-light">{{ balance }}</h4>
+          <h3 v-if="!contractDetails.isContract" class="font-weight-light">{{ fiatBalance }}</h3>
+          <h4 v-if="!contractDetails.isContract" class="grey--text font-weight-light">{{ balance }}</h4>
           <h3 v-else class="font-weight-light">{{ balance }}</h3>
         </v-flex>
 
@@ -166,7 +166,7 @@ export default {
           if (this.contractDetails.isContract) {
             this.contractDetails.etherBalance = balance;
             return retrieveContractDetails(this.walletAddress, this.contractDetails)
-              .then(this.$forceUpdate);
+              .then(() => this.$forceUpdate());
           } else {
             this.$set(this.contractDetails, "balance", balance);
             this.$set(this.contractDetails, "balanceFiat", etherToFiat(balance));
