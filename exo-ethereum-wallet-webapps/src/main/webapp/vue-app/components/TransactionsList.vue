@@ -591,7 +591,7 @@ export default {
         .catch(e => {
           console.debug("loadTransactions - method error", e);
           this.$emit("error", `${e}`);
-        })
+        })/*
         .then(() => {
           this.forceUpdateList();
           if (this.contractDetails.isContract) {
@@ -602,7 +602,7 @@ export default {
                 console.debug(`Error loading transactions from contract ${this.contractDetails && this.contractDetails.address} for account ${this.account} on network ${this.networkId}`, this.contractDetails, e);
               });
           }
-        })
+        })*/
         .then(() => {
           if (this.selectedTransactionHash) {
             const selectedTransaction = this.transactions[this.selectedTransactionHash];
