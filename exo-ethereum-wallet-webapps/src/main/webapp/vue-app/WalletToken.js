@@ -94,16 +94,10 @@ export function retrieveContractDetails(account, contractDetails) {
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
     })
-    .then(() => {
-      return contractDetails.contract.methods.decimals().call()
-        .then(decimals => {
-          contractDetails.decimals = decimals || 0;
-          contractDetails.retrievedAttributes++;
-        })
-        .catch(e => {
-          console.debug("no decimals operation found in contract ", contractDetails.address);
-          contractDetails.decimals = 0;
-        })
+    .then(() => contractDetails.contract.methods.decimals().call())
+    .then(decimals => {
+      contractDetails.decimals = decimals || 0;
+      contractDetails.retrievedAttributes++;
     })
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving decimals", contractDetails.address, new Error(e));
