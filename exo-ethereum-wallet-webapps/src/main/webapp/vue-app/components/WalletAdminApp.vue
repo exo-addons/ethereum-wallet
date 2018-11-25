@@ -53,6 +53,7 @@
             <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="wallets">Wallets</v-tab>
+            <v-tab v-show="kudosListRetrieved" key="kudosList">Kudos list</v-tab>
           </v-tabs>
 
           <v-tabs-items v-if="displaySettings" v-model="selectedTab">
@@ -504,6 +505,14 @@
                   @error="refreshBalance(null, null, $event)" />
               </v-card>
             </v-tab-item>
+            <v-tab-item v-show="kudosListRetrieved" id="kudosList" class="text-xs-center">
+              <kudos-list
+                ref="kudosList"
+                :wallets="wallets"
+                :wallet-address="walletAddress"
+                :contract-details="principalContract"
+                @list-retrieved="kudosListRetrieved = true"/>
+            </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-layout>
@@ -520,6 +529,7 @@ import AccountDetail from './AccountDetail.vue';
 import SendFundsModal from './SendFundsModal.vue';
 import ContractDetail from './ContractDetail.vue';
 import WalletSummary from './WalletSummary.vue';
+import KudosList from './KudosList.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
@@ -535,6 +545,7 @@ export default {
     SendFundsModal,
     ContractDetail,
     WalletSummary,
+    KudosList,
     WalletSetup
   },
   data () {
@@ -577,6 +588,7 @@ export default {
       selectedWalletAddress: null,
       selectedContractDetails: null,
       selectedWalletDetails: null,
+      kudosListRetrieved: false,
       mandatoryRule: [
         (v) => !!v || 'Field is required'
       ],
