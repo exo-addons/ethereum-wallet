@@ -25,6 +25,8 @@ public class AccountDetail implements Serializable {
 
   private boolean           isSpaceAdministrator;
 
+  private boolean           isEnabled;
+
   private String            avatar;
 
 }

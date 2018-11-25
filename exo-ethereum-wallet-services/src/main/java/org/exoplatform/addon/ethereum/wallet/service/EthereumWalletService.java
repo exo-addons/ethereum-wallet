@@ -342,13 +342,7 @@ public class EthereumWalletService implements Startable {
     if (globalSettingsValue != null && globalSettingsValue.getValue() != null) {
       globalSettings = GlobalSettings.parseStringToObject(defaultSettings, globalSettingsValue.getValue().toString());
       if (StringUtils.isNotBlank(globalSettings.getAccessPermission())) {
-        Space space = spaceService.getSpaceByPrettyName(globalSettings.getAccessPermission());
-        if (space == null) {
-          space = spaceService.getSpaceByUrl(globalSettings.getAccessPermission());
-          if (space == null) {
-            space = spaceService.getSpaceByGroupId("/spaces/" + globalSettings.getAccessPermission());
-          }
-        }
+        Space space = getSpace(globalSettings.getAccessPermission());
         // Disable wallet for users not member of the permitted space members
         if (username != null && space != null
             && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
@@ -1237,6 +1231,7 @@ public class EthereumWalletService implements Startable {
                                    identity.getProfile().getFullName(),
                                    getUserAddressFromStorage(id),
                                    false,
+                                   identity.isEnable(),
                                    avatarUrl);
         } else if (SPACE_ACCOUNT_TYPE.equals(accountDetailCacheId.getType())) {
           String id = accountDetailCacheId.getId();
@@ -1256,6 +1251,7 @@ public class EthereumWalletService implements Startable {
                                    getSpaceAddressFromStorage(id),
                                    spaceService.isManager(space, getCurrentUserId())
                                        || spaceService.isSuperManager(getCurrentUserId()),
+                                   true,
                                    avatarUrl);
         }
         return accountDetail;

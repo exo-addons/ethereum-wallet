@@ -338,7 +338,7 @@
                       </span>
                     </td>
                     <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
-                      {{ props.item.contractType > 0 ? `${props.item.sellPrice} ether` : "-" }}
+                      {{ props.item.contractType > 0 && props.item.sellPrice ? `${props.item.sellPrice} ether` : "-" }}
                     </td>
                     <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
                       {{ props.item.contractTypeLabel }}

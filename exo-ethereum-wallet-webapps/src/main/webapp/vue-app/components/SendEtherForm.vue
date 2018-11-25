@@ -175,6 +175,7 @@ export default {
         return;
       }
 
+      this.error = null;
       this.loading = true;
       try {
         const amount = window.localWeb3.utils.toWei(this.amount.toString(), "ether");
