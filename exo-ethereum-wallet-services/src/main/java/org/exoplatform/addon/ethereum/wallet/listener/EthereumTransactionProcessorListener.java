@@ -297,7 +297,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
   private AccountDetail getAccountDetail(String address) {
     AccountDetail accountDetails = ethereumWalletService.getAccountDetailsByAddress(address);
     if (accountDetails == null) {
-      accountDetails = new AccountDetail(null, null, null, address, address, false, LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
+      accountDetails =
+                     new AccountDetail(null, null, null, address, address, false, true, LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
     }
     return accountDetails;
   }
