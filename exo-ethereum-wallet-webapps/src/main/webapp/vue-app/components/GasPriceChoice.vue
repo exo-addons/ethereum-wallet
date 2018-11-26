@@ -1,6 +1,6 @@
 <template>
   <div class="mt-3">
-    Transaction fee <code v-if="estimatedFee" class="ml-2">{{ estimatedFee }}</code>
+    {{ title ? title : 'Transaction fee' }} <code v-if="estimatedFee" class="ml-2">{{ estimatedFee }}</code>
     <v-radio-group v-model="choice" :label="``">
       <v-radio label="Cheap (could take 1 day)" value="1" />
       <v-radio label="Normal (could take few hours)" value="2" />
@@ -12,6 +12,12 @@
 export default {
   props: {
     estimatedFee: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    title: {
       type: String,
       default: function() {
         return null;

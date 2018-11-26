@@ -38,6 +38,7 @@
           @click:append="walletPasswordShow = !walletPasswordShow" />
         <gas-price-choice
           :estimated-fee="transactionFeeString"
+          :title="`${validRecipientsCount} transactions total fee`"
           @changed="gasPrice = $event" />
         <v-text-field
           v-model="transactionLabel"
