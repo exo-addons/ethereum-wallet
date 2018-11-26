@@ -12,17 +12,12 @@
         <i class="uiIconInfo"></i>{{ information }}
       </div>
       <v-form @submit="$event.preventDefault();$event.stopPropagation();">
-        <v-container flat fluid grid-list-lg class="mt-4 pl-2">
-          <v-layout row wrap>
-            <v-text-field
-              v-model.number="amount"
-              :disabled="loading"
-              name="amount"
-              label="Tokens per Kudo"
-              placeholder="Select an amount of tokens per kudo" />
-            <slot></slot>
-          </v-layout>
-        </v-container>
+        <v-text-field
+          v-model.number="amount"
+          :disabled="loading"
+          :label="`Tokens per Kudo (total tokens to send: ${totalAmount})`"
+          name="amount"
+          placeholder="Select an amount of tokens per kudo" />
 
         <v-text-field
           v-if="!storedPassword"
@@ -101,7 +96,6 @@ export default {
       walletPasswordShow: false,
       useMetamask: false,
       amount: null,
-      totalAmount: 0,
       gasPrice: 0,
       estimatedGas: 0,
       fiatSymbol: null,
@@ -114,6 +108,19 @@ export default {
   computed: {
     loading() {
       return this.loadingCount > 0;
+    },
+    totalKudosCount() {
+      let totalKudos = 0;
+      this.recipientsHavingAddress.forEach(recipient => {
+        totalKudos += recipient.received;
+        console.log("recipient.received", recipient.id, recipient.received);
+      });
+      console.log("totalKudos", totalKudos);
+      return totalKudos;
+    },
+    totalAmount() {
+      // This is a workaround to avoid floating point
+      return this.amount * 1000000 * this.totalKudosCount / 1000000;
     },
     validRecipientsCount() {
       return this.recipientsHavingAddress ? this.recipientsHavingAddress.length : 0;
@@ -155,13 +162,6 @@ export default {
     recipients() {
       this.recipientsHavingAddress = this.recipients ? this.recipients.slice(0) : [];
       this.recipientsHavingAddress = this.recipientsHavingAddress.filter(recipientWallet => recipientWallet.address);
-    },
-    amount() {
-      if (this.amount && this.validRecipientsCount) {
-        this.totalAmount = this.amount * this.validRecipientsCount;
-      } else {
-        this.totalAmount = 0;
-      }
     }
   },
   methods: {
@@ -258,9 +258,10 @@ export default {
       }
 
       this.loadingCount++;
-      console.log(this.amount * recipientWallet.received);
       try {
-        this.contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(this.amount * recipientWallet.received, this.contractDetails.decimals).toString())
+        // Workaround for floating point problem
+        const amountToSendForReceiver = this.amount * 1000000 * recipientWallet.received / 1000000;
+        this.contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
             gas: window.walletSettings.userPreferences.defaultGas,
@@ -277,7 +278,7 @@ export default {
             }
             const sender = this.contractDetails.contract.options.from;
             const contractDetails = this.contractDetails;
-            return contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(this.amount * recipientWallet.received, contractDetails.decimals).toString())
+            return contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, contractDetails.decimals).toString())
               .send({
                 from: sender,
                 gas: window.walletSettings.userPreferences.defaultGas,
@@ -296,7 +297,7 @@ export default {
                   pending: true,
                   contractAddress: contractDetails.address,
                   contractMethodName: 'transfer',
-                  contractAmount : this.amount * recipientWallet.received,
+                  contractAmount : amountToSendForReceiver,
                   label: this.transactionLabel,
                   message: this.transactionMessage,
                   timestamp: Date.now(),
