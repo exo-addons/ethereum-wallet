@@ -53,11 +53,11 @@
             <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="wallets">Wallets</v-tab>
-            <v-tab v-show="kudosListRetrieved" key="kudosList">Kudos list</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" id="kudosListTab" key="kudosList" :class="kudosListRetrieved || 'hidden'">Kudos list</v-tab>
           </v-tabs>
 
           <v-tabs-items v-if="displaySettings" v-model="selectedTab">
-            <v-tab-item key="general">
+            <v-tab-item id="general">
               <v-card v-if="!loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <v-combobox
                   v-model="selectedNetwork"
@@ -173,7 +173,7 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" key="funds">
+            <v-tab-item v-if="sameConfiguredNetwork" id="funds">
               <v-card v-if="!loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <v-card-title>
                   The following settings manages the funds holder and the amount of initial funds to send for a user that has created a new wallet for the first time.
@@ -261,7 +261,7 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" key="overview">
+            <v-tab-item v-if="sameConfiguredNetwork" id="overview">
               <v-card v-if="!loadingSettings && !error" class="text-xs-center pr-3 pl-3 pt-2" flat>
                 <div>
                   <v-switch v-model="enableDelegation" label="Enable token delegation operations for wallets by default"></v-switch>
@@ -317,7 +317,7 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" key="contracts">
+            <v-tab-item v-if="sameConfiguredNetwork" id="contracts">
               <v-card flat>
                 <v-subheader class="text-xs-center">Default contracts</v-subheader>
                 <v-divider />
@@ -406,7 +406,7 @@
               </v-card>
             </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" key="wallets">
+            <v-tab-item v-if="sameConfiguredNetwork" id="wallets">
               <v-card flat>
                 <v-data-table :headers="walletHeaders" :items="wallets" :loading="loadingWallets" hide-actions>
                   <template slot="items" slot-scope="props">
@@ -505,7 +505,8 @@
                   @error="refreshBalance(null, null, $event)" />
               </v-card>
             </v-tab-item>
-            <v-tab-item v-show="kudosListRetrieved" id="kudosList" class="text-xs-center">
+
+            <v-tab-item v-if="sameConfiguredNetwork" id="kudosList">
               <kudos-list
                 ref="kudosList"
                 :wallets="wallets"

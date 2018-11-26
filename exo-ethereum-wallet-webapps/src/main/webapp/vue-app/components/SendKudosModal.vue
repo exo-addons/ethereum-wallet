@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup" width="600px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <button slot="activator" :value="true" class="btn btn-primary mt-1 mb-1" @click="dialog = true">
+  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="600px" max-width="100vw" persistent @keydown.esc="dialog = false">
+    <button slot="activator" :disabled="disabled" :value="true" class="btn btn-primary mt-1 mb-1" @click="dialog = true">
       Send kudos reward
     </button>
     <v-card class="elevation-12">
@@ -44,6 +44,12 @@ export default {
     return {
       dialog: false
     };
+  },
+  computed: {
+    disabled() {
+      // disable button when no recipient
+      return !this.contractDetails || !this.recipients || !this.recipients.filter(wallet => wallet.address).length;
+    }
   },
   watch: {
     dialog() {

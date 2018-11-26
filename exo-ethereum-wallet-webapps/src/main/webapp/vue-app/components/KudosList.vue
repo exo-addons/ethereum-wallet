@@ -55,7 +55,6 @@
       </template>
     </v-data-table>
     <send-kudos-modal
-      v-if="kudosIdentitiesList && kudosIdentitiesList.length"
       :account="walletAddress"
       :contract-details="contractDetails"
       :recipients="kudosIdentitiesList"
@@ -162,7 +161,7 @@ export default {
       } else if(event.detail.list) {
         this.kudosIdentitiesList = event.detail.list;
         this.kudosIdentitiesList.forEach(walletKudos => {
-          const wallet = this.wallets.find(wallet => wallet && wallet.id && wallet.id === walletKudos.id && wallet.type === walletKudos.type);
+          const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.id === walletKudos.id && wallet.type === walletKudos.type);
           if(wallet && wallet.address) {
             this.$set(walletKudos, "address", wallet.address);
           }
