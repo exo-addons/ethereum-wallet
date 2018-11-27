@@ -42,15 +42,45 @@
           @input="selectedDateMenu = false" />
       </v-menu>
       <v-data-table
+        v-model="selectedKudosIdentitiesList"
         :headers="kudosIdentitiesHeaders"
         :items="kudosIdentitiesList"
         :loading="loading"
         :sortable="true"
         :pagination.sync="pagination"
+        select-all
+        item-key="idType"
         class="elevation-1 mr-3 mb-2"
         hide-actions>
-        <template slot="items" slot-scope="props">
+        <template slot="headers" slot-scope="props">
           <tr>
+            <th>
+              <v-checkbox
+                :input-value="props.all"
+                :indeterminate="props.indeterminate"
+                primary
+                hide-details
+                @click.native="toggleAll" />
+            </th>
+            <th
+              v-for="header in props.headers"
+              :key="header.text"
+              :class="['column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+              @click="changeSort(header.value)">
+              <v-icon v-if="pagination.descending" small>arrow_upward</v-icon>
+              <v-icon v-else small>arrow_downward</v-icon>
+              {{ header.text }}
+            </th>
+          </tr>
+        </template>
+        <template slot="items" slot-scope="props">
+          <tr :active="props.selected" @click="props.selected = !props.selected">
+            <td>
+              <v-checkbox
+                v-if="props.item.address && props.item.received"
+                :input-value="props.selected"
+                hide-details />
+            </td>
             <td>
               <v-avatar size="36px">
                 <img
@@ -83,7 +113,7 @@
       <send-kudos-modal
         :account="walletAddress"
         :contract-details="contractDetails"
-        :recipients="kudosIdentitiesList"
+        :recipients="recipients"
         @sent="newTransactionPending"
         @error="error = $event" />
     </v-card-text>
@@ -124,10 +154,12 @@ export default {
       selectedDateMenu: false,
       kudosPeriodType: null,
       kudosIdentitiesList: [],
+      selectedKudosIdentitiesList: [],
       selectedStartDate: null,
       selectedEndDate: null,
       pagination: {
-        descending: true
+        descending: true,
+        sortBy: 'received'
       },
       kudosIdentitiesHeaders: [
         {
@@ -180,6 +212,9 @@ export default {
       } else {
         return '';
       }
+    },
+    recipients() {
+      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(item => item.address && item.received && item.tokensToSend) : [];
     },
     displayButton() {
       return this.contractDetails && this.kudosIdentitiesList && this.kudosIdentitiesList.length;
@@ -249,7 +284,9 @@ export default {
         console.debug(event.detail.error);
         this.error = event.detail.error;
       } else if(event.detail.list) {
-        this.kudosIdentitiesList = event.detail.list;
+        const list = event.detail.list;
+        list.forEach(element => element.idType = `${element.type}_${element.id}`);
+        this.kudosIdentitiesList = list;
         this.refreshList();
       } else {
         this.error = 'Empty kudos list is retrieved';
@@ -280,6 +317,21 @@ export default {
       const dateString = date.toString();
       // Example: 'Feb 01 2018'
       return dateString.substring(dateString.indexOf(' ') + 1, dateString.indexOf(":") - 3);
+    },
+    toggleAll() {
+      if (this.selectedKudosIdentitiesList.length === this.kudosIdentitiesList.length){
+        this.selectedKudosIdentitiesList = [];
+      } else {
+        this.selectedKudosIdentitiesList = this.kudosIdentitiesList.slice();
+      }
+    },
+    changeSort(column) {
+      if (this.pagination.sortBy === column) {
+        this.pagination.descending = !this.pagination.descending;
+      } else {
+        this.pagination.sortBy = column;
+        this.pagination.descending = false;
+      }
     }
   }
 };
