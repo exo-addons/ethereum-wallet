@@ -100,7 +100,6 @@ export default {
       estimatedGas: 0,
       fiatSymbol: null,
       warning: null,
-      recipientsHavingAddress: [],
       information: null,
       errors: null
     };
@@ -113,9 +112,7 @@ export default {
       let totalKudos = 0;
       this.recipientsHavingAddress.forEach(recipient => {
         totalKudos += recipient.received;
-        console.log("recipient.received", recipient.id, recipient.received);
       });
-      console.log("totalKudos", totalKudos);
       return totalKudos;
     },
     totalAmount() {
@@ -123,7 +120,7 @@ export default {
       return this.amount * 1000000 * this.totalKudosCount / 1000000;
     },
     validRecipientsCount() {
-      return this.recipientsHavingAddress ? this.recipientsHavingAddress.length : 0;
+      return this.recipientsHavingAddress.length;
     },
     transactionFeeString() {
       if (this.transactionFeeToken) {
@@ -151,6 +148,10 @@ export default {
     },
     transactionFeeToken() {
       return !this.contractDetails || this.contractDetails.isOwner || !this.transactionFeeInWei || !this.sellPriceInWei ? 0 : Number(this.transactionFeeInWei / this.sellPriceInWei).toFixed(4);
+    },
+    recipientsHavingAddress() {
+      const recipientsHavingAddress = this.recipients ? this.recipients.slice(0) : [];
+      return recipientsHavingAddress.filter(recipientWallet => recipientWallet.address && Number(recipientWallet.received) > 0);
     }
   },
   watch: {
@@ -158,10 +159,6 @@ export default {
       if (this.contractDetails && this.contractDetails.isPaused) {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
       }
-    },
-    recipients() {
-      this.recipientsHavingAddress = this.recipients ? this.recipients.slice(0) : [];
-      this.recipientsHavingAddress = this.recipientsHavingAddress.filter(recipientWallet => recipientWallet.address);
     }
   },
   methods: {
@@ -171,7 +168,6 @@ export default {
       }
       this.loadingCount = 1;
       this.showQRCodeModal = false;
-      this.recipientsHavingAddress = null;
       this.amount = null;
       this.warning = null;
       this.errors = null;
@@ -183,8 +179,6 @@ export default {
       this.useMetamask = window.walletSettings.userPreferences.useMetamask;
       this.fiatSymbol = window.walletSettings.fiatSymbol;
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
-      this.recipientsHavingAddress = this.recipients ? this.recipients.slice(0) : [];
-      this.recipientsHavingAddress = this.recipientsHavingAddress.filter(recipientWallet => recipientWallet.address);
       this.$nextTick(() => {
         if (this.contractDetails && this.contractDetails.isPaused) {
           this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;

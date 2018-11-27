@@ -1,71 +1,69 @@
 <template>
-  <v-flex>
-    <v-menu
-      ref="selectedDateMenu"
-      v-model="selectedDateMenu"
-      transition="scale-transition"
-      lazy
-      offset-y
-      xs12 lg6>
-      <v-text-field
-        slot="activator"
-        v-model="dateFormatted"
-        label="Date"
-        persistent-hint
-        prepend-icon="event"
-        @blur="date = parseDate(dateFormatted)" />
-      <v-date-picker
-        v-model="selectedMonth"
-        type="month"
-        @input="selectedDateMenu = false" />
-    </v-menu>
-    <v-data-table
-      :headers="kudosIdentitiesHeaders"
-      :items="kudosIdentitiesList"
-      :loading="loading"
-      :sortable="true"
-      :pagination.sync="pagination"
-      class="elevation-1 mr-3 ml-3 mt-2 mb-2"
-      hide-actions>
-      <template slot="items" slot-scope="props">
-        <tr>
-          <td>
-            <v-avatar size="36px">
-              <img
-                :src="props.item.avatar"
-                onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-            </v-avatar>
-          </td>
-          <td class="text-xs-left">
-            <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
-            <div v-else>
-              <del>
-                <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
-              </del>
-              (No address)
-            </div>
-          </td>
-          <td v-html="props.item.address">
-          </td>
-          <td v-html="props.item.received">
-          </td>
-          <td v-html="props.item.sent">
-          </td>
-        </tr>
-      </template>
-    </v-data-table>
-    <send-kudos-modal
-      :account="walletAddress"
-      :contract-details="contractDetails"
-      :recipients="kudosIdentitiesList"
-      @sent="newTransactionPending"
-      @error="error = $event" />
-  </v-flex>
+  <v-card flat>
+    <v-card-text>
+      <v-menu
+        ref="selectedDateMenu"
+        v-model="selectedDateMenu"
+        transition="scale-transition"
+        lazy
+        offset-y
+        class="kudosDateSelector">
+        <v-text-field
+          slot="activator"
+          v-model="periodDatesDisplay"
+          label="Select the period date"
+          prepend-icon="event" />
+        <v-date-picker
+          v-model="selectedDate"
+          @input="selectedDateMenu = false" />
+      </v-menu>
+      <v-data-table
+        :headers="kudosIdentitiesHeaders"
+        :items="kudosIdentitiesList"
+        :loading="loading"
+        :sortable="true"
+        :pagination.sync="pagination"
+        class="elevation-1 mr-3 mb-2"
+        hide-actions>
+        <template slot="items" slot-scope="props">
+          <tr>
+            <td>
+              <v-avatar size="36px">
+                <img
+                  :src="props.item.avatar"
+                  onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+              </v-avatar>
+            </td>
+            <td class="text-xs-left">
+              <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
+              <div v-else>
+                <del>
+                  <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
+                </del>
+                (No address)
+              </div>
+            </td>
+            <td v-html="props.item.address">
+            </td>
+            <td v-html="props.item.received">
+            </td>
+            <td v-html="props.item.sent">
+            </td>
+          </tr>
+        </template>
+      </v-data-table>
+      <send-kudos-modal
+        :account="walletAddress"
+        :contract-details="contractDetails"
+        :recipients="kudosIdentitiesList"
+        @sent="newTransactionPending"
+        @error="error = $event" />
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>
 import SendKudosModal from './SendKudosModal.vue';
-
 export default {
   components: {
     SendKudosModal
@@ -84,14 +82,16 @@ export default {
       }
     }
   },
-  data: vm => {
+  data() {
     return {
       loading: false,
       error: null,
-      selectedMonth: new Date().toISOString().substr(0, 7),
-      dateFormatted: vm.formatDate(new Date().toISOString().substr(0, 7)),
+      selectedDate: null,
       selectedDateMenu: false,
+      kudosPeriodType: null,
       kudosIdentitiesList: [],
+      selectedStartDate: null,
+      selectedEndDate: null,
       pagination: {
         descending: true
       },
@@ -131,24 +131,54 @@ export default {
     };
   },
   computed: {
+    periodDatesDisplay() {
+      if(this.selectedStartDate && this.selectedEndDate) {
+        return `${this.selectedStartDate} to ${this.selectedEndDate}`;
+      } else if(this.selectedStartDate) {
+        return this.selectedStartDate;
+      } else {
+        return '';
+      }
+    },
     displayButton() {
       return this.contractDetails && this.kudosIdentitiesList && this.kudosIdentitiesList.length;
     }
   },
   watch: {
-    selectedMonth () {
-      this.dateFormatted = this.formatDate(this.selectedMonth);
-      document.dispatchEvent(new CustomEvent('exo-kudo-get-kudos-list', {'detail' : {'month' : new Date(this.selectedMonth)}}));
+    selectedDate() {
+      this.loadAll();
+    },
+    kudosPeriodType() {
+      this.loadAll();
     }
   },
   created() {
-    document.addEventListener('exo-kudo-get-kudos-list-loading', () => this.loading = true);
-    document.addEventListener('exo-kudo-get-kudos-list-result', this.loadKudosList);
+    document.addEventListener('exo-kudos-get-kudos-list-loading', () => this.loading = true);
+    document.addEventListener('exo-kudos-get-kudos-list-result', this.loadKudosList);
     this.$nextTick(() => {
-      document.dispatchEvent(new CustomEvent('exo-kudo-get-kudos-list', {'detail' : {'month' : new Date(this.selectedMonth)}}));
+      this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
+      this.selectedDate = new Date().toISOString().substr(0, 10);
+      document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
   },
   methods: {
+    loadAll() {
+      if (!this.selectedDate || !this.kudosPeriodType) {
+        return;
+      }
+      this.selectedStartDate = this.formatDate(new Date(this.selectedDate));
+      this.selectedEndDate = null;
+      document.dispatchEvent(new CustomEvent('exo-kudos-get-period', {'detail' : {'date' : new Date(this.selectedDate), 'periodType': this.kudosPeriodType}}));
+    },
+    loadPeriodDates(event) {
+      if(event && event.detail && event.detail.period) {
+        this.selectedStartDate = this.formatDate(new Date(event.detail.period.startDateInSeconds * 1000));
+        this.selectedEndDate = this.formatDate(new Date(event.detail.period.endDateInSeconds * 1000));
+        document.dispatchEvent(new CustomEvent('exo-kudos-get-kudos-list', {'detail' : {'startDate' : new Date(this.selectedStartDate), 'endDate' : new Date(this.selectedEndDate)}}));
+      } else {
+        console.debug("Retrieved event detail doesn't have the period as result");
+      }
+    },
     loadKudosList(event) {
       this.$emit("list-retrieved");
       this.error = null;
@@ -175,15 +205,9 @@ export default {
       if (!date){
         return null;
       }
-      const [year, month] = date.split('-');
-      return `${month}/${year}`;
-    },
-    parseDate (date) {
-      if (!date) {
-        return null;
-      }
-      const [month, year] = date.split('/');
-      return `${year}-${month.padStart(2, '0')}`;
+      const dateString = date.toString();
+      // Example: 'Feb 01 2018'
+      return dateString.substring(dateString.indexOf(' ') + 1, dateString.indexOf(":") - 3);
     }
   }
 };
