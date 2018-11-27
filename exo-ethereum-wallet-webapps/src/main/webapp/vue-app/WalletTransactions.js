@@ -575,7 +575,9 @@ function loadPendingTransaction(networkId, account, contractDetails, transaction
       }
     })
     .catch(error => {
-      console.debug("Error while retrieving transaction details", pendingTransaction, error);
+      if(String(error).indexOf('Invalid transaction hash') < 0) {
+        console.debug("Error while retrieving transaction details", pendingTransaction, error);
+      }
     });
 }
 

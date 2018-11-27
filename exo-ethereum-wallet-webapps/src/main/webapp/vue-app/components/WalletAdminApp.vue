@@ -507,7 +507,7 @@
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" id="kudosList">
-              <kudos-list
+              <wallet-kudos-list
                 ref="kudosList"
                 :wallets="wallets"
                 :wallet-address="walletAddress"
@@ -530,7 +530,7 @@ import AccountDetail from './AccountDetail.vue';
 import SendFundsModal from './SendFundsModal.vue';
 import ContractDetail from './ContractDetail.vue';
 import WalletSummary from './WalletSummary.vue';
-import KudosList from './KudosList.vue';
+import WalletKudosList from './WalletKudosList.vue';
 
 import * as constants from '../WalletConstants.js';
 import {searchSpaces, searchUsers} from '../WalletAddressRegistry.js';
@@ -546,7 +546,7 @@ export default {
     SendFundsModal,
     ContractDetail,
     WalletSummary,
-    KudosList,
+    WalletKudosList,
     WalletSetup
   },
   data () {

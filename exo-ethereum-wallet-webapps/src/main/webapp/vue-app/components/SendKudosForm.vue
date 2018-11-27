@@ -12,13 +12,10 @@
         <i class="uiIconInfo"></i>{{ information }}
       </div>
       <v-form @submit="$event.preventDefault();$event.stopPropagation();">
-        <v-text-field
-          v-model.number="amount"
-          :disabled="loading"
-          :label="`Tokens per Kudo (total tokens to send: ${totalAmount})`"
-          name="amount"
-          placeholder="Select an amount of tokens per kudo" />
-
+        <gas-price-choice
+          :estimated-fee="transactionFeeString"
+          :title="`${validRecipientsCount} transactions with a total amount to send ${totalTokens} ${contractDetails.symbol}. Overall transactions fee:`"
+          @changed="gasPrice = $event" />
         <v-text-field
           v-if="!storedPassword"
           v-model="walletPassword"
@@ -31,10 +28,6 @@
           counter
           autocomplete="current-passord"
           @click:append="walletPasswordShow = !walletPasswordShow" />
-        <gas-price-choice
-          :estimated-fee="transactionFeeString"
-          :title="`${validRecipientsCount} transactions total fee`"
-          @changed="gasPrice = $event" />
         <v-text-field
           v-model="transactionLabel"
           :disabled="loading"
@@ -56,7 +49,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendRewards">Send</button>
+      <button :disabled="loading || !totalTokens" :loading="loading" class="btn btn-primary mr-1" @click="sendRewards">Send</button>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -95,7 +88,6 @@ export default {
       walletPassword: '',
       walletPasswordShow: false,
       useMetamask: false,
-      amount: null,
       gasPrice: 0,
       estimatedGas: 0,
       fiatSymbol: null,
@@ -111,13 +103,16 @@ export default {
     totalKudosCount() {
       let totalKudos = 0;
       this.recipientsHavingAddress.forEach(recipient => {
-        totalKudos += recipient.received;
+        totalKudos += Number(recipient.received);
       });
       return totalKudos;
     },
-    totalAmount() {
-      // This is a workaround to avoid floating point
-      return this.amount * 1000000 * this.totalKudosCount / 1000000;
+    totalTokens() {
+      let totalTokens = 0;
+      this.recipientsHavingAddress.forEach(recipient => {
+        totalTokens += Number(recipient.tokensToSend);
+      });
+      return totalTokens;
     },
     validRecipientsCount() {
       return this.recipientsHavingAddress.length;
@@ -151,7 +146,7 @@ export default {
     },
     recipientsHavingAddress() {
       const recipientsHavingAddress = this.recipients ? this.recipients.slice(0) : [];
-      return recipientsHavingAddress.filter(recipientWallet => recipientWallet.address && Number(recipientWallet.received) > 0);
+      return recipientsHavingAddress.filter(recipientWallet => recipientWallet.address && Number(recipientWallet.tokensToSend) > 0);
     }
   },
   watch: {
@@ -168,7 +163,6 @@ export default {
       }
       this.loadingCount = 1;
       this.showQRCodeModal = false;
-      this.amount = null;
       this.warning = null;
       this.errors = null;
       this.transactionMessage = null;
@@ -206,6 +200,8 @@ export default {
       }
     },
     sendRewards() {
+      this.errors = null;
+
       if (this.contractDetails && this.contractDetails.isPaused) {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
         return;
@@ -216,8 +212,8 @@ export default {
         return;
       }
 
-      if (!this.totalAmount || isNaN(parseFloat(this.amount)) || !isFinite(this.amount) || this.amount <= 0) {
-        this.errors = "Invalid amount";
+      if (!this.totalTokens) {
+        this.errors = "Invalid amount of tokens to send";
         return;
       }
 
@@ -232,11 +228,10 @@ export default {
         return;
       }
 
-      if (this.contractDetails.balance < this.totalAmount) {
+      if (this.contractDetails.balance < this.totalTokens) {
         this.errors = "Unsufficient funds";
         return;
       }
-      this.errors = null;
 
       this.recipientsHavingAddress.forEach(recipientWallet => {
         const sent = this.sendTokens(recipientWallet);
@@ -251,10 +246,14 @@ export default {
         return;
       }
 
+      if (!Number(recipientWallet.tokensToSend)) {
+        this.appendError("Invalid recipient address");
+        return;
+      }
+
       this.loadingCount++;
       try {
-        // Workaround for floating point problem
-        const amountToSendForReceiver = this.amount * 1000000 * recipientWallet.received / 1000000;
+        const amountToSendForReceiver = recipientWallet.tokensToSend;
         this.contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
@@ -333,7 +332,7 @@ export default {
       }
     },
     appendError(error) {
-      this.error += `<br />${error}`;
+      this.errors += `<br />${error}`;
     }
   }
 };

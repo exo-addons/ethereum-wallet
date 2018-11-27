@@ -1,6 +1,30 @@
 <template>
   <v-card flat>
-    <v-card-text>
+    <v-card-title class="text-xs-center">
+      <div v-if="error" class="alert alert-error v-content">
+        <i class="uiIconError"></i>
+        {{ error }}
+      </div>
+    </v-card-title>
+    <v-card-text class="text-xs-center">
+      <div id="tokenRatioAmount">
+        <v-text-field
+          v-model.number="tokenPerKudo"
+          :readonly="!isEditingRatio"
+          label="Tokens per Kudo"
+          name="tokenPerKudo"
+          placeholder="Select an amount of tokens per kudo" />
+        <v-slide-x-reverse-transition
+          slot="append-outer"
+          mode="out-in">
+          <v-icon
+            :color="isEditingRatio ? 'success' : 'info'"
+            :key="`icon-${isEditingRatio}`"
+            @click="saveTokensPerKudos"
+            v-text="isEditingRatio ? 'fa-check-circle' : 'fa-edit'" />
+        </v-slide-x-reverse-transition>
+      </div>
+    
       <v-menu
         ref="selectedDateMenu"
         v-model="selectedDateMenu"
@@ -45,6 +69,10 @@
             </td>
             <td v-html="props.item.address">
             </td>
+            <td>
+              <v-text-field v-if="props.item.address && props.item.received" v-model="props.item.tokensToSend"/>
+              <template v-else>-</template>
+            </td>
             <td v-html="props.item.received">
             </td>
             <td v-html="props.item.sent">
@@ -63,7 +91,10 @@
 </template>
 
 <script>
+import {getTokensPerKudos, saveTokensPerKudos} from '../WalletExtServices.js';
+
 import SendKudosModal from './SendKudosModal.vue';
+
 export default {
   components: {
     SendKudosModal
@@ -86,6 +117,9 @@ export default {
     return {
       loading: false,
       error: null,
+      isEditingRatio: false,
+      tokenPerKudo: null,
+      defaultTokenPerKudos: null,
       selectedDate: null,
       selectedDateMenu: false,
       kudosPeriodType: null,
@@ -114,6 +148,13 @@ export default {
           align: 'center',
           sortable: true,
           value: 'address'
+        },
+        {
+          text: 'Tokens to send',
+          align: 'center',
+          sortable: true,
+          value: 'tokensToSend',
+          width: '70px'
         },
         {
           text: 'Received',
@@ -148,6 +189,9 @@ export default {
     selectedDate() {
       this.loadAll();
     },
+    defaultTokenPerKudos() {
+      this.refreshList();
+    },
     kudosPeriodType() {
       this.loadAll();
     }
@@ -160,8 +204,24 @@ export default {
       this.selectedDate = new Date().toISOString().substr(0, 10);
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
+    getTokensPerKudos().then(value => this.defaultTokenPerKudos = this.tokenPerKudo = value);
   },
   methods: {
+    saveTokensPerKudos() {
+      if(this.isEditingRatio) {
+        saveTokensPerKudos(this.tokenPerKudo)
+          .then(() => {
+            this.defaultTokenPerKudos = this.tokenPerKudo;
+            this.isEditingRatio = false;
+          })
+          .catch(error => {
+            this.error = "Error while saving 'Token per Kudos' parameter";
+            this.isEditingRatio = true;
+          });
+      } else {
+        this.isEditingRatio = true;
+      }
+    },
     loadAll() {
       if (!this.selectedDate || !this.kudosPeriodType) {
         return;
@@ -190,16 +250,28 @@ export default {
         this.error = event.detail.error;
       } else if(event.detail.list) {
         this.kudosIdentitiesList = event.detail.list;
-        this.kudosIdentitiesList.forEach(walletKudos => {
-          const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.id === walletKudos.id && wallet.type === walletKudos.type);
-          if(wallet && wallet.address) {
-            this.$set(walletKudos, "address", wallet.address);
-          }
-        });
+        this.refreshList();
       } else {
         this.error = 'Empty kudos list is retrieved';
       }
       this.loading = false;
+    },
+    refreshList() {
+      this.kudosIdentitiesList.forEach(walletKudos => {
+        const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.id === walletKudos.id && wallet.type === walletKudos.type);
+        if(wallet && wallet.address) {
+          this.$set(walletKudos, "address", wallet.address);
+          if (this.defaultTokenPerKudos) {
+            let result = Number(walletKudos.received) * 100000 * Number(this.defaultTokenPerKudos) / 100000;
+            // attempt to simply avoid floatting point problem
+            const resultString = String(result);
+            if(resultString.length - resultString.indexOf(".") > 5) {
+              result = Number(walletKudos.received) * 1000000 * Number(this.defaultTokenPerKudos) / 1000000;
+            }
+            this.$set(walletKudos, "tokensToSend", result);
+          }
+        }
+      });
     },
     formatDate (date) {
       if (!date){

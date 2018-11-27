@@ -79,7 +79,11 @@ public class Utils {
 
   public static final String                             SCOPE_NAME                            = "ADDONS_ETHEREUM_WALLET";
 
+  public static final String                             EXT_SCOPE_NAME                        = "ADDONS_ETHEREUM_WALLET_EXT";
+
   public static final String                             GLOBAL_SETTINGS_KEY_NAME              = "GLOBAL_SETTINGS";
+
+  public static final String                             EXT_TOKENS_PER_KUDOS_KEY_NAME         = "TOKENS_PER_KUDOS";
 
   public static final String                             ADDRESS_KEY_NAME                      = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
@@ -91,7 +95,12 @@ public class Utils {
 
   public static final Context                            WALLET_CONTEXT                        = Context.GLOBAL;
 
+  public static final Context                            EXT_WALLET_CONTEXT                    = Context.GLOBAL;
+
   public static final Scope                              WALLET_SCOPE                          = Scope.APPLICATION.id(SCOPE_NAME);
+
+  public static final Scope                              EXT_WALLET_SCOPE                      =
+                                                                          Scope.APPLICATION.id(EXT_SCOPE_NAME);
 
   public static final String                             WALLET_DEFAULT_CONTRACTS_NAME         = "WALLET_DEFAULT_CONTRACTS";
 
