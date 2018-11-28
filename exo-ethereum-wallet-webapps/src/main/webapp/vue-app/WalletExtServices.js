@@ -7,6 +7,14 @@ export function getTokensPerKudos() {
   .then(value => Number(value));
 }
 
+export function getKudosContract() {
+  return fetch('/portal/rest/wallet/api/ext/getKudosContract', {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(resp => resp && resp.ok && resp.text());
+}
+
 export function saveTokensPerKudos(tokensPerKudos) {
   return fetch('/portal/rest/wallet/api/ext/saveTokensPerKudos', {
     method: 'POST',
@@ -15,6 +23,23 @@ export function saveTokensPerKudos(tokensPerKudos) {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: $.param({tokensPerKudos: Number(tokensPerKudos)})
+  }).then(resp => {
+    if(resp && resp.ok) {
+      return;
+    } else {
+      throw new Error("Error saving parameter");
+    }
+  });
+}
+
+export function saveKudosContract(kudosContractAddress) {
+  return fetch('/portal/rest/wallet/api/ext/saveKudosContract', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: $.param({kudosContract: kudosContractAddress})
   }).then(resp => {
     if(resp && resp.ok) {
       return;

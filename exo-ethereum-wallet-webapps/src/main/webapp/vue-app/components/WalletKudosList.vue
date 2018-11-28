@@ -6,37 +6,41 @@
         {{ error }}
       </div>
     </v-card-title>
-    <v-card-title>
-      <v-spacer />
-      <h3>
-        Used contract to pay Kudos rewards:
-        <a
-          v-if="tokenEtherscanLink && contractDetails && contractDetails.address"
-          :href="`${tokenEtherscanLink}${contractDetails.address}`"
-          target="_blank"
-          title="Open on etherscan">{{ contractDetails.name }}</a>
-      </h3>
-      <v-spacer />
-    </v-card-title>
-    <v-card-text class="text-xs-center">
-      <div id="tokenRatioAmount">
+    <h3 class="text-xs-left ml-3">Configuration</h3>
+    <v-card-text>
+      <div class="text-xs-left kudosWalletConfiguration">
         <v-text-field
           v-model.number="tokenPerKudo"
-          :readonly="!isEditingRatio"
           label="Tokens per Kudo"
-          name="tokenPerKudo"
-          placeholder="Select an amount of tokens per kudo" />
-        <v-slide-x-reverse-transition
-          slot="append-outer"
-          mode="out-in">
-          <v-icon
-            :color="isEditingRatio ? 'success' : 'info'"
-            :key="`icon-${isEditingRatio}`"
-            @click="saveTokensPerKudos"
-            v-text="isEditingRatio ? 'fa-check-circle' : 'fa-edit'" />
-        </v-slide-x-reverse-transition>
+          name="tokenPerKudo" />
+        <span> per kudos using </span>
+        <v-combobox
+          v-model="selectedKudosContractAddress"
+          :items="contracts"
+          :return-object="false"
+          label="Token type"
+          item-value="address"
+          item-text="name"
+          hide-no-data
+          hide-selected
+          small-chips>
+          <template slot="selection" slot-scope="data">
+            <v-chip
+              :selected="data.selected"
+              :disabled="data.disabled"
+              :key="data.value"
+              @input="data.parent.selectItem(data.item)">
+              {{ selectedKudosContractName }}
+            </v-chip>
+          </template>
+        </v-combobox>
+        <button class="btn btn-primary mb-3" @click="save">
+          Save
+        </button>
       </div>
-    
+    </v-card-text>
+    <h3 class="text-xs-left ml-3">Send Rewards</h3>
+    <v-card-text class="text-xs-center">
       <v-menu
         ref="selectedDateMenu"
         v-model="selectedDateMenu"
@@ -166,7 +170,7 @@
 </template>
 
 <script>
-import {getTokensPerKudos, saveTokensPerKudos, getPeriodTransactions} from '../WalletExtServices.js';
+import {getKudosContract, getTokensPerKudos, saveKudosContract, saveTokensPerKudos, getPeriodTransactions} from '../WalletExtServices.js';
 import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 import SendKudosModal from './SendKudosModal.vue';
@@ -182,10 +186,16 @@ export default {
         return [];
       }
     },
-    contractDetails: {
-      type: Object,
+    contracts: {
+      type: Array,
       default: function() {
-        return {};
+        return [];
+      }
+    },
+    principalAccount: {
+      type: String,
+      default: function() {
+        return null;
       }
     }
   },
@@ -193,11 +203,11 @@ export default {
     return {
       loading: false,
       error: null,
-      isEditingRatio: false,
       tokenPerKudo: null,
       defaultTokenPerKudos: null,
       selectedDate: null,
       selectedDateMenu: false,
+      selectedKudosContractAddress: null,
       tokenEtherscanLink: null,
       transactionEtherscanLink: null,
       addressEtherscanLink: null,
@@ -265,6 +275,12 @@ export default {
     };
   },
   computed: {
+    selectedKudosContractName() {
+      return this.contractDetails && this.contractDetails.name;
+    },
+    contractDetails() {
+      return this.selectedKudosContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedKudosContractAddress);
+    },
     paginationDescending() {
       return this.pagination && this.pagination.descending;
     },
@@ -288,9 +304,6 @@ export default {
     },
     selectableRecipients() {
       return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(item => item.address && item.received && !item.tokensSent && (!item.status || item.status === 'error')) : [];
-    },
-    displayButton() {
-      return this.contractDetails && this.kudosIdentitiesList && this.kudosIdentitiesList.length;
     }
   },
   watch: {
@@ -313,6 +326,7 @@ export default {
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
     getTokensPerKudos().then(value => this.defaultTokenPerKudos = this.tokenPerKudo = value);
+    getKudosContract().then(kudosContract => this.selectedKudosContractAddress = kudosContract || this.principalAccount);
     this.tokenEtherscanLink = getTokenEtherscanlink(window.walletSettings.defaultNetworkId);
     this.transactionEtherscanLink = getTransactionEtherscanlink(window.walletSettings.defaultNetworkId);
     this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
@@ -363,20 +377,23 @@ export default {
           });
       }
     },
+    save() {
+      this.saveKudosContract().then(() => this.saveTokensPerKudos());
+    },
+    saveKudosContract() {
+      return saveKudosContract(this.selectedKudosContractAddress)
+        .catch(error => {
+          this.error = "Error while saving 'Kudos contract address' parameter";
+        });
+    },
     saveTokensPerKudos() {
-      if(this.isEditingRatio) {
-        saveTokensPerKudos(this.tokenPerKudo)
-          .then(() => {
-            this.defaultTokenPerKudos = this.tokenPerKudo;
-            this.isEditingRatio = false;
-          })
-          .catch(error => {
-            this.error = "Error while saving 'Token per Kudos' parameter";
-            this.isEditingRatio = true;
-          });
-      } else {
-        this.isEditingRatio = true;
-      }
+      return saveTokensPerKudos(this.tokenPerKudo)
+        .then(() => {
+          this.defaultTokenPerKudos = this.tokenPerKudo;
+        })
+        .catch(error => {
+          this.error = "Error while saving 'Token per Kudos' parameter";
+        });
     },
     loadAll() {
       if (!this.selectedDate || !this.kudosPeriodType) {

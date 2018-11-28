@@ -179,7 +179,7 @@ export function retrieveContractDetails(account, contractDetails) {
         finally(() => {
           if (contractDetails.retrievedAttributes === 0) {
             transformContracDetailsToFailed(contractDetails);
-          } else if (contractDetails.retrievedAttributes > 4) {
+          } else if (contractDetails.retrievedAttributes > 5) {
             if (contractToSave || contractDetails.contractType === 0) {
               saveContractAddressAsDefault(contractDetails);
             }

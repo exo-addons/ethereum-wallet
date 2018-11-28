@@ -60,6 +60,18 @@ public class ExtraWalletSettingsREST implements ResourceContainer {
   }
 
   /**
+   * Get contract address for Token rewards payment
+   * 
+   * @return
+   */
+  @Path("getKudosContract")
+  @GET
+  @RolesAllowed("administrators")
+  public Response getKudosContract() {
+    return Response.ok(String.valueOf(extendedWalletService.getKudosContract())).build();
+  }
+
+  /**
    * Save tokens amount per Kudos setting
    * 
    * @param tokensPerKudos
@@ -69,6 +81,19 @@ public class ExtraWalletSettingsREST implements ResourceContainer {
   @RolesAllowed("administrators")
   public Response saveTokensPerKudos(@FormParam("tokensPerKudos") double tokensPerKudos) {
     extendedWalletService.saveTokensPerKudos(tokensPerKudos);
+    return Response.ok().build();
+  }
+
+  /**
+   * Save kudos contract address used for rewards payment
+   * 
+   * @param kudosContractAddress
+   */
+  @POST
+  @Path("saveKudosContract")
+  @RolesAllowed("administrators")
+  public Response saveKudosContract(@FormParam("kudosContract") String kudosContractAddress) {
+    extendedWalletService.saveKudosContract(kudosContractAddress);
     return Response.ok().build();
   }
 

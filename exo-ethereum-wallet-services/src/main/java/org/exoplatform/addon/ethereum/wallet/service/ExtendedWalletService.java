@@ -38,6 +38,8 @@ public class ExtendedWalletService {
 
   private Double         tokensPerKudos;
 
+  private String         kudosContractAddress;
+
   public ExtendedWalletService(SettingService settingService) {
     this.settingService = settingService;
   }
@@ -54,6 +56,17 @@ public class ExtendedWalletService {
   }
 
   /**
+   * @return Kudos Contract address used for rewards payment
+   */
+  public String getKudosContract() {
+    if (kudosContractAddress == null) {
+      SettingValue<?> value = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_KUDOS_CONTRACT_ADDRESS_KEY_NAME);
+      this.kudosContractAddress = value == null ? "" : value.getValue().toString();
+    }
+    return kudosContractAddress;
+  }
+
+  /**
    * Sets the amount of tokens per kudos
    * 
    * @param tokensPerKudos
@@ -61,6 +74,19 @@ public class ExtendedWalletService {
   public void saveTokensPerKudos(double tokensPerKudos) {
     settingService.set(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_TOKENS_PER_KUDOS_KEY_NAME, SettingValue.create(tokensPerKudos));
     this.tokensPerKudos = null;
+  }
+
+  /**
+   * Save Kudos Contract address used for rewards payment
+   * 
+   * @param kudosContractAddress
+   */
+  public void saveKudosContract(String kudosContractAddress) {
+    settingService.set(EXT_WALLET_CONTEXT,
+                       EXT_WALLET_SCOPE,
+                       EXT_KUDOS_CONTRACT_ADDRESS_KEY_NAME,
+                       SettingValue.create(kudosContractAddress));
+    this.kudosContractAddress = null;
   }
 
   /**

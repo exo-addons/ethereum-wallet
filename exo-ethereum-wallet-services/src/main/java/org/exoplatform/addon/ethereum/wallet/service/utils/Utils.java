@@ -87,6 +87,8 @@ public class Utils {
 
   public static final String                             EXT_TOKENS_PER_KUDOS_KEY_NAME         = "TOKENS_PER_KUDOS";
 
+  public static final String                             EXT_KUDOS_CONTRACT_ADDRESS_KEY_NAME   = "KUDOS_CONTRACT_ADDRESS";
+
   public static final String                             ADDRESS_KEY_NAME                      = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
   public static final String                             LAST_BLOCK_NUMBER_KEY_NAME            =

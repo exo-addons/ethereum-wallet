@@ -511,7 +511,8 @@
                 ref="kudosList"
                 :wallets="wallets"
                 :wallet-address="walletAddress"
-                :contract-details="principalContract"
+                :contracts="contracts"
+                :principal-account="principalAccount"
                 @pending="pendingTransaction"
                 @list-retrieved="kudosListRetrieved = true"/>
             </v-tab-item>
