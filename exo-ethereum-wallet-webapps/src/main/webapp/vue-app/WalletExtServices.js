@@ -23,3 +23,52 @@ export function saveTokensPerKudos(tokensPerKudos) {
     }
   });
 }
+
+export function savePeriodKudosTransactions(transactions) {
+  return fetch('/portal/rest/wallet/api/ext/savePeriodKudosTransactions', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(transactions)
+  }).then(resp => {
+    if(resp && resp.ok) {
+      return;
+    } else {
+      throw new Error("Error saving kudos transactions");
+    }
+  });
+}
+
+export function savePeriodKudosTransaction(transaction) {
+  return fetch('/portal/rest/wallet/api/ext/savePeriodKudosTransaction', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(transaction)
+  }).then(resp => {
+    if(resp && resp.ok) {
+      return;
+    } else {
+      throw new Error("Error saving kudos transaction");
+    }
+  });
+}
+
+export function getPeriodTransactions(networkId, periodType, startDateInSeconds) {
+  return fetch(`/portal/rest/wallet/api/ext/getPeriodTransactions?networkId=${networkId}&periodType=${periodType}&startDateInSeconds=${startDateInSeconds}`, {
+    method: 'GET',
+    credentials: 'include'
+  }).then(resp => {
+    if(resp && resp.ok) {
+      return resp.json();
+    } else {
+      throw new Error("Error saving kudos transactions");
+    }
+  });
+}

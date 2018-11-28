@@ -1,8 +1,9 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.decodeString;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.encodeString;
+
 import java.io.Serializable;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
@@ -49,8 +50,8 @@ public class TransactionDetail implements Serializable {
     if (StringUtils.isNotBlank(storedTransactionDetails)) {
       String[] transactionDetailsArray = storedTransactionDetails.split(";");
       transactionMessage.setHash(transactionDetailsArray[0]);
-      transactionMessage.setLabel(transactionDetailsArray.length > 1 ? decode(transactionDetailsArray[1]) : null);
-      transactionMessage.setMessage(transactionDetailsArray.length > 2 ? decode(transactionDetailsArray[2]) : null);
+      transactionMessage.setLabel(transactionDetailsArray.length > 1 ? decodeString(transactionDetailsArray[1]) : null);
+      transactionMessage.setMessage(transactionDetailsArray.length > 2 ? decodeString(transactionDetailsArray[2]) : null);
     }
     return transactionMessage;
   }
@@ -63,7 +64,7 @@ public class TransactionDetail implements Serializable {
    * @return
    */
   public String getToStoreValue(boolean sender) {
-    return hash + ";" + (sender ? encode(label) : "") + ";" + encode(message);
+    return hash + ";" + (sender ? encodeString(label) : "") + ";" + encodeString(message);
   }
 
   public String toJSONString() {
@@ -110,21 +111,5 @@ public class TransactionDetail implements Serializable {
       throw new RuntimeException("Error while converting Object to JSON", e);
     }
     return jsonObject;
-  }
-
-  private static String encode(String content) {
-    try {
-      return StringUtils.isBlank(content) ? "" : URLEncoder.encode(content.trim(), "UTF-8");
-    } catch (Exception e) {
-      return content;
-    }
-  }
-
-  private static String decode(String content) {
-    try {
-      return StringUtils.isBlank(content) ? "" : URLDecoder.decode(content.trim(), "UTF-8");
-    } catch (Exception e) {
-      return content;
-    }
   }
 }

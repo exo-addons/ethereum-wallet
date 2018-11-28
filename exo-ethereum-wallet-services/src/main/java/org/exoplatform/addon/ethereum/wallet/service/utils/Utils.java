@@ -16,6 +16,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service.utils;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -105,6 +107,8 @@ public class Utils {
   public static final String                             WALLET_DEFAULT_CONTRACTS_NAME         = "WALLET_DEFAULT_CONTRACTS";
 
   public static final String                             WALLET_USER_TRANSACTION_NAME          = "WALLET_USER_TRANSACTION";
+
+  public static final String                             KUDOS_PERIOD_TRANSACTIONS_NAME        = "KUDOS_PERIOD_TRANSACTIONS";
 
   public static final String                             WALLET_BROWSER_PHRASE_NAME            = "WALLET_BROWSER_PHRASE";
 
@@ -354,5 +358,21 @@ public class Utils {
       }
     }
     return list;
+  }
+
+  public static String encodeString(String content) {
+    try {
+      return StringUtils.isBlank(content) ? "" : URLEncoder.encode(content.trim(), "UTF-8");
+    } catch (Exception e) {
+      return content;
+    }
+  }
+
+  public static String decodeString(String content) {
+    try {
+      return StringUtils.isBlank(content) ? "" : URLDecoder.decode(content.trim(), "UTF-8");
+    } catch (Exception e) {
+      return content;
+    }
   }
 }

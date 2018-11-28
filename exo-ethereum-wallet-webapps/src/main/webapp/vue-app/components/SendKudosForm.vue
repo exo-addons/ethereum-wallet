@@ -64,6 +64,7 @@ import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
+import {savePeriodKudosTransactions, savePeriodKudosTransaction} from '../WalletExtServices.js';
 
 export default {
   components: {
@@ -80,6 +81,18 @@ export default {
       type: Array,
       default: function() {
         return [];
+      }
+    },
+    periodType: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    startDateInSeconds: {
+      type: Number,
+      default: function() {
+        return 0;
       }
     }
   },
@@ -188,6 +201,12 @@ export default {
         }
         this.loadingCount = 0;
       });
+      if(!this.periodType) {
+        this.errors = 'Unable to determine Kudos period type (Week, Month...)';
+      }
+      if(!this.startDateInSeconds) {
+        this.errors = 'Unable to determine selected start date of Kudos period';
+      }
     },
     estimateTransactionFee() {
       if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.isApproved && this.contractDetails.sellPrice && this.contractDetails.owner && this.contractDetails.contractType) {
@@ -239,6 +258,8 @@ export default {
         return;
       }
 
+      const kudosTransactions = [];
+      const kudosTransactionsPromises = [];
       this.recipientsHavingAddress.forEach(recipientWallet => {
         this.transactionsSent++;
         if (!window.localWeb3.utils.isAddress(recipientWallet.address)) {
@@ -247,15 +268,22 @@ export default {
           this.appendError("Invalid recipient address");
         } else {
           this.loadingCount++;
-          this.sendTokens(recipientWallet);
+          kudosTransactionsPromises.push(this.sendTokens(recipientWallet, kudosTransactions));
         }
       });
+      Promise.all(kudosTransactionsPromises)
+        .then(() => {
+          if(kudosTransactions.length) {
+            // save all kudos transactions again for current period (for consistency check)
+            savePeriodKudosTransactions(kudosTransactions);
+          }
+        });
     },
-    sendTokens(recipientWallet) {
+    sendTokens(recipientWallet, kudosTransactions) {
       let errorAppended = false;
       try {
         const amountToSendForReceiver = recipientWallet.tokensToSend;
-        this.contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
+        return this.contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
             gas: window.walletSettings.userPreferences.defaultGas,
@@ -303,6 +331,19 @@ export default {
                 // *async* save transaction message for contract, sender and receiver
                 saveTransactionDetails(pendingTransaction, contractDetails);
 
+                // *async* save kudos transaction for current period
+                const kudosTransaction = {
+                  networkId: window.walletSettings.defaultNetworkId,
+                  periodType: this.periodType,
+                  startDateInSeconds: this.startDateInSeconds,
+                  hash: pendingTransaction.hash,
+                  receiverType: recipientWallet.type,
+                  receiverId: recipientWallet.id,
+                  tokensAmountSent: String(Number(amountToSendForReceiver))
+                };
+                kudosTransactions.push(kudosTransaction);
+                savePeriodKudosTransaction(kudosTransaction);
+
                 // The transaction has been hashed and will be sent
                 this.$emit("sent", pendingTransaction, contractDetails);
 
@@ -343,6 +384,7 @@ export default {
           this.appendError(`Error sending tokens: ${truncateError(e)}`);
         }
       }
+      return Promise.resolve(null);
     },
     appendError(error) {
       if(error) {

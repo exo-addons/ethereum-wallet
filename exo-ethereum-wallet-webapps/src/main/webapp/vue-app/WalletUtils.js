@@ -792,6 +792,7 @@ function waitAsyncForTransactionStatus(hash) {
                 window.watchingTransactions[hash].forEach(callback => {
                   callback(receipt, block);
                 });
+                window.watchingTransactions[hash] = null;
               }
             } else {
               setTimeout(() => {

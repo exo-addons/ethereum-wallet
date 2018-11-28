@@ -11,6 +11,8 @@
       <send-kudos-form ref="sendKudosForm"
                        :recipients="recipients"
                        :contract-details="contractDetails"
+                       :period-type="periodType"
+                       :start-date-in-seconds="startDateInSeconds"
                        class="pt-4"
                        @sent="$emit('sent', $event, contractDetails)"
                        @close="dialog = false"
@@ -37,6 +39,18 @@ export default {
       type: Array,
       default: function() {
         return [];
+      }
+    },
+    periodType: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    startDateInSeconds: {
+      type: Number,
+      default: function() {
+        return 0;
       }
     }
   },

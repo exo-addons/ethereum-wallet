@@ -6,6 +6,18 @@
         {{ error }}
       </div>
     </v-card-title>
+    <v-card-title>
+      <v-spacer />
+      <h3>
+        Used contract to pay Kudos rewards:
+        <a
+          v-if="tokenEtherscanLink && contractDetails && contractDetails.address"
+          :href="`${tokenEtherscanLink}${contractDetails.address}`"
+          target="_blank"
+          title="Open on etherscan">{{ contractDetails.name }}</a>
+      </h3>
+      <v-spacer />
+    </v-card-title>
     <v-card-text class="text-xs-center">
       <div id="tokenRatioAmount">
         <v-text-field
@@ -54,7 +66,7 @@
         hide-actions>
         <template slot="headers" slot-scope="props">
           <tr>
-            <th>
+            <th v-if="selectableRecipients.length">
               <v-checkbox
                 :input-value="props.all"
                 :indeterminate="props.indeterminate"
@@ -65,19 +77,20 @@
             <th
               v-for="header in props.headers"
               :key="header.text"
-              :class="['column sortable', pagination.descending ? 'desc' : 'asc', header.value === pagination.sortBy ? 'active' : '']"
+              :class="['column sortable', header.value === pagination.sortBy ? 'active' : '', header.align === 'center' ? 'text-xs-center' : header.align === 'right' ? 'text-xs-right' : 'text-xs-left']"
               @click="changeSort(header.value)">
-              <v-icon v-if="pagination.descending" small>arrow_upward</v-icon>
-              <v-icon v-else small>arrow_downward</v-icon>
+              <template v-if="header.value === pagination.sortBy">
+                <v-icon small>{{ paginationIcon }}</v-icon>
+              </template>
               {{ header.text }}
             </th>
           </tr>
         </template>
         <template slot="items" slot-scope="props">
           <tr :active="props.selected">
-            <td>
+            <td v-if="selectableRecipients.length">
               <v-checkbox
-                v-if="props.item.address && props.item.received"
+                v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')"
                 :input-value="props.selected"
                 hide-details
                 @click="props.selected = !props.selected" />
@@ -98,10 +111,39 @@
                 (No address)
               </div>
             </td>
-            <td v-html="props.item.address">
+            <td>
+              <a
+                v-if="addressEtherscanLink"
+                :href="`${addressEtherscanLink}${props.item.address}`"
+                target="_blank"
+                title="Open on etherscan">{{ props.item.address }}</a>
+              <span v-else>{{ props.item.address }}</span>
             </td>
             <td>
-              <v-text-field v-if="props.item.address && props.item.received" v-model="props.item.tokensToSend"/>
+              <a
+                v-if="transactionEtherscanLink && props.item.txHash"
+                :href="`${transactionEtherscanLink}${props.item.txHash}`"
+                target="_blank" title="Open on etherscan">
+                Etherscan link
+              </a>
+              <span v-else>-</span>
+            </td>
+            <td>
+              <div v-if="!props.item.status">-</div>
+              <v-progress-circular
+                v-else-if="props.item.status === 'pending'"
+                color="primary"
+                indeterminate
+                size="20" />
+              <v-icon
+                v-else
+                :color="props.item.status === 'success' ? 'success' : 'error'"
+                :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
+                v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+            </td>
+            <td>
+              <v-text-field v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend"/>
+              <template v-else-if="props.item.status === 'success'">{{ props.item.tokensSent }}</template>
               <template v-else>-</template>
             </td>
             <td v-html="props.item.received">
@@ -115,14 +157,17 @@
         :account="walletAddress"
         :contract-details="contractDetails"
         :recipients="recipients"
-        @sent="$emit('pending', $event)"
+        :period-type="kudosPeriodType"
+        :start-date-in-seconds="selectedStartDateInSeconds"
+        @sent="newPendingTransaction"
         @error="error = $event" />
     </v-card-text>
   </v-card>
 </template>
 
 <script>
-import {getTokensPerKudos, saveTokensPerKudos} from '../WalletExtServices.js';
+import {getTokensPerKudos, saveTokensPerKudos, getPeriodTransactions} from '../WalletExtServices.js';
+import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 import SendKudosModal from './SendKudosModal.vue';
 
@@ -153,6 +198,9 @@ export default {
       defaultTokenPerKudos: null,
       selectedDate: null,
       selectedDateMenu: false,
+      tokenEtherscanLink: null,
+      transactionEtherscanLink: null,
+      addressEtherscanLink: null,
       kudosPeriodType: null,
       kudosIdentitiesList: [],
       selectedKudosIdentitiesList: [],
@@ -183,7 +231,19 @@ export default {
           value: 'address'
         },
         {
-          text: 'Tokens to send',
+          text: 'Transaction',
+          align: 'center',
+          sortable: true,
+          value: 'txHash'
+        },
+        {
+          text: 'Status',
+          align: 'center',
+          sortable: true,
+          value: 'status'
+        },
+        {
+          text: 'Tokens',
           align: 'center',
           sortable: true,
           value: 'tokensToSend',
@@ -205,6 +265,15 @@ export default {
     };
   },
   computed: {
+    paginationDescending() {
+      return this.pagination && this.pagination.descending;
+    },
+    paginationIcon() {
+      return this.paginationDescending ? 'arrow_downward' : 'arrow_upward';
+    },
+    selectedStartDateInSeconds() {
+      return this.selectedStartDate ? new Date(this.selectedStartDate).getTime() / 1000 : 0;
+    },
     periodDatesDisplay() {
       if(this.selectedStartDate && this.selectedEndDate) {
         return `${this.selectedStartDate} to ${this.selectedEndDate}`;
@@ -215,7 +284,10 @@ export default {
       }
     },
     recipients() {
-      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(item => item.address && item.received && item.tokensToSend) : [];
+      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(item => item.address && item.received && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+    },
+    selectableRecipients() {
+      return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(item => item.address && item.received && !item.tokensSent && (!item.status || item.status === 'error')) : [];
     },
     displayButton() {
       return this.contractDetails && this.kudosIdentitiesList && this.kudosIdentitiesList.length;
@@ -241,8 +313,56 @@ export default {
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
     getTokensPerKudos().then(value => this.defaultTokenPerKudos = this.tokenPerKudo = value);
+    this.tokenEtherscanLink = getTokenEtherscanlink(window.walletSettings.defaultNetworkId);
+    this.transactionEtherscanLink = getTransactionEtherscanlink(window.walletSettings.defaultNetworkId);
+    this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
   },
   methods: {
+    newPendingTransaction(transaction) {
+      this.$emit('pending', transaction);
+      if(!transaction || !transaction.to) {
+        return;
+      }
+      this.refreshKudosWalletStatus(transaction);
+    },
+    refreshKudosWalletStatus(transaction) {
+      if(transaction && transaction.to) {
+        const kudosWalletIndex = this.selectedKudosIdentitiesList.findIndex(kudosWallet => kudosWallet.address && kudosWallet.address.toLowerCase() === transaction.to.toLowerCase());
+        const kudosWallet = this.selectedKudosIdentitiesList[kudosWalletIndex];
+        if(kudosWallet) {
+          this.$set(kudosWallet, 'txHash', transaction.hash);
+          this.$set(kudosWallet, 'status', 'pending');
+          if (transaction.contractAmount) {
+            this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
+          }
+          this.selectedKudosIdentitiesList.splice(kudosWalletIndex, 1);
+          const thiss = this;
+          watchTransactionStatus(transaction.hash, receipt => {
+            thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+          });
+        }
+      } else {
+        getPeriodTransactions(window.walletSettings.defaultNetworkId, this.kudosPeriodType, this.selectedStartDateInSeconds)
+          .then(kudosTransactions => {
+            if (kudosTransactions) {
+              kudosTransactions.forEach(kudosTransaction => {
+                if(kudosTransaction) {
+                  const kudosWallet = this.kudosIdentitiesList.find(kudosWallet => kudosWallet.id === kudosTransaction.receiverId && kudosWallet.type === kudosTransaction.receiverType);
+                  this.$set(kudosWallet, 'tokensSent', kudosTransaction.tokensAmountSent ? Number(kudosTransaction.tokensAmountSent) : 0);
+                  this.$set(kudosWallet, 'txHash', kudosTransaction.hash);
+                  this.$set(kudosWallet, 'status', 'pending');
+
+                  const thiss = this;
+                  watchTransactionStatus(kudosTransaction.hash, receipt => {
+                    thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+                  });
+                }
+              });
+              this.$forceUpdate();
+            }
+          });
+      }
+    },
     saveTokensPerKudos() {
       if(this.isEditingRatio) {
         saveTokensPerKudos(this.tokenPerKudo)
@@ -289,6 +409,7 @@ export default {
         list.forEach(element => element.idType = `${element.type}_${element.id}`);
         this.kudosIdentitiesList = list;
         this.refreshList();
+        this.refreshKudosWalletStatus();
       } else {
         this.error = 'Empty kudos list is retrieved';
       }
