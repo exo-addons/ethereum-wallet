@@ -175,6 +175,20 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         && (sender == null || sender.getId() == null || !sender.getId().equals(receiver.getId()))) {
       if (sendNotification) {
         if (isContractTransaction || transactionStatusOk || checkTransactionStatus(transaction) != null) {
+          if (sender != null && sender.getId() == null && settings != null && settings.getDefaultPrincipalAccount() != null) {
+            ContractDetail principalContractDetails = null;
+            if (contractDetails != null
+                && StringUtils.equalsIgnoreCase(contractDetails.getAddress(), settings.getDefaultPrincipalAccount())) {
+              principalContractDetails = contractDetails;
+            } else {
+              principalContractDetails = ethereumWalletService.getDefaultContractDetail(settings.getDefaultPrincipalAccount(),
+                                                                                        settings.getDefaultNetworkId());
+            }
+            if (principalContractDetails != null
+                && StringUtils.equalsIgnoreCase(sender.getAddress(), principalContractDetails.getOwner())) {
+              sender.setName("Admin");
+            }
+          }
           sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.RECEIVER, amount);
         }
       }

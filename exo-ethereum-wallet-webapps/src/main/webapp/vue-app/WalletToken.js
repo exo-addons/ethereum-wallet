@@ -46,6 +46,7 @@ export function retrieveContractDetails(account, contractDetails) {
   console.debug(`retrieve contract at address ${contractDetails && contractDetails.address} with account ${account}`);
   let adminLevelComputed, approveAccountComputed, computeContractType = !contractDetails.contractType;
   contractDetails.retrievedAttributes = 0;
+  let contractToSave = false;
   return getContractInstance(account, contractDetails.address, true)
     .then((contractInstance, error) => {
       if (error) {
@@ -62,6 +63,9 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(() => getSavedContractDetails(contractDetails.address, contractDetails.networkId))
     .then(savedDetails => {
       if (savedDetails) {
+        if(!savedDetails || !savedDetails.owner || !savedDetails.decimals || !savedDetails.sellPrice) {
+          contractToSave = true;
+        }
         Object.keys(savedDetails).forEach(key => {
           contractDetails[key] = savedDetails[key];
         });
@@ -176,7 +180,7 @@ export function retrieveContractDetails(account, contractDetails) {
           if (contractDetails.retrievedAttributes === 0) {
             transformContracDetailsToFailed(contractDetails);
           } else if (contractDetails.retrievedAttributes > 4) {
-            if (contractDetails.contractType === 0) {
+            if (contractToSave || contractDetails.contractType === 0) {
               saveContractAddressAsDefault(contractDetails);
             }
             contractDetails.contractType = 1;
@@ -377,7 +381,7 @@ export function saveContractAddressAsDefault(contractDetails) {
       symbol: contractDetails.symbol,
       address: contractDetails.address,
       networkId: contractDetails.networkId,
-      owner: contractDetails.address,
+      owner: contractDetails.owner,
       contractType: contractDetails.contractType,
       sellPrice: contractDetails.sellPrice,
       decimals: contractDetails.decimals
