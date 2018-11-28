@@ -510,8 +510,23 @@ export function getPendingTransactionFromStorage(networkId, account, contractDet
   }
 }
 
-export function saveTransactionDetails(transaction) {
+export function saveTransactionDetails(transaction, contractDetails) {
   try {
+    const pendingTransaction = {
+      networkId: transaction.networkId ? transaction.networkId : window.walletSettings.defaultNetworkId,
+      hash: transaction.hash ? transaction.hash : '',
+      contractAddress: transaction.contractAddress,
+      contractMethodName: transaction.contractMethodName,
+      pending: transaction.pending ? Boolean(transaction.pending) : false,
+      from: transaction.from ? transaction.from : '',
+      to: transaction.to ? transaction.to : '',
+      label: transaction.label ? transaction.label : '',
+      message: transaction.message ? transaction.message : '',
+      value: transaction.value ? Number(transaction.value) : 0,
+      contractAmount: transaction.contractAmount ? Number(transaction.contractAmount) : 0,
+      isAdminOperation: transaction.isAdminOperation ? Boolean(transaction.isAdminOperation) : false,
+      timestamp: transaction.timestamp ? Number(transaction.timestamp) : 0
+    };
     fetch('/portal/rest/wallet/api/account/saveTransactionDetails', {
       method: 'POST',
       credentials: 'include',
@@ -519,22 +534,11 @@ export function saveTransactionDetails(transaction) {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        networkId: transaction.networkId ? transaction.networkId : window.walletSettings.defaultNetworkId,
-        hash: transaction.hash ? transaction.hash : '',
-        contractAddress: transaction.contractAddress,
-        contractMethodName: transaction.contractMethodName,
-        pending: transaction.pending ? Boolean(transaction.pending) : false,
-        from: transaction.from ? transaction.from : '',
-        to: transaction.to ? transaction.to : '',
-        label: transaction.label ? transaction.label : '',
-        message: transaction.message ? transaction.message : '',
-        value: transaction.value ? Number(transaction.value) : 0,
-        contractAmount: transaction.contractAmount ? Number(transaction.contractAmount) : 0,
-        isAdminOperation: transaction.isAdminOperation ? Boolean(transaction.isAdminOperation) : false,
-        timestamp: transaction.timestamp ? Number(transaction.timestamp) : 0
-      })
+      body: JSON.stringify(pendingTransaction)
     });
+    if (pendingTransaction && pendingTransaction.networkId && pendingTransaction.from) {
+      addPendingTransactionToStorage(pendingTransaction.networkId, pendingTransaction.from, contractDetails, pendingTransaction);
+    }
   } catch(e) {
     console.debug("Error saving pending transaction", e);
   }
@@ -588,16 +592,19 @@ function loadCompletedTransaction(networkId, account, contractDetails, transacti
   } else if (!transactionDetail.pending) {
     let transaction,receipt;
 
+    let resultTransactionDetails = transactionDetail;
     const transactionHash = transactionDetail.hash;
     const label = transactionDetail.label;
     const message = transactionDetail.message;
     return window.localWeb3.eth.getTransaction(transactionHash)
       .then(transactionTmp => {
         transaction = transactionTmp;
+        if (!transaction) {
+          return {ignore: true};
+        }
 
         // if this is about loading a contract transactions, ignore other ether transactions
-        if (!transaction
-            || !transaction.from
+        if (!transaction.from
             || (contractDetails.isContract
                 && (!transaction.to
                     || !contractDetails.address 
@@ -611,7 +618,7 @@ function loadCompletedTransaction(networkId, account, contractDetails, transacti
         }
       })
       .then(receiptTmp => {
-        if (transaction.ignore) {
+        if (!transaction || transaction.ignore) {
           return;
         }
 
@@ -619,20 +626,21 @@ function loadCompletedTransaction(networkId, account, contractDetails, transacti
         return window.localWeb3.eth.getBlock(transaction.blockNumber, false);
       })
       .then(block => {
-        if (transaction.ignore) {
+        if (!transaction || transaction.ignore) {
           return;
         }
         return addTransaction(networkId, account, contractDetails, transactions, transaction, receipt, block && block.timestamp * 1000);
       })
       .then(transactionDetails => {
-        if (transaction.ignore) {
+        if (!transaction || transaction.ignore) {
           return;
         }
+        resultTransactionDetails = transactionDetails;
         return transactionDetails;
       })
       .catch(error => {
         if (`${error}`.indexOf('stopLoading') < 0) {
-          console.debug("Error while retrieving transaction details", transactionDetails, error);
+          console.debug("Error while retrieving transaction details", resultTransactionDetails, error);
         }
       });
   }

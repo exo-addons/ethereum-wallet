@@ -1,7 +1,7 @@
 <template>
   <v-card flat>
     <v-card-title class="text-xs-center">
-      <div v-if="error" class="alert alert-error v-content">
+      <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
         <i class="uiIconError"></i>
         {{ error }}
       </div>
@@ -74,12 +74,13 @@
           </tr>
         </template>
         <template slot="items" slot-scope="props">
-          <tr :active="props.selected" @click="props.selected = !props.selected">
+          <tr :active="props.selected">
             <td>
               <v-checkbox
                 v-if="props.item.address && props.item.received"
                 :input-value="props.selected"
-                hide-details />
+                hide-details
+                @click="props.selected = !props.selected" />
             </td>
             <td>
               <v-avatar size="36px">
@@ -114,7 +115,7 @@
         :account="walletAddress"
         :contract-details="contractDetails"
         :recipients="recipients"
-        @sent="newTransactionPending"
+        @sent="$emit('pending', $event)"
         @error="error = $event" />
     </v-card-text>
   </v-card>

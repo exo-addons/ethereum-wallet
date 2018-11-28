@@ -729,10 +729,10 @@ function checkMetamaskEnabled(waitTime) {
   if (!waitTime) {
     waitTime = 200;
   }
-  if (!window.walletsSettings) {
-    window.walletsSettings = {};
+  if (!window.walletSettings) {
+    window.walletSettings = {};
   }
-  if (window.walletsSettings.metamaskEnableResponseRetrieved) {
+  if (window.walletSettings.metamaskEnableResponseRetrieved) {
     return Promise.resolve([window.web3.eth.defaultAccount]);
   }
   // Test if Metamask is enabled: ethereum.enable operation can hang up forever
@@ -743,13 +743,13 @@ function checkMetamaskEnabled(waitTime) {
     })
     .finally(() => {
       // If enablement discarded by user
-      window.walletsSettings.metamaskEnableResponseRetrieved = true;
+      window.walletSettings.metamaskEnableResponseRetrieved = true;
       console.debug("Response received from user");
     });
   console.debug("Checking ethereum.enable");
   return new Promise(resolve => setTimeout(resolve, waitTime))
     .then(() => {
-      if (!window.walletsSettings.metamaskEnableResponseRetrieved) {
+      if (!window.walletSettings.metamaskEnableResponseRetrieved) {
         console.debug("The ethereum.enable seems to hang up");
         throw new Error();
       } else {

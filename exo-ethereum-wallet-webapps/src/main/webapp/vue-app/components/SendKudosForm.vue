@@ -1,5 +1,8 @@
 <template>
   <v-card>
+    <v-flex v-if="loading" class="pt-0 text-xs-center">
+      <v-progress-circular color="primary" indeterminate size="20" />
+    </v-flex>
     <v-card-text class="pt-0">
       <div v-if="errors" class="alert alert-error v-content">
         <i class="uiIconError"></i>
@@ -15,6 +18,7 @@
         <gas-price-choice
           :estimated-fee="transactionFeeString"
           :title="`${validRecipientsCount} transactions with a total amount to send ${totalTokens} ${contractDetails.symbol}. Overall transactions fee:`"
+          :disabled="loading"
           @changed="gasPrice = $event" />
         <v-text-field
           v-if="!storedPassword"
@@ -162,11 +166,13 @@ export default {
         this.$refs.autocomplete.clear();
       }
       this.loadingCount = 1;
+      this.transactionsSent = 0;
       this.showQRCodeModal = false;
       this.warning = null;
       this.errors = null;
       this.transactionMessage = null;
       this.transactionLabel = null;
+      this.$emit("error", "");
       if (!this.gasPrice) {
         this.gasPrice = window.walletSettings.minGasPrice;
       }
@@ -234,24 +240,19 @@ export default {
       }
 
       this.recipientsHavingAddress.forEach(recipientWallet => {
-        const sent = this.sendTokens(recipientWallet);
-        if(!sent) {
-          this.appendError(`Can't send tokens to user '${recipientWallet.id}'`);
+        this.transactionsSent++;
+        if (!window.localWeb3.utils.isAddress(recipientWallet.address)) {
+          this.appendError("Invalid recipient address");
+        } else if (!Number(recipientWallet.tokensToSend)) {
+          this.appendError("Invalid recipient address");
+        } else {
+          this.loadingCount++;
+          this.sendTokens(recipientWallet);
         }
       });
     },
     sendTokens(recipientWallet) {
-      if (!window.localWeb3.utils.isAddress(recipientWallet.address)) {
-        this.appendError("Invalid recipient address");
-        return;
-      }
-
-      if (!Number(recipientWallet.tokensToSend)) {
-        this.appendError("Invalid recipient address");
-        return;
-      }
-
-      this.loadingCount++;
+      let errorAppended = false;
       try {
         const amountToSendForReceiver = recipientWallet.tokensToSend;
         this.contractDetails.contract.methods.transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
@@ -300,39 +301,53 @@ export default {
                 };
 
                 // *async* save transaction message for contract, sender and receiver
-                saveTransactionDetails(pendingTransaction);
+                saveTransactionDetails(pendingTransaction, contractDetails);
 
                 // The transaction has been hashed and will be sent
                 this.$emit("sent", pendingTransaction, contractDetails);
+
+                if(this.transactionsSent === this.recipientsHavingAddress.length) {
+                  this.$emit("close");
+                }
               })
               .on('error', (error, receipt) => {
                 console.debug("Web3 contract.transfer method - error", error);
                 // The transaction has failed
+                errorAppended = true;
                 this.appendError(`Error sending tokens: ${truncateError(error)}`);
+                this.$emit("error", `Error sending tokens: ${truncateError(error)}`);
+                if(this.transactionsSent === this.recipientsHavingAddress.length) {
+                  this.$emit("close");
+                }
               });
           })
           .catch (e => {
             console.debug("Web3 contract.transfer method - error", e);
-            this.appendError(`Error sending tokens: ${truncateError(e)}`);
+            if(!errorAppended) {
+              this.appendError(`Error sending tokens: ${truncateError(e)}`);
+            }
           })
           .finally(() => {
             this.loadingCount--;
             if(!this.useMetamask) {
               lockBrowerWallet();
             }
-            if (!this.loadingCount && !this.error) {
+            if(this.transactionsSent === this.recipientsHavingAddress.length) {
               this.$emit("close");
             }
           });
-        return true;
       } catch(e) {
         console.debug("Web3 contract.transfer method - error", e);
         this.loadingCount--;
-        this.appendError(`Error sending tokens: ${truncateError(e)}`);
+        if(!errorAppended) {
+          this.appendError(`Error sending tokens: ${truncateError(e)}`);
+        }
       }
     },
     appendError(error) {
-      this.errors += `<br />${error}`;
+      if(error) {
+        this.errors += `<br />${error}`;
+      }
     }
   }
 };

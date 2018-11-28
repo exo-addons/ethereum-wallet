@@ -401,7 +401,7 @@
                     :loading-wallets="loadingWallets"
                     :refresh-index="refreshIndex"
                     @back="back()"
-                    @pending-transaction="watchPendingAdminTransaction" />
+                    @pending-transaction="watchPendingTransaction" />
                 </v-navigation-drawer>
               </v-card>
             </v-tab-item>
@@ -427,7 +427,7 @@
                       <span v-else>{{ props.item.address }}</span>
                     </td>
                     <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-                      <v-card-title v-if="props.item.loadingBalancePrincipal" primary-title class="pb-0">
+                      <v-card-title v-if="props.item.loadingBalancePrincipal" primary-title class="pb-0 pt-0">
                         <v-spacer />
                         <v-badge color="red" right title="A transaction is in progress">
                           <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
@@ -447,7 +447,7 @@
                       <template v-else>-</template>
                     </td>
                     <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-                      <v-card-title v-if="props.item.loadingBalance" primary-title class="pb-0">
+                      <v-card-title v-if="props.item.loadingBalance" primary-title class="pb-0 pt-0">
                         <v-spacer />
                         <v-badge color="red" right title="A transaction is in progress">
                           <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
@@ -512,6 +512,7 @@
                 :wallets="wallets"
                 :wallet-address="walletAddress"
                 :contract-details="principalContract"
+                @pending="pendingTransaction"
                 @list-retrieved="kudosListRetrieved = true"/>
             </v-tab-item>
           </v-tabs-items>
@@ -1047,8 +1048,10 @@ export default {
       if (wallet) {
         if (transaction.contractAddress) {
           this.$set(wallet, "loadingBalancePrincipal", true);
+          this.watchPendingTransaction(transaction, this.principalContract);
         } else {
           this.$set(wallet, "loadingBalance", true);
+          this.watchPendingTransaction(transaction);
         }
       } else {
         const contract = this.contracts.find(contract => contract && contract.address && contract.address.toLowerCase() === recipient.toLowerCase());
@@ -1083,8 +1086,6 @@ export default {
         });
         this.wallets.forEach(wallet => {
           if (wallet.loadingBalance || wallet.loadingBalancePrincipal) {
-            this.$set(wallet, "loadingBalance", false);
-            this.$set(wallet, "loadingBalancePrincipal", false);
             this.$set(wallet, 'icon', 'warning');
             this.$set(wallet, 'error', `Error proceeding transaction: ${error}`);
             // Update wallet stateus: admin, approved ...
@@ -1138,7 +1139,7 @@ export default {
           this.loadingWallets = false;
         });
     },
-    computeBalance(accountDetails, wallet) {
+    computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
       computeBalance(wallet.address)
         .then((balanceDetails, error) => {
           if (error) {
@@ -1148,7 +1149,9 @@ export default {
             this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
             this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
           }
-          this.$set(wallet, "loadingBalance", false);
+          if(!ignoreUpdateLoadingBalanceParam) {
+            this.$set(wallet, "loadingBalance", false);
+          }
           this.forceUpdate();
         })
         .catch(error => {
@@ -1158,15 +1161,17 @@ export default {
         accountDetails.contract.methods.balanceOf(wallet.address).call()
           .then((balance, error) => {
             if (error) {
-              this.$set(wallet, "loadingBalancePrincipal", false);
+              if(!ignoreUpdateLoadingBalanceParam) {
+                this.$set(wallet, "loadingBalancePrincipal", false);
+              }
               throw new Error('Invalid contract address');
             }
             balance = String(balance);
             this.$set(wallet, 'balancePrincipal', convertTokenAmountReceived(balance, accountDetails.decimals));
-            this.$set(wallet, "loadingBalancePrincipal", false);
+            if(!ignoreUpdateLoadingBalanceParam) {
+              this.$set(wallet, "loadingBalancePrincipal", false);
+            }
           });
-      } else {
-        this.$set(wallet, "loadingBalancePrincipal", false);
       }
     },
     setSelectedValues() {
@@ -1312,7 +1317,7 @@ export default {
           this.error = `Error encountered: ${e}`;
         });
     },
-    watchPendingAdminTransaction(transaction, contractDetails) {
+    watchPendingTransaction(transaction, contractDetails) {
       if (this.$refs.walletSummary) {
         this.$refs.walletSummary.loadPendingTransactions();
       }
@@ -1347,13 +1352,100 @@ export default {
           } else if (transaction.contractMethodName === 'unPause' || transaction.contractMethodName === 'pause') {
             thiss.$set(contractDetails, "isPaused", transaction.contractMethodName === 'pause' ? true : false);
             thiss.$nextTick(thiss.forceUpdate);
-          } else if (transaction.contractMethodName === 'setSellPrice') {
-            thiss.$set(contractDetails, "sellPrice", transaction.contractAmount);
-            thiss.$nextTick(() => thiss.forceUpdate());
-            saveContractAddressAsDefault(contractDetails);
+          } else if (transaction.to && (!transaction.contractMethodName || transaction.contractMethodName === 'transfer' || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve')) {
+            const wallet = this.wallets.find(wallet => wallet.address && wallet.address.toLowerCase() === transaction.to.toLowerCase());
+            if (wallet) {
+              const thiss = this;
+              // Wait for Block synchronization with Metamask
+              setTimeout(() => {
+                thiss.refreshWalletBalance(wallet, transaction.contractMethodName ? thiss.principalContract: null, true);
+              }, 2000);
+            }
           }
         }
       });
+    },
+    refreshWalletBalance(wallet, contractDetails, disableRefreshInProgress) {
+      if (contractDetails && contractDetails.contract) {
+        return contractDetails.contract.methods.balanceOf(wallet.address).call()
+          .then((balance, error) => {
+            if (error) {
+              throw new Error('Invalid contract address');
+            }
+            balance = String(balance);
+            balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+            this.$set(wallet, 'balancePrincipal', balance);
+            this.forceUpdate();
+            return this.refreshCurrentWalletBalances(contractDetails);
+          })
+          .catch(error => {
+            this.error = String(error);
+          })
+          .finally(() => {
+            this.$set(wallet, "loadingBalancePrincipal", false);
+          });
+      } else {
+        return computeBalance(wallet.address)
+          .then((balanceDetails, error) => {
+            if (error) {
+              this.$set(wallet, 'icon', 'warning');
+              this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
+            } else {
+              this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
+              this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
+            }
+            this.forceUpdate();
+            return this.refreshCurrentWalletBalances();
+          })
+          .catch(error => {
+            this.error = String(error);
+          })
+          .finally(() => {
+            this.$set(wallet, "loadingBalance", false);
+          });
+      }
+    },
+    refreshCurrentWalletBalances(contractDetails) {
+      if(!this.walletAddress) {
+        return Promise.resolve(null);
+      }
+      const wallet = this.wallets.find(wallet => wallet.address && wallet.address.toLowerCase() === this.walletAddress.toLowerCase());
+      return computeBalance(this.walletAddress)
+        .then(balanceDetails => {
+          if (balanceDetails) {
+            this.walletAddressEtherBalance = balanceDetails.balance;
+            this.walletAddressFiatBalance = balanceDetails.balanceFiat;
+            if (wallet) {
+              this.$set(wallet, 'balance', balanceDetails.balance);
+              this.$set(wallet, 'balanceFiat', balanceDetails.balanceFiat);
+            }
+            this.forceUpdate();
+            if (this.$refs.walletSummary) {
+              this.$refs.walletSummary.$forceUpdate();
+            }
+          }
+          if (contractDetails) {
+            contractDetails.contract.methods.balanceOf(this.walletAddress).call()
+              .then((balance, error) => {
+                if (error) {
+                  throw new Error('Invalid contract address');
+                }
+                balance = String(balance);
+                balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+                this.$set(contractDetails, 'balance', balance);
+                if (wallet) {
+                  this.$set(wallet, 'balancePrincipal', balance);
+                }
+                this.forceUpdate();
+                if (this.$refs.walletSummary) {
+                  this.$refs.walletSummary.$forceUpdate();
+                }
+              })
+              .catch(error => {
+                this.error = String(error);
+              });
+          }
+        });
     },
     refreshContractsList(avoidReloading) {
       const previouslyRetrievedContracts = this.contracts;
