@@ -103,6 +103,7 @@ export default {
       transactionLabel: '',
       transactionMessage: '',
       walletPassword: '',
+      isContractOwner: false,
       walletPasswordShow: false,
       useMetamask: false,
       gasPrice: 0,
@@ -170,6 +171,12 @@ export default {
     contractDetails() {
       if (this.contractDetails && this.contractDetails.isPaused) {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
+      }
+      this.isContractOwner = this.contractDetails && this.contractDetails.contract && this.contractDetails.contract.options && this.contractDetails.owner && this.contractDetails.owner === this.contractDetails.contract.options.from;
+      if(this.isContractOwner) {
+        this.information = 'You are using the contract owner addres, thus the transaction fee will be payed in ether.';
+      } else {
+        this.information = null;
       }
     }
   },
