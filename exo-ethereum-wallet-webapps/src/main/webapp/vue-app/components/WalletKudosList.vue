@@ -50,6 +50,7 @@
           prepend-icon="event" />
         <v-date-picker
           v-model="selectedDate"
+          :first-day-of-week="1"
           @input="selectedDateMenu = false" />
       </v-menu>
       <v-data-table
