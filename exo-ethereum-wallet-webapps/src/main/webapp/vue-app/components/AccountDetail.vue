@@ -146,7 +146,7 @@ export default {
       return this.contractDetails && this.contractDetails.balanceFiat ? `${this.contractDetails.balanceFiat} ${this.fiatSymbol}` : `0 ${this.fiatSymbol}`;
     },
     balance() {
-      return this.contractDetails && this.contractDetails.balance ? `${this.contractDetails.balance} ${this.contractDetails.symbol}` : '';
+      return this.contractDetails && this.contractDetails.balance ? `${this.contractDetails.balance} ${this.contractDetails && this.contractDetails.symbol}` : '';
     }
   },
   watch: {

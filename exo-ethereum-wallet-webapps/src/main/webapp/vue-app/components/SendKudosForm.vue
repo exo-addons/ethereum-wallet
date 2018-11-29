@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card v-if="contractDetails">
     <v-flex v-if="loading" class="pt-0 text-xs-center">
       <v-progress-circular color="primary" indeterminate size="20" />
     </v-flex>
@@ -17,7 +17,7 @@
       <v-form @submit="$event.preventDefault();$event.stopPropagation();">
         <gas-price-choice
           :estimated-fee="transactionFeeString"
-          :title="`${validRecipientsCount} transactions with a total amount to send ${totalTokens} ${contractDetails.symbol}. Overall transactions fee:`"
+          :title="`${validRecipientsCount} transactions with a total amount to send ${totalTokens} ${contractDetails && contractDetails.symbol}. Overall transactions fee:`"
           :disabled="loading"
           @changed="gasPrice = $event" />
         <v-text-field
@@ -136,10 +136,10 @@ export default {
     },
     transactionFeeString() {
       if (this.transactionFeeToken) {
-        if (!this.contractDetails) {
-          return '';
+        if (this.contractDetails) {
+          return `${this.transactionFeeToken} ${this.contractDetails && this.contractDetails.symbol}`;
         } else {
-          return `${this.transactionFeeToken} ${this.contractDetails.symbol}`;
+          return '';
         }
       } else if (this.transactionFeeFiat) {
         return `${this.transactionFeeFiat} ${this.fiatSymbol}`;

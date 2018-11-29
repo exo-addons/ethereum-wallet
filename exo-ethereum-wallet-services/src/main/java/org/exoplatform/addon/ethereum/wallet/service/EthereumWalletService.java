@@ -362,7 +362,16 @@ public class EthereumWalletService implements Startable {
       // Retrieve default contracts to display for all users
       globalSettings.setDefaultContractsToDisplay(getDefaultContractsAddresses(networkId));
 
-      if (username != null) {
+      if (StringUtils.isBlank(username)) {
+        // Generic global settings computing
+        String defaultPrincipalAccount = globalSettings.getDefaultPrincipalAccount();
+        if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
+          ContractDetail principalContractDetails = getDefaultContractDetail(defaultPrincipalAccount,
+                                                                             globalSettings.getDefaultNetworkId());
+          globalSettings.setPrincipalContractAdminAddress(principalContractDetails == null ? null
+                                                                                           : principalContractDetails.getOwner());
+        }
+      } else {
         // Append user preferences
         SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(username), WALLET_SCOPE, SETTINGS_KEY_NAME);
         UserPreferences userSettings = null;
@@ -380,6 +389,11 @@ public class EthereumWalletService implements Startable {
         } else {
           userSettings.setWalletAddress(getUserAddress(username));
           userSettings.setPhrase(getUserPhrase(username));
+        }
+        if (this.storedSettings != null) {
+          if (StringUtils.isNotBlank(this.storedSettings.getPrincipalContractAdminAddress())) {
+            globalSettings.setPrincipalContractAdminAddress(this.storedSettings.getPrincipalContractAdminAddress());
+          }
         }
       }
       globalSettings.setContractAbi(getContractAbi());

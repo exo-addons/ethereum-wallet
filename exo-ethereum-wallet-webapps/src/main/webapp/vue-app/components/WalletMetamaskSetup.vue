@@ -271,7 +271,7 @@ export default {
         });
     },
     disableMetamaskUsage() {
-      disableMetamask();
+      disableMetamask(this.isSpace);
       this.$emit("refresh");
     }
   }

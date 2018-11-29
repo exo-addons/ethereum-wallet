@@ -157,7 +157,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
               receiver.setName("Contract: " + contractDetails.getName());
             }
           }
-          // Send notification
+
+          // Send notification to sender
           sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.SENDER, amount);
         }
       }
@@ -175,20 +176,14 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         && (sender == null || sender.getId() == null || !sender.getId().equals(receiver.getId()))) {
       if (sendNotification) {
         if (isContractTransaction || transactionStatusOk || checkTransactionStatus(transaction) != null) {
-          if (sender != null && sender.getId() == null && settings != null && settings.getDefaultPrincipalAccount() != null) {
-            ContractDetail principalContractDetails = null;
-            if (contractDetails != null
-                && StringUtils.equalsIgnoreCase(contractDetails.getAddress(), settings.getDefaultPrincipalAccount())) {
-              principalContractDetails = contractDetails;
-            } else {
-              principalContractDetails = ethereumWalletService.getDefaultContractDetail(settings.getDefaultPrincipalAccount(),
-                                                                                        settings.getDefaultNetworkId());
-            }
-            if (principalContractDetails != null
-                && StringUtils.equalsIgnoreCase(sender.getAddress(), principalContractDetails.getOwner())) {
-              sender.setName("Admin");
-            }
+          // Change address to 'Admin' if the sender address equals to the
+          // principal contract owner
+          if (sender != null && sender.getId() == null && settings != null && settings.getPrincipalContractAdminAddress() != null
+              && StringUtils.equalsIgnoreCase(settings.getPrincipalContractAdminAddress(), sender.getAddress())) {
+            sender.setName(settings.getPrincipalContractAdminName());
           }
+
+          // Send notification to receiver
           sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.RECEIVER, amount);
         }
       }
@@ -201,6 +196,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
                                                    false);
     }
 
+    // If transaction details saved, delete it from cache
     if (transactionSaved) {
       ethereumWalletService.removeTransactionDetailFromCache(transaction.getHash());
     }

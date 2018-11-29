@@ -362,7 +362,7 @@ export function saveBrowerWalletInstance(wallet, password, isSpace, autoGenerate
     .then((phrase, error) => {
       saveBrowerWallet(password, phrase, address, autoGenerateWallet, autoGenerateWallet);
       setWalletBackedUp(address, backedUp);
-      disableMetamask();
+      disableMetamask(isSpace);
     });
 }
 

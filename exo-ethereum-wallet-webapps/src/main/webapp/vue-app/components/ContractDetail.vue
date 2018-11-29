@@ -9,7 +9,7 @@
           </div>
           <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Contract balance: {{ contractDetails.contractBalanceFiat }} {{ fiatSymbol }} / {{ contractDetails.contractBalance }} ether</h3>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
-          <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ totalSupply }} {{ contractDetails.symbol }}</h4>
+          <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ totalSupply }} {{ contractDetails && contractDetails.symbol }}</h4>
           <h4 v-if="transferTransactionsCount" class="grey--text font-weight-light">Transfer transactions: {{ transferTransactionsCount }}</h4>
         </v-flex>
 

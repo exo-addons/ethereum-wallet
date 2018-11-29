@@ -100,7 +100,7 @@
                   <div class="text-xs-center">
                     <h4 v-if="item.error" class="mb-0">{{ item.error }}</h4>
                     <h3 v-if="!item.error && (item.balanceFiat === 0 || item.balanceFiat) && overviewAccounts.indexOf('fiat') > -1" class="headline mb-0">{{ `${item.balanceFiat} ${fiatSymbol}` }}</h3>
-                    <h4 v-if="!item.error && (item.balance === 0 || item.balance)">{{ `${item.balance} ${item.symbol}` }}</h4>
+                    <h4 v-if="!item.error && (item.balance === 0 || item.balance)">{{ `${item.balance} ${item && item.symbol}` }}</h4>
                   </div>
                   <v-spacer v-if="!item.error" />
                   <v-btn v-if="!item.error" icon class="mr-2" @click="!item.error && $emit('account-details-selected', item)">

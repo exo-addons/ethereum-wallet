@@ -16,43 +16,47 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GlobalSettings implements Serializable {
 
-  private static final long     serialVersionUID           = -4672745644323864680L;
+  private static final long     serialVersionUID              = -4672745644323864680L;
 
-  private Integer               dataVersion                = 0;
+  private Integer               dataVersion                   = 0;
 
-  private boolean               walletEnabled              = true;
+  private boolean               walletEnabled                 = true;
 
-  private boolean               enableDelegation           = true;
+  private boolean               enableDelegation              = true;
 
-  private boolean               isAdmin                    = false;
+  private boolean               isAdmin                       = false;
 
-  private String                accessPermission           = null;
+  private String                accessPermission              = null;
 
-  private String                fundsHolder                = null;
+  private String                fundsHolder                   = null;
 
-  private String                initialFundsRequestMessage = null;
+  private String                initialFundsRequestMessage    = null;
 
-  private String                fundsHolderType            = USER_ACCOUNT_TYPE;
+  private String                fundsHolderType               = USER_ACCOUNT_TYPE;
 
-  private String                providerURL                = null;
+  private String                providerURL                   = null;
 
-  private String                websocketProviderURL       = null;
+  private String                websocketProviderURL          = null;
 
-  private Integer               defaultBlocksToRetrieve    = 0;
+  private Integer               defaultBlocksToRetrieve       = 0;
 
-  private Long                  defaultNetworkId           = 0L;
+  private Long                  defaultNetworkId              = 0L;
 
-  private Long                  defaultGas                 = 0L;
+  private Long                  defaultGas                    = 0L;
 
-  private Long                  minGasPrice                = 4000000000L;
+  private Long                  minGasPrice                   = 4000000000L;
 
-  private Long                  normalGasPrice             = 8000000000L;
+  private Long                  normalGasPrice                = 8000000000L;
 
-  private Long                  maxGasPrice                = 15000000000L;
+  private Long                  maxGasPrice                   = 15000000000L;
 
-  private String                defaultPrincipalAccount    = null;
+  private String                principalContractAdminName    = "Admin";
 
-  private List<String>          defaultOverviewAccounts    = null;
+  private String                principalContractAdminAddress = null;
+
+  private String                defaultPrincipalAccount       = null;
+
+  private List<String>          defaultOverviewAccounts       = null;
 
   private Map<String, Double>   initialFunds;
 
@@ -66,12 +70,12 @@ public class GlobalSettings implements Serializable {
   /**
    * Managed by code
    */
-  private transient JSONArray   contractAbi                = null;
+  private transient JSONArray   contractAbi                   = null;
 
   /**
    * Managed by code
    */
-  private transient String      contractBin                = null;
+  private transient String      contractBin                   = null;
 
   public String toJSONString(boolean includeTransient) {
     return toJSONObject(includeTransient).toString();
@@ -118,7 +122,15 @@ public class GlobalSettings implements Serializable {
         jsonObject.put("defaultOverviewAccounts", new JSONArray(defaultOverviewAccounts));
       }
       if (includeTransient) {
-        jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
+        if (principalContractAdminName != null) {
+          jsonObject.put("principalContractAdminName", principalContractAdminName);
+        }
+        if (principalContractAdminAddress != null) {
+          jsonObject.put("principalContractAdminAddress", principalContractAdminAddress);
+        }
+        if (defaultContractsToDisplay != null) {
+          jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
+        }
         if (contractAbi != null) {
           jsonObject.put("contractAbi", contractAbi);
         }

@@ -721,7 +721,7 @@ export default {
     minGasPriceToken() {
       if (this.defaultGas && this.minGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
         const amount = Number(this.minGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
-        return amount ? ` / ${amount} ${this.principalContract.symbol}` : '';
+        return amount ? ` / ${amount} ${this.principalContract && this.principalContract.symbol}` : '';
       }
       return '';
     },
@@ -738,7 +738,7 @@ export default {
     normalGasPriceToken() {
       if (this.defaultGas && this.normalGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
         const amount = Number(this.normalGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
-        return amount ? ` / ${amount} ${this.principalContract.symbol}` : '';
+        return amount ? ` / ${amount} ${this.principalContract && this.principalContract.symbol}` : '';
       }
       return '';
     },
@@ -755,7 +755,7 @@ export default {
     maxGasPriceToken() {
       if (this.defaultGas && this.maxGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
         const amount = Number(this.maxGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
-        return amount ? ` / ${amount} ${this.principalContract.symbol}` : '';
+        return amount ? ` / ${amount} ${this.principalContract && this.principalContract.symbol}` : '';
       }
       return '';
     },

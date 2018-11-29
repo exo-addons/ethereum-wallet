@@ -142,10 +142,10 @@ export default {
   computed: {
     transactionFeeString() {
       if (this.transactionFeeToken) {
-        if (!this.contractDetails) {
-          return '';
+        if (this.contractDetails) {
+          return `${this.transactionFeeToken} ${this.contractDetails && this.contractDetails.symbol}`;
         } else {
-          return `${this.transactionFeeToken} ${this.contractDetails.symbol}`;
+          return '';
         }
       } else if (this.transactionFeeFiat) {
         return `${this.transactionFeeFiat} ${this.fiatSymbol}`;
