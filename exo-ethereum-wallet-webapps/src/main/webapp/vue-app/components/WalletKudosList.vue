@@ -9,31 +9,26 @@
     <h3 class="text-xs-left ml-3">Configuration</h3>
     <v-card-text>
       <div class="text-xs-left kudosWalletConfiguration">
+        <span>Users will be rewarded </span>
         <v-text-field
           v-model.number="tokenPerKudo"
-          label="Tokens per Kudo"
           name="tokenPerKudo" />
-        <span> per kudos using </span>
         <v-combobox
+          id="selectedKudosContractAddress"
           v-model="selectedKudosContractAddress"
           :items="contracts"
           :return-object="false"
-          label="Token contract"
           item-value="address"
           item-text="name"
+          class="selectedKudosContractAddress"
           hide-no-data
           hide-selected
           small-chips>
           <template slot="selection" slot-scope="data">
-            <v-chip
-              :selected="data.selected"
-              :disabled="data.disabled"
-              :key="data.value"
-              @input="data.parent.selectItem(data.item)">
-              {{ selectedKudosContractName }}
-            </v-chip>
+            {{ selectedKudosContractName }}
           </template>
         </v-combobox>
+        <span> per kudos</span>
         <button class="btn btn-primary mb-3" @click="save">
           Save
         </button>
