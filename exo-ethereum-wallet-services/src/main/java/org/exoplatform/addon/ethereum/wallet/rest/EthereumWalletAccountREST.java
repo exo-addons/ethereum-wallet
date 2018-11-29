@@ -348,6 +348,21 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
+    if (!ethereumWalletService.isUserAdmin()) {
+      // Check if the address is current user's address or if the current user
+      // is admin
+      AccountDetail accountDetails = ethereumWalletService.getAccountDetailsByAddress(address);
+      String currentUserId = getCurrentUserId();
+      if (accountDetails == null || (USER_ACCOUNT_TYPE.equals(accountDetails.getType())
+          && !StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId))) {
+        LOG.warn("User {} attempts to display transactions of {} {}",
+                 currentUserId,
+                 accountDetails.getType(),
+                 accountDetails.getId());
+        return Response.status(403).build();
+      }
+    }
+
     List<JSONObject> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address);
     JSONArray array = new JSONArray(userTransactions);
 

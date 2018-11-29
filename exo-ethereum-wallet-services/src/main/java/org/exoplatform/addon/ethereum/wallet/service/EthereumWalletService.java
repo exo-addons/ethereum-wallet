@@ -352,7 +352,7 @@ public class EthereumWalletService implements Startable {
           globalSettings.setWalletEnabled(false);
         }
       }
-      globalSettings.setAdmin(userACL.isUserInGroup(ADMINISTRATORS_GROUP));
+      globalSettings.setAdmin(isUserAdmin());
     }
 
     if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
@@ -795,11 +795,29 @@ public class EthereumWalletService implements Startable {
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
+
+    AccountDetail accountDetails = getAccountDetailsByAddress(address);
+    String currentUserId = getCurrentUserId();
+    boolean displayLabel = isUserAdmin()
+        || (accountDetails != null && StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId));
+
+    if (!displayLabel && accountDetails != null && SPACE_ACCOUNT_TYPE.equals(accountDetails.getType())) {
+      Space space = getSpace(accountDetails.getId());
+      if (space != null && (spaceService.isManager(space, currentUserId) || spaceService.isSuperManager(currentUserId))) {
+        displayLabel = true;
+      }
+    }
+    final boolean displayLabelFinal = displayLabel;
     return Arrays.stream(addressTransactionsArray).map(transaction -> {
       TransactionDetail transactionDetail = TransactionDetail.fromStoredValue(transaction);
       TransactionDetail cachedTransactionDetail = getTransactionDetailFromCache(transactionDetail.getHash());
       if (cachedTransactionDetail != null) {
         transactionDetail = cachedTransactionDetail;
+      }
+      // Avoid diplaying labels coming from other accounts even for admins
+      // The transaction label should stay private
+      if (!displayLabelFinal) {
+        transactionDetail.setLabel(null);
       }
       return transactionDetail.toJSONObject();
     }).collect(Collectors.toList());
@@ -1023,6 +1041,13 @@ public class EthereumWalletService implements Startable {
                                               + extension)) {
       return IOUtils.toString(abiInputStream);
     }
+  }
+
+  /**
+   * @return true if user is member of /platform/users
+   */
+  public boolean isUserAdmin() {
+    return userACL.isUserInGroup(ADMINISTRATORS_GROUP);
   }
 
   private Map<String, String> getListOfWalletsOfType(String walletType) throws Exception {

@@ -190,10 +190,11 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
       // Add user transaction
       transactionSaved = true;
+      boolean saveLabel = sender == null && SPACE_ACCOUNT_TYPE.equals(receiver.getType());
       ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(),
                                                    receiver.getAddress(),
                                                    transaction.getHash(),
-                                                   false);
+                                                   saveLabel);
     }
 
     // If transaction details saved, delete it from cache
