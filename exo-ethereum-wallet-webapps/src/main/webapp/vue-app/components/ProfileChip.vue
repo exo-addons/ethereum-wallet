@@ -107,7 +107,7 @@ export default {
             labels: this.labels,
             content: false,
             keepAlive: true,
-            defaultPosition: "left",
+            defaultPosition: "left_bottom",
             maxWidth: "240px"
           });
         });
@@ -119,7 +119,7 @@ export default {
             labels: this.labels,
             content: false,
             keepAlive: true,
-            defaultPosition: "left",
+            defaultPosition: "left_bottom",
             maxWidth: "240px"
           });
         });

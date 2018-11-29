@@ -486,7 +486,7 @@
                     :wallet-address="selectedWalletAddress"
                     :contract-details="selectedWalletDetails"
                     :selected-transaction-hash="selectedTransactionHash"
-                    :wallet-display-name="selectedWalletDisplayName"
+                    :wallet="selectedWallet"
                     is-read-only
                     is-display-only
                     @back="back()"/>
@@ -593,7 +593,7 @@ export default {
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
       selectedWalletAddress: null,
-      selectedWalletDisplayName: null,
+      selectedWallet: null,
       selectedContractDetails: null,
       selectedWalletDetails: null,
       kudosListRetrieved: false,
@@ -1215,7 +1215,7 @@ export default {
     openAccountDetail(wallet, hash) {
       this.selectedTransactionHash = hash;
       this.selectedWalletAddress = wallet.address;
-      this.selectedWalletDisplayName = wallet.name;
+      this.selectedWallet = wallet;
       this.computeWalletDetails(wallet);
       this.seeAccountDetails = true;
 

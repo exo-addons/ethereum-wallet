@@ -5,7 +5,16 @@
         <v-flex id="accountDetailTitle">
           <div class="headline title align-start">
             <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
-            <span v-if="walletDisplayName">Wallet transactions of: {{ walletDisplayName }}</span>
+            <span v-if="wallet">
+              Wallet transactions of:
+              <profile-chip
+                :profile-technical-id="wallet.technicalId"
+                :profile-id="wallet.id"
+                :profile-type="wallet.type"
+                :avatar="wallet.avatar"
+                :display-name="wallet.name"
+                :address="wallet.address" />
+            </span>
             <span v-else>{{ contractDetails.title }}</span>
           </div>
           <h3 v-if="!contractDetails.isContract" class="font-weight-light">{{ fiatBalance }}</h3>
@@ -77,6 +86,7 @@ import SendTokensModal from './SendTokensModal.vue';
 import DelegateTokensModal from './DelegateTokensModal.vue';
 import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
+import ProfileChip from './ProfileChip.vue';
 
 import {retrieveContractDetails} from '../WalletToken.js';
 import {etherToFiat} from '../WalletUtils.js';
@@ -88,7 +98,8 @@ export default {
     SendTokensModal,
     DelegateTokensModal,
     SendDelegatedTokensModal,
-    TransactionsList
+    TransactionsList,
+    ProfileChip
   },
   props: {
     isReadOnly: {
@@ -115,8 +126,8 @@ export default {
         return null;
       }
     },
-    walletDisplayName: {
-      type: String,
+    wallet: {
+      type: Object,
       default: function() {
         return null;
       }
