@@ -5,7 +5,8 @@
         <v-flex id="accountDetailTitle">
           <div class="headline title align-start">
             <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
-            {{ contractDetails.title }}
+            <span v-if="walletDisplayName">Wallet transactions of: {{ walletDisplayName }}</span>
+            <span v-else>{{ contractDetails.title }}</span>
           </div>
           <h3 v-if="!contractDetails.isContract" class="font-weight-light">{{ fiatBalance }}</h3>
           <h4 v-if="!contractDetails.isContract" class="grey--text font-weight-light">{{ balance }}</h4>
@@ -109,6 +110,12 @@ export default {
       }
     },
     walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    walletDisplayName: {
       type: String,
       default: function() {
         return null;

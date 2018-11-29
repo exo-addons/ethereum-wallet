@@ -18,7 +18,7 @@
           v-model="selectedKudosContractAddress"
           :items="contracts"
           :return-object="false"
-          label="Token type"
+          label="Token contract"
           item-value="address"
           item-text="name"
           hide-no-data
@@ -125,10 +125,12 @@
             </td>
             <td>
               <a
-                v-if="transactionEtherscanLink && props.item.txHash"
-                :href="`${transactionEtherscanLink}${props.item.txHash}`"
-                target="_blank" title="Open on etherscan">
-                Etherscan link
+                v-if="props.item.hash"
+                href="javascript:void(0);"
+                target="_blank"
+                title="Open transaction in wallet"
+                @click="$emit('open-wallet-transaction', props.item)">
+                Open in wallet
               </a>
               <span v-else>-</span>
             </td>
@@ -244,7 +246,7 @@ export default {
           text: 'Transaction',
           align: 'center',
           sortable: true,
-          value: 'txHash'
+          value: 'hash'
         },
         {
           text: 'Status',
@@ -344,7 +346,7 @@ export default {
         const kudosWalletIndex = this.selectedKudosIdentitiesList.findIndex(kudosWallet => kudosWallet.address && kudosWallet.address.toLowerCase() === transaction.to.toLowerCase());
         const kudosWallet = this.selectedKudosIdentitiesList[kudosWalletIndex];
         if(kudosWallet) {
-          this.$set(kudosWallet, 'txHash', transaction.hash);
+          this.$set(kudosWallet, 'hash', transaction.hash);
           this.$set(kudosWallet, 'status', 'pending');
           if (transaction.contractAmount) {
             this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
@@ -363,7 +365,7 @@ export default {
                 if(kudosTransaction) {
                   const kudosWallet = this.kudosIdentitiesList.find(kudosWallet => kudosWallet.id === kudosTransaction.receiverId && kudosWallet.type === kudosTransaction.receiverType);
                   this.$set(kudosWallet, 'tokensSent', kudosTransaction.tokensAmountSent ? Number(kudosTransaction.tokensAmountSent) : 0);
-                  this.$set(kudosWallet, 'txHash', kudosTransaction.hash);
+                  this.$set(kudosWallet, 'hash', kudosTransaction.hash);
                   this.$set(kudosWallet, 'status', 'pending');
 
                   const thiss = this;

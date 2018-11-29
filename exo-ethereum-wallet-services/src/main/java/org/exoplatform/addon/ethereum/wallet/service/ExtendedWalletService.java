@@ -105,6 +105,7 @@ public class ExtendedWalletService {
                                                                                 : kudosPeriodTransactionsValue.getValue()
                                                                                                               .toString();
 
+    
     String[] kudosPeriodTransactionsArray = kudosPeriodTransactionsString.isEmpty() ? new String[0]
                                                                                     : kudosPeriodTransactionsString.split(",");
     return Arrays.stream(kudosPeriodTransactionsArray).map(transaction -> {

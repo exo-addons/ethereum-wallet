@@ -485,6 +485,8 @@
                     :network-id="networkId"
                     :wallet-address="selectedWalletAddress"
                     :contract-details="selectedWalletDetails"
+                    :selected-transaction-hash="selectedTransactionHash"
+                    :wallet-display-name="selectedWalletDisplayName"
                     is-read-only
                     is-display-only
                     @back="back()"/>
@@ -514,6 +516,7 @@
                 :contracts="contracts"
                 :principal-account="principalAccount"
                 @pending="pendingTransaction"
+                @open-wallet-transaction="openWalletTransaction"
                 @list-retrieved="kudosListRetrieved = true"/>
             </v-tab-item>
           </v-tabs-items>
@@ -583,12 +586,14 @@ export default {
       showAddContractModal: false,
       selectedOverviewAccounts: [],
       selectedPrincipalAccount: null,
+      selectedTransactionHash: null,
       enableDelegation: true,
       seeContractDetails: false,
       seeContractDetailsPermanent: false,
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
       selectedWalletAddress: null,
+      selectedWalletDisplayName: null,
       selectedContractDetails: null,
       selectedWalletDetails: null,
       kudosListRetrieved: false,
@@ -1200,8 +1205,17 @@ export default {
         });
       });
     },
-    openAccountDetail(wallet) {
+    openWalletTransaction(transactionDetails) {
+      const wallet = this.wallets.find(wallet => wallet && wallet.address && wallet.address.toLowerCase() === transactionDetails.address.toLowerCase());
+      if(wallet) {
+        this.selectedTab = 4;
+        this.openAccountDetail(wallet, transactionDetails.hash);
+      }
+    },
+    openAccountDetail(wallet, hash) {
+      this.selectedTransactionHash = hash;
       this.selectedWalletAddress = wallet.address;
+      this.selectedWalletDisplayName = wallet.name;
       this.computeWalletDetails(wallet);
       this.seeAccountDetails = true;
 
