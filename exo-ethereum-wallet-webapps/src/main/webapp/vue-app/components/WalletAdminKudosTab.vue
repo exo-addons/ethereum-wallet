@@ -12,7 +12,8 @@
         <span>Users will be rewarded </span>
         <v-text-field
           v-model.number="tokenPerKudo"
-          name="tokenPerKudo" />
+          name="tokenPerKudo"
+          class="input-text-center" />
         <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
           <v-combobox
             v-model="selectedKudosContractAddress"
@@ -151,7 +152,7 @@
                 v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
             </td>
             <td>
-              <v-text-field v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend"/>
+              <v-text-field v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
               <template v-else-if="props.item.status === 'success'">{{ props.item.tokensSent }}</template>
               <template v-else>-</template>
             </td>
