@@ -153,7 +153,7 @@
             </td>
             <td>
               <v-text-field v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
-              <template v-else-if="props.item.status === 'success'">{{ props.item.tokensSent }}</template>
+              <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
               <template v-else>-</template>
             </td>
             <td v-html="props.item.received">

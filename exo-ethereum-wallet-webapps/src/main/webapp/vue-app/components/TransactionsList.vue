@@ -309,17 +309,17 @@
 
               <v-list-tile-content v-if="item.type === 'ether' && item.amount && Number(item.amount)" class="transactionDetailActions">
                 <v-list-tile-title :class="item.adminIcon ? '' : item.isReceiver ? 'green--text' : 'red--text'">
-                  <span>{{ Number(item.amount) }} ETH</span>
+                  <span>{{ toFixed(item.amount) }} ETH</span>
                 </v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat">
-                  <v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text>
+                  <v-list-tile-action-text>{{ toFixed(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text>
                 </v-list-tile-sub-title>
               </v-list-tile-content>
 
               <v-list-tile-content v-else class="transactionDetailActions">
-                <v-list-tile-title v-if="item.contractAmount" :class="item.adminIcon ? '' : item.isReceiver ? 'green--text' : 'red--text'"><span>{{ Number.isInteger(item.contractAmount) ? Number(item.contractAmount) : item.contractAmount }} {{ item.contractSymbol }}</span></v-list-tile-title>
-                <v-list-tile-title v-else-if="item.amount && Number(item.amount)" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ item.amount ? Number(item.amount) : 0 }} ether</span></v-list-tile-title>
-                <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ Number(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
+                <v-list-tile-title v-if="item.contractAmount" :class="item.adminIcon ? '' : item.isReceiver ? 'green--text' : 'red--text'"><span>{{ toFixed(item.contractAmount) }} {{ item.contractSymbol }}</span></v-list-tile-title>
+                <v-list-tile-title v-else-if="item.amount && Number(item.amount)" :class="item.isReceiver ? 'green--text' : 'red--text'"><span>{{ toFixed(item.amount) }} ether</span></v-list-tile-title>
+                <v-list-tile-sub-title v-if="item.amountFiat"><v-list-tile-action-text>{{ toFixed(item.amountFiat) }} {{ fiatSymbol }}</v-list-tile-action-text></v-list-tile-sub-title>
                 <v-list-tile-sub-title v-else />
               </v-list-tile-content>
             </v-list-tile>
@@ -352,19 +352,19 @@
             <v-list-tile v-if="Number(item.contractAmount)">
               <v-list-tile-content>{{ item.contractAmountLabel }}</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ item.contractAmount }} {{ item.contractSymbol }}
+                {{ toFixed(item.contractAmount) }} {{ item.contractSymbol }}
               </v-list-tile-content>
             </v-list-tile>
             <v-list-tile v-else-if="Number(item.amountFiat)">
               <v-list-tile-content>Amount</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ item.amountFiat }} {{ fiatSymbol }}
+                {{ toFixed(item.amountFiat) }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
             <v-list-tile v-else-if="Number(item.amount)">
               <v-list-tile-content>Amount</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ item.amount }} ether
+                {{ toFixed(item.amount) }} ether
               </v-list-tile-content>
             </v-list-tile>
 
@@ -393,14 +393,14 @@
             <v-list-tile v-if="!contractDetails.isContract">
               <v-list-tile-content>Balance now</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ contractDetails.balanceFiat }} {{ fiatSymbol }}
+                {{ toFixed(contractDetails.balanceFiat) }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
 
             <v-list-tile v-if="!contractDetails.isContract && item.balanceAtDateFiat">
               <v-list-tile-content>Balance at date</v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ item.balanceAtDateFiat }} {{ fiatSymbol }}
+                {{ toFixed(item.balanceAtDateFiat) }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
 
@@ -425,10 +425,10 @@
             <v-list-tile v-if="item.fee">
               <v-list-tile-content>Transaction fee</v-list-tile-content>
               <v-list-tile-content v-if="item.feeToken" class="align-end">
-                {{ item.feeToken }} {{ item.contractSymbol }}
+                {{ toFixed(item.feeToken) }} {{ item.contractSymbol }}
               </v-list-tile-content>
               <v-list-tile-content v-else class="align-end">
-                {{ item.feeFiat }} {{ fiatSymbol }}
+                {{ toFixed(item.feeFiat) }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
 

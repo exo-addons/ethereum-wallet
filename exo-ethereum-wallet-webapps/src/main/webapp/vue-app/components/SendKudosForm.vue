@@ -138,12 +138,12 @@ export default {
     transactionFeeString() {
       if (this.transactionFeeToken) {
         if (this.contractDetails) {
-          return `${this.transactionFeeToken} ${this.contractDetails && this.contractDetails.symbol}`;
+          return `${this.toFixed(this.transactionFeeToken)} ${this.contractDetails && this.contractDetails.symbol}`;
         } else {
           return '';
         }
       } else if (this.transactionFeeFiat) {
-        return `${this.transactionFeeFiat} ${this.fiatSymbol}`;
+        return `${this.toFixed(this.transactionFeeFiat)} ${this.fiatSymbol}`;
       }
       return '';
     },
@@ -160,7 +160,7 @@ export default {
       return this.transactionFeeEther ? etherToFiat(this.transactionFeeEther) : 0;
     },
     transactionFeeToken() {
-      return !this.contractDetails || this.contractDetails.isOwner || !this.transactionFeeInWei || !this.sellPriceInWei ? 0 : Number(this.transactionFeeInWei / this.sellPriceInWei).toFixed(4);
+      return !this.contractDetails || this.contractDetails.isOwner || !this.transactionFeeInWei || !this.sellPriceInWei ? 0 : this.toFixed(this.transactionFeeInWei / this.sellPriceInWei);
     },
     recipientsHavingAddress() {
       const recipientsHavingAddress = this.recipients ? this.recipients.slice(0) : [];

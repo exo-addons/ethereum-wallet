@@ -12,17 +12,17 @@
 
     <v-card-title primary-title class="pt-2 pb-0" >
       <v-flex class="flex-center">
-        <h4 v-if="principalAccount === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</h4>
-        <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ totalBalance }} ether</h4>
-        <h4 v-else class="headline">{{ principalAccountDetails.balance }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
+        <h4 v-if="principalAccount === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</h4>
+        <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</h4>
+        <h4 v-else class="headline">{{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
       </v-flex>
     </v-card-title>
 
     <v-card-title primary-title class="pt-0 flex-center">
       <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index">
-        <template v-if="accountDetails.key === 'fiat'" class="headline">{{ totalFiatBalance }} {{ fiatSymbol }}</template>
-        <template v-else-if="accountDetails.key === 'ether'" class="headline">{{ totalBalance }} ether</template>
-        <template v-else class="headline">{{ accountDetails.balance }} {{ accountDetails && accountDetails.symbol }}</template>
+        <template v-if="accountDetails.key === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</template>
+        <template v-else-if="accountDetails.key === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</template>
+        <template v-else class="headline">{{ toFixed(accountDetails.balance) }} {{ accountDetails && accountDetails.symbol }}</template>
       </v-flex>
     </v-card-title>
 

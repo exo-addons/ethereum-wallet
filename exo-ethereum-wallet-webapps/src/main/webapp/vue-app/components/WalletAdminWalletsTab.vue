@@ -26,7 +26,7 @@
             <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
           </v-badge>
           <template v-if="props.item.balancePrincipal">
-            {{ props.item.balancePrincipal }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
+            {{ toFixed(props.item.balancePrincipal) }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
             <v-btn 
               class="bottomNavigationItem transparent"
               title="Send funds"
@@ -43,7 +43,7 @@
             <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
           </v-badge>
           <template>
-            {{ props.item.balance }} eth
+            {{ toFixed(props.item.balance) }} eth
             <v-btn 
               class="bottomNavigationItem transparent"
               title="Send funds"

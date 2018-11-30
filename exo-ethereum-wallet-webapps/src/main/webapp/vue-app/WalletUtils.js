@@ -1,9 +1,12 @@
 import * as constants from './WalletConstants';
 import {searchUserOrSpaceObject, saveNewAddress} from './WalletAddressRegistry';
 
+const DECIMALS = 3;
+const DECIMALS_POW = Math.pow(10, DECIMALS);
+
 export function etherToFiat(amount) {
   if (window.walletSettings.fiatPrice && amount)  {
-    return (window.walletSettings.fiatPrice * amount).toFixed(4);
+    return toFixed(window.walletSettings.fiatPrice * amount);
   }
   return 0;
 }
@@ -23,7 +26,7 @@ export function gasToFiat(amount, gasPriceInEther) {
     gasPriceInEther = window.walletSettings.gasPriceInEther;
   }
   if (window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
-    return (gasPriceInEther * window.walletSettings.fiatPrice * amount).toFixed(4);
+    return toFixed(gasPriceInEther * window.walletSettings.fiatPrice * amount);
   }
   return 0;
 }
@@ -57,24 +60,6 @@ export function retrieveFiatExchangeRate() {
         retrieveFiatExchangeRate();
       }, 300000);
       return computeGasPrice();
-    });
-}
-
-function retrieveFiatExchangeRateOnline(currency) {
-  // Retrieve Fiat <=> Ether exchange rate
-  return fetch(`https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=${currency}`, {
-      referrerPolicy: "no-referrer",
-      headers: {
-        'Origin': ''
-      }
-    })
-    .then(resp => {
-      if (resp && resp.ok) {
-        return resp.json();
-      }
-    })
-    .catch (error => {
-      console.debug("error retrieving currency exchange, trying to get exchange from local store", error);
     });
 }
 
@@ -608,7 +593,7 @@ export function convertTokenAmountToSend(amount, decimals) {
   const negative = String(amount).substring(0, 1) === '-';
 
   if (negative) {
-    ether = ether.substring(1);
+    amount = amount.substring(1);
   }
   const comps = String(amount).split('.');
   let integer = comps[0];
@@ -623,7 +608,7 @@ export function convertTokenAmountToSend(amount, decimals) {
   fraction = toBN(fraction);
   let result = (integer.mul(base)).add(fraction);
   if (negative) {
-    result = result.mul(negative1);
+    result = result.mul(-1);
   }
   return result.toString(10);
 }
@@ -641,7 +626,7 @@ export function convertTokenAmountReceived(amount, decimals) {
   const base = toBN(10).pow(toBN(decimals));
 
   if (negative) {
-    amountBN = amountBN.mul(negative1);
+    amountBN = amountBN.mul(-1);
   }
   var fraction = amountBN.mod(base).toString(10);
   while (fraction.length < decimals) {
@@ -669,6 +654,38 @@ export function estimateTransactionFeeFiat(gas, gasPrice) {
     return 0;
   }
   return etherToFiat(estimateTransactionFeeEther(gas, gasPrice));
+}
+
+export function toFixed(value) {
+  const decimals = 3;
+  let number = Number(value);
+  if(Number.isNaN(number) || !Number.isFinite(number) || !number || !value) {
+    return 0;
+  }
+  value = String(number);
+  const toBN = window.localWeb3.utils.toBN
+  const negative = value.substring(0, 1) === '-';
+  if (negative) {
+    value = value.substring(1);
+  }
+  const comps = value.split('.');
+  let integer = comps[0];
+  let fraction = comps[1] ? comps[1] : '0';
+  if (fraction && fraction.length > decimals) {
+    fraction = String(Math.round(Number("0." + fraction) * DECIMALS_POW) / DECIMALS_POW).substring(2);
+  }
+  if(!fraction || Number(fraction) === 0) {
+    fraction = null;
+  }
+  integer = toBN(integer);
+  if (negative) {
+    integer = integer.mul(-1);
+  }
+  if(fraction && fraction.length) {
+    return `${integer}.${fraction}`;
+  } else {
+    return integer.toString();
+  }
 }
 
 function createLocalWeb3Instance(isSpace, useMetamask) {
@@ -843,4 +860,22 @@ function clearCache() {
       sessionStorage.removeItem(key);
     }
   });
+}
+
+function retrieveFiatExchangeRateOnline(currency) {
+  // Retrieve Fiat <=> Ether exchange rate
+  return fetch(`https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=${currency}`, {
+      referrerPolicy: "no-referrer",
+      headers: {
+        'Origin': ''
+      }
+    })
+    .then(resp => {
+      if (resp && resp.ok) {
+        return resp.json();
+      }
+    })
+    .catch (error => {
+      console.debug("error retrieving currency exchange, trying to get exchange from local store", error);
+    });
 }

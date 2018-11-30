@@ -17,9 +17,9 @@
             </span>
             <span v-else>{{ contractDetails.title }}</span>
           </div>
-          <h3 v-if="!contractDetails.isContract" class="font-weight-light">{{ fiatBalance }}</h3>
-          <h4 v-if="!contractDetails.isContract" class="grey--text font-weight-light">{{ balance }}</h4>
-          <h3 v-else class="font-weight-light">{{ balance }}</h3>
+          <h3 v-if="!contractDetails.isContract" class="font-weight-light">{{ toFixed(fiatBalance) }}</h3>
+          <h4 v-if="!contractDetails.isContract" class="grey--text font-weight-light">{{ toFixed(balance) }}</h4>
+          <h3 v-else class="font-weight-light">{{ toFixed(balance) }}</h3>
         </v-flex>
 
         <v-flex v-if="!isDisplayOnly" id="accountDetailActions">

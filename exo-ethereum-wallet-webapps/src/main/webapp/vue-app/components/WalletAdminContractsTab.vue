@@ -16,7 +16,7 @@
         <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
           <v-progress-circular v-if="props.item.loadingBalance" color="primary" indeterminate size="20" />
           <span v-else>
-            {{ props.item.contractBalance }} ether
+            {{ toFixed(props.item.contractBalance) }} ether
           </span>
         </td>
         <td class="clickable text-xs-center" @click="openContractDetails(props.item)">

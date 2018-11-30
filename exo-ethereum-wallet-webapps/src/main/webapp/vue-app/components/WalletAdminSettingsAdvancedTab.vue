@@ -89,8 +89,8 @@ export default {
   computed: {
     minGasPriceToken() {
       if (this.defaultGas && this.minGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
-        const amount = Number(this.minGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
-        return amount ? ` / ${amount} ${this.principalContract && this.principalContract.symbol}` : '';
+        const amount = this.minGasPriceEther * this.defaultGas / this.principalContract.sellPrice;
+        return amount ? ` / ${this.toFixed(amount)} ${this.principalContract && this.principalContract.symbol}` : '';
       }
       return '';
     },
@@ -102,12 +102,12 @@ export default {
     },
     minGasFiatPrice() {
       const amount = this.defaultGas && this.minGasPriceEther && gasToFiat(this.defaultGas,  this.minGasPriceEther);
-      return amount ? `${amount} ${this.fiatSymbol}` : '';
+      return amount ? `${this.toFixed(amount)} ${this.fiatSymbol}` : '';
     },
     normalGasPriceToken() {
       if (this.defaultGas && this.normalGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
-        const amount = Number(this.normalGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
-        return amount ? ` / ${amount} ${this.principalContract && this.principalContract.symbol}` : '';
+        const amount = this.normalGasPriceEther * this.defaultGas / this.principalContract.sellPrice;
+        return amount ? ` / ${this.toFixed(amount)} ${this.principalContract && this.principalContract.symbol}` : '';
       }
       return '';
     },
@@ -119,12 +119,12 @@ export default {
     },
     normalGasFiatPrice() {
       const amount = this.defaultGas && this.normalGasPriceEther && gasToFiat(this.defaultGas,  this.normalGasPriceEther);
-      return amount ? `${amount} ${this.fiatSymbol}` : '';
+      return amount ? `${this.toFixed(amount)} ${this.fiatSymbol}` : '';
     },
     maxGasPriceToken() {
       if (this.defaultGas && this.maxGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
-        const amount = Number(this.maxGasPriceEther * this.defaultGas / this.principalContract.sellPrice).toFixed(4);
-        return amount ? ` / ${amount} ${this.principalContract && this.principalContract.symbol}` : '';
+        const amount = this.maxGasPriceEther * this.defaultGas / this.principalContract.sellPrice;
+        return amount ? ` / ${this.toFixed(amount)} ${this.principalContract && this.principalContract.symbol}` : '';
       }
       return '';
     },
@@ -136,7 +136,7 @@ export default {
     },
     maxGasFiatPrice() {
       const amount = this.defaultGas && this.maxGasPriceEther && gasToFiat(this.defaultGas,  this.maxGasPriceEther);
-      return amount ? `${amount} ${this.fiatSymbol}` : '';
+      return amount ? `${this.toFixed(amount)} ${this.fiatSymbol}` : '';
     }
   },
   methods: {

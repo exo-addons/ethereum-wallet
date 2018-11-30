@@ -78,7 +78,7 @@
               no-resize />
 
             <gas-price-choice
-              :estimated-fee="`${transactionFeeFiat} ${fiatSymbol}`"
+              :estimated-fee="`${toFixed(transactionFeeFiat)} ${fiatSymbol}`"
               @changed="gasPrice = $event" />
 
           </v-form>
