@@ -57,7 +57,11 @@
       Please switch Metamask to <strong>{{ networkLabel }}</strong>
     </div>
     <div v-else-if="newAddressDetected">
-      <div v-if="associatedWalletAddress" class="alert alert-warning">
+      <div v-if="associatedWalletAddress && isAdministration && isPrincipalContractAdmin" class="alert alert-info">
+        <i class="uiIconInfo"></i>
+        <span>You are using principal contract owner address</span>
+      </div>
+      <div v-else-if="associatedWalletAddress" class="alert alert-warning">
         <i class="uiIconWarning"></i>
         <span v-if="isAdministration">Attention: you are using a different metamask account from your associated address {{ associatedWalletAddress }}</span>
         <span v-else>Please switch metamask to {{ associatedWalletAddress }} account to be able to send transactions</span>
@@ -162,6 +166,7 @@ export default {
       addressAssociationDialog: false,
       installInstructionDialog: false,
       networkLabel: null,
+      principalContractAdminAddress: null,
       sameConfiguredNetwork: true,
       associatedWalletAddress: null,
       detectedMetamaskAccount: null,
@@ -173,6 +178,9 @@ export default {
   computed: {
     displayNotSameNetworkWarning() {
       return this.refreshIndex && !this.sameConfiguredNetwork && (!this.isSpace || !this.associatedWalletAddress);
+    },
+    isPrincipalContractAdmin() {
+      return this.principalContractAdminAddress && this.detectedMetamaskAccount && this.principalContractAdminAddress.toLowerCase() === this.detectedMetamaskAccount.toLowerCase();
     },
     displaySpaceAccountAssociationHelp() {
       return this.refreshIndex && this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
@@ -220,6 +228,7 @@ export default {
       this.sameConfiguredNetwork = true;
       this.detectedMetamaskAccount = null;
       this.currentAccountAlreadyInUse = false;
+      this.principalContractAdminAddress = window.walletSettings.principalContractAdminAddress;
 
       if (this.metamaskEnabled && this.metamaskConnected) {
         this.detectedMetamaskAccount = window.walletSettings.detectedMetamaskAccount;
