@@ -22,14 +22,11 @@
           <span v-else>{{ props.item.address }}</span>
         </td>
         <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-card-title v-if="props.item.loadingBalancePrincipal" primary-title class="pb-0 pt-0">
-            <v-spacer />
-            <v-badge color="red" right title="A transaction is in progress">
-              <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
-            </v-badge>
-          </v-card-title>
-          <template v-else-if="props.item.balancePrincipal">
-            {{ props.item.balancePrincipal }}
+          <v-badge v-if="props.item.loadingBalancePrincipal" color="red" right title="A transaction is in progress">
+            <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+          </v-badge>
+          <template v-if="props.item.balancePrincipal">
+            {{ props.item.balancePrincipal }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
             <v-btn 
               class="bottomNavigationItem transparent"
               title="Send funds"
@@ -42,14 +39,11 @@
           <template v-else>-</template>
         </td>
         <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-card-title v-if="props.item.loadingBalance" primary-title class="pb-0 pt-0">
-            <v-spacer />
-            <v-badge color="red" right title="A transaction is in progress">
-              <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
-            </v-badge>
-          </v-card-title>
-          <template v-else>
-            {{ props.item.balance }}
+          <v-badge v-if="props.item.loadingBalance" color="red" right title="A transaction is in progress">
+            <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+          </v-badge>
+          <template>
+            {{ props.item.balance }} eth
             <v-btn 
               class="bottomNavigationItem transparent"
               title="Send funds"
