@@ -306,7 +306,8 @@ export default {
               throw new Error('Invalid contract address');
             }
             balance = String(balance);
-            this.$set(wallet, 'balancePrincipal', convertTokenAmountReceived(balance, accountDetails.decimals));
+            balance = convertTokenAmountReceived(balance, accountDetails.decimals);
+            this.$set(wallet, 'balancePrincipal', balance);
             if(!ignoreUpdateLoadingBalanceParam) {
               this.$set(wallet, "loadingBalancePrincipal", false);
             }

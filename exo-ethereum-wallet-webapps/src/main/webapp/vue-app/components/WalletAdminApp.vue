@@ -108,7 +108,7 @@
                 :fiat-symbol="fiatSymbol"
                 :token-etherscan-link="tokenEtherscanLink"
                 :wallets="wallets"
-                @contract-list-modified="loadWallets"
+                @contract-list-modified="$refs.walletsTab && $refs.walletsTab.init()"
                 @pending-transaction="watchPendingTransaction"
                 @contracts-loaded="contracts = $event" />
             </v-tab-item>
@@ -134,7 +134,7 @@
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" id="kudosList">
-              <wallet-kudos-list
+              <kudos-tab
                 v-if="!loading"
                 ref="kudosList"
                 :wallets="wallets"
@@ -158,9 +158,10 @@ import InitialFundsTab from './WalletAdminInitialFundsTab.vue';
 import AdvancedSettingsTab from './WalletAdminSettingsAdvancedTab.vue';
 import ContractsTab from './WalletAdminContractsTab.vue';
 import WalletsTab from './WalletAdminWalletsTab.vue';
+import KudosTab from './WalletAdminKudosTab.vue';
+
 import WalletSetup from './WalletSetup.vue';
 import WalletSummary from './WalletSummary.vue';
-import WalletKudosList from './WalletKudosList.vue';
 
 import * as constants from '../WalletConstants.js';
 import {initWeb3, initSettings, watchTransactionStatus, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../WalletUtils.js';
@@ -172,8 +173,8 @@ export default {
     AdvancedSettingsTab,
     ContractsTab,
     WalletsTab,
+    KudosTab,
     WalletSummary,
-    WalletKudosList,
     WalletSetup
   },
   data () {
@@ -378,8 +379,8 @@ export default {
       const thiss = this;
       watchTransactionStatus(transaction.hash, receipt => {
         if (receipt.status) {
+          const wallet = thiss.wallets && thiss.wallets.find(wallet => wallet && wallet.address && transaction.to && wallet.address.toLowerCase() === transaction.to.toLowerCase());
           if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {
-            const wallet = thiss.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
             if (wallet) {
               contractDetails.contract.methods.isApprovedAccount(wallet.address).call()
                 .then(approved => {
@@ -391,7 +392,6 @@ export default {
                 });
             }
           } else if (transaction.contractMethodName === 'addAdmin' || transaction.contractMethodName === 'removeAdmin') {
-            const wallet = thiss.wallets.find(wallet => wallet && wallet.address && wallet.address === transaction.to);
             if (wallet) {
               contractDetails.contract.methods.getAdminLevel(wallet.address).call()
                 .then(level => {
@@ -406,8 +406,7 @@ export default {
           } else if (transaction.contractMethodName === 'unPause' || transaction.contractMethodName === 'pause') {
             thiss.$set(contractDetails, "isPaused", transaction.contractMethodName === 'pause' ? true : false);
             thiss.$nextTick(thiss.forceUpdate);
-          } else if (transaction.to && (!transaction.contractMethodName || transaction.contractMethodName === 'transfer' || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve')) {
-            const wallet = this.wallets.find(wallet => wallet.address && wallet.address.toLowerCase() === transaction.to.toLowerCase());
+          } else if ((!transaction.contractMethodName || transaction.contractMethodName === 'transfer' || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve') && transaction.to) {
             if (wallet) {
               const thiss = this;
               // Wait for Block synchronization with Metamask

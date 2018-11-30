@@ -30,7 +30,7 @@
         @pending="$emit('pending', $event)"
         @close="dialog = false">
 
-        <div id="sendFundsAccount">
+        <div id="sendFundsAccount" class="selectBoxVuetifyParent">
           <v-combobox
             v-model="selectedOption"
             :items="accountsList"

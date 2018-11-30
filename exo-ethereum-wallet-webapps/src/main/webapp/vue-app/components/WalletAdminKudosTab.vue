@@ -6,28 +6,30 @@
         {{ error }}
       </div>
     </v-card-title>
-    <h3 class="text-xs-left ml-3">Configuration</h3>
-    <v-card-text>
+    <h3 class="text-xs-left ml-3 ">Configuration</h3>
+    <v-card-text class="text-xs-left">
       <div class="text-xs-left kudosWalletConfiguration">
         <span>Users will be rewarded </span>
         <v-text-field
           v-model.number="tokenPerKudo"
           name="tokenPerKudo" />
-        <v-combobox
-          id="selectedKudosContractAddress"
-          v-model="selectedKudosContractAddress"
-          :items="contracts"
-          :return-object="false"
-          item-value="address"
-          item-text="name"
-          class="selectedKudosContractAddress"
-          hide-no-data
-          hide-selected
-          small-chips>
-          <template slot="selection" slot-scope="data">
-            {{ selectedKudosContractName }}
-          </template>
-        </v-combobox>
+        <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
+          <v-combobox
+            v-model="selectedKudosContractAddress"
+            :items="contracts"
+            :return-object="false"
+            attach="#selectedKudosContractAddress"
+            item-value="address"
+            item-text="name"
+            class="selectedKudosContractAddress"
+            hide-no-data
+            hide-selected
+            small-chips>
+            <template slot="selection" slot-scope="data">
+              {{ selectedKudosContractName }}
+            </template>
+          </v-combobox>
+        </div>
         <span> per kudos</span>
         <button class="btn btn-primary mb-3" @click="save">
           Save
@@ -35,6 +37,10 @@
       </div>
     </v-card-text>
     <h3 class="text-xs-left ml-3">Send Rewards</h3>
+    <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
+      <i class="uiIconWarning"></i>
+      You have chosen a token that is different from principal displayed token
+    </div>
     <v-card-text class="text-xs-center">
       <v-menu
         ref="selectedDateMenu"
@@ -206,6 +212,7 @@ export default {
       defaultTokenPerKudos: null,
       selectedDate: null,
       selectedDateMenu: false,
+      kudosContractAddress: null,
       selectedKudosContractAddress: null,
       tokenEtherscanLink: null,
       transactionEtherscanLink: null,
@@ -275,10 +282,16 @@ export default {
   },
   computed: {
     selectedKudosContractName() {
-      return this.contractDetails && this.contractDetails.name;
+      return this.selectedContractDetails && this.selectedContractDetails.name;
+    },
+    isContractDifferentFromPrincipal() {
+      return this.kudosContractAddress && this.principalAccount && this.principalAccount.toLowerCase() !== this.kudosContractAddress.toLowerCase();
+    },
+    selectedContractDetails() {
+      return this.selectedKudosContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedKudosContractAddress);
     },
     contractDetails() {
-      return this.selectedKudosContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedKudosContractAddress);
+      return this.kudosContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.kudosContractAddress);
     },
     paginationDescending() {
       return this.pagination && this.pagination.descending;
@@ -325,7 +338,7 @@ export default {
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
     getTokensPerKudos().then(value => this.defaultTokenPerKudos = this.tokenPerKudo = value);
-    getKudosContract().then(kudosContract => this.selectedKudosContractAddress = kudosContract || this.principalAccount);
+    getKudosContract().then(kudosContract => this.kudosContractAddress = this.selectedKudosContractAddress = kudosContract || this.principalAccount);
     this.tokenEtherscanLink = getTokenEtherscanlink(window.walletSettings.defaultNetworkId);
     this.transactionEtherscanLink = getTransactionEtherscanlink(window.walletSettings.defaultNetworkId);
     this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
@@ -360,15 +373,18 @@ export default {
             if (kudosTransactions) {
               kudosTransactions.forEach(kudosTransaction => {
                 if(kudosTransaction) {
-                  const kudosWallet = this.kudosIdentitiesList.find(kudosWallet => kudosWallet.id === kudosTransaction.receiverId && kudosWallet.type === kudosTransaction.receiverType);
-                  this.$set(kudosWallet, 'tokensSent', kudosTransaction.tokensAmountSent ? Number(kudosTransaction.tokensAmountSent) : 0);
-                  this.$set(kudosWallet, 'hash', kudosTransaction.hash);
-                  this.$set(kudosWallet, 'status', 'pending');
-
-                  const thiss = this;
-                  watchTransactionStatus(kudosTransaction.hash, receipt => {
-                    thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
-                  });
+                  const kudosWallet = this.kudosIdentitiesList.find(kudosWallet => kudosWallet.type === kudosTransaction.receiverType && (kudosWallet.id === kudosTransaction.receiverId || kudosWallet.identityId === kudosTransaction.receiverIdentityId));
+                  if(kudosWallet) {
+                    this.$set(kudosWallet, 'tokensSent', kudosTransaction.tokensAmountSent ? Number(kudosTransaction.tokensAmountSent) : 0);
+                    this.$set(kudosWallet, 'hash', kudosTransaction.hash);
+                    this.$set(kudosWallet, 'status', 'pending');
+                    const thiss = this;
+                    watchTransactionStatus(kudosTransaction.hash, receipt => {
+                      thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+                    });
+                  } else {
+                    console.error("Can't find wallet of a sent Kudos token transaction, kudosTransaction=", kudosTransaction);
+                  }
                 }
               });
               this.$forceUpdate();
@@ -381,6 +397,9 @@ export default {
     },
     saveKudosContract() {
       return saveKudosContract(this.selectedKudosContractAddress)
+        .then(() => {
+          this.kudosContractAddress = this.selectedKudosContractAddress;
+        })
         .catch(error => {
           this.error = "Error while saving 'Kudos contract address' parameter";
         });
@@ -433,7 +452,7 @@ export default {
     },
     refreshList() {
       this.kudosIdentitiesList.forEach(walletKudos => {
-        const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.id === walletKudos.id && wallet.type === walletKudos.type);
+        const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.technicalId && wallet.type === walletKudos.type &&  (wallet.id === walletKudos.id || wallet.technicalId === walletKudos.identityId));
         if(wallet && wallet.address) {
           this.$set(walletKudos, "address", wallet.address);
           if (this.defaultTokenPerKudos) {

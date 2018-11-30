@@ -32,6 +32,8 @@ public class KudosTransaction implements Serializable {
 
   private String            receiverId;
 
+  private String            receiverIdentityId;
+
   private String            tokensAmountSent;
 
   public static KudosTransaction fromStoredValue(String storedTransactionDetails) {
@@ -43,6 +45,8 @@ public class KudosTransaction implements Serializable {
       transactionMessage.setReceiverId(transactionDetailsArray.length > 2 ? decodeString(transactionDetailsArray[2]) : null);
       transactionMessage.setTokensAmountSent(transactionDetailsArray.length > 3 ? decodeString(transactionDetailsArray[3])
                                                                                 : null);
+      transactionMessage.setReceiverIdentityId(transactionDetailsArray.length > 4 ? decodeString(transactionDetailsArray[4])
+                                                                                  : null);
     }
     return transactionMessage;
   }
@@ -59,7 +63,8 @@ public class KudosTransaction implements Serializable {
     if (StringUtils.isBlank(receiverId)) {
       throw new IllegalStateException("receiverId is mandatory");
     }
-    return hash + ";" + encodeString(receiverType) + ";" + encodeString(receiverId) + ";" + encodeString(tokensAmountSent);
+    return hash + ";" + encodeString(receiverType) + ";" + encodeString(receiverId) + ";" + encodeString(tokensAmountSent) + ";"
+        + receiverIdentityId;
   }
 
   public String toJSONString() {
@@ -80,6 +85,9 @@ public class KudosTransaction implements Serializable {
       }
       if (StringUtils.isNotBlank(receiverId)) {
         jsonObject.put("receiverId", receiverId);
+      }
+      if (StringUtils.isNotBlank(receiverIdentityId)) {
+        jsonObject.put("receiverIdentityId", receiverIdentityId);
       }
       if (StringUtils.isNotBlank(tokensAmountSent)) {
         jsonObject.put("tokensAmountSent", tokensAmountSent);

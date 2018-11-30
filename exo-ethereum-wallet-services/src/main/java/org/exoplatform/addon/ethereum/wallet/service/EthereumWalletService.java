@@ -1281,7 +1281,7 @@ public class EthereumWalletService implements Startable {
 
           String avatarUrl = space.getAvatarUrl();
           if (StringUtils.isBlank(avatarUrl)) {
-            avatarUrl = "/rest/v1/social/spaces/" + id + "/avatar";
+            avatarUrl = "/rest/v1/social/spaces/" + space.getPrettyName() + "/avatar";
           }
           return new AccountDetail(id,
                                    space.getId(),

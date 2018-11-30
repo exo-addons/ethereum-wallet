@@ -9,6 +9,22 @@
    border: 0;
 }
 
+.selectBoxVuetifyParent {
+  position: relative;
+
+  .v-menu__content {
+    top: 86% !important;
+    left: 0px!important;
+    position: absolute !important;
+    width: 100%;
+    z-index: 1050 !important;
+    
+    .v-list {
+      padding: 0;
+    }
+  }
+}
+
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
   background: transparent;
 
@@ -180,22 +196,6 @@
     top: 40px!important;
     right: 20px!important;
     left: auto!important;
-  }
-
-  #sendFundsAccount {
-    position: relative;
-
-    .v-menu__content {
-      top: 72%!important;
-      left: 0px!important;
-      position: absolute;
-      width: 100%;
-      z-index: 1050 !important;
-      
-      .v-list {
-        padding: 0;
-      }
-    }
   }
 
   #requestFundsAccount {

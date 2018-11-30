@@ -346,6 +346,7 @@ export default {
                   hash: pendingTransaction.hash,
                   receiverType: recipientWallet.type,
                   receiverId: recipientWallet.id,
+                  receiverIdentityId: recipientWallet.identityId,
                   tokensAmountSent: String(Number(amountToSendForReceiver))
                 };
                 kudosTransactions.push(kudosTransaction);
