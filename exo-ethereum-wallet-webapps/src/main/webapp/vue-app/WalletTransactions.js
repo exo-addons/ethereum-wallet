@@ -1,6 +1,6 @@
 import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
-import {getContractInstance, getSavedContractDetails} from './WalletToken.js';
+import {getContractInstance, getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
 
 export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, refreshCallback) {
   let loadingPromises = [];
@@ -230,6 +230,24 @@ export function addTransaction(networkId, account, accountDetails, transactions,
   let isLoadingAll = false;
 
   return getSavedContractDetails(transactionDetails.contractAddress, networkId)
+    .then(contractDetails => {
+      if(contractDetails) {
+        return contractDetails;
+      } else if (receipt && receipt.logs && receipt.logs.length) {
+        return window.localWeb3.eth.getCode(transactionDetails.contractAddress)
+          .then(contractCode => {
+            if(contractCode  && contractCode !== '0x') {
+              contractDetails = {
+                address : transactionDetails.contractAddress,
+                icon : 'fa-file-contract',
+                isContract : true,
+                networkId : networkId
+              };
+              return retrieveContractDetails(account, contractDetails);
+            }
+          })
+      }
+    })
     .then(contractDetails => {
       if (contractDetails) {
         isLoadingAll = contractDetails.address && contractDetails.address.toLowerCase() === account;

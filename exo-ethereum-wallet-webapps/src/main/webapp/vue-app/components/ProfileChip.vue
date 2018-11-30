@@ -93,7 +93,6 @@ export default {
   },
   methods: {
     initTiptip() {
-      console.warn("initTiptip", this.profileTechnicalId, this.profileType, this.avatar);
       if (this.profileType === 'space') {
         this.$nextTick(() => {
           $(`#${this.id}`).spacePopup({
