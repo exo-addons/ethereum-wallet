@@ -111,7 +111,7 @@ public class EthereumClientConnector implements Startable {
           return;
         }
       } catch (Throwable e) {
-        LOG.error("Error while checking connection status to Etherreum Websocket endpoint: {}", e.getMessage());
+        LOG.warn("Error while checking connection status to Etherreum Websocket endpoint: {}", e.getMessage());
         closeConnection();
         return;
       }
@@ -171,7 +171,7 @@ public class EthereumClientConnector implements Startable {
       try {
         this.transactionSubscription.unsubscribe();
       } catch (Throwable e) {
-        LOG.warn("Error occurred while unsubscribing to Ethereum transaction events", e);
+        LOG.warn("Error occurred while unsubscribing to Ethereum transaction events: {}", e.getMessage());
       }
       this.transactionSubscription = null;
     }
@@ -248,7 +248,7 @@ public class EthereumClientConnector implements Startable {
         try {
           web3jService.close();
         } catch (Throwable e) {
-          LOG.warn("Error closing old websocket connection", e);
+          LOG.warn("Error closing old websocket connection: {}", e.getMessage());
         }
       }
       web3j = null;
@@ -318,7 +318,7 @@ public class EthereumClientConnector implements Startable {
 
         @Override
         public void onError(Exception e) {
-          LOG.error("Connection failed to " + getWebsocketProviderURL());
+          LOG.warn("Connection failed to " + getWebsocketProviderURL());
         }
 
         @Override
