@@ -13,6 +13,7 @@
                        :contract-details="contractDetails"
                        :period-type="periodType"
                        :start-date-in-seconds="startDateInSeconds"
+                       :end-date-in-seconds="endDateInSeconds"
                        class="pt-4"
                        @sent="$emit('sent', $event, contractDetails)"
                        @close="dialog = false"
@@ -48,6 +49,12 @@ export default {
       }
     },
     startDateInSeconds: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
+    endDateInSeconds: {
       type: Number,
       default: function() {
         return 0;

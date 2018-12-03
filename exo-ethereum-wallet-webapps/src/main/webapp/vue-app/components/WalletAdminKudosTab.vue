@@ -169,6 +169,7 @@
         :recipients="recipients"
         :period-type="kudosPeriodType"
         :start-date-in-seconds="selectedStartDateInSeconds"
+        :end-date-in-seconds="selectedEndDateInSeconds"
         @sent="newPendingTransaction"
         @error="error = $event" />
     </v-card-text>
@@ -302,6 +303,9 @@ export default {
     },
     selectedStartDateInSeconds() {
       return this.selectedStartDate ? new Date(this.selectedStartDate).getTime() / 1000 : 0;
+    },
+    selectedEndDateInSeconds() {
+      return this.selectedEndDate ? new Date(this.selectedEndDate).getTime() / 1000 : 0;
     },
     periodDatesDisplay() {
       if(this.selectedStartDate && this.selectedEndDate) {

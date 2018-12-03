@@ -94,6 +94,12 @@ export default {
       default: function() {
         return 0;
       }
+    },
+    endDateInSeconds: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
     }
   },
   data () {
@@ -115,6 +121,14 @@ export default {
     };
   },
   computed: {
+    kudosDefaultLabel() {
+      const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+      const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+      return `Kudos reward for period: ${startDate} to ${endDate}`;
+    },
+    kudosDefaultMessage() {
+      return this.kudosDefaultLabel;
+    },
     loading() {
       return this.loadingCount > 0;
     },
@@ -190,8 +204,8 @@ export default {
       this.showQRCodeModal = false;
       this.warning = null;
       this.errors = null;
-      this.transactionMessage = null;
-      this.transactionLabel = null;
+      this.transactionLabel = this.kudosDefaultLabel;
+      this.transactionMessage = this.kudosDefaultMessage;
       this.$emit("error", "");
       if (!this.gasPrice) {
         this.gasPrice = window.walletSettings.minGasPrice;
