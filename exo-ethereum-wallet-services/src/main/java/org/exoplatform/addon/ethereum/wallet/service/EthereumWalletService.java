@@ -798,8 +798,8 @@ public class EthereumWalletService implements Startable {
 
     AccountDetail accountDetails = getAccountDetailsByAddress(address);
     String currentUserId = getCurrentUserId();
-    boolean displayLabel = isUserAdmin()
-        || (accountDetails != null && StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId));
+    boolean displayLabel = (accountDetails != null && USER_ACCOUNT_TYPE.equals(accountDetails.getId())
+        && StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId));
 
     if (!displayLabel && accountDetails != null && SPACE_ACCOUNT_TYPE.equals(accountDetails.getType())) {
       Space space = getSpace(accountDetails.getId());
@@ -814,16 +814,17 @@ public class EthereumWalletService implements Startable {
       TransactionDetail cachedTransactionDetail = getTransactionDetailFromCache(transactionDetail.getHash());
       if (cachedTransactionDetail != null) {
         transactionDetail = cachedTransactionDetail;
-        if (StringUtils.isBlank(transactionDetail.getFrom())
-            || !StringUtils.equalsIgnoreCase(transactionDetail.getFrom(), address)) {
-          transactionDetail.setLabel(null);
-        }
       }
-
-      // Avoid diplaying labels coming from other accounts even for admins
-      // The transaction label should stay private
-      if (!displayLabelFinal) {
-        transactionDetail.setLabel(null);
+      if (!StringUtils.isBlank(transactionDetail.getFrom())
+          && !StringUtils.equalsIgnoreCase(transactionDetail.getFrom(), address)) {
+        // If user is admin and no user is associated to sender account, then
+        // display label
+        if (!displayLabelFinal) {
+          AccountDetail txAccountDetails = getAccountDetailsByAddress(transactionDetail.getFrom());
+          if (txAccountDetails != null && !StringUtils.equalsIgnoreCase(txAccountDetails.getAddress(), address)) {
+            transactionDetail.setLabel(null);
+          }
+        }
       }
       return transactionDetail.toJSONObject();
     }).collect(Collectors.toList());
@@ -986,12 +987,15 @@ public class EthereumWalletService implements Startable {
     }
     this.transactionDetailsCache.put(transactionMessage.getHash(), transactionMessage);
 
-    if (StringUtils.isNotBlank(transactionMessage.getFrom())
-        && getAccountDetailsByAddress(transactionMessage.getFrom()) != null) {
-      this.saveAccountTransaction(transactionMessage.getNetworkId(),
-                                  transactionMessage.getFrom(),
-                                  transactionMessage.getHash(),
-                                  true);
+    AccountDetail senderAccount = null;
+    if (StringUtils.isNotBlank(transactionMessage.getFrom())) {
+      senderAccount = getAccountDetailsByAddress(transactionMessage.getFrom());
+      if (senderAccount != null) {
+        this.saveAccountTransaction(transactionMessage.getNetworkId(),
+                                    transactionMessage.getFrom(),
+                                    transactionMessage.getHash(),
+                                    true);
+      }
     }
 
     // Avoid notifying receiver for admin transaction until it's mined
@@ -1006,10 +1010,13 @@ public class EthereumWalletService implements Startable {
     if (StringUtils.isNotBlank(transactionMessage.getContractAddress())
         && !StringUtils.equalsIgnoreCase(transactionMessage.getTo(), transactionMessage.getContractAddress())
         && getDefaultContractDetail(transactionMessage.getContractAddress(), transactionMessage.getNetworkId()) != null) {
+      // Save message label when the sender is not a known user or when this is
+      // an administration operation
+      boolean saveLabelToContractTransactionsList = transactionMessage.isAdminOperation() || senderAccount == null;
       this.saveAccountTransaction(transactionMessage.getNetworkId(),
                                   transactionMessage.getContractAddress(),
                                   transactionMessage.getHash(),
-                                  true);
+                                  saveLabelToContractTransactionsList);
     }
   }
 
