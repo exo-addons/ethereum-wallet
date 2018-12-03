@@ -807,13 +807,19 @@ public class EthereumWalletService implements Startable {
         displayLabel = true;
       }
     }
+
     final boolean displayLabelFinal = displayLabel;
     return Arrays.stream(addressTransactionsArray).map(transaction -> {
       TransactionDetail transactionDetail = TransactionDetail.fromStoredValue(transaction);
       TransactionDetail cachedTransactionDetail = getTransactionDetailFromCache(transactionDetail.getHash());
       if (cachedTransactionDetail != null) {
         transactionDetail = cachedTransactionDetail;
+        if (StringUtils.isBlank(transactionDetail.getFrom())
+            || !StringUtils.equalsIgnoreCase(transactionDetail.getFrom(), address)) {
+          transactionDetail.setLabel(null);
+        }
       }
+
       // Avoid diplaying labels coming from other accounts even for admins
       // The transaction label should stay private
       if (!displayLabelFinal) {
@@ -1014,7 +1020,8 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public TransactionDetail getTransactionDetailFromCache(String transactionHash) {
-    return this.transactionDetailsCache.get(transactionHash);
+    TransactionDetail transactionDetail = this.transactionDetailsCache.get(transactionHash);
+    return transactionDetail == null ? null : (TransactionDetail) transactionDetail.clone();
   }
 
   /**

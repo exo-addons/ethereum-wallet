@@ -15,7 +15,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class TransactionDetail implements Serializable {
+public class TransactionDetail implements Serializable, Cloneable {
 
   private static final long serialVersionUID = 658273092293607458L;
 
@@ -54,6 +54,15 @@ public class TransactionDetail implements Serializable {
       transactionMessage.setMessage(transactionDetailsArray.length > 2 ? decodeString(transactionDetailsArray[2]) : null);
     }
     return transactionMessage;
+  }
+
+  @Override
+  public Object clone() {
+    try {
+      return super.clone();
+    } catch (CloneNotSupportedException e) {
+      return null;
+    }
   }
 
   /**
