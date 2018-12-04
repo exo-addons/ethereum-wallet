@@ -64,7 +64,7 @@ import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
-import {savePeriodKudosTransactions, savePeriodKudosTransaction} from '../WalletExtServices.js';
+import {savePeriodKudosTransactions, savePeriodKudosTransaction} from '../WalletKudosServices.js';
 
 export default {
   components: {

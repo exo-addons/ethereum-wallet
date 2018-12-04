@@ -30,9 +30,9 @@ import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 
 /**
- * A storage service to save/load extra information used by other addons
+ * A storage service to save/load extra information used by kudos addon
  */
-public class ExtendedWalletService {
+public class WalletKudosService {
 
   private SettingService settingService;
 
@@ -40,7 +40,7 @@ public class ExtendedWalletService {
 
   private String         kudosContractAddress;
 
-  public ExtendedWalletService(SettingService settingService) {
+  public WalletKudosService(SettingService settingService) {
     this.settingService = settingService;
   }
 
