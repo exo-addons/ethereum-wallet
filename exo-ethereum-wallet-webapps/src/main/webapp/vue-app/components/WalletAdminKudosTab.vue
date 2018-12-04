@@ -177,7 +177,7 @@
 </template>
 
 <script>
-import {getKudosContract, getTokensPerKudos, saveKudosContract, saveTokensPerKudos, getPeriodTransactions} from '../WalletExtServices.js';
+import {getKudosContract, getTokensPerKudos, saveKudosContract, saveTokensPerKudos, getPeriodTransactions} from '../WalletKudosServices.js';
 import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 import SendKudosModal from './SendKudosModal.vue';

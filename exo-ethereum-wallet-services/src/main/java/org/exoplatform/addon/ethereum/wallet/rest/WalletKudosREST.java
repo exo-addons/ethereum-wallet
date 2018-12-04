@@ -28,22 +28,22 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.exoplatform.addon.ethereum.wallet.ext.kudos.model.KudosTransaction;
-import org.exoplatform.addon.ethereum.wallet.service.ExtendedWalletService;
+import org.exoplatform.addon.ethereum.wallet.service.WalletKudosService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
 
 /**
  * This class provide a REST endpoint to save/load extra Wallet data related to
- * other addons
+ * Kudos addon
  */
-@Path("/wallet/api/ext")
-public class ExtraWalletSettingsREST implements ResourceContainer {
-  private static final Log      LOG = ExoLogger.getLogger(ExtraWalletSettingsREST.class);
+@Path("/wallet/api/kudos")
+public class WalletKudosREST implements ResourceContainer {
+  private static final Log      LOG = ExoLogger.getLogger(WalletKudosREST.class);
 
-  private ExtendedWalletService extendedWalletService;
+  private WalletKudosService extendedWalletService;
 
-  public ExtraWalletSettingsREST(ExtendedWalletService extendedWalletService) {
+  public WalletKudosREST(WalletKudosService extendedWalletService) {
     this.extendedWalletService = extendedWalletService;
   }
 

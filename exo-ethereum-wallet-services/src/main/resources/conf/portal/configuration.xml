@@ -4,7 +4,7 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd" xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.service.ExtendedWalletService</type>
+    <type>org.exoplatform.addon.ethereum.wallet.service.WalletKudosService</type>
   </component>
 
   <component>
@@ -70,7 +70,7 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.rest.ExtraWalletSettingsREST</type>
+    <type>org.exoplatform.addon.ethereum.wallet.rest.WalletKudosREST</type>
   </component>
 
   <external-component-plugins>

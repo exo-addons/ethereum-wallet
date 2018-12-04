@@ -1,5 +1,5 @@
 export function getTokensPerKudos() {
-  return fetch('/portal/rest/wallet/api/ext/getTokensPerKudos', {
+  return fetch('/portal/rest/wallet/api/kudos/getTokensPerKudos', {
     method: 'GET',
     credentials: 'include'
   })
@@ -8,7 +8,7 @@ export function getTokensPerKudos() {
 }
 
 export function getKudosContract() {
-  return fetch('/portal/rest/wallet/api/ext/getKudosContract', {
+  return fetch('/portal/rest/wallet/api/kudos/getKudosContract', {
     method: 'GET',
     credentials: 'include'
   })
@@ -16,7 +16,7 @@ export function getKudosContract() {
 }
 
 export function saveTokensPerKudos(tokensPerKudos) {
-  return fetch('/portal/rest/wallet/api/ext/saveTokensPerKudos', {
+  return fetch('/portal/rest/wallet/api/kudos/saveTokensPerKudos', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -33,7 +33,7 @@ export function saveTokensPerKudos(tokensPerKudos) {
 }
 
 export function saveKudosContract(kudosContractAddress) {
-  return fetch('/portal/rest/wallet/api/ext/saveKudosContract', {
+  return fetch('/portal/rest/wallet/api/kudos/saveKudosContract', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -50,7 +50,7 @@ export function saveKudosContract(kudosContractAddress) {
 }
 
 export function savePeriodKudosTransactions(transactions) {
-  return fetch('/portal/rest/wallet/api/ext/savePeriodKudosTransactions', {
+  return fetch('/portal/rest/wallet/api/kudos/savePeriodKudosTransactions', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -68,7 +68,7 @@ export function savePeriodKudosTransactions(transactions) {
 }
 
 export function savePeriodKudosTransaction(transaction) {
-  return fetch('/portal/rest/wallet/api/ext/savePeriodKudosTransaction', {
+  return fetch('/portal/rest/wallet/api/kudos/savePeriodKudosTransaction', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -86,7 +86,7 @@ export function savePeriodKudosTransaction(transaction) {
 }
 
 export function getPeriodTransactions(networkId, periodType, startDateInSeconds) {
-  return fetch(`/portal/rest/wallet/api/ext/getPeriodTransactions?networkId=${networkId}&periodType=${periodType}&startDateInSeconds=${startDateInSeconds}`, {
+  return fetch(`/portal/rest/wallet/api/kudos/getPeriodTransactions?networkId=${networkId}&periodType=${periodType}&startDateInSeconds=${startDateInSeconds}`, {
     method: 'GET',
     credentials: 'include'
   }).then(resp => {
