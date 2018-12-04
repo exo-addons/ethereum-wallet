@@ -41,16 +41,6 @@
         <value>${exo.addon.wallet.defaultGasPrice:4000000000}</value>
       </value-param>
       <value-param>
-        <name>defaultBlocksToRetrieve</name>
-        <description>Default number of blocks to retrieve to list user's ether transactions</description>
-        <value>${exo.addon.wallet.defaultBlocksToRetrieve:100}</value>
-      </value-param>
-      <value-param>
-        <name>defaultBlocksToRetrieve</name>
-        <description>Default number of blocks to retrieve to list user's ether transactions</description>
-        <value>${exo.addon.wallet.defaultBlocksToRetrieve:100}</value>
-      </value-param>
-      <value-param>
         <name>contract.abi.path</name>
         <description>Token Contract ABI path</description>
         <value>${exo.addon.wallet.contract.abi.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.json}</value>

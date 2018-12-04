@@ -38,8 +38,6 @@ public class GlobalSettings implements Serializable {
 
   private String                websocketProviderURL          = null;
 
-  private Integer               defaultBlocksToRetrieve       = 0;
-
   private Long                  defaultNetworkId              = 0L;
 
   private Long                  defaultGas                    = 0L;
@@ -84,23 +82,43 @@ public class GlobalSettings implements Serializable {
   public JSONObject toJSONObject(boolean includeTransient) {
     JSONObject jsonObject = new JSONObject();
     try {
-      jsonObject.put("isWalletEnabled", walletEnabled);
-      jsonObject.put("isAdmin", isAdmin);
       jsonObject.put("enableDelegation", enableDelegation);
-      jsonObject.put("accessPermission", accessPermission);
-      jsonObject.put("initialFundsRequestMessage", initialFundsRequestMessage);
-      jsonObject.put("fundsHolder", fundsHolder);
-      jsonObject.put("fundsHolderType", fundsHolderType);
-      jsonObject.put("providerURL", providerURL);
-      jsonObject.put("websocketProviderURL", websocketProviderURL);
-      jsonObject.put("defaultBlocksToRetrieve", defaultBlocksToRetrieve);
-      jsonObject.put("defaultNetworkId", defaultNetworkId);
-      jsonObject.put("defaultGas", defaultGas);
-      jsonObject.put("minGasPrice", minGasPrice);
-      jsonObject.put("normalGasPrice", normalGasPrice);
-      jsonObject.put("maxGasPrice", maxGasPrice);
-      jsonObject.put("dataVersion", dataVersion);
-
+      if (StringUtils.isNotBlank(accessPermission)) {
+        jsonObject.put("accessPermission", accessPermission);
+      }
+      if (StringUtils.isNotBlank(initialFundsRequestMessage)) {
+        jsonObject.put("initialFundsRequestMessage", initialFundsRequestMessage);
+      }
+      if (StringUtils.isNotBlank(fundsHolder)) {
+        jsonObject.put("fundsHolder", fundsHolder);
+      }
+      if (StringUtils.isNotBlank(fundsHolderType)) {
+        jsonObject.put("fundsHolderType", fundsHolderType);
+      }
+      if (StringUtils.isNotBlank(providerURL)) {
+        jsonObject.put("providerURL", providerURL);
+      }
+      if (StringUtils.isNotBlank(websocketProviderURL)) {
+        jsonObject.put("websocketProviderURL", websocketProviderURL);
+      }
+      if (defaultNetworkId != null && defaultNetworkId != 0) {
+        jsonObject.put("defaultNetworkId", defaultNetworkId);
+      }
+      if (defaultGas != null && defaultGas != 0) {
+        jsonObject.put("defaultGas", defaultGas);
+      }
+      if (minGasPrice != null && minGasPrice != 0) {
+        jsonObject.put("minGasPrice", minGasPrice);
+      }
+      if (normalGasPrice != null && normalGasPrice != 0) {
+        jsonObject.put("normalGasPrice", normalGasPrice);
+      }
+      if (maxGasPrice != null && maxGasPrice != 0) {
+        jsonObject.put("maxGasPrice", maxGasPrice);
+      }
+      if (dataVersion != null && dataVersion != 0) {
+        jsonObject.put("dataVersion", dataVersion);
+      }
       if (initialFunds != null && !initialFunds.isEmpty()) {
         JSONArray array = new JSONArray();
         Set<String> addresses = initialFunds.keySet();
@@ -112,29 +130,31 @@ public class GlobalSettings implements Serializable {
         }
         jsonObject.put("initialFunds", array);
       }
-      if (userPreferences != null) {
-        jsonObject.put("userPreferences", userPreferences.toJSONObject());
-      }
-      if (defaultPrincipalAccount != null) {
+      if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
         jsonObject.put("defaultPrincipalAccount", defaultPrincipalAccount);
       }
-      if (defaultOverviewAccounts != null) {
+      if (defaultOverviewAccounts != null && !defaultOverviewAccounts.isEmpty()) {
         jsonObject.put("defaultOverviewAccounts", new JSONArray(defaultOverviewAccounts));
       }
       if (includeTransient) {
-        if (principalContractAdminName != null) {
+        jsonObject.put("isAdmin", isAdmin);
+        jsonObject.put("isWalletEnabled", walletEnabled);
+        if (userPreferences != null) {
+          jsonObject.put("userPreferences", userPreferences.toJSONObject());
+        }
+        if (StringUtils.isNotBlank(principalContractAdminName)) {
           jsonObject.put("principalContractAdminName", principalContractAdminName);
         }
-        if (principalContractAdminAddress != null) {
+        if (StringUtils.isNotBlank(principalContractAdminAddress)) {
           jsonObject.put("principalContractAdminAddress", principalContractAdminAddress);
         }
-        if (defaultContractsToDisplay != null) {
+        if (defaultContractsToDisplay != null && !defaultContractsToDisplay.isEmpty()) {
           jsonObject.put("defaultContractsToDisplay", new JSONArray(defaultContractsToDisplay));
         }
-        if (contractAbi != null) {
+        if (contractAbi != null && contractAbi.length() > 0) {
           jsonObject.put("contractAbi", contractAbi);
         }
-        if (contractBin != null) {
+        if (StringUtils.isNotBlank(contractBin)) {
           jsonObject.put("contractBin", contractBin);
         }
       }
@@ -163,50 +183,66 @@ public class GlobalSettings implements Serializable {
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       GlobalSettings globalSettings = new GlobalSettings();
-      String storedFundsHolder = jsonObject.has("fundsHolder") ? jsonObject.getString("fundsHolder") : null;
-      globalSettings.setFundsHolder(storedFundsHolder == null || storedFundsHolder.isEmpty() ? defaultSettings.getFundsHolder()
-                                                                                             : storedFundsHolder);
-      String storedFundsHolderType = jsonObject.has("fundsHolderType") ? jsonObject.getString("fundsHolderType") : null;
-      globalSettings.setFundsHolderType(storedFundsHolderType == null
-          || storedFundsHolderType.isEmpty() ? defaultSettings.getFundsHolderType() : storedFundsHolderType);
-      JSONArray storedInitialFunds = jsonObject.has("initialFunds") ? jsonObject.getJSONArray("initialFunds") : null;
-      globalSettings.setInitialFunds(storedInitialFunds == null ? defaultSettings.getInitialFunds() : toMap(storedInitialFunds));
-      String storedAccessPermission = jsonObject.has("accessPermission") ? jsonObject.getString("accessPermission") : null;
-      globalSettings.setAccessPermission(storedAccessPermission == null
-          || storedAccessPermission.isEmpty() ? defaultSettings.getAccessPermission() : storedAccessPermission);
+
+      String storedFundsHolder = jsonObject.has("fundsHolder") ? jsonObject.getString("fundsHolder")
+                                                               : defaultSettings.getFundsHolder();
+      globalSettings.setFundsHolder(storedFundsHolder);
+
+      String storedFundsHolderType = jsonObject.has("fundsHolderType") ? jsonObject.getString("fundsHolderType")
+                                                                       : defaultSettings.getFundsHolderType();
+      globalSettings.setFundsHolderType(storedFundsHolderType);
+
+      Map<String, Double> storedInitialFunds = jsonObject.has("initialFunds") ? toMap(jsonObject.getJSONArray("initialFunds"))
+                                                                              : defaultSettings.getInitialFunds();
+      globalSettings.setInitialFunds(storedInitialFunds);
+
+      String storedAccessPermission = jsonObject.has("accessPermission") ? jsonObject.getString("accessPermission")
+                                                                         : defaultSettings.getAccessPermission();
+      globalSettings.setAccessPermission(storedAccessPermission);
+
       String storedInitialfundsRequestMessage =
                                               jsonObject.has("initialFundsRequestMessage") ? jsonObject.getString("initialFundsRequestMessage")
-                                                                                           : null;
-      globalSettings.setInitialFundsRequestMessage(storedInitialfundsRequestMessage == null
-          || storedInitialfundsRequestMessage.isEmpty() ? defaultSettings.getInitialFundsRequestMessage()
-                                                        : storedInitialfundsRequestMessage);
-      String storedProviderURL = jsonObject.has("providerURL") ? jsonObject.getString("providerURL") : null;
+                                                                                           : defaultSettings.getInitialFundsRequestMessage();
+      globalSettings.setInitialFundsRequestMessage(storedInitialfundsRequestMessage);
+
+      String storedProviderURL = jsonObject.has("providerURL") ? jsonObject.getString("providerURL")
+                                                               : defaultSettings.getProviderURL();
       globalSettings.setProviderURL(storedProviderURL);
+
       String storedWebsocketProviderURL = jsonObject.has("websocketProviderURL") ? jsonObject.getString("websocketProviderURL")
-                                                                                 : null;
+                                                                                 : defaultSettings.getWebsocketProviderURL();
       globalSettings.setWebsocketProviderURL(storedWebsocketProviderURL);
-      int storedDefaultBlocksToRetrieve = jsonObject.has("defaultBlocksToRetrieve") ? jsonObject.getInt("defaultBlocksToRetrieve")
-                                                                                    : 0;
-      globalSettings.setDefaultBlocksToRetrieve(storedDefaultBlocksToRetrieve == 0 ? defaultSettings.getDefaultBlocksToRetrieve()
-                                                                                   : storedDefaultBlocksToRetrieve);
-      long storedDefaultNetworkId = jsonObject.has("defaultNetworkId") ? jsonObject.getLong("defaultNetworkId") : 0;
-      globalSettings.setDefaultNetworkId(storedDefaultNetworkId == 0L ? defaultSettings.getDefaultBlocksToRetrieve()
-                                                                      : storedDefaultNetworkId);
-      long storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getLong("defaultGas") : 0;
-      globalSettings.setDefaultGas(storedDefaultGas == 0 ? defaultSettings.getDefaultGas() : storedDefaultGas);
-      long storedMinGasPrice = jsonObject.has("minGasPrice") ? jsonObject.getLong("minGasPrice") : 0;
-      globalSettings.setMinGasPrice(storedMinGasPrice == 0 ? defaultSettings.getMinGasPrice() : storedMinGasPrice);
-      long storedNormalGasPrice = jsonObject.has("normalGasPrice") ? jsonObject.getLong("normalGasPrice") : 0;
-      globalSettings.setNormalGasPrice(storedNormalGasPrice == 0 ? defaultSettings.getNormalGasPrice() : storedNormalGasPrice);
-      long storedMaxGasPrice = jsonObject.has("maxGasPrice") ? jsonObject.getLong("maxGasPrice") : 0;
-      globalSettings.setMaxGasPrice(storedMaxGasPrice == 0 ? defaultSettings.getMaxGasPrice() : storedMaxGasPrice);
-      boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation") : true;
+
+      long storedDefaultNetworkId = jsonObject.has("defaultNetworkId") ? jsonObject.getLong("defaultNetworkId")
+                                                                       : defaultSettings.getDefaultNetworkId();
+      globalSettings.setDefaultNetworkId(storedDefaultNetworkId);
+
+      long storedDefaultGas = jsonObject.has("defaultGas") ? jsonObject.getLong("defaultGas") : defaultSettings.getDefaultGas();
+      globalSettings.setDefaultGas(storedDefaultGas);
+
+      long storedMinGasPrice =
+                             jsonObject.has("minGasPrice") ? jsonObject.getLong("minGasPrice") : defaultSettings.getMinGasPrice();
+      globalSettings.setMinGasPrice(storedMinGasPrice);
+
+      long storedNormalGasPrice = jsonObject.has("normalGasPrice") ? jsonObject.getLong("normalGasPrice")
+                                                                   : defaultSettings.getNormalGasPrice();
+      globalSettings.setNormalGasPrice(storedNormalGasPrice);
+
+      long storedMaxGasPrice =
+                             jsonObject.has("maxGasPrice") ? jsonObject.getLong("maxGasPrice") : defaultSettings.getMaxGasPrice();
+      globalSettings.setMaxGasPrice(storedMaxGasPrice);
+
+      boolean storedEnableDelegation = jsonObject.has("enableDelegation") ? jsonObject.getBoolean("enableDelegation")
+                                                                          : defaultSettings.isEnableDelegation();
       globalSettings.setEnableDelegation(storedEnableDelegation);
+
       String storedDefaultPrincipalAccount =
                                            jsonObject.has("defaultPrincipalAccount") ? jsonObject.getString("defaultPrincipalAccount")
-                                                                                     : null;
+                                                                                     : defaultSettings.getDefaultPrincipalAccount();
       globalSettings.setDefaultPrincipalAccount(storedDefaultPrincipalAccount);
+
       globalSettings.setDefaultOverviewAccounts(jsonArrayToList(jsonObject, "defaultOverviewAccounts"));
+
       globalSettings.setDataVersion(jsonObject.has("dataVersion") ? jsonObject.getInt("dataVersion") : 0);
       return globalSettings;
     } catch (JSONException e) {

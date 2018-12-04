@@ -75,8 +75,6 @@ public class Utils {
 
   public static final String                             MAX_GAS_PRICE                         = "maxGasPrice";
 
-  public static final String                             DEFAULT_BLOCKS_TO_RETRIEVE            = "defaultBlocksToRetrieve";
-
   public static final String                             DEFAULT_CONTRACTS_ADDRESSES           = "defaultContractAddresses";
 
   public static final String                             SCOPE_NAME                            = "ADDONS_ETHEREUM_WALLET";

@@ -534,7 +534,7 @@ export default {
         enableDelegation: window.walletSettings.enableDelegation,
         initialFunds: defaultInitialFundsMap
       };
-      globalSettings = {...currentGlobalSettings, ...globalSettings};
+      globalSettings = Object.assign(currentGlobalSettings, globalSettings);
       return fetch('/portal/rest/wallet/api/global-settings/save', {
         method: 'POST',
         credentials: 'include',

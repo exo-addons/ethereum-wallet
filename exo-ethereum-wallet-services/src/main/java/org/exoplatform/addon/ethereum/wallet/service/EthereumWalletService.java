@@ -176,12 +176,6 @@ public class EthereumWalletService implements Startable {
       defaultSettings.setMaxGasPrice(maxGasPrice);
     }
 
-    if (params.containsKey(DEFAULT_BLOCKS_TO_RETRIEVE)) {
-      String value = params.getValueParam(DEFAULT_BLOCKS_TO_RETRIEVE).getValue();
-      int defaultBlocksToRetrieve = Integer.parseInt(value);
-      defaultSettings.setDefaultBlocksToRetrieve(defaultBlocksToRetrieve);
-    }
-
     if (params.containsKey(DEFAULT_CONTRACTS_ADDRESSES)) {
       String defaultContractsToDisplay = params.getValueParam(DEFAULT_CONTRACTS_ADDRESSES).getValue();
       if (StringUtils.isNotBlank(defaultContractsToDisplay)) {
