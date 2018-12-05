@@ -54,11 +54,15 @@
         </button>
       </div>
     </v-card-text>
+    <v-card-text class="text-xs-center">
+      <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
+        <i class="uiIconWarning"></i>
+        You have chosen a token that is different from principal displayed token
+      </div>
+    </v-card-text>
+    <gamification-teams
+      :wallets="wallets"/>
     <h3 class="text-xs-left ml-3">Send Rewards</h3>
-    <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
-      <i class="uiIconWarning"></i>
-      You have chosen a token that is different from principal displayed token
-    </div>
     <v-card-text class="text-xs-center">
       <v-menu
         ref="selectedDateMenu"
@@ -183,10 +187,15 @@
 </template>
 
 <script>
+import GamificationTeams from "./WalletAdminGamificationTeams.vue";
+
 import {getSettings, saveSettings, getPeriodTransactions, getPeriodDates, getGamificationPoints} from '../WalletGamificationServices.js';
 import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 export default {
+  components: {
+    GamificationTeams
+  },
   props: {
     wallets: {
       type: Array,

@@ -10,15 +10,19 @@ public class GamificationTeam implements Serializable {
 
   private static final long            serialVersionUID = 4475704534821391132L;
 
-  private long                         id;
+  private Long                         id;
 
   private String                       name;
 
   private String                       description;
 
-  private double                       budgetInTokens;
+  private Double                       budget;
 
-  private GamificationTeamMember       owner;
+  private String                       spaceId;
+
+  private String                       spacePrettyName;
+
+  private GamificationTeamMember       manager;
 
   private List<GamificationTeamMember> members          = null;
 

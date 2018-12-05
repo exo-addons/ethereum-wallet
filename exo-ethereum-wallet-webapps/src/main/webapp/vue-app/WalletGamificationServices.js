@@ -7,6 +7,14 @@ export function getSettings() {
   .then(settings => window.walletGamificationSettings = settings);
 }
 
+export function getTeams() {
+  return fetch('/portal/rest/wallet/api/gamification/teams', {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(resp => resp && resp.ok && resp.json());
+}
+
 export function saveSettings(settings) {
   return fetch('/portal/rest/wallet/api/gamification/saveSettings', {
     method: 'POST',
@@ -22,6 +30,18 @@ export function saveSettings(settings) {
       throw new Error("Error saving parameter");
     }
   });
+}
+
+export function saveTeam(team) {
+  return fetch('/portal/rest/wallet/api/gamification/saveTeam', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(team)
+  })
+  .then(resp => resp && resp.ok && resp.json());
 }
 
 export function savePeriodKudosTransactions(transactions) {

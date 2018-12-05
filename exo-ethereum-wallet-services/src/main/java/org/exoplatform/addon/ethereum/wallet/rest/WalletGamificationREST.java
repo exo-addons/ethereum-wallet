@@ -56,6 +56,23 @@ public class WalletGamificationREST implements ResourceContainer {
   }
 
   /**
+   * Remove a Gamification Team/Pool by id
+   * @param id
+   * @return
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("removeTeam")
+  @RolesAllowed("administrators")
+  public Response removeTeam(@QueryParam("id") Long id) {
+    if (id == null || id == 0) {
+      return Response.status(400).build();
+    }
+    walletGamificationService.removeTeam(id);
+    return Response.ok().build();
+  }
+
+  /**
    * Save global settings of gamification
    * 
    * @param gamificationSettings
@@ -83,14 +100,15 @@ public class WalletGamificationREST implements ResourceContainer {
   @POST
   @Path("saveTeam")
   @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("administrators")
   public Response saveTeam(GamificationTeam gamificationTeam) {
     if (gamificationTeam == null) {
       LOG.warn("Bad request sent to server with empty team");
       return Response.status(400).build();
     }
-    walletGamificationService.saveTeam(gamificationTeam);
-    return Response.ok().build();
+    gamificationTeam = walletGamificationService.saveTeam(gamificationTeam);
+    return Response.ok(gamificationTeam).build();
   }
 
   /**

@@ -184,7 +184,7 @@ export function searchUsers(filter, includeCurrentUserInResults) {
 /*
  * Search spaces from eXo Platform, used for suggester
  */
-export function searchSpaces(filter) {
+export function searchSpaces(filter, withMembers) {
   const params = $.param({fields: ["id","prettyName","displayName","avatarUrl"], keyword: filter});
   return fetch(`/portal/rest/space/user/searchSpace?${params}`, {credentials: 'include'})
     .then(resp =>  {
@@ -201,7 +201,9 @@ export function searchSpaces(filter) {
           avatar: item.avatarUrl ? item.avatarUrl : `/portal/rest/v1/social/spaces/${item.prettyName}/avatar`,
           name: item.displayName,
           id: item.prettyName,
-          id_type: `space_${item.prettyName}`
+          id_type: `space_${item.prettyName}`,
+          technicalId: item.id,
+          members: withMembers ? item.members : null
         });
       });
       return result;

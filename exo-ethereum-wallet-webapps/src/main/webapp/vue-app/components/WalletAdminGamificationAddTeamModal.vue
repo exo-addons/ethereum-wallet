@@ -1,0 +1,421 @@
+<template>
+  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="700px" max-width="100vw" persistent @keydown.esc="dialog = false">
+    <v-btn slot="activator" color="primary" icon flat>
+      <v-icon>add</v-icon>
+    </v-btn>
+    <v-card class="elevation-12">
+      <div class="popupHeader ClearFix">
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
+        <span class="PopupTitle popupTitle">Add reward pool</span>
+      </div>
+      <v-card-title class="text-xs-center">
+        <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
+          <i class="uiIconError"></i>
+          {{ error }}
+        </div>
+      </v-card-title>
+      <v-container grid-list-md class="pt-2">
+        <v-layout wrap class="rewardPoolForm">
+          <v-flex
+            id="rewardTeamSpaceAutoComplete"
+            class="contactAutoComplete"
+            xs12 sm6>
+            <v-autocomplete
+              ref="rewardTeamSpaceAutoComplete"
+              v-model="rewardTeamSpace"
+              :items="rewardTeamSpaceOptions"
+              :loading="isLoadingSpaceSuggestions"
+              :search-input.sync="rewardTeamSpaceSearchTerm"
+              attach="#rewardTeamSpaceAutoComplete"
+              label="Pool space"
+              class="contactAutoComplete"
+              placeholder="Start typing to Search a space"
+              content-class="contactAutoCompleteContent"
+              max-width="100%"
+              item-text="name"
+              item-value="id"
+              hide-details
+              hide-selected
+              chips
+              cache-items
+              dense
+              flat>
+              <template slot="no-data">
+                <v-list-tile>
+                  <v-list-tile-title>
+                    Search for a <strong>Space</strong>
+                  </v-list-tile-title>
+                </v-list-tile>
+              </template>
+
+              <template slot="selection" slot-scope="{ item, selected }">
+                <v-chip v-if="item.error" :selected="selected" class="autocompleteSelectedItem">
+                  <del><span>{{ item.name }}</span></del>
+                </v-chip>
+                <v-chip v-else :selected="selected" class="autocompleteSelectedItem">
+                  <span>{{ item.name }}</span>
+                </v-chip>
+              </template>
+
+              <template slot="item" slot-scope="{ item, tile }">
+                <v-list-tile-avatar v-if="item.avatar" tile size="20">
+                  <img :src="item.avatar">
+                </v-list-tile-avatar>
+                <v-list-tile-title v-text="item.name" />
+              </template>
+            </v-autocomplete>
+          </v-flex>
+
+          <address-auto-complete
+            ref="managerAutocomplete"
+            input-label="Pool manager"
+            input-placeholder="Select a pool manager"
+            no-data-label="Search for a user"
+            no-address
+            class="xs12 sm6"
+            @item-selected="manager = $event && $event.id" />
+
+          <v-flex xs12 sm6>
+            <v-text-field
+              v-model="name"
+              label="Pool name"
+              placeholder="Enter pool name"
+              name="name"
+              required />
+          </v-flex>
+
+          <v-flex xs12 sm6>
+            <v-text-field
+              v-model="description"
+              label="Pool description"
+              placeholder="Enter pool description"
+              name="description" />
+          </v-flex>
+
+          <v-flex xs12 sm6>
+            <v-text-field
+              v-model="budget"
+              label="Pool budget"
+              placeholder="Enter pool budget per period"
+              type="number"
+              name="budget" />
+          </v-flex>
+
+          <v-flex xs12>
+            <v-label>Pool members</v-label>
+            <v-data-table
+              :items="membersObjects"
+              item-key="id"
+              class="elevation-1 mt-2">
+              <template slot="no-data">
+                <tr>
+                  <td colspan="3" class="text-xs-center">
+                    No pool members
+                  </td>
+                </tr>
+              </template>
+              <template slot="headers" slot-scope="props">
+                <tr>
+                  <th class="text-xs-left">
+                    Avatar
+                  </th>
+                  <th class="text-xs-center">
+                    Name
+                  </th>
+                  <th class="text-xs-right">
+                    <v-btn icon title="Delete all" @click="members=[]">
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                  </th>
+                </tr>
+              </template>
+              <template slot="items" slot-scope="props">
+                <tr>
+                  <td class="text-xs-left">
+                    <v-avatar size="36px">
+                      <img
+                        :src="props.item.avatar"
+                        onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                    </v-avatar>
+                  </td>
+                  <td class="text-xs-center">
+                    {{ props.item.name }}
+                  </td>
+                  <td class="text-xs-right">
+                    <v-btn icon title="Delete" @click="deleteMember(props.item)">
+                      <v-icon>delete</v-icon>
+                    </v-btn>
+                  </td>
+                </tr>
+              </template>
+            </v-data-table>
+          </v-flex>
+        </v-layout>
+      </v-container>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn :loading="loading" class="btn btn-primary mr-1" dark @click="save">Save</v-btn>
+        <v-btn class="btn" color="white" @click="dialog = false">Close</v-btn>
+        <v-spacer />
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script>
+import AddressAutoComplete from './AddressAutoComplete.vue';
+
+import {searchSpaces, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
+import {saveTeam} from '../WalletGamificationServices.js';
+
+export default {
+  components: {
+    AddressAutoComplete
+  },
+  props: {
+    team: {
+      type: Object,
+      default: function() {
+        return null;
+      }
+    },
+    wallets: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    }
+  },
+  data: () => ({
+    dialog: false,
+    loading: false,
+    error: null,
+    id: null,
+    name: '',
+    description: '',
+    budget: '',
+    memberSelection: null,
+    manager: null,
+    managerObject: null,
+    members: [],
+    membersObjects: [],
+    rewardTeamSpace: null,
+    rewardTeamSpaceId: null,
+    rewardTeamSpaceOptions: [],
+    rewardTeamSpaceSearchTerm: null,
+    isLoadingSpaceSuggestions: false
+  }),
+  watch: {
+    team() {
+      if(this.team) {
+        this.dialog = true;
+      }
+    },
+    dialog() {
+      if(this.dialog) {
+        this.init();
+      } else {
+        this.$emit("closed");
+      }
+    },
+    rewardTeamSpace(newValue, oldValue) {
+      if (oldValue) {
+        this.rewardTeamSpaceSearchTerm = null;
+        // A hack to close on select
+        // See https://www.reddit.com/r/vuetifyjs/comments/819h8u/how_to_close_a_multiple_autocomplete_vselect/
+        this.$refs.rewardTeamSpaceAutoComplete.isFocused = false;
+      }
+      this.rewardTeamSpaceId = null;
+      if(this.rewardTeamSpaceOptions && this.rewardTeamSpaceOptions.length) {
+        const selectedObject = this.rewardTeamSpaceOptions.find(space => space.id === this.rewardTeamSpace);
+        this.rewardTeamSpaceId = selectedObject && selectedObject.technicalId;
+        if(selectedObject && selectedObject.members && selectedObject.members.length) {
+          this.members = selectedObject.members && selectedObject.members.slice();
+        }
+      }
+    },
+    rewardTeamSpaceSearchTerm() {
+      if(this.rewardTeamSpaceSearchTerm) {
+        this.isLoadingSuggestions = true;
+        searchSpaces(this.rewardTeamSpaceSearchTerm, true)
+          .then(items => {
+            if (items) {
+              this.rewardTeamSpaceOptions = items;
+            } else {
+              this.rewardTeamSpaceOptions = [];
+            }
+            this.isLoadingSpaceSuggestions = false;
+          })
+          .catch((e) => {
+            console.debug("searchSpaces method - error", e);
+            this.isLoadingSpaceSuggestions = false;
+          });
+      }
+    },
+    manager() {
+      if(!this.manager || !this.manager.length) {
+        this.managerObject = null;
+      }
+      const managerObject = this.membersObjects && this.membersObjects.find(wallet => wallet.id === this.manager && wallet.type === 'user');
+      if(managerObject) {
+        this.managerObject = managerObject;
+      } else {
+        const wallet = this.wallets.find(wallet => wallet.id === this.manager && wallet.type === 'user');
+        if(wallet) {
+          this.managerObject = {
+            id: wallet.id,
+            name: wallet.name,
+            identityId: wallet.technicalId,
+            type: wallet.type,
+            avatar: wallet.avatar
+          };
+        } else {
+          searchUserOrSpaceObject(this.manager, 'user')
+            .then(userDetails => {
+              if(userDetails) {
+                this.managerObject = {
+                  name: userDetails.name,
+                  id: userDetails.id,
+                  identityId: userDetails.technicalId,
+                  type: userDetails.type,
+                  avatar: userDetails.avatar
+                };
+              }
+            });
+        }
+      }
+    },
+    members() {
+      const oldMemberObjects = this.membersObjects;
+      this.membersObjects = [];
+      if (this.members && this.members.length) {
+        this.members.forEach(memberId => {
+          const memberObject = oldMemberObjects && oldMemberObjects.find(wallet => wallet.id === memberId && wallet.type === 'user');
+          if(memberObject) {
+            this.membersObjects.push(memberObject);
+          } else {
+            const wallet = this.wallets.find(wallet => wallet.id === memberId && wallet.type === 'user');
+            if(wallet) {
+              this.membersObjects.push({
+                id: wallet.id,
+                name: wallet.name,
+                identityId: wallet.technicalId,
+                type: wallet.type,
+                avatar: wallet.avatar
+              });
+            } else {
+              searchUserOrSpaceObject(memberId, 'user')
+                .then(userDetails => {
+                  if(userDetails) {
+                    this.membersObjects.push({
+                      name: userDetails.name,
+                      id: userDetails.id,
+                      identityId: userDetails.technicalId,
+                      type: userDetails.type,
+                      avatar: userDetails.avatar
+                    });
+                  }
+                });
+            }
+          }
+        });
+      }
+    }
+  },
+  methods: {
+    init() {
+      this.error = null;
+      this.loading = false;
+      this.id =  this.team && this.team.id;
+      this.name = (this.team && this.team.name) || '';
+      this.description = (this.team && this.team.description) || '';
+      this.budget = (this.team && this.team.budget) || '';
+
+      this.rewardTeamSpace = null;
+      this.rewardTeamSpaceId = null;
+      this.rewardTeamSpaceOptions = [];
+      this.rewardTeamSpaceSearchTerm = null;
+      this.isLoadingSpaceSuggestions = false;
+
+      if (this.team) {
+        this.rewardTeamSpace = this.team.spacePrettyName;
+        this.rewardTeamSpaceId = this.team.spaceId;
+
+        if (this.team.spacePrettyName) {
+          searchSpaces(this.rewardTeamSpace)
+            .then(items => {
+              if (items) {
+                this.rewardTeamSpaceOptions = items;
+              } else {
+                this.rewardTeamSpaceOptions = [];
+              }
+              if (!this.rewardTeamSpaceOptions.find(item => item.id === this.rewardTeamSpace)) {
+                this.rewardTeamSpaceOptions.push({id : this.rewardTeamSpace, technicalId: this.rewardTeamSpaceId, name : this.rewardTeamSpace, error : true});
+              }
+            });
+        }
+
+        this.manager = this.team.manager && this.team.manager.id;
+        if(this.$refs && this.$refs.managerAutocomplete) {
+          this.$refs.managerAutocomplete.selectItem(this.manager, 'user');
+        }
+
+        if(this.team.members && this.team.members.length) {
+          this.members = this.team.members.map(memberObject => memberObject.id);
+        }
+      }
+    },
+    deleteMember(poolMember) {
+      if(poolMember) {
+        const poolMemberIndex = this.members.indexOf(poolMember.id);
+        if (poolMemberIndex >= 0) {
+          this.members.splice(poolMemberIndex, 1);
+        }
+      }
+    },
+    save() {
+      this.error = null;
+      this.loading = true;
+
+      if(!this.name) {
+        this.error = 'Pool name is mandatory';
+      }
+
+      if(!this.manager) {
+        this.error = 'Pool manager is mandatory';
+      }
+
+      const members = this.membersObjects && this.membersObjects.map(memberObject => Object({id: memberObject.id, identityId: memberObject.identityId}));
+      const team = {
+        id: this.id,
+        name: this.name,
+        description: this.description,
+        budget: this.budget ? Number(this.budget) : 0,
+        spacePrettyName: this.rewardTeamSpace,
+        spaceId: this.rewardTeamSpaceId,
+        members: members,
+        manager: {
+          id: this.manager,
+          identityId: this.managerObject && this.managerObject.identityId
+        }
+      };
+
+      return saveTeam(team)
+        .then(addedTeam => {
+          if(addedTeam) {
+            this.$emit("saved", addedTeam);
+            this.loading = false;
+            this.dialog = false;
+          } else {
+            console.debug("Error saving pool, response code is NOK");
+            this.error = 'Error saving pool, please contact your administrator.';
+          }
+        })
+        .catch(e => {
+          console.debug("Error saving pool", e);
+          this.error = 'Error saving pool, please contact your administrator.';
+        });
+    }
+  }
+};
+</script>

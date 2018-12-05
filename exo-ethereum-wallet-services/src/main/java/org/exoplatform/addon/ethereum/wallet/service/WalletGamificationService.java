@@ -27,11 +27,13 @@ public class WalletGamificationService {
 
   private GamificationSettings       gamificationSettings     = new GamificationSettings();
 
-  private Vector<GamificationTeam>   teams                    = new Vector<>();
+  private List<GamificationTeam>     teams                    = new ArrayList<>();
 
   private AbstractResourceDescriptor gamificationRestResource;
 
   private boolean                    gamificationRestSearched = false;
+
+  private long                       id                       = 1;
 
   public WalletGamificationService(ResourceBinder restResourceBinder, SettingService settingService) {
     this.settingService = settingService;
@@ -71,11 +73,12 @@ public class WalletGamificationService {
     return teams;
   }
 
-  public void saveTeam(GamificationTeam gamificationTeam) {
+  public GamificationTeam saveTeam(GamificationTeam gamificationTeam) {
     if (gamificationTeam == null) {
       throw new IllegalArgumentException("Empty team to save");
     }
-    if (gamificationTeam.getId() == 0) {
+    if (gamificationTeam.getId() == null || gamificationTeam.getId() == 0) {
+      gamificationTeam.setId(id++);
       teams.add(gamificationTeam);
     } else {
       GamificationTeam oldGamificationTeam = teams.stream()
@@ -88,6 +91,17 @@ public class WalletGamificationService {
         teams.remove(oldGamificationTeam);
         teams.add(gamificationTeam);
       }
+    }
+    return gamificationTeam;
+  }
+
+  /**
+   * Remove a Gamification Team/Pool by id
+   * @param id
+   */
+  public void removeTeam(long id) {
+    if (id != 0) {
+      teams = teams.stream().filter(team -> team.getId() == id).collect(Collectors.toList());
     }
   }
 

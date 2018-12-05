@@ -23,7 +23,10 @@
   
       <template slot="no-data">
         <v-list-tile>
-          <v-list-tile-title>
+          <v-list-tile-title v-if="noDataLabel">
+            {{ noDataLabel }}
+          </v-list-tile-title>
+          <v-list-tile-title v-else>
             Search for a <strong>Wallet</strong> of space or user
           </v-list-tile-title>
         </v-list-tile>
@@ -73,6 +76,12 @@ export default {
         return null;
       }
     },
+    noDataLabel: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     noAddress: {
       type: Boolean,
       default: function() {
@@ -95,6 +104,7 @@ export default {
       address: null,
       isLoadingSuggestions: false,
       addressLoad: '',
+      currentUserItem: null,
       error: null
     };
   },
@@ -112,12 +122,17 @@ export default {
           searchContact(value)
             .then(data => {
               this.items = data;
+              if(!this.items) {
+                this.items = [this.currentUserItem];
+              } else {
+                this.items.push(this.currentUserItem);
+              }
             });
         } finally {
           this.isLoadingSuggestions = false;
         }
       } else {
-        this.items = [];
+        this.items = [this.currentUserItem];
       }
     },
     selectedValue() {
@@ -127,18 +142,30 @@ export default {
         const isAddress = this.selectedValue.indexOf('_') < 0;
         const type = isAddress ? null : this.selectedValue.substring(0, this.selectedValue.indexOf('_'));
         const id = isAddress ? this.selectedValue : this.selectedValue.substring(this.selectedValue.indexOf('_') + 1);
-        if (isAddress) {
+        if (this.noAddress || isAddress) {
           this.addressLoad = 'success';
-          this.$emit("item-selected", {id: id, type: null, address: id});
+          this.$emit("item-selected", {
+            id: id,
+            type: null,
+            address: id
+          });
         } else {
           searchAddress(id, type)
             .then( address => {
               if (address && address.length) {
                 this.addressLoad = 'success';
-                this.$emit("item-selected", {id: id, type: type, address: address});
+                this.$emit("item-selected", {
+                  id: id,
+                  type: type,
+                  address: address
+                });
               } else {
-                this.$emit("item-selected", {id: id, type: type, address: null});
                 this.addressLoad = 'error';
+                this.$emit("item-selected", {
+                  id: id,
+                  type: type,
+                  address: null
+                });
               }
             })
             .catch(error => {
@@ -149,9 +176,17 @@ export default {
       }
     }
   },
+  created() {
+    searchUserOrSpaceObject(eXo.env.portal.userName, 'user')
+      .then(item => {
+        item.id_type = `${item.type}_${item.id}`;
+        this.currentUserItem = item;
+        this.items.push(this.currentUserItem);
+      });
+  },
   methods: {
     clear() {
-      this.items = [];
+      this.items = [this.currentUserItem];
       this.selectedValue = null;
       this.searchTerm = null;
       this.address = null;
@@ -160,7 +195,9 @@ export default {
       this.error = null;
     },
     selectItem(id, type) {
-      if (type) {
+      if (!id) {
+        this.$refs.selectAutoComplete.selectItem(null);
+      } else if (type) {
         searchUserOrSpaceObject(id, type)
           .then(item => {
             item.id_type = `${item.type}_${item.id}`;
