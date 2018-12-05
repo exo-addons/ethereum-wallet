@@ -66,7 +66,7 @@ export default {
   watch: {
     refreshIndex(newValue, oldValue) {
       if (newValue > oldValue) {
-        this.nextTick(this.init);
+        this.$nextTick(this.init);
       }
     }
   },

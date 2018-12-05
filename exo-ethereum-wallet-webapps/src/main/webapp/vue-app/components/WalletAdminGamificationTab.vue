@@ -8,30 +8,47 @@
     </v-card-title>
     <h3 class="text-xs-left ml-3 ">Configuration</h3>
     <v-card-text class="text-xs-left">
-      <div class="text-xs-left kudosWalletConfiguration">
-        <span>Users will be rewarded </span>
+      <div class="text-xs-left gamificationWalletConfiguration">
+        <span>Users will be rewarded starting from </span>
         <v-text-field
-          v-model.number="tokenPerKudo"
-          name="tokenPerKudo"
+          v-model.number="selectedThreshold"
+          name="threshold"
           class="input-text-center" />
-        <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
+        <span> gamification points per </span>
+        <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
           <v-combobox
-            v-model="selectedKudosContractAddress"
-            :items="contracts"
+            v-model="selectedPeriodType"
+            :items="periods"
             :return-object="false"
-            attach="#selectedKudosContractAddress"
-            item-value="address"
-            item-text="name"
-            class="selectedContractAddress"
+            attach="#selectedPeriodType"
+            label="Period type"
+            class="selectBoxVuetify"
             hide-no-data
             hide-selected
             small-chips>
             <template slot="selection" slot-scope="data">
-              {{ selectedKudosContractName }}
+              {{ selectedPeriodName }}
             </template>
           </v-combobox>
         </div>
-        <span> per kudos</span>
+        <span> using contract </span>
+        <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
+          <v-combobox
+            v-model="selectedContractAddress"
+            :items="contracts"
+            :return-object="false"
+            attach="#selectedContractAddress"
+            item-value="address"
+            item-text="name"
+            class="selectBoxVuetify"
+            hide-no-data
+            hide-selected
+            small-chips>
+            <template slot="selection" slot-scope="data">
+              {{ selectedContractName }}
+            </template>
+          </v-combobox>
+        </div>
         <button class="btn btn-primary mb-3" @click="save">
           Save
         </button>
@@ -49,7 +66,7 @@
         transition="scale-transition"
         lazy
         offset-y
-        class="kudosDateSelector">
+        class="gamificationDateSelector">
         <v-text-field
           slot="activator"
           v-model="periodDatesDisplay"
@@ -58,18 +75,18 @@
         <v-date-picker
           v-model="selectedDate"
           :first-day-of-week="1"
-          :type="!kudosPeriodType || kudosPeriodType === 'WEEK' ? 'date' : 'month'"
+          :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
           @input="selectedDateMenu = false" />
       </v-menu>
       <v-data-table
-        v-model="selectedKudosIdentitiesList"
-        :headers="kudosIdentitiesHeaders"
-        :items="kudosIdentitiesList"
+        v-model="selectedIdentitiesList"
+        :headers="identitiesHeaders"
+        :items="identitiesList"
         :loading="loading"
         :sortable="true"
         :pagination.sync="pagination"
         select-all
-        item-key="idType"
+        item-key="address"
         class="elevation-1 mr-3 mb-2"
         hide-actions>
         <template slot="headers" slot-scope="props">
@@ -98,7 +115,7 @@
           <tr :active="props.selected">
             <td v-if="selectableRecipients.length">
               <v-checkbox
-                v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')"
+                v-if="props.item.address && props.item.points && props.item.points > threshold && (!props.item.status || props.item.status === 'error')"
                 :input-value="props.selected"
                 hide-details
                 @click="props.selected = !props.selected" />
@@ -152,40 +169,24 @@
                 v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
             </td>
             <td>
-              <v-text-field v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
+              <v-text-field v-if="props.item.address && props.item.points && props.item.points > threshold && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
               <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
               <template v-else>-</template>
             </td>
-            <td v-html="props.item.received">
-            </td>
-            <td v-html="props.item.sent">
+            <td v-html="props.item.points">
             </td>
           </tr>
         </template>
       </v-data-table>
-      <send-kudos-modal
-        :account="walletAddress"
-        :contract-details="contractDetails"
-        :recipients="recipients"
-        :period-type="kudosPeriodType"
-        :start-date-in-seconds="selectedStartDateInSeconds"
-        :end-date-in-seconds="selectedEndDateInSeconds"
-        @sent="newPendingTransaction"
-        @error="error = $event" />
     </v-card-text>
   </v-card>
 </template>
 
 <script>
-import {getKudosContract, getTokensPerKudos, saveKudosContract, saveTokensPerKudos, getPeriodTransactions} from '../WalletKudosServices.js';
+import {getSettings, saveSettings, getPeriodTransactions, getPeriodDates, getGamificationPoints} from '../WalletGamificationServices.js';
 import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
-import SendKudosModal from './SendKudosModal.vue';
-
 export default {
-  components: {
-    SendKudosModal
-  },
   props: {
     wallets: {
       type: Array,
@@ -210,25 +211,48 @@ export default {
     return {
       loading: false,
       error: null,
-      tokenPerKudo: null,
-      defaultTokenPerKudos: null,
-      selectedDate: null,
+      selectedDate: new Date().toISOString().substr(0, 10),
       selectedDateMenu: false,
-      kudosContractAddress: null,
-      selectedKudosContractAddress: null,
+      contractAddress: null,
+      threshold: null,
+      periodType: null,
+      selectedContractAddress: null,
+      selectedThreshold: null,
+      selectedPeriodType: null,
       tokenEtherscanLink: null,
       transactionEtherscanLink: null,
       addressEtherscanLink: null,
-      kudosPeriodType: null,
-      kudosIdentitiesList: [],
-      selectedKudosIdentitiesList: [],
+      identitiesList: [],
+      selectedIdentitiesList: [],
       selectedStartDate: null,
       selectedEndDate: null,
       pagination: {
         descending: true,
         sortBy: 'received'
       },
-      kudosIdentitiesHeaders: [
+      periods: [
+        {
+          text: 'Week',
+          value: 'WEEK'
+        },
+        {
+          text: 'Month',
+          value: 'MONTH'
+        },
+        {
+          text: 'Quarter',
+          value: 'QUARTER'
+        },
+        {
+          text: 'Semester',
+          value: 'SEMESTER'
+        },
+        {
+          text: 'Year',
+          value: 'YEAR'
+        }
+      ],
+      identitiesHeaders: [
         {
           text: '',
           align: 'right',
@@ -268,32 +292,30 @@ export default {
           width: '70px'
         },
         {
-          text: 'Received',
+          text: 'Points',
           align: 'center',
           sortable: true,
-          value: 'received'
-        },
-        {
-          text: 'Sent',
-          align: 'center',
-          sortable: true,
-          value: 'sent'
+          value: 'points'
         }
       ]
     };
   },
   computed: {
-    selectedKudosContractName() {
+    selectedPeriodName() {
+      const selectedPeriodName = this.periods.find(period => period.value === this.selectedPeriodType);
+      return selectedPeriodName && selectedPeriodName.text ? selectedPeriodName.text : this.selectedPeriodType && (this.selectedPeriodType.text || this.selectedPeriodType);
+    },
+    selectedContractName() {
       return this.selectedContractDetails && this.selectedContractDetails.name;
     },
     isContractDifferentFromPrincipal() {
-      return this.kudosContractAddress && this.principalAccount && this.principalAccount.toLowerCase() !== this.kudosContractAddress.toLowerCase();
+      return this.contractAddress && this.principalAccount && this.principalAccount.toLowerCase() !== this.contractAddress.toLowerCase();
     },
     selectedContractDetails() {
-      return this.selectedKudosContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedKudosContractAddress);
+      return this.selectedContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedContractAddress);
     },
     contractDetails() {
-      return this.kudosContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.kudosContractAddress);
+      return this.contractAddress && this.contracts && this.contracts.find(contract => contract.address === this.contractAddress);
     },
     paginationDescending() {
       return this.pagination && this.pagination.descending;
@@ -317,36 +339,32 @@ export default {
       }
     },
     recipients() {
-      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(item => item.address && item.received && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points > this.threshold && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
     },
     selectableRecipients() {
-      return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(item => item.address && item.received && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points > this.threshold && !item.tokensSent && (!item.status || item.status === 'error')) : [];
     }
   },
   watch: {
     selectedDate() {
       this.loadAll();
     },
-    defaultTokenPerKudos() {
+    threshold() {
       this.refreshList();
     },
-    kudosPeriodType() {
+    periodType() {
       this.loadAll();
     }
   },
   created() {
-    document.addEventListener('exo-kudos-get-kudos-list-loading', () => this.loading = true);
-    document.addEventListener('exo-kudos-get-kudos-list-result', this.loadKudosList);
-    this.$nextTick(() => {
-      this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
-      this.selectedDate = new Date().toISOString().substr(0, 10);
-      document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
-    });
-    getTokensPerKudos().then(value => this.defaultTokenPerKudos = this.tokenPerKudo = value);
-    getKudosContract().then(kudosContract => this.kudosContractAddress = this.selectedKudosContractAddress = kudosContract || this.principalAccount);
-    this.tokenEtherscanLink = getTokenEtherscanlink(window.walletSettings.defaultNetworkId);
-    this.transactionEtherscanLink = getTransactionEtherscanlink(window.walletSettings.defaultNetworkId);
-    this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
+    getSettings()
+      .then(settings => {
+        if (settings) {
+          this.selectedContractAddress = this.contractAddress = settings.contractAddress;
+          this.selectedThreshold = this.threshold = settings.threshold;
+          this.selectedPeriodType = this.periodType = settings.periodType;
+        }
+      });
   },
   methods: {
     newPendingTransaction(transaction) {
@@ -354,41 +372,41 @@ export default {
       if(!transaction || !transaction.to) {
         return;
       }
-      this.refreshKudosWalletStatus(transaction);
+      this.refreshWalletTransactionStatus(transaction);
     },
-    refreshKudosWalletStatus(transaction) {
+    refreshWalletTransactionStatus(transaction) {
       if(transaction && transaction.to) {
-        const kudosWalletIndex = this.kudosIdentitiesList.findIndex(kudosWallet => kudosWallet.address && kudosWallet.address.toLowerCase() === transaction.to.toLowerCase());
-        const kudosWallet = this.kudosIdentitiesList[kudosWalletIndex];
-        if(kudosWallet) {
-          this.$set(kudosWallet, 'hash', transaction.hash);
-          this.$set(kudosWallet, 'status', 'pending');
+        const resultWalletIndex = this.selectedIdentitiesList.findIndex(resultWallet => resultWallet.address && resultWallet.address.toLowerCase() === transaction.to.toLowerCase());
+        const resultWallet = this.selectedIdentitiesList[resultWalletIndex];
+        if(resultWallet) {
+          this.$set(resultWallet, 'hash', transaction.hash);
+          this.$set(resultWallet, 'status', 'pending');
           if (transaction.contractAmount) {
-            this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
+            this.$set(resultWallet, 'tokensSent', transaction.contractAmount);
           }
-          this.kudosIdentitiesList.splice(kudosWalletIndex, 1);
+          this.selectedIdentitiesList.splice(resultWalletIndex, 1);
           const thiss = this;
           watchTransactionStatus(transaction.hash, receipt => {
-            thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+            thiss.$set(resultWallet, 'status', receipt.status ? 'success' : 'error');
           });
         }
       } else {
-        getPeriodTransactions(window.walletSettings.defaultNetworkId, this.kudosPeriodType, this.selectedStartDateInSeconds)
-          .then(kudosTransactions => {
-            if (kudosTransactions) {
-              kudosTransactions.forEach(kudosTransaction => {
-                if(kudosTransaction) {
-                  const kudosWallet = this.kudosIdentitiesList.find(kudosWallet => kudosWallet.type === kudosTransaction.receiverType && (kudosWallet.id === kudosTransaction.receiverId || kudosWallet.identityId === kudosTransaction.receiverIdentityId));
-                  if(kudosWallet) {
-                    this.$set(kudosWallet, 'tokensSent', kudosTransaction.tokensAmountSent ? Number(kudosTransaction.tokensAmountSent) : 0);
-                    this.$set(kudosWallet, 'hash', kudosTransaction.hash);
-                    this.$set(kudosWallet, 'status', 'pending');
+        getPeriodTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.selectedStartDateInSeconds)
+          .then(resultTransactions => {
+            if (resultTransactions) {
+              resultTransactions.forEach(resultTransaction => {
+                if(resultTransaction) {
+                  const resultWallet = this.identitiesList.find(resultWallet => resultWallet.type === resultTransaction.receiverType && (resultWallet.id === resultTransaction.receiverId || resultWallet.identityId === resultTransaction.receiverIdentityId));
+                  if(resultWallet) {
+                    this.$set(resultWallet, 'tokensSent', resultTransaction.tokensAmountSent ? Number(resultTransaction.tokensAmountSent) : 0);
+                    this.$set(resultWallet, 'hash', resultTransaction.hash);
+                    this.$set(resultWallet, 'status', 'pending');
                     const thiss = this;
-                    watchTransactionStatus(kudosTransaction.hash, receipt => {
-                      thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+                    watchTransactionStatus(resultTransaction.hash, receipt => {
+                      thiss.$set(resultWallet, 'status', receipt.status ? 'success' : 'error');
                     });
                   } else {
-                    console.error("Can't find wallet of a sent Kudos token transaction, kudosTransaction=", kudosTransaction);
+                    console.error("Can't find wallet of a sent result token transaction, resultTransaction=", resultTransaction);
                   }
                 }
               });
@@ -398,78 +416,72 @@ export default {
       }
     },
     save() {
-      this.saveKudosContract().then(() => this.saveTokensPerKudos());
-    },
-    saveKudosContract() {
-      return saveKudosContract(this.selectedKudosContractAddress)
+      return saveSettings({
+        threshold: this.selectedThreshold,
+        contractAddress : this.selectedContractAddress,
+        periodType: this.selectedPeriodType && (this.selectedPeriodType.value || this.selectedPeriodType)
+      })
         .then(() => {
-          this.kudosContractAddress = this.selectedKudosContractAddress;
+          this.contractAddress = this.selectedContractAddress;
+          this.periodType = this.selectedPeriodType;
+          this.threshold = this.selectedThreshold;
         })
         .catch(error => {
-          this.error = "Error while saving 'Kudos contract address' parameter";
-        });
-    },
-    saveTokensPerKudos() {
-      return saveTokensPerKudos(this.tokenPerKudo)
-        .then(() => {
-          this.defaultTokenPerKudos = this.tokenPerKudo;
-        })
-        .catch(error => {
-          this.error = "Error while saving 'Token per Kudos' parameter";
+          this.error = "Error while saving 'Gamification settings'";
         });
     },
     loadAll() {
-      if (!this.selectedDate || !this.kudosPeriodType) {
+      if (!this.selectedDate || !this.periodType) {
         return;
       }
-      this.selectedStartDate = this.formatDate(new Date(this.selectedDate));
-      this.selectedEndDate = null;
-      document.dispatchEvent(new CustomEvent('exo-kudos-get-period', {'detail' : {'date' : new Date(this.selectedDate), 'periodType': this.kudosPeriodType}}));
+      getPeriodDates(new Date(this.selectedDate), this.periodType)
+        .then(period => {
+          this.selectedStartDate = this.formatDate(new Date(period.startDateInSeconds * 1000));
+          this.selectedEndDate = this.formatDate(new Date(period.endDateInSeconds * 1000));
+          return this.loadGamificationList();
+        });
     },
-    loadPeriodDates(event) {
-      if(event && event.detail && event.detail.period) {
-        this.selectedStartDate = this.formatDate(new Date(event.detail.period.startDateInSeconds * 1000));
-        this.selectedEndDate = this.formatDate(new Date(event.detail.period.endDateInSeconds * 1000));
-        document.dispatchEvent(new CustomEvent('exo-kudos-get-kudos-list', {'detail' : {'startDate' : new Date(this.selectedStartDate), 'endDate' : new Date(this.selectedEndDate)}}));
-      } else {
-        console.debug("Retrieved event detail doesn't have the period as result");
-      }
-    },
-    loadKudosList(event) {
+    loadGamificationList() {
       this.$emit("list-retrieved");
       this.error = null;
-      this.kudosIdentitiesList = [];
-      if(!event || !event.detail) {
-        this.error = 'Empty kudos list is retrieved';
-      } else if(event.detail.error) {
-        console.debug(event.detail.error);
-        this.error = event.detail.error;
-      } else if(event.detail.list) {
-        const list = event.detail.list;
-        list.forEach(element => element.idType = `${element.type}_${element.id}`);
-        this.kudosIdentitiesList = list;
-        this.refreshList();
-        this.refreshKudosWalletStatus();
-      } else {
-        this.error = 'Empty kudos list is retrieved';
+      this.identitiesList = [];
+      this.loading = true;
+      const identitiesListPromises = [];
+      if(this.wallets && this.wallets.length) {
+        const retrievedIdentities = [];
+        this.wallets.forEach(wallet => {
+          if(!wallet || wallet.type !== 'user' || retrievedIdentities.indexOf(wallet.id) >= 0) {
+            return;
+          }
+          retrievedIdentities.push(wallet.id);
+          wallet = Object.assign({}, wallet);
+          const startDate = new Date(this.selectedStartDate);
+          const endDate = new Date(this.selectedEndDate);
+          identitiesListPromises.push(
+            getGamificationPoints(wallet.id, startDate, endDate)
+              .then(object => {
+                wallet.points = object && object.points;
+                this.identitiesList.push(wallet);
+              })
+          );
+        });
       }
-      this.loading = false;
+      Promise.all(identitiesListPromises)
+        .then(() => this.loading = false);
     },
     refreshList() {
-      this.kudosIdentitiesList.forEach(walletKudos => {
-        const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.technicalId && wallet.type === walletKudos.type &&  (wallet.id === walletKudos.id || wallet.technicalId === walletKudos.identityId));
-        if(wallet && wallet.address) {
-          this.$set(walletKudos, "address", wallet.address);
-          if (this.defaultTokenPerKudos) {
-            let result = Number(walletKudos.received) * 100000 * Number(this.defaultTokenPerKudos) / 100000;
-            // attempt to simply avoid floatting point problem
-            const resultString = String(result);
-            if(resultString.length - resultString.indexOf(".") > 5) {
-              result = Number(walletKudos.received) * 1000000 * Number(this.defaultTokenPerKudos) / 1000000;
-            }
-            this.$set(walletKudos, "tokensToSend", result);
-          }
+      this.identitiesList.forEach(walletResult => {
+        /*
+        Calculate Tokens to send per wallet
+
+        let result = Number(walletResult.points) * 100000 * Number(this.defaultTokenPerResult) / 100000;
+        // attempt to simply avoid floatting point problem
+        const resultString = String(result);
+        if(resultString.length - resultString.indexOf(".") > 5) {
+          result = Number(walletResult.received) * 1000000 * Number(this.defaultTokenPerResult) / 1000000;
         }
+        this.$set(walletResult, "tokensToSend", result);
+        */
       });
     },
     formatDate (date) {
@@ -481,10 +493,10 @@ export default {
       return dateString.substring(dateString.indexOf(' ') + 1, dateString.indexOf(":") - 3);
     },
     toggleAll() {
-      if (this.selectedKudosIdentitiesList.length === this.kudosIdentitiesList.length){
-        this.selectedKudosIdentitiesList = [];
+      if (this.selectedIdentitiesList.length === this.identitiesList.length){
+        this.selectedIdentitiesList = [];
       } else {
-        this.selectedKudosIdentitiesList = this.kudosIdentitiesList.slice();
+        this.selectedIdentitiesList = this.identitiesList.slice();
       }
     },
     changeSort(column) {

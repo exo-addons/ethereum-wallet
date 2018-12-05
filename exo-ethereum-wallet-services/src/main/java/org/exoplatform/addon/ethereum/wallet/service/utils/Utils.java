@@ -110,6 +110,9 @@ public class Utils {
 
   public static final String                             KUDOS_PERIOD_TRANSACTIONS_NAME        = "KUDOS_PERIOD_TRANSACTIONS";
 
+  public static final String                             GAMIFICATION_PERIOD_TRANSACTIONS_NAME =
+                                                                                               "GAMIFICATION_PERIOD_TRANSACTIONS";
+
   public static final String                             WALLET_BROWSER_PHRASE_NAME            = "WALLET_BROWSER_PHRASE";
 
   public static final String                             ABI_PATH_PARAMETER                    = "contract.abi.path";

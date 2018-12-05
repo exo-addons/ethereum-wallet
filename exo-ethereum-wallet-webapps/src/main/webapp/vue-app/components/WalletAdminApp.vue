@@ -53,7 +53,8 @@
             <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="wallets">Wallets</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" id="kudosListTab" key="kudosList" :class="kudosListRetrieved || 'hidden'">Kudos list</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" id="kudosListTab" key="kudosList" :class="kudosListRetrieved || 'hidden'">Kudos</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" id="gamificationTab" key="gamificationTab" :class="gamificationRetrieved || 'hidden'">Gamification</v-tab>
           </v-tabs>
 
           <v-tabs-items v-model="selectedTab">
@@ -145,6 +146,18 @@
                 @open-wallet-transaction="openWalletTransaction"
                 @list-retrieved="kudosListRetrieved = true"/>
             </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="gamificationTab">
+              <gamification-tab
+                v-if="!loading"
+                ref="kudosList"
+                :wallets="wallets"
+                :wallet-address="walletAddress"
+                :contracts="contracts"
+                :principal-account="principalAccountAddress"
+                @pending="pendingTransaction"
+                @open-wallet-transaction="openWalletTransaction"
+                @list-retrieved="gamificationRetrieved = true"/>
+            </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-layout>
@@ -159,6 +172,7 @@ import AdvancedSettingsTab from './WalletAdminSettingsAdvancedTab.vue';
 import ContractsTab from './WalletAdminContractsTab.vue';
 import WalletsTab from './WalletAdminWalletsTab.vue';
 import KudosTab from './WalletAdminKudosTab.vue';
+import GamificationTab from './WalletAdminGamificationTab.vue';
 
 import WalletSetup from './WalletSetup.vue';
 import WalletSummary from './WalletSummary.vue';
@@ -174,6 +188,7 @@ export default {
     ContractsTab,
     WalletsTab,
     KudosTab,
+    GamificationTab,
     WalletSummary,
     WalletSetup
   },
@@ -201,6 +216,7 @@ export default {
       addressEtherscanLink: null,
       selectedTransactionHash: null,
       kudosListRetrieved: false,
+      gamificationRetrieved: false,
       initialFunds: [],
       contracts: [],
       wallets: []

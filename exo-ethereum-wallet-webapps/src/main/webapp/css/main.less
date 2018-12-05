@@ -563,14 +563,21 @@
     padding-left: 60px;
   }
 
-  .kudosWalletConfiguration {
+  .kudosWalletConfiguration, .gamificationWalletConfiguration {
     &  > * {
-      max-width: 150px;
       display: inline-block;
+    }
+    &  > .v-input {
+      max-width: 150px;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+    &  > input {
+      text-align: center;
     }
   }
 
-  .selectedKudosContractAddress .v-select__selections {
+  .selectBoxVuetify .v-select__selections {
     line-height: 17px;
   }
 
