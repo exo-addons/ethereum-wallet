@@ -67,7 +67,7 @@
         <span v-else>Please switch metamask to {{ associatedWalletAddress }} account to be able to send transactions</span>
       </div>
       <br />
-      <div v-if="!isAdministration" class="alert alert-info">
+      <div v-if="displayAddressAssociationBox" class="alert alert-info">
         <i class="uiIconInfo"></i>
         <span>A new wallet has been detected on Metamask!</span>
         <br />
@@ -187,6 +187,10 @@ export default {
     },
     displayUserAccountAssociationHelp() {
       return this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
+    },
+    displayAddressAssociationBox() {
+      // Display dialog association only when it's not a space or the space doesn't have an associated address yet
+      return this.refreshIndex && !this.isAdministration && (!this.isSpace || !this.associatedWalletAddress);
     },
     displayUserAccountChangeHelp() {
       return this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && this.associatedWalletAddress && this.detectedMetamaskAccount;

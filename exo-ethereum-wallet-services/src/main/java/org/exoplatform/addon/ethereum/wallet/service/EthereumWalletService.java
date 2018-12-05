@@ -1237,7 +1237,8 @@ public class EthereumWalletService implements Startable {
       LOG.warn("cache key is mandatory");
       return null;
     }
-    AccountDetail accountDetail = accountDetailFutureCache.get(new ServiceContext<AccountDetail>() {
+    String currentUserId = getCurrentUserId();
+    AccountDetail accountDetails = accountDetailFutureCache.get(new ServiceContext<AccountDetail>() {
       @Override
       public AccountDetail execute() {
         AccountDetail accountDetail = null;
@@ -1296,19 +1297,28 @@ public class EthereumWalletService implements Startable {
                                    SPACE_ACCOUNT_TYPE,
                                    space.getDisplayName(),
                                    getSpaceAddressFromStorage(id),
-                                   spaceService.isManager(space, getCurrentUserId())
-                                       || spaceService.isSuperManager(getCurrentUserId()),
+                                   spaceService.isManager(space, currentUserId) || spaceService.isSuperManager(currentUserId),
                                    true,
                                    avatarUrl);
         }
         return accountDetail;
       }
     }, accountDetailCacheId);
+
     // don't keep in cache only users with addresses
-    if (accountDetail != null && StringUtils.isBlank(accountDetail.getAddress())) {
-      removeFromCache(accountDetail.getType(), accountDetail.getId());
+    if (accountDetails != null && StringUtils.isBlank(accountDetails.getAddress())) {
+      removeFromCache(accountDetails.getType(), accountDetails.getId());
     }
-    return accountDetail;
+    if (accountDetails != null && SPACE_ACCOUNT_TYPE.equals(accountDetails.getType())) {
+      Space space = getSpace(accountDetails.getId());
+      if (space == null) {
+        accountDetails.setSpaceAdministrator(false);
+      } else {
+        accountDetails.setSpaceAdministrator(spaceService.isManager(space, currentUserId)
+            || spaceService.isSuperManager(currentUserId));
+      }
+    }
+    return accountDetails;
   }
 
   private String getUserAddressFromStorage(String id) {
