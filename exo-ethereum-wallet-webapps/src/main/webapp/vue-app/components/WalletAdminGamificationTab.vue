@@ -88,7 +88,6 @@
         :items="identitiesList"
         :loading="loading"
         :sortable="true"
-        :pagination.sync="pagination"
         select-all
         item-key="address"
         class="elevation-1 mr-3 mb-2"

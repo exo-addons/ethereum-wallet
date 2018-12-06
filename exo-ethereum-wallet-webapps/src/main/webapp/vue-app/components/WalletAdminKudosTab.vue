@@ -67,7 +67,6 @@
         :items="kudosIdentitiesList"
         :loading="loading"
         :sortable="true"
-        :pagination.sync="pagination"
         select-all
         item-key="idType"
         class="elevation-1 mr-3 mb-2"
