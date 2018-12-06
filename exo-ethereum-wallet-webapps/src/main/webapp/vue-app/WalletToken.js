@@ -43,27 +43,22 @@ export function getContractsDetails(account, netId, onlyDefault) {
  * Retrieve an ERC20 contract instance at specified address
  */
 export function retrieveContractDetails(account, contractDetails) {
-  console.debug(`retrieve contract at address ${contractDetails && contractDetails.address} with account ${account}`);
-  let adminLevelComputed, approveAccountComputed, computeContractType = !contractDetails.contractType;
+  let adminLevelComputed;
   contractDetails.retrievedAttributes = 0;
   let contractToSave = false;
-  return getContractInstance(account, contractDetails.address, true)
-    .then((contractInstance, error) => {
-      if (error) {
-        throw error;
-      }
-      if (!contractInstance) {
-        throw new Error('Can\'t find contract instance');
-      }
-      return contractDetails.contract = contractInstance;
-    })
-    .catch(e => {
-      console.debug("retrieveContractDetails method - error retrieving instance", contractDetails.address, new Error(e));
-    })
-    .then(() => getSavedContractDetails(contractDetails.address, contractDetails.networkId))
+  try {
+    const contractInstance = getContractInstance(account, contractDetails.address);
+    contractDetails.contract = contractInstance;
+  } catch(e) {
+    transformContracDetailsToFailed(contractDetails);
+    console.debug("retrieveContractDetails method - error retrieving instance", contractDetails.address, new Error(e));
+    return Promise.resolve(contractDetails);
+  }
+
+  return getSavedContractDetails(contractDetails.address, contractDetails.networkId)
     .then(savedDetails => {
       if (savedDetails) {
-        if(!savedDetails || !savedDetails.owner || !savedDetails.decimals || !savedDetails.sellPrice) {
+        if(!savedDetails.hasOwnProperty("contractType")) {
           contractToSave = true;
         }
         Object.keys(savedDetails).forEach(key => {
@@ -81,49 +76,93 @@ export function retrieveContractDetails(account, contractDetails) {
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving saved details", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contract.methods.symbol().call())
-    .then(symbol => {
-      contractDetails.symbol = symbol;
+    .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.implementationAddress().call())
+    .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.version().call())
+    .then(version => {
+      contractToSave = contractToSave || (version && (!contractDetails.contractType || contractDetails.contractType <= 0));
+      version = Number(version);
+      contractDetails.contractType = version && !Number.isNaN(version) && Number.isInteger(version) ? 1 : 0;
       contractDetails.retrievedAttributes++;
     })
     .catch(e => {
+      contractDetails.contractType = 0;
+    })
+    .then(() => (contractDetails.decimals || contractDetails.contract.methods.decimals().call()))
+    .then(decimals => {
+      if (decimals) {
+        contractDetails.decimals = decimals || 0;
+        contractDetails.retrievedAttributes++;
+      } else {
+        contractDetails.decimals = 0;
+      }
+    })
+    .catch(e => {
+      contractDetails.decimals = 0;
+    })
+    .then(() => contractDetails.contract.methods.balanceOf(account).call())
+    .then(balance => {
+      contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+    })
+    .catch(e => {
+      contractDetails.contractType = -1;
+    })
+    .then(() => contractDetails.contractType >= 0 && (contractDetails.symbol || contractDetails.contract.methods.symbol().call()))
+    .then(symbol => {
+      if (symbol) {
+        contractDetails.symbol = symbol;
+        contractDetails.retrievedAttributes++;
+      }
+    })
+    .catch(e => {
+      contractDetails.contractType = -1;
       console.debug("retrieveContractDetails method - error retrieving symbol", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contract.methods.name().call())
+    .then(() => contractDetails.contractType >= 0 && (contractDetails.name || contractDetails.contract.methods.name().call()))
     .then(name => {
-      contractDetails.name = name;
-      contractDetails.title = name;
-      contractDetails.retrievedAttributes++;
+      if (name) {
+        contractDetails.name = name;
+        contractDetails.title = name;
+        contractDetails.retrievedAttributes++;
+      }
     })
     .catch(e => {
+      contractDetails.contractType = -1;
       console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contract.methods.decimals().call())
-    .then(decimals => {
-      contractDetails.decimals = decimals || 0;
-      contractDetails.retrievedAttributes++;
+    .then(() => contractDetails.contractType >= 0 && (contractDetails.totalSupply || contractDetails.contract.methods.totalSupply().call()))
+    .then(totalSupply =>  {
+      if (totalSupply) {
+        contractDetails.totalSupply = totalSupply;
+        contractDetails.retrievedAttributes++;
+      }
     })
     .catch(e => {
-      console.debug("retrieveContractDetails method - error retrieving decimals", contractDetails.address, new Error(e));
+      console.debug("retrieveContractDetails method - error retrieving totalSupply", contractDetails.address, new Error(e));
     })
-    .then(() => computeBalance(contractDetails.address))
+    .then(() => contractDetails.contractType > 0 && computeBalance(contractDetails.address))
     .then((contractBalance) => {
-      if (contractBalance) {
+      if (contractBalance && contractBalance.balance) {
         contractDetails.contractBalance = contractBalance.balance;
         contractDetails.contractBalanceFiat = contractBalance.balanceFiat;
       }
     })
-    .then(() =>
-      contractDetails.contract.methods.getSellPrice().call()
+    .catch(e => {
+      console.debug("retrieveContractDetails method - error retrieving balance of contract", contractDetails.address, new Error(e));
+    })
+    .then(() => {
+      if (!contractDetails.contractType || contractDetails.contractType <= 0) {
+        return;
+      }
+      // Compute ERT Token attributes
+      return contractDetails.contract.methods.getSellPrice().call()
         .then(sellPrice => {
-          contractDetails.contractType = 1;
           contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), "ether");
           contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contractType && contractDetails.contract.methods.owner().call())
+        .then(() => contractDetails.owner || contractDetails.contract.methods.owner().call())
         .then(owner =>  {
           if (owner) {
             contractDetails.owner = owner;
@@ -134,30 +173,16 @@ export function retrieveContractDetails(account, contractDetails) {
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contractType && contractDetails.contract.methods.totalSupply().call())
-        .then(totalSupply =>  {
-          if (totalSupply) {
-            contractDetails.totalSupply = totalSupply;
-          }
-          contractDetails.retrievedAttributes++;
-        })
-        .catch(e => {
-          console.debug("retrieveContractDetails method - error retrieving totalSupply", contractDetails.address, new Error(e));
-        })
-        .then(() => contractDetails.contractType && contractDetails.contract.methods.isApprovedAccount && contractDetails.contract.methods.isApprovedAccount(account).call())
+        .then(() => contractDetails.contract.methods.isApprovedAccount(account).call())
         .then(approvedAccount =>  {
-          contractDetails.contractType = 1;
           contractDetails.isApproved = approvedAccount;
-          approveAccountComputed = true;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving isApprovedAccount", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contractType && contractDetails.contract.methods.getAdminLevel && contractDetails.contract.methods.getAdminLevel(account).call())
+        .then(() => contractDetails.contract.methods.getAdminLevel(account).call())
         .then(habilitationLevel =>  {
-          contractDetails.contractType = 1;
           if (habilitationLevel) {
-            adminLevelComputed = true;
             contractDetails.adminLevel = Number(habilitationLevel);
             contractDetails.isAdmin = habilitationLevel > 0;
             if (contractDetails.isAdmin) {
@@ -168,43 +193,34 @@ export function retrieveContractDetails(account, contractDetails) {
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving getAdminLevel", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contractType && contractDetails.contract.methods.isPaused && contractDetails.contract.methods.isPaused().call())
+        .then(() => contractDetails.contract.methods.isPaused().call())
         .then(isPaused =>  {
           contractDetails.isPaused = isPaused ? true: false;
           contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving isPaused", contractDetails.address, new Error(e));
-        }).
-        finally(() => {
-          if (contractDetails.retrievedAttributes === 0) {
-            transformContracDetailsToFailed(contractDetails);
-          } else if (contractDetails.retrievedAttributes > 5) {
-            if (contractToSave || contractDetails.contractType === 0) {
-              saveContractAddressAsDefault(contractDetails);
-            }
-            contractDetails.contractType = 1;
-          } else if (computeContractType && !adminLevelComputed && !approveAccountComputed) {
-            contractDetails.contractType = 0;
-          }
-          if (contractDetails.contractType === 1) {
-            contractDetails.contractTypeLabel = 'ERT Token';
-          } else {
-            contractDetails.contractTypeLabel = 'Standard ERC20 Token';
-          }
         })
-    )
-    .then(() => contractDetails.contract.methods.balanceOf(account).call())
-    .then(balance => {
-      contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-      return contractDetails;
     })
     .catch(e => {
-      console.debug("retrieveContractDetails method - error", account, contractDetails, new Error(e), e);
+      console.debug("retrieveContractDetails method - error retrieving ERT Token", account, contractDetails, new Error(e), e);
       return contractDetails;
     })
-    .finally(() => {
-      console.debug(`finished retrieving contract at address ${contractDetails && contractDetails.address} with account ${account}`);
+    .then(() => {
+      if (contractDetails.contractType < 0 || contractDetails.retrievedAttributes === 0) {
+        transformContracDetailsToFailed(contractDetails);
+      } else if (contractToSave && window.walletSettings.isAdmin) {
+        saveContractAddressOnServer(contractDetails);
+      }
+
+      if (contractDetails.contractType > 0) {
+        contractDetails.contractTypeLabel = 'ERT Token';
+      } else if(contractDetails.contractType === 0) {
+        contractDetails.contractTypeLabel = 'Standard ERC20 Token';
+      } else {
+        contractDetails.contractTypeLabel = 'Non ERC20 Contract';
+      }
+      return contractDetails;
     });
 }
 
@@ -252,19 +268,19 @@ export function getSavedContractDetails(address, networkId) {
   return fetch(`/portal/rest/wallet/api/contract/getContract?address=${address}&networkId=${networkId}`, {
     method: 'GET',
     credentials: 'include'
- })
- .then(resp => {
-   if(resp && resp.ok) {
-     return resp.json();
-   } else {
-     throw new Error(`Error getting contract details from server with address ${address} on network with id ${networkId}`);
-   }
- })
- .then(contractDetails => contractDetails && contractDetails.address ? contractDetails : null)
- .catch(e => {
-   console.debug("Error getting contract details from server", e);
-   return null; 
- });
+  })
+    .then(resp => {
+      if(resp && resp.ok) {
+        return resp.json();
+      } else {
+        throw new Error(`Error getting contract details from server with address ${address} on network with id ${networkId}`);
+      }
+    })
+    .then(contractDetails => contractDetails && contractDetails.address ? contractDetails : null)
+    .catch(e => {
+      console.debug("Error getting contract details from server", e);
+      return null; 
+    });
 }
 
 /*
@@ -367,8 +383,15 @@ export function removeContractAddressFromDefault(address) {
  * Save a new Contract address as default contract to display for all users
  */
 export function saveContractAddressAsDefault(contractDetails) {
-  contractDetails.address = contractDetails.address.toLowerCase();
   console.debug("save contract as default", contractDetails);
+  contractDetails.defaultContract = true;
+  saveContractAddressOnServer(contractDetails);
+}
+/*
+ * Save a new Contract address as default contract to display for all users
+ */
+export function saveContractAddressOnServer(contractDetails) {
+  contractDetails.address = contractDetails.address.toLowerCase();
   return fetch('/portal/rest/wallet/api/contract/save', {
     method: 'POST',
     credentials: 'include',
@@ -384,18 +407,19 @@ export function saveContractAddressAsDefault(contractDetails) {
       owner: contractDetails.owner,
       contractType: contractDetails.contractType,
       sellPrice: contractDetails.sellPrice,
-      decimals: contractDetails.decimals
+      decimals: contractDetails.decimals,
+      defaultContract: contractDetails.defaultContract ? contractDetails.defaultContract : false
     })
   })
-    .then(resp => {
-      if (!window.walletSettings.defaultContractsToDisplay) {
-        window.walletSettings.defaultContractsToDisplay = [];
-      }
-      if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
-        window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
-      }
-      return resp;
-    });
+  .then(resp => {
+    if (!window.walletSettings.defaultContractsToDisplay) {
+      window.walletSettings.defaultContractsToDisplay = [];
+    }
+    if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
+      window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
+    }
+    return resp;
+  });
 }
 
 /*

@@ -360,8 +360,8 @@ public class EthereumWalletService implements Startable {
         // Generic global settings computing
         String defaultPrincipalAccount = globalSettings.getDefaultPrincipalAccount();
         if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
-          ContractDetail principalContractDetails = getDefaultContractDetail(defaultPrincipalAccount,
-                                                                             globalSettings.getDefaultNetworkId());
+          ContractDetail principalContractDetails = getContractDetail(defaultPrincipalAccount,
+                                                                      globalSettings.getDefaultNetworkId());
           globalSettings.setPrincipalContractAdminAddress(principalContractDetails == null ? null
                                                                                            : principalContractDetails.getOwner());
         }
@@ -401,12 +401,11 @@ public class EthereumWalletService implements Startable {
   }
 
   /**
-   * Save a new contract address to display it in wallet of all users and save
-   * contract name and symbol
+   * Save a new contract details
    * 
    * @param contractDetail
    */
-  public void saveDefaultContract(ContractDetail contractDetail) {
+  public void saveContract(ContractDetail contractDetail) {
     if (StringUtils.isBlank(contractDetail.getAddress())) {
       throw new IllegalArgumentException("address parameter is mandatory");
     }
@@ -423,16 +422,18 @@ public class EthereumWalletService implements Startable {
                        address + contractDetail.getNetworkId(),
                        SettingValue.create(contractDetail.toJSONString()));
 
-    // Save the contract address in the list of default contract addreses
-    SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
-    String defaultContractsAddresses =
-                                     defaultContractsAddressesValue == null ? address
-                                                                            : defaultContractsAddressesValue.getValue().toString()
-                                                                                + "," + address;
-    settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(defaultContractsAddresses));
+    if (contractDetail.isDefaultContract()) {
+      // Save the contract address in the list of default contract addreses
+      SettingValue<?> defaultContractsAddressesValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey);
+      String defaultContractsAddresses = defaultContractsAddressesValue == null ? address
+                                                                                : defaultContractsAddressesValue.getValue()
+                                                                                                                .toString()
+                                                                                    + "," + address;
+      settingService.set(WALLET_CONTEXT, WALLET_SCOPE, defaultContractsParamKey, SettingValue.create(defaultContractsAddresses));
 
-    // Clear cached in memory stored settings
-    this.storedSettings = null;
+      // Clear cached in memory stored settings
+      this.storedSettings = null;
+    }
   }
 
   /**
@@ -474,13 +475,13 @@ public class EthereumWalletService implements Startable {
   }
 
   /**
-   * Get default contract detail
+   * Get contract detail
    * 
    * @param address
    * @param networkId
    * @return
    */
-  public ContractDetail getDefaultContractDetail(String address, Long networkId) {
+  public ContractDetail getContractDetail(String address, Long networkId) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Can't get default contract detail with empty address");
       return null;
@@ -854,7 +855,7 @@ public class EthereumWalletService implements Startable {
 
     GlobalSettings settings = getSettings();
     if (!StringUtils.isBlank(fundsRequest.getContract())) {
-      ContractDetail contractDetail = getDefaultContractDetail(fundsRequest.getContract(), settings.getDefaultNetworkId());
+      ContractDetail contractDetail = getContractDetail(fundsRequest.getContract(), settings.getDefaultNetworkId());
       if (contractDetail == null) {
         throw new IllegalStateException("Bad request sent to server with invalid contract address (O ly default addresses are permitted)");
       }
@@ -1003,7 +1004,7 @@ public class EthereumWalletService implements Startable {
 
     if (StringUtils.isNotBlank(transactionMessage.getContractAddress())
         && !StringUtils.equalsIgnoreCase(transactionMessage.getTo(), transactionMessage.getContractAddress())
-        && getDefaultContractDetail(transactionMessage.getContractAddress(), transactionMessage.getNetworkId()) != null) {
+        && getContractDetail(transactionMessage.getContractAddress(), transactionMessage.getNetworkId()) != null) {
       // Save message label when the sender is not a known user or when this is
       // an administration operation
       boolean saveLabelToContractTransactionsList = transactionMessage.isAdminOperation() || senderAccount == null;

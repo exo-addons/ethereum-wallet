@@ -220,7 +220,7 @@ import SendEtherModal from './SendEtherModal.vue';
 import ContractAdminModal from './ContractAdminModal.vue';
 import TransactionsList from './TransactionsList.vue';
 
-import {retrieveContractDetails, saveContractAddressAsDefault} from '../WalletToken.js';
+import {retrieveContractDetails} from '../WalletToken.js';
 import {addTransaction} from '../WalletTransactions.js';
 import {etherToFiat, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
 

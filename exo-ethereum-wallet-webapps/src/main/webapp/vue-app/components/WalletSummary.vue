@@ -242,7 +242,7 @@ export default {
     loadPendingTransactions() {
       Object.keys(this.pendingTransactions).forEach(key => delete this.pendingTransactions[key]);
 
-      return loadTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, true, transaction => {
+      return loadTransactions(this.networkId, this.walletAddress, null, this.pendingTransactions, true, 10, null, transaction => {
         const contractDetails = transaction.to && this.accountsDetails[transaction.to.toLowerCase()];
         this.refreshBalance(contractDetails);
         if (this.pendingTransactions[transaction.hash]) {

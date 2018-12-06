@@ -2,15 +2,25 @@ import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 import {getContractInstance, getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
 
-export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, refreshCallback) {
-  let loadingPromises = [];
+export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, transactionsLimit, transactionHashToSearch, refreshCallback) {
+  if (!transactionsLimit) {
+    transactionsLimit = 50;
+  }
 
+  let loadedTransactions = Object.assign({}, transactions);
+  loadedTransactions = Object.values(loadedTransactions).filter(transaction => transaction && !transaction.notLoaded);
+  let loadedTransactionsCount = loadedTransactions.length;
+
+  let searchedTransactionHashFound = !transactionHashToSearch;
+
+  let loadingPromises = [];
   let pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
   if (!pendingTransactions) {
     pendingTransactions = {};
   }
 
   Object.keys(pendingTransactions).forEach(transactionHash => {
+    searchedTransactionHashFound = searchedTransactionHashFound || transactionHash === transactionHashToSearch;
     let pendingTransaction = pendingTransactions[transactionHash];
     loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback));
   });
@@ -19,11 +29,21 @@ export function loadTransactions(networkId, account, contractDetails, transactio
     .then(storedTransactions => {
       if (storedTransactions && storedTransactions.length) {
         storedTransactions.forEach(storedTransaction => {
+          loadedTransactionsCount++;
+
           if (storedTransaction.pending) {
             loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, storedTransaction, excludeFinished, refreshCallback));
           } else if(!excludeFinished) {
-            loadingPromises.push(loadCompletedTransaction(networkId, account, contractDetails, transactions, storedTransaction));
+            if(loadedTransactionsCount > transactionsLimit && searchedTransactionHashFound) {
+              transactions[storedTransaction.hash] = Object({
+                hash: storedTransaction.hash,
+                notLoaded: true
+              });
+            } else if(!transactions[storedTransaction.hash] || !transactions[storedTransaction.hash].from) {
+              loadingPromises.push(loadCompletedTransaction(networkId, account, contractDetails, transactions, storedTransaction));
+            }
           }
+          searchedTransactionHashFound = searchedTransactionHashFound || storedTransaction.hash === transactionHashToSearch;
         });
       }
       return Promise.all(loadingPromises)
@@ -620,6 +640,12 @@ function loadCompletedTransaction(networkId, account, contractDetails, transacti
     const transactionHash = transactionDetail.hash;
     const label = transactionDetail.label;
     const message = transactionDetail.message;
+
+    transactions[transactionDetail.hash] = Object({
+      hash: transactionDetail.hash,
+      ignore: true
+    });
+
     return window.localWeb3.eth.getTransaction(transactionHash)
       .then(transactionTmp => {
         transaction = transactionTmp;

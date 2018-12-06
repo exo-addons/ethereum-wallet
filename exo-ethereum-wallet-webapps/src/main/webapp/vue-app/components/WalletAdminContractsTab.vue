@@ -92,7 +92,7 @@ import AddContractModal from './AddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
 import ContractDetail from './ContractDetail.vue';
 
-import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress, saveContractAddressAsDefault} from '../WalletToken.js';
+import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
 import {getTransactionReceipt, watchTransactionStatus} from '../WalletUtils.js';
 
 export default {

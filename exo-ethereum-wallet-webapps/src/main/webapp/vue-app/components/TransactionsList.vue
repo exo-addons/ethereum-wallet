@@ -445,6 +445,11 @@
             </v-list-tile>
           </v-list>
         </v-expansion-panel-content>
+        <div v-if="!limitReached">
+          <v-btn :loading="loading" color="primary" flat @click="transactionsLimit += transactionsPerPage">
+            Load More
+          </v-btn>
+        </div>
       </v-expansion-panel>
       <v-flex v-else-if="!loading" class="text-xs-center">
         <span>No recent transactions</span>
@@ -518,6 +523,9 @@ export default {
       // since the attribute this.transactions is modified outside the component
       refreshIndex: 1,
       loading: false,
+      transactionsLimit: 10,
+      transactionsPerPage: 10,
+      limitReached: false,
       transactions: {}
     };
   },
@@ -530,20 +538,32 @@ export default {
       }
       const transactions = this.transactions;
       const sortedTransactions = {};
-      Object.keys(transactions)
-        .sort((key1, key2) => transactions[key2].date - transactions[key1].date)
-        .forEach(key => {
-          sortedTransactions[key] = transactions[key];
+      Object.values(transactions)
+        .filter(transaction => transaction && transaction.date && !transaction.notLoaded && !transaction.ignore)
+        .sort((transaction1, transaction2) => transaction2.date - transaction1.date)
+        .forEach(transaction => {
+          sortedTransactions[transaction.hash] = transaction;
         });
       return sortedTransactions;
     }
   },
   watch: {
-    account(account) {
-      if (account) {
-        this.loading = true;
+    transactionsLimit() {
+      if (this.transactionsLimit !== this.transactionsPerPage && this.account && !this.loading) {
         this.init()
-          .then(() => this.loading = false)
+          .catch(error => {
+            console.debug("account field change event - error", error);
+            this.loading = false;
+            this.$emit("error", `Account loading error: ${error}`);
+          });
+      } 
+    },
+    contractDetails() {
+      if (this.contractDetails && this.account) {
+        this.limitReached = false;
+        this.transactions = {};
+        this.transactionsLimit = this.transactionsPerPage;
+        this.init()
           .catch(error => {
             console.debug("account field change event - error", error);
             this.loading = false;
@@ -577,32 +597,12 @@ export default {
   },
   methods: {
     init() {
-      this.transactions = {};
-      this.loadedBlocks = 0;
       this.loading = true;
       this.error = null;
 
       const thiss = this;
       // Get transactions to latest block with maxBlocks to load
-      return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, () => {
-        thiss.$emit("refresh-balance");
-        thiss.forceUpdateList();
-      })
-        .catch(e => {
-          console.debug("loadTransactions - method error", e);
-          this.$emit("error", `${e}`);
-        })/*
-        .then(() => {
-          this.forceUpdateList();
-          if (this.contractDetails.isContract) {
-            return loadContractTransactions(this.networkId, this.account, this.contractDetails, this.transactions, () => {
-              thiss.forceUpdateList();
-            })
-              .catch(e => {
-                console.debug(`Error loading transactions from contract ${this.contractDetails && this.contractDetails.address} for account ${this.account} on network ${this.networkId}`, this.contractDetails, e);
-              });
-          }
-        })*/
+      return this.loadRecentTransaction(this.transactionsLimit)
         .then(() => {
           if (this.selectedTransactionHash) {
             const selectedTransaction = this.transactions[this.selectedTransactionHash];
@@ -628,7 +628,31 @@ export default {
           this.$emit("error", `${e}`);
         })
         .finally(() => {
-          this.$emit("loaded", this.transactions);
+          this.$emit("loaded", this.sortedTransactions);
+        });
+    },
+    loadRecentTransaction(limit) {
+      const thiss = this;
+      return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, limit, this.selectedTransactionHash, () => {
+        thiss.$emit("refresh-balance");
+        thiss.forceUpdateList();
+      })
+        .then(() => {
+          const totalTransactionsCount = Object.keys(this.transactions).length;
+          const notLoadedTransactionsCount = Object.values(this.transactions).filter(transaction => transaction.notLoaded).length;
+          const ignoredTransactionsCount = Object.values(this.transactions).filter(transaction => transaction.ignore).length;
+          const loadedTransactionsCount = totalTransactionsCount - notLoadedTransactionsCount - ignoredTransactionsCount;
+          this.limitReached = notLoadedTransactionsCount === 0;
+          if(loadedTransactionsCount > this.transactionsLimit) {
+            this.transactionsLimit = loadedTransactionsCount;
+          }
+          if(loadedTransactionsCount < this.transactionsLimit && notLoadedTransactionsCount > 0) {
+            return this.loadRecentTransaction(limit + this.transactionsPerPage);
+          }
+        })
+        .catch(e => {
+          console.debug("loadTransactions - method error", e);
+          this.$emit("error", `${e}`);
         });
     },
     addTransaction(transaction, contactDetails) {
@@ -640,7 +664,7 @@ export default {
         null,
         null,
         () => {
-          this.$emit("loaded", this.transactions);
+          this.$emit("loaded", this.sortedTransactions);
           this.$emit("refresh-balance");
           this.forceUpdateList();
         },

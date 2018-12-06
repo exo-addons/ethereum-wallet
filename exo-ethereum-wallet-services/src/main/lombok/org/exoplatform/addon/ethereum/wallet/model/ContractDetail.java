@@ -31,6 +31,8 @@ public class ContractDetail implements Serializable {
 
   private String            contractType;
 
+  private boolean           defaultContract;
+
   public String toJSONString() {
     return toJSONObject().toString();
   }
@@ -38,14 +40,31 @@ public class ContractDetail implements Serializable {
   public JSONObject toJSONObject() {
     JSONObject jsonObject = new JSONObject();
     try {
-      jsonObject.put("address", address);
-      jsonObject.put("name", name);
-      jsonObject.put("symbol", symbol);
-      jsonObject.put("decimals", decimals);
-      jsonObject.put("networkId", networkId);
-      jsonObject.put("owner", owner);
-      jsonObject.put("sellPrice", sellPrice);
-      jsonObject.put("contractType", contractType);
+      if (StringUtils.isNotBlank(name)) {
+        jsonObject.put("address", address);
+      }
+      if (StringUtils.isNotBlank(name)) {
+        jsonObject.put("name", name);
+      }
+      if (StringUtils.isNotBlank(symbol)) {
+        jsonObject.put("symbol", symbol);
+      }
+      if (decimals != null) {
+        jsonObject.put("decimals", decimals);
+      }
+      if (networkId != null) {
+        jsonObject.put("networkId", networkId);
+      }
+      if (StringUtils.isNotBlank(owner)) {
+        jsonObject.put("owner", owner);
+      }
+      if (StringUtils.isNotBlank(sellPrice)) {
+        jsonObject.put("sellPrice", sellPrice);
+      }
+      if (StringUtils.isNotBlank(contractType)) {
+        jsonObject.put("contractType", contractType);
+      }
+      jsonObject.put("defaultContract", defaultContract);
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting Object to JSON", e);
     }
@@ -59,14 +78,15 @@ public class ContractDetail implements Serializable {
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       ContractDetail contractDetail = new ContractDetail();
-      contractDetail.setNetworkId(jsonObject.getLong("networkId"));
-      contractDetail.setAddress(jsonObject.getString("address"));
-      contractDetail.setName(jsonObject.getString("name"));
-      contractDetail.setSymbol(jsonObject.getString("symbol"));
+      contractDetail.setNetworkId(jsonObject.has("networkId") ? jsonObject.getLong("networkId") : 0);
+      contractDetail.setAddress(jsonObject.has("address") ? jsonObject.getString("address") : null);
+      contractDetail.setName(jsonObject.has("name") ? jsonObject.getString("name") : null);
+      contractDetail.setSymbol(jsonObject.has("symbol") ? jsonObject.getString("symbol") : null);
       contractDetail.setDecimals(jsonObject.has("decimals") ? jsonObject.getInt("decimals") : 0);
       contractDetail.setOwner(jsonObject.has("owner") ? jsonObject.getString("owner") : null);
       contractDetail.setSellPrice(jsonObject.has("sellPrice") ? jsonObject.getString("sellPrice") : null);
       contractDetail.setContractType(jsonObject.has("contractType") ? jsonObject.getString("contractType") : null);
+      contractDetail.setDefaultContract(jsonObject.has("defaultContract") ? jsonObject.getBoolean("defaultContract") : true);
       return contractDetail;
     } catch (JSONException e) {
       throw new RuntimeException("Error while converting JSON String to Object", e);

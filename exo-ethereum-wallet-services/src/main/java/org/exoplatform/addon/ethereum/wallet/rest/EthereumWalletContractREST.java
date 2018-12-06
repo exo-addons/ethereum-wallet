@@ -114,7 +114,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
     }
     contractDetail.setAddress(contractDetail.getAddress().toLowerCase());
     try {
-      ethereumWalletService.saveDefaultContract(contractDetail);
+      ethereumWalletService.saveContract(contractDetail);
     } catch (Exception e) {
       LOG.warn("Error saving contract as default: " + contractDetail.getAddress(), e);
       return Response.serverError().build();
@@ -139,7 +139,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       return Response.status(400).build();
     }
     try {
-      ContractDetail contractDetail = ethereumWalletService.getDefaultContractDetail(address, networkId);
+      ContractDetail contractDetail = ethereumWalletService.getContractDetail(address, networkId);
       if (contractDetail == null) {
         contractDetail = new ContractDetail();
       }

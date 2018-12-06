@@ -621,7 +621,7 @@ export function convertTokenAmountReceived(amount, decimals) {
     return amount;
   }
   const toBN = window.localWeb3.utils.toBN
-  const amountBN = toBN(amount);
+  let amountBN = toBN(amount);
   const negative = amountBN.lt(0);
   const base = toBN(10).pow(toBN(decimals));
 

@@ -75,7 +75,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     ContractDetail contractDetails =
                                    StringUtils.isBlank(transaction.getTo()) ? null
-                                                                            : ethereumWalletService.getDefaultContractDetail(transaction.getTo(),
+                                                                            : ethereumWalletService.getContractDetail(transaction.getTo(),
                                                                                                                              settings.getDefaultNetworkId());
     // Save transaction in contract transactions list
     if (contractDetails != null) {
