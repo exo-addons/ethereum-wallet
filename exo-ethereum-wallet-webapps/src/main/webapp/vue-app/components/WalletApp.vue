@@ -278,26 +278,28 @@ export default {
       }
     });
 
-    // Init application
-    this.init()
-      .then((result, error) => {
-        if (this.$refs.walletSummary) {
-          this.$refs.walletSummary.checkSendingRequest(this.isReadOnly);
-        }
-        if (this.$refs.walletAccountsList) {
-          this.$refs.walletAccountsList.checkOpenTransaction();
-        }
-        this.forceUpdate();
-      })
-      .catch(error => {
-        console.debug('An error occurred while on initialization', error);
-
-        if (this.useMetamask) {
-          this.errorMessage = `You can't send transaction because Metamask is disconnected`;
-        } else {
-          this.errorMessage = `You can't send transaction because your wallet is disconnected`;
-        }
-      });
+    this.$nextTick(() => {
+      // Init application
+      this.init()
+        .then((result, error) => {
+          if (this.$refs.walletSummary) {
+            this.$refs.walletSummary.checkSendingRequest(this.isReadOnly);
+          }
+          if (this.$refs.walletAccountsList) {
+            this.$refs.walletAccountsList.checkOpenTransaction();
+          }
+          this.forceUpdate();
+        })
+        .catch(error => {
+          console.debug('An error occurred while on initialization', error);
+  
+          if (this.useMetamask) {
+            this.errorMessage = `You can't send transaction because Metamask is disconnected`;
+          } else {
+            this.errorMessage = `You can't send transaction because your wallet is disconnected`;
+          }
+        });
+    });
   },
   methods: {
     init() {
@@ -364,6 +366,8 @@ export default {
           if (error) {
             throw error;
           }
+          this.loading = false;
+          this.forceUpdate();
         })
         .catch(e => {
           console.debug("init method - error", e);
@@ -381,8 +385,6 @@ export default {
           } else {
             this.errorMessage = error;
           }
-        })
-        .finally(() => {
           this.loading = false;
           this.forceUpdate();
         });
@@ -436,7 +438,7 @@ export default {
     },
     refreshTokenBalance(accountDetail) {
       if (accountDetail) {
-        retrieveContractDetails(this.walletAddress ,accountDetail)
+        retrieveContractDetails(this.walletAddress ,accountDetail, false)
           .then(() => this.forceUpdate());
       } else {
         console.debug('Empty contract');
@@ -444,7 +446,7 @@ export default {
     },
     reloadContracts() {
       this.showAddContractModal = false;
-      return getContractsDetails(this.walletAddress, this.networkId)
+      return getContractsDetails(this.walletAddress, this.networkId, false, false)
         .then((contractsDetails, error) => {
           if (error) {
             throw error;

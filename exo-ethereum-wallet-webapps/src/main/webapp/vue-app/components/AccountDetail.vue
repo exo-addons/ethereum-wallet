@@ -149,6 +149,12 @@ export default {
       default: function() {
         return {};
       }
+    },
+    isAdministration: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
     }
   },
   data() {
@@ -183,7 +189,7 @@ export default {
           balance = window.localWeb3.utils.fromWei(String(balance), "ether");
           if (this.contractDetails.isContract) {
             this.contractDetails.etherBalance = balance;
-            return retrieveContractDetails(this.walletAddress, this.contractDetails)
+            return retrieveContractDetails(this.walletAddress, this.contractDetails, this.isAdministration)
               .then(() => this.$forceUpdate());
           } else {
             this.$set(this.contractDetails, "balance", balance);

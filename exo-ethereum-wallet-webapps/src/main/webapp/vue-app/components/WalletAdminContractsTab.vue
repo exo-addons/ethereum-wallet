@@ -217,7 +217,7 @@ export default {
     init(avoidReloading) {
       const previouslyRetrievedContracts = this.contracts;
       this.contracts = [];
-      return (avoidReloading ? Promise.resolve(previouslyRetrievedContracts) : getContractsDetails(this.walletAddress, this.networkId, true))
+      return (avoidReloading ? Promise.resolve(previouslyRetrievedContracts) : getContractsDetails(this.walletAddress, this.networkId, true, true))
         .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
         .then(() => getContractDeploymentTransactionsInProgress(this.networkId))
         .then(contractsInProgress => {

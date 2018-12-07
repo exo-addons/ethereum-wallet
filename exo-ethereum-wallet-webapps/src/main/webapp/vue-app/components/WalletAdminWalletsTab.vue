@@ -78,6 +78,7 @@
         :wallet="selectedWallet"
         is-read-only
         is-display-only
+        is-administration
         @back="back()"/>
     </v-navigation-drawer>
 

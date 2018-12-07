@@ -263,7 +263,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                 isContract : true,
                 networkId : networkId
               };
-              return retrieveContractDetails(account, contractDetails);
+              return retrieveContractDetails(account, contractDetails, false);
             }
           })
       }

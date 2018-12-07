@@ -13,7 +13,7 @@ import {convertTokenAmountReceived, computeBalance} from './WalletUtils.js';
  *   isDefault: is default contract coming from configuration
  * }
  */
-export function getContractsDetails(account, netId, onlyDefault) {
+export function getContractsDetails(account, netId, onlyDefault, isAdministration) {
   let contractsAddresses = [];
   if (onlyDefault) {
     contractsAddresses = window.walletSettings.defaultContractsToDisplay || [];
@@ -33,7 +33,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
       contractDetails.networkId = netId;
       contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
                                   && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
-      contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails));
+      contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails, isAdministration));
     }
   }
   return Promise.all(contractsDetailsPromises);
@@ -42,7 +42,7 @@ export function getContractsDetails(account, netId, onlyDefault) {
 /*
  * Retrieve an ERC20 contract instance at specified address
  */
-export function retrieveContractDetails(account, contractDetails) {
+export function retrieveContractDetails(account, contractDetails, isAdministration) {
   let adminLevelComputed;
   contractDetails.retrievedAttributes = 0;
   let contractToSave = false;
@@ -79,9 +79,11 @@ export function retrieveContractDetails(account, contractDetails) {
     .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.implementationAddress().call())
     .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.version().call())
     .then(version => {
-      contractToSave = contractToSave || (version && (!contractDetails.contractType || contractDetails.contractType <= 0));
-      version = Number(version);
-      contractDetails.contractType = version && !Number.isNaN(version) && Number.isInteger(version) ? 1 : 0;
+      if (!contractDetails.contractType || contractDetails.contractType <= 0) {
+        contractToSave = contractToSave || version;
+        version = Number(version);
+        contractDetails.contractType = version && !Number.isNaN(version) && Number.isInteger(version) ? 1 : 0;
+      }
       contractDetails.retrievedAttributes++;
     })
     .catch(e => {
@@ -139,7 +141,7 @@ export function retrieveContractDetails(account, contractDetails) {
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving totalSupply", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contractType > 0 && computeBalance(contractDetails.address))
+    .then(() => contractDetails.contractType > 0 && isAdministration && computeBalance(contractDetails.address))
     .then((contractBalance) => {
       if (contractBalance && contractBalance.balance) {
         contractDetails.contractBalance = contractBalance.balance;
@@ -154,7 +156,9 @@ export function retrieveContractDetails(account, contractDetails) {
         return;
       }
       // Compute ERT Token attributes
-      return contractDetails.contract.methods.getSellPrice().call()
+      return contractDetails.sellPrice && !isAdministration ?
+          Promise.resolve(contractDetails.sellPrice)
+          :contractDetails.contract.methods.getSellPrice().call()
         .then(sellPrice => {
           contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), "ether");
           contractDetails.retrievedAttributes++;
@@ -162,7 +166,7 @@ export function retrieveContractDetails(account, contractDetails) {
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.owner || contractDetails.contract.methods.owner().call())
+        .then(() => contractDetails.hasOwnProperty("owner") && !isAdministration ? contractDetails.owner : contractDetails.contract.methods.owner().call())
         .then(owner =>  {
           if (owner) {
             contractDetails.owner = owner;
@@ -173,14 +177,14 @@ export function retrieveContractDetails(account, contractDetails) {
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contract.methods.isApprovedAccount(account).call())
+        .then(() => contractDetails.hasOwnProperty("isApproved") && !isAdministration ? contractDetails.isApproved : contractDetails.contract.methods.isApprovedAccount(account).call())
         .then(approvedAccount =>  {
           contractDetails.isApproved = approvedAccount;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving isApprovedAccount", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contract.methods.getAdminLevel(account).call())
+        .then(() => contractDetails.hasOwnProperty("adminLevel") && !isAdministration ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call())
         .then(habilitationLevel =>  {
           if (habilitationLevel) {
             contractDetails.adminLevel = Number(habilitationLevel);
@@ -193,7 +197,7 @@ export function retrieveContractDetails(account, contractDetails) {
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving getAdminLevel", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.contract.methods.isPaused().call())
+        .then(() => contractDetails.hasOwnProperty("isPaused") && !isAdministration ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call())
         .then(isPaused =>  {
           contractDetails.isPaused = isPaused ? true: false;
           contractDetails.retrievedAttributes++;
@@ -444,7 +448,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       let overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
       overviewAccounts = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
       if (isDefaultContract || overviewAccounts.indexOf(address) < 0) {
-        return retrieveContractDetails(account, {address: address, networkId: netId})
+        return retrieveContractDetails(account, {address: address, networkId: netId}, true)
           .then((contractDetails, error) => {
             if (error) {
               throw error;

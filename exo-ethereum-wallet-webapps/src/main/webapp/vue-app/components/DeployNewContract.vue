@@ -564,7 +564,7 @@ export default {
         isContract: true
       };
 
-      return retrieveContractDetails(this.account, contractDetails)
+      return retrieveContractDetails(this.account, contractDetails, true)
         .then(() => {
           this.$set(this.processingStep, this.step, true);
           // Save conract address to display for all users
