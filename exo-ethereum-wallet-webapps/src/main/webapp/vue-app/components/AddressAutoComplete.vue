@@ -123,16 +123,22 @@ export default {
             .then(data => {
               this.items = data;
               if(!this.items) {
-                this.items = [this.currentUserItem];
-              } else {
+                if(this.currentUserItem) {
+                  this.items = [this.currentUserItem];
+                } else {
+                  this.items = [];
+                }
+              } else if(this.currentUserItem) {
                 this.items.push(this.currentUserItem);
               }
             });
         } finally {
           this.isLoadingSuggestions = false;
         }
-      } else {
+      } else if(this.currentUserItem) {
         this.items = [this.currentUserItem];
+      } else {
+        this.items = [];
       }
     },
     selectedValue() {
@@ -179,14 +185,20 @@ export default {
   created() {
     searchUserOrSpaceObject(eXo.env.portal.userName, 'user')
       .then(item => {
-        item.id_type = `${item.type}_${item.id}`;
-        this.currentUserItem = item;
-        this.items.push(this.currentUserItem);
+        if(item) {
+          item.id_type = `${item.type}_${item.id}`;
+          this.currentUserItem = item;
+          this.items.push(this.currentUserItem);
+        }
       });
   },
   methods: {
     clear() {
-      this.items = [this.currentUserItem];
+      if(this.currentUserItem) {
+        this.items = [this.currentUserItem];
+      } else {
+        this.items = [];
+      }
       this.selectedValue = null;
       this.searchTerm = null;
       this.address = null;
