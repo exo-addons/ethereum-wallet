@@ -980,7 +980,7 @@ public class EthereumWalletService implements Startable {
     if (settings != null && (transactionMessage.getNetworkId() == null || transactionMessage.getNetworkId() == 0)) {
       transactionMessage.setNetworkId(settings.getDefaultNetworkId());
     }
-    this.transactionDetailsCache.put(transactionMessage.getHash(), transactionMessage);
+    setTransactionDetailInCache(transactionMessage);
 
     AccountDetail senderAccount = null;
     if (StringUtils.isNotBlank(transactionMessage.getFrom())) {
@@ -1013,6 +1013,15 @@ public class EthereumWalletService implements Startable {
                                   transactionMessage.getHash(),
                                   saveLabelToContractTransactionsList);
     }
+  }
+
+  /**
+   * Set transaction in cache
+   * 
+   * @param transactionMessage
+   */
+  public void setTransactionDetailInCache(TransactionDetail transactionMessage) {
+    this.transactionDetailsCache.put(transactionMessage.getHash(), transactionMessage);
   }
 
   /**
