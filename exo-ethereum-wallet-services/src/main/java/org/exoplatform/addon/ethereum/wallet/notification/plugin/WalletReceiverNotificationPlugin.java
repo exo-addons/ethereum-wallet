@@ -58,14 +58,18 @@ public class WalletReceiverNotificationPlugin extends BaseNotificationPlugin {
       return null;
     }
 
+    String avatar = SPACE_ACCOUNT_TYPE.equals(receiverAccountDetail.getType()) ? CommonsUtils.getCurrentDomain()
+        + receiverAccountDetail.getAvatar() : CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar();
+
     return NotificationInfo.instance()
                            .to(toList)
                            .with(ACCOUNT_TYPE, receiverAccountDetail.getType())
+                           .with(RECEIVER_TYPE, receiverAccountDetail.getType())
                            .with(AMOUNT, String.valueOf(amount))
                            .with(SYMBOL, symbol)
                            .with(MESSAGE, message)
                            .with(HASH, hash)
-                           .with(AVATAR, CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar())
+                           .with(AVATAR, avatar)
                            .with(SENDER_URL, getPermanentLink(senderAccountDetail))
                            .with(RECEIVER_URL, getPermanentLink(receiverAccountDetail))
                            .with(SENDER, senderAccountDetail.getName())

@@ -58,7 +58,7 @@ public class FundsRequestNotificationPlugin extends BaseNotificationPlugin {
       return null;
     }
 
-    String requestAcceptURL = getAbsoluteMyWalletLink() + "?receiver=" + requestSenderAccountDetail.getId() + "&receiver_type="
+    String requestAcceptURL = getWalletLink(null, null) + "?receiver=" + requestSenderAccountDetail.getId() + "&receiver_type="
         + requestSenderAccountDetail.getType() + "&amount=" + fundsRequest.getAmount();
 
     String contractAddress = fundsRequest.getContract();

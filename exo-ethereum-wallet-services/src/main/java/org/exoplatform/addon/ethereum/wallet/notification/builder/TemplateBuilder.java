@@ -48,6 +48,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
 
     String amount = notification.getValueOwnerParameter(AMOUNT);
     String type = notification.getValueOwnerParameter(ACCOUNT_TYPE);
+    String receiverType = notification.getValueOwnerParameter(RECEIVER_TYPE);
     String avatar = notification.getValueOwnerParameter(AVATAR);
     String receiver = notification.getValueOwnerParameter(RECEIVER);
     String sender = notification.getValueOwnerParameter(SENDER);
@@ -70,7 +71,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("READ", Boolean.valueOf(notificationRead) ? "read" : "unread");
       templateContext.put("MESSAGE", message);
       templateContext.put("HASH", hash);
-      String absoluteMyWalletLink = getAbsoluteMyWalletLink();
+      String absoluteMyWalletLink = getWalletLink(receiverType, receiver);
       templateContext.put("BASE_URL", absoluteMyWalletLink);
       try {
         templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));

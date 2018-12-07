@@ -20,7 +20,6 @@
           :disabled="loading"
           input-label="Recipient"
           input-placeholder="Select a recipient for your funds request"
-          no-address
           @item-selected="recipient = $event" />
 
         <v-container flat fluid grid-list-lg class="mt-4 pl-2">

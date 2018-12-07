@@ -62,6 +62,7 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
                            .to(toList)
                            .with(AMOUNT, String.valueOf(amount))
                            .with(ACCOUNT_TYPE, senderAccountDetail.getType())
+                           .with(RECEIVER_TYPE, receiverAccountDetail.getType())
                            .with(SYMBOL, symbol)
                            .with(MESSAGE, message)
                            .with(HASH, hash)

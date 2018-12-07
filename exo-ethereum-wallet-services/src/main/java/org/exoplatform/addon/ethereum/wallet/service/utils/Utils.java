@@ -169,6 +169,8 @@ public class Utils {
 
   public static final String                             ACCOUNT_TYPE                          = "account_type";
 
+  public static final String                             RECEIVER_TYPE                         = "receiver_type";
+
   public static final String                             AVATAR                                = "avatar";
 
   public static final String                             SENDER                                = "sender";
@@ -310,8 +312,17 @@ public class Utils {
     return space;
   }
 
-  public static String getAbsoluteMyWalletLink() {
-    return CommonsUtils.getCurrentDomain() + getMyWalletLink();
+  public static String getWalletLink(String receiverType, String receiverId) {
+    if (receiverType == null || receiverId == null || USER_ACCOUNT_TYPE.equals(receiverType)) {
+      return CommonsUtils.getCurrentDomain() + getMyWalletLink();
+    } else {
+      Space space = getSpace(receiverId);
+      if (space == null) {
+        return CommonsUtils.getCurrentDomain() + getMyWalletLink();
+      } else {
+        return CommonsUtils.getCurrentDomain() + LinkProvider.getSpaceUri(space.getPrettyName()) + "/EthereumSpaceWallet";
+      }
+    }
   }
 
   public static String getMyWalletLink() {
