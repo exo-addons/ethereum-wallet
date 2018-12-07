@@ -1,5 +1,5 @@
-export function getTokensPerKudos() {
-  return fetch('/portal/rest/wallet/api/kudos/getTokensPerKudos', {
+export function getKudosBudget() {
+  return fetch('/portal/rest/wallet/api/kudos/getKudosBudget', {
     method: 'GET',
     credentials: 'include'
   })
@@ -15,14 +15,14 @@ export function getKudosContract() {
   .then(resp => resp && resp.ok && resp.text());
 }
 
-export function saveTokensPerKudos(tokensPerKudos) {
-  return fetch('/portal/rest/wallet/api/kudos/saveTokensPerKudos', {
+export function saveKudosTotalBudget(budget) {
+  return fetch('/portal/rest/wallet/api/kudos/saveKudosTotalBudget', {
     method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: $.param({tokensPerKudos: Number(tokensPerKudos)})
+    body: $.param({budget: Number(budget)})
   }).then(resp => {
     if(resp && resp.ok) {
       return;

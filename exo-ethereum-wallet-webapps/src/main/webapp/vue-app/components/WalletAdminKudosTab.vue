@@ -9,10 +9,10 @@
     <h3 class="text-xs-left ml-3 ">Configuration</h3>
     <v-card-text class="text-xs-left">
       <div class="text-xs-left kudosWalletConfiguration">
-        <span>Users will be rewarded </span>
+        <span>Kudos total budget is </span>
         <v-text-field
-          v-model.number="tokenPerKudo"
-          name="tokenPerKudo"
+          v-model.number="kudosBudget"
+          name="kudosBudget"
           class="input-text-center" />
         <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
           <v-combobox
@@ -176,7 +176,7 @@
 </template>
 
 <script>
-import {getKudosContract, getTokensPerKudos, saveKudosContract, saveTokensPerKudos, getPeriodTransactions} from '../WalletKudosServices.js';
+import {getKudosContract, getKudosBudget, saveKudosContract, saveKudosTotalBudget, getPeriodTransactions} from '../WalletKudosServices.js';
 import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 import SendKudosModal from './SendKudosModal.vue';
@@ -209,8 +209,8 @@ export default {
     return {
       loading: false,
       error: null,
-      tokenPerKudo: null,
-      defaultTokenPerKudos: null,
+      kudosBudget: null,
+      defaultKudosBudget: null,
       selectedDate: null,
       selectedDateMenu: false,
       kudosContractAddress: null,
@@ -316,17 +316,29 @@ export default {
       }
     },
     recipients() {
-      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(item => item.address && item.received && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(item => item.address && item.received && item.tokensToSend && (!item.status || item.status === 'error')) : [];
+    },
+    totalKudosToSend() {
+      return (this.validSelectedKudosIdentitiesList && this.validSelectedKudosIdentitiesList.length) ? this.validSelectedKudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
+    },
+    totalKudos() {
+      return (this.kudosIdentitiesList && this.kudosIdentitiesList.length) ? this.kudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
+    },
+    validSelectedKudosIdentitiesList() {
+      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(this.isValidItem) : [];
     },
     selectableRecipients() {
-      return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(item => item.address && item.received && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(this.isValidItem) : [];
     }
   },
   watch: {
     selectedDate() {
       this.loadAll();
     },
-    defaultTokenPerKudos() {
+    selectedKudosIdentitiesList() {
+      this.refreshList();
+    },
+    defaultKudosBudget() {
       this.refreshList();
     },
     kudosPeriodType() {
@@ -341,13 +353,16 @@ export default {
       this.selectedDate = new Date().toISOString().substr(0, 10);
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
-    getTokensPerKudos().then(value => this.defaultTokenPerKudos = this.tokenPerKudo = value);
+    getKudosBudget().then(value => this.defaultKudosBudget = this.kudosBudget = value);
     getKudosContract().then(kudosContract => this.kudosContractAddress = this.selectedKudosContractAddress = kudosContract || this.principalAccount);
     this.tokenEtherscanLink = getTokenEtherscanlink(window.walletSettings.defaultNetworkId);
     this.transactionEtherscanLink = getTransactionEtherscanlink(window.walletSettings.defaultNetworkId);
     this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
   },
   methods: {
+    isValidItem(userKudosItem) {
+      return userKudosItem.address && userKudosItem.received && (!userKudosItem.status || userKudosItem.status === 'error');
+    },
     newPendingTransaction(transaction) {
       this.$emit('pending', transaction);
       if(!transaction || !transaction.to) {
@@ -365,7 +380,8 @@ export default {
           if (transaction.contractAmount) {
             this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
           }
-          this.kudosIdentitiesList.splice(kudosWalletIndex, 1);
+          this.selectedKudosIdentitiesList.splice(kudosWalletIndex, 1);
+
           const thiss = this;
           watchTransactionStatus(transaction.hash, receipt => {
             thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
@@ -397,7 +413,7 @@ export default {
       }
     },
     save() {
-      this.saveKudosContract().then(() => this.saveTokensPerKudos());
+      this.saveKudosContract().then(() => this.saveKudosTotalBudget());
     },
     saveKudosContract() {
       return saveKudosContract(this.selectedKudosContractAddress)
@@ -408,10 +424,10 @@ export default {
           this.error = "Error while saving 'Kudos contract address' parameter";
         });
     },
-    saveTokensPerKudos() {
-      return saveTokensPerKudos(this.tokenPerKudo)
+    saveKudosTotalBudget() {
+      return saveKudosTotalBudget(this.kudosBudget)
         .then(() => {
-          this.defaultTokenPerKudos = this.tokenPerKudo;
+          this.defaultKudosBudget = this.kudosBudget;
         })
         .catch(error => {
           this.error = "Error while saving 'Token per Kudos' parameter";
@@ -455,18 +471,18 @@ export default {
       this.loading = false;
     },
     refreshList() {
+      const tokenPerPerson = this.totalKudosToSend && this.defaultKudosBudget / this.totalKudosToSend;
       this.kudosIdentitiesList.forEach(walletKudos => {
         const wallet = this.wallets && this.wallets.find(wallet => wallet && wallet.id && wallet.technicalId && wallet.type === walletKudos.type &&  (wallet.id === walletKudos.id || wallet.technicalId === walletKudos.identityId));
         if(wallet && wallet.address) {
           this.$set(walletKudos, "address", wallet.address);
-          if (this.defaultTokenPerKudos) {
-            let result = Number(walletKudos.received) * 100000 * Number(this.defaultTokenPerKudos) / 100000;
-            // attempt to simply avoid floatting point problem
-            const resultString = String(result);
-            if(resultString.length - resultString.indexOf(".") > 5) {
-              result = Number(walletKudos.received) * 1000000 * Number(this.defaultTokenPerKudos) / 1000000;
+          if (this.defaultKudosBudget) {
+            const tokensToSend = Number(walletKudos.received) * Number(tokenPerPerson);
+            if(this.selectedKudosIdentitiesList.find(identity => identity.id === walletKudos.id)) {
+              this.$set(walletKudos, "tokensToSend", this.toFixed(tokensToSend));
+            } else {
+              this.$set(walletKudos, "tokensToSend", 0);
             }
-            this.$set(walletKudos, "tokensToSend", result);
           }
         }
       });

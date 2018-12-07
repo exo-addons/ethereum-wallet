@@ -52,11 +52,11 @@ public class WalletKudosREST implements ResourceContainer {
    * 
    * @return
    */
-  @Path("getTokensPerKudos")
+  @Path("getKudosBudget")
   @GET
   @RolesAllowed("administrators")
-  public Response getTokensPerKudos() {
-    return Response.ok(String.valueOf(extendedWalletService.getTokensPerKudos())).build();
+  public Response getKudosBudget() {
+    return Response.ok(String.valueOf(extendedWalletService.getKudosBudget())).build();
   }
 
   /**
@@ -74,13 +74,13 @@ public class WalletKudosREST implements ResourceContainer {
   /**
    * Save tokens amount per Kudos setting
    * 
-   * @param tokensPerKudos
+   * @param budget
    */
   @POST
-  @Path("saveTokensPerKudos")
+  @Path("saveKudosTotalBudget")
   @RolesAllowed("administrators")
-  public Response saveTokensPerKudos(@FormParam("tokensPerKudos") double tokensPerKudos) {
-    extendedWalletService.saveTokensPerKudos(tokensPerKudos);
+  public Response saveKudosTotalBudget(@FormParam("budget") double budget) {
+    extendedWalletService.saveKudosTotalBudget(budget);
     return Response.ok().build();
   }
 

@@ -36,7 +36,7 @@ public class WalletKudosService {
 
   private SettingService settingService;
 
-  private Double         tokensPerKudos;
+  Double                 budget;
 
   private String         kudosContractAddress;
 
@@ -45,14 +45,14 @@ public class WalletKudosService {
   }
 
   /**
-   * @return the amount of token per kudos
+   * @return the amount of kudos budget
    */
-  public double getTokensPerKudos() {
-    if (tokensPerKudos == null) {
-      SettingValue<?> value = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_TOKENS_PER_KUDOS_KEY_NAME);
-      this.tokensPerKudos = value == null ? 0 : Double.parseDouble(value.getValue().toString());
+  public double getKudosBudget() {
+    if (budget == null) {
+      SettingValue<?> value = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_TOKENS_KUDOS_BUDGET);
+      this.budget = value == null ? 0 : Double.parseDouble(value.getValue().toString());
     }
-    return tokensPerKudos;
+    return budget;
   }
 
   /**
@@ -67,13 +67,13 @@ public class WalletKudosService {
   }
 
   /**
-   * Sets the amount of tokens per kudos
+   * Sets the amount of kudos budget
    * 
-   * @param tokensPerKudos
+   * @param budget
    */
-  public void saveTokensPerKudos(double tokensPerKudos) {
-    settingService.set(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_TOKENS_PER_KUDOS_KEY_NAME, SettingValue.create(tokensPerKudos));
-    this.tokensPerKudos = null;
+  public void saveKudosTotalBudget(double budget) {
+    settingService.set(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_TOKENS_KUDOS_BUDGET, SettingValue.create(budget));
+    this.budget = null;
   }
 
   /**
@@ -105,7 +105,6 @@ public class WalletKudosService {
                                                                                 : kudosPeriodTransactionsValue.getValue()
                                                                                                               .toString();
 
-    
     String[] kudosPeriodTransactionsArray = kudosPeriodTransactionsString.isEmpty() ? new String[0]
                                                                                     : kudosPeriodTransactionsString.split(",");
     return Arrays.stream(kudosPeriodTransactionsArray).map(transaction -> {
