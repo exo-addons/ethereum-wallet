@@ -224,8 +224,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     if (contractDetails == null) {
       ctx.append(SYMBOL_PARAMETER, "ether");
+      ctx.append(CONTRACT_ADDRESS_PARAMETER, "");
     } else {
       ctx.append(SYMBOL_PARAMETER, contractDetails.getSymbol());
+      ctx.append(CONTRACT_ADDRESS_PARAMETER, contractDetails.getAddress());
     }
     ctx.append(AMOUNT_PARAMETER, amount);
 

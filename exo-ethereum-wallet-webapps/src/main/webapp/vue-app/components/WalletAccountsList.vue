@@ -219,7 +219,9 @@ export default {
         const search = document.location.search.substring(1);
         const parameters = JSON.parse(`{"${decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"')}"}`);
         if (this.walletAddress && this.accountsDetails && parameters && parameters.hash) {
-          if (this.accountsDetails[this.walletAddress]) {
+          if (parameters.contract && this.accountsDetails[parameters.contract]) {
+            this.$emit('account-details-selected', this.accountsDetails[parameters.contract], parameters.hash);
+          } else if (this.accountsDetails[this.walletAddress]) {
             this.$emit('account-details-selected', this.accountsDetails[this.walletAddress], parameters.hash);
           } else if(Object.keys(this.accountsDetails).length) {
             this.$emit('account-details-selected', this.accountsDetails[Object.keys(this.accountsDetails)[0]], parameters.hash);

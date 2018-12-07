@@ -49,6 +49,7 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
     AccountDetail senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
     AccountDetail receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
     String symbol = ctx.value(SYMBOL_PARAMETER);
+    String contractAddress = ctx.value(CONTRACT_ADDRESS_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
     String message = ctx.value(MESSAGE_PARAMETER);
     String hash = ctx.value(HASH_PARAMETER);
@@ -60,6 +61,7 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
 
     return NotificationInfo.instance()
                            .to(toList)
+                           .with(CONTRACT_ADDRESS, contractAddress)
                            .with(AMOUNT, String.valueOf(amount))
                            .with(ACCOUNT_TYPE, senderAccountDetail.getType())
                            .with(RECEIVER_TYPE, receiverAccountDetail.getType())

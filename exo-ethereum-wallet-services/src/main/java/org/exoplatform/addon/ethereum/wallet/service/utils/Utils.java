@@ -159,6 +159,8 @@ public class Utils {
 
   public static final String                             FUNDS_REQUEST_SENT                    = "sent";
 
+  public static final String                             CONTRACT_ADDRESS                      = "contractAddress";
+
   public static final String                             AMOUNT                                = "amount";
 
   public static final String                             SYMBOL                                = "symbol";
@@ -222,6 +224,10 @@ public class Utils {
 
   public static final ArgumentLiteral<String>            SYMBOL_PARAMETER                      =
                                                                           new ArgumentLiteral<>(String.class, SYMBOL);
+
+  public static final ArgumentLiteral<String>            CONTRACT_ADDRESS_PARAMETER            =
+                                                                                    new ArgumentLiteral<>(String.class,
+                                                                                                          CONTRACT_ADDRESS);
 
   public static final Event                              CONTRACT_TRANSFER_EVENT               =
                                                                                  new Event("Transfer",

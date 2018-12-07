@@ -54,6 +54,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
     String sender = notification.getValueOwnerParameter(SENDER);
     String receiverUrl = notification.getValueOwnerParameter(RECEIVER_URL);
     String senderUrl = notification.getValueOwnerParameter(SENDER_URL);
+    String contractAddress = notification.getValueOwnerParameter(CONTRACT_ADDRESS);
     String symbol = notification.getValueOwnerParameter(SYMBOL);
     String message = notification.getValueOwnerParameter(MESSAGE);
     String hash = notification.getValueOwnerParameter(HASH);
@@ -67,6 +68,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("RECEIVER_URL", receiverUrl);
       templateContext.put("AVATAR", avatar != null ? avatar : LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
       templateContext.put("SYMBOL", symbol);
+      templateContext.put("CONTRACT_ADDRESS", contractAddress == null ? "" : contractAddress);
       templateContext.put("NOTIFICATION_ID", notification.getId());
       templateContext.put("READ", Boolean.valueOf(notificationRead) ? "read" : "unread");
       templateContext.put("MESSAGE", message);
