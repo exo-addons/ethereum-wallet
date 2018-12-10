@@ -8,6 +8,7 @@
             Contract Details: {{ contractDetails.title }}
           </div>
           <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Contract balance: {{ toFixed(contractDetails.contractBalanceFiat) }} {{ fiatSymbol }} / {{ toFixed(contractDetails.contractBalance) }} ether</h3>
+          <h4 v-if="contractDetails.owner" class="grey--text font-weight-light">Owner: <wallet-address :value="contractDetails.owner" /></h4>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
           <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ toFixed(totalSupply) }} {{ contractDetails && contractDetails.symbol }}</h4>
         </v-flex>
@@ -218,6 +219,7 @@
 import SendEtherModal from './SendEtherModal.vue';
 import ContractAdminModal from './ContractAdminModal.vue';
 import TransactionsList from './TransactionsList.vue';
+import WalletAddress from './WalletAddress.vue';
 
 import {retrieveContractDetails} from '../WalletToken.js';
 import {addTransaction} from '../WalletTransactions.js';
@@ -227,7 +229,8 @@ export default {
   components: {
     SendEtherModal,
     ContractAdminModal,
-    TransactionsList
+    TransactionsList,
+    WalletAddress
   },
   props: {
     isDisplayOnly: {
