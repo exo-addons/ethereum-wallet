@@ -389,8 +389,9 @@ export function removeContractAddressFromDefault(address) {
 export function saveContractAddressAsDefault(contractDetails) {
   console.debug("save contract as default", contractDetails);
   contractDetails.defaultContract = true;
-  saveContractAddressOnServer(contractDetails);
+  return saveContractAddressOnServer(contractDetails);
 }
+
 /*
  * Save a new Contract address as default contract to display for all users
  */
