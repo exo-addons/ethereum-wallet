@@ -9,8 +9,8 @@
                     :disabled="disabled"
                     :attach="`#${id}`"
                     :placeholder="inputPlaceholder"
+                    :content-class="`contactAutoCompleteContent ${bigField && 'bigContactAutoComplete'}`"
                     class="contactAutoComplete"
-                    content-class="contactAutoCompleteContent"
                     max-width="100%"
                     item-text="name"
                     item-value="id_type"
@@ -89,6 +89,12 @@ export default {
       }
     },
     disabled: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    bigField: {
       type: Boolean,
       default: function() {
         return false;

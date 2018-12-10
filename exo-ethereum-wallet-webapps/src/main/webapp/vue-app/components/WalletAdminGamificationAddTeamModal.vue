@@ -30,7 +30,7 @@
               label="Pool space"
               class="contactAutoComplete"
               placeholder="Start typing to Search a space"
-              content-class="contactAutoCompleteContent"
+              content-class="contactAutoCompleteContent bigContactAutoComplete"
               max-width="100%"
               item-text="name"
               item-value="id"
@@ -72,6 +72,7 @@
             input-placeholder="Select a pool manager"
             no-data-label="Search for a user"
             no-address
+            big-field
             class="xs12 sm6"
             @item-selected="manager = $event && $event.id" />
 
