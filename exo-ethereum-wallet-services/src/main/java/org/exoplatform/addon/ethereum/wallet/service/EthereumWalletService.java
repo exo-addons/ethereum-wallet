@@ -1002,16 +1002,28 @@ public class EthereumWalletService implements Startable {
                                   false);
     }
 
-    if (StringUtils.isNotBlank(transactionMessage.getContractAddress())
-        && !StringUtils.equalsIgnoreCase(transactionMessage.getTo(), transactionMessage.getContractAddress())
-        && getContractDetail(transactionMessage.getContractAddress(), transactionMessage.getNetworkId()) != null) {
-      // Save message label when the sender is not a known user or when this is
-      // an administration operation
-      boolean saveLabelToContractTransactionsList = transactionMessage.isAdminOperation() || senderAccount == null;
-      this.saveAccountTransaction(transactionMessage.getNetworkId(),
-                                  transactionMessage.getContractAddress(),
-                                  transactionMessage.getHash(),
-                                  saveLabelToContractTransactionsList);
+    String contractAddress = transactionMessage.getContractAddress();
+    ContractDetail contractDetail = null;
+    if (StringUtils.isBlank(contractAddress)) {
+      contractDetail = getContractDetail(transactionMessage.getTo(), transactionMessage.getNetworkId());
+      if (contractDetail != null) {
+        contractAddress = transactionMessage.getTo();
+      }
+    }
+
+    if (StringUtils.isNotBlank(contractAddress)) {
+      if (contractDetail == null) {
+        contractDetail = getContractDetail(contractAddress, transactionMessage.getNetworkId());
+      }
+      if (contractDetail != null) {
+        // Save message label when the sender is not a known user or when this
+        // is an administration operation
+        boolean saveLabelToContractTransactionsList = transactionMessage.isAdminOperation() || senderAccount == null;
+        this.saveAccountTransaction(transactionMessage.getNetworkId(),
+                                    contractAddress,
+                                    transactionMessage.getHash(),
+                                    saveLabelToContractTransactionsList);
+      }
     }
   }
 
