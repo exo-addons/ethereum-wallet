@@ -11,4 +11,6 @@ public class GamificationSettings {
 
   GamificationPeriodType periodType = GamificationPeriodType.DEFAULT;
 
+  private double         totalBudget;
+
 }

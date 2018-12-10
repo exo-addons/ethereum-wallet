@@ -49,11 +49,21 @@
             </template>
           </v-combobox>
         </div>
-        <button class="btn btn-primary mb-3" @click="save">
-          Save
-        </button>
+      </div>
+      <div class="text-xs-left gamificationWalletConfiguration">
+        <span>A total budget of </span>
+        <v-text-field
+          v-model.number="selectedTotalBudget"
+          name="totalBudget"
+          class="input-text-center" />
+        <span> will be used per {{ selectedPeriodName }} </span>
       </div>
     </v-card-text>
+    <v-card-actions>
+      <button class="btn btn-primary mb-3" @click="save">
+        Save
+      </button>
+    </v-card-actions>
     <v-card-text class="text-xs-center">
       <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
         <i class="uiIconWarning"></i>
@@ -223,9 +233,11 @@ export default {
       selectedDateMenu: false,
       contractAddress: null,
       threshold: null,
+      totalBudget: null,
       periodType: null,
       selectedContractAddress: null,
       selectedThreshold: null,
+      selectedTotalBudget: null,
       selectedPeriodType: null,
       tokenEtherscanLink: null,
       transactionEtherscanLink: null,
@@ -357,6 +369,9 @@ export default {
     selectedDate() {
       this.loadAll();
     },
+    totalBudget() {
+      this.refreshList();
+    },
     threshold() {
       this.refreshList();
     },
@@ -369,6 +384,7 @@ export default {
       .then(settings => {
         if (settings) {
           this.selectedContractAddress = this.contractAddress = settings.contractAddress;
+          this.selectedTotalBudget = this.totalBudget = settings.totalBudget;
           this.selectedThreshold = this.threshold = settings.threshold;
           this.selectedPeriodType = this.periodType = settings.periodType;
         }
@@ -425,6 +441,7 @@ export default {
     },
     save() {
       return saveSettings({
+        totalBudget: this.selectedTotalBudget,
         threshold: this.selectedThreshold,
         contractAddress : this.selectedContractAddress,
         periodType: this.selectedPeriodType && (this.selectedPeriodType.value || this.selectedPeriodType)
@@ -433,6 +450,7 @@ export default {
           this.contractAddress = this.selectedContractAddress;
           this.periodType = this.selectedPeriodType;
           this.threshold = this.selectedThreshold;
+          this.totalBudget = this.selectedTotalBudget;
         })
         .catch(error => {
           this.error = "Error while saving 'Gamification settings'";
