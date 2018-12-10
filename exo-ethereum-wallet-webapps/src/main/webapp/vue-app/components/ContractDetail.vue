@@ -10,7 +10,6 @@
           <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Contract balance: {{ toFixed(contractDetails.contractBalanceFiat) }} {{ fiatSymbol }} / {{ toFixed(contractDetails.contractBalance) }} ether</h3>
           <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
           <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ toFixed(totalSupply) }} {{ contractDetails && contractDetails.symbol }}</h4>
-          <h4 v-if="transferTransactionsCount" class="grey--text font-weight-light">Transfer transactions: {{ transferTransactionsCount }}</h4>
         </v-flex>
 
         <v-flex v-if="!isDisplayOnly" id="accountDetailActions">
@@ -283,7 +282,6 @@ export default {
   data() {
     return {
       selectedTab: 0,
-      transferTransactionsCount: 0,
       totalTransactionsCount: 0,
       error: null
     };
@@ -303,7 +301,6 @@ export default {
     contractDetails() {
       this.error = null;
       this.totalTransactionsCount = 0;
-      this.transferTransactionsCount = 0;
       this.retrieveAccountsDetails();
     }
   },
@@ -372,9 +369,8 @@ export default {
       this.error = String(error);
       this.$forceUpdate();
     },
-    computeTransactionsCount(transactions) {
-      this.totalTransactionsCount = Object.values(transactions).length;
-      this.transferTransactionsCount = Object.values(transactions).filter(transaction => transaction.contractMethodName && transaction.contractMethodName === 'transfer').length;
+    computeTransactionsCount(transactions, count) {
+      this.totalTransactionsCount = count;
     },
     refreshBalance() {
       this.$set(this.contractDetails, "loadingBalance", false);

@@ -628,7 +628,7 @@ export default {
           this.$emit("error", `${e}`);
         })
         .finally(() => {
-          this.$emit("loaded", this.sortedTransactions);
+          this.$emit("loaded", this.sortedTransactions, this.transactions ? Object.keys(this.transactions).length : 0);
         });
     },
     loadRecentTransaction(limit) {
