@@ -59,7 +59,7 @@
     <div v-else-if="newAddressDetected">
       <div v-if="associatedWalletAddress && isAdministration && isPrincipalContractAdmin" class="alert alert-info">
         <i class="uiIconInfo"></i>
-        <span>You are using principal contract owner address in metamask</span>
+        <span>You are using <code>Admin</code> address in metamask</span>
       </div>
       <div v-else-if="associatedWalletAddress" class="alert alert-warning">
         <i class="uiIconWarning"></i>
@@ -108,6 +108,10 @@
           </v-card>
         </v-dialog>
       </div>
+    </div>
+    <div v-else-if="isAdministration" class="alert alert-warning">
+      <i class="uiIconWarning"></i>
+      Attention: you are using an account different from<code>Admin</code> account
     </div>
   </v-flex>
 </template>
