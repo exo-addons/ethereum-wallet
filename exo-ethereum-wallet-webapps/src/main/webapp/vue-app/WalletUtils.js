@@ -251,15 +251,23 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
   if (!window.watchingTransactions) {
       window.watchingTransactions = {};
   }
+
   let initWatching = false;
   if (!window.watchingTransactions[hash]) {
       window.watchingTransactions[hash] = [];
       initWatching = true;
   }
-  window.watchingTransactions[hash].push(transactionFinishedcallback);
-  if(initWatching) {
-    waitAsyncForTransactionStatus(hash);
-  }
+  window.localWeb3.eth.getTransaction(hash)
+    .then(transaction => {
+      if(transaction) {
+        window.watchingTransactions[hash].push(transactionFinishedcallback);
+        if(initWatching) {
+          waitAsyncForTransactionStatus(hash);
+        }
+      } else {
+        transactionFinishedcallback(null);
+      }
+    });
 }
 
 export function getTransactionReceipt(hash) {

@@ -247,7 +247,9 @@ export default {
           this.wallets.forEach(wallet => {
             if(wallet && wallet.address) {
               this.$set(wallet, "loadingBalance", true);
-              this.$set(wallet, "loadingBalancePrincipal", true);
+              if (this.principalContract) {
+                this.$set(wallet, "loadingBalancePrincipal", true);
+              }
               this.computeBalance(this.principalContract, wallet);
             }
           });

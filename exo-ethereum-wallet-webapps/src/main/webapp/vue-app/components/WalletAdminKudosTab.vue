@@ -349,7 +349,9 @@ export default {
     document.addEventListener('exo-kudos-get-kudos-list-loading', () => this.loading = true);
     document.addEventListener('exo-kudos-get-kudos-list-result', this.loadKudosList);
     this.$nextTick(() => {
-      this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
+      if (window.kudosSettings) {
+        this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
+      }
       this.selectedDate = new Date().toISOString().substr(0, 10);
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
@@ -376,15 +378,17 @@ export default {
         const kudosWallet = this.kudosIdentitiesList[kudosWalletIndex];
         if(kudosWallet) {
           this.$set(kudosWallet, 'hash', transaction.hash);
-          this.$set(kudosWallet, 'status', 'pending');
-          if (transaction.contractAmount) {
+          if(this.principalAccount) {
+            this.$set(kudosWallet, 'status', 'pending');
+          }
+          if (transaction && transaction.contractAmount) {
             this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
           }
           this.selectedKudosIdentitiesList.splice(kudosWalletIndex, 1);
 
           const thiss = this;
           watchTransactionStatus(transaction.hash, receipt => {
-            thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+            thiss.$set(kudosWallet, 'status', receipt && receipt.status ? 'success' : 'error');
           });
         }
       } else {
@@ -397,10 +401,12 @@ export default {
                   if(kudosWallet) {
                     this.$set(kudosWallet, 'tokensSent', kudosTransaction.tokensAmountSent ? Number(kudosTransaction.tokensAmountSent) : 0);
                     this.$set(kudosWallet, 'hash', kudosTransaction.hash);
-                    this.$set(kudosWallet, 'status', 'pending');
+                    if(this.principalAccount) {
+                      this.$set(kudosWallet, 'status', 'pending');
+                    }
                     const thiss = this;
                     watchTransactionStatus(kudosTransaction.hash, receipt => {
-                      thiss.$set(kudosWallet, 'status', receipt.status ? 'success' : 'error');
+                      thiss.$set(kudosWallet, 'status', receipt && receipt.status ? 'success' : 'error');
                     });
                   } else {
                     console.error("Can't find wallet of a sent Kudos token transaction, kudosTransaction=", kudosTransaction);

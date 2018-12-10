@@ -395,7 +395,7 @@ export default {
           this.selectedIdentitiesList.splice(resultWalletIndex, 1);
           const thiss = this;
           watchTransactionStatus(transaction.hash, receipt => {
-            thiss.$set(resultWallet, 'status', receipt.status ? 'success' : 'error');
+            thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
           });
         }
       } else {
