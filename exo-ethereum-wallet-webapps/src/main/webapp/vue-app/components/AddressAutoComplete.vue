@@ -214,12 +214,16 @@ export default {
           .then(item => {
             item.id_type = `${item.type}_${item.id}`;
             this.items.push(item);
-            this.$refs.selectAutoComplete.selectItem(item);
+            if (this.$refs.selectAutoComplete) {
+              this.$refs.selectAutoComplete.selectItem(item);
+            }
           });
       } else {
         const item = {id_type: id, name: id};
         this.items.push(item);
-        this.$refs.selectAutoComplete.selectItem(item);
+        if (this.$refs.selectAutoComplete) {
+          this.$refs.selectAutoComplete.selectItem(item);
+        }
       }
     }
   }
