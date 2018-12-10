@@ -18,7 +18,7 @@
       </div>
       <v-card-title v-show="loading" class="pb-0">
         <v-spacer />
-        <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+        <v-progress-circular color="primary" indeterminate size="20" />
         <v-spacer />
       </v-card-title>
       <v-card-text>

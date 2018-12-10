@@ -10,6 +10,11 @@
         <div v-if="errorMessage" class="alert alert-error v-content">
           <i class="uiIconError"></i>{{ errorMessage }}
         </div>
+        <v-card-title v-show="loading" class="pb-0">
+          <v-spacer />
+          <v-progress-circular color="primary" indeterminate size="20" />
+          <v-spacer />
+        </v-card-title>
         <v-form ref="form" @submit="$event.preventDefault();$event.stopPropagation();">
           <label v-if="walletAddress" for="walletPrivateKey" class="mb-3">
             Please enter the private key for the following wallet (Find your private key in Backup section):
@@ -22,6 +27,7 @@
             :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
             :rules="[rules.priv]"
             :type="walletPrivateKeyShow ? 'text' : 'password'"
+            :disabled="loading"
             name="walletPrivateKey"
             label="Wallet private key"
             placeholder="Enter your wallet private key"
@@ -100,34 +106,37 @@ export default {
     importWallet() {
       this.errorMessage = null;
       this.loading = true;
-      try {
-        if (this.walletPrivateKey.indexOf("0x") < 0) {
-          this.walletPrivateKey = `0x${this.walletPrivateKey}`;
-        }
-        const wallet = window.localWeb3.eth.accounts.wallet.add(this.walletPrivateKey);
-        if (!this.walletAddress || wallet.address.toLowerCase() === this.walletAddress.toLowerCase()) {
-          saveBrowerWalletInstance(wallet, generatePassword(), this.isSpace, true, true)
-            .then(() => {
-              this.loading = false;
-              this.importWalletDialog = false;
-              this.$nextTick(() => {
-                this.$emit('configured');
+      const thiss = this;
+      window.setTimeout(() => {
+        try {
+          if (thiss.walletPrivateKey.indexOf("0x") < 0) {
+            thiss.walletPrivateKey = `0x${thiss.walletPrivateKey}`;
+          }
+          const wallet = window.localWeb3.eth.accounts.wallet.add(thiss.walletPrivateKey);
+          if (!thiss.walletAddress || wallet.address.toLowerCase() === thiss.walletAddress.toLowerCase()) {
+            saveBrowerWalletInstance(wallet, generatePassword(), thiss.isSpace, true, true)
+              .then(() => {
+                thiss.loading = false;
+                thiss.importWalletDialog = false;
+                thiss.$nextTick(() => {
+                  thiss.$emit('configured');
+                });
+              })
+              .catch(e => {
+                thiss.loading = false;
+                console.debug("saveBrowerWalletInstance method - error", e);
+                thiss.errorMessage = `Error saving new Wallet address`;
               });
-            })
-            .catch(e => {
-              this.loading = false;
-              console.debug("saveBrowerWalletInstance method - error", e);
-              this.errorMessage = `Error saving new Wallet address`;
-            });
-        } else {
-          this.loading = false;
-          this.errorMessage = `Private key doesn't match address ${this.walletAddress}`;
+          } else {
+            thiss.loading = false;
+            thiss.errorMessage = `Private key doesn't match address ${thiss.walletAddress}`;
+          }
+        } catch(e) {
+          thiss.loading = false;
+          console.debug('Error importing private key', e);
+          thiss.errorMessage = `Error saving new Wallet address`;
         }
-      } catch(e) {
-        this.loading = false;
-        console.debug('Error importing private key', e);
-        this.errorMessage = `Error saving new Wallet address`;
-      }
+      }, 200);
     }
   }
 };
