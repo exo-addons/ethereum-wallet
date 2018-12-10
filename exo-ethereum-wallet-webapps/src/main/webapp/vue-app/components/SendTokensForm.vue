@@ -96,6 +96,7 @@ import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
+import {retrieveContractDetails} from '../WalletToken.js';
 
 export default {
   components: {
@@ -233,13 +234,17 @@ export default {
         if (this.contractDetails && this.contractDetails.isPaused) {
           this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
         } else {
+          if(this.contractDetails && this.contractDetails.address && !this.contractDetails.hasOwnProperty("isApproved")) {
+            // Load contract details in async mode for adminLevel test
+            retrieveContractDetails(this.account, this.contractDetails, true);
+          }
           this.estimateTransactionFee();
           this.warning = null;
         }
       });
     },
     estimateTransactionFee() {
-      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.isApproved && this.contractDetails.sellPrice && this.contractDetails.owner && this.contractDetails.contractType) {
+      if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.sellPrice && this.contractDetails.owner && this.contractDetails.contractType) {
         const recipient = this.contractDetails.isOwner ? "0x1111111111111111111111111111111111111111" : this.contractDetails.owner;
         // Estimate gas
         this.contractDetails.contract.methods.transfer(recipient, String(Math.pow(10, this.contractDetails.decimals ? this.contractDetails.decimals : 0)))
