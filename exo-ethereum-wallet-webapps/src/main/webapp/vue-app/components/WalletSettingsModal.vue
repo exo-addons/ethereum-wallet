@@ -290,7 +290,7 @@ export default {
         this.error = null;
         this.walletAddress = window.walletSettings.userPreferences.walletAddress;
         this.defaultGas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
-        this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
+        this.defaulGasPriceFiat = this.defaulGasPriceFiat || gasToFiat(this.defaultGas, window.walletSettings.maxGasPriceEther);
         this.accountType = window.walletSettings.userPreferences.useMetamask ? '2' : '1';
         this.enableDelegation = window.walletSettings.userPreferences.enableDelegation;
         this.refreshFromSettings();
@@ -357,7 +357,7 @@ export default {
       }
     },
     defaultGas() {
-      this.defaulGasPriceFiat = gasToFiat(this.defaultGas);
+      this.defaulGasPriceFiat = gasToFiat(this.defaultGas, window.walletSettings.maxGasPriceEther);
     }
   },
   created() {

@@ -60,9 +60,9 @@
       </div>
     </v-card-text>
     <v-card-actions>
-      <button class="btn btn-primary mb-3" @click="save">
+      <v-btn :loading="loadingSettings" class="btn btn-primary" dark @click="save">
         Save
-      </button>
+      </v-btn>
     </v-card-actions>
     <v-card-text class="text-xs-center">
       <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
@@ -228,6 +228,7 @@ export default {
   data() {
     return {
       loading: false,
+      loadingSettings: false,
       error: null,
       selectedDate: new Date().toISOString().substr(0, 10),
       selectedDateMenu: false,
@@ -440,21 +441,28 @@ export default {
       }
     },
     save() {
-      return saveSettings({
-        totalBudget: this.selectedTotalBudget,
-        threshold: this.selectedThreshold,
-        contractAddress : this.selectedContractAddress,
-        periodType: this.selectedPeriodType && (this.selectedPeriodType.value || this.selectedPeriodType)
-      })
-        .then(() => {
-          this.contractAddress = this.selectedContractAddress;
-          this.periodType = this.selectedPeriodType;
-          this.threshold = this.selectedThreshold;
-          this.totalBudget = this.selectedTotalBudget;
+      const thiss = this;
+      this.loadingSettings = true;
+      window.setTimeout(() => {
+        saveSettings({
+          totalBudget: thiss.selectedTotalBudget,
+          threshold: thiss.selectedThreshold,
+          contractAddress : thiss.selectedContractAddress,
+          periodType: thiss.selectedPeriodType && (thiss.selectedPeriodType.value || thiss.selectedPeriodType)
         })
-        .catch(error => {
-          this.error = "Error while saving 'Gamification settings'";
-        });
+          .then(() => {
+            thiss.contractAddress = thiss.selectedContractAddress;
+            thiss.periodType = thiss.selectedPeriodType;
+            thiss.threshold = thiss.selectedThreshold;
+            thiss.totalBudget = thiss.selectedTotalBudget;
+          })
+          .catch(error => {
+            thiss.error = "Error while saving 'Gamification settings'";
+          })
+          .finally(() => {
+            thiss.loadingSettings = false;
+          });
+      }, 200);
     },
     loadAll() {
       if (!this.selectedDate || !this.periodType) {

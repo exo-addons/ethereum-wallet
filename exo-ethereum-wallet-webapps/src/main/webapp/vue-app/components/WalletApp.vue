@@ -197,6 +197,7 @@ export default {
       showAddContractModal: false,
       displayWalletSetup: false,
       displayWalletNotExistingYet: false,
+      gasPriceInEther: null,
       networkId: null,
       browserWalletExists: false,
       browserWalletBackedUp: true,
@@ -217,7 +218,7 @@ export default {
       return !this.loading && !this.errorMessage && this.walletAddress && !this.useMetamask && this.browserWalletExists;
     },
     displayEtherBalanceTooLow() {
-      return !this.loading && !this.errorMessage && (!this.isSpace || this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.defaultGas);
+      return !this.loading && !this.errorMessage && (!this.isSpace || this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.defaultGas, this.gasPriceInEther);
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
@@ -272,6 +273,7 @@ export default {
     }
 
     const thiss = this;
+
     $(document).on("keydown", event => {
       if (event.which === 27 && thiss.seeAccountDetailsPermanent && !$('.v-dialog:visible').length) {
         thiss.back();
@@ -353,6 +355,11 @@ export default {
 
           this.principalAccount = window.walletSettings.defaultPrincipalAccount;
           this.fiatSymbol = window.walletSettings ? window.walletSettings.fiatSymbol : '$';
+          this.gasPriceInEther = this.gasPriceInEther || window.localWeb3.utils.fromWei(String(window.walletSettings.normalGasPrice), 'ether');
+
+          if (window.walletSettings.maxGasPrice) {
+            window.walletSettings.maxGasPriceEther = window.walletSettings.maxGasPriceEther || window.localWeb3.utils.fromWei(String(window.walletSettings.maxGasPrice), 'ether').toString();
+          }
 
           return this.refreshBalance();
         })

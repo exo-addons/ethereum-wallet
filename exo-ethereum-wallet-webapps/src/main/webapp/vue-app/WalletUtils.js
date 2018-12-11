@@ -12,9 +12,6 @@ export function etherToFiat(amount) {
 }
 
 export function gasToEther(amount, gasPriceInEther) {
-  if (!gasPriceInEther) {
-    gasPriceInEther = window.walletSettings.gasPriceInEther;
-  }
   if (gasPriceInEther && amount)  {
     return (gasPriceInEther * amount);
   }
@@ -22,9 +19,6 @@ export function gasToEther(amount, gasPriceInEther) {
 }
 
 export function gasToFiat(amount, gasPriceInEther) {
-  if (!gasPriceInEther) {
-    gasPriceInEther = window.walletSettings.gasPriceInEther;
-  }
   if (window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
     return toFixed(gasPriceInEther * window.walletSettings.fiatPrice * amount);
   }
@@ -59,34 +53,7 @@ export function retrieveFiatExchangeRate() {
       window.retrieveFiatExchangeRateInterval = setTimeout(() => {
         retrieveFiatExchangeRate();
       }, 300000);
-      return computeGasPrice();
     });
-}
-
-export function computeGasPrice() {
-  if (!window.walletSettings) {
-    window.walletSettings = {};
-  }
-  if (window.localWeb3 && window.localWeb3.currentProvider) {
-    console.debug("Retrieving gas price");
-    return window.localWeb3.eth.getGasPrice()
-      .then(gasPrice => {
-        console.debug("Detected Gas price:", window.localWeb3.utils.fromWei(String(gasPrice), 'gwei').toString(), 'gwei');
-
-        // Avoid adding excessive gas price
-        window.walletSettings.gasPrice = gasPrice;
-        if (window.walletSettings.normalGasPrice && window.walletSettings.gasPrice > window.walletSettings.normalGasPrice) {
-          console.warn(`Detected gas price ${window.walletSettings.gasPrice} is heigher than default gas price ${window.walletSettings.normalGasPrice}`);
-        }
-        console.debug("Used Gas price:", window.localWeb3.utils.fromWei(String(window.walletSettings.gasPrice), 'gwei').toString(), 'gwei');
-        window.walletSettings.gasPriceInEther = gasPrice ? window.localWeb3.utils.fromWei(String(gasPrice), 'ether'): 0;
-      })
-      .catch(error => {
-        console.debug("computeGasPrice method error: ", error);
-      });
-  } else {
-    console.debug("Cannot retrieve gas price because no preconfigured provider");
-  }
 }
 
 export function initEmptyWeb3Instance() {
@@ -721,32 +688,32 @@ function isBrowserWallet(id, type, address) {
   return localStorage.getItem(`exo-wallet-${type}-${id}`) === address;
 }
 
-function checkNetworkStatus(waitTime) {
+function checkNetworkStatus(waitTime, tentativesCount) {
   if (!waitTime) {
-    waitTime = 100;
+    waitTime = 300;
+  }
+  if (!tentativesCount) {
+    tentativesCount = 1;
   }
   // Test if network is connected: isListening operation can hang up forever
-  let isListening = false;
   window.localWeb3.eth.net.isListening()
-    .then(listening => isListening = listening);
+    .then(listening => window.walletSettings.isListening = window.walletSettings.isListening || listening);
   return new Promise(resolve => setTimeout(resolve, waitTime))
     .then(() => {
-      if (!isListening) {
+      if (!window.walletSettings.isListening) {
         console.debug("The network seems to be disconnected");
         throw new Error(constants.ERROR_WALLET_DISCONNECTED);
       }
     })
     .then(() => computeNetwork())
-    .then(() => computeGasPrice())
     .then(() => console.debug("Network status: OK"))
     .then(() => constants.OK)
     .catch(error => {
-      if (waitTime >= 5000) {
+      if(tentativesCount > 10) {
         throw error;
       }
-      waitTime = waitTime * 2;
-      console.debug("Reattempt to connect with wait time:", waitTime);
-      return checkNetworkStatus(waitTime);
+      console.debug("Reattempt to connect with wait time:", waitTime, " tentative : ", tentativesCount);
+      return checkNetworkStatus(waitTime, ++tentativesCount);
     });
 }
 

@@ -13,6 +13,7 @@
       <v-data-iterator
         :items="teams"
         content-tag="v-layout"
+        no-data-text=""
         row
         wrap
         hide-actions>

@@ -101,6 +101,14 @@
               type="number"
               name="budget" />
           </v-flex>
+          <v-flex xs12 sm6>
+            <v-text-field
+              v-model="computedBudget"
+              label="Computed pool budget (switch number of members)"
+              type="number"
+              name="computedBudget"
+              readonly />
+          </v-flex>
 
           <v-flex xs12>
             <v-label>Pool members</v-label>
