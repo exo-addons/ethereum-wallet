@@ -7,7 +7,7 @@
         :team="selectedTeam"
         :wallets="wallets"
         @closed="selectedTeam = null"
-        @saved="addTeam" />
+        @saved="refresh" />
     </h3>
     <v-container fluid grid-list-md>
       <v-data-iterator
@@ -24,7 +24,7 @@
           sm6
           md4
           lg3>
-          <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto space`">
+          <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto no-repeat`">
             <v-card flat class="transparent">
               <v-card-title :class="props.item.description && 'pb-0'">
                 <v-chip dark>
@@ -47,9 +47,17 @@
                   <v-list-tile-content>Members:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.members ? props.item.members.length : 0 }}</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile>
-                  <v-list-tile-content>Budget:</v-list-tile-content>
+                <v-list-tile v-if="props.item.budget">
+                  <v-list-tile-content>Fixed budget:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.budget }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile>
+                  <v-list-tile-content>Computed budget:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile>
+                  <v-list-tile-content>Total valid points:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.totalValidPoints }}</v-list-tile-content>
                 </v-list-tile>
               </v-list>
             </v-card>
@@ -85,6 +93,7 @@ export default {
   },
   data: () => ({
     teams: [],
+    teamsRetrieved: false,
     selectedTeam: null
   }),
   created() {
@@ -94,7 +103,12 @@ export default {
     refresh() {
       getTeams()
         .then(teams => {
+          if(teams && teams.length) {
+            teams = teams.sort((team1, team2) => team2.id - team1.id);
+          }
           this.teams = teams;
+          this.teamsRetrieved = true;
+          this.$emit('teams-retrieved');
         })
         .catch(e => {
           console.debug('Error getting teams list', e);
@@ -114,16 +128,6 @@ export default {
           console.debug('Error getting team with id', id, e);
           this.error = 'Error removing team';
         });
-    },
-    addTeam(addedTeam) {
-      if(addedTeam) {
-        const teamIndex = this.teams.findIndex(team => addedTeam.id === team.id);
-        if(teamIndex >= 0) {
-          this.teams.splice(teamIndex, 1, addedTeam);
-        } else {
-          this.teams.push(addedTeam);
-        }
-      }
     }
   }
 };

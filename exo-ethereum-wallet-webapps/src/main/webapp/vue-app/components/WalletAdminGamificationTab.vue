@@ -71,8 +71,21 @@
       </div>
     </v-card-text>
     <gamification-teams
-      :wallets="wallets"/>
+      ref="gamificationTeams"
+      :wallets="validRecipients"
+      @teams-retrieved="refreshTeams" />
     <h3 class="text-xs-left ml-3">Send Rewards</h3>
+    <v-card-text class="text-xs-center">
+      <div v-if="duplicatedWallets && duplicatedWallets.length" class="alert alert-warning">
+        <i class="uiIconWarning"></i>
+        There is some user(s) with multiple teams, thus the calculation could be wrong:
+        <ul>
+          <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
+            <code>{{ duplicatedWallet.name }}</code>
+          </li>
+        </ul>
+      </div>
+    </v-card-text>
     <v-card-text class="text-xs-center">
       <v-menu
         ref="selectedDateMenu"
@@ -92,43 +105,30 @@
           :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
           @input="selectedDateMenu = false" />
       </v-menu>
+      <v-card-title>
+        <v-text-field
+          v-model="search"
+          append-icon="search"
+          label="Search"
+          single-line
+          hide-details />
+      </v-card-title>
       <v-data-table
         v-model="selectedIdentitiesList"
         :headers="identitiesHeaders"
-        :items="identitiesList"
+        :items="filteredIdentitiesList"
         :loading="loading"
         :sortable="true"
         select-all
         item-key="address"
         class="elevation-1 mr-3 mb-2"
+        disable-initial-sort
         hide-actions>
-        <template slot="headers" slot-scope="props">
-          <tr>
-            <th v-if="selectableRecipients.length">
-              <v-checkbox
-                :input-value="props.all"
-                :indeterminate="props.indeterminate"
-                primary
-                hide-details
-                @click.native="toggleAll" />
-            </th>
-            <th
-              v-for="header in props.headers"
-              :key="header.text"
-              :class="['column sortable', header.value === pagination.sortBy ? 'active' : '', header.align === 'center' ? 'text-xs-center' : header.align === 'right' ? 'text-xs-right' : 'text-xs-left']"
-              @click="changeSort(header.value)">
-              <template v-if="header.value === pagination.sortBy">
-                <v-icon small>{{ paginationIcon }}</v-icon>
-              </template>
-              {{ header.text }}
-            </th>
-          </tr>
-        </template>
         <template slot="items" slot-scope="props">
           <tr :active="props.selected">
-            <td v-if="selectableRecipients.length">
+            <td>
               <v-checkbox
-                v-if="props.item.address && props.item.points && props.item.points > threshold && (!props.item.status || props.item.status === 'error')"
+                v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
                 :input-value="props.selected"
                 hide-details
                 @click="props.selected = !props.selected" />
@@ -149,13 +149,17 @@
                 (No address)
               </div>
             </td>
-            <td>
-              <a
-                v-if="addressEtherscanLink"
-                :href="`${addressEtherscanLink}${props.item.address}`"
-                target="_blank"
-                title="Open on etherscan">{{ props.item.address }}</a>
-              <span v-else>{{ props.item.address }}</span>
+            <td class="text-xs-left">
+              <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">
+                <li
+                  v-for="team in props.item.gamificationTeams"
+                  :key="team.id">
+                  {{ team.name }}
+                </li>
+              </ul>
+              <div v-else>
+                -
+              </div>
             </td>
             <td>
               <a
@@ -182,13 +186,24 @@
                 v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
             </td>
             <td>
-              <v-text-field v-if="props.item.address && props.item.points && props.item.points > threshold && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
+              <v-text-field v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
               <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
               <template v-else>-</template>
             </td>
             <td v-html="props.item.points">
             </td>
           </tr>
+        </template>
+        <template slot="footer">
+          <td :colspan="identitiesHeaders.length - 1">
+            <strong>Total</strong>
+          </td>
+          <td>
+            <strong>{{ totalTokens }}</strong>
+          </td>
+          <td>
+            <strong>{{ totalPoints }}</strong>
+          </td>
         </template>
       </v-data-table>
     </v-card-text>
@@ -236,6 +251,8 @@ export default {
       threshold: null,
       totalBudget: null,
       periodType: null,
+      duplicatedWallets: null,
+      search: '',
       selectedContractAddress: null,
       selectedThreshold: null,
       selectedTotalBudget: null,
@@ -249,7 +266,7 @@ export default {
       selectedEndDate: null,
       pagination: {
         descending: true,
-        sortBy: 'received'
+        sortBy: 'points'
       },
       periods: [
         {
@@ -284,14 +301,14 @@ export default {
         {
           text: 'Name',
           align: 'left',
-          sortable: false,
+          sortable: true,
           value: 'name'
         },
         {
-          text: 'Address',
+          text: 'Teams',
           align: 'center',
           sortable: true,
-          value: 'address'
+          value: 'gamificationTeams'
         },
         {
           text: 'Transaction',
@@ -360,21 +377,50 @@ export default {
       }
     },
     recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points > this.threshold && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points >= this.threshold && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+    },
+    validRecipients() {
+      if (this.totalBudget) {
+        return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points >= this.threshold) : [];
+      } else {
+        return [];
+      }
+    },
+    filteredIdentitiesList() {
+      return this.identitiesList ? this.identitiesList.filter(wallet => this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
-      return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points > this.threshold && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.validRecipients.filter(item => !item.tokensSent && (!item.status || item.status === 'error'));
+    },
+    totalPoints() {
+      if(this.filteredIdentitiesList) {
+        let result = 0;
+        this.filteredIdentitiesList.forEach(wallet => {
+          result += Number(wallet.points);
+        });
+        return result;
+      } else {
+        return 0;
+      }
+    },
+    totalTokens() {
+      if(this.filteredIdentitiesList) {
+        let result = 0;
+        this.filteredIdentitiesList.forEach(wallet => {
+          result += wallet.tokensToSend ? Number(wallet.tokensToSend) : 0 + wallet.tokensSent ? Number(wallet.tokensSent) : 0;
+        });
+        return result;
+      } else {
+        return 0;
+      }
     }
   },
   watch: {
     selectedDate() {
       this.loadAll();
     },
-    totalBudget() {
-      this.refreshList();
-    },
-    threshold() {
-      this.refreshList();
+    wallets() {
+      this.refreshTeams();
     },
     periodType() {
       this.loadAll();
@@ -392,6 +438,122 @@ export default {
       });
   },
   methods: {
+    refreshTeams() {
+      this.duplicatedWallets = [];
+      if(this.$refs && this.$refs.gamificationTeams && this.$refs.gamificationTeams.teamsRetrieved) {
+        const teams = this.$refs.gamificationTeams.teams;
+        const wallets = this.identitiesList;
+        wallets.forEach(wallet => {
+          delete wallet.gamificationTeams;
+        });
+        teams.forEach(team => {
+          if (team.members) {
+            team.members.forEach(memberObject => {
+              const wallet = wallets.find(wallet => wallet && wallet.id && wallet.type === 'user' && wallet.id ===  memberObject.id);
+              if (wallet) {
+                if(wallet.gamificationTeams && wallet.gamificationTeams.length) {
+                  wallet.gamificationTeams.push(team);
+                  this.duplicatedWallets.push(wallet);
+                } else {
+                  this.$set(wallet, 'gamificationTeams', [team]);
+                }
+              }
+            });
+          }
+        });
+        this.computeBudgets();
+      }
+    },
+    computeBudgets() {
+      if(this.identitiesList && this.identitiesList.length) {
+        this.identitiesList.forEach(wallet => {
+          wallet.tokensToSend = 0;
+        });
+      }
+
+      if(!this.validRecipients.length) {
+        return;
+      }
+      const validRecipients = this.validRecipients.slice();
+      let teams = [];
+      if(this.$refs.gamificationTeams && this.$refs.gamificationTeams.teams && this.$refs.gamificationTeams.teams.length) {
+        teams = this.$refs.gamificationTeams.teams.slice();
+      }
+      const membersWithEmptyTeam = validRecipients.filter(wallet => !wallet.gamificationTeams || !wallet.gamificationTeams.length);
+
+      // Members with no Team
+      teams.push({
+        members: membersWithEmptyTeam,
+        computedBudget: 0
+      });
+
+      let totalComputedBudget = this.totalBudget;
+      let computedRecipientsCount = 0;
+      teams.forEach(team => {
+        team.membersWallets = [];
+        team.computedBudget = 0;
+        team.totalValidPoints = 0;
+        if(!team.members || !team.members.length) {
+          return;
+        }
+
+        team.members.forEach(memberObject => {
+          const wallet = memberObject.address ? memberObject : validRecipients.find(wallet => wallet.id === memberObject.id);
+          if(wallet) {
+            team.membersWallets.push(wallet);
+            team.totalValidPoints += wallet.points;
+          }
+        });
+
+        if (team.budget) {
+          if(team.membersWallets.length) {
+            team.computedBudget = Number(team.budget);
+            totalComputedBudget -= team.computedBudget;
+          }
+        } else {
+          computedRecipientsCount += team.membersWallets.length;
+        }
+      });
+
+      const tokenPerRecipient = computedRecipientsCount > 0 && totalComputedBudget > 0 ? totalComputedBudget / computedRecipientsCount : 0;
+
+      teams.forEach(team => {
+        if(!team.membersWallets || !team.membersWallets.length) {
+          return;
+        }
+
+        let budget = Number(team.budget);
+        if (!budget || Number.isNaN(budget)) {
+          budget = team.computedBudget = tokenPerRecipient * team.membersWallets.length;
+        }
+
+        if (budget) {
+          team.membersWallets.forEach(wallet => {
+            const tokensToSend = budget * wallet.points / team.totalValidPoints;
+            this.$set(wallet, 'tokensToSend', this.toFixed(tokensToSend));
+          });
+        }
+      });
+    },
+    filterItemFromList(wallet, searchText) {
+      if(!searchText || !searchText.length) {
+        return true;
+      }
+      searchText = searchText.trim().toLowerCase();
+      const name = wallet.name.toLowerCase();
+      if(name.indexOf(searchText) > -1) {
+        return true;
+      }
+      const address = wallet.address.toLowerCase();
+      if(address.indexOf(searchText) > -1) {
+        return true;
+      }
+      if(searchText === '-' && (!wallet.gamificationTeams || !wallet.gamificationTeams.length)) {
+        return true;
+      }
+      const teams = wallet.gamificationTeams && wallet.gamificationTeams.length ? wallet.gamificationTeams.map(team => team.name).join(',').toLowerCase() : '';
+      return teams.indexOf(searchText) > -1;
+    },
     newPendingTransaction(transaction) {
       this.$emit('pending', transaction);
       if(!transaction || !transaction.to) {
@@ -455,6 +617,7 @@ export default {
             thiss.periodType = thiss.selectedPeriodType;
             thiss.threshold = thiss.selectedThreshold;
             thiss.totalBudget = thiss.selectedTotalBudget;
+            return this.refreshTeams();
           })
           .catch(error => {
             thiss.error = "Error while saving 'Gamification settings'";
@@ -501,22 +664,10 @@ export default {
         });
       }
       Promise.all(identitiesListPromises)
-        .then(() => this.loading = false);
-    },
-    refreshList() {
-      this.identitiesList.forEach(walletResult => {
-        /*
-        Calculate Tokens to send per wallet
-
-        let result = Number(walletResult.points) * 100000 * Number(this.defaultTokenPerResult) / 100000;
-        // attempt to simply avoid floatting point problem
-        const resultString = String(result);
-        if(resultString.length - resultString.indexOf(".") > 5) {
-          result = Number(walletResult.received) * 1000000 * Number(this.defaultTokenPerResult) / 1000000;
-        }
-        this.$set(walletResult, "tokensToSend", result);
-        */
-      });
+        .then(() => {
+          this.refreshTeams();
+          this.loading = false;
+        });
     },
     formatDate (date) {
       if (!date){
@@ -531,14 +682,6 @@ export default {
         this.selectedIdentitiesList = [];
       } else {
         this.selectedIdentitiesList = this.identitiesList.slice();
-      }
-    },
-    changeSort(column) {
-      if (this.pagination.sortBy === column) {
-        this.pagination.descending = !this.pagination.descending;
-      } else {
-        this.pagination.sortBy = column;
-        this.pagination.descending = false;
       }
     }
   }

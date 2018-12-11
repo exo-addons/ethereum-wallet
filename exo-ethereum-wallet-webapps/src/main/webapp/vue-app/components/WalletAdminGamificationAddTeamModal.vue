@@ -96,8 +96,8 @@
           <v-flex xs12 sm6>
             <v-text-field
               v-model="budget"
-              label="Pool budget"
-              placeholder="Enter pool budget per period"
+              label="Pool fixed budget"
+              placeholder="Enter the pool budget (will be removed from total budget)"
               type="number"
               name="budget" />
           </v-flex>
@@ -273,6 +273,7 @@ export default {
     manager() {
       if(!this.manager || !this.manager.length) {
         this.managerObject = null;
+        return;
       }
       const managerObject = this.membersObjects && this.membersObjects.find(wallet => wallet.id === this.manager && wallet.type === 'user');
       if(managerObject) {
@@ -342,12 +343,22 @@ export default {
   },
   methods: {
     init() {
+      if(this.$refs && this.$refs.managerAutocomplete) {
+        this.$refs.managerAutocomplete.clear();
+      }
+      if(this.$refs && this.$refs.memberAutocomplete) {
+        this.$refs.memberAutocomplete.clear();
+      }
+
       this.error = null;
       this.loading = false;
       this.id =  this.team && this.team.id;
       this.name = (this.team && this.team.name) || '';
       this.description = (this.team && this.team.description) || '';
       this.budget = (this.team && this.team.budget) || '';
+      this.computedBudget = (this.team && this.team.computedBudget) || '0';
+      this.manager = null;
+      this.members = [];
 
       this.rewardTeamSpace = null;
       this.rewardTeamSpaceId = null;
@@ -375,11 +386,13 @@ export default {
 
         this.manager = this.team.manager && this.team.manager.id;
         if(this.$refs && this.$refs.managerAutocomplete) {
-          this.$refs.managerAutocomplete.selectItem(this.manager, 'user');
+          this.$refs.managerAutocomplete.selectItem(this.manager, this.manager && 'user');
         }
 
         if(this.team.members && this.team.members.length) {
           this.members = this.team.members.map(memberObject => memberObject.id);
+        } else {
+          this.members = [];
         }
       }
     },
@@ -410,10 +423,12 @@ export default {
 
       if(!this.name) {
         this.error = 'Pool name is mandatory';
+        return;
       }
 
       if(!this.manager) {
         this.error = 'Pool manager is mandatory';
+        return;
       }
 
       const members = this.membersObjects && this.membersObjects.map(memberObject => Object({id: memberObject.id, identityId: memberObject.identityId}));

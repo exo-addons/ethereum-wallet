@@ -631,8 +631,10 @@ export function estimateTransactionFeeFiat(gas, gasPrice) {
   return etherToFiat(estimateTransactionFeeEther(gas, gasPrice));
 }
 
-export function toFixed(value) {
-  const decimals = 3;
+export function toFixed(value, decimals) {
+  if(!decimals) {
+    decimals = 3;
+  }
   let number = Number(value);
   if(Number.isNaN(number) || !Number.isFinite(number) || !number || !value) {
     return 0;
