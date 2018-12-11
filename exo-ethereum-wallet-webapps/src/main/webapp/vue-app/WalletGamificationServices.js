@@ -44,6 +44,14 @@ export function saveTeam(team) {
   .then(resp => resp && resp.ok && resp.json());
 }
 
+export function removeTeam(id) {
+  return fetch(`/portal/rest/wallet/api/gamification/removeTeam?id=${id}`, {
+    method: 'GET',
+    credentials: 'include'
+  })
+  .then(resp => resp && resp.ok);
+}
+
 export function savePeriodKudosTransactions(transactions) {
   return fetch('/portal/rest/wallet/api/gamification/savePeriodTransactions', {
     method: 'POST',

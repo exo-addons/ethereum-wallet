@@ -24,24 +24,22 @@
           sm6
           md4
           lg3>
-          <v-card>
-            <v-img
-              v-if="props.item.spacePrettyName && !props.item.imageError"
-              :src="`/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner`"
-              @error="$set(props.item, 'imageError', true)" />
-            <v-card flat>
+          <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto space`">
+            <v-card flat class="transparent">
               <v-card-title :class="props.item.description && 'pb-0'">
-                <h3 class="headline mb-0">
+                <v-chip dark>
                   <v-avatar v-if="props.item.spacePrettyName">
                     <img :src="`/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/avatar`">
                   </v-avatar>
-                  {{ props.item.name }}
-                </h3>
+                  <h3 class="headline">{{ props.item.name }}</h3>
+                </v-chip>
               </v-card-title>
               <v-card-title v-if="props.item.description" class="pt-0">
-                <h4>
-                  {{ props.item.description }}
-                </h4>
+                <v-chip dark>
+                  <h4>
+                    {{ props.item.description }}
+                  </h4>
+                </v-chip>
               </v-card-title>
               <v-divider></v-divider>
               <v-list dense>
@@ -57,8 +55,8 @@
             </v-card>
             <v-card-actions>
               <v-spacer />
-              <v-btn flat color="primary" @click="selectedTeam = props.item;">Edit</v-btn>
-              <v-btn flat color="primary">Delete</v-btn>
+              <v-btn v-if="props.item.id" flat color="primary" @click="selectedTeam = props.item;">Edit</v-btn>
+              <v-btn v-if="props.item.id" flat color="primary" @click="removeTeam(props.item.id)">Delete</v-btn>
               <v-spacer />
             </v-card-actions>
           </v-card>
@@ -71,7 +69,7 @@
 <script>
 import AddTeamModal from './WalletAdminGamificationAddTeamModal.vue';
 
-import {getTeams} from '../WalletGamificationServices.js';
+import {getTeams, removeTeam} from '../WalletGamificationServices.js';
 
 export default {
   components: {
@@ -101,6 +99,20 @@ export default {
         .catch(e => {
           console.debug('Error getting teams list', e);
           this.error = 'Error getting teams list, please contact your administrator';
+        });
+    },
+    removeTeam(id) {
+      removeTeam(id)
+        .then(status => {
+          if(status) {
+            this.refresh();
+          } else {
+            this.error = 'Error removing team';
+          }
+        })
+        .catch(e => {
+          console.debug('Error getting team with id', id, e);
+          this.error = 'Error removing team';
         });
     },
     addTeam(addedTeam) {

@@ -111,7 +111,15 @@
           </v-flex>
 
           <v-flex xs12>
-            <v-label>Pool members</v-label>
+            <address-auto-complete
+              ref="memberAutocomplete"
+              :ignore-items="members"
+              input-label="Pool members"
+              input-placeholder="Add new member"
+              no-data-label="Search for a user"
+              no-address
+              big-field
+              @item-selected="addMember($event)" />
             <v-data-table
               :items="membersObjects"
               item-key="id"
@@ -203,6 +211,7 @@ export default {
     name: '',
     description: '',
     budget: '',
+    computedBudget: '0',
     memberSelection: null,
     manager: null,
     managerObject: null,
@@ -381,6 +390,19 @@ export default {
           this.members.splice(poolMemberIndex, 1);
         }
       }
+    },
+    addMember(memberObject) {
+      if(!memberObject || !memberObject.id) {
+        return;
+      }
+      if(this.members) {
+        if (this.members.indexOf(memberObject.id) < 0) {
+          this.members.push(memberObject.id);
+        }
+      } else {
+        this.members = [memberObject.id];
+      }
+      this.$refs.memberAutocomplete.selectItem(null);
     },
     save() {
       this.error = null;

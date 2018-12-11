@@ -101,7 +101,7 @@ public class WalletGamificationService {
    */
   public void removeTeam(long id) {
     if (id != 0) {
-      teams = teams.stream().filter(team -> team.getId() == id).collect(Collectors.toList());
+      teams = teams.stream().filter(team -> team.getId() != id).collect(Collectors.toList());
     }
   }
 

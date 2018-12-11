@@ -60,7 +60,7 @@
       </div>
     </v-card-text>
     <v-card-actions>
-      <v-btn :loading="loadingSettings" class="btn btn-primary" dark @click="save">
+      <v-btn :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
         Save
       </v-btn>
     </v-card-actions>

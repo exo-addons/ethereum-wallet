@@ -26,4 +26,6 @@ public class GamificationTeam implements Serializable {
 
   private List<GamificationTeamMember> members          = null;
 
+  private Long                         createdDateInSeconds;
+
 }

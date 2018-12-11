@@ -10,6 +10,7 @@
                     :attach="`#${id}`"
                     :placeholder="inputPlaceholder"
                     :content-class="`contactAutoCompleteContent ${bigField && 'bigContactAutoComplete'}`"
+                    :filter="filterIgnoredItems"
                     class="contactAutoComplete"
                     max-width="100%"
                     item-text="name"
@@ -98,6 +99,12 @@ export default {
       type: Boolean,
       default: function() {
         return false;
+      }
+    },
+    ignoreItems: {
+      type: Array,
+      default: function() {
+        return [];
       }
     }
   },
@@ -194,7 +201,6 @@ export default {
         if(item) {
           item.id_type = `${item.type}_${item.id}`;
           this.currentUserItem = item;
-          this.items.push(this.currentUserItem);
         }
       });
   },
@@ -211,6 +217,18 @@ export default {
       this.isLoadingSuggestions = false;
       this.addressLoad = '';
       this.error = null;
+    },
+    canAddItem(item) {
+      return !item || !item.id || this.ignoreItems.indexOf(item.id) < 0;
+    },
+    filterIgnoredItems(item, queryText, itemText) {
+      if(queryText && itemText.toLowerCase().indexOf(queryText.toLowerCase()) < 0) {
+        return false;
+      }
+      if (this.ignoreItems && this.ignoreItems.length) {
+        return this.canAddItem(item);
+      }
+      return true;
     },
     selectItem(id, type) {
       if (!id) {
