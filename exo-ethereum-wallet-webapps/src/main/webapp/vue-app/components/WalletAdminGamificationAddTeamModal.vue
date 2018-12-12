@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="800px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-btn slot="activator" color="primary" icon flat>
+    <v-btn slot="activator" color="primary" class="btn btn-primary" icon large>
       <v-icon>add</v-icon>
     </v-btn>
     <v-card class="elevation-12">
@@ -8,8 +8,8 @@
         <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
         <span class="PopupTitle popupTitle">Add reward pool</span>
       </div>
-      <v-card-title class="text-xs-center">
-        <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
+      <v-card-title v-if="error && String(error).trim() != '{}'" class="text-xs-center">
+        <div class="alert alert-error v-content">
           <i class="uiIconError"></i>
           {{ error }}
         </div>
@@ -93,7 +93,7 @@
             class="xs12 sm6"
             @item-selected="manager = $event && $event.id" />
 
-          <v-flex class="mt-3" xs12>
+          <v-flex xs12>
             <v-radio-group v-model="rewardType" label="Reward pool members">
               <v-radio value="COMPUTED" label="By computing team reward from total budget" />
               <v-radio value="FIXED" label="By a total fixed budget (retained from global budget)" />
@@ -107,9 +107,8 @@
                   name="budget" />
               </v-flex>
               <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per member (retained from global budget)" />
-              <v-flex xs12 sm6>
+              <v-flex v-if="rewardType === 'FIXED_PER_MEMBER'" xs12 sm6>
                 <v-text-field
-                  v-if="rewardType === 'FIXED_PER_MEMBER'"
                   v-model="budgetPerMember"
                   placeholder="Enter the fixed budget per pool member"
                   type="number"

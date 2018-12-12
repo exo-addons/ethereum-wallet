@@ -222,6 +222,30 @@ export default {
       wallets: []
     };
   },
+  watch: {
+    kudosListRetrieved() {
+      if(this.kudosListRetrieved) {
+        window.dispatchEvent(new Event('resize'));
+      }
+    },
+    gamificationRetrieved() {
+      if(this.gamificationRetrieved) {
+        window.dispatchEvent(new Event('resize'));
+      }
+    },
+    selectedTab() {
+      this.$nextTick(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+    },
+    loading() {
+      if(!this.loading) {
+        this.$nextTick(() => {
+          window.dispatchEvent(new Event('resize'));
+        });
+      }
+    }
+  },
   created() {
     this.init()
       .then(() => this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId))

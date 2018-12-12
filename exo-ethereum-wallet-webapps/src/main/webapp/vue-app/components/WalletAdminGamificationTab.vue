@@ -1,264 +1,281 @@
 <template>
   <v-card flat>
-    <v-card-title class="text-xs-center">
-      <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
+    <v-card-text v-if="error && String(error).trim() != '{}'" class="text-xs-center">
+      <div class="alert alert-error v-content">
         <i class="uiIconError"></i>
         {{ error }}
       </div>
-    </v-card-title>
-
-    <h3 class="text-xs-left ml-3 ">Configuration</h3>
-    <v-card-text class="text-xs-left">
-      <div class="text-xs-left gamificationWalletConfiguration">
-        <span>Minimal gamification points threshold to reward users: </span>
-        <v-text-field
-          v-model.number="selectedThreshold"
-          name="threshold"
-          class="input-text-center" />
-      </div>
-      <div class="text-xs-left gamificationWalletConfiguration">
-        <span>The total gamification reward buget is set:</span>
-        <v-flex class="mt-3" xs12>
-          <v-radio-group v-model="selectedRewardType">
-            <v-radio value="FIXED" label="By a fixed budget" />
-            <v-flex v-if="selectedRewardType === 'FIXED'" xs12 sm6>
-              <v-text-field
-                v-model.number="selectedTotalBudget"
-                placeholder="Enter the fixed total budget"
-                type="number"
-                class="pt-0 pb-0"
-                name="totalBudget" />
-              <span> using token </span>
-              <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedContractAddress"
-                  :items="contracts"
-                  :return-object="false"
-                  attach="#selectedContractAddress"
-                  item-value="address"
-                  item-text="name"
-                  class="selectBoxVuetify xs12 sm2"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
-                  <template slot="selection" slot-scope="data">
-                    {{ selectedContractName }}
-                  </template>
-                </v-combobox>
-              </div>
-            </v-flex>
-            <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per valid member on period" />
-            <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'">
-              <v-text-field
-                v-model="selectedBudgetPerMember"
-                placeholder="Enter the fixed budget per valid member on period"
-                type="number"
-                class="pt-0 pb-0 xs12 sm2"
-                name="budgetPerMember" />
-              <span> using token </span>
-              <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedContractAddress"
-                  :items="contracts"
-                  :return-object="false"
-                  attach="#selectedContractAddress"
-                  item-value="address"
-                  item-text="name"
-                  class="selectBoxVuetify xs12 sm2"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
-                  <template slot="selection" slot-scope="data">
-                    {{ selectedContractName }}
-                  </template>
-                </v-combobox>
-              </div>
-            </v-flex>
-          </v-radio-group>
-        </v-flex>
-      </div>
-      <div class="text-xs-left gamificationWalletConfiguration">
-        <span>Reward priodicity: </span>
-        <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
-          <v-combobox
-            v-model="selectedPeriodType"
-            :items="periods"
-            :return-object="false"
-            attach="#selectedPeriodType"
-            class="selectBoxVuetify"
-            hide-no-data
-            hide-selected
-            small-chips>
-            <template slot="selection" slot-scope="data">
-              {{ selectedPeriodName }}
-            </template>
-          </v-combobox>
-        </div>
-      </div>
     </v-card-text>
-    <v-card-actions>
-      <v-btn :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
-        Save
-      </v-btn>
-    </v-card-actions>
-    <v-card-text class="text-xs-center">
-      <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
+    <v-card-text v-if="isContractDifferentFromPrincipal" class="text-xs-center">
+      <div class="alert alert-warning">
         <i class="uiIconWarning"></i>
         You have chosen a token that is different from principal displayed token
       </div>
     </v-card-text>
-    <gamification-teams
-      ref="gamificationTeams"
-      :wallets="validRecipients"
-      :contract-details="selectedContractDetails"
-      @teams-retrieved="refreshTeams" />
-    <h3 class="text-xs-left ml-3">Send Rewards</h3>
-    <v-card-text class="text-xs-center">
-      <div v-if="duplicatedWallets && duplicatedWallets.length" class="alert alert-warning">
-        <i class="uiIconWarning"></i>
-        There is some user(s) with multiple teams, thus the calculation could be wrong:
-        <ul>
-          <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
-            <code>{{ duplicatedWallet.name }}</code>
-          </li>
-        </ul>
-      </div>
-    </v-card-text>
-    <v-card-text class="text-xs-center">
-      <v-menu
-        ref="selectedDateMenu"
-        v-model="selectedDateMenu"
-        transition="scale-transition"
-        lazy
-        offset-y
-        class="gamificationDateSelector">
-        <v-text-field
-          slot="activator"
-          v-model="periodDatesDisplay"
-          label="Select the period date"
-          prepend-icon="event" />
-        <v-date-picker
-          v-model="selectedDate"
-          :first-day-of-week="1"
-          :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
-          @input="selectedDateMenu = false" />
-      </v-menu>
-      <v-card-title>
-        <v-text-field
-          v-model="search"
-          append-icon="search"
-          label="Search"
-          single-line
-          hide-details />
-      </v-card-title>
-      <v-data-table
-        v-model="selectedIdentitiesList"
-        :headers="identitiesHeaders"
-        :items="filteredIdentitiesList"
-        :loading="loading"
-        :sortable="true"
-        select-all
-        item-key="address"
-        class="elevation-1 mr-3 mb-2"
-        disable-initial-sort
-        hide-actions>
-        <template slot="items" slot-scope="props">
-          <tr :active="props.selected">
-            <td>
-              <v-checkbox
-                v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
-                :input-value="props.selected"
-                hide-details
-                @click="props.selected = !props.selected" />
-            </td>
-            <td>
-              <v-avatar size="36px">
-                <img
-                  :src="props.item.avatar"
-                  onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-              </v-avatar>
-            </td>
-            <td class="text-xs-left">
-              <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
-              <div v-else>
-                <del>
-                  <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
-                </del>
-                (No address)
+    <v-tabs v-model="selectedTab" grow>
+      <v-tabs-slider v-if="!loading" color="primary" />
+      <v-tab key="SendRewards">Send Rewards</v-tab>
+      <v-tab key="RewardPools">Reward pools</v-tab>
+      <v-tab key="Configuration">Configuration</v-tab>
+    </v-tabs>
+
+    <v-tabs-items v-model="selectedTab">
+      <v-tab-item id="SendRewards">
+        <v-card-text class="text-xs-center">
+          <div v-if="duplicatedWallets && duplicatedWallets.length" class="alert alert-warning">
+            <i class="uiIconWarning"></i>
+            There is some user(s) with multiple teams, thus the calculation could be wrong:
+            <ul>
+              <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
+                <code>{{ duplicatedWallet.name }}</code>
+              </li>
+            </ul>
+          </div>
+        </v-card-text>
+        <v-card-text class="text-xs-center">
+          <v-menu
+            ref="selectedDateMenu"
+            v-model="selectedDateMenu"
+            transition="scale-transition"
+            lazy
+            offset-y
+            class="gamificationDateSelector">
+            <v-text-field
+              slot="activator"
+              v-model="periodDatesDisplay"
+              label="Select the period date"
+              prepend-icon="event" />
+            <v-date-picker
+              v-model="selectedDate"
+              :first-day-of-week="1"
+              :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+              @input="selectedDateMenu = false" />
+          </v-menu>
+          <v-card-title>
+            <v-text-field
+              v-model="search"
+              append-icon="search"
+              label="Search"
+              single-line
+              hide-details />
+          </v-card-title>
+          <v-data-table
+            v-model="selectedIdentitiesList"
+            :headers="identitiesHeaders"
+            :items="filteredIdentitiesList"
+            :loading="loading"
+            :sortable="true"
+            select-all
+            item-key="address"
+            class="elevation-1 mr-3 mb-2"
+            disable-initial-sort
+            hide-actions>
+            <template slot="items" slot-scope="props">
+              <tr :active="props.selected">
+                <td>
+                  <v-checkbox
+                    v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+                    :input-value="props.selected"
+                    hide-details
+                    @click="props.selected = !props.selected" />
+                </td>
+                <td>
+                  <v-avatar size="36px">
+                    <img
+                      :src="props.item.avatar"
+                      onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                  </v-avatar>
+                </td>
+                <td class="text-xs-left">
+                  <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
+                  <div v-else>
+                    <del>
+                      <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
+                    </del>
+                    (No address)
+                  </div>
+                </td>
+                <td class="text-xs-left">
+                  <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">
+                    <li
+                      v-for="team in props.item.gamificationTeams"
+                      :key="team.id">
+                      {{ team.name }}
+                    </li>
+                  </ul>
+                  <div v-else>
+                    -
+                  </div>
+                </td>
+                <td>
+                  <a
+                    v-if="props.item.hash"
+                    href="javascript:void(0);"
+                    target="_blank"
+                    title="Open transaction in wallet"
+                    @click="$emit('open-wallet-transaction', props.item)">
+                    Open in wallet
+                  </a>
+                  <span v-else>-</span>
+                </td>
+                <td>
+                  <template v-if="!props.item.status">
+                    <v-icon
+                      v-if="!props.item.address"
+                      color="warning"
+                      title="No address">
+                      warning
+                    </v-icon>
+                    <v-icon
+                      v-else-if="!props.item.points || props.item.points < threshold"
+                      :title="`Not enough points, minimum: ${threshold} points`"
+                      color="warning">
+                      warning
+                    </v-icon>
+                    <div v-else>-</div>
+                  </template>
+                  <v-progress-circular
+                    v-else-if="props.item.status === 'pending'"
+                    color="primary"
+                    indeterminate
+                    size="20" />
+                  <v-icon
+                    v-else
+                    :color="props.item.status === 'success' ? 'success' : 'error'"
+                    :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
+                    v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+                </td>
+                <td>
+                  <v-text-field v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
+                  <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
+                  <template v-else>-</template>
+                </td>
+                <td v-html="props.item.points">
+                </td>
+              </tr>
+            </template>
+            <template slot="footer">
+              <td :colspan="identitiesHeaders.length - 1">
+                <strong>Total</strong>
+              </td>
+              <td>
+                <strong>{{ totalTokens }}</strong>
+              </td>
+              <td>
+                <strong>{{ totalPoints }}</strong>
+              </td>
+            </template>
+          </v-data-table>
+        </v-card-text>
+      </v-tab-item>
+      <v-tab-item id="RewardPools">
+        <gamification-teams
+          ref="gamificationTeams"
+          :wallets="validRecipients"
+          :contract-details="selectedContractDetails"
+          @teams-retrieved="refreshTeams" />
+      </v-tab-item>
+      <v-tab-item id="Configuration">
+        <div slot="header" class="text-xs-left ml-3">Configuration</div>
+        <v-card>
+          <v-card-text class="text-xs-left mt-3">
+            <div class="text-xs-left gamificationWalletConfiguration">
+              <span>Minimal gamification points threshold to reward users: </span>
+              <v-text-field
+                v-model.number="selectedThreshold"
+                name="threshold"
+                class="input-text-center" />
+            </div>
+            <div class="text-xs-left gamificationWalletConfiguration">
+              <span>Reward priodicity: </span>
+              <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
+                <v-combobox
+                  v-model="selectedPeriodType"
+                  :items="periods"
+                  :return-object="false"
+                  attach="#selectedPeriodType"
+                  class="selectBoxVuetify"
+                  hide-no-data
+                  hide-selected
+                  small-chips>
+                  <template slot="selection" slot-scope="data">
+                    {{ selectedPeriodName }}
+                  </template>
+                </v-combobox>
               </div>
-            </td>
-            <td class="text-xs-left">
-              <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">
-                <li
-                  v-for="team in props.item.gamificationTeams"
-                  :key="team.id">
-                  {{ team.name }}
-                </li>
-              </ul>
-              <div v-else>
-                -
-              </div>
-            </td>
-            <td>
-              <a
-                v-if="props.item.hash"
-                href="javascript:void(0);"
-                target="_blank"
-                title="Open transaction in wallet"
-                @click="$emit('open-wallet-transaction', props.item)">
-                Open in wallet
-              </a>
-              <span v-else>-</span>
-            </td>
-            <td>
-              <template v-if="!props.item.status">
-                <v-icon
-                  v-if="!props.item.address"
-                  color="warning"
-                  title="No address">
-                  warning
-                </v-icon>
-                <v-icon
-                  v-else-if="!props.item.points || props.item.points < threshold"
-                  :title="`Not enough points, minimum: ${threshold} points`"
-                  color="warning">
-                  warning
-                </v-icon>
-                <div v-else>-</div>
-              </template>
-              <v-progress-circular
-                v-else-if="props.item.status === 'pending'"
-                color="primary"
-                indeterminate
-                size="20" />
-              <v-icon
-                v-else
-                :color="props.item.status === 'success' ? 'success' : 'error'"
-                :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
-                v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
-            </td>
-            <td>
-              <v-text-field v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
-              <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
-              <template v-else>-</template>
-            </td>
-            <td v-html="props.item.points">
-            </td>
-          </tr>
-        </template>
-        <template slot="footer">
-          <td :colspan="identitiesHeaders.length - 1">
-            <strong>Total</strong>
-          </td>
-          <td>
-            <strong>{{ totalTokens }}</strong>
-          </td>
-          <td>
-            <strong>{{ totalPoints }}</strong>
-          </td>
-        </template>
-      </v-data-table>
-    </v-card-text>
+            </div>
+            <div class="text-xs-left mt-4">
+              <div>The total gamification reward buget is set:</div>
+              <v-flex class="ml-4">
+                <v-radio-group v-model="selectedRewardType">
+                  <v-radio value="FIXED" label="By a fixed budget" />
+                  <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
+                    <v-text-field
+                      v-model.number="selectedTotalBudget"
+                      placeholder="Enter the fixed total budget"
+                      type="number"
+                      class="pt-0 pb-0"
+                      name="totalBudget" />
+                    <span> using token </span>
+                    <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
+                      <v-combobox
+                        v-model="selectedContractAddress"
+                        :items="contracts"
+                        :return-object="false"
+                        attach="#selectedContractAddress"
+                        item-value="address"
+                        item-text="name"
+                        class="selectBoxVuetify"
+                        hide-no-data
+                        hide-selected
+                        small-chips>
+                        <template slot="selection" slot-scope="data">
+                          {{ selectedContractName }}
+                        </template>
+                      </v-combobox>
+                    </div>
+                  </v-flex>
+                  <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per valid member on period" />
+                  <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
+                    <v-text-field
+                      v-model="selectedBudgetPerMember"
+                      placeholder="Enter the fixed budget per valid member on period"
+                      type="number"
+                      class="pt-0 pb-0"
+                      name="budgetPerMember" />
+                    <span> using token </span>
+                    <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
+                      <v-combobox
+                        v-model="selectedContractAddress"
+                        :items="contracts"
+                        :return-object="false"
+                        attach="#selectedContractAddress"
+                        item-value="address"
+                        item-text="name"
+                        class="selectBoxVuetify"
+                        hide-no-data
+                        hide-selected
+                        small-chips>
+                        <template slot="selection" slot-scope="data">
+                          {{ selectedContractName }}
+                        </template>
+                      </v-combobox>
+                    </div>
+                  </v-flex>
+                </v-radio-group>
+              </v-flex>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
+              Save
+            </v-btn>
+            <v-spacer />
+          </v-card-actions>
+        </v-card>
+      </v-tab-item>
+    </v-tabs-items>
   </v-card>
 </template>
 
@@ -303,6 +320,7 @@ export default {
       threshold: null,
       totalBudget: null,
       budgetPerMember: null,
+      selectedTab: true,
       periodType: null,
       duplicatedWallets: null,
       search: '',

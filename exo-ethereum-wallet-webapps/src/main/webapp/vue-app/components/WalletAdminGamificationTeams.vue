@@ -1,7 +1,6 @@
 <template>
   <div>
     <h3 class="text-xs-left ml-3">
-      Reward pools
       <add-team-modal
         ref="teamModal"
         :team="selectedTeam"
