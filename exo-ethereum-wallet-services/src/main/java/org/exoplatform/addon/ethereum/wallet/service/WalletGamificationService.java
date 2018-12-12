@@ -1,13 +1,18 @@
 package org.exoplatform.addon.ethereum.wallet.service;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUtils.fromDTO;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUtils.toDTO;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 
+import org.exoplatform.addon.ethereum.wallet.dao.GamificationTeamDAO;
+import org.exoplatform.addon.ethereum.wallet.ext.gamification.entity.GamificationTeamEntity;
 import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.*;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
@@ -21,21 +26,22 @@ public class WalletGamificationService {
 
   private static final Log           LOG                      = ExoLogger.getLogger(WalletGamificationService.class);
 
+  GamificationTeamDAO                gamificationTeamDAO      = null;
+
   private SettingService             settingService;
 
   private ResourceBinder             restResourceBinder;
 
   private GamificationSettings       gamificationSettings     = new GamificationSettings();
 
-  private List<GamificationTeam>     teams                    = new ArrayList<>();
-
   private AbstractResourceDescriptor gamificationRestResource;
 
   private boolean                    gamificationRestSearched = false;
 
-  private long                       id                       = 1;
-
-  public WalletGamificationService(ResourceBinder restResourceBinder, SettingService settingService) {
+  public WalletGamificationService(GamificationTeamDAO gamificationTeamDAO,
+                                   ResourceBinder restResourceBinder,
+                                   SettingService settingService) {
+    this.gamificationTeamDAO = gamificationTeamDAO;
     this.settingService = settingService;
     this.restResourceBinder = restResourceBinder;
   }
@@ -70,38 +76,34 @@ public class WalletGamificationService {
   }
 
   public List<GamificationTeam> getTeams() {
-    return teams;
+    List<GamificationTeamEntity> teamEntities = gamificationTeamDAO.findAll();
+    return teamEntities.stream().map(teamEntity -> toDTO(teamEntity)).collect(Collectors.toList());
   }
 
   public GamificationTeam saveTeam(GamificationTeam gamificationTeam) {
     if (gamificationTeam == null) {
       throw new IllegalArgumentException("Empty team to save");
     }
-    if (gamificationTeam.getId() == null || gamificationTeam.getId() == 0) {
-      gamificationTeam.setId(id++);
-      teams.add(gamificationTeam);
+    GamificationTeamEntity teamEntity = fromDTO(gamificationTeam);
+    if (teamEntity.getId() == null || teamEntity.getId() == 0) {
+      teamEntity = gamificationTeamDAO.create(teamEntity);
     } else {
-      GamificationTeam oldGamificationTeam = teams.stream()
-                                                  .filter(team -> team.getId() == gamificationTeam.getId())
-                                                  .findFirst()
-                                                  .get();
-      if (oldGamificationTeam == null) {
-        teams.add(gamificationTeam);
-      } else {
-        teams.remove(oldGamificationTeam);
-        teams.add(gamificationTeam);
-      }
+      teamEntity = gamificationTeamDAO.update(teamEntity);
     }
-    return gamificationTeam;
+    return toDTO(gamificationTeamDAO.find(teamEntity.getId()));
   }
 
   /**
    * Remove a Gamification Team/Pool by id
+   * 
    * @param id
    */
   public void removeTeam(long id) {
     if (id != 0) {
-      teams = teams.stream().filter(team -> team.getId() != id).collect(Collectors.toList());
+      GamificationTeamEntity entity = gamificationTeamDAO.find(id);
+      if (entity != null) {
+        gamificationTeamDAO.delete(entity);
+      }
     }
   }
 

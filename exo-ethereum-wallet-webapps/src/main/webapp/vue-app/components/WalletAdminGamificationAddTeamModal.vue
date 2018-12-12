@@ -123,7 +123,8 @@
             <v-data-table
               :items="membersObjects"
               item-key="id"
-              class="elevation-1 mt-2">
+              class="elevation-1 mt-2"
+              sortable>
               <template slot="no-data">
                 <tr>
                   <td colspan="3" class="text-xs-center">
@@ -133,10 +134,7 @@
               </template>
               <template slot="headers" slot-scope="props">
                 <tr>
-                  <th class="text-xs-left">
-                    Avatar
-                  </th>
-                  <th class="text-xs-center">
+                  <th colspan="2" class="text-xs-center">
                     Name
                   </th>
                   <th class="text-xs-right">
@@ -196,6 +194,12 @@ export default {
         return null;
       }
     },
+    teams: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    },
     wallets: {
       type: Array,
       default: function() {
@@ -245,7 +249,7 @@ export default {
       }
       this.rewardTeamSpaceId = null;
       if(this.rewardTeamSpaceOptions && this.rewardTeamSpaceOptions.length) {
-        const selectedObject = this.rewardTeamSpaceOptions.find(space => space.id === this.rewardTeamSpace);
+        const selectedObject = this.rewardTeamSpaceOptions.find(space => space.name === this.rewardTeamSpace);
         this.rewardTeamSpaceId = selectedObject && selectedObject.technicalId;
         if(selectedObject && selectedObject.members && selectedObject.members.length) {
           this.members = selectedObject.members && selectedObject.members.slice();
@@ -362,25 +366,23 @@ export default {
 
       this.rewardTeamSpace = null;
       this.rewardTeamSpaceId = null;
-      this.rewardTeamSpaceOptions = [];
       this.rewardTeamSpaceSearchTerm = null;
       this.isLoadingSpaceSuggestions = false;
 
       if (this.team) {
-        this.rewardTeamSpace = this.team.spacePrettyName;
-        this.rewardTeamSpaceId = this.team.spaceId;
-
-        if (this.team.spacePrettyName) {
-          searchSpaces(this.rewardTeamSpace)
+        if (this.team.spacePrettyName && this.team.spaceId) {
+          searchSpaces(this.team.spacePrettyName)
             .then(items => {
               if (items) {
                 this.rewardTeamSpaceOptions = items;
               } else {
                 this.rewardTeamSpaceOptions = [];
               }
-              if (!this.rewardTeamSpaceOptions.find(item => item.id === this.rewardTeamSpace)) {
-                this.rewardTeamSpaceOptions.push({id : this.rewardTeamSpace, technicalId: this.rewardTeamSpaceId, name : this.rewardTeamSpace, error : true});
+              if (!this.rewardTeamSpaceOptions.find(item => item.id === this.team.spaceId)) {
+                this.rewardTeamSpaceOptions.push({id : this.team.spaceId, technicalId: this.team.spaceId, name : this.team.spacePrettyName});
               }
+              this.rewardTeamSpace = this.team.spacePrettyName;
+              this.rewardTeamSpaceId = this.team.spaceId;
             });
         }
 
@@ -419,8 +421,6 @@ export default {
     },
     save() {
       this.error = null;
-      this.loading = true;
-
       if(!this.name) {
         this.error = 'Pool name is mandatory';
         return;
@@ -431,36 +431,64 @@ export default {
         return;
       }
 
-      const members = this.membersObjects && this.membersObjects.map(memberObject => Object({id: memberObject.id, identityId: memberObject.identityId}));
-      const team = {
-        id: this.id,
-        name: this.name,
-        description: this.description,
-        budget: this.budget ? Number(this.budget) : 0,
-        spacePrettyName: this.rewardTeamSpace,
-        spaceId: this.rewardTeamSpaceId,
-        members: members,
-        manager: {
-          id: this.manager,
-          identityId: this.managerObject && this.managerObject.identityId
-        }
-      };
-
-      return saveTeam(team)
-        .then(addedTeam => {
-          if(addedTeam) {
-            this.$emit("saved", addedTeam);
-            this.loading = false;
-            this.dialog = false;
-          } else {
-            console.debug("Error saving pool, response code is NOK");
-            this.error = 'Error saving pool, please contact your administrator.';
-          }
-        })
-        .catch(e => {
-          console.debug("Error saving pool", e);
-          this.error = 'Error saving pool, please contact your administrator.';
+      if(this.teams && this.teams.length) {
+        let nameAlreadyExists = false;
+        this.teams.forEach(team => {
+          nameAlreadyExists = nameAlreadyExists || team.name.toLowerCase() === this.name.toLowerCase();
         });
+        if(nameAlreadyExists) {
+          this.error = 'Pool name already exists';
+          return;
+        }
+      }
+
+      this.loading = true;
+      try {
+        const members = this.membersObjects && this.membersObjects.map(memberObject => Object({id: memberObject.id, identityId: memberObject.identityId}));
+        if(this.team && this.team.members && this.team.members.length) {
+          members.forEach(memberObject => {
+            const oldMember = this.team.members.find(oldMemberObject => String(oldMemberObject.identityId) === String(memberObject.identityId));
+            if(oldMember) {
+              memberObject.technicalId = oldMember.technicalId;
+            }
+          });
+        }
+        const team = {
+          id: this.id,
+          name: this.name,
+          description: this.description,
+          budget: this.budget ? Number(this.budget) : 0,
+          spacePrettyName: this.rewardTeamSpace,
+          spaceId: this.rewardTeamSpaceId,
+          members: members,
+          manager: {
+            id: this.manager,
+            identityId: this.managerObject && this.managerObject.identityId
+          }
+        };
+
+        return saveTeam(team)
+          .then(addedTeam => {
+            if(addedTeam) {
+              this.$emit("saved", addedTeam);
+              this.dialog = false;
+            } else {
+              console.debug("Error saving pool, response code is NOK");
+              this.error = 'Error saving pool, please contact your administrator.';
+            }
+          })
+          .catch(e => {
+            console.debug("Error saving pool", e);
+            this.error = 'Error saving pool, please contact your administrator.';
+          })
+          .finally(() => {
+            this.loading = false;
+          });
+      } catch(e) {
+        console.debug("Error saving pool", e);
+        this.error = 'Error saving pool, please contact your administrator.';
+        this.loading = false;
+      }
     }
   }
 };

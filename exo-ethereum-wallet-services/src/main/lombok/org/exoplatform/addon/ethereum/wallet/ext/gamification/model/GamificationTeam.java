@@ -18,14 +18,12 @@ public class GamificationTeam implements Serializable {
 
   private Double                       budget;
 
-  private String                       spaceId;
+  private Long                         spaceId;
 
   private String                       spacePrettyName;
 
   private GamificationTeamMember       manager;
 
   private List<GamificationTeamMember> members          = null;
-
-  private Long                         createdDateInSeconds;
 
 }

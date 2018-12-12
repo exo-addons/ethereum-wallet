@@ -15,6 +15,8 @@ public class GamificationTeamMember implements Serializable {
 
   private String            providerId       = OrganizationIdentityProvider.NAME;
 
-  private String            identityId;
+  private Long              technicalId;
+
+  private Long              identityId;
 
 }

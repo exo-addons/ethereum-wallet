@@ -57,6 +57,7 @@ public class WalletGamificationREST implements ResourceContainer {
 
   /**
    * Remove a Gamification Team/Pool by id
+   * 
    * @param id
    * @return
    */
@@ -68,7 +69,11 @@ public class WalletGamificationREST implements ResourceContainer {
     if (id == null || id == 0) {
       return Response.status(400).build();
     }
-    walletGamificationService.removeTeam(id);
+    try {
+      walletGamificationService.removeTeam(id);
+    } catch (Exception e) {
+      LOG.warn("Error removing Gamification pool with id: " + id, e);
+    }
     return Response.ok().build();
   }
 
@@ -107,7 +112,11 @@ public class WalletGamificationREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with empty team");
       return Response.status(400).build();
     }
-    gamificationTeam = walletGamificationService.saveTeam(gamificationTeam);
+    try {
+      gamificationTeam = walletGamificationService.saveTeam(gamificationTeam);
+    } catch (Exception e) {
+      LOG.warn("Error saving Gamification pool", e);
+    }
     return Response.ok(gamificationTeam).build();
   }
 

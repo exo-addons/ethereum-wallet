@@ -312,6 +312,9 @@ public class Utils {
         space = spaceService.getSpaceByDisplayName(id);
         if (space == null) {
           space = spaceService.getSpaceByUrl(id);
+          if (space == null) {
+            space = spaceService.getSpaceById(id);
+          }
         }
       }
     }
