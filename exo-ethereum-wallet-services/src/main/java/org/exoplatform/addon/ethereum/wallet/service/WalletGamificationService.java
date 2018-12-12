@@ -28,13 +28,14 @@ public class WalletGamificationService {
 
   GamificationTeamDAO                gamificationTeamDAO      = null;
 
-  private SettingService             settingService;
+  private SettingService             settingService           = null;
 
-  private ResourceBinder             restResourceBinder;
+  private ResourceBinder             restResourceBinder       = null;
 
-  private GamificationSettings       gamificationSettings     = new GamificationSettings();
+  private GamificationSettings       gamificationSettings     = null;
 
-  private AbstractResourceDescriptor gamificationRestResource;
+  // Used to see if gamification addon is deployed
+  private AbstractResourceDescriptor gamificationRestResource = null;
 
   private boolean                    gamificationRestSearched = false;
 
@@ -46,7 +47,7 @@ public class WalletGamificationService {
     this.restResourceBinder = restResourceBinder;
   }
 
-  public GamificationSettings getSettings() {
+  public GamificationSettings getSettings() throws Exception {
     if (this.gamificationRestResource == null && !gamificationRestSearched) {
       try {
         // Check if gamification is deployed
@@ -65,14 +66,29 @@ public class WalletGamificationService {
       this.gamificationRestSearched = true;
     }
     if (this.gamificationRestResource != null) {
-      return gamificationSettings;
+      if (this.gamificationSettings == null) {
+        SettingValue<?> value = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_GAMIFICATION_SETTINGS_KEY_NAME);
+        if (value != null && value.getValue() != null) {
+          this.gamificationSettings = value == null
+              || value.getValue() == null ? this.gamificationSettings
+                                          : GamificationSettings.fromString(value.getValue().toString());
+        }
+      }
+      return this.gamificationSettings;
     } else {
       return null;
     }
   }
 
   public void saveSettings(GamificationSettings gamificationSettings) {
-    this.gamificationSettings = gamificationSettings;
+    if (gamificationSettings == null) {
+      throw new IllegalArgumentException("settings are empty");
+    }
+    settingService.set(EXT_WALLET_CONTEXT,
+                       EXT_WALLET_SCOPE,
+                       EXT_GAMIFICATION_SETTINGS_KEY_NAME,
+                       SettingValue.create(gamificationSettings.toStringToStore()));
+    this.gamificationSettings = null;
   }
 
   public List<GamificationTeam> getTeams() {

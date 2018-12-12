@@ -96,15 +96,6 @@
           <v-flex class="mt-3" xs12>
             <v-radio-group v-model="rewardType" label="Reward pool members">
               <v-radio value="COMPUTED" label="By computing team reward from total budget" />
-              <v-flex xs12 sm6>
-                <v-text-field
-                  v-if="rewardType === 'COMPUTED' && Number(computedBudget)"
-                  v-model="computedBudget"
-                  type="number"
-                  name="computedBudget"
-                  class="pt-0 pb-0"
-                  readonly />
-              </v-flex>
               <v-radio value="FIXED" label="By a total fixed budget (retained from global budget)" />
               <v-flex xs12 sm6>
                 <v-text-field

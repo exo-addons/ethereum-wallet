@@ -6,6 +6,7 @@
         {{ error }}
       </div>
     </v-card-title>
+
     <h3 class="text-xs-left ml-3 ">Configuration</h3>
     <v-card-text class="text-xs-left">
       <div class="text-xs-left gamificationWalletConfiguration">
@@ -360,7 +361,7 @@ export default {
           value: 'name'
         },
         {
-          text: 'Teams',
+          text: 'Pools',
           align: 'center',
           sortable: true,
           value: 'gamificationTeams'

@@ -14,9 +14,16 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.ws.frameworks.json.JsonGenerator;
+import org.exoplatform.ws.frameworks.json.JsonParser;
+import org.exoplatform.ws.frameworks.json.impl.*;
 
 public class GamificationUtils {
-  private static final Log LOG = ExoLogger.getLogger(GamificationUtils.class);
+  private static final Log               LOG                  = ExoLogger.getLogger(GamificationUtils.class);
+
+  public static final JsonParser         JSON_PARSER          = new JsonParserImpl();
+
+  public static final JsonGenerator      JSON_GENERATOR       = new JsonGeneratorImpl();
 
   public static LocalDateTime timeFromSeconds(long createdDate) {
     return LocalDateTime.ofInstant(Instant.ofEpochSecond(createdDate), TimeZone.getDefault().toZoneId());

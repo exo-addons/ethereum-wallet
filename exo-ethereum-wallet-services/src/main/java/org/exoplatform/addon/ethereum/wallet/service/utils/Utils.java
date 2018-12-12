@@ -83,6 +83,8 @@ public class Utils {
 
   public static final String                             GLOBAL_SETTINGS_KEY_NAME              = "GLOBAL_SETTINGS";
 
+  public static final String                             EXT_GAMIFICATION_SETTINGS_KEY_NAME    = "GAMIFICATION_SETTINGS";
+
   public static final String                             EXT_TOKENS_KUDOS_BUDGET               = "KUDOS_BUDGET";
 
   public static final String                             EXT_KUDOS_CONTRACT_ADDRESS_KEY_NAME   = "KUDOS_CONTRACT_ADDRESS";

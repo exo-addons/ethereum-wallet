@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUtils.timeFromSeconds;
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
 
 import java.util.List;
 
@@ -42,7 +42,13 @@ public class WalletGamificationREST implements ResourceContainer {
   @Path("settings")
   @RolesAllowed("users")
   public Response getSettings() {
-    return Response.ok(walletGamificationService.getSettings()).build();
+    try {
+      GamificationSettings settings = walletGamificationService.getSettings();
+      return Response.ok(settings == null ? new GamificationSettings() : settings).build();
+    } catch (Exception e) {
+      LOG.warn("Error getting gamification settings", e);
+      return Response.serverError().build();
+    }
   }
 
   /**
