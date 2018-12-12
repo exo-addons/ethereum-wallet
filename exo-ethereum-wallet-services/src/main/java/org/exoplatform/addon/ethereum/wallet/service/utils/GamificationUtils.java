@@ -51,6 +51,8 @@ public class GamificationUtils {
     teamEntity.setName(gamificationTeam.getName());
     teamEntity.setDescription(gamificationTeam.getDescription());
     teamEntity.setBudget(gamificationTeam.getBudget());
+    teamEntity.setRewardType(gamificationTeam.getRewardType());
+    teamEntity.setRewardPerMember(gamificationTeam.getRewardPerMember());
     if (gamificationTeam.getManager() != null && gamificationTeam.getManager().getIdentityId() != 0) {
       teamEntity.setManager(gamificationTeam.getManager().getIdentityId());
     }
@@ -77,6 +79,8 @@ public class GamificationUtils {
     gamificationTeam.setDescription(teamEntity.getDescription());
     gamificationTeam.setBudget(teamEntity.getBudget());
     gamificationTeam.setManager(getGamificationTeamMember(teamEntity.getManager()));
+    gamificationTeam.setRewardType(teamEntity.getRewardType());
+    gamificationTeam.setRewardPerMember(teamEntity.getRewardPerMember());
     if (teamEntity.getSpaceId() != null && teamEntity.getSpaceId() != 0) {
       SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
       Space space = spaceService.getSpaceById(String.valueOf(teamEntity.getSpaceId()));

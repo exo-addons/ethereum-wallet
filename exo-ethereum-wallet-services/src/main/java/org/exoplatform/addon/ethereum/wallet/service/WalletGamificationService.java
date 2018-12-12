@@ -97,14 +97,17 @@ public class WalletGamificationService {
    * Remove a Gamification Team/Pool by id
    * 
    * @param id
+   * @return 
    */
-  public void removeTeam(long id) {
-    if (id != 0) {
-      GamificationTeamEntity entity = gamificationTeamDAO.find(id);
-      if (entity != null) {
-        gamificationTeamDAO.delete(entity);
-      }
+  public GamificationTeam removeTeam(Long id) {
+    if (id == null || id == 0) {
+      throw new IllegalArgumentException("Team id is required");
     }
+    GamificationTeamEntity entity = gamificationTeamDAO.find(id);
+    if (entity != null) {
+      gamificationTeamDAO.delete(entity);
+    }
+    return toDTO(entity);
   }
 
   /**

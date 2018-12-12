@@ -14,24 +14,15 @@
           v-model.number="selectedThreshold"
           name="threshold"
           class="input-text-center" />
-        <span> gamification points per </span>
-        <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
-          <v-combobox
-            v-model="selectedPeriodType"
-            :items="periods"
-            :return-object="false"
-            attach="#selectedPeriodType"
-            label="Period type"
-            class="selectBoxVuetify"
-            hide-no-data
-            hide-selected
-            small-chips>
-            <template slot="selection" slot-scope="data">
-              {{ selectedPeriodName }}
-            </template>
-          </v-combobox>
-        </div>
-        <span> using contract </span>
+        <span> gamification points.</span>
+      </div>
+      <div class="text-xs-left gamificationWalletConfiguration">
+        <span>A total budget of </span>
+        <v-text-field
+          v-model.number="selectedTotalBudget"
+          name="totalBudget"
+          class="input-text-center" />
+        <span> using token </span>
         <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
           <v-combobox
             v-model="selectedContractAddress"
@@ -49,14 +40,23 @@
             </template>
           </v-combobox>
         </div>
-      </div>
-      <div class="text-xs-left gamificationWalletConfiguration">
-        <span>A total budget of </span>
-        <v-text-field
-          v-model.number="selectedTotalBudget"
-          name="totalBudget"
-          class="input-text-center" />
-        <span> will be used per {{ selectedPeriodName }} </span>
+        <span> will be used per </span>
+        <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
+          <v-combobox
+            v-model="selectedPeriodType"
+            :items="periods"
+            :return-object="false"
+            attach="#selectedPeriodType"
+            label="Period type"
+            class="selectBoxVuetify"
+            hide-no-data
+            hide-selected
+            small-chips>
+            <template slot="selection" slot-scope="data">
+              {{ selectedPeriodName }}
+            </template>
+          </v-combobox>
+        </div>
       </div>
     </v-card-text>
     <v-card-actions>
@@ -73,6 +73,7 @@
     <gamification-teams
       ref="gamificationTeams"
       :wallets="validRecipients"
+      :contract-details="selectedContractDetails"
       @teams-retrieved="refreshTeams" />
     <h3 class="text-xs-left ml-3">Send Rewards</h3>
     <v-card-text class="text-xs-center">
@@ -173,7 +174,21 @@
               <span v-else>-</span>
             </td>
             <td>
-              <div v-if="!props.item.status">-</div>
+              <template v-if="!props.item.status">
+                <v-icon
+                  v-if="!props.item.address"
+                  color="warning"
+                  title="No address">
+                  warning
+                </v-icon>
+                <v-icon
+                  v-else-if="!props.item.points || props.item.points < threshold"
+                  :title="`Not enough points, minimum: ${threshold} points`"
+                  color="warning">
+                  warning
+                </v-icon>
+                <div v-else>-</div>
+              </template>
               <v-progress-circular
                 v-else-if="props.item.status === 'pending'"
                 color="primary"
@@ -484,14 +499,16 @@ export default {
       // Members with no Team
       teams.push({
         members: membersWithEmptyTeam,
+        rewardType: 'COMPUTED',
         computedBudget: 0
       });
 
       let totalComputedBudget = this.totalBudget;
       let computedRecipientsCount = 0;
       teams.forEach(team => {
-        team.membersWallets = [];
+        team.validMembersWallets = [];
         team.computedBudget = 0;
+        team.fixedBudget = 0;
         team.totalValidPoints = 0;
         if(!team.members || !team.members.length) {
           return;
@@ -500,35 +517,40 @@ export default {
         team.members.forEach(memberObject => {
           const wallet = memberObject.address ? memberObject : validRecipients.find(wallet => wallet.id === memberObject.id);
           if(wallet) {
-            team.membersWallets.push(wallet);
+            team.validMembersWallets.push(wallet);
             team.totalValidPoints += wallet.points;
           }
         });
 
-        if (team.budget) {
-          if(team.membersWallets.length) {
-            team.computedBudget = Number(team.budget);
+        if(team.validMembersWallets.length) {
+          if (team.rewardType === 'FIXED') {
+            team.computedBudget = team.fixedBudget = team.budget ? Number(team.budget) : 0;
             totalComputedBudget -= team.computedBudget;
+          } else if (team.rewardType === 'FIXED_PER_MEMBER') {
+            team.computedBudget = team.fixedBudget = team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0;
+            totalComputedBudget -= team.computedBudget;
+          } else if (team.rewardType === 'COMPUTED') {
+            computedRecipientsCount += team.validMembersWallets.length;
           }
-        } else {
-          computedRecipientsCount += team.membersWallets.length;
         }
       });
 
       const tokenPerRecipient = computedRecipientsCount > 0 && totalComputedBudget > 0 ? totalComputedBudget / computedRecipientsCount : 0;
 
       teams.forEach(team => {
-        if(!team.membersWallets || !team.membersWallets.length) {
+        if(!team.validMembersWallets || !team.validMembersWallets.length) {
           return;
         }
 
-        let budget = Number(team.budget);
-        if (!budget || Number.isNaN(budget)) {
-          budget = team.computedBudget = tokenPerRecipient * team.membersWallets.length;
+        let budget = 0;
+        if (team.rewardType === 'FIXED' || team.rewardType === 'FIXED_PER_MEMBER') {
+          budget = team.fixedBudget ? Number(team.fixedBudget) : 0;
+        } else if (team.rewardType === 'COMPUTED') {
+          budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;
         }
 
         if (budget) {
-          team.membersWallets.forEach(wallet => {
+          team.validMembersWallets.forEach(wallet => {
             const tokensToSend = budget * wallet.points / team.totalValidPoints;
             this.$set(wallet, 'tokensToSend', this.toFixed(tokensToSend));
           });

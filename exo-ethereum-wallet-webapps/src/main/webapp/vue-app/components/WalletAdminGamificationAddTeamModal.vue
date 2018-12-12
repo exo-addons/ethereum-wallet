@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="700px" max-width="100vw" persistent @keydown.esc="dialog = false">
+  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="800px" max-width="100vw" persistent @keydown.esc="dialog = false">
     <v-btn slot="activator" color="primary" icon flat>
       <v-icon>add</v-icon>
     </v-btn>
@@ -16,6 +16,23 @@
       </v-card-title>
       <v-container grid-list-md class="pt-2">
         <v-layout wrap class="rewardPoolForm">
+          <v-flex xs12 sm6>
+            <v-text-field
+              v-model="name"
+              label="Pool name"
+              placeholder="Enter pool name"
+              name="name"
+              required />
+          </v-flex>
+
+          <v-flex xs12 sm6>
+            <v-text-field
+              v-model="description"
+              label="Pool description"
+              placeholder="Enter pool description"
+              name="description" />
+          </v-flex>
+
           <v-flex
             id="rewardTeamSpaceAutoComplete"
             class="contactAutoComplete"
@@ -76,38 +93,39 @@
             class="xs12 sm6"
             @item-selected="manager = $event && $event.id" />
 
-          <v-flex xs12 sm6>
-            <v-text-field
-              v-model="name"
-              label="Pool name"
-              placeholder="Enter pool name"
-              name="name"
-              required />
-          </v-flex>
-
-          <v-flex xs12 sm6>
-            <v-text-field
-              v-model="description"
-              label="Pool description"
-              placeholder="Enter pool description"
-              name="description" />
-          </v-flex>
-
-          <v-flex xs12 sm6>
-            <v-text-field
-              v-model="budget"
-              label="Pool fixed budget"
-              placeholder="Enter the pool budget (will be removed from total budget)"
-              type="number"
-              name="budget" />
-          </v-flex>
-          <v-flex xs12 sm6>
-            <v-text-field
-              v-model="computedBudget"
-              label="Computed pool budget (switch number of members)"
-              type="number"
-              name="computedBudget"
-              readonly />
+          <v-flex class="mt-3" xs12>
+            <v-radio-group v-model="rewardType" label="Reward pool members">
+              <v-radio value="COMPUTED" label="By computing team reward from total budget" />
+              <v-flex xs12 sm6>
+                <v-text-field
+                  v-if="rewardType === 'COMPUTED' && Number(computedBudget)"
+                  v-model="computedBudget"
+                  type="number"
+                  name="computedBudget"
+                  class="pt-0 pb-0"
+                  readonly />
+              </v-flex>
+              <v-radio value="FIXED" label="By a total fixed budget (retained from global budget)" />
+              <v-flex xs12 sm6>
+                <v-text-field
+                  v-if="rewardType === 'FIXED'"
+                  v-model="budget"
+                  placeholder="Enter the pool fixed budget"
+                  type="number"
+                  class="pt-0 pb-0"
+                  name="budget" />
+              </v-flex>
+              <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per member (retained from global budget)" />
+              <v-flex xs12 sm6>
+                <v-text-field
+                  v-if="rewardType === 'FIXED_PER_MEMBER'"
+                  v-model="budgetPerMember"
+                  placeholder="Enter the fixed budget per pool member"
+                  type="number"
+                  class="pt-0 pb-0"
+                  name="budgetPerMember" />
+              </v-flex>
+            </v-radio-group>
           </v-flex>
 
           <v-flex xs12>
@@ -214,8 +232,10 @@ export default {
     id: null,
     name: '',
     description: '',
+    rewardType: 'COMPUTED',
     budget: '',
-    computedBudget: '0',
+    budgetPerMember: '',
+    computedBudget: 0,
     memberSelection: null,
     manager: null,
     managerObject: null,
@@ -249,7 +269,7 @@ export default {
       }
       this.rewardTeamSpaceId = null;
       if(this.rewardTeamSpaceOptions && this.rewardTeamSpaceOptions.length) {
-        const selectedObject = this.rewardTeamSpaceOptions.find(space => space.name === this.rewardTeamSpace);
+        const selectedObject = this.rewardTeamSpaceOptions.find(space => space.name === this.rewardTeamSpace || space.id === this.rewardTeamSpace);
         this.rewardTeamSpaceId = selectedObject && selectedObject.technicalId;
         if(selectedObject && selectedObject.members && selectedObject.members.length) {
           this.members = selectedObject.members && selectedObject.members.slice();
@@ -359,6 +379,8 @@ export default {
       this.id =  this.team && this.team.id;
       this.name = (this.team && this.team.name) || '';
       this.description = (this.team && this.team.description) || '';
+      this.rewardType = (this.team && this.team.rewardType) || 'COMPUTED';
+      this.budgetPerMember = (this.team && this.team.rewardPerMember) || '';
       this.budget = (this.team && this.team.budget) || '';
       this.computedBudget = (this.team && this.team.computedBudget) || '0';
       this.manager = null;
@@ -379,7 +401,7 @@ export default {
                 this.rewardTeamSpaceOptions = [];
               }
               if (!this.rewardTeamSpaceOptions.find(item => item.id === this.team.spaceId)) {
-                this.rewardTeamSpaceOptions.push({id : this.team.spaceId, technicalId: this.team.spaceId, name : this.team.spacePrettyName});
+                this.rewardTeamSpaceOptions.push({id : this.team.spacePrettyName, technicalId: this.team.spaceId, name : this.team.spacePrettyName});
               }
               this.rewardTeamSpace = this.team.spacePrettyName;
               this.rewardTeamSpaceId = this.team.spaceId;
@@ -457,7 +479,9 @@ export default {
           id: this.id,
           name: this.name,
           description: this.description,
-          budget: this.budget ? Number(this.budget) : 0,
+          rewardType: this.rewardType,
+          budget: this.budget && this.rewardType === 'FIXED' ? Number(this.budget) : 0,
+          rewardPerMember: this.budgetPerMember && this.rewardType === 'FIXED_PER_MEMBER' ? Number(this.budgetPerMember) : 0,
           spacePrettyName: this.rewardTeamSpace,
           spaceId: this.rewardTeamSpaceId,
           members: members,

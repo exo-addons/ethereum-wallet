@@ -47,17 +47,29 @@
                   <v-list-tile-content>Members:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.members ? props.item.members.length : 0 }}</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile v-if="props.item.budget">
-                  <v-list-tile-content>Fixed budget:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ props.item.budget }}</v-list-tile-content>
-                </v-list-tile>
                 <v-list-tile>
-                  <v-list-tile-content>Computed budget:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }}</v-list-tile-content>
+                  <v-list-tile-content>Current period valid members:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.validMembersWallets ? props.item.validMembersWallets.length : 0 }}</v-list-tile-content>
                 </v-list-tile>
                 <v-list-tile>
                   <v-list-tile-content>Total valid points:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ props.item.totalValidPoints }}</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.totalValidPoints }} points</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-if="props.item.rewardType === 'FIXED'">
+                  <v-list-tile-content>Fixed total budget:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.fixedBudget }} {{ symbol }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-if="props.item.rewardType === 'FIXED_PER_MEMBER'">
+                  <v-list-tile-content>Fixed budget per member:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.rewardPerMember)) }} {{ symbol }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-if="props.item.rewardType === 'FIXED_PER_MEMBER'">
+                  <v-list-tile-content>Total budget for current period:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.fixedBudget)) }} {{ symbol }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-if="props.item.rewardType === 'COMPUTED'">
+                  <v-list-tile-content>Computed budget:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
               </v-list>
             </v-card>
@@ -89,6 +101,12 @@ export default {
       default: function() {
         return [];
       }
+    },
+    contractDetails: {
+      type: Object,
+      default: function() {
+        return null;
+      }
     }
   },
   data: () => ({
@@ -96,6 +114,11 @@ export default {
     teamsRetrieved: false,
     selectedTeam: null
   }),
+  computed: {
+    symbol() {
+      return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
+    }
+  },
   created() {
     this.refresh();
   },
@@ -104,7 +127,7 @@ export default {
       getTeams()
         .then(teams => {
           if(teams && teams.length) {
-            teams = teams.sort((team1, team2) => team2.id - team1.id);
+            teams = teams.sort((team1, team2) => team1.id - team2.id);
           }
           this.teams = teams;
           this.teamsRetrieved = true;

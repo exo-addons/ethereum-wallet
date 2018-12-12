@@ -17,7 +17,9 @@
         <constraints nullable="false" unique="true" uniqueConstraintName="UK_WALLET_GAM_TEAM_NAME"/>
       </column>
       <column name="TEAM_DESCRIPTION" type="NVARCHAR(2000)"/>
+      <column name="TEAM_REWARD_TYPE" type="INT"/>
       <column name="TEAM_BUDGET" type="DOUBLE"/>
+      <column name="TEAM_MEMBER_REWARD" type="DOUBLE"/>
       <column name="TEAM_SPACE_ID" type="BIGINT"/>
       <column name="TEAM_MANAGER_ID" type="BIGINT"/>
     </createTable>

@@ -8,6 +8,7 @@ import javax.persistence.*;
 
 import org.hibernate.annotations.DynamicUpdate;
 
+import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.GamificationTeamRewardType;
 import org.exoplatform.commons.api.persistence.ExoEntity;
 
 @Entity(name = "WalletGamificationTeam")
@@ -30,8 +31,14 @@ public class GamificationTeamEntity implements Serializable {
   @Column(name = "TEAM_DESCRIPTION")
   private String                            description;
 
+  @Column(name = "TEAM_REWARD_TYPE")
+  private GamificationTeamRewardType        rewardType;
+
   @Column(name = "TEAM_BUDGET")
   private Double                            budget;
+
+  @Column(name = "TEAM_MEMBER_REWARD")
+  private Double                            rewardPerMember;
 
   @Column(name = "TEAM_SPACE_ID")
   private Long                              spaceId;
@@ -88,6 +95,22 @@ public class GamificationTeamEntity implements Serializable {
 
   public void setManager(Long manager) {
     this.manager = manager;
+  }
+
+  public Double getRewardPerMember() {
+    return rewardPerMember;
+  }
+
+  public void setRewardPerMember(Double rewardPerMember) {
+    this.rewardPerMember = rewardPerMember;
+  }
+
+  public GamificationTeamRewardType getRewardType() {
+    return rewardType;
+  }
+
+  public void setRewardType(GamificationTeamRewardType rewardType) {
+    this.rewardType = rewardType;
   }
 
   public Set<GamificationTeamMemberEntity> getMembers() {

@@ -4,8 +4,10 @@ import java.io.Serializable;
 import java.util.List;
 
 import lombok.Data;
+import lombok.ToString;
 
 @Data
+@ToString
 public class GamificationTeam implements Serializable {
 
   private static final long            serialVersionUID = 4475704534821391132L;
@@ -16,7 +18,11 @@ public class GamificationTeam implements Serializable {
 
   private String                       description;
 
+  private GamificationTeamRewardType   rewardType;
+
   private Double                       budget;
+
+  private Double                       rewardPerMember;
 
   private Long                         spaceId;
 

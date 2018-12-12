@@ -1,6 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUtils.timeFromSeconds;
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.List;
 
@@ -70,7 +71,8 @@ public class WalletGamificationREST implements ResourceContainer {
       return Response.status(400).build();
     }
     try {
-      walletGamificationService.removeTeam(id);
+      GamificationTeam team = walletGamificationService.removeTeam(id);
+      LOG.info("{} removed Gamification pool {}", getCurrentUserId(), team.toString());
     } catch (Exception e) {
       LOG.warn("Error removing Gamification pool with id: " + id, e);
     }
@@ -93,6 +95,7 @@ public class WalletGamificationREST implements ResourceContainer {
       return Response.status(400).build();
     }
     walletGamificationService.saveSettings(gamificationSettings);
+    LOG.info("{} saved Gamification settings '{}'", getCurrentUserId(), gamificationSettings.toString());
     return Response.ok().build();
   }
 
@@ -114,6 +117,7 @@ public class WalletGamificationREST implements ResourceContainer {
     }
     try {
       gamificationTeam = walletGamificationService.saveTeam(gamificationTeam);
+      LOG.info("{} saved Gamification pool {}", getCurrentUserId(), gamificationTeam.getName());
     } catch (Exception e) {
       LOG.warn("Error saving Gamification pool", e);
     }
