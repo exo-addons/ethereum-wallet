@@ -21,8 +21,8 @@
 
     <v-tabs-items v-model="selectedTab">
       <v-tab-item id="SendRewards">
-        <v-card-text class="text-xs-center">
-          <div v-if="duplicatedWallets && duplicatedWallets.length" class="alert alert-warning">
+        <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
+          <div class="alert alert-warning">
             <i class="uiIconWarning"></i>
             There is some user(s) with multiple teams, thus the calculation could be wrong:
             <ul>
@@ -32,7 +32,7 @@
             </ul>
           </div>
         </v-card-text>
-        <v-card-text class="text-xs-center">
+        <v-card-text v-if="selectedTab === 0" class="text-xs-center">
           <v-menu
             ref="selectedDateMenu"
             v-model="selectedDateMenu"
@@ -169,6 +169,26 @@
         </v-card-text>
       </v-tab-item>
       <v-tab-item id="RewardPools">
+        <v-card-text v-if="selectedTab === 1" class="text-xs-center">
+          <v-menu
+            ref="selectedDateMenu"
+            v-model="selectedDateMenu"
+            transition="scale-transition"
+            lazy
+            offset-y
+            class="gamificationDateSelector">
+            <v-text-field
+              slot="activator"
+              v-model="periodDatesDisplay"
+              label="Select the period date"
+              prepend-icon="event" />
+            <v-date-picker
+              v-model="selectedDate"
+              :first-day-of-week="1"
+              :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+              @input="selectedDateMenu = false" />
+          </v-menu>
+        </v-card-text>
         <gamification-teams
           ref="gamificationTeams"
           :wallets="validRecipients"
@@ -183,6 +203,7 @@
               <span>Minimal gamification points threshold to reward users: </span>
               <v-text-field
                 v-model.number="selectedThreshold"
+                :disabled="!configurationEditable"
                 name="threshold"
                 class="input-text-center" />
             </div>
@@ -191,6 +212,7 @@
               <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
                 <v-combobox
                   v-model="selectedPeriodType"
+                  :disabled="!configurationEditable"
                   :items="periods"
                   :return-object="false"
                   attach="#selectedPeriodType"
@@ -212,6 +234,7 @@
                   <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
                     <v-text-field
                       v-model.number="selectedTotalBudget"
+                      :disabled="!configurationEditable"
                       placeholder="Enter the fixed total budget"
                       type="number"
                       class="pt-0 pb-0"
@@ -220,6 +243,7 @@
                     <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
                       <v-combobox
                         v-model="selectedContractAddress"
+                        :disabled="!configurationEditable"
                         :items="contracts"
                         :return-object="false"
                         attach="#selectedContractAddress"
@@ -239,6 +263,7 @@
                   <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
                     <v-text-field
                       v-model="selectedBudgetPerMember"
+                      :disabled="!configurationEditable"
                       placeholder="Enter the fixed budget per valid member on period"
                       type="number"
                       class="pt-0 pb-0"
@@ -247,6 +272,7 @@
                     <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
                       <v-combobox
                         v-model="selectedContractAddress"
+                        :disabled="!configurationEditable"
                         :items="contracts"
                         :return-object="false"
                         attach="#selectedContractAddress"
@@ -268,8 +294,11 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer />
-            <v-btn :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
+            <v-btn v-if="configurationEditable" :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
               Save
+            </v-btn>
+            <v-btn v-else class="btn btn-primary ml-2" dark @click="configurationEditable = true">
+              Edit
             </v-btn>
             <v-spacer />
           </v-card-actions>
@@ -319,6 +348,7 @@ export default {
       contractAddress: null,
       threshold: null,
       totalBudget: null,
+      configurationEditable: false,
       budgetPerMember: null,
       selectedTab: true,
       periodType: null,
@@ -716,6 +746,7 @@ export default {
           })
           .finally(() => {
             thiss.loadingSettings = false;
+            thiss.configurationEditable = false;
           });
       }, 200);
     },

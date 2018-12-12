@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="800px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-btn slot="activator" color="primary" class="btn btn-primary" icon large>
+    <v-btn slot="activator" title="Add a new pool" color="primary" class="btn btn-primary" icon large>
       <v-icon>add</v-icon>
     </v-btn>
     <v-card class="elevation-12">
