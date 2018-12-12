@@ -9,45 +9,81 @@
     <h3 class="text-xs-left ml-3 ">Configuration</h3>
     <v-card-text class="text-xs-left">
       <div class="text-xs-left gamificationWalletConfiguration">
-        <span>Users will be rewarded starting from </span>
+        <span>Minimal gamification points threshold to reward users: </span>
         <v-text-field
           v-model.number="selectedThreshold"
           name="threshold"
           class="input-text-center" />
-        <span> gamification points.</span>
       </div>
       <div class="text-xs-left gamificationWalletConfiguration">
-        <span>A total budget of </span>
-        <v-text-field
-          v-model.number="selectedTotalBudget"
-          name="totalBudget"
-          class="input-text-center" />
-        <span> using token </span>
-        <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-          <v-combobox
-            v-model="selectedContractAddress"
-            :items="contracts"
-            :return-object="false"
-            attach="#selectedContractAddress"
-            item-value="address"
-            item-text="name"
-            class="selectBoxVuetify"
-            hide-no-data
-            hide-selected
-            small-chips>
-            <template slot="selection" slot-scope="data">
-              {{ selectedContractName }}
-            </template>
-          </v-combobox>
-        </div>
-        <span> will be used per </span>
+        <span>The total gamification reward buget is set:</span>
+        <v-flex class="mt-3" xs12>
+          <v-radio-group v-model="selectedRewardType">
+            <v-radio value="FIXED" label="By a fixed budget" />
+            <v-flex v-if="selectedRewardType === 'FIXED'" xs12 sm6>
+              <v-text-field
+                v-model.number="selectedTotalBudget"
+                placeholder="Enter the fixed total budget"
+                type="number"
+                class="pt-0 pb-0"
+                name="totalBudget" />
+              <span> using token </span>
+              <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
+                <v-combobox
+                  v-model="selectedContractAddress"
+                  :items="contracts"
+                  :return-object="false"
+                  attach="#selectedContractAddress"
+                  item-value="address"
+                  item-text="name"
+                  class="selectBoxVuetify xs12 sm2"
+                  hide-no-data
+                  hide-selected
+                  small-chips>
+                  <template slot="selection" slot-scope="data">
+                    {{ selectedContractName }}
+                  </template>
+                </v-combobox>
+              </div>
+            </v-flex>
+            <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per valid member on period" />
+            <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'">
+              <v-text-field
+                v-model="selectedBudgetPerMember"
+                placeholder="Enter the fixed budget per valid member on period"
+                type="number"
+                class="pt-0 pb-0 xs12 sm2"
+                name="budgetPerMember" />
+              <span> using token </span>
+              <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
+                <v-combobox
+                  v-model="selectedContractAddress"
+                  :items="contracts"
+                  :return-object="false"
+                  attach="#selectedContractAddress"
+                  item-value="address"
+                  item-text="name"
+                  class="selectBoxVuetify xs12 sm2"
+                  hide-no-data
+                  hide-selected
+                  small-chips>
+                  <template slot="selection" slot-scope="data">
+                    {{ selectedContractName }}
+                  </template>
+                </v-combobox>
+              </div>
+            </v-flex>
+          </v-radio-group>
+        </v-flex>
+      </div>
+      <div class="text-xs-left gamificationWalletConfiguration">
+        <span>Reward priodicity: </span>
         <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
           <v-combobox
             v-model="selectedPeriodType"
             :items="periods"
             :return-object="false"
             attach="#selectedPeriodType"
-            label="Period type"
             class="selectBoxVuetify"
             hide-no-data
             hide-selected
@@ -265,13 +301,17 @@ export default {
       contractAddress: null,
       threshold: null,
       totalBudget: null,
+      budgetPerMember: null,
       periodType: null,
       duplicatedWallets: null,
       search: '',
       selectedContractAddress: null,
       selectedThreshold: null,
+      selectedBudgetPerMember: null,
+      selectedRewardType: 'FIXED',
       selectedTotalBudget: null,
       selectedPeriodType: null,
+      rewardType: 'FIXED',
       tokenEtherscanLink: null,
       transactionEtherscanLink: null,
       addressEtherscanLink: null,
@@ -395,10 +435,13 @@ export default {
       return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points >= this.threshold && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
     },
     validRecipients() {
-      if (this.totalBudget) {
-        return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points >= this.threshold) : [];
-      } else {
-        return [];
+      return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points >= this.threshold) : [];
+    },
+    computedTotalBudget() {
+      if(this.rewardType === 'FIXED') {
+        return this.totalBudget ? Number(this.totalBudget) : 0;
+      } else if(this.rewardType === 'FIXED_PER_MEMBER') {
+        return this.budgetPerMember && this.validRecipients && this.validRecipients.length ? this.validRecipients.length * this.budgetPerMember : 0;
       }
     },
     filteredIdentitiesList() {
@@ -446,6 +489,8 @@ export default {
       .then(settings => {
         if (settings) {
           this.selectedContractAddress = this.contractAddress = settings.contractAddress;
+          this.selectedRewardType = this.rewardType = settings.rewardType;
+          this.selectedBudgetPerMember = this.budgetPerMember = settings.budgetPerMember;
           this.selectedTotalBudget = this.totalBudget = settings.totalBudget;
           this.selectedThreshold = this.threshold = settings.threshold;
           this.selectedPeriodType = this.periodType = settings.periodType;
@@ -503,7 +548,7 @@ export default {
         computedBudget: 0
       });
 
-      let totalComputedBudget = this.totalBudget;
+      let totalComputedBudget = this.computedTotalBudget;
       let computedRecipientsCount = 0;
       teams.forEach(team => {
         team.validMembersWallets = [];
@@ -627,9 +672,13 @@ export default {
     save() {
       const thiss = this;
       this.loadingSettings = true;
+      this.selectedTotalBudget = this.selectedRewardType === 'FIXED' ? this.selectedTotalBudget : 0;
+      this.selectedBudgetPerMember = this.selectedRewardType === 'FIXED_PER_MEMBER' ? this.selectedBudgetPerMember : 0;
       window.setTimeout(() => {
         saveSettings({
           totalBudget: thiss.selectedTotalBudget,
+          budgetPerMember: thiss.selectedBudgetPerMember,
+          rewardType: thiss.selectedRewardType,
           threshold: thiss.selectedThreshold,
           contractAddress : thiss.selectedContractAddress,
           periodType: thiss.selectedPeriodType && (thiss.selectedPeriodType.value || thiss.selectedPeriodType)
@@ -638,7 +687,9 @@ export default {
             thiss.contractAddress = thiss.selectedContractAddress;
             thiss.periodType = thiss.selectedPeriodType;
             thiss.threshold = thiss.selectedThreshold;
+            thiss.rewardType = thiss.selectedRewardType;
             thiss.totalBudget = thiss.selectedTotalBudget;
+            thiss.budgetPerMember = thiss.selectedBudgetPerMember;
             return this.refreshTeams();
           })
           .catch(error => {

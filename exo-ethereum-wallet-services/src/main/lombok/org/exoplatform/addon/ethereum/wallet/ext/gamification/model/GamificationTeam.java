@@ -18,7 +18,7 @@ public class GamificationTeam implements Serializable {
 
   private String                       description;
 
-  private GamificationTeamRewardType   rewardType;
+  private GamificationRewardType   rewardType;
 
   private Double                       budget;
 

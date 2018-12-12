@@ -7,12 +7,16 @@ import lombok.ToString;
 @ToString
 public class GamificationSettings {
 
-  long                   threshold;
+  long                           threshold;
 
-  private String         contractAddress;
+  private String                 contractAddress;
 
-  GamificationPeriodType periodType = GamificationPeriodType.DEFAULT;
+  private GamificationPeriodType periodType = GamificationPeriodType.DEFAULT;
 
-  private double         totalBudget;
+  private GamificationRewardType rewardType = GamificationRewardType.FIXED;
+
+  private double                 totalBudget;
+
+  private double                 budgetPerMember;
 
 }
