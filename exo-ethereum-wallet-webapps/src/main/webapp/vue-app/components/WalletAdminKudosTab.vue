@@ -49,7 +49,7 @@
         transition="scale-transition"
         lazy
         offset-y
-        class="kudosDateSelector">
+        class="dateSelector">
         <v-text-field
           slot="activator"
           v-model="periodDatesDisplay"

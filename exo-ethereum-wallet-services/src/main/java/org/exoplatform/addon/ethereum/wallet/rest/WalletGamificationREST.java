@@ -93,6 +93,7 @@ public class WalletGamificationREST implements ResourceContainer {
    */
   @POST
   @Path("saveSettings")
+  @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @RolesAllowed("administrators")
   public Response saveSettings(GamificationSettings gamificationSettings) {
@@ -100,9 +101,9 @@ public class WalletGamificationREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with empty settings");
       return Response.status(400).build();
     }
-    walletGamificationService.saveSettings(gamificationSettings);
+    gamificationSettings = walletGamificationService.saveSettings(gamificationSettings);
     LOG.info("{} saved Gamification settings '{}'", getCurrentUserId(), gamificationSettings.toString());
-    return Response.ok().build();
+    return Response.ok(gamificationSettings).build();
   }
 
   /**

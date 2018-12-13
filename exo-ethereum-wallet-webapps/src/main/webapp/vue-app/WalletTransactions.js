@@ -215,9 +215,11 @@ export function addTransaction(networkId, account, accountDetails, transactions,
     watchTransactionStatus(transaction.hash, (receipt, block) => {
       window.localWeb3.eth.getTransaction(transaction.hash)
         .then(tx => {
-          tx.label = transaction.label;
-          tx.message = transaction.message;
-          transaction = tx;
+          if(tx) {
+            tx.label = transaction.label;
+            tx.message = transaction.message;
+            transaction = tx;
+          }
           transaction.loadedFromPending = true;
 
           return addTransaction(networkId, account, accountDetails, transactions, transaction, receipt, block && block.timestamp * 1000, watchLoadSuccess, watchLoadError);

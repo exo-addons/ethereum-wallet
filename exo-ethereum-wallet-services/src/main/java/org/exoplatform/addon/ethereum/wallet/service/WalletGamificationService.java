@@ -80,7 +80,7 @@ public class WalletGamificationService {
     }
   }
 
-  public void saveSettings(GamificationSettings gamificationSettings) {
+  public GamificationSettings saveSettings(GamificationSettings gamificationSettings) {
     if (gamificationSettings == null) {
       throw new IllegalArgumentException("settings are empty");
     }
@@ -89,6 +89,7 @@ public class WalletGamificationService {
                        EXT_GAMIFICATION_SETTINGS_KEY_NAME,
                        SettingValue.create(gamificationSettings.toStringToStore()));
     this.gamificationSettings = null;
+    return gamificationSettings;
   }
 
   public List<GamificationTeam> getTeams() {

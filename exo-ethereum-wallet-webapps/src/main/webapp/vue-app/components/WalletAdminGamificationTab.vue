@@ -12,8 +12,7 @@
         You have chosen a token that is different from principal displayed token
       </div>
     </v-card-text>
-    <v-tabs v-model="selectedTab" grow>
-      <v-tabs-slider v-if="!loading" color="primary" />
+    <v-tabs v-model="selectedTab" grow hide-slider>
       <v-tab key="SendRewards">Send Rewards</v-tab>
       <v-tab key="RewardPools">Reward pools</v-tab>
       <v-tab key="Configuration">Configuration</v-tab>
@@ -21,302 +20,117 @@
 
     <v-tabs-items v-model="selectedTab">
       <v-tab-item id="SendRewards">
-        <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
-          <div class="alert alert-warning">
-            <i class="uiIconWarning"></i>
-            There is some user(s) with multiple teams, thus the calculation could be wrong:
-            <ul>
-              <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
-                <code>{{ duplicatedWallet.name }}</code>
-              </li>
-            </ul>
-          </div>
-        </v-card-text>
-        <v-card-text v-if="selectedTab === 0" class="text-xs-center">
-          <v-menu
-            ref="selectedDateMenu"
-            v-model="selectedDateMenu"
-            transition="scale-transition"
-            lazy
-            offset-y
-            class="gamificationDateSelector">
-            <v-text-field
-              slot="activator"
-              v-model="periodDatesDisplay"
-              label="Select the period date"
-              prepend-icon="event" />
-            <v-date-picker
-              v-model="selectedDate"
-              :first-day-of-week="1"
-              :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
-              @input="selectedDateMenu = false" />
-          </v-menu>
-          <v-card-title>
-            <v-text-field
-              v-model="search"
-              append-icon="search"
-              label="Search"
-              single-line
-              hide-details />
-          </v-card-title>
-          <v-data-table
-            v-model="selectedIdentitiesList"
-            :headers="identitiesHeaders"
-            :items="filteredIdentitiesList"
-            :loading="loading"
-            :sortable="true"
-            select-all
-            item-key="address"
-            class="elevation-1 mr-3 mb-2"
-            disable-initial-sort
-            hide-actions>
-            <template slot="items" slot-scope="props">
-              <tr :active="props.selected">
-                <td>
-                  <v-checkbox
-                    v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
-                    :input-value="props.selected"
-                    hide-details
-                    @click="props.selected = !props.selected" />
-                </td>
-                <td>
-                  <v-avatar size="36px">
-                    <img
-                      :src="props.item.avatar"
-                      onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-                  </v-avatar>
-                </td>
-                <td class="text-xs-left">
-                  <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
-                  <div v-else>
-                    <del>
-                      <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
-                    </del>
-                    (No address)
-                  </div>
-                </td>
-                <td class="text-xs-left">
-                  <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">
-                    <li
-                      v-for="team in props.item.gamificationTeams"
-                      :key="team.id">
-                      {{ team.name }}
-                    </li>
-                  </ul>
-                  <div v-else>
-                    -
-                  </div>
-                </td>
-                <td>
-                  <a
-                    v-if="props.item.hash"
-                    href="javascript:void(0);"
-                    target="_blank"
-                    title="Open transaction in wallet"
-                    @click="$emit('open-wallet-transaction', props.item)">
-                    Open in wallet
-                  </a>
-                  <span v-else>-</span>
-                </td>
-                <td>
-                  <template v-if="!props.item.status">
-                    <v-icon
-                      v-if="!props.item.address"
-                      color="warning"
-                      title="No address">
-                      warning
-                    </v-icon>
-                    <v-icon
-                      v-else-if="!props.item.points || props.item.points < threshold"
-                      :title="`Not enough points, minimum: ${threshold} points`"
-                      color="warning">
-                      warning
-                    </v-icon>
-                    <div v-else>-</div>
-                  </template>
-                  <v-progress-circular
-                    v-else-if="props.item.status === 'pending'"
-                    color="primary"
-                    indeterminate
-                    size="20" />
-                  <v-icon
-                    v-else
-                    :color="props.item.status === 'success' ? 'success' : 'error'"
-                    :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
-                    v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
-                </td>
-                <td>
-                  <v-text-field v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center"/>
-                  <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
-                  <template v-else>-</template>
-                </td>
-                <td v-html="props.item.points">
-                </td>
-              </tr>
-            </template>
-            <template slot="footer">
-              <td :colspan="identitiesHeaders.length - 1">
-                <strong>Total</strong>
-              </td>
-              <td>
-                <strong>{{ totalTokens }}</strong>
-              </td>
-              <td>
-                <strong>{{ totalPoints }}</strong>
-              </td>
-            </template>
-          </v-data-table>
-        </v-card-text>
-      </v-tab-item>
-      <v-tab-item id="RewardPools">
-        <v-card-text v-if="selectedTab === 1" class="text-xs-center">
-          <v-menu
-            ref="selectedDateMenu"
-            v-model="selectedDateMenu"
-            transition="scale-transition"
-            lazy
-            offset-y
-            class="gamificationDateSelector">
-            <v-text-field
-              slot="activator"
-              v-model="periodDatesDisplay"
-              label="Select the period date"
-              prepend-icon="event" />
-            <v-date-picker
-              v-model="selectedDate"
-              :first-day-of-week="1"
-              :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
-              @input="selectedDateMenu = false" />
-          </v-menu>
-        </v-card-text>
-        <gamification-teams
-          ref="gamificationTeams"
-          :wallets="validRecipients"
-          :contract-details="selectedContractDetails"
-          @teams-retrieved="refreshTeams" />
-      </v-tab-item>
-      <v-tab-item id="Configuration">
-        <div slot="header" class="text-xs-left ml-3">Configuration</div>
-        <v-card>
-          <v-card-text class="text-xs-left mt-3">
-            <div class="text-xs-left gamificationWalletConfiguration">
-              <span>Minimal gamification points threshold to reward users: </span>
-              <v-text-field
-                v-model.number="selectedThreshold"
-                :disabled="!configurationEditable"
-                name="threshold"
-                class="input-text-center" />
-            </div>
-            <div class="text-xs-left gamificationWalletConfiguration">
-              <span>Reward priodicity: </span>
-              <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedPeriodType"
-                  :disabled="!configurationEditable"
-                  :items="periods"
-                  :return-object="false"
-                  attach="#selectedPeriodType"
-                  class="selectBoxVuetify"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
-                  <template slot="selection" slot-scope="data">
-                    {{ selectedPeriodName }}
-                  </template>
-                </v-combobox>
-              </div>
-            </div>
-            <div class="text-xs-left mt-4">
-              <div>The total gamification reward buget is set:</div>
-              <v-flex class="ml-4">
-                <v-radio-group v-model="selectedRewardType">
-                  <v-radio value="FIXED" label="By a fixed budget" />
-                  <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
-                    <v-text-field
-                      v-model.number="selectedTotalBudget"
-                      :disabled="!configurationEditable"
-                      placeholder="Enter the fixed total budget"
-                      type="number"
-                      class="pt-0 pb-0"
-                      name="totalBudget" />
-                    <span> using token </span>
-                    <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                      <v-combobox
-                        v-model="selectedContractAddress"
-                        :disabled="!configurationEditable"
-                        :items="contracts"
-                        :return-object="false"
-                        attach="#selectedContractAddress"
-                        item-value="address"
-                        item-text="name"
-                        class="selectBoxVuetify"
-                        hide-no-data
-                        hide-selected
-                        small-chips>
-                        <template slot="selection" slot-scope="data">
-                          {{ selectedContractName }}
-                        </template>
-                      </v-combobox>
-                    </div>
-                  </v-flex>
-                  <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per valid member on period" />
-                  <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
-                    <v-text-field
-                      v-model="selectedBudgetPerMember"
-                      :disabled="!configurationEditable"
-                      placeholder="Enter the fixed budget per valid member on period"
-                      type="number"
-                      class="pt-0 pb-0"
-                      name="budgetPerMember" />
-                    <span> using token </span>
-                    <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                      <v-combobox
-                        v-model="selectedContractAddress"
-                        :disabled="!configurationEditable"
-                        :items="contracts"
-                        :return-object="false"
-                        attach="#selectedContractAddress"
-                        item-value="address"
-                        item-text="name"
-                        class="selectBoxVuetify"
-                        hide-no-data
-                        hide-selected
-                        small-chips>
-                        <template slot="selection" slot-scope="data">
-                          {{ selectedContractName }}
-                        </template>
-                      </v-combobox>
-                    </div>
-                  </v-flex>
-                </v-radio-group>
-              </v-flex>
+        <v-card flat>
+          <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i>
+              There is some user(s) with multiple teams, thus the calculation could be wrong:
+              <ul>
+                <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
+                  <code>{{ duplicatedWallet.name }}</code>
+                </li>
+              </ul>
             </div>
           </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn v-if="configurationEditable" :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
-              Save
-            </v-btn>
-            <v-btn v-else class="btn btn-primary ml-2" dark @click="configurationEditable = true">
-              Edit
-            </v-btn>
-            <v-spacer />
-          </v-card-actions>
+          <v-card-text v-if="selectedTab === 0" class="text-xs-center">
+            <v-menu
+              ref="selectedDateMenu"
+              v-model="selectedDateMenu"
+              transition="scale-transition"
+              lazy
+              offset-y
+              class="dateSelector">
+              <v-text-field
+                slot="activator"
+                v-model="periodDatesDisplay"
+                label="Select the period date"
+                prepend-icon="event" />
+              <v-date-picker
+                v-model="selectedDate"
+                :first-day-of-week="1"
+                :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+                @input="selectedDateMenu = false" />
+            </v-menu>
+          </v-card-text>
+          <send-rewards-tab
+            :loading="loading"
+            :identities-list="identitiesList"
+            :contract-details="contractDetails"
+            :threshold="threshold"
+            :period-type="periodType"
+            :selected-start-date="selectedStartDateInSeconds"
+            :selected-end-date="selectedEndDateInSeconds"
+            @open-wallet-transaction="$emit('open-wallet-transaction', $event)"
+            @pending="$emit('pending', transaction)" />
         </v-card>
+      </v-tab-item>
+      <v-tab-item id="RewardPools">
+        <v-card flat>
+          <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i>
+              There is some user(s) with multiple teams, thus the calculation could be wrong:
+              <ul>
+                <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
+                  <code>{{ duplicatedWallet.name }}</code>
+                </li>
+              </ul>
+            </div>
+          </v-card-text>
+          <v-card-text v-if="displayDateSelector && selectedTab === 1" class="text-xs-center">
+            <v-menu
+              ref="selectedDateMenu"
+              v-model="selectedDateMenu"
+              transition="scale-transition"
+              lazy
+              offset-y
+              class="dateSelector">
+              <v-text-field
+                slot="activator"
+                v-model="periodDatesDisplay"
+                label="Select the period date"
+                prepend-icon="event"
+                width="150px" />
+              <v-date-picker
+                v-model="selectedDate"
+                :first-day-of-week="1"
+                :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+                @input="selectedDateMenu = false" />
+            </v-menu>
+          </v-card-text>
+          <gamification-teams-tab
+            ref="gamificationTeams"
+            :wallets="validRecipients"
+            :contract-details="selectedContractDetails"
+            :period="periodDatesDisplay"
+            @teams-retrieved="refresh"
+            @form-opened="displayDateSelector = false"
+            @form-closed="displayDateSelector = true" />
+        </v-card>
+      </v-tab-item>
+      <v-tab-item id="Configuration">
+        <configuration-tab
+          ref="configurationTab"
+          :contracts="contracts"
+          @saved="changeSettings"
+          @error="error = $event"/>
       </v-tab-item>
     </v-tabs-items>
   </v-card>
 </template>
 
 <script>
-import GamificationTeams from "./WalletAdminGamificationTeams.vue";
+import GamificationTeamsTab from "./WalletAdminGamificationTeamsTab.vue";
+import SendRewardsTab from "./WalletAdminGamificationSendRewardsTab.vue";
+import ConfigurationTab from "./WalletAdminGamificationConfigurationTab.vue";
 
-import {getSettings, saveSettings, getPeriodTransactions, getPeriodDates, getGamificationPoints} from '../WalletGamificationServices.js';
-import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
+import {getSettings, getPeriodDates, getGamificationPoints} from '../WalletGamificationServices.js';
 
 export default {
   components: {
-    GamificationTeams
+    ConfigurationTab,
+    SendRewardsTab,
+    GamificationTeamsTab
   },
   props: {
     wallets: {
@@ -341,129 +155,30 @@ export default {
   data() {
     return {
       loading: false,
-      loadingSettings: false,
       error: null,
       selectedDate: new Date().toISOString().substr(0, 10),
       selectedDateMenu: false,
+      displayDateSelector: true,
       contractAddress: null,
       threshold: null,
       totalBudget: null,
-      configurationEditable: false,
       budgetPerMember: null,
       selectedTab: true,
       periodType: null,
       duplicatedWallets: null,
-      search: '',
-      selectedContractAddress: null,
-      selectedThreshold: null,
-      selectedBudgetPerMember: null,
-      selectedRewardType: 'FIXED',
-      selectedTotalBudget: null,
-      selectedPeriodType: null,
       rewardType: 'FIXED',
-      tokenEtherscanLink: null,
-      transactionEtherscanLink: null,
-      addressEtherscanLink: null,
       identitiesList: [],
       selectedIdentitiesList: [],
       selectedStartDate: null,
-      selectedEndDate: null,
-      pagination: {
-        descending: true,
-        sortBy: 'points'
-      },
-      periods: [
-        {
-          text: 'Week',
-          value: 'WEEK'
-        },
-        {
-          text: 'Month',
-          value: 'MONTH'
-        },
-        {
-          text: 'Quarter',
-          value: 'QUARTER'
-        },
-        {
-          text: 'Semester',
-          value: 'SEMESTER'
-        },
-        {
-          text: 'Year',
-          value: 'YEAR'
-        }
-      ],
-      identitiesHeaders: [
-        {
-          text: '',
-          align: 'right',
-          sortable: false,
-          value: 'avatar',
-          width: '36px'
-        },
-        {
-          text: 'Name',
-          align: 'left',
-          sortable: true,
-          value: 'name'
-        },
-        {
-          text: 'Pools',
-          align: 'center',
-          sortable: true,
-          value: 'gamificationTeams'
-        },
-        {
-          text: 'Transaction',
-          align: 'center',
-          sortable: true,
-          value: 'hash'
-        },
-        {
-          text: 'Status',
-          align: 'center',
-          sortable: true,
-          value: 'status'
-        },
-        {
-          text: 'Tokens',
-          align: 'center',
-          sortable: true,
-          value: 'tokensToSend',
-          width: '70px'
-        },
-        {
-          text: 'Points',
-          align: 'center',
-          sortable: true,
-          value: 'points'
-        }
-      ]
+      selectedEndDate: null
     };
   },
   computed: {
-    selectedPeriodName() {
-      const selectedPeriodName = this.periods.find(period => period.value === this.selectedPeriodType);
-      return selectedPeriodName && selectedPeriodName.text ? selectedPeriodName.text : this.selectedPeriodType && (this.selectedPeriodType.text || this.selectedPeriodType);
-    },
-    selectedContractName() {
-      return this.selectedContractDetails && this.selectedContractDetails.name;
-    },
     isContractDifferentFromPrincipal() {
       return this.contractAddress && this.principalAccount && this.principalAccount.toLowerCase() !== this.contractAddress.toLowerCase();
     },
-    selectedContractDetails() {
-      return this.selectedContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedContractAddress);
-    },
     contractDetails() {
       return this.contractAddress && this.contracts && this.contracts.find(contract => contract.address === this.contractAddress);
-    },
-    paginationDescending() {
-      return this.pagination && this.pagination.descending;
-    },
-    paginationIcon() {
-      return this.paginationDescending ? 'arrow_downward' : 'arrow_upward';
     },
     selectedStartDateInSeconds() {
       return this.selectedStartDate ? new Date(this.selectedStartDate).getTime() / 1000 : 0;
@@ -480,9 +195,6 @@ export default {
         return '';
       }
     },
-    recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points >= this.threshold && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
-    },
     validRecipients() {
       return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points >= this.threshold) : [];
     },
@@ -492,34 +204,6 @@ export default {
       } else if(this.rewardType === 'FIXED_PER_MEMBER') {
         return this.budgetPerMember && this.validRecipients && this.validRecipients.length ? this.validRecipients.length * this.budgetPerMember : 0;
       }
-    },
-    filteredIdentitiesList() {
-      return this.identitiesList ? this.identitiesList.filter(wallet => this.filterItemFromList(wallet, this.search)) : [];
-    },
-    selectableRecipients() {
-      return this.validRecipients.filter(item => !item.tokensSent && (!item.status || item.status === 'error'));
-    },
-    totalPoints() {
-      if(this.filteredIdentitiesList) {
-        let result = 0;
-        this.filteredIdentitiesList.forEach(wallet => {
-          result += Number(wallet.points);
-        });
-        return result;
-      } else {
-        return 0;
-      }
-    },
-    totalTokens() {
-      if(this.filteredIdentitiesList) {
-        let result = 0;
-        this.filteredIdentitiesList.forEach(wallet => {
-          result += wallet.tokensToSend ? Number(wallet.tokensToSend) : 0 + wallet.tokensSent ? Number(wallet.tokensSent) : 0;
-        });
-        return result;
-      } else {
-        return 0;
-      }
     }
   },
   watch: {
@@ -527,7 +211,7 @@ export default {
       this.loadAll();
     },
     wallets() {
-      this.refreshTeams();
+      this.refresh();
     },
     periodType() {
       this.loadAll();
@@ -537,17 +221,31 @@ export default {
     getSettings()
       .then(settings => {
         if (settings) {
-          this.selectedContractAddress = this.contractAddress = settings.contractAddress;
-          this.selectedRewardType = this.rewardType = settings.rewardType;
-          this.selectedBudgetPerMember = this.budgetPerMember = settings.budgetPerMember;
-          this.selectedTotalBudget = this.totalBudget = settings.totalBudget;
-          this.selectedThreshold = this.threshold = settings.threshold;
-          this.selectedPeriodType = this.periodType = settings.periodType;
+          this.contractAddress = settings.contractAddress;
+          this.rewardType = settings.rewardType;
+          this.budgetPerMember = settings.budgetPerMember;
+          this.totalBudget = settings.totalBudget;
+          this.threshold = settings.threshold;
+          this.periodType = settings.periodType;
+          this.$refs.configurationTab.init(settings);
         }
       });
   },
   methods: {
-    refreshTeams() {
+    changeSettings(settings) {
+      if(settings) {
+        this.contractAddress = settings.contractAddress;
+        this.periodType = settings.periodType;
+        this.threshold = settings.threshold;
+        this.rewardType = settings.rewardType;
+        this.totalBudget = settings.totalBudget;
+        this.budgetPerMember = settings.budgetPerMember;
+        this.$nextTick(() => {
+          this.refresh();
+        });
+      }
+    },
+    refresh() {
       this.duplicatedWallets = [];
       if(this.$refs && this.$refs.gamificationTeams && this.$refs.gamificationTeams.teamsRetrieved) {
         const teams = this.$refs.gamificationTeams.teams;
@@ -580,9 +278,6 @@ export default {
         });
       }
 
-      if(!this.validRecipients.length) {
-        return;
-      }
       const validRecipients = this.validRecipients.slice();
       let teams = [];
       if(this.$refs.gamificationTeams && this.$refs.gamificationTeams.teams && this.$refs.gamificationTeams.teams.length) {
@@ -599,29 +294,39 @@ export default {
 
       let totalComputedBudget = this.computedTotalBudget;
       let computedRecipientsCount = 0;
+
       teams.forEach(team => {
-        team.validMembersWallets = [];
-        team.computedBudget = 0;
-        team.fixedBudget = 0;
-        team.totalValidPoints = 0;
+        this.$set(team, "validMembersWallets", []);
+        this.$set(team, "computedBudget", 0);
+        this.$set(team, "fixedBudget", 0);
+        this.$set(team, "totalValidPoints", 0);
+        this.$set(team, "totalPoints", 0);
+
         if(!team.members || !team.members.length) {
           return;
         }
 
         team.members.forEach(memberObject => {
-          const wallet = memberObject.address ? memberObject : validRecipients.find(wallet => wallet.id === memberObject.id);
+          let wallet = memberObject.address ? memberObject : validRecipients.find(wallet => wallet.id === memberObject.id);
           if(wallet) {
-            team.validMembersWallets.push(wallet);
+            team.totalPoints += wallet.points;
             team.totalValidPoints += wallet.points;
+            team.validMembersWallets.push(wallet);
+          } else {
+            wallet = memberObject.points ? memberObject : this.identitiesList.find(wallet => wallet.id === memberObject.id);
+            if(wallet) {
+              team.totalPoints += wallet.points;
+            }
           }
         });
 
         if(team.validMembersWallets.length) {
           if (team.rewardType === 'FIXED') {
-            team.computedBudget = team.fixedBudget = team.budget ? Number(team.budget) : 0;
-            totalComputedBudget -= team.computedBudget;
+            this.$set(team, "computedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
+            this.$set(team, "fixedBudget", team.computedBudget);
           } else if (team.rewardType === 'FIXED_PER_MEMBER') {
-            team.computedBudget = team.fixedBudget = team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0;
+            this.$set(team, "computedBudget", team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0);
+            this.$set(team, "fixedBudget", team.computedBudget);
             totalComputedBudget -= team.computedBudget;
           } else if (team.rewardType === 'COMPUTED') {
             computedRecipientsCount += team.validMembersWallets.length;
@@ -650,105 +355,6 @@ export default {
           });
         }
       });
-    },
-    filterItemFromList(wallet, searchText) {
-      if(!searchText || !searchText.length) {
-        return true;
-      }
-      searchText = searchText.trim().toLowerCase();
-      const name = wallet.name.toLowerCase();
-      if(name.indexOf(searchText) > -1) {
-        return true;
-      }
-      const address = wallet.address.toLowerCase();
-      if(address.indexOf(searchText) > -1) {
-        return true;
-      }
-      if(searchText === '-' && (!wallet.gamificationTeams || !wallet.gamificationTeams.length)) {
-        return true;
-      }
-      const teams = wallet.gamificationTeams && wallet.gamificationTeams.length ? wallet.gamificationTeams.map(team => team.name).join(',').toLowerCase() : '';
-      return teams.indexOf(searchText) > -1;
-    },
-    newPendingTransaction(transaction) {
-      this.$emit('pending', transaction);
-      if(!transaction || !transaction.to) {
-        return;
-      }
-      this.refreshWalletTransactionStatus(transaction);
-    },
-    refreshWalletTransactionStatus(transaction) {
-      if(transaction && transaction.to) {
-        const resultWalletIndex = this.selectedIdentitiesList.findIndex(resultWallet => resultWallet.address && resultWallet.address.toLowerCase() === transaction.to.toLowerCase());
-        const resultWallet = this.selectedIdentitiesList[resultWalletIndex];
-        if(resultWallet) {
-          this.$set(resultWallet, 'hash', transaction.hash);
-          this.$set(resultWallet, 'status', 'pending');
-          if (transaction.contractAmount) {
-            this.$set(resultWallet, 'tokensSent', transaction.contractAmount);
-          }
-          this.selectedIdentitiesList.splice(resultWalletIndex, 1);
-          const thiss = this;
-          watchTransactionStatus(transaction.hash, receipt => {
-            thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
-          });
-        }
-      } else {
-        getPeriodTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.selectedStartDateInSeconds)
-          .then(resultTransactions => {
-            if (resultTransactions) {
-              resultTransactions.forEach(resultTransaction => {
-                if(resultTransaction) {
-                  const resultWallet = this.identitiesList.find(resultWallet => resultWallet.type === resultTransaction.receiverType && (resultWallet.id === resultTransaction.receiverId || resultWallet.identityId === resultTransaction.receiverIdentityId));
-                  if(resultWallet) {
-                    this.$set(resultWallet, 'tokensSent', resultTransaction.tokensAmountSent ? Number(resultTransaction.tokensAmountSent) : 0);
-                    this.$set(resultWallet, 'hash', resultTransaction.hash);
-                    this.$set(resultWallet, 'status', 'pending');
-                    const thiss = this;
-                    watchTransactionStatus(resultTransaction.hash, receipt => {
-                      thiss.$set(resultWallet, 'status', receipt.status ? 'success' : 'error');
-                    });
-                  } else {
-                    console.error("Can't find wallet of a sent result token transaction, resultTransaction=", resultTransaction);
-                  }
-                }
-              });
-              this.$forceUpdate();
-            }
-          });
-      }
-    },
-    save() {
-      const thiss = this;
-      this.loadingSettings = true;
-      this.selectedTotalBudget = this.selectedRewardType === 'FIXED' ? this.selectedTotalBudget : 0;
-      this.selectedBudgetPerMember = this.selectedRewardType === 'FIXED_PER_MEMBER' ? this.selectedBudgetPerMember : 0;
-      window.setTimeout(() => {
-        saveSettings({
-          totalBudget: thiss.selectedTotalBudget,
-          budgetPerMember: thiss.selectedBudgetPerMember,
-          rewardType: thiss.selectedRewardType,
-          threshold: thiss.selectedThreshold,
-          contractAddress : thiss.selectedContractAddress,
-          periodType: thiss.selectedPeriodType && (thiss.selectedPeriodType.value || thiss.selectedPeriodType)
-        })
-          .then(() => {
-            thiss.contractAddress = thiss.selectedContractAddress;
-            thiss.periodType = thiss.selectedPeriodType;
-            thiss.threshold = thiss.selectedThreshold;
-            thiss.rewardType = thiss.selectedRewardType;
-            thiss.totalBudget = thiss.selectedTotalBudget;
-            thiss.budgetPerMember = thiss.selectedBudgetPerMember;
-            return this.refreshTeams();
-          })
-          .catch(error => {
-            thiss.error = "Error while saving 'Gamification settings'";
-          })
-          .finally(() => {
-            thiss.loadingSettings = false;
-            thiss.configurationEditable = false;
-          });
-      }, 200);
     },
     loadAll() {
       if (!this.selectedDate || !this.periodType) {
@@ -786,9 +392,10 @@ export default {
           );
         });
       }
-      Promise.all(identitiesListPromises)
+
+      return Promise.all(identitiesListPromises)
+        .then(() => this.refresh())
         .then(() => {
-          this.refreshTeams();
           this.loading = false;
         });
     },
@@ -799,13 +406,6 @@ export default {
       const dateString = date.toString();
       // Example: 'Feb 01 2018'
       return dateString.substring(dateString.indexOf(' ') + 1, dateString.indexOf(":") - 3);
-    },
-    toggleAll() {
-      if (this.selectedIdentitiesList.length === this.identitiesList.length){
-        this.selectedIdentitiesList = [];
-      } else {
-        this.selectedIdentitiesList = this.identitiesList.slice();
-      }
     }
   }
 };

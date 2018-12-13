@@ -16,6 +16,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -115,6 +117,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
     contractDetail.setAddress(contractDetail.getAddress().toLowerCase());
     try {
       ethereumWalletService.saveContract(contractDetail);
+      LOG.info("{} saved contract details '{}'", getCurrentUserId(), contractDetail.toJSONString());
     } catch (Exception e) {
       LOG.warn("Error saving contract as default: " + contractDetail.getAddress(), e);
       return Response.serverError().build();
@@ -172,10 +175,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
     }
     try {
       ethereumWalletService.removeDefaultContract(address.toLowerCase(), networkId);
+      LOG.info("{} removed contract details '{}'", getCurrentUserId(), address);
     } catch (Exception e) {
       LOG.warn("Error removing default contract: " + address, e);
       return Response.serverError().build();
     }
     return Response.ok().build();
   }
+
 }

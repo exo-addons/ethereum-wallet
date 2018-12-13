@@ -8,7 +8,9 @@
 .v-textarea>.v-input__control>.v-input__slot:before {
    border: 0;
 }
-
+.container.grid-list-md .layout .flex {
+  box-sizing: border-box;
+}
 .selectBoxVuetifyParent {
   position: relative;
 
@@ -27,6 +29,11 @@
 
 .grid-list-md {
   box-sizing: border-box;
+}
+
+.v-input--is-disabled .v-input__slot {
+  background-color: #f2f2f2;
+  border-radius: 4px;
 }
 
 #WalletApp, #WalletSpaceApp, #WalletAdminApp {
@@ -618,6 +625,23 @@
       border: 1px solid #ccc;
       border-left: 0;
       border-right: 0;
+    }
+
+    #addTeamButton {
+      position: absolute;
+      top: 17px;
+    }
+
+    .v-tabs__item--active {
+      background: #d8d6d6;
+    }
+  }
+
+  .dateSelector {
+    width: 288px;
+
+    input {
+      text-align: center;
     }
   }
 }

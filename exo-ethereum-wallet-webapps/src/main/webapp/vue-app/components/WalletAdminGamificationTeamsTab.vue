@@ -1,14 +1,18 @@
 <template>
   <div>
-    <h3 class="text-xs-left ml-3">
-      <add-team-modal
-        ref="teamModal"
-        :team="selectedTeam"
-        :wallets="wallets"
-        @closed="selectedTeam = null"
-        @saved="refresh" />
+    <add-team-form
+      v-show="selectedTeam"
+      ref="teamModal"
+      :team="selectedTeam"
+      :wallets="wallets"
+      @saved="refresh"
+      @close="selectedTeam = null" />
+    <h3 v-show="!selectedTeam" id="addTeamButton" class="text-xs-left ml-3">
+      <v-btn title="Add a new pool" color="primary" class="btn btn-primary" icon large @click="selectedTeam = {}">
+        <v-icon>add</v-icon>
+      </v-btn>
     </h3>
-    <v-container fluid grid-list-md>
+    <v-container v-show="!selectedTeam" fluid grid-list-md>
       <v-data-iterator
         :items="teams"
         content-tag="v-layout"
@@ -46,28 +50,33 @@
                   <v-list-tile-content>Members:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.members ? props.item.members.length : 0 }}</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile>
-                  <v-list-tile-content>Current period valid members:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ props.item.validMembersWallets ? props.item.validMembersWallets.length : 0 }}</v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile>
-                  <v-list-tile-content>Total valid points:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ props.item.totalValidPoints }} points</v-list-tile-content>
-                </v-list-tile>
                 <v-list-tile v-if="props.item.rewardType === 'FIXED'">
                   <v-list-tile-content>Fixed total budget:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ props.item.fixedBudget }} {{ symbol }}</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.budget }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
                 <v-list-tile v-if="props.item.rewardType === 'FIXED_PER_MEMBER'">
                   <v-list-tile-content>Fixed budget per member:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.rewardPerMember)) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile v-if="props.item.rewardType === 'FIXED_PER_MEMBER'">
-                  <v-list-tile-content>Total budget for current period:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.fixedBudget)) }} {{ symbol }}</v-list-tile-content>
-                </v-list-tile>
                 <v-list-tile v-if="props.item.rewardType === 'COMPUTED'">
-                  <v-list-tile-content>Computed budget:</v-list-tile-content>
+                  <v-list-tile-content>Budget:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">Computed</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile>
+                  <v-flex class="align-start pr-1"><v-divider /></v-flex>
+                  <v-flex class="align-center"><strong>{{ period }}</strong></v-flex>
+                  <v-flex class="align-end pl-1"><v-divider /></v-flex>
+                </v-list-tile>
+                <v-list-tile>
+                  <v-list-tile-content>Eligible members:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.validMembersWallets ? props.item.validMembersWallets.length : 0 }} / {{ props.item.members ? props.item.members.length : 0 }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile>
+                  <v-list-tile-content>Eligible earnings:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ props.item.totalValidPoints ? props.item.totalValidPoints : 0 }} / {{ props.item.totalPoints ? props.item.totalPoints : 0 }} points</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile>
+                  <v-list-tile-content>Budget:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
               </v-list>
@@ -86,13 +95,13 @@
 </template>
 
 <script>
-import AddTeamModal from './WalletAdminGamificationAddTeamModal.vue';
+import AddTeamForm from './WalletAdminGamificationAddTeamForm.vue';
 
 import {getTeams, removeTeam} from '../WalletGamificationServices.js';
 
 export default {
   components: {
-    AddTeamModal
+    AddTeamForm
   },
   props: {
     wallets: {
@@ -103,6 +112,12 @@ export default {
     },
     contractDetails: {
       type: Object,
+      default: function() {
+        return null;
+      }
+    },
+    period: {
+      type: String,
       default: function() {
         return null;
       }
@@ -118,11 +133,21 @@ export default {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     }
   },
+  watch: {
+    selectedTeam() {
+      if(this.selectedTeam) {
+        this.$emit("form-opened");
+      } else {
+        this.$emit("form-closed");
+      }
+    }
+  },
   created() {
     this.refresh();
   },
   methods: {
     refresh() {
+      this.selectedTeam = null;
       getTeams()
         .then(teams => {
           if(teams && teams.length) {

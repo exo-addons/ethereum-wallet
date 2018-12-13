@@ -25,7 +25,7 @@ export function saveSettings(settings) {
     body: JSON.stringify(settings)
   }).then(resp => {
     if(resp && resp.ok) {
-      return;
+      return resp.json();
     } else {
       throw new Error("Error saving parameter");
     }

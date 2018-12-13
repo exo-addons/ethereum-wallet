@@ -16,6 +16,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
+
 import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
@@ -39,7 +41,7 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
  */
 @Path("/wallet/api/kudos")
 public class WalletKudosREST implements ResourceContainer {
-  private static final Log      LOG = ExoLogger.getLogger(WalletKudosREST.class);
+  private static final Log   LOG = ExoLogger.getLogger(WalletKudosREST.class);
 
   private WalletKudosService extendedWalletService;
 
@@ -81,6 +83,7 @@ public class WalletKudosREST implements ResourceContainer {
   @RolesAllowed("administrators")
   public Response saveKudosTotalBudget(@FormParam("budget") double budget) {
     extendedWalletService.saveKudosTotalBudget(budget);
+    LOG.info("{} saved kudos total budget '{}'", getCurrentUserId(), budget);
     return Response.ok().build();
   }
 
@@ -94,6 +97,7 @@ public class WalletKudosREST implements ResourceContainer {
   @RolesAllowed("administrators")
   public Response saveKudosContract(@FormParam("kudosContract") String kudosContractAddress) {
     extendedWalletService.saveKudosContract(kudosContractAddress);
+    LOG.info("{} saved kudos contract '{}'", getCurrentUserId(), kudosContractAddress);
     return Response.ok().build();
   }
 

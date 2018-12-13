@@ -16,6 +16,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -25,7 +27,6 @@ import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
-import org.exoplatform.addon.ethereum.wallet.service.utils.Utils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -89,9 +90,9 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    LOG.info("User {} is saving new global settings", Utils.getCurrentUserId());
     try {
       ethereumWalletService.saveSettings(globalSettings);
+      LOG.info("{} saved wallet settings details '{}'", getCurrentUserId(), globalSettings.toJSONString(false));
     } catch (Exception e) {
       LOG.warn("Error saving global settings", e);
       return Response.serverError().build();

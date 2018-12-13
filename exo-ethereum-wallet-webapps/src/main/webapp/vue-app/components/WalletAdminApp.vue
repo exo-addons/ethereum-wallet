@@ -53,8 +53,8 @@
             <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
             <v-tab v-if="sameConfiguredNetwork" key="wallets">Wallets</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" id="kudosListTab" key="kudosList" :class="kudosListRetrieved || 'hidden'">Kudos</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" id="gamificationTab" key="gamificationTab" :class="gamificationRetrieved || 'hidden'">Gamification</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="kudosList" :class="kudosListRetrieved || 'hidden'">Kudos</v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="gamificationTab" :class="gamificationRetrieved || 'hidden'">Gamification</v-tab>
           </v-tabs>
 
           <v-tabs-items v-model="selectedTab">
