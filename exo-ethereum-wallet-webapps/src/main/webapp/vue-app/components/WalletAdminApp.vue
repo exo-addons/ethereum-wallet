@@ -431,6 +431,11 @@ export default {
                   thiss.$nextTick(() => thiss.forceUpdate());
                 });
             }
+          } else if (transaction.contractMethodName === 'transferOwnership') {
+            if(contractDetails && contractDetails.isContract) {
+              // Force refresh contract details
+              return this.init();
+            }
           } else if (transaction.contractMethodName === 'addAdmin' || transaction.contractMethodName === 'removeAdmin') {
             if (wallet) {
               contractDetails.contract.methods.getAdminLevel(wallet.address).call()

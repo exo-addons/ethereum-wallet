@@ -56,12 +56,16 @@
       <i class="uiIconWarning"></i>
       Please switch Metamask to <strong>{{ networkLabel }}</strong>
     </div>
+    <div v-else-if="isAdministration && isPrincipalContractAdmin" class="alert alert-info">
+      <i class="uiIconInfo"></i>
+      <span>You are using <code>Admin</code> address in metamask</span>
+    </div>
+    <div v-else-if="isAdministration && !isPrincipalContractAdmin" class="alert alert-warning">
+      <i class="uiIconWarning"></i>
+      Attention: you are using an account different from<code>Admin</code> account
+    </div>
     <div v-else-if="newAddressDetected">
-      <div v-if="associatedWalletAddress && isAdministration && isPrincipalContractAdmin" class="alert alert-info">
-        <i class="uiIconInfo"></i>
-        <span>You are using <code>Admin</code> address in metamask</span>
-      </div>
-      <div v-else-if="associatedWalletAddress" class="alert alert-warning">
+      <div v-if="associatedWalletAddress" class="alert alert-warning">
         <i class="uiIconWarning"></i>
         <span v-if="isAdministration">Attention: you are using a different metamask account from your associated address {{ associatedWalletAddress }}</span>
         <span v-else>Please switch metamask to {{ associatedWalletAddress }} account to be able to send transactions</span>
@@ -108,10 +112,6 @@
           </v-card>
         </v-dialog>
       </div>
-    </div>
-    <div v-else-if="isAdministration" class="alert alert-warning">
-      <i class="uiIconWarning"></i>
-      Attention: you are using an account different from<code>Admin</code> account
     </div>
   </v-flex>
 </template>

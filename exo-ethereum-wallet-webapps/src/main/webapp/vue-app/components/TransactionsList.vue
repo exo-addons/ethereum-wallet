@@ -191,6 +191,27 @@
                   <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
                   <wallet-address v-else :value="item.contractAddress" allow-copy />
                 </v-list-tile-title>
+                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferOwnership'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>Transfered ownership to</span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                  <span> on contract </span>
+                  <wallet-address v-if="item.contractName" :value="item.contractName" :allow-copy="false" />
+                  <wallet-address v-else :value="item.contractAddress" allow-copy />
+                </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approveAccount'">
                   <profile-chip

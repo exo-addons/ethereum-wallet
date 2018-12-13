@@ -79,10 +79,11 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.implementationAddress().call())
     .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.version().call())
     .then(version => {
-      if (!contractDetails.contractType || contractDetails.contractType <= 0) {
-        contractToSave = contractToSave || version;
+      if (version) {
         version = Number(version);
+        const originalContractType = contractDetails.contractType;
         contractDetails.contractType = version && !Number.isNaN(version) && Number.isInteger(version) ? 1 : 0;
+        contractToSave = contractToSave || Number(contractDetails.contractType) !== originalContractType;
       }
       contractDetails.retrievedAttributes++;
     })
@@ -92,7 +93,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .then(() => (contractDetails.decimals || contractDetails.contract.methods.decimals().call()))
     .then(decimals => {
       if (decimals) {
-        contractDetails.decimals = decimals || 0;
+        decimals = Number(decimals);
+        contractToSave = contractToSave || Number(contractDetails.decimals) !== decimals;
+        contractDetails.decimals = decimals;
         contractDetails.retrievedAttributes++;
       } else {
         contractDetails.decimals = 0;
@@ -108,9 +111,10 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .catch(e => {
       contractDetails.contractType = -1;
     })
-    .then(() => contractDetails.contractType >= 0 && (contractDetails.symbol || contractDetails.contract.methods.symbol().call()))
+    .then(() => contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty("symbol") ? contractDetails.symbol : contractDetails.contract.methods.symbol().call())
     .then(symbol => {
       if (symbol) {
+        contractToSave = contractToSave || contractDetails.symbol !== symbol;
         contractDetails.symbol = symbol;
         contractDetails.retrievedAttributes++;
       }
@@ -119,9 +123,10 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       contractDetails.contractType = -1;
       console.debug("retrieveContractDetails method - error retrieving symbol", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contractType >= 0 && (contractDetails.name || contractDetails.contract.methods.name().call()))
+    .then(() => contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty("name") ? contractDetails.name : contractDetails.contract.methods.name().call())
     .then(name => {
       if (name) {
+        contractToSave = contractToSave || contractDetails.name !== name;
         contractDetails.name = name;
         contractDetails.title = name;
         contractDetails.retrievedAttributes++;
@@ -131,9 +136,10 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       contractDetails.contractType = -1;
       console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contractType >= 0 && (contractDetails.totalSupply || contractDetails.contract.methods.totalSupply().call()))
+    .then(() => contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty("totalSupply") ? contractDetails.totalSupply : contractDetails.contract.methods.totalSupply().call())
     .then(totalSupply =>  {
       if (totalSupply) {
+        contractToSave = contractToSave || Number(contractDetails.totalSupply) !== Number(totalSupply);
         contractDetails.totalSupply = totalSupply;
         contractDetails.retrievedAttributes++;
       }

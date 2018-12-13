@@ -122,6 +122,20 @@
             convert-wei
             @sent="newTransactionPending"
             @error="transactionError" />
+
+          <contract-admin-modal
+            v-if="contractDetails.isOwner"
+            ref="transferOwnership"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="transferOwnership"
+            title="Transfer ownership"
+            autocomplete-label="New owner"
+            autocomplete-placeholder="Choose a new owner of the contract"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
+
         </v-flex>
         <v-btn icon class="rightIcon" @click="$emit('back')">
           <v-icon>close</v-icon>

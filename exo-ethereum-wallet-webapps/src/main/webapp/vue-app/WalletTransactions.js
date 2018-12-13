@@ -348,6 +348,11 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.contractSymbol = 'Level';
                   transactionDetails.contractAmountLabel = 'Level';
                 }
+              } else if (method.name === 'transferOwnership') {
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransferOwnership');
+                if (methodLog) {
+                  transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
+                }
               } else if (method.name === 'removeAdmin') {
                 const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'RemovedAdmin');
                 if (methodLog) {
