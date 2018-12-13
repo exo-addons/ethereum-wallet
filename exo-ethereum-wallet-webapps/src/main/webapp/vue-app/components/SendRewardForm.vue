@@ -64,7 +64,7 @@ import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
-import {savePeriodKudosTransactions, savePeriodKudosTransaction} from '../WalletKudosServices.js';
+import {savePeriodRewardTransactions, savePeriodRewardTransaction} from '../WalletRewardServices.js';
 
 export default {
   components: {
@@ -100,6 +100,30 @@ export default {
       default: function() {
         return 0;
       }
+    },
+    defaultTransactionLabel: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    defaultTransactionMessage: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    rewardCountField: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
+    rewardType: {
+      type: String,
+      default: function() {
+        return null;
+      }
     }
   },
   data () {
@@ -121,23 +145,18 @@ export default {
     };
   },
   computed: {
-    kudosDefaultLabel() {
+    defaultLabel() {
       const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
       const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-      return `Kudos reward for period: ${startDate} to ${endDate}`;
+      return `${this.defaultTransactionLabel} for period: ${startDate} to ${endDate}`;
     },
-    kudosDefaultMessage() {
-      return this.kudosDefaultLabel;
+    defaultMessage() {
+      const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+      const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+      return `${this.defaultTransactionMessage} for period: ${startDate} to ${endDate}`;
     },
     loading() {
       return this.loadingCount > 0;
-    },
-    totalKudosCount() {
-      let totalKudos = 0;
-      this.recipientsHavingAddress.forEach(recipient => {
-        totalKudos += Number(recipient.received);
-      });
-      return totalKudos;
     },
     totalTokens() {
       let totalTokens = 0;
@@ -204,8 +223,8 @@ export default {
       this.showQRCodeModal = false;
       this.warning = null;
       this.errors = null;
-      this.transactionLabel = this.kudosDefaultLabel;
-      this.transactionMessage = this.kudosDefaultMessage;
+      this.transactionLabel = this.defaultLabel;
+      this.transactionMessage = this.defaultMessage;
       this.$emit("error", "");
       if (!this.gasPrice) {
         this.gasPrice = window.walletSettings.minGasPrice;
@@ -223,10 +242,10 @@ export default {
         this.loadingCount = 0;
       });
       if(!this.periodType) {
-        this.errors = 'Unable to determine Kudos period type (Week, Month...)';
+        this.errors = 'Unable to determine reward period type (Week, Month...)';
       }
       if(!this.startDateInSeconds) {
-        this.errors = 'Unable to determine selected start date of Kudos period';
+        this.errors = 'Unable to determine selected start date of reward period';
       }
     },
     estimateTransactionFee() {
@@ -279,8 +298,8 @@ export default {
         return;
       }
 
-      const kudosTransactions = [];
-      const kudosTransactionsPromises = [];
+      const rewardTransactions = [];
+      const rewardTransactionsPromises = [];
       this.recipientsHavingAddress.forEach(recipientWallet => {
         this.transactionsSent++;
         if (!window.localWeb3.utils.isAddress(recipientWallet.address)) {
@@ -289,18 +308,18 @@ export default {
           this.appendError("Invalid recipient address");
         } else {
           this.loadingCount++;
-          kudosTransactionsPromises.push(this.sendTokens(recipientWallet, kudosTransactions));
+          rewardTransactionsPromises.push(this.sendTokens(recipientWallet, rewardTransactions));
         }
       });
-      Promise.all(kudosTransactionsPromises)
+      Promise.all(rewardTransactionsPromises)
         .then(() => {
-          if(kudosTransactions.length) {
-            // save all kudos transactions again for current period (for consistency check)
-            savePeriodKudosTransactions(kudosTransactions);
+          if(rewardTransactions.length) {
+            // save all reward transactions again for current period (for consistency check)
+            savePeriodRewardTransactions(rewardTransactions);
           }
         });
     },
-    sendTokens(recipientWallet, kudosTransactions) {
+    sendTokens(recipientWallet, rewardTransactions) {
       let errorAppended = false;
       try {
         const amountToSendForReceiver = recipientWallet.tokensToSend;
@@ -330,6 +349,18 @@ export default {
               .on('transactionHash', hash => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
+                // Add number of reward type received by user in label
+                let label = this.transactionLabel;
+                if(this.transactionLabel && this.rewardCountField && recipientWallet[this.rewardCountField] && this.transactionLabel.trim().indexOf(this.defaultLabel.trim()) >= 0) {
+                  label = label.replace(this.defaultLabel.trim(), `${recipientWallet[this.rewardCountField]} ${this.defaultLabel.trim()}`);
+                }
+
+                // Add number of reward type received by user in message
+                let message = this.transactionMessage;
+                if(this.transactionMessage && this.rewardCountField && recipientWallet[this.rewardCountField] && this.transactionMessage.trim().indexOf(this.defaultMessage.trim()) >= 0) {
+                  message = message.replace(this.defaultMessage.trim(), `${recipientWallet[this.rewardCountField]} ${this.defaultMessage.trim()}`);
+                }
+
                 const pendingTransaction = {
                   hash: hash,
                   from: sender.toLowerCase(),
@@ -341,8 +372,8 @@ export default {
                   contractAddress: contractDetails.address,
                   contractMethodName: 'transfer',
                   contractAmount : amountToSendForReceiver,
-                  label: this.transactionLabel,
-                  message: this.transactionMessage,
+                  label: label,
+                  message: message,
                   timestamp: Date.now(),
                   fee: this.transactionFeeEther,
                   feeFiat: this.transactionFeeFiat,
@@ -352,8 +383,8 @@ export default {
                 // *async* save transaction message for contract, sender and receiver
                 saveTransactionDetails(pendingTransaction, contractDetails);
 
-                // *async* save kudos transaction for current period
-                const kudosTransaction = {
+                // *async* save reward transaction for current period
+                const rewardTransaction = {
                   networkId: window.walletSettings.defaultNetworkId,
                   periodType: this.periodType,
                   startDateInSeconds: this.startDateInSeconds,
@@ -361,10 +392,11 @@ export default {
                   receiverType: recipientWallet.type,
                   receiverId: recipientWallet.id,
                   receiverIdentityId: recipientWallet.identityId,
-                  tokensAmountSent: String(Number(amountToSendForReceiver))
+                  tokensAmountSent: String(Number(amountToSendForReceiver)),
+                  rewardType: this.rewardType
                 };
-                kudosTransactions.push(kudosTransaction);
-                savePeriodKudosTransaction(kudosTransaction);
+                rewardTransactions.push(rewardTransaction);
+                savePeriodRewardTransaction(rewardTransaction);
 
                 // The transaction has been hashed and will be sent
                 this.$emit("sent", pendingTransaction, contractDetails);

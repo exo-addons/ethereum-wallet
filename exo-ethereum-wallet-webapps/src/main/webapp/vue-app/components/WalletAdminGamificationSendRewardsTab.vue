@@ -12,11 +12,11 @@
       v-model="selectedIdentitiesList"
       :headers="identitiesHeaders"
       :items="filteredIdentitiesList"
-      :select-all="filteredIdentitiesList && filteredIdentitiesList.length"
       :loading="loading"
       :sortable="true"
       item-key="address"
       class="elevation-1 mr-3 mb-2"
+      select-all
       disable-initial-sort
       hide-actions>
       <template slot="items" slot-scope="props">
@@ -119,15 +119,40 @@
         </td>
       </template>
     </v-data-table>
+
+    <send-reward-modal
+      :account="walletAddress"
+      :contract-details="contractDetails"
+      :recipients="recipients"
+      :period-type="periodType"
+      :start-date-in-seconds="startDateInSeconds"
+      :end-date-in-seconds="endDateInSeconds"
+      :reward-type="rewardType"
+      default-transaction-label="gamification points reward"
+      default-transaction-message="gamification points reward"
+      reward-count-field="points"
+      @sent="newPendingTransaction"
+      @error="error = $event" />
   </v-flex>
 </template>
 
 <script>
-import {getPeriodTransactions} from '../WalletGamificationServices.js';
+import SendRewardModal from './SendRewardModal.vue';
+
+import {getPeriodRewardTransactions} from '../WalletRewardServices.js';
 import {watchTransactionStatus, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 export default {
+  components: {
+    SendRewardModal
+  },
   props: {
+    walletAddress: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     loading: {
       type: Boolean,
       default: function() {
@@ -158,13 +183,13 @@ export default {
         return null;
       }
     },
-    selectedStartDate: {
+    startDateInSeconds: {
       type: Number,
       default: function() {
         return 0;
       }
     },
-    selectedEndDate: {
+    endDateInSeconds: {
       type: Number,
       default: function() {
         return 0;
@@ -175,6 +200,7 @@ export default {
     return {
       search: '',
       selectedIdentitiesList: [],
+      rewardType: 'GAMIFICATION_PERIOD_TRANSACTIONS',
       identitiesHeaders: [
         {
           text: '',
@@ -225,7 +251,7 @@ export default {
   },
   computed: {
     recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points >= this.threshold && item.tokensToSend && !item.tokensSent && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter(item => item.address && item.points && item.points >= this.threshold && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
     validRecipients() {
       return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points >= this.threshold) : [];
@@ -234,7 +260,7 @@ export default {
       return this.identitiesList ? this.identitiesList.filter(wallet => this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
-      return this.validRecipients.filter(item => !item.tokensSent && (!item.status || item.status === 'error'));
+      return this.validRecipients.filter(item => !item.status || item.status === 'error');
     },
     totalPoints() {
       if(this.filteredIdentitiesList) {
@@ -280,30 +306,30 @@ export default {
       return teams.indexOf(searchText) > -1;
     },
     newPendingTransaction(transaction) {
-      this.$emit('pending', transaction);
       if(!transaction || !transaction.to) {
         return;
       }
+      this.$emit('pending', transaction);
       this.refreshWalletTransactionStatus(transaction);
     },
     refreshWalletTransactionStatus(transaction) {
       if(transaction && transaction.to) {
-        const resultWalletIndex = this.identitiesList.findIndex(resultWallet => resultWallet.address && resultWallet.address.toLowerCase() === transaction.to.toLowerCase());
-        const resultWallet = this.identitiesList[resultWalletIndex];
+        const resultWalletIndex = this.selectedIdentitiesList.findIndex(resultWallet => resultWallet.address && resultWallet.address.toLowerCase() === transaction.to.toLowerCase());
+        const resultWallet = this.selectedIdentitiesList[resultWalletIndex];
         if(resultWallet) {
           this.$set(resultWallet, 'hash', transaction.hash);
           this.$set(resultWallet, 'status', 'pending');
           if (transaction.contractAmount) {
             this.$set(resultWallet, 'tokensSent', transaction.contractAmount);
           }
-          this.identitiesList.splice(resultWalletIndex, 1);
+          this.selectedIdentitiesList.splice(resultWalletIndex, 1);
           const thiss = this;
           watchTransactionStatus(transaction.hash, receipt => {
             thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
           });
         }
       } else {
-        getPeriodTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.selectedStartDateInSeconds)
+        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.startDateInSeconds, this.rewardType)
           .then(resultTransactions => {
             if (resultTransactions) {
               resultTransactions.forEach(resultTransaction => {

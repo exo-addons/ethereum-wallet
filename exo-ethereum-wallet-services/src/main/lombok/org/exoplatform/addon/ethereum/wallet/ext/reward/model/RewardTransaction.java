@@ -1,4 +1,4 @@
-package org.exoplatform.addon.ethereum.wallet.ext.kudos.model;
+package org.exoplatform.addon.ethereum.wallet.ext.reward.model;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.decodeString;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.encodeString;
@@ -16,7 +16,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class KudosTransaction implements Serializable {
+public class RewardTransaction implements Serializable {
 
   private static final long serialVersionUID = 658273092293607458L;
 
@@ -36,8 +36,10 @@ public class KudosTransaction implements Serializable {
 
   private String            tokensAmountSent;
 
-  public static KudosTransaction fromStoredValue(String storedTransactionDetails) {
-    KudosTransaction transactionMessage = new KudosTransaction();
+  private String            rewardType;
+
+  public static RewardTransaction fromStoredValue(String storedTransactionDetails) {
+    RewardTransaction transactionMessage = new RewardTransaction();
     if (StringUtils.isNotBlank(storedTransactionDetails)) {
       String[] transactionDetailsArray = storedTransactionDetails.split(";");
       transactionMessage.setHash(transactionDetailsArray[0]);
@@ -100,9 +102,9 @@ public class KudosTransaction implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null || !(obj instanceof KudosTransaction)) {
+    if (obj == null || !(obj instanceof RewardTransaction)) {
       return false;
     }
-    return StringUtils.equalsIgnoreCase(hash, ((KudosTransaction) obj).getHash());
+    return StringUtils.equalsIgnoreCase(hash, ((RewardTransaction) obj).getHash());
   }
 }

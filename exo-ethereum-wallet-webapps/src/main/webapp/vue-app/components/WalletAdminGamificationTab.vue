@@ -53,15 +53,17 @@
             </v-menu>
           </v-card-text>
           <send-rewards-tab
+            ref="sendRewards"
+            :wallet-address="walletAddress"
             :loading="loading"
             :identities-list="identitiesList"
             :contract-details="contractDetails"
             :threshold="threshold"
             :period-type="periodType"
-            :selected-start-date="selectedStartDateInSeconds"
-            :selected-end-date="selectedEndDateInSeconds"
+            :start-date-in-seconds="selectedStartDateInSeconds"
+            :end-date-in-seconds="selectedEndDateInSeconds"
             @open-wallet-transaction="$emit('open-wallet-transaction', $event)"
-            @pending="$emit('pending', transaction)" />
+            @pending="$emit('pending', $event)" />
         </v-card>
       </v-tab-item>
       <v-tab-item id="RewardPools">
@@ -124,7 +126,8 @@ import GamificationTeamsTab from "./WalletAdminGamificationTeamsTab.vue";
 import SendRewardsTab from "./WalletAdminGamificationSendRewardsTab.vue";
 import ConfigurationTab from "./WalletAdminGamificationConfigurationTab.vue";
 
-import {getSettings, getPeriodDates, getGamificationPoints} from '../WalletGamificationServices.js';
+import {getSettings, getGamificationPoints} from '../WalletGamificationServices.js';
+import {getPeriodRewardDates} from '../WalletRewardServices.js';
 
 export default {
   components: {
@@ -133,6 +136,12 @@ export default {
     GamificationTeamsTab
   },
   props: {
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     wallets: {
       type: Array,
       default: function() {
@@ -360,7 +369,7 @@ export default {
       if (!this.selectedDate || !this.periodType) {
         return;
       }
-      getPeriodDates(new Date(this.selectedDate), this.periodType)
+      getPeriodRewardDates(new Date(this.selectedDate), this.periodType)
         .then(period => {
           this.selectedStartDate = this.formatDate(new Date(period.startDateInSeconds * 1000));
           this.selectedEndDate = this.formatDate(new Date(period.endDateInSeconds * 1000));
@@ -381,6 +390,10 @@ export default {
           }
           retrievedIdentities.push(wallet.id);
           wallet = Object.assign({}, wallet);
+          wallet.hash = null;
+          wallet.status = null;
+          wallet.tokensSent = null;
+
           const startDate = new Date(this.selectedStartDate);
           const endDate = new Date(this.selectedEndDate);
           identitiesListPromises.push(
@@ -395,6 +408,7 @@ export default {
 
       return Promise.all(identitiesListPromises)
         .then(() => this.refresh())
+        .then(() => this.$refs.sendRewards && this.$refs.sendRewards.refreshWalletTransactionStatus())
         .then(() => {
           this.loading = false;
         });

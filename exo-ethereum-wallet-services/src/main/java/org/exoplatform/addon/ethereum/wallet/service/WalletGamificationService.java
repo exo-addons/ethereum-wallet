@@ -4,16 +4,13 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUt
 import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUtils.toDTO;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-import org.json.JSONObject;
-
 import org.exoplatform.addon.ethereum.wallet.dao.GamificationTeamDAO;
 import org.exoplatform.addon.ethereum.wallet.ext.gamification.entity.GamificationTeamEntity;
-import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.*;
+import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.GamificationSettings;
+import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.GamificationTeam;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.services.log.ExoLogger;
@@ -114,7 +111,7 @@ public class WalletGamificationService {
    * Remove a Gamification Team/Pool by id
    * 
    * @param id
-   * @return 
+   * @return
    */
   public GamificationTeam removeTeam(Long id) {
     if (id == null || id == 0) {
@@ -125,70 +122,5 @@ public class WalletGamificationService {
       gamificationTeamDAO.delete(entity);
     }
     return toDTO(entity);
-  }
-
-  /**
-   * @param networkId
-   * @param periodType
-   * @param startDateInSeconds
-   * @return
-   */
-  public List<JSONObject> getPeriodTransactions(Long networkId, String periodType, long startDateInSeconds) {
-    String paramName = getPeriodTransactionsParamName(periodType, startDateInSeconds);
-    SettingValue<?> transactionsValue = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, paramName);
-    String transactionsString = transactionsValue == null ? "" : transactionsValue.getValue().toString();
-    String[] transactionsArray = transactionsString.isEmpty() ? new String[0] : transactionsString.split(",");
-    return Arrays.stream(transactionsArray).map(transaction -> {
-      GamificationTransaction gamificationTransaction = GamificationTransaction.fromStoredValue(transaction);
-      gamificationTransaction.setNetworkId(networkId);
-      return gamificationTransaction.toJSONObject();
-    }).collect(Collectors.toList());
-  }
-
-  /**
-   * Save gamification transaction
-   * 
-   * @param gamificationTransaction
-   */
-  public void savePeriodTransaction(GamificationTransaction gamificationTransaction) {
-    if (gamificationTransaction == null) {
-      throw new IllegalArgumentException("gamificationTransaction parameter is mandatory");
-    }
-    if (gamificationTransaction.getNetworkId() == 0) {
-      throw new IllegalArgumentException("transaction NetworkId parameter is mandatory");
-    }
-    if (StringUtils.isBlank(gamificationTransaction.getHash())) {
-      throw new IllegalArgumentException("transaction hash parameter is mandatory");
-    }
-    if (StringUtils.isBlank(gamificationTransaction.getPeriodType())) {
-      throw new IllegalArgumentException("transaction PeriodType parameter is mandatory");
-    }
-    if (gamificationTransaction.getStartDateInSeconds() == 0) {
-      throw new IllegalArgumentException("transaction 'period start date' parameter is mandatory");
-    }
-    if (StringUtils.isBlank(gamificationTransaction.getReceiverType())) {
-      throw new IllegalArgumentException("transaction ReceiverType parameter is mandatory");
-    }
-    if (StringUtils.isBlank(gamificationTransaction.getReceiverId())) {
-      throw new IllegalArgumentException("transaction ReceiverId parameter is mandatory");
-    }
-    if (StringUtils.isBlank(gamificationTransaction.getReceiverIdentityId())) {
-      throw new IllegalArgumentException("transaction ReceiverIdentityId parameter is mandatory");
-    }
-
-    String paramName = getPeriodTransactionsParamName(gamificationTransaction.getPeriodType(),
-                                                      gamificationTransaction.getStartDateInSeconds());
-    SettingValue<?> transactionsValue = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, paramName);
-    String transactionsString = transactionsValue == null ? "" : transactionsValue.getValue().toString();
-
-    if (!transactionsString.contains(gamificationTransaction.getHash())) {
-      String contentToPrepend = gamificationTransaction.getToStoreValue();
-      transactionsString = transactionsString.isEmpty() ? contentToPrepend : contentToPrepend + "," + transactionsString;
-      settingService.set(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, paramName, SettingValue.create(transactionsString));
-    }
-  }
-
-  private String getPeriodTransactionsParamName(String periodType, long startDateInSeconds) {
-    return GAMIFICATION_PERIOD_TRANSACTIONS_NAME + periodType + startDateInSeconds;
   }
 }

@@ -6,24 +6,22 @@ import java.util.stream.Collectors;
 
 import org.exoplatform.addon.ethereum.wallet.ext.gamification.entity.GamificationTeamEntity;
 import org.exoplatform.addon.ethereum.wallet.ext.gamification.entity.GamificationTeamMemberEntity;
-import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.*;
+import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.GamificationTeam;
+import org.exoplatform.addon.ethereum.wallet.ext.gamification.model.GamificationTeamMember;
 import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.ws.frameworks.json.JsonGenerator;
 import org.exoplatform.ws.frameworks.json.JsonParser;
-import org.exoplatform.ws.frameworks.json.impl.*;
+import org.exoplatform.ws.frameworks.json.impl.JsonGeneratorImpl;
+import org.exoplatform.ws.frameworks.json.impl.JsonParserImpl;
 
 public class GamificationUtils {
-  private static final Log               LOG                  = ExoLogger.getLogger(GamificationUtils.class);
+  public static final JsonParser    JSON_PARSER    = new JsonParserImpl();
 
-  public static final JsonParser         JSON_PARSER          = new JsonParserImpl();
-
-  public static final JsonGenerator      JSON_GENERATOR       = new JsonGeneratorImpl();
+  public static final JsonGenerator JSON_GENERATOR = new JsonGeneratorImpl();
 
   public static LocalDateTime timeFromSeconds(long createdDate) {
     return LocalDateTime.ofInstant(Instant.ofEpochSecond(createdDate), TimeZone.getDefault().toZoneId());
@@ -31,22 +29,6 @@ public class GamificationUtils {
 
   public static long timeToSeconds(LocalDateTime time) {
     return time.atZone(ZoneOffset.systemDefault()).toEpochSecond();
-  }
-
-  public static GamificationPeriod getCurrentPeriod(GamificationSettings gamificationSettings) {
-    return getPeriodOfTime(gamificationSettings, LocalDateTime.now());
-  }
-
-  public static GamificationPeriod getPeriodOfTime(GamificationSettings gamificationSettings, LocalDateTime localDateTime) {
-    GamificationPeriodType gamificationPeriodType = null;
-    if (gamificationSettings == null || gamificationSettings.getPeriodType() == null) {
-      LOG.warn("Provided gamificationSettings doesn't have a parametred gamification period type, using MONTH period type: "
-          + gamificationSettings, new RuntimeException());
-      gamificationPeriodType = GamificationPeriodType.DEFAULT;
-    } else {
-      gamificationPeriodType = gamificationSettings.getPeriodType();
-    }
-    return gamificationPeriodType.getPeriodOfTime(localDateTime);
   }
 
   public static GamificationTeamEntity fromDTO(GamificationTeam gamificationTeam) {

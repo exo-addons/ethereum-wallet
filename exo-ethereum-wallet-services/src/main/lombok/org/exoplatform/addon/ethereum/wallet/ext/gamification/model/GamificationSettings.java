@@ -7,6 +7,7 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.ext.reward.model.RewardPeriodType;
 import org.exoplatform.ws.frameworks.json.impl.JsonDefaultHandler;
 import org.exoplatform.ws.frameworks.json.impl.ObjectBuilder;
 
@@ -21,7 +22,7 @@ public class GamificationSettings implements Serializable {
 
   private String                 contractAddress;
 
-  private GamificationPeriodType periodType       = GamificationPeriodType.DEFAULT;
+  private RewardPeriodType periodType       = RewardPeriodType.DEFAULT;
 
   private GamificationRewardType rewardType       = GamificationRewardType.FIXED;
 

@@ -27,7 +27,7 @@
           sm6
           md4
           lg3>
-          <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto no-repeat`">
+          <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto no-repeat`" class="elevation-3">
             <v-card flat class="transparent">
               <v-card-title :class="props.item.description && 'pb-0'">
                 <v-chip dark>

@@ -18,14 +18,6 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang.StringUtils;
-import org.json.JSONObject;
-
-import org.exoplatform.addon.ethereum.wallet.ext.kudos.model.KudosTransaction;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 
@@ -87,83 +79,5 @@ public class WalletKudosService {
                        EXT_KUDOS_CONTRACT_ADDRESS_KEY_NAME,
                        SettingValue.create(kudosContractAddress));
     this.kudosContractAddress = null;
-  }
-
-  /**
-   * @param networkId
-   * @param periodType
-   * @param startDateInSeconds
-   * @return
-   */
-  public List<JSONObject> getPeriodTransactions(Long networkId, String periodType, long startDateInSeconds) {
-    String kudosPeriodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds);
-    SettingValue<?> kudosPeriodTransactionsValue = settingService.get(EXT_WALLET_CONTEXT,
-                                                                      EXT_WALLET_SCOPE,
-                                                                      kudosPeriodTransactionsParamName);
-
-    String kudosPeriodTransactionsString = kudosPeriodTransactionsValue == null ? ""
-                                                                                : kudosPeriodTransactionsValue.getValue()
-                                                                                                              .toString();
-
-    String[] kudosPeriodTransactionsArray = kudosPeriodTransactionsString.isEmpty() ? new String[0]
-                                                                                    : kudosPeriodTransactionsString.split(",");
-    return Arrays.stream(kudosPeriodTransactionsArray).map(transaction -> {
-      KudosTransaction kudosTransaction = KudosTransaction.fromStoredValue(transaction);
-      kudosTransaction.setNetworkId(networkId);
-      return kudosTransaction.toJSONObject();
-    }).collect(Collectors.toList());
-  }
-
-  /**
-   * Save kudos transaction
-   * 
-   * @param kudosTransaction
-   */
-  public void savePeriodKudosTransaction(KudosTransaction kudosTransaction) {
-    if (kudosTransaction == null) {
-      throw new IllegalArgumentException("kudosTransaction parameter is mandatory");
-    }
-    if (kudosTransaction.getNetworkId() == 0) {
-      throw new IllegalArgumentException("transaction NetworkId parameter is mandatory");
-    }
-    if (StringUtils.isBlank(kudosTransaction.getHash())) {
-      throw new IllegalArgumentException("transaction hash parameter is mandatory");
-    }
-    if (StringUtils.isBlank(kudosTransaction.getPeriodType())) {
-      throw new IllegalArgumentException("transaction PeriodType parameter is mandatory");
-    }
-    if (kudosTransaction.getStartDateInSeconds() == 0) {
-      throw new IllegalArgumentException("transaction 'period start date' parameter is mandatory");
-    }
-    if (StringUtils.isBlank(kudosTransaction.getReceiverType())) {
-      throw new IllegalArgumentException("transaction ReceiverType parameter is mandatory");
-    }
-    if (StringUtils.isBlank(kudosTransaction.getReceiverId())) {
-      throw new IllegalArgumentException("transaction ReceiverId parameter is mandatory");
-    }
-
-    String kudosPeriodTransactionsParamName = getPeriodTransactionsParamName(kudosTransaction.getPeriodType(),
-                                                                             kudosTransaction.getStartDateInSeconds());
-    SettingValue<?> kudosPeriodTransactionsValue = settingService.get(EXT_WALLET_CONTEXT,
-                                                                      EXT_WALLET_SCOPE,
-                                                                      kudosPeriodTransactionsParamName);
-    String kudosPeriodTransactionsString = kudosPeriodTransactionsValue == null ? ""
-                                                                                : kudosPeriodTransactionsValue.getValue()
-                                                                                                              .toString();
-
-    if (!kudosPeriodTransactionsString.contains(kudosTransaction.getHash())) {
-      String contentToPrepend = kudosTransaction.getToStoreValue();
-      kudosPeriodTransactionsString = kudosPeriodTransactionsString.isEmpty() ? contentToPrepend
-                                                                              : contentToPrepend + ","
-                                                                                  + kudosPeriodTransactionsString;
-      settingService.set(EXT_WALLET_CONTEXT,
-                         EXT_WALLET_SCOPE,
-                         kudosPeriodTransactionsParamName,
-                         SettingValue.create(kudosPeriodTransactionsString));
-    }
-  }
-
-  private String getPeriodTransactionsParamName(String periodType, long startDateInSeconds) {
-    return KUDOS_PERIOD_TRANSACTIONS_NAME + periodType + startDateInSeconds;
   }
 }

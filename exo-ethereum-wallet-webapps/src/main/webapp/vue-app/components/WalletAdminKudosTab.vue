@@ -162,13 +162,17 @@
           </tr>
         </template>
       </v-data-table>
-      <send-kudos-modal
+      <send-reward-modal
         :account="walletAddress"
         :contract-details="contractDetails"
         :recipients="recipients"
         :period-type="kudosPeriodType"
         :start-date-in-seconds="selectedStartDateInSeconds"
         :end-date-in-seconds="selectedEndDateInSeconds"
+        :reward-type="rewardType"
+        default-transaction-label="kudos reward"
+        default-transaction-message="kudos reward"
+        reward-count-field="received"
         @sent="newPendingTransaction"
         @error="error = $event" />
     </v-card-text>
@@ -176,16 +180,23 @@
 </template>
 
 <script>
-import {getKudosContract, getKudosBudget, saveKudosContract, saveKudosTotalBudget, getPeriodTransactions} from '../WalletKudosServices.js';
-import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
+import SendRewardModal from './SendRewardModal.vue';
 
-import SendKudosModal from './SendKudosModal.vue';
+import {getKudosContract, getKudosBudget, saveKudosContract, saveKudosTotalBudget} from '../WalletKudosServices.js';
+import {getPeriodRewardTransactions} from '../WalletRewardServices.js';
+import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
 
 export default {
   components: {
-    SendKudosModal
+    SendRewardModal
   },
   props: {
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     wallets: {
       type: Array,
       default: function() {
@@ -223,6 +234,7 @@ export default {
       selectedKudosIdentitiesList: [],
       selectedStartDate: null,
       selectedEndDate: null,
+      rewardType: 'KUDOS_PERIOD_TRANSACTIONS',
       pagination: {
         descending: true,
         sortBy: 'received'
@@ -392,7 +404,7 @@ export default {
           });
         }
       } else {
-        getPeriodTransactions(window.walletSettings.defaultNetworkId, this.kudosPeriodType, this.selectedStartDateInSeconds)
+        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.kudosPeriodType, this.selectedStartDateInSeconds, this.rewardType)
           .then(kudosTransactions => {
             if (kudosTransactions) {
               kudosTransactions.forEach(kudosTransaction => {

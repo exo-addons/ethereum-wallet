@@ -1,16 +1,16 @@
-package org.exoplatform.addon.ethereum.wallet.ext.gamification.model;
+package org.exoplatform.addon.ethereum.wallet.ext.reward.model;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.GamificationUtils.timeToSeconds;
 
 import java.time.*;
 
-public enum GamificationPeriodType {
+public enum RewardPeriodType {
   WEEK, MONTH, QUARTER, SEMESTER, YEAR;
 
-  public static final GamificationPeriodType DEFAULT = MONTH;
+  public static final RewardPeriodType DEFAULT = MONTH;
 
-  public GamificationPeriod getPeriodOfTime(LocalDateTime localDateTime) {
-    GamificationPeriod gamificationPeriod = new GamificationPeriod();
+  public RewardPeriod getPeriodOfTime(LocalDateTime localDateTime) {
+    RewardPeriod gamificationPeriod = new RewardPeriod();
     YearMonth yearMonth = YearMonth.from(localDateTime);
     switch (this) {
     case WEEK:
