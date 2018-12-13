@@ -24,7 +24,7 @@
           <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
             <div class="alert alert-warning">
               <i class="uiIconWarning"></i>
-              There is some user(s) with multiple teams, thus the calculation could be wrong:
+              Some users are members of  multiple pools, the budget computing could be wrong:
               <ul>
                 <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
                   <code>{{ duplicatedWallet.name }}</code>
@@ -71,7 +71,7 @@
           <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
             <div class="alert alert-warning">
               <i class="uiIconWarning"></i>
-              There is some user(s) with multiple teams, thus the calculation could be wrong:
+              Some users are members of  multiple pools, the budget computing could be wrong:
               <ul>
                 <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
                   <code>{{ duplicatedWallet.name }}</code>
@@ -205,7 +205,7 @@ export default {
       }
     },
     validRecipients() {
-      return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points >= this.threshold) : [];
+      return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points && item.points >= this.threshold) : [];
     },
     computedTotalBudget() {
       if(this.rewardType === 'FIXED') {
@@ -333,6 +333,7 @@ export default {
           if (team.rewardType === 'FIXED') {
             this.$set(team, "computedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
             this.$set(team, "fixedBudget", team.computedBudget);
+            totalComputedBudget -= team.computedBudget;
           } else if (team.rewardType === 'FIXED_PER_MEMBER') {
             this.$set(team, "computedBudget", team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0);
             this.$set(team, "fixedBudget", team.computedBudget);

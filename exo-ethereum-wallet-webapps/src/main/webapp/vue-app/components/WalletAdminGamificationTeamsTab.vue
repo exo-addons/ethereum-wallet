@@ -1,5 +1,22 @@
 <template>
   <div>
+    <v-dialog v-model="removeTeamConfirm" content-class="uiPopup" width="290px" max-width="100vw" @keydown.esc="removeTeamConfirm = false">
+      <v-card class="elevation-12">
+        <div class="popupHeader ClearFix">
+          <a class="uiIconClose pull-right" aria-hidden="true" @click="removeTeamConfirm = false"></a>
+          <span class="PopupTitle popupTitle">Delete pool confirmation</span>
+        </div>
+        <v-card-text>
+          Would you like to delete pool <strong>{{ teamToDelete && teamToDelete.name }}</strong>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <button :disabled="loading" :loading="loading" class="btn btn-primary mr-2" @click="removeTeam(teamToDelete.id)">Delete</button>
+          <button :disabled="loading" :loading="loading" class="btn ml-2" @click="removeTeamConfirm = false">Cancel</button>
+          <v-spacer />
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <add-team-form
       v-show="selectedTeam"
       ref="teamModal"
@@ -84,7 +101,7 @@
             <v-card-actions>
               <v-spacer />
               <v-btn v-if="props.item.id" flat color="primary" @click="selectedTeam = props.item;">Edit</v-btn>
-              <v-btn v-if="props.item.id" flat color="primary" @click="removeTeam(props.item.id)">Delete</v-btn>
+              <v-btn v-if="props.item.id" flat color="primary" @click="teamToDelete = props.item;removeTeamConfirm = true">Delete</v-btn>
               <v-spacer />
             </v-card-actions>
           </v-card>
@@ -125,6 +142,8 @@ export default {
   },
   data: () => ({
     teams: [],
+    teamToDelete: null,
+    removeTeamConfirm: false,
     teamsRetrieved: false,
     selectedTeam: null
   }),
@@ -166,7 +185,9 @@ export default {
       removeTeam(id)
         .then(status => {
           if(status) {
-            this.refresh();
+            this.removeTeamConfirm = false;
+            this.teamToDelete = null;
+            return this.refresh();
           } else {
             this.error = 'Error removing team';
           }

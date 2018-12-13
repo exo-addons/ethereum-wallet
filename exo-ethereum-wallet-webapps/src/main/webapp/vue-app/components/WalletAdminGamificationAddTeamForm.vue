@@ -1,5 +1,5 @@
 <template>
-  <v-card class="elevation-12">
+  <v-card class="elevation-12 pt-4">
     <v-card-title v-if="error && String(error).trim() != '{}'" class="text-xs-center">
       <div class="alert alert-error v-content">
         <i class="uiIconError"></i>
@@ -11,7 +11,7 @@
         <v-flex xs12 sm6>
           <v-text-field
             v-model="name"
-            label="Pool name"
+            label="Pool name *"
             placeholder="Enter pool name"
             name="name"
             required />
@@ -36,7 +36,7 @@
             :loading="isLoadingSpaceSuggestions"
             :search-input.sync="rewardTeamSpaceSearchTerm"
             attach="#rewardTeamSpaceAutoComplete"
-            label="Pool space"
+            label="Pool space (optional, add its members in pool and display avatar)"
             class="contactAutoComplete"
             placeholder="Start typing to Search a space"
             content-class="contactAutoCompleteContent bigContactAutoComplete"
@@ -87,7 +87,7 @@
 
         <v-flex xs12>
           <v-radio-group v-model="rewardType" label="Reward pool members">
-            <v-radio value="COMPUTED" label="By computing team reward from total budget" />
+            <v-radio value="COMPUTED" label="By computing pool reward from total budget" />
             <v-radio value="FIXED" label="By a total fixed budget (retained from global budget)" />
             <v-flex xs12 sm6>
               <v-text-field
@@ -418,11 +418,6 @@ export default {
       this.error = null;
       if(!this.name) {
         this.error = 'Pool name is mandatory';
-        return;
-      }
-
-      if(!this.manager) {
-        this.error = 'Pool manager is mandatory';
         return;
       }
 

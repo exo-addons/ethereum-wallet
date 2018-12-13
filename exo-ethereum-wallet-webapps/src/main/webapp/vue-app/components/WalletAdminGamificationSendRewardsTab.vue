@@ -218,7 +218,7 @@ export default {
         {
           text: 'Pools',
           align: 'center',
-          sortable: true,
+          sortable: false,
           value: 'gamificationTeams'
         },
         {

@@ -10,7 +10,7 @@
           class="input-text-center" />
       </div>
       <div class="text-xs-left gamificationWalletConfiguration">
-        <span>Reward priodicity: </span>
+        <span>Reward periodicity: </span>
         <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
           <v-combobox
             v-model="selectedPeriodType"
@@ -32,7 +32,7 @@
         <div>The total gamification reward buget is set:</div>
         <v-flex class="ml-4">
           <v-radio-group v-model="selectedRewardType">
-            <v-radio value="FIXED" label="By a fixed budget" />
+            <v-radio :disabled="!configurationEditable" value="FIXED" label="By a fixed budget of" />
             <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
               <v-text-field
                 v-model.number="selectedTotalBudget"
@@ -61,7 +61,7 @@
                 </v-combobox>
               </div>
             </v-flex>
-            <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member on period" />
+            <v-radio :disabled="!configurationEditable" value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member on period of" />
             <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
               <v-text-field
                 v-model="selectedBudgetPerMember"
