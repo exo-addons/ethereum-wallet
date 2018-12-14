@@ -67,6 +67,11 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         Object.keys(savedDetails).forEach(key => {
           contractDetails[key] = savedDetails[key];
         });
+        // FIXME: Workaround for a unidentified bug
+        if (contractDetails.symbol && contractDetails.symbol === '?') {
+          contractDetails.symbol = null;
+        }
+
         // Convert to numbers
         if(contractDetails.contractType) {
           contractDetails.contractType = Number(contractDetails.contractType);
