@@ -36,13 +36,16 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
       contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails, isAdministration));
     }
   }
+  if(!window.walletContractsDetails) {
+    window.walletContractsDetails = {};
+  }
   return Promise.all(contractsDetailsPromises);
 }
 
 /*
  * Retrieve an ERC20 contract instance at specified address
  */
-export function retrieveContractDetails(account, contractDetails, isAdministration) {
+export function retrieveContractDetails(account, contractDetails, isAdministration, ignoreSavedDetails) {
   let adminLevelComputed;
   contractDetails.retrievedAttributes = 0;
   let contractToSave = false;
@@ -55,7 +58,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     return Promise.resolve(contractDetails);
   }
 
-  return getSavedContractDetails(contractDetails.address, contractDetails.networkId)
+  return (ignoreSavedDetails ? Promise.resolve(null) : getSavedContractDetails(contractDetails.address, contractDetails.networkId))
     .then(savedDetails => {
       if (savedDetails) {
         if(!savedDetails.hasOwnProperty("contractType")) {
@@ -225,8 +228,13 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
 
       if (contractDetails.contractType > 0) {
         contractDetails.contractTypeLabel = 'ERT Token';
+        window.walletContractsDetails[contractDetails.address] = contractDetails;
+        window.walletContractsDetails[contractDetails.address.toLowerCase()] = contractDetails;
       } else if(contractDetails.contractType === 0) {
         contractDetails.contractTypeLabel = 'Standard ERC20 Token';
+        window.walletContractsDetails[contractDetails.address] = contractDetails;
+        window.walletContractsDetails[contractDetails.address.toLowerCase()] = contractDetails;
+        console.log("window.walletContractsDetails", window.walletContractsDetails);
       } else {
         contractDetails.contractTypeLabel = 'Non ERC20 Contract';
       }

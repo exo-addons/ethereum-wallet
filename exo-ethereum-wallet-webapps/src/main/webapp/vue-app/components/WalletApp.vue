@@ -23,7 +23,6 @@
               <v-spacer />
   
               <wallet-app-menu 
-                v-if="!loading"
                 :is-space="isSpace"
                 :wallet-address="walletAddress"
                 :is-maximized="isMaximized"
@@ -376,6 +375,7 @@ export default {
           this.loading = false;
           this.forceUpdate();
         })
+        .then(() => this.$refs.walletSetup && this.$refs.walletSetup.init())
         .catch(e => {
           console.debug("init method - error", e);
           const error = `${e}`;

@@ -1,5 +1,5 @@
 <template>
-  <v-flex v-if="!loading" id="walletSetup" class="text-xs-center">
+  <v-flex id="walletSetup" class="text-xs-center">
     <div v-if="displayWalletBackup" class="alert alert-warning">
       <i class="uiIconWarning"></i>
       Your wallet is not backed up yet.

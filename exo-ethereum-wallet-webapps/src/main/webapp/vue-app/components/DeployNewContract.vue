@@ -262,7 +262,7 @@ export default {
   },
   computed: {
     gasPriceGwei() {
-      return this.gasPrice && window.localWeb3.utils.fromWei(String(this.gasPrice), 'gwei');
+      return this.gasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.gasPrice), 'gwei');
     },
     gasFee() {
       return this.calculateGasPriceInFiat(this.gasByStep[this.step], this.gasPrice);
@@ -285,7 +285,7 @@ export default {
   },
   watch: {
     newTokenGasPrice() {
-      this.newTokenGasPriceGWEI = window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'gwei');
+      this.newTokenGasPriceGWEI = window.localWeb3 && window.localWeb3.utils.fromWei(this.newTokenGasPrice.toString(), 'gwei');
       this.calculateGasPriceInFiat();
     },
     createNewToken() {
@@ -374,7 +374,7 @@ export default {
     },
     calculateGasPriceInFiat(gas, gasPrice) {
       gasPrice = gasPrice ? gasPrice : this.gasPrice;
-      const gasPriceInEther = window.localWeb3.utils.fromWei(String(gasPrice), 'ether');
+      const gasPriceInEther = window.localWeb3 && window.localWeb3.utils.fromWei(String(gasPrice), 'ether');
       return gasToFiat(gas, gasPriceInEther);
     },
     proceedStep(password) {

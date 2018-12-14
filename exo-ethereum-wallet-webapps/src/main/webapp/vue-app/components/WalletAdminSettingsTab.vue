@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!loading && !loadingSettings" class="text-xs-center pr-3 pl-3 pt-2" flat>
+  <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
     <v-combobox
       v-model="selectedNetwork"
       :items="networks"

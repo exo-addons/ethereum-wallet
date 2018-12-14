@@ -1,5 +1,5 @@
 <template>
-  <v-flex v-if="!loading" class="text-xs-center white">
+  <v-flex class="text-xs-center white">
     <div id="walletBrowserSetup">
       <button v-if="!walletAddress" :disabled="loadingWalletBrowser" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>

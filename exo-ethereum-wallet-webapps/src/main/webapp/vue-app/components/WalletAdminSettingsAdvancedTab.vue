@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!loading" class="text-xs-center pr-3 pl-3 pt-2" flat>
+  <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
     <div>
       <v-switch v-model="enableDelegation" label="Enable token delegation operations for wallets by default"></v-switch>
     </div>
@@ -95,10 +95,10 @@ export default {
       return '';
     },
     minGasPriceEther() {
-      return this.minGasPrice && window.localWeb3.utils.fromWei(String(this.minGasPrice), 'ether').toString();
+      return this.minGasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.minGasPrice), 'ether').toString();
     },
     minGasPriceGwei() {
-      return this.minGasPrice && window.localWeb3.utils.fromWei(String(this.minGasPrice), 'gwei').toString();
+      return this.minGasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.minGasPrice), 'gwei').toString();
     },
     minGasFiatPrice() {
       const amount = this.defaultGas && this.minGasPriceEther && gasToFiat(this.defaultGas,  this.minGasPriceEther);
@@ -112,10 +112,10 @@ export default {
       return '';
     },
     normalGasPriceEther() {
-      return this.normalGasPrice && window.localWeb3.utils.fromWei(String(this.normalGasPrice), 'ether').toString();
+      return this.normalGasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.normalGasPrice), 'ether').toString();
     },
     normalGasPriceGwei() {
-      return this.normalGasPrice && window.localWeb3.utils.fromWei(String(this.normalGasPrice), 'gwei').toString();
+      return this.normalGasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.normalGasPrice), 'gwei').toString();
     },
     normalGasFiatPrice() {
       const amount = this.defaultGas && this.normalGasPriceEther && gasToFiat(this.defaultGas,  this.normalGasPriceEther);
@@ -129,10 +129,10 @@ export default {
       return '';
     },
     maxGasPriceEther() {
-      return this.maxGasPrice && window.localWeb3.utils.fromWei(String(this.maxGasPrice), 'ether').toString();
+      return this.maxGasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.maxGasPrice), 'ether').toString();
     },
     maxGasPriceGwei() {
-      return this.maxGasPrice && window.localWeb3.utils.fromWei(String(this.maxGasPrice), 'gwei').toString();
+      return this.maxGasPrice && window.localWeb3 && window.localWeb3.utils.fromWei(String(this.maxGasPrice), 'gwei').toString();
     },
     maxGasFiatPrice() {
       const amount = this.defaultGas && this.maxGasPriceEther && gasToFiat(this.defaultGas,  this.maxGasPriceEther);

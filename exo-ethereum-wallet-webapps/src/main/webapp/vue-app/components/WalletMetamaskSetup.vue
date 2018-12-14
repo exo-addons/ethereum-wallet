@@ -1,5 +1,5 @@
 <template>
-  <v-flex v-if="!loading" id="walletMetamaskSetup">
+  <v-flex id="walletMetamaskSetup">
     <div v-if="!metamaskEnabled" class="alert alert-info">
       <i class="uiIconInfo"></i>
       <span v-if="walletAddress">Current wallet is in readonly mode.</span>

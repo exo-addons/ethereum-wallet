@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!loading" flat>
+  <v-card flat>
     <div v-if="error" class="alert alert-error v-content">
       <i class="uiIconError"></i>{{ error }}
     </div>

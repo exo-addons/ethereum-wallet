@@ -178,6 +178,7 @@ import WalletSetup from './WalletSetup.vue';
 import WalletSummary from './WalletSummary.vue';
 
 import * as constants from '../WalletConstants.js';
+import {saveContractAddressOnServer} from '../WalletToken.js';
 import {initWeb3, initSettings, watchTransactionStatus, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../WalletUtils.js';
 
 export default {
@@ -292,6 +293,7 @@ export default {
             this.walletAddressFiatBalance = balanceDetails.balanceFiat;
           }
         })
+        .then(() => this.$refs.walletSetup && this.$refs.walletSetup.init())
         .then(() => this.$refs.generalTab && this.$refs.generalTab.init())
         .then(() => this.$refs.fundsTab && this.$refs.fundsTab.init())
         .then(() => this.$refs.advancedTab && this.$refs.advancedTab.init())
@@ -432,9 +434,11 @@ export default {
                 });
             }
           } else if (transaction.contractMethodName === 'transferOwnership') {
-            if(contractDetails && contractDetails.isContract) {
-              // Force refresh contract details
-              return this.init();
+            if(contractDetails && contractDetails.isContract && contractDetails.address && transaction.contractAddress && contractDetails.address.toLowerCase() === transaction.contractAddress.toLowerCase()) {
+              this.$set(contractDetails, "owner", transaction.to);
+              contractDetails.networkId = this.networkId;
+              return saveContractAddressOnServer(contractDetails)
+                .then(() => this.init());
             }
           } else if (transaction.contractMethodName === 'addAdmin' || transaction.contractMethodName === 'removeAdmin') {
             if (wallet) {

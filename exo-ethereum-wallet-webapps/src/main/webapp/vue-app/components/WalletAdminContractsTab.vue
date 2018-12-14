@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="!loading" flat>
+  <v-card flat>
     <div v-if="newTokenAddress" class="alert alert-success v-content">
       <i class="uiIconSuccess"></i>
       Contract created under address: 
@@ -197,6 +197,11 @@ export default {
     };
   },
   watch: {
+    loading() {
+      if(this.loading) {
+        this.back();
+      }
+    },
     seeContractDetails() {
       if (this.seeContractDetails) {
         $("body").addClass("hide-scroll");

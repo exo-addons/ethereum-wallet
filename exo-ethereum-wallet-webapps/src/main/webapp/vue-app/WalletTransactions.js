@@ -251,9 +251,16 @@ export function addTransaction(networkId, account, accountDetails, transactions,
 
   let isLoadingAll = false;
 
-  return getSavedContractDetails(transactionDetails.contractAddress, networkId)
+  let cachedContractDetails = accountDetails && accountDetails.isContract && accountDetails.address && transactionDetails.contractAddress && transactionDetails.contractAddress.toLowerCase() === accountDetails.address.toLowerCase() ? accountDetails : null;
+  if(!cachedContractDetails && transactionDetails.contractAddress) {
+    cachedContractDetails = window.walletContractsDetails ? Object.values(window.walletContractsDetails).find(details => details && transactionDetails.contractAddress.toLowerCase() === details.address.toLowerCase()) : null;
+  }
+  let contractDetailsLoadingPromise = cachedContractDetails ? Promise.resolve(cachedContractDetails) : getSavedContractDetails(transactionDetails.contractAddress, networkId);
+  return contractDetailsLoadingPromise
     .then(contractDetails => {
-      if(contractDetails) {
+      if(contractDetails && contractDetails.ignore) {
+        return null;
+      } else if(contractDetails) {
         return contractDetails;
       } else if (receipt && receipt.logs && receipt.logs.length) {
         return window.localWeb3.eth.getCode(transactionDetails.contractAddress)
@@ -265,7 +272,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                 isContract : true,
                 networkId : networkId
               };
-              return retrieveContractDetails(account, contractDetails, false);
+              return retrieveContractDetails(account, contractDetails, false, true);
             }
           })
       }

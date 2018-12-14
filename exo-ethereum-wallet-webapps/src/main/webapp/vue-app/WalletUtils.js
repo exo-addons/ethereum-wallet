@@ -19,7 +19,7 @@ export function gasToEther(amount, gasPriceInEther) {
 }
 
 export function gasToFiat(amount, gasPriceInEther) {
-  if (window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
+  if (window.walletSettings && window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
     return toFixed(gasPriceInEther * window.walletSettings.fiatPrice * amount);
   }
   return 0;
