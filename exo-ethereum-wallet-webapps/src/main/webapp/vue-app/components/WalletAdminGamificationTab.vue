@@ -354,8 +354,15 @@ export default {
         let budget = 0;
         if (team.rewardType === 'FIXED' || team.rewardType === 'FIXED_PER_MEMBER') {
           budget = team.fixedBudget ? Number(team.fixedBudget) : 0;
+          if(this.computedTotalBudget < budget) {
+            team.exceedingBudget = true;
+          }
         } else if (team.rewardType === 'COMPUTED') {
-          budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;
+          if(tokenPerRecipient > 0) {
+            budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;
+          } else {
+            team.notEnoughRemainingBudget = true;
+          }
         }
 
         if (budget) {

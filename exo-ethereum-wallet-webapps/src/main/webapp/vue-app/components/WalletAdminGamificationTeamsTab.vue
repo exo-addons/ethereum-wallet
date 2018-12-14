@@ -92,9 +92,33 @@
                   <v-list-tile-content>Eligible earnings:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.totalValidPoints ? props.item.totalValidPoints : 0 }} / {{ props.item.totalPoints ? props.item.totalPoints : 0 }} points</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile>
+                <v-list-tile v-if="!Number(props.item.computedBudget) && props.item.validMembersWallets && props.item.validMembersWallets.length">
+                  <v-list-tile-content class="red--text"><strong>Budget:</strong></v-list-tile-content>
+                  <v-list-tile-content class="align-end red--text"><strong>0</strong></v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-else>
                   <v-list-tile-content>Budget:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }} {{ symbol }}</v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-if="props.item.notEnoughRemainingBudget" class="teamCardWarning">
+                  <v-list-tile-content>
+                    <div class="alert alert-warning">
+                      <i class="uiIconWarning"></i>
+                      No remaining budget for this pool, please review :
+                      <ul>
+                        <li>Total budget allowed in global configuration</li>
+                        <li><strong>Fixed</strong> budget allowed for other pools.</li>
+                      </ul>
+                    </div>
+                  </v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-else-if="props.item.exceedingBudget" class="teamCardWarning">
+                  <v-list-tile-content>
+                    <div class="alert alert-warning">
+                      <i class="uiIconWarning"></i>
+                      The pool total budget exceeds the global total budget.
+                    </div>
+                  </v-list-tile-content>
                 </v-list-tile>
               </v-list>
             </v-card>
