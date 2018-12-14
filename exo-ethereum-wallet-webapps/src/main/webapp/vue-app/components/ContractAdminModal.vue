@@ -283,6 +283,9 @@ export default {
         .then(estimatedGas => {
           // Add 10% of estimated gas
           this.gasEstimation = estimatedGas * 1.1;
+        })
+        .catch(e => {
+          console.debug("Error while estimating gas", e);
         });
     },
     send() {

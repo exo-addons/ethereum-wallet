@@ -179,6 +179,7 @@ export default {
       this.checkErrors();
     },
     recipient(newValue, oldValue) {
+      this.error = null;
       if (newValue && oldValue !== newValue) {
         this.checkErrors();
         if(this.error) {
@@ -256,6 +257,9 @@ export default {
           .then(estimatedGas => {
             // Add 10% to ensure that the operation doesn't take more than the estimation
             this.estimatedGas = estimatedGas * 1.1;
+          })
+          .catch(e => {
+            console.debug("Error while estimating gas", e);
           });
       }
     },
