@@ -752,7 +752,7 @@ function checkMetamaskEnabled(waitTime) {
       }
     })
     .catch(error => {
-      // Wait for the second time for 10 seconds
+      // Wait for the second time for 2 seconds
       waitTime = 2000;
       console.debug("Reattempt to enable Metamask, wait time:", waitTime);
       return checkMetamaskEnabled(waitTime);
