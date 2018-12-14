@@ -62,7 +62,7 @@
                 </v-chip>
               </v-card-title>
               <v-divider></v-divider>
-              <v-list dense>
+              <v-list dense class="pb-0">
                 <v-list-tile>
                   <v-list-tile-content>Members:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.members ? props.item.members.length : 0 }}</v-list-tile-content>
@@ -106,8 +106,8 @@
                       <i class="uiIconWarning"></i>
                       No remaining budget for this pool, please review :
                       <ul>
-                        <li>Total budget allowed in global configuration</li>
-                        <li><strong>Fixed</strong> budget allowed for other pools.</li>
+                        <li>- Total budget allowed in global configuration</li>
+                        <li>- <strong>Fixed</strong> budget allowed for other pools.</li>
                       </ul>
                     </div>
                   </v-list-tile-content>
