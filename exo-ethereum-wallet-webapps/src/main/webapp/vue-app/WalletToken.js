@@ -239,7 +239,6 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         contractDetails.contractTypeLabel = 'Standard ERC20 Token';
         window.walletContractsDetails[contractDetails.address] = contractDetails;
         window.walletContractsDetails[contractDetails.address.toLowerCase()] = contractDetails;
-        console.log("window.walletContractsDetails", window.walletContractsDetails);
       } else {
         contractDetails.contractTypeLabel = 'Non ERC20 Contract';
       }

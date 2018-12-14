@@ -1,10 +1,10 @@
 <template>
   <v-flex>
-    <v-card-title>
+    <v-card-title class="ml-5 mr-5">
       <v-text-field
         v-model="search"
         append-icon="search"
-        label="Search"
+        label="Search in name, pools, wallet address"
         single-line
         hide-details />
     </v-card-title>
