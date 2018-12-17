@@ -206,13 +206,6 @@ export default {
     },
     validRecipients() {
       return this.identitiesList ? this.identitiesList.filter(item => item.address && item.points && item.points >= this.threshold) : [];
-    },
-    computedTotalBudget() {
-      if(this.rewardType === 'FIXED') {
-        return this.totalBudget ? Number(this.totalBudget) : 0;
-      } else if(this.rewardType === 'FIXED_PER_MEMBER') {
-        return this.budgetPerMember && this.validRecipients && this.validRecipients.length ? this.validRecipients.length * this.budgetPerMember : 0;
-      }
     }
   },
   watch: {
@@ -301,15 +294,17 @@ export default {
         computedBudget: 0
       });
 
-      let totalComputedBudget = this.computedTotalBudget;
       let computedRecipientsCount = 0;
 
+      // Compute fixed budgets for teams
       teams.forEach(team => {
         this.$set(team, "validMembersWallets", []);
         this.$set(team, "computedBudget", 0);
         this.$set(team, "fixedBudget", 0);
         this.$set(team, "totalValidPoints", 0);
         this.$set(team, "totalPoints", 0);
+        this.$set(team, "notEnoughRemainingBudget", false);
+        this.$set(team, "exceedingBudget", false);
 
         if(!team.members || !team.members.length) {
           return;
@@ -331,18 +326,23 @@ export default {
 
         if(team.validMembersWallets.length) {
           if (team.rewardType === 'FIXED') {
-            this.$set(team, "computedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
-            this.$set(team, "fixedBudget", team.computedBudget);
-            totalComputedBudget -= team.computedBudget;
+            this.$set(team, "fixedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
+            this.$set(team, "computedBudget", team.fixedBudget);
           } else if (team.rewardType === 'FIXED_PER_MEMBER') {
-            this.$set(team, "computedBudget", team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0);
-            this.$set(team, "fixedBudget", team.computedBudget);
-            totalComputedBudget -= team.computedBudget;
+            this.$set(team, "fixedBudget", team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0);
+            this.$set(team, "computedBudget", team.fixedBudget);
           } else if (team.rewardType === 'COMPUTED') {
             computedRecipientsCount += team.validMembersWallets.length;
           }
         }
       });
+
+      let totalComputedBudget = 0;
+      if(this.rewardType === 'FIXED') {
+        totalComputedBudget = this.totalBudget ? Number(this.totalBudget) : 0;
+      } else if(this.rewardType === 'FIXED_PER_MEMBER') {
+        totalComputedBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
+      }
 
       const tokenPerRecipient = computedRecipientsCount > 0 && totalComputedBudget > 0 ? totalComputedBudget / computedRecipientsCount : 0;
 
@@ -354,9 +354,7 @@ export default {
         let budget = 0;
         if (team.rewardType === 'FIXED' || team.rewardType === 'FIXED_PER_MEMBER') {
           budget = team.fixedBudget ? Number(team.fixedBudget) : 0;
-          if(this.computedTotalBudget < budget) {
-            team.exceedingBudget = true;
-          }
+          team.exceedingBudget = this.computedTotalBudget < budget;
         } else if (team.rewardType === 'COMPUTED') {
           if(tokenPerRecipient > 0) {
             budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;
