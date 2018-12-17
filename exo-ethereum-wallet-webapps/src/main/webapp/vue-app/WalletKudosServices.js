@@ -3,8 +3,8 @@ export function getKudosBudget() {
     method: 'GET',
     credentials: 'include'
   })
-  .then(resp => resp && resp.ok && resp.text())
-  .then(value => Number(value));
+    .then(resp => resp && resp.ok && resp.text())
+    .then(value => Number(value));
 }
 
 export function getKudosContract() {
@@ -12,7 +12,7 @@ export function getKudosContract() {
     method: 'GET',
     credentials: 'include'
   })
-  .then(resp => resp && resp.ok && resp.text());
+    .then(resp => resp && resp.ok && resp.text());
 }
 
 export function saveKudosTotalBudget(budget) {
@@ -23,13 +23,14 @@ export function saveKudosTotalBudget(budget) {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: $.param({budget: Number(budget)})
-  }).then(resp => {
-    if(resp && resp.ok) {
-      return;
-    } else {
-      throw new Error("Error saving parameter");
-    }
-  });
+  })
+    .then(resp => {
+      if(resp && resp.ok) {
+        return;
+      } else {
+        throw new Error("Error saving parameter");
+      }
+    });
 }
 
 export function saveKudosContract(kudosContractAddress) {
@@ -40,11 +41,12 @@ export function saveKudosContract(kudosContractAddress) {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: $.param({kudosContract: kudosContractAddress})
-  }).then(resp => {
-    if(resp && resp.ok) {
-      return;
-    } else {
-      throw new Error("Error saving parameter");
-    }
-  });
+  })
+    .then(resp => {
+      if(resp && resp.ok) {
+        return;
+      } else {
+        throw new Error("Error saving parameter");
+      }
+    });
 }

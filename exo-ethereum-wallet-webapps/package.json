@@ -12,7 +12,6 @@
     "watch": "webpack --config webpack.watch.js --progress --colors --watch -d",
     "test": "jest",
     "lint": "eslint .",
-    "test-coverage": "jest --coverage",
     "build": "webpack --config webpack.prod.js --mode production"
   },
   "author": "eXo",
@@ -24,62 +23,57 @@
     "babel-loader": "^7.1.4",
     "babel-preset-es2015": "^6.24.1",
     "connect-api-mocker": "^1.4.0",
+    "css-loader": "^0.28.11",
     "eslint": "^4.19.1",
+    "eslint-loader": "^2.0.0",
     "eslint-plugin-jest": "^21.17.0",
+    "eslint-plugin-vue": "^4.5.0",
     "ethereum-qr-code": "^0.3.0",
+    "extract-text-webpack-plugin": "^4.0.0-beta.0",
     "fetch-mock": "^7.2.5",
-    "identity-obj-proxy": "^3.0.0",
+    "file-loader": "^1.1.11",
     "jest": "^22.4.4",
-    "jest-fetch-mock": "^1.7.5",
     "jest-localstorage-mock": "^2.2.0",
     "jest-runner-eslint": "^0.5.0",
     "jest-vue-preprocessor": "^1.4.0",
     "jquery": "^3.3.1",
-    "truffle": "^4.1.13",
-    "truffle-contract": "^3.0.6",
-    "vue-jest": "^3.0.1",
-    "vue-test-utils": "^1.0.0-beta.11",
-    "webpack-dev-server": "^3.1.4"
-  },
-  "dependencies": {
-    "css-loader": "^0.28.11",
-    "eslint-loader": "^2.0.0",
-    "eslint-plugin-vue": "^4.5.0",
-    "extract-text-webpack-plugin": "^4.0.0-beta.0",
-    "file-loader": "^1.1.11",
-    "install": "^0.12.2",
     "less": "^3.0.4",
     "less-loader": "^4.1.0",
-    "npm": "^6.4.1",
+    "truffle": "^4.1.13",
+    "truffle-contract": "^3.0.6",
     "vue": "^2.5.16",
     "vue-i18n": "^7.8.1",
+    "vue-jest": "^3.0.1",
     "vue-loader": "^14.2.3",
     "vue-template-compiler": "^2.5.16",
-    "vuetify": "^1.3.12",
+    "vue-test-utils": "^1.0.0-beta.11",
+    "vuetify": "^1.1.8",
     "web3": "^1.0.0-beta.37",
+    "web3-eth": "^1.0.0-beta.37",
+    "web3-eth-accounts": "^1.0.0-beta.37",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.1",
+    "webpack-dev-server": "^3.1.4",
     "webpack-merge": "^4.1.3"
   },
+  "dependencies": {},
   "jest": {
     "projects": [
       {
         "displayName": "test",
         "testMatch": [
-          "<rootDir>/src/test/specs/**/*.js"
+          "<rootDir>/src/test/specs/*.js"
         ],
         "moduleNameMapper": {
-          "^vue$": "vue/dist/vue.common.js",
-          "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
-          "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+          "^vue$": "vue/dist/vue.common.js"
         },
         "moduleFileExtensions": [
+          "js",
+          "jsx",
           "ts",
           "tsx",
-         "js",
-         "jsx",
-         "json",
-         "node",
+          "json",
+          "node",
           "vue"
         ],
         "modulePaths": [
@@ -95,8 +89,7 @@
         ],
         "setupFiles": [
           "<rootDir>/src/test/globals.js",
-          "jest-localstorage-mock",
-          "jest-fetch-mock"
+          "jest-localstorage-mock"
         ],
         "testURL": "http://localhost/"
       },

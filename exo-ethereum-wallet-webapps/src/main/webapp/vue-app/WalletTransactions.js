@@ -13,7 +13,7 @@ export function loadTransactions(networkId, account, contractDetails, transactio
 
   let searchedTransactionHashFound = !transactionHashToSearch;
 
-  let loadingPromises = [];
+  const loadingPromises = [];
   let pendingTransactions = getPendingTransactionFromStorage(networkId, account, contractDetails);
   if (!pendingTransactions) {
     pendingTransactions = {};
@@ -21,8 +21,7 @@ export function loadTransactions(networkId, account, contractDetails, transactio
 
   Object.keys(pendingTransactions).forEach(transactionHash => {
     searchedTransactionHashFound = searchedTransactionHashFound || transactionHash === transactionHashToSearch;
-    let pendingTransaction = pendingTransactions[transactionHash];
-    loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransaction, excludeFinished, refreshCallback));
+    loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransactions[transactionHash], excludeFinished, refreshCallback));
   });
 
   return getStoredTransactionsHashes(networkId, account)
@@ -75,17 +74,17 @@ export function loadContractTransactions(networkId, account, contractDetails, tr
     .then(events => events && addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Transfer events for user as receiver
     .then(() => !isLoadingAll && contractDetails.contract.getPastEvents("Transfer", {
-        fromBlock: 0,
-        toBlock: 'latest',
-        filter: {
-          isError: 0,
-          txreceipt_status: 1
-        },
-        topics: [
-          window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
-          null,
-          window.localWeb3.utils.padLeft(account, 64)
-        ]
+      fromBlock: 0,
+      toBlock: 'latest',
+      filter: {
+        isError: 0,
+        txreceipt_status: 1
+      },
+      topics: [
+        window.localWeb3.utils.sha3("Transfer(address,address,uint256)"),
+        null,
+        window.localWeb3.utils.padLeft(account, 64)
+      ]
     }))
     .then(events => events && addEventsToTransactions(networkId, account, contractDetails, transactions, events, "_from", "_to", progressionCallback))
     // Load Approval events for user as receiver
@@ -210,8 +209,6 @@ export function addTransaction(networkId, account, accountDetails, transactions,
   if (transaction.pending) {
     addPendingTransactionToStorage(networkId, account, accountDetails, transaction);
 
-    let loadedBlock = null;
-    let loadedReceipt = null;
     watchTransactionStatus(transaction.hash, (receipt, block) => {
       window.localWeb3.eth.getTransaction(transaction.hash)
         .then(tx => {
@@ -255,7 +252,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
   if(!cachedContractDetails && transactionDetails.contractAddress) {
     cachedContractDetails = window.walletContractsDetails ? Object.values(window.walletContractsDetails).find(details => details && transactionDetails.contractAddress.toLowerCase() === details.address.toLowerCase()) : null;
   }
-  let contractDetailsLoadingPromise = cachedContractDetails ? Promise.resolve(cachedContractDetails) : getSavedContractDetails(transactionDetails.contractAddress, networkId);
+  const contractDetailsLoadingPromise = cachedContractDetails ? Promise.resolve(cachedContractDetails) : getSavedContractDetails(transactionDetails.contractAddress, networkId);
   return contractDetailsLoadingPromise
     .then(contractDetails => {
       if(contractDetails && contractDetails.ignore) {
@@ -274,7 +271,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
               };
               return retrieveContractDetails(account, contractDetails, false, true);
             }
-          })
+          });
       }
     })
     .then(contractDetails => {
@@ -317,7 +314,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
             }
             if (transactionDetails.contractMethodName) {
               if (method.name === 'transfer' || method.name === 'approve') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && (decodedLog.name == 'Transfer' || decodedLog.name == 'Approval'));
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && (decodedLog.name === 'Transfer' || decodedLog.name === 'Approval'));
                 if (methodLog) {
                   transactionDetails.fromAddress = methodLog.events[0].value.toLowerCase();
                   transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
@@ -325,7 +322,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.isReceiver = transactionDetails.toAddress === account;
                 }
               } else if (method.name === 'transferFrom') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'Transfer');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'Transfer');
                 if (methodLog) {
                   transactionDetails.fromAddress = methodLog.events[0].value.toLowerCase();
                   transactionDetails.toAddress = methodLog.events[1].value.toLowerCase();
@@ -334,21 +331,21 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.isReceiver = false;
                 }
               } else if (method.name === 'approveAccount') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'ApprovedAccount');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'ApprovedAccount');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                 } else {
                   transactionDetails.toDisplayName = 'a previously approved';
                 }
               } else if (method.name === 'disapproveAccount') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'DisapprovedAccount');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'DisapprovedAccount');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                 } else {
                   transactionDetails.toDisplayName = 'a previously disapproved';
                 }
               } else if (method.name === 'addAdmin') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'AddedAdmin');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'AddedAdmin');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                   transactionDetails.contractAmount = methodLog.events[1].value;
@@ -356,19 +353,19 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.contractAmountLabel = 'Level';
                 }
               } else if (method.name === 'transferOwnership') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransferOwnership');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'TransferOwnership');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                 }
               } else if (method.name === 'removeAdmin') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'RemovedAdmin');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'RemovedAdmin');
                 if (methodLog) {
                   transactionDetails.toAddress = methodLog.events[0].value.toLowerCase();
                 } else {
                   transactionDetails.toDisplayName = 'a not admin account';
                 }
               } else if (method.name === 'setSellPrice') {
-                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TokenPriceChanged');
+                const methodLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'TokenPriceChanged');
                 if (methodLog) {
                   transactionDetails.contractAmount = methodLog.events[0].value.toLowerCase();
                   if (transactionDetails.contractAmount) {
@@ -377,7 +374,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
                   transactionDetails.contractSymbol = 'eth';
                 }
               }
-              const transactionFeeLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name == 'TransactionFee');
+              const transactionFeeLog = decodedLogs && decodedLogs.find(decodedLog => decodedLog && decodedLog.name === 'TransactionFee');
               if (transactionFeeLog) {
                 transactionDetails.feeToken = convertTokenAmountReceived(transactionFeeLog.events[1].value, transactionDetails.contractDecimals);
               }
@@ -476,7 +473,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
 export function formatTransactionsWithDetails(networkId, account, contractDetails, transactionsDetails, transactions, timestamp, progressionCallback) {
   account = account.toLowerCase();
 
-  let loadingPromises = [];
+  const loadingPromises = [];
 
   if (transactions && transactions.length) {
     // Iterate over transactions from retrieved from block
@@ -530,7 +527,7 @@ export function addPendingTransactionToStorage(networkId, account, contractDetai
     addPendingTransactionToStorage(networkId, transaction.to, contractDetails, transaction);
 
     // Add to general token transactions list
-    if (contractDetails && contractDetails.isContract && contractDetails.address != account) {
+    if (contractDetails && contractDetails.isContract && contractDetails.address !== account) {
       addPendingTransactionToStorage(networkId, contractDetails.address, contractDetails, transaction);
     }
   }
@@ -560,7 +557,7 @@ export function removePendingTransactionFromStorage(networkId, account, contract
 export function getPendingTransactionFromStorage(networkId, account, contractDetails) {
   const contractAddressSuffix = contractDetails && contractDetails.isContract ? `-${contractDetails.address}` : '';
   const STORAGE_KEY = `exo-wallet-transactions-progress-${networkId}-${account}${contractAddressSuffix}`.toLowerCase();
-  let storageValue = localStorage.getItem(STORAGE_KEY);
+  const storageValue = localStorage.getItem(STORAGE_KEY);
   if (storageValue === null) {
     return {};
   } else {
@@ -610,7 +607,7 @@ function loadPendingTransaction(networkId, account, contractDetails, transaction
       if (transactionTmp) {
         transaction.label = pendingTransaction.label;
         transaction.message = pendingTransaction.message;
-        return window.localWeb3.eth.getTransactionReceipt(pendingTransaction.hash)
+        return window.localWeb3.eth.getTransactionReceipt(pendingTransaction.hash);
       } else {
         removePendingTransactionFromStorage(networkId, account, contractDetails, pendingTransaction.hash);
         throw new Error("Invalid transaction hash, it will be removed", pendingTransaction.hash);
@@ -721,7 +718,7 @@ function getStoredTransactionsHashes(networkId, account, noPending) {
       }
     })
     .then(transactions =>{
-      return transactions && transactions.length ? transactions.filter(transaction => !noPending || !Boolean(transaction.pending)) : []
+      return transactions && transactions.length ? transactions.filter(transaction => !noPending || !new Boolean(transaction.pending)) : [];
     })
     .catch(error => {
       throw new Error("Error fetching stored transactions", error);
@@ -763,22 +760,22 @@ function addEventsToTransactions(networkId, account, contractDetails, transactio
       })
       .then(loadedTransactions => {
         return formatTransactionsWithDetails(networkId, account, contractDetails, transactions, loadedTransactions, null, progressionCallback);
-      })
+      });
   } else {
     return [];
   }
 }
 
 function getFromBlock(fromBlock, toBlock, maxBlocks) {
-  if (fromBlock != null) {
+  if (fromBlock !== null) {
     return Promise.resolve(fromBlock);
-  } else if (toBlock != null && maxBlocks != null) {
+  } else if (toBlock !== null && maxBlocks !== null) {
     fromBlock = toBlock - maxBlocks;
     if (fromBlock < 0) {
       fromBlock = 0;
     }
     return Promise.resolve(fromBlock);
-  } else if (maxBlocks != null) {
+  } else if (maxBlocks !== null) {
     return window.localWeb3.eth.getBlockNumber()
       .then(lastBlock => {
         fromBlock = lastBlock - maxBlocks;
@@ -793,7 +790,7 @@ function getFromBlock(fromBlock, toBlock, maxBlocks) {
 }
 
 function getToBlock(fromBlock, toBlock, maxBlocks) {
-  if (toBlock != null) {
+  if (toBlock !== null) {
     return Promise.resolve(toBlock);
   } else {
     let lastReturnedBlock = 0;

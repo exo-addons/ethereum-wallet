@@ -154,7 +154,7 @@ export const FIAT_CURRENCIES = {
     "text":"South Africa Rand (ZAR)",
     "symbol": "R (ZAR)"
   }
-}
+};
 
 export const NETWORK_NAMES = {
   0: '',
@@ -163,7 +163,7 @@ export const NETWORK_NAMES = {
   3: 'Ropsten',
   4: 'Rinkeby',
   42: 'Kovan'
-}
+};
 
 export const OK = 'OK';
 export const ERROR_WALLET_NOT_CONFIGURED = 'ERROR_WALLET_NOT_CONFIGURED';

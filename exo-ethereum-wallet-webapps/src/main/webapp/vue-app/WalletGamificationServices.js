@@ -1,6 +1,6 @@
 export function getGamificationPoints(userId, startDate, endDate) {
-  startDate = startDate.toISOString().substring(0, 10) + ' 00:00:00';
-  endDate = endDate.toISOString().substring(0, 10) + ' 00:00:00';
+  startDate = `${startDate.toISOString().substring(0, 10)} 00:00:00`;
+  endDate = `${endDate.toISOString().substring(0, 10)} 00:00:00`;
   return fetch(`/portal/rest/gamification/api/v1/points/date?userId=${userId}&startDate=${startDate}&endDate=${endDate}`, {
     credentials: 'include',
     headers: {
@@ -15,8 +15,8 @@ export function getSettings() {
     method: 'GET',
     credentials: 'include'
   })
-  .then(resp => resp && resp.ok && resp.json())
-  .then(settings => window.walletGamificationSettings = settings);
+    .then(resp => resp && resp.ok && resp.json())
+    .then(settings => window.walletGamificationSettings = settings);
 }
 
 export function getTeams() {
@@ -24,7 +24,7 @@ export function getTeams() {
     method: 'GET',
     credentials: 'include'
   })
-  .then(resp => resp && resp.ok && resp.json());
+    .then(resp => resp && resp.ok && resp.json());
 }
 
 export function saveSettings(settings) {
@@ -35,13 +35,14 @@ export function saveSettings(settings) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(settings)
-  }).then(resp => {
-    if(resp && resp.ok) {
-      return resp.json();
-    } else {
-      throw new Error("Error saving parameter");
-    }
-  });
+  })
+    .then(resp => {
+      if(resp && resp.ok) {
+        return resp.json();
+      } else {
+        throw new Error("Error saving parameter");
+      }
+    });
 }
 
 export function saveTeam(team) {
@@ -53,7 +54,7 @@ export function saveTeam(team) {
     },
     body: JSON.stringify(team)
   })
-  .then(resp => resp && resp.ok && resp.json());
+    .then(resp => resp && resp.ok && resp.json());
 }
 
 export function removeTeam(id) {
@@ -61,5 +62,5 @@ export function removeTeam(id) {
     method: 'GET',
     credentials: 'include'
   })
-  .then(resp => resp && resp.ok);
+    .then(resp => resp && resp.ok);
 }

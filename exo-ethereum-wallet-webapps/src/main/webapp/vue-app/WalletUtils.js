@@ -102,9 +102,9 @@ export function initWeb3(isSpace, isAdmin) {
           createLocalWeb3Instance(isSpace, true);
           return checkNetworkStatus();
         })
-      .finally(() => {
-        window.walletSettings.enablingMetamaskAccountDone = true;
-      });
+        .finally(() => {
+          window.walletSettings.enablingMetamaskAccountDone = true;
+        });
     } catch(e) {
       console.error("Error while enabling Metamask", e);
     }
@@ -139,7 +139,7 @@ export function initSettings(isSpace) {
         window.walletSettings.userPreferences.enableDelegation =
           window.walletSettings.userPreferences.hasOwnProperty('enableDelegation') ?
             window.walletSettings.userPreferences.enableDelegation
-          : window.walletSettings.enableDelegation;
+            : window.walletSettings.enableDelegation;
 
         if (!window.walletSettings.defaultOverviewAccounts || !window.walletSettings.defaultOverviewAccounts.length) {
           if (window.walletSettings.defaultContractsToDisplay) {
@@ -216,13 +216,13 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
   hash = hash.toLowerCase();
 
   if (!window.watchingTransactions) {
-      window.watchingTransactions = {};
+    window.watchingTransactions = {};
   }
 
   let initWatching = false;
   if (!window.watchingTransactions[hash]) {
-      window.watchingTransactions[hash] = [];
-      initWatching = true;
+    window.watchingTransactions[hash] = [];
+    initWatching = true;
   }
   window.localWeb3.eth.getTransaction(hash)
     .then(transaction => {
@@ -495,10 +495,12 @@ export function skipWalletPasswordSet() {
 }
 
 export function hashCode(s) {
-  var h = 0, l = s.length, i = 0;
-  if ( l > 0 )
-    while (i < l)
+  let h = 0, i = 0;
+  if ( s.length > 0 ) {
+    while (i < s.length) {
       h = (h << 5) - h + s.charCodeAt(i++) | 0;
+    }
+  }
   return String(h);
 }
 
@@ -533,9 +535,7 @@ export function checkFundRequestStatus(notificationId) {
     .then(resp =>  {
       return resp && resp.ok && resp.text();
     })
-    .then(content =>  {
-      return "true" === content;
-    });
+    .then(content =>  content === "true");
 }
 
 export function getWallets() {
@@ -560,10 +560,10 @@ export function setDraggable() {
  * return amount * 10 ^ decimals
  */
 export function convertTokenAmountToSend(amount, decimals) {
-  if (decimals == 0) {
+  if (decimals === 0) {
     return amount;
   }
-  const toBN = window.localWeb3.utils.toBN
+  const toBN = window.localWeb3.utils.toBN;
   const base = toBN(10).pow(toBN(decimals));
   const negative = String(amount).substring(0, 1) === '-';
 
@@ -592,10 +592,10 @@ export function convertTokenAmountToSend(amount, decimals) {
  * return amount * 10 ^ decimals
  */
 export function convertTokenAmountReceived(amount, decimals) {
-  if (decimals == 0) {
+  if (decimals === 0) {
     return amount;
   }
-  const toBN = window.localWeb3.utils.toBN
+  const toBN = window.localWeb3.utils.toBN;
   let amountBN = toBN(amount);
   const negative = amountBN.lt(0);
   const base = toBN(10).pow(toBN(decimals));
@@ -603,13 +603,13 @@ export function convertTokenAmountReceived(amount, decimals) {
   if (negative) {
     amountBN = amountBN.mul(-1);
   }
-  var fraction = amountBN.mod(base).toString(10);
+  let fraction = amountBN.mod(base).toString(10);
   while (fraction.length < decimals) {
     fraction = `0${fraction}`;
   }
   fraction = fraction.match(/^([0-9]*[1-9]|0)(0*)/)[1];
-  var whole = amountBN.div(base).toString(10);
-  var value = `${whole}${fraction == '0' ? '' : `.${fraction}`}`;
+  const whole = amountBN.div(base).toString(10);
+  let value = `${whole}${fraction === '0' ? '' : `.${fraction}`}`;
   if (negative) {
     value = `-${value}`;
   }
@@ -635,12 +635,12 @@ export function toFixed(value, decimals) {
   if(!decimals) {
     decimals = 3;
   }
-  let number = Number(value);
+  const number = Number(value);
   if(Number.isNaN(number) || !Number.isFinite(number) || !number || !value) {
     return 0;
   }
   value = String(number);
-  const toBN = window.localWeb3.utils.toBN
+  const toBN = window.localWeb3.utils.toBN;
   const negative = value.substring(0, 1) === '-';
   if (negative) {
     value = value.substring(1);
@@ -649,7 +649,7 @@ export function toFixed(value, decimals) {
   let integer = comps[0];
   let fraction = comps[1] ? comps[1] : '0';
   if (fraction && fraction.length > decimals) {
-    fraction = String(Math.round(Number("0." + fraction) * DECIMALS_POW) / DECIMALS_POW).substring(2);
+    fraction = String(Math.round(Number("0." + fraction) * DECIMALS_POW) / DECIMALS_POW).substring(2); // eslint-disable-line prefer-template
   }
   if(!fraction || Number(fraction) === 0) {
     fraction = null;
@@ -771,7 +771,6 @@ function initSpaceAccount(spaceGroup) {
         window.walletSettings.isReadOnly = true;
         return window.walletSettings.isSpaceAdministrator = false;
       }
-      return false;
     });
 }
 
@@ -842,11 +841,11 @@ function clearCache() {
 function retrieveFiatExchangeRateOnline(currency) {
   // Retrieve Fiat <=> Ether exchange rate
   return fetch(`https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=${currency}`, {
-      referrerPolicy: "no-referrer",
-      headers: {
-        'Origin': ''
-      }
-    })
+    referrerPolicy: "no-referrer",
+    headers: {
+      'Origin': ''
+    }
+  })
     .then(resp => {
       if (resp && resp.ok) {
         return resp.json();

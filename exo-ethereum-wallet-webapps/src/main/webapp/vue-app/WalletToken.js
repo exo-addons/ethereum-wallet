@@ -18,7 +18,7 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
   if (onlyDefault) {
     contractsAddresses = window.walletSettings.defaultContractsToDisplay || [];
   } else {
-    let overviewAccounts = window.walletSettings.userPreferences.overviewAccountsToDisplay || [];
+    const overviewAccounts = window.walletSettings.userPreferences.overviewAccountsToDisplay || [];
     contractsAddresses = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
   }
 
@@ -119,7 +119,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .catch(e => {
       contractDetails.contractType = -1;
     })
-    .then(() => contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty("symbol") ? contractDetails.symbol : contractDetails.contract.methods.symbol().call())
+    .then(() => {
+      return contractDetails.contractType < 0 ? null : (contractDetails.hasOwnProperty("symbol") ? contractDetails.symbol : contractDetails.contract.methods.symbol().call());
+    })
     .then(symbol => {
       if (symbol) {
         contractToSave = contractToSave || contractDetails.symbol !== symbol;
@@ -131,8 +133,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       contractDetails.contractType = -1;
       console.debug("retrieveContractDetails method - error retrieving symbol", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty("name") ? contractDetails.name : contractDetails.contract.methods.name().call())
-    .then(name => {
+    .then(() => {
+      return contractDetails.contractType < 0 ? null : (contractDetails.hasOwnProperty("name") ? contractDetails.name : contractDetails.contract.methods.name().call());
+    }).then(name => {
       if (name) {
         contractToSave = contractToSave || contractDetails.name !== name;
         contractDetails.name = name;
@@ -144,7 +147,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       contractDetails.contractType = -1;
       console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty("totalSupply") ? contractDetails.totalSupply : contractDetails.contract.methods.totalSupply().call())
+    .then(() => {
+      return contractDetails.contractType < 0 ? null : (contractDetails.hasOwnProperty("totalSupply") ? contractDetails.totalSupply : contractDetails.contract.methods.totalSupply().call());
+    })
     .then(totalSupply =>  {
       if (totalSupply) {
         contractToSave = contractToSave || Number(contractDetails.totalSupply) !== Number(totalSupply);
@@ -170,9 +175,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         return;
       }
       // Compute ERT Token attributes
-      return contractDetails.sellPrice && !isAdministration ?
-          Promise.resolve(contractDetails.sellPrice)
-          :contractDetails.contract.methods.getSellPrice().call()
+      return (contractDetails.sellPrice && !isAdministration ?
+        Promise.resolve(contractDetails.sellPrice)
+        :contractDetails.contract.methods.getSellPrice().call())
         .then(sellPrice => {
           contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), "ether");
           contractDetails.retrievedAttributes++;
@@ -180,7 +185,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.hasOwnProperty("owner") && !isAdministration ? contractDetails.owner : contractDetails.contract.methods.owner().call())
+        .then(() => {
+          return (contractDetails.hasOwnProperty("owner") && !isAdministration) ? contractDetails.owner : contractDetails.contract.methods.owner().call();
+        })
         .then(owner =>  {
           if (owner) {
             contractDetails.owner = owner;
@@ -191,14 +198,18 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.hasOwnProperty("isApproved") && !isAdministration ? contractDetails.isApproved : contractDetails.contract.methods.isApprovedAccount(account).call())
+        .then(() => {
+          return (contractDetails.hasOwnProperty("isApproved") && !isAdministration) ? contractDetails.isApproved : contractDetails.contract.methods.isApprovedAccount(account).call();
+        })
         .then(approvedAccount =>  {
           contractDetails.isApproved = approvedAccount;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving isApprovedAccount", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.hasOwnProperty("adminLevel") && !isAdministration ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call())
+        .then(() => {
+          return (contractDetails.hasOwnProperty("adminLevel") && !isAdministration) ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call();
+        })
         .then(habilitationLevel =>  {
           if (habilitationLevel) {
             contractDetails.adminLevel = Number(habilitationLevel);
@@ -211,14 +222,16 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving getAdminLevel", contractDetails.address, new Error(e));
         })
-        .then(() => contractDetails.hasOwnProperty("isPaused") && !isAdministration ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call())
+        .then(() => {
+          return (contractDetails.hasOwnProperty("isPaused") && !isAdministration) ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call();
+        })
         .then(isPaused =>  {
           contractDetails.isPaused = isPaused ? true: false;
           contractDetails.retrievedAttributes++;
         })
         .catch(e => {
           console.debug("retrieveContractDetails method - error retrieving isPaused", contractDetails.address, new Error(e));
-        })
+        });
     })
     .catch(e => {
       console.debug("retrieveContractDetails method - error retrieving ERT Token", account, contractDetails, new Error(e), e);
@@ -298,7 +311,9 @@ export function getSavedContractDetails(address, networkId) {
         throw new Error(`Error getting contract details from server with address ${address} on network with id ${networkId}`);
       }
     })
-    .then(contractDetails => contractDetails && contractDetails.address ? contractDetails : null)
+    .then(contractDetails => {
+      return contractDetails && contractDetails.address ? contractDetails : null;
+    })
     .catch(e => {
       console.debug("Error getting contract details from server", e);
       return null; 
@@ -311,9 +326,9 @@ export function getSavedContractDetails(address, networkId) {
 export function newContractInstanceByName(tokenName, ...args) {
   let contractBin, contractAbi;
   return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
-       method: 'GET',
-       credentials: 'include'
-    })
+    method: 'GET',
+    credentials: 'include'
+  })
     .then(resp => {
       if(resp && resp.ok) {
         return resp.text();
@@ -346,27 +361,27 @@ export function newContractInstanceByNameAndAddress(tokenName, tokenAddress) {
     method: 'GET',
     credentials: 'include'
   })
-  .then(resp => {
-    if(resp && resp.ok) {
-      return resp.text();
-    } else {
-      throw new Error(`Cannot find contract BIN with name ${tokenName}`);
-    }
-  })
-  .then(bin => contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`)
-  .then(() => fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
-    method: 'GET',
-    credentials: 'include'
-  }))
-  .then(resp => {
-    if(resp && resp.ok) {
-      return resp.json();
-    } else {
-      throw new Error(`Cannot find contract ABI with name ${tokenName}`);
-    }
-  })
-  .then(abi => contractAbi = abi)
-  .then(() => getContractInstance(window.localWeb3.eth.defaultAccount, tokenAddress, false, contractAbi, contractBin));
+    .then(resp => {
+      if(resp && resp.ok) {
+        return resp.text();
+      } else {
+        throw new Error(`Cannot find contract BIN with name ${tokenName}`);
+      }
+    })
+    .then(bin => contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`)
+    .then(() => fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
+      method: 'GET',
+      credentials: 'include'
+    }))
+    .then(resp => {
+      if(resp && resp.ok) {
+        return resp.json();
+      } else {
+        throw new Error(`Cannot find contract ABI with name ${tokenName}`);
+      }
+    })
+    .then(abi => contractAbi = abi)
+    .then(() => getContractInstance(window.localWeb3.eth.defaultAccount, tokenAddress, false, contractAbi, contractBin));
 }
 
 export function estimateContractDeploymentGas(instance) {
@@ -434,15 +449,15 @@ export function saveContractAddressOnServer(contractDetails) {
       defaultContract: contractDetails.defaultContract ? contractDetails.defaultContract : false
     })
   })
-  .then(resp => {
-    if (!window.walletSettings.defaultContractsToDisplay) {
-      window.walletSettings.defaultContractsToDisplay = [];
-    }
-    if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
-      window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
-    }
-    return resp;
-  });
+    .then(resp => {
+      if (!window.walletSettings.defaultContractsToDisplay) {
+        window.walletSettings.defaultContractsToDisplay = [];
+      }
+      if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
+        window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
+      }
+      return resp;
+    });
 }
 
 /*
@@ -459,7 +474,8 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       }
       // Test on existence of balanceOf method in contract code
       return foundContract.methods.balanceOf(account).call();
-    }).then((balance, error) => {
+    })
+    .then((balance, error) => {
       if (error) {
         throw new Error('Invalid contract address');
       }
@@ -481,17 +497,18 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       } else if (!isDefaultContract) {
         throw new Error('Contract already exists');
       }
-    }).then(contractDetails => {
+    })
+    .then(contractDetails => {
       if (contractDetails && isDefaultContract) {
         return saveContractAddressAsDefault(contractDetails).then(() => contractDetails);
       }
       return contractDetails;
-    })
+    });
 }
 
 export function getContractDeploymentTransactionsInProgress(networkId) {
   const STORAGE_KEY = `exo-wallet-contract-deployment-progress-${networkId}`;
-  let storageValue = localStorage.getItem(STORAGE_KEY);
+  const storageValue = localStorage.getItem(STORAGE_KEY);
   if (storageValue === null) {
     return {};
   } else {
@@ -517,15 +534,15 @@ export function removeContractDeploymentTransactionsInProgress(networkId, transa
 export function getContractInstance(account, address, usePromise, abi, bin) {
   try {
     const contractInstance = new window.localWeb3.eth.Contract(
-        abi ? abi : window.walletSettings.contractAbi,
-        address,
-        {
-          from: account && account.toLowerCase(),
-          gas: window.walletSettings.userPreferences.defaultGas,
-          gasPrice: window.walletSettings.normalGasPrice,
-          data: bin ? bin : window.walletSettings.contractBin
-        }
-      );
+      abi ? abi : window.walletSettings.contractAbi,
+      address,
+      {
+        from: account && account.toLowerCase(),
+        gas: window.walletSettings.userPreferences.defaultGas,
+        gasPrice: window.walletSettings.normalGasPrice,
+        data: bin ? bin : window.walletSettings.contractBin
+      }
+    );
     if (usePromise) {
       return Promise.resolve(contractInstance);
     } else {

@@ -113,7 +113,7 @@ export function searchFullName(address) {
   address = address.toLowerCase();
 
   // Get user information from session storage (refreshed when browser closes)
-  let item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase())
+  const item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase())
     || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
 
   if (item) {
