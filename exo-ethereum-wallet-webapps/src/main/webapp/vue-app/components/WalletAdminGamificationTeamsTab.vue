@@ -34,6 +34,18 @@
       <strong>
         {{ computedTotalBudget }} {{ symbol }}
       </strong>
+      <template v-if="rewardType === 'FIXED'">
+        ({{ eligibleUsersCount }} eligible users)
+      </template>
+    </h4>
+    <h4 v-show="!selectedTeam">
+      Configured budget:
+      <strong>
+        {{ configuredBudget }} {{ symbol }}
+      </strong>
+      <template v-if="rewardType === 'FIXED_PER_MEMBER'">
+        ({{ budgetPerMember }} {{ symbol }} per eligible user with {{ eligibleUsersCount }} eligible users)
+      </template>
     </h4>
     <v-container v-show="!selectedTeam" fluid grid-list-md>
       <v-data-iterator
@@ -95,25 +107,18 @@
                   <v-list-tile-content class="align-end">{{ props.item.validMembersWallets ? props.item.validMembersWallets.length : 0 }} / {{ props.item.members ? props.item.members.length : 0 }}</v-list-tile-content>
                 </v-list-tile>
                 <v-list-tile>
-                  <v-list-tile-content>Eligible earnings:</v-list-tile-content>
+                  <v-list-tile-content>Eligible/Total earnings:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.totalValidPoints ? props.item.totalValidPoints : 0 }} / {{ props.item.totalPoints ? props.item.totalPoints : 0 }} points</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile v-if="!Number(props.item.computedBudget) || !props.item.validMembersWallets || !props.item.validMembersWallets.length">
-                  <v-list-tile-content class="red--text"><strong>Budget:</strong></v-list-tile-content>
-                  <v-list-tile-content class="align-end red--text"><strong>0 {{ symbol }}</strong></v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile v-else>
+                <v-list-tile>
                   <v-list-tile-content>Budget:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }} {{ symbol }}</v-list-tile-content>
+                  <v-list-tile-content v-if="!Number(props.item.computedBudget) || !props.item.validMembersWallets || !props.item.validMembersWallets.length" class="align-end red--text"><strong>0 {{ symbol }}</strong></v-list-tile-content>
+                  <v-list-tile-content v-else class="align-end">{{ Number(toFixed(props.item.computedBudget)) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
-
-                <v-list-tile v-if="!Number(props.item.computedBudget) || !props.item.validMembersWallets || !props.item.validMembersWallets.length">
-                  <v-list-tile-content class="red--text"><strong>Budget per member:</strong></v-list-tile-content>
-                  <v-list-tile-content class="align-end red--text"><strong>0 {{ symbol }}</strong></v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile v-else>
+                <v-list-tile>
                   <v-list-tile-content>Budget per member:</v-list-tile-content>
-                  <v-list-tile-content class="align-end">{{ toFixed(Number(props.item.computedBudget) / props.item.validMembersWallets.length) }} {{ symbol }}</v-list-tile-content>
+                  <v-list-tile-content v-if="!Number(props.item.computedBudget) || !props.item.validMembersWallets || !props.item.validMembersWallets.length" class="align-end red--text"><strong>0 {{ symbol }}</strong></v-list-tile-content>
+                  <v-list-tile-content v-else class="align-end">{{ toFixed(Number(props.item.computedBudget) / props.item.validMembersWallets.length) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
 
                 <v-list-tile v-if="props.item.notEnoughRemainingBudget" class="teamCardWarning">
@@ -173,10 +178,28 @@ export default {
         return null;
       }
     },
+    rewardType: {
+      type: String,
+      default: function() {
+        return null;
+      }
+    },
     period: {
       type: String,
       default: function() {
         return null;
+      }
+    },
+    budgetPerMember: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
+    },
+    totalBudget: {
+      type: Number,
+      default: function() {
+        return 0;
       }
     },
     computedTotalBudget: {
@@ -196,6 +219,16 @@ export default {
   computed: {
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
+    },
+    eligibleUsersCount() {
+      return this.wallets ? this.wallets.length : 0;
+    },
+    configuredBudget() {
+      if(this.rewardType === 'FIXED') {
+        return this.totalBudget;
+      } else if(this.rewardType === 'FIXED_PER_MEMBER') {
+        return this.budgetPerMember * this.eligibleUsersCount;
+      }
     }
   },
   watch: {

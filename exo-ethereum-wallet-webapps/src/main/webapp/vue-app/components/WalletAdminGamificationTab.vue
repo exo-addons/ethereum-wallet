@@ -106,6 +106,9 @@
             :contract-details="contractDetails"
             :period="periodDatesDisplay"
             :computed-total-budget="computedTeamsBudget"
+            :reward-type="rewardType"
+            :budget-per-member="budgetPerMember"
+            :total-budget="totalBudget"
             @teams-retrieved="refresh"
             @form-opened="displayDateSelector = false"
             @form-closed="displayDateSelector = true" />
@@ -258,7 +261,7 @@ export default {
           delete wallet.gamificationTeams;
         });
         teams.forEach(team => {
-          if (team.members) {
+          if (team.id && team.members) {
             team.members.forEach(memberObject => {
               const wallet = wallets.find(wallet => wallet && wallet.id && wallet.type === 'user' && wallet.id ===  memberObject.id);
               if (wallet) {
@@ -317,6 +320,8 @@ export default {
       this.computedTeamsBudget = 0;
       if(this.rewardType === 'FIXED') {
         fixedGlobalBudget = computedTotalBudget = this.totalBudget ? Number(this.totalBudget) : 0;
+      } else if(this.rewardType === 'FIXED_PER_MEMBER') {
+        computedTotalBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
       }
 
       // Compute fixed budgets for teams
@@ -349,7 +354,7 @@ export default {
 
         if(team.validMembersWallets.length) {
           if (team.rewardType === 'FIXED') {
-            this.$set(team, "fixedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
+            this.$set(team, "fixedBudget", team.budget ? Number(team.budget) : 0);
             this.$set(team, "computedBudget", team.fixedBudget);
             computedTotalBudget -= team.fixedBudget;
             this.computedTeamsBudget += team.fixedBudget;
@@ -364,11 +369,7 @@ export default {
         }
       });
 
-      if(this.rewardType === 'FIXED_PER_MEMBER') {
-        computedTotalBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
-      }
-
-      this.computedTeamsBudget += computedRecipientsCount > 0 ? computedTotalBudget : 0;
+      this.computedTeamsBudget += computedRecipientsCount > 0 && computedTotalBudget > 0 ? computedTotalBudget : 0;
 
       const tokenPerRecipient = computedRecipientsCount > 0 && computedTotalBudget > 0 ? computedTotalBudget / computedRecipientsCount : 0;
 
