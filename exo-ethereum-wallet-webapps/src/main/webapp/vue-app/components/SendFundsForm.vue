@@ -129,9 +129,11 @@ export default {
         this.receiver = receiver;
         this.receiverType = receiverType;
         this.notificationId = notificationId;
-        this.amount = amount;
+        if(amount) {
+          this.amount = amount;
+        }
       } else {
-        if (receiver && receiverType && amount) {
+        if (receiver && receiverType) {
           this.$emit("dialog-error", "Selected currency is not displayed switch your preferences");
         }
 

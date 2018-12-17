@@ -224,11 +224,15 @@ export default {
       if (document.location.search && document.location.search.length) {
         const search = document.location.search.substring(1);
         const parameters = JSON.parse(`{"${decodeURI(search).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g,'":"')}"}`);
-        if (parameters && parameters.receiver && parameters.receiver_type && parameters.amount) {
+        if (parameters && parameters.receiver && parameters.receiver_type) {
           if (isReadOnly) {
             throw new Error('Your wallet is in readonly state');
           }
-          this.$refs.sendFundsModal.prepareSendForm(parameters.receiver, parameters.receiver_type, parameters.amount, parameters.contract, parameters.id);
+          let contractAddress = parameters.contract;
+          if(!contractAddress && parameters.principal && this.principalAccount && this.principalAccount.indexOf('0x') === 0) {
+            contractAddress = this.principalAccount;
+          }
+          this.$refs.sendFundsModal.prepareSendForm(parameters.receiver, parameters.receiver_type, parameters.amount, contractAddress, parameters.id);
         }
       }
     },
