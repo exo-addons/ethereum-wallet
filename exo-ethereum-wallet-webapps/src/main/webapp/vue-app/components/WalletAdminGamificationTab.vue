@@ -327,6 +327,7 @@ export default {
         this.$set(team, "totalValidPoints", 0);
         this.$set(team, "totalPoints", 0);
         this.$set(team, "notEnoughRemainingBudget", false);
+        this.$set(team, "exceedingBudget", false);
 
         if(!team.members || !team.members.length) {
           return;
@@ -350,10 +351,12 @@ export default {
           if (team.rewardType === 'FIXED') {
             this.$set(team, "fixedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
             this.$set(team, "computedBudget", team.fixedBudget);
+            computedTotalBudget -= team.fixedBudget;
             this.computedTeamsBudget += team.fixedBudget;
           } else if (team.rewardType === 'FIXED_PER_MEMBER') {
             this.$set(team, "fixedBudget", team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0);
             this.$set(team, "computedBudget", team.fixedBudget);
+            computedTotalBudget -= team.fixedBudget;
             this.computedTeamsBudget += team.fixedBudget;
           } else if (team.rewardType === 'COMPUTED') {
             computedRecipientsCount += team.validMembersWallets.length;
@@ -377,6 +380,7 @@ export default {
         let budget = 0;
         if (team.rewardType === 'FIXED' || team.rewardType === 'FIXED_PER_MEMBER') {
           budget = team.fixedBudget ? Number(team.fixedBudget) : 0;
+          team.exceedingBudget = this.rewardType === 'FIXED' && fixedGlobalBudget <= budget;
         } else if (team.rewardType === 'COMPUTED') {
           if(tokenPerRecipient > 0) {
             budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;

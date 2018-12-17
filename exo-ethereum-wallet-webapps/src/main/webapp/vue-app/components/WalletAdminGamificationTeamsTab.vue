@@ -115,6 +115,27 @@
                   <v-list-tile-content>Budget per member:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ toFixed(Number(props.item.computedBudget) / props.item.validMembersWallets.length) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
+
+                <v-list-tile v-if="props.item.notEnoughRemainingBudget" class="teamCardWarning">
+                  <v-list-tile-content>
+                    <div class="alert alert-warning">
+                      <i class="uiIconWarning"></i>
+                      No remaining budget for this pool, please review :
+                      <ul>
+                        <li>- Total budget allowed in global configuration</li>
+                        <li>- <strong>Fixed</strong> budget allowed for other pools.</li>
+                      </ul>
+                    </div>
+                  </v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-else-if="props.item.exceedingBudget" class="teamCardWarning">
+                  <v-list-tile-content>
+                    <div class="alert alert-warning">
+                      <i class="uiIconWarning"></i>
+                      The pool total budget exceeds the global total budget.
+                    </div>
+                  </v-list-tile-content>
+                </v-list-tile>
               </v-list>
             </v-card>
             <v-card-actions>
