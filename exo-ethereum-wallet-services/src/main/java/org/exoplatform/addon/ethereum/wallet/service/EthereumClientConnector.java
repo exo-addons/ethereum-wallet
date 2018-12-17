@@ -244,11 +244,24 @@ public class EthereumClientConnector implements Startable {
   private void closeConnection() {
     stopListeninigToTransactions();
     if (web3jService != null) {
-      if (webSocketClient != null && webSocketClient.isOpen()) {
+      if (web3j != null) {
         try {
-          web3jService.close();
+          web3j.shutdown();
         } catch (Throwable e) {
-          LOG.warn("Error closing old websocket connection: {}", e.getMessage());
+          LOG.warn("Error closing old web3j connection: {}", e.getMessage());
+          if (this.web3jService != null && webSocketClient != null && webSocketClient.isOpen()) {
+            try {
+              web3jService.close();
+            } catch (Throwable e1) {
+              LOG.warn("Error closing old websocket connection: {}", e1.getMessage());
+            }
+          } else if (webSocketClient != null && webSocketClient.isOpen()) {
+            try {
+              webSocketClient.close();
+            } catch (Throwable e1) {
+              LOG.warn("Error closing old websocket connection: {}", e1.getMessage());
+            }
+          }
         }
       }
       web3j = null;
@@ -286,16 +299,9 @@ public class EthereumClientConnector implements Startable {
   }
 
   private void establishConnection() throws Exception {
-    if (web3jService != null) {
-      web3jService.close();
-      web3jService = null;
-    }
+    closeConnection();
 
-    if (web3j != null) {
-      LOG.info("Connection was interrupted, atempt to reconnect to Ethereum network endpoint {}", getWebsocketProviderURL());
-    } else {
-      LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
-    }
+    LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
 
     web3jService = testConnection();
     web3j = Web3j.build(web3jService);
@@ -337,11 +343,37 @@ public class EthereumClientConnector implements Startable {
   }
 
   private void closeConnectionAndThrowError(Throwable e) {
-    try {
-      this.web3jService.close();
-    } finally {
-      this.webSocketClient = null;
-      this.web3jService = null;
+    if (this.web3j != null) {
+      try {
+        this.web3j.shutdown();
+      } catch (Exception e1) {
+        LOG.debug("Error closing web socket", e1);
+      } finally {
+        this.web3j = null;
+        this.webSocketClient = null;
+        this.web3jService = null;
+      }
+    }
+    if (this.web3jService != null) {
+      try {
+        this.web3jService.close();
+      } catch (Exception e1) {
+        LOG.debug("Error closing web socket", e1);
+      } finally {
+        this.web3jService = null;
+        this.webSocketClient = null;
+      }
+    }
+    if (this.webSocketClient != null && this.webSocketClient.isOpen()) {
+      try {
+        this.webSocketClient.close();
+      } catch (Exception e1) {
+        LOG.debug("Error closing web socket", e1);
+      } finally {
+        this.web3j = null;
+        this.webSocketClient = null;
+        this.web3jService = null;
+      }
     }
     if (e == null) {
       throw new IllegalStateException("Connection failed to " + getWebsocketProviderURL());
