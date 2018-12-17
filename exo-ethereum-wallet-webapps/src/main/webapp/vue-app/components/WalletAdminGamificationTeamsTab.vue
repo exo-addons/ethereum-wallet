@@ -29,6 +29,12 @@
         <v-icon>add</v-icon>
       </v-btn>
     </h3>
+    <h4 v-show="!selectedTeam">
+      Total budget:
+      <strong>
+        {{ computedTotalBudget }} {{ symbol }}
+      </strong>
+    </h4>
     <v-container v-show="!selectedTeam" fluid grid-list-md>
       <v-data-iterator
         :items="teams"
@@ -92,14 +98,24 @@
                   <v-list-tile-content>Eligible earnings:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ props.item.totalValidPoints ? props.item.totalValidPoints : 0 }} / {{ props.item.totalPoints ? props.item.totalPoints : 0 }} points</v-list-tile-content>
                 </v-list-tile>
-                <v-list-tile v-if="!Number(props.item.computedBudget) && props.item.validMembersWallets && props.item.validMembersWallets.length">
+                <v-list-tile v-if="!Number(props.item.computedBudget) || !props.item.validMembersWallets || !props.item.validMembersWallets.length">
                   <v-list-tile-content class="red--text"><strong>Budget:</strong></v-list-tile-content>
-                  <v-list-tile-content class="align-end red--text"><strong>0</strong></v-list-tile-content>
+                  <v-list-tile-content class="align-end red--text"><strong>0 {{ symbol }}</strong></v-list-tile-content>
                 </v-list-tile>
                 <v-list-tile v-else>
                   <v-list-tile-content>Budget:</v-list-tile-content>
                   <v-list-tile-content class="align-end">{{ Number(toFixed(props.item.computedBudget)) }} {{ symbol }}</v-list-tile-content>
                 </v-list-tile>
+
+                <v-list-tile v-if="!Number(props.item.computedBudget) || !props.item.validMembersWallets || !props.item.validMembersWallets.length">
+                  <v-list-tile-content class="red--text"><strong>Budget per member:</strong></v-list-tile-content>
+                  <v-list-tile-content class="align-end red--text"><strong>0 {{ symbol }}</strong></v-list-tile-content>
+                </v-list-tile>
+                <v-list-tile v-else>
+                  <v-list-tile-content>Budget per member:</v-list-tile-content>
+                  <v-list-tile-content class="align-end">{{ toFixed(Number(props.item.computedBudget) / props.item.validMembersWallets.length) }} {{ symbol }}</v-list-tile-content>
+                </v-list-tile>
+
                 <v-list-tile v-if="props.item.notEnoughRemainingBudget" class="teamCardWarning">
                   <v-list-tile-content>
                     <div class="alert alert-warning">
@@ -162,6 +178,12 @@ export default {
       default: function() {
         return null;
       }
+    },
+    computedTotalBudget: {
+      type: Number,
+      default: function() {
+        return 0;
+      }
     }
   },
   data: () => ({
@@ -193,9 +215,6 @@ export default {
       this.selectedTeam = null;
       getTeams()
         .then(teams => {
-          if(teams && teams.length) {
-            teams = teams.sort((team1, team2) => team1.id - team2.id);
-          }
           this.teams = teams;
           this.teamsRetrieved = true;
           this.$emit('teams-retrieved');

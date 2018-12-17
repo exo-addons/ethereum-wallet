@@ -88,7 +88,7 @@
         <v-flex xs12>
           <v-radio-group v-model="rewardType" label="Reward pool members">
             <v-radio value="COMPUTED" label="By computing pool reward from total budget" />
-            <v-radio value="FIXED" label="By a total fixed budget (retained from global budget)" />
+            <v-radio value="FIXED" label="By a total fixed budget (not retained from global budget)" />
             <v-flex xs12 sm6>
               <v-text-field
                 v-if="rewardType === 'FIXED'"
@@ -98,7 +98,7 @@
                 class="pt-0 pb-0"
                 name="budget" />
             </v-flex>
-            <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member (retained from global budget)" />
+            <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member (not retained from global budget)" />
             <v-flex v-if="rewardType === 'FIXED_PER_MEMBER'" xs12 sm6>
               <v-text-field
                 v-model="budgetPerMember"

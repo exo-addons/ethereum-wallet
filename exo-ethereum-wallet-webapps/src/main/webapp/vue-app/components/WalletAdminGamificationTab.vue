@@ -103,8 +103,9 @@
           <gamification-teams-tab
             ref="gamificationTeams"
             :wallets="validRecipients"
-            :contract-details="selectedContractDetails"
+            :contract-details="contractDetails"
             :period="periodDatesDisplay"
+            :computed-total-budget="computedTeamsBudget"
             @teams-retrieved="refresh"
             @form-opened="displayDateSelector = false"
             @form-closed="displayDateSelector = true" />
@@ -170,6 +171,7 @@ export default {
       displayDateSelector: true,
       contractAddress: null,
       threshold: null,
+      computedTeamsBudget: null,
       totalBudget: null,
       budgetPerMember: null,
       selectedTab: true,
@@ -250,7 +252,7 @@ export default {
     refresh() {
       this.duplicatedWallets = [];
       if(this.$refs && this.$refs.gamificationTeams && this.$refs.gamificationTeams.teamsRetrieved) {
-        const teams = this.$refs.gamificationTeams.teams;
+        let teams = this.$refs.gamificationTeams.teams;
         const wallets = this.identitiesList;
         wallets.forEach(wallet => {
           delete wallet.gamificationTeams;
@@ -270,6 +272,29 @@ export default {
             });
           }
         });
+
+        const membersWithEmptyTeam = this.validRecipients.filter(wallet => !wallet.gamificationTeams || !wallet.gamificationTeams.length);
+
+        let team = teams.find(team => team.id === 0);
+        if(!team) {
+          team = {
+            id: 0,
+            name: "No pool users",
+            description: "Users with no associated pool",
+            members: membersWithEmptyTeam,
+            rewardType: 'COMPUTED',
+            computedBudget: 0
+          };
+          // Members with no Team
+          teams.push(team);
+        } else {
+          team.members = membersWithEmptyTeam;
+        }
+
+        if(teams && teams.length) {
+          teams = teams.sort((team1, team2) => Number(team1.id) - Number(team2.id));
+        }
+
         this.computeBudgets();
       }
     },
@@ -280,21 +305,19 @@ export default {
         });
       }
 
-      const validRecipients = this.validRecipients.slice();
       let teams = [];
       if(this.$refs.gamificationTeams && this.$refs.gamificationTeams.teams && this.$refs.gamificationTeams.teams.length) {
         teams = this.$refs.gamificationTeams.teams.slice();
       }
-      const membersWithEmptyTeam = validRecipients.filter(wallet => !wallet.gamificationTeams || !wallet.gamificationTeams.length);
-
-      // Members with no Team
-      teams.push({
-        members: membersWithEmptyTeam,
-        rewardType: 'COMPUTED',
-        computedBudget: 0
-      });
 
       let computedRecipientsCount = 0;
+      let fixedGlobalBudget = 0;
+      let computedTotalBudget = 0;
+
+      this.computedTeamsBudget = 0;
+      if(this.rewardType === 'FIXED') {
+        fixedGlobalBudget = computedTotalBudget = this.totalBudget ? Number(this.totalBudget) : 0;
+      }
 
       // Compute fixed budgets for teams
       teams.forEach(team => {
@@ -311,7 +334,7 @@ export default {
         }
 
         team.members.forEach(memberObject => {
-          let wallet = memberObject.address ? memberObject : validRecipients.find(wallet => wallet.id === memberObject.id);
+          let wallet = memberObject.address ? memberObject : this.validRecipients.find(wallet => wallet.id === memberObject.id);
           if(wallet) {
             team.totalPoints += wallet.points;
             team.totalValidPoints += wallet.points;
@@ -328,23 +351,24 @@ export default {
           if (team.rewardType === 'FIXED') {
             this.$set(team, "fixedBudget", team.fixedBudget = team.budget ? Number(team.budget) : 0);
             this.$set(team, "computedBudget", team.fixedBudget);
+            this.computedTeamsBudget += team.fixedBudget;
           } else if (team.rewardType === 'FIXED_PER_MEMBER') {
             this.$set(team, "fixedBudget", team.rewardPerMember ? Number(team.rewardPerMember) * team.validMembersWallets.length : 0);
             this.$set(team, "computedBudget", team.fixedBudget);
+            this.computedTeamsBudget += team.fixedBudget;
           } else if (team.rewardType === 'COMPUTED') {
             computedRecipientsCount += team.validMembersWallets.length;
           }
         }
       });
 
-      let totalComputedBudget = 0;
-      if(this.rewardType === 'FIXED') {
-        totalComputedBudget = this.totalBudget ? Number(this.totalBudget) : 0;
-      } else if(this.rewardType === 'FIXED_PER_MEMBER') {
-        totalComputedBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
+      if(this.rewardType === 'FIXED_PER_MEMBER') {
+        computedTotalBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
       }
 
-      const tokenPerRecipient = computedRecipientsCount > 0 && totalComputedBudget > 0 ? totalComputedBudget / computedRecipientsCount : 0;
+      this.computedTeamsBudget += computedRecipientsCount > 0 ? computedTotalBudget : 0;
+
+      const tokenPerRecipient = computedRecipientsCount > 0 && computedTotalBudget > 0 ? computedTotalBudget / computedRecipientsCount : 0;
 
       teams.forEach(team => {
         if(!team.validMembersWallets || !team.validMembersWallets.length) {
@@ -354,7 +378,7 @@ export default {
         let budget = 0;
         if (team.rewardType === 'FIXED' || team.rewardType === 'FIXED_PER_MEMBER') {
           budget = team.fixedBudget ? Number(team.fixedBudget) : 0;
-          team.exceedingBudget = this.computedTotalBudget < budget;
+          team.exceedingBudget = this.rewardType === 'FIXED' && fixedGlobalBudget <= budget;
         } else if (team.rewardType === 'COMPUTED') {
           if(tokenPerRecipient > 0) {
             budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;
