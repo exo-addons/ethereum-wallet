@@ -22,9 +22,9 @@
         <v-spacer />
       </v-card-title>
       <v-card-text>
-        <div v-if="errorMessage" class="alert alert-error">
+        <div v-if="error" class="alert alert-error">
           <i class="uiIconError"></i>
-          {{ errorMessage }}
+          {{ error }}
         </div>
 
         <div v-if="!backedUp && !rememberPasswordToChange" class="alert alert-warning v-content">
@@ -101,7 +101,7 @@ export default {
       dialog: false,
       loading: false,
       backedUp: false,
-      errorMessage: null,
+      error: null,
       walletPassword: '',
       walletPasswordShow: false,
       newWalletPassword: '',
@@ -125,7 +125,7 @@ export default {
           this.$refs.form.reset();
         }
         if (!window.walletSettings.browserWalletExists) {
-          this.errorMessage = 'Can\'t reset wallet because it doesn\'t exist in current browser';
+          this.error = 'Can\'t reset wallet because it doesn\'t exist in current browser';
         }
         this.$nextTick(() => {
           setDraggable();
@@ -145,7 +145,7 @@ export default {
   },
   methods: {
     init() {
-      this.errorMessage = null;
+      this.error = null;
       this.walletPassword = '';
       this.walletPasswordShow = false;
       this.newWalletPassword = '';
@@ -167,7 +167,7 @@ export default {
       }
     },
     resetWallet() {
-      this.errorMessage = null;
+      this.error = null;
       if (!this.$refs.form.validate()) {
         return;
       }
@@ -189,12 +189,12 @@ export default {
           } catch (e) {
             thiss.loading = false;
             console.debug("saveWallet method error", e);
-            thiss.errorMessage = String(e);
+            thiss.error = String(e);
             return;
           }
         } else {
           thiss.loading = false;
-          thiss.errorMessage = 'Wrong password';
+          thiss.error = 'Wrong password';
         }
       }, 200);
     }

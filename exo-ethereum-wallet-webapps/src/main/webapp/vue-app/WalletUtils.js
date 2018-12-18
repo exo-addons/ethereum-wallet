@@ -249,7 +249,7 @@ export function computeNetwork() {
         throw error;
       }
       if (networkId) {
-        console.debug("Detected network id:", networkId);
+        console.debug(`Detected network id: ${networkId}`);
         window.walletSettings.currentNetworkId = networkId;
         return window.localWeb3.eth.net.getNetworkType();
       } else {

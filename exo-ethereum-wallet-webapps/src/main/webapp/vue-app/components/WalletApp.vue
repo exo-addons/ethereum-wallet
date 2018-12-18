@@ -23,6 +23,7 @@
               <v-spacer />
   
               <wallet-app-menu 
+                ref="walletAppMenu"
                 :is-space="isSpace"
                 :wallet-address="walletAddress"
                 :is-maximized="isMaximized"
@@ -32,6 +33,7 @@
                 @modify-settings="showSettingsModal = true" />
   
               <wallet-settings-modal
+                ref="walletSettingsModal"
                 :is-space="isSpace"
                 :open="showSettingsModal"
                 :app-loading="loading"
@@ -40,7 +42,6 @@
                 :accounts-details="accountsDetails"
                 :overview-accounts="overviewAccounts"
                 :principal-account-address="principalAccount"
-                app
                 @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()"
                 @close="showSettingsModal = false"
                 @settings-changed="init()" />
@@ -57,14 +58,14 @@
                 @loading="loading = true"
                 @end-loading="loading = false"
                 @refresh="init()"
-                @error="loading = false; errorMessage = $event" />
+                @error="loading = false; error = $event" />
             </v-toolbar>
 
             <!-- Body -->
             <v-card v-if="displayAccountsList" class="text-xs-center" flat>
-              <div v-if="errorMessage && !loading" class="alert alert-error">
+              <div v-if="error && !loading" class="alert alert-error">
                 <i class="uiIconError"></i>
-                {{ errorMessage }}
+                {{ error }}
               </div>
 
               <v-progress-circular v-if="loading" color="primary" class="mb-2" indeterminate />
@@ -88,7 +89,7 @@
                 :fiat-symbol="fiatSymbol"
                 @refresh-balance="refreshBalance"
                 @refresh-token-balance="refreshTokenBalance"
-                @error="errorMessage = $event" />
+                @error="error = $event" />
   
               <wallet-accounts-list
                 v-if="isMaximized && !loading"
@@ -103,7 +104,7 @@
                 @account-details-selected="openAccountDetail"
                 @refresh-contracts="forceUpdate"
                 @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
-                @error="errorMessage = $event" />
+                @error="error = $event" />
             </v-card>
   
             <!-- The selected account detail -->
@@ -157,7 +158,6 @@ import WalletSummary from './WalletSummary.vue';
 import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
 import WalletSettingsModal from './WalletSettingsModal.vue';
-import AddContractModal from './AddContractModal.vue';
 
 import * as constants from '../WalletConstants.js';
 import {getContractsDetails, retrieveContractDetails} from '../WalletToken.js';
@@ -170,8 +170,7 @@ export default {
     WalletSetup,
     WalletAccountsList,
     AccountDetail,
-    WalletSettingsModal,
-    AddContractModal
+    WalletSettingsModal
   },
   props: {
     isSpace: {
@@ -194,20 +193,16 @@ export default {
       overviewAccountsToDisplay: [],
       principalAccount: null,
       showSettingsModal: false,
-      showAddContractModal: false,
-      displayWalletSetup: false,
-      displayWalletNotExistingYet: false,
       gasPriceInEther: null,
       networkId: null,
       browserWalletExists: false,
-      browserWalletBackedUp: true,
       walletAddress: null,
       selectedTransactionHash: null,
       selectedAccount: null,
       fiatSymbol: '$',
       accountsDetails: {},
       refreshIndex: 1,
-      errorMessage: null
+      error: null
     };
   },
   computed: {
@@ -215,10 +210,10 @@ export default {
       return true;
     },
     displayWalletResetOption() {
-      return !this.loading && !this.errorMessage && this.walletAddress && !this.useMetamask && this.browserWalletExists;
+      return !this.loading && !this.error && this.walletAddress && !this.useMetamask && this.browserWalletExists;
     },
     displayEtherBalanceTooLow() {
-      return !this.loading && !this.errorMessage && (!this.isSpace || this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.defaultGas, this.gasPriceInEther);
+      return !this.loading && !this.error && (!this.isSpace || this.isSpaceAdministrator) && this.walletAddress && !this.isReadOnly && this.etherBalance < gasToEther(window.walletSettings.userPreferences.defaultGas, this.gasPriceInEther);
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
@@ -298,9 +293,9 @@ export default {
           console.debug('An error occurred while on initialization', error);
   
           if (this.useMetamask) {
-            this.errorMessage = `You can't send transaction because Metamask is disconnected`;
+            this.error = `You can't send transaction because Metamask is disconnected`;
           } else {
-            this.errorMessage = `You can't send transaction because your wallet is disconnected`;
+            this.error = `You can't send transaction because your wallet is disconnected`;
           }
         });
     });
@@ -308,7 +303,7 @@ export default {
   methods: {
     init() {
       this.loading = true;
-      this.errorMessage = null;
+      this.error = null;
       this.seeAccountDetails = false;
       this.selectedAccount = null;
       this.accountsDetails = {};
@@ -389,11 +384,11 @@ export default {
               this.walletAddress = null;
             }
           } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
-            this.errorMessage = 'Failed to load user settings';
+            this.error = 'Failed to load user settings';
           } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
-            this.errorMessage = 'Failed to connect to network';
+            this.error = 'Failed to connect to network';
           } else {
-            this.errorMessage = error;
+            this.error = error;
           }
           this.loading = false;
           this.forceUpdate();
@@ -455,7 +450,6 @@ export default {
       }
     },
     reloadContracts() {
-      this.showAddContractModal = false;
       return getContractsDetails(this.walletAddress, this.networkId, false, false)
         .then((contractsDetails, error) => {
           if (error) {

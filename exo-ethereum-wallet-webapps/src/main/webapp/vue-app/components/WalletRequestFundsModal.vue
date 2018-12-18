@@ -38,7 +38,8 @@
                 :items="accountsList"
                 attach="#requestFundsAccount"
                 label="Select currency"
-                placeholder="Select a currency to use for requesting funds" />
+                placeholder="Select a currency to use for requesting funds"
+                cache-items />
             </div>
           </v-layout>
         </v-container>

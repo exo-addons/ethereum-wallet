@@ -13,6 +13,7 @@ global.LocalWeb3 = LocalWeb3;
 Vue.prototype.toFixed = toFixed;
 Vue.use(Vuetify);
 Vue.prototype.isMaximized = true;
+Vue.config.silent = true
 
 window.testWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider("http://localhost:8545"))
 

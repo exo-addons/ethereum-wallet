@@ -109,7 +109,6 @@ export default {
       skipWalletPasswordSet: false,
       browserWalletExists: false,
       displayWalletSetup: false,
-      networkId: null,
       browserWalletBackedUp: true,
       watchMetamaskAccountInterval: null,
       detectedMetamaskAccount: null

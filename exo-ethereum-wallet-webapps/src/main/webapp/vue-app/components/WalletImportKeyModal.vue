@@ -7,8 +7,8 @@
         <span class="PopupTitle popupTitle">Restore wallet</span>
       </div>
       <v-card-text>
-        <div v-if="errorMessage" class="alert alert-error v-content">
-          <i class="uiIconError"></i>{{ errorMessage }}
+        <div v-if="error" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
         </div>
         <v-card-title v-show="loading" class="pb-0">
           <v-spacer />
@@ -75,7 +75,7 @@ export default {
       importWalletDialog: false,
       walletPrivateKey: '',
       walletPrivateKeyShow: false,
-      errorMessage: null,
+      error: null,
       loading: false,
       rules: {
         min: v => (v && v.length >= 8) || 'At least 8 characters',
@@ -100,11 +100,11 @@ export default {
     resetForm() {
       this.walletPrivateKey = '';
       this.walletPrivateKeyShow = false;
-      this.errorMessage = null;
+      this.error = null;
       this.loading = false;
     },
     importWallet() {
-      this.errorMessage = null;
+      this.error = null;
       this.loading = true;
       const thiss = this;
       window.setTimeout(() => {
@@ -125,16 +125,16 @@ export default {
               .catch(e => {
                 thiss.loading = false;
                 console.debug("saveBrowerWalletInstance method - error", e);
-                thiss.errorMessage = `Error saving new Wallet address`;
+                thiss.error = `Error saving new Wallet address`;
               });
           } else {
             thiss.loading = false;
-            thiss.errorMessage = `Private key doesn't match address ${thiss.walletAddress}`;
+            thiss.error = `Private key doesn't match address ${thiss.walletAddress}`;
           }
         } catch(e) {
           thiss.loading = false;
           console.debug('Error importing private key', e);
-          thiss.errorMessage = `Error saving new Wallet address`;
+          thiss.error = `Error saving new Wallet address`;
         }
       }, 200);
     }

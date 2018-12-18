@@ -35,9 +35,10 @@
             v-model="selectedOption"
             :items="accountsList"
             attach="#sendFundsAccount"
-            absolute
             label="Select currency"
-            placeholder="Select a currency to use for requesting funds" />
+            placeholder="Select a currency to use for requesting funds"
+            absolute
+            cache-items />
         </div>
 
       </send-funds-form>

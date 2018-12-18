@@ -44,9 +44,9 @@
       <i class="uiIconWarning"></i>
       Please connect to Metamask
     </div>
-    <div v-else-if="errorMessage" class="alert alert-error">
+    <div v-else-if="error" class="alert alert-error">
       <i class="uiIconError"></i>
-      {{ errorMessage }}
+      {{ error }}
     </div>
     <div v-else-if="displaySpaceMetamaskEnableHelp" class="alert alert-info">
       <i class="uiIconInfo"></i>
@@ -279,7 +279,7 @@ export default {
             this.$emit("refresh");
             this.init();
           } else {
-            this.errorMessage = 'Error saving new Wallet address';
+            this.error = 'Error saving new Wallet address';
           }
         })
         .catch(e => {
