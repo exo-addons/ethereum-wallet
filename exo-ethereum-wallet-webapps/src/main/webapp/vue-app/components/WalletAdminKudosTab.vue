@@ -42,7 +42,7 @@
       <i class="uiIconWarning"></i>
       You have chosen a token that is different from principal displayed token
     </div>
-    <v-card-text class="text-xs-center">
+    <v-card-text class="text-xs-center" data-app>
       <v-menu
         ref="selectedDateMenu"
         v-model="selectedDateMenu"

@@ -1,5 +1,5 @@
 <template>
-  <v-card flat>
+  <v-card id="walletAccountsList" flat>
     <!-- Ether account actions -->
     <send-ether-modal
       :account="walletAddress"
@@ -48,10 +48,10 @@
                 width="400px"
                 max-width="100%"
                 height="210px">
-                <v-card-title dark class="primary">
+                <v-card-title dark class="primary" data-app>
                   <v-icon :class="!item.error && 'clickable'" dark @click="!item.error && $emit('account-details-selected', item)">{{ item.icon }}</v-icon>
                   <v-spacer />
-                  <v-card-sub-title :class="item.error ? 'errorHeadline' : 'headline clickable'" @click="!item.error && $emit('account-details-selected', item)">{{ item.title }}</v-card-sub-title>
+                  <div :class="item.error ? 'errorHeadline' : 'headline clickable'" @click="!item.error && $emit('account-details-selected', item)">{{ item.title }}</div>
                   <v-spacer v-if="!item.error" />
                   <v-menu v-if="!item.error" :ref="`walletAccountCard${index}`" :attach="`.walletAccountMenuItem${index}`" :class="`walletAccountMenuItem${index}`" content-class="walletAccountMenu">
                     <v-btn slot="activator" :disabled="isReadOnly" dark icon>

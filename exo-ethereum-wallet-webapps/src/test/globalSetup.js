@@ -1,4 +1,4 @@
-module.exports = async () => {
+module.exports = () => {
   const ganache = require("ganache-cli");
   global.server = ganache.server({
     "network_id": 4452365,

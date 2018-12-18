@@ -3,12 +3,16 @@ import Vue from 'vue';
 import Vuetify from "../main/webapp/js/lib/vuetify.min.js";
 import LocalWeb3 from "../main/webapp/js/lib/web3.min.js";
 
+import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
+
 global.Vuetify = Vuetify;
 global.$ = $;
 global.Vue = Vue;
 global.LocalWeb3 = LocalWeb3;
 
+Vue.prototype.toFixed = toFixed;
 Vue.use(Vuetify);
+Vue.prototype.isMaximized = true;
 
 window.testWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider("http://localhost:8545"))
 
@@ -17,7 +21,8 @@ global.eXo = {
     portal: {
       context: 'portal',
       rest: 'rest',
-      language: 'en'
+      language: 'en',
+      userName: 'testuser'
     }
   }
 };
@@ -62,10 +67,43 @@ fetch.mockImplementation(url => {
            "dataVersion":0, // User preferences data version
            "currency":"usd", // User currency used to display fiat amounts
            "defaultGas":0, // User gas limit preference
-           "walletAddress":"0x104e1124a0a64dc13b02effdd675b860c66f72d5" // associated user address
+           "walletAddress":"0xb460A021b66A1f421970B07262Ed11d626B798EF" // associated user address
         },
         "contractBin":"", // Principal ERT Token contract BIN
      };
+  } else if(url === "https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=usd") {
+    resultJson = [{
+      "id": "ethereum", 
+      "name": "Ethereum", 
+      "symbol": "ETH", 
+      "rank": "3", 
+      "price_usd": "93.6172896711", 
+      "price_btc": "0.02663421", 
+      "24h_volume_usd": "2256800339.33", 
+      "market_cap_usd": "9723872573.0", 
+      "available_supply": "103868341.0", 
+      "total_supply": "103868341.0", 
+      "max_supply": null, 
+      "percent_change_1h": "-0.09", 
+      "percent_change_24h": "5.02", 
+      "percent_change_7d": "4.77", 
+      "last_updated": "1545137119"
+    }];
+  } else if(url === '/portal/rest/wallet/api/account/getTransactions?networkId=4452365&address=0xb460a021b66a1f421970b07262ed11d626b798ef') {
+    resultJson = [];
+  } else if(url === '/portal/rest/wallet/api/account/detailsById?id=testuser&type=user') {
+    resultJson = {
+        "avatar":"/rest/v1/social/users/testuser/avatar",
+        "technicalId":"2",
+        "spaceAdministrator":false,
+        "enabled":true,
+        "address":"0xb460a021b66a1f421970b07262ed11d626b798ef",
+        "name":"testuser testuser",
+        "id":"testuser",
+        "type":"user"
+    };
+  } else {
+    console.warn(new Error(`URL ${url} isn't mocked`));
   }
   return Promise.resolve(resultJson ? new Response(JSON.stringify(resultJson)) : resultText);
 });

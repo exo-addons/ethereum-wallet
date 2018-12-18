@@ -28,13 +28,6 @@
                     v-model="selectedCurrency"
                     :items="currencies"
                     label="Select fiat currency used to display ether amounts conversion" />
-                  <!-- v-combobox
-                    v-model="selectedPrincipalAccount"
-                    :items="accountsList"
-                    item-disabled="itemDisabled"
-                    label="Select principal currency displayed in wallet summary"
-                    placeholder="Select principal currency displayed in wallet summary"
-                    chips /-->
                   <v-combobox
                     v-model="selectedOverviewAccounts"
                     :items="accountsList"
@@ -224,15 +217,15 @@ export default {
       }
     },
     overviewAccounts: {
-      type: Object,
+      type: Array,
       default: function() {
-        return {};
+        return [];
       }
     },
-    principalAccount: {
-      type: Object,
+    principalAccountAddress: {
+      type: String,
       default: function() {
-        return {};
+        return null;
       }
     },
     accountsDetails: {
@@ -319,7 +312,7 @@ export default {
           }
         });
 
-        this.selectedPrincipalAccount = this.getOverviewAccountObject(this.principalAccount);
+        this.selectedPrincipalAccount = this.getOverviewAccountObject(this.principalAccountAddress);
 
         // Workaround to display slider on first popin open
         this.$refs.settingsTabs.callSlider();

@@ -95,9 +95,9 @@ export default {
       }
     },
     overviewAccounts: {
-      type: Object,
+      type: Array,
       default: function() {
-        return {};
+        return [];
       }
     },
     principalAccount: {

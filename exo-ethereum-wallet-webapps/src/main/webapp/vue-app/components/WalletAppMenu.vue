@@ -1,5 +1,5 @@
 <template>
-  <div class="walletConfigurationMenu">
+  <div id="walletAppMenu">
     <v-btn icon flat title="Refresh wallet" class="mr-0" @click="$emit('refresh')">
       <v-icon size="20px">refresh</v-icon>
     </v-btn>

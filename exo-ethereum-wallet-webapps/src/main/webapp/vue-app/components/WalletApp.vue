@@ -39,7 +39,8 @@
                 :display-reset-option="displayWalletResetOption"
                 :accounts-details="accountsDetails"
                 :overview-accounts="overviewAccounts"
-                :principal-account="principalAccount"
+                :principal-account-address="principalAccount"
+                app
                 @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()"
                 @close="showSettingsModal = false"
                 @settings-changed="init()" />
@@ -221,12 +222,14 @@ export default {
     },
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
-        return this.accountsDetails[this.walletAddress].balance;
+        let balance = this.accountsDetails[this.walletAddress].balance;
+        balance = balance ? Number(balance) : balance;
+        return balance;
       }
       return 0;
     },
     totalFiatBalance() {
-      return etherToFiat(this.totalBalance);
+      return Number(etherToFiat(this.totalBalance));
     },
     totalBalance() {
       let balance = 0;

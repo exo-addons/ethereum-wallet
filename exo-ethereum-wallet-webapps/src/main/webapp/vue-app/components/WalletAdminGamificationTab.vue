@@ -32,7 +32,7 @@
               </ul>
             </div>
           </v-card-text>
-          <v-card-text v-if="selectedTab === 0" class="text-xs-center">
+          <v-card-text v-if="selectedTab === 0" class="text-xs-center" data-app>
             <v-menu
               ref="selectedDateMenu"
               v-model="selectedDateMenu"

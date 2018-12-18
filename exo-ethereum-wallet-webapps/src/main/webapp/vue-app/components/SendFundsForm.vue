@@ -47,9 +47,9 @@ export default {
   },
   props: {
     networkId: {
-      type: String,
+      type: Number,
       default: function() {
-        return null;
+        return 0;
       }
     },
     addPendingToReceiver: {

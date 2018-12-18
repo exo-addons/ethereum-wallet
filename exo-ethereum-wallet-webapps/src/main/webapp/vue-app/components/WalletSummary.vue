@@ -1,5 +1,5 @@
 <template>
-  <v-card class="waletSummary elevation-0">
+  <v-card id="waletSummary" class="elevation-0">
 
     <v-card-title v-if="pendingTransactionsCount" primary-title class="pb-0">
       <v-spacer />
@@ -125,9 +125,9 @@ export default {
       }
     },
     overviewAccounts: {
-      type: Object,
+      type: Array,
       default: function() {
-        return {};
+        return [];
       }
     },
     principalAccount: {
