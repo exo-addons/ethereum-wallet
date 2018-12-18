@@ -98,8 +98,8 @@
         ]
       }
     ],
-    "globalSetup" : "<rootDir>/src/test/globalSetup.js",
-    "globalTeardown" : "<rootDir>/src/test/globalTeardown.js",
+    "globalSetup": "<rootDir>/src/test/globalSetup.js",
+    "globalTeardown": "<rootDir>/src/test/globalTeardown.js",
     "coverageDirectory": "<rootDir>/target/jest/coverage"
   }
 }

@@ -13,35 +13,6 @@ const {initWeb3, initSettings, computeBalance, etherToFiat, gasToEther} = requir
 const { shallowMount, mount, wrapper} = require('@vue/test-utils');
 const Vue = require ('vue');
 
-//beforeAll(() => {
-//  if (!global.server) {
-//    global.server = global.TestRPC.server();
-//    global.server.listen(7545, function(err, blockchain) {});
-//// console.log(global.server.provider.manager.state.accounts)
-//  }
-//});
-
-//afterAll(() => {
-//  if (global.server) {
-//   global.server.close();    
-//  }
-//});
-
-
-
-//function getAccountDetails(address) {
- // return {
-  //  title : 'ether',
-   // icon : 'fab fa-ethereum',
-  //  symbol : 'ether',
-  //  isContract : false,
-  //  address : address,
-   // balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
-   // balanceFiat : balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0
- // };
-//}
-
-
 describe('WalletApp.test.js', () => {
   let app;
   const overviewAccounts = [{
@@ -52,19 +23,13 @@ describe('WalletApp.test.js', () => {
   }];
   
   const walletAddress = '0x104E1124A0A64dc13b02effdD675b860c66F72d5';
-  
-  
+
   beforeEach(() => {
-        
     app = shallowMount(WalletApp, {
-      
-      attachToDocument: true,
+      isSpace: false
     });
     app.setData({ walletAddress : walletAddress , overviewAccounts : overviewAccounts})
-
   });
-  
-  
 
   it('wallet has minimized class by default', () => {
     expect(app.find('#WalletApp').classes()).toContain('minimized');
@@ -77,8 +42,7 @@ describe('WalletApp.test.js', () => {
     app.vm.isWalletEnabled = true;
     expect(app.find('.walletAppToolbar').exists()).toBe(true);
   });
-  
-  
+
   it('contient les données par défaut', () => {
     expect(typeof WalletApp.data).toBe('function')
     const defaultData = WalletApp.data()
@@ -109,11 +73,11 @@ describe('WalletApp.test.js', () => {
   
 
   it('init ', () => {
-  expect(app.vm.init());
-  expect(app.vm.loading).toBe(true);
-  expect(app.vm.errorMessage).toBeNull();
-  expect(app.vm.seeAccountDetails).toBe(false);
-  expect(app.vm.walletAddress).toBeNull();
+    app.vm.init();
+    expect(app.vm.loading).toBe(true);
+    expect(app.vm.errorMessage).toBeNull();
+    expect(app.vm.seeAccountDetails).toBe(false);
+    expect(app.vm.walletAddress).toBeNull();
   });
 
  
@@ -140,8 +104,7 @@ describe('WalletApp.test.js', () => {
  
  
 it('refresh token balance', () => {
-expect(app.vm.refreshBalance());
-
+  app.vm.refreshBalance();
 });
 
  
