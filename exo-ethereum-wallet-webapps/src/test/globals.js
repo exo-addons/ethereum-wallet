@@ -1,17 +1,18 @@
 import $ from 'jquery';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
-const Web3 = require("web3");
+
+import LocalWeb3 from "../main/webapp/js/lib/web3.min.js";
 
 global.Vuetify = Vuetify;
 global.$ = $;
 global.Vue = Vue;
-global.LocalWeb3 = Web3;
+global.LocalWeb3 = LocalWeb3;
 
 
 Vue.use(Vuetify);
 
-window.testWeb3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
+window.testWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider("http://localhost:8545"))
 
 global.eXo = {
   env: {

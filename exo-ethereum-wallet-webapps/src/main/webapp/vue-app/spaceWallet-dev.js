@@ -1,5 +1,5 @@
-import NodeWeb3 from 'web3';
-import EthereumQRPlugin from 'ethereum-qr-code';
+import NodeWeb3 from "../main/webapp/js/lib/web3.min.js";
+import EthereumQRPlugin from "../main/webapp/js/lib/ethereum-qr-code.min.js";
 import $ from 'jquery';
 
 import SpaceWalletApp from './components/SpaceWalletApp.vue';
