@@ -49,9 +49,10 @@ const config = {
     ]
   },
   externals: {
-    vuetify: 'Vuetify',
     vue: 'Vue',
-    jquery: '$'
+    vuetify: 'Vuetify',
+    jquery: '$',
+    web3: 'Web3'
   },
   plugins: [
     new ExtractTextWebpackPlugin('css/wallet-v1.2.0-M02.css')

@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import Vue from 'vue';
-import Vuetify from 'vuetify';
+import Vuetify from "../main/webapp/js/lib/vuetify.min.js";
 
 import LocalWeb3 from "../main/webapp/js/lib/web3.min.js";
 
