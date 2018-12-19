@@ -15,22 +15,22 @@ export default {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     title: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     disabled: {
       type: Boolean,
       default: function() {
         return false;
-      }
-    }
+      },
+    },
   },
-  data () {
+  data() {
     return {
       choice: '1',
     };
@@ -38,16 +38,16 @@ export default {
   watch: {
     choice() {
       let gasPrice = window.walletSettings.minGasPrice;
-      switch(Number(this.choice)) {
-      case 2:
-        gasPrice = window.walletSettings.normalGasPrice;
-        break;
-      case 3:
-        gasPrice = window.walletSettings.maxGasPrice;
-        break;
+      switch (Number(this.choice)) {
+        case 2:
+          gasPrice = window.walletSettings.normalGasPrice;
+          break;
+        case 3:
+          gasPrice = window.walletSettings.maxGasPrice;
+          break;
       }
-      this.$emit("changed", gasPrice);
-    }
-  }
+      this.$emit('changed', gasPrice);
+    },
+  },
 };
 </script>

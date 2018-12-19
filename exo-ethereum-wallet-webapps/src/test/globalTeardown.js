@@ -1,5 +1,5 @@
-module.exports = config => {
-  if(global.server) {
+module.exports = (config) => {
+  if (global.server) {
     global.server.close();
   }
 };

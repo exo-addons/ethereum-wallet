@@ -1,50 +1,25 @@
 <template>
-  <v-app id="WalletApp" :class="isMaximized ? 'maximized': 'minimized'" color="transaprent" flat>
+  <v-app id="WalletApp" :class="isMaximized ? 'maximized' : 'minimized'" color="transaprent" flat>
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
           <v-card :class="isMaximized && 'transparent'" flat>
-            <v-toolbar :class="isMaximized ? 'mb-3':'no-padding'" class="walletAppToolbar" color="white" flat dense>
+            <v-toolbar :class="isMaximized ? 'mb-3' : 'no-padding'" class="walletAppToolbar" color="white" flat dense>
               <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
               <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
               <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
               <div v-if="displayEtherBalanceTooLow" id="etherTooLowWarningParent">
-                <v-tooltip
-                  content-class="etherTooLowWarning"
-                  attach="#etherTooLowWarningParent"
-                  absolute
-                  top
-                  class="ml-2">
+                <v-tooltip content-class="etherTooLowWarning" attach="#etherTooLowWarningParent" absolute top class="ml-2">
                   <v-icon slot="activator" color="orange">warning</v-icon>
                   <span>Not enough funds to send transactions</span>
                 </v-tooltip>
               </div>
 
               <v-spacer />
-  
-              <wallet-app-menu 
-                ref="walletAppMenu"
-                :is-space="isSpace"
-                :wallet-address="walletAddress"
-                :is-maximized="isMaximized"
-                :is-space-administrator="isSpaceAdministrator"
-                @refresh="init()"
-                @maximize="maximize()"
-                @modify-settings="showSettingsModal = true" />
-  
-              <wallet-settings-modal
-                ref="walletSettingsModal"
-                :is-space="isSpace"
-                :open="showSettingsModal"
-                :app-loading="loading"
-                :fiat-symbol="fiatSymbol"
-                :display-reset-option="displayWalletResetOption"
-                :accounts-details="accountsDetails"
-                :overview-accounts="overviewAccounts"
-                :principal-account-address="principalAccount"
-                @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()"
-                @close="showSettingsModal = false"
-                @settings-changed="init()" />
+
+              <wallet-app-menu ref="walletAppMenu" :is-space="isSpace" :wallet-address="walletAddress" :is-maximized="isMaximized" :is-space-administrator="isSpaceAdministrator" @refresh="init()" @maximize="maximize()" @modify-settings="showSettingsModal = true" />
+
+              <wallet-settings-modal ref="walletSettingsModal" :is-space="isSpace" :open="showSettingsModal" :app-loading="loading" :fiat-symbol="fiatSymbol" :display-reset-option="displayWalletResetOption" :accounts-details="accountsDetails" :overview-accounts="overviewAccounts" :principal-account-address="principalAccount" @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()" @close="showSettingsModal = false" @settings-changed="init()" />
             </v-toolbar>
 
             <v-toolbar class="additionalToolbar" color="white" flat dense>
@@ -58,78 +33,26 @@
                 @loading="loading = true"
                 @end-loading="loading = false"
                 @refresh="init()"
-                @error="loading = false; error = $event" />
+                @error="
+                  loading = false;
+                  error = $event;
+                "
+              />
             </v-toolbar>
 
             <!-- Body -->
             <v-card v-if="displayAccountsList" class="text-xs-center" flat>
-              <div v-if="error && !loading" class="alert alert-error">
-                <i class="uiIconError"></i>
-                {{ error }}
-              </div>
+              <div v-if="error && !loading" class="alert alert-error"><i class="uiIconError"></i> {{ error }}</div>
 
               <v-progress-circular v-if="loading" color="primary" class="mb-2" indeterminate />
 
-              <wallet-summary
-                v-if="walletAddress && !loading && accountsDetails[walletAddress]"
-                ref="walletSummary"
-                :is-maximized="isMaximized"
-                :is-space="isSpace"
-                :is-space-administrator="isSpaceAdministrator"
-                :accounts-details="accountsDetails"
-                :overview-accounts="overviewAccountsToDisplay"
-                :principal-account="principalAccount"
-                :refresh-index="refreshIndex"
-                :network-id="networkId"
-                :wallet-address="walletAddress"
-                :ether-balance="etherBalance"
-                :total-balance="totalBalance"
-                :total-fiat-balance="totalFiatBalance"
-                :is-read-only="isReadOnly"
-                :fiat-symbol="fiatSymbol"
-                @refresh-balance="refreshBalance"
-                @refresh-token-balance="refreshTokenBalance"
-                @error="error = $event" />
-  
-              <wallet-accounts-list
-                v-if="isMaximized && !loading"
-                ref="walletAccountsList"
-                :is-read-only="isReadOnly"
-                :accounts-details="accountsDetails"
-                :overview-accounts="overviewAccountsToDisplay"
-                :wallet-address="walletAddress"
-                :network-id="networkId"
-                :refresh-index="refreshIndex"
-                :fiat-symbol="fiatSymbol"
-                @account-details-selected="openAccountDetail"
-                @refresh-contracts="forceUpdate"
-                @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
-                @error="error = $event" />
+              <wallet-summary v-if="walletAddress && !loading && accountsDetails[walletAddress]" ref="walletSummary" :is-maximized="isMaximized" :is-space="isSpace" :is-space-administrator="isSpaceAdministrator" :accounts-details="accountsDetails" :overview-accounts="overviewAccountsToDisplay" :principal-account="principalAccount" :refresh-index="refreshIndex" :network-id="networkId" :wallet-address="walletAddress" :ether-balance="etherBalance" :total-balance="totalBalance" :total-fiat-balance="totalFiatBalance" :is-read-only="isReadOnly" :fiat-symbol="fiatSymbol" @refresh-balance="refreshBalance" @refresh-token-balance="refreshTokenBalance" @error="error = $event" />
+
+              <wallet-accounts-list v-if="isMaximized && !loading" ref="walletAccountsList" :is-read-only="isReadOnly" :accounts-details="accountsDetails" :overview-accounts="overviewAccountsToDisplay" :wallet-address="walletAddress" :network-id="networkId" :refresh-index="refreshIndex" :fiat-symbol="fiatSymbol" @account-details-selected="openAccountDetail" @refresh-contracts="forceUpdate" @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()" @error="error = $event" />
             </v-card>
-  
+
             <!-- The selected account detail -->
-            <v-navigation-drawer
-              id="accountDetailsDrawer"
-              v-model="seeAccountDetails"
-              fixed
-              temporary
-              right
-              stateless
-              width="700"
-              max-width="100vw">
-
-              <account-detail
-                ref="accountDetail"
-                :fiat-symbol="fiatSymbol"
-                :is-read-only="isReadOnly"
-                :network-id="networkId"
-                :wallet-address="walletAddress"
-                :contract-details="selectedAccount"
-                :selected-transaction-hash="selectedTransactionHash"
-                @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
-                @back="back()"/>
-
-            </v-navigation-drawer>
+            <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right stateless width="700" max-width="100vw"> <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :is-read-only="isReadOnly" :network-id="networkId" :wallet-address="walletAddress" :contract-details="selectedAccount" :selected-transaction-hash="selectedTransactionHash" @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()" @back="back()" /> </v-navigation-drawer>
           </v-card>
         </v-flex>
       </v-layout>
@@ -139,10 +62,7 @@
         <v-flex>
           <v-card-title class="transparent" flat>
             <v-spacer />
-            <div class="alert alert-warning">
-              <i class="uiIconWarning"></i>
-              You don't have enough access rights to use Ethereum Wallet application
-            </div>
+            <div class="alert alert-warning"><i class="uiIconWarning"></i> You don't have enough access rights to use Ethereum Wallet application</div>
             <v-spacer />
           </v-card-title>
         </v-flex>
@@ -170,15 +90,15 @@ export default {
     WalletSetup,
     WalletAccountsList,
     AccountDetail,
-    WalletSettingsModal
+    WalletSettingsModal,
   },
   props: {
     isSpace: {
       type: Boolean,
       default: function() {
         return false;
-      }
-    }
+      },
+    },
   },
   data() {
     return {
@@ -202,7 +122,7 @@ export default {
       fiatSymbol: '$',
       accountsDetails: {},
       refreshIndex: 1,
-      error: null
+      error: null,
     };
   },
   computed: {
@@ -229,32 +149,32 @@ export default {
     totalBalance() {
       let balance = 0;
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails) {
-        Object.keys(this.accountsDetails).forEach(key => {
+        Object.keys(this.accountsDetails).forEach((key) => {
           const accountDetail = this.accountsDetails[key];
           balance += Number((accountDetail.isContract ? accountDetail.balanceInEther : accountDetail.balance) || 0);
         });
       }
       return balance;
-    }
+    },
   },
   watch: {
     seeAccountDetails() {
       if (this.seeAccountDetails) {
-        $("body").addClass("hide-scroll");
+        $('body').addClass('hide-scroll');
 
         const thiss = this;
         setTimeout(() => {
           thiss.seeAccountDetailsPermanent = true;
         }, 200);
       } else {
-        $("body").removeClass("hide-scroll");
+        $('body').removeClass('hide-scroll');
 
         this.seeAccountDetailsPermanent = false;
       }
-    }
+    },
   },
   created() {
-    if (!eXo && eXo.env || !eXo.env.portal || !eXo.env.portal.userName || !eXo.env.portal.userName.length) {
+    if ((!eXo && eXo.env) || !eXo.env.portal || !eXo.env.portal.userName || !eXo.env.portal.userName.length) {
       this.isWalletEnabled = false;
       return;
     }
@@ -271,7 +191,7 @@ export default {
 
     const thiss = this;
 
-    $(document).on("keydown", event => {
+    $(document).on('keydown', (event) => {
       if (event.which === 27 && thiss.seeAccountDetailsPermanent && !$('.v-dialog:visible').length) {
         thiss.back();
       }
@@ -289,9 +209,9 @@ export default {
           }
           this.forceUpdate();
         })
-        .catch(error => {
+        .catch((error) => {
           console.debug('An error occurred while on initialization', error);
-  
+
           if (this.useMetamask) {
             this.error = `You can't send transaction because Metamask is disconnected`;
           } else {
@@ -318,7 +238,7 @@ export default {
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
             this.isWalletEnabled = false;
             this.forceUpdate();
-            throw new Error("Wallet disabled for current user");
+            throw new Error('Wallet disabled for current user');
           } else {
             this.isWalletEnabled = true;
             this.initMenuApp();
@@ -374,8 +294,8 @@ export default {
           this.forceUpdate();
         })
         .then(() => this.$refs.walletSetup && this.$refs.walletSetup.init())
-        .catch(e => {
-          console.debug("init method - error", e);
+        .catch((e) => {
+          console.debug('init method - error', e);
           const error = `${e}`;
 
           if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
@@ -403,70 +323,68 @@ export default {
         .then((balanceDetails, error) => {
           if (error) {
             this.$set(this.accountsDetails, this.walletAddress, {
-              title : 'ether',
-              icon : 'warning',
-              balance : 0,
-              symbol : 'ether',
-              isContract : false,
-              address : this.walletAddress,
-              error : `Error retrieving balance of wallet: ${error}`
+              title: 'ether',
+              icon: 'warning',
+              balance: 0,
+              symbol: 'ether',
+              isContract: false,
+              address: this.walletAddress,
+              error: `Error retrieving balance of wallet: ${error}`,
             });
             this.forceUpdate();
             throw error;
           }
           const accountDetails = {
-            title : 'ether',
-            icon : 'fab fa-ethereum',
-            symbol : 'ether',
-            isContract : false,
-            address : this.walletAddress,
-            balance : balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
-            balanceFiat : balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0
+            title: 'ether',
+            icon: 'fab fa-ethereum',
+            symbol: 'ether',
+            isContract: false,
+            address: this.walletAddress,
+            balance: balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
+            balanceFiat: balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0,
           };
           this.$set(this.accountsDetails, this.walletAddress, accountDetails);
           this.forceUpdate();
           return accountDetails;
         })
-        .catch(e => {
-          console.debug("refreshBalance method - error", e);
+        .catch((e) => {
+          console.debug('refreshBalance method - error', e);
           this.$set(this.accountsDetails, this.walletAddress, {
-            title : 'ether',
-            icon : 'warning',
-            balance : 0,
-            symbol : 'ether',
-            isContract : false,
-            address : this.walletAddress,
-            error : `Error retrieving balance of wallet ${e}`,
+            title: 'ether',
+            icon: 'warning',
+            balance: 0,
+            symbol: 'ether',
+            isContract: false,
+            address: this.walletAddress,
+            error: `Error retrieving balance of wallet ${e}`,
           });
           throw e;
         });
     },
     refreshTokenBalance(accountDetail) {
       if (accountDetail) {
-        retrieveContractDetails(this.walletAddress ,accountDetail, false)
-          .then(() => this.forceUpdate());
+        retrieveContractDetails(this.walletAddress, accountDetail, false).then(() => this.forceUpdate());
       } else {
         console.debug('Empty contract');
       }
     },
     reloadContracts() {
-      return getContractsDetails(this.walletAddress, this.networkId, false, false)
-        .then((contractsDetails, error) => {
-          if (error) {
-            throw error;
-          }
-          if (contractsDetails && contractsDetails.length) {
-            contractsDetails.forEach(contractDetails => {
-              if (contractDetails && contractDetails.address) {
-                if (this.accountsDetails[this.walletAddress]) {
-                  contractDetails.etherBalance = this.accountsDetails[this.walletAddress].balance;
-                }
-                this.$set(this.accountsDetails, contractDetails.address, contractDetails);
+      return getContractsDetails(this.walletAddress, this.networkId, false, false).then((contractsDetails, error) => {
+        if (error) {
+          throw error;
+        }
+        if (contractsDetails && contractsDetails.length) {
+          contractsDetails.forEach((contractDetails) => {
+            if (contractDetails && contractDetails.address) {
+              if (this.accountsDetails[this.walletAddress]) {
+                contractDetails.etherBalance = this.accountsDetails[this.walletAddress].balance;
               }
-            });
-            this.forceUpdate();
-          }
-        });
+              this.$set(this.accountsDetails, contractDetails.address, contractDetails);
+            }
+          });
+          this.forceUpdate();
+        }
+      });
     },
     openAccountDetail(accountDetails, hash) {
       if (!accountDetails.error) {
@@ -477,7 +395,7 @@ export default {
 
       this.$nextTick(() => {
         const thiss = this;
-        $('.v-overlay').on('click', event => {
+        $('.v-overlay').on('click', (event) => {
           thiss.back();
         });
       });
@@ -488,30 +406,30 @@ export default {
       this.selectedAccount = null;
     },
     maximize() {
-      window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`; 
+      window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`;
     },
     initMenuApp() {
       if (!this.isWalletEnabled || this.isSpace) {
         return;
       }
       this.$nextTick(() => {
-        if ($("#myWalletTad").length) {
+        if ($('#myWalletTad').length) {
           return;
         }
         if (!$('.userNavigation .item').length) {
           setTimeout(this.initMenuApp, 500);
           return;
         }
-        $(".userNavigation").append(` \
-          <li id='myWalletTad' class='item${this.isMaximized ? " active" : ""}'> \
+        $('.userNavigation').append(` \
+          <li id='myWalletTad' class='item${this.isMaximized ? ' active' : ''}'> \
             <a href='/portal/intranet/wallet'> \
               <div class='uiIconAppWallet uiIconDefaultApp' /> \
               <span class='tabName'>My Wallet</span> \
             </a> \
           </li>`);
-        $(window).trigger("resize");
+        $(window).trigger('resize');
       });
-    }
-  }
+    },
+  },
 };
 </script>

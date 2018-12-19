@@ -4,9 +4,7 @@
       <button v-if="!walletAddress" :disabled="loadingWalletBrowser" class="btn btn-primary" @click="createWallet()">Create new wallet</button>
       <div v-if="!walletAddress">Or</div>
 
-      <wallet-import-key-modal
-        :wallet-address="walletAddress"
-        @configured="$emit('configured')" />
+      <wallet-import-key-modal :wallet-address="walletAddress" @configured="$emit('configured')" />
 
       <div>Or</div>
       <a href="javascript:void(0);" @click="switchToMetamask">Use metamask</a>
@@ -23,44 +21,44 @@ import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWallet
 export default {
   components: {
     WalletAddress,
-    WalletImportKeyModal
+    WalletImportKeyModal,
   },
   props: {
     isSpace: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     isSpaceAdministrator: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     isAdministration: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     loading: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     refreshIndex: {
       type: Number,
       default: function() {
         return 0;
-      }
-    }
+      },
+    },
   },
   data() {
     return {
       walletAddress: null,
-      loadingWalletBrowser: false
+      loadingWalletBrowser: false,
     };
   },
   watch: {
@@ -68,7 +66,7 @@ export default {
       if (newValue > oldValue) {
         this.$nextTick(this.init);
       }
-    }
+    },
   },
   created() {
     this.init();
@@ -91,19 +89,19 @@ export default {
 
       saveBrowerWalletInstance(wallet[0], password, this.isSpace, true, false)
         .then(() => {
-          this.$emit("configured");
+          this.$emit('configured');
           this.loadingWalletBrowser = false;
         })
-        .catch(e => {
-          console.debug("saveBrowerWalletInstance method - error", e);
+        .catch((e) => {
+          console.debug('saveBrowerWalletInstance method - error', e);
           this.$emit('error', 'Error saving new Wallet address');
           this.loadingWalletBrowser = false;
         });
     },
     switchToMetamask() {
       enableMetamask(this.isSpace);
-      this.$emit("configured");
-    }
-  }
+      this.$emit('configured');
+    },
+  },
 };
 </script>

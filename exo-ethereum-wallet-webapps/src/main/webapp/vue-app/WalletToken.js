@@ -19,7 +19,7 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
     contractsAddresses = window.walletSettings.defaultContractsToDisplay || [];
   } else {
     const overviewAccounts = window.walletSettings.userPreferences.overviewAccountsToDisplay || [];
-    contractsAddresses = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
+    contractsAddresses = overviewAccounts.filter((contractAddress) => contractAddress && contractAddress.indexOf('0x') === 0);
   }
 
   const contractsDetailsPromises = [];
@@ -31,12 +31,11 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
       contractDetails.icon = 'fa-file-contract';
       contractDetails.isContract = true;
       contractDetails.networkId = netId;
-      contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay 
-                                  && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
+      contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
       contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails, isAdministration));
     }
   }
-  if(!window.walletContractsDetails) {
+  if (!window.walletContractsDetails) {
     window.walletContractsDetails = {};
   }
   return Promise.all(contractsDetailsPromises);
@@ -52,19 +51,19 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
   try {
     const contractInstance = getContractInstance(account, contractDetails.address);
     contractDetails.contract = contractInstance;
-  } catch(e) {
+  } catch (e) {
     transformContracDetailsToFailed(contractDetails);
-    console.debug("retrieveContractDetails method - error retrieving instance", contractDetails.address, new Error(e));
+    console.debug('retrieveContractDetails method - error retrieving instance', contractDetails.address, new Error(e));
     return Promise.resolve(contractDetails);
   }
 
   return (ignoreSavedDetails ? Promise.resolve(null) : getSavedContractDetails(contractDetails.address, contractDetails.networkId))
-    .then(savedDetails => {
+    .then((savedDetails) => {
       if (savedDetails) {
-        if(!savedDetails.hasOwnProperty("contractType")) {
+        if (!savedDetails.hasOwnProperty('contractType')) {
           contractToSave = true;
         }
-        Object.keys(savedDetails).forEach(key => {
+        Object.keys(savedDetails).forEach((key) => {
           contractDetails[key] = savedDetails[key];
         });
         // FIXME: Workaround for a unidentified bug
@@ -73,20 +72,20 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         }
 
         // Convert to numbers
-        if(contractDetails.contractType) {
+        if (contractDetails.contractType) {
           contractDetails.contractType = Number(contractDetails.contractType);
         }
-        if(contractDetails.sellPrice) {
+        if (contractDetails.sellPrice) {
           contractDetails.sellPrice = Number(contractDetails.sellPrice);
         }
       }
     })
-    .catch(e => {
-      console.debug("retrieveContractDetails method - error retrieving saved details", contractDetails.address, new Error(e));
+    .catch((e) => {
+      console.debug('retrieveContractDetails method - error retrieving saved details', contractDetails.address, new Error(e));
     })
     .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.implementationAddress().call())
     .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.version().call())
-    .then(version => {
+    .then((version) => {
       if (version) {
         version = Number(version);
         const originalContractType = contractDetails.contractType;
@@ -95,11 +94,11 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       }
       contractDetails.retrievedAttributes++;
     })
-    .catch(e => {
+    .catch((e) => {
       contractDetails.contractType = 0;
     })
-    .then(() => (contractDetails.decimals || contractDetails.contract.methods.decimals().call()))
-    .then(decimals => {
+    .then(() => contractDetails.decimals || contractDetails.contract.methods.decimals().call())
+    .then((decimals) => {
       if (decimals) {
         decimals = Number(decimals);
         contractToSave = contractToSave || Number(contractDetails.decimals) !== decimals;
@@ -109,33 +108,34 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         contractDetails.decimals = 0;
       }
     })
-    .catch(e => {
+    .catch((e) => {
       contractDetails.decimals = 0;
     })
     .then(() => contractDetails.contract.methods.balanceOf(account).call())
-    .then(balance => {
+    .then((balance) => {
       contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
     })
-    .catch(e => {
+    .catch((e) => {
       contractDetails.contractType = -1;
     })
     .then(() => {
-      return contractDetails.contractType < 0 ? null : (contractDetails.hasOwnProperty("symbol") ? contractDetails.symbol : contractDetails.contract.methods.symbol().call());
+      return contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty('symbol') ? contractDetails.symbol : contractDetails.contract.methods.symbol().call();
     })
-    .then(symbol => {
+    .then((symbol) => {
       if (symbol) {
         contractToSave = contractToSave || contractDetails.symbol !== symbol;
         contractDetails.symbol = symbol;
         contractDetails.retrievedAttributes++;
       }
     })
-    .catch(e => {
+    .catch((e) => {
       contractDetails.contractType = -1;
-      console.debug("retrieveContractDetails method - error retrieving symbol", contractDetails.address, new Error(e));
+      console.debug('retrieveContractDetails method - error retrieving symbol', contractDetails.address, new Error(e));
     })
     .then(() => {
-      return contractDetails.contractType < 0 ? null : (contractDetails.hasOwnProperty("name") ? contractDetails.name : contractDetails.contract.methods.name().call());
-    }).then(name => {
+      return contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty('name') ? contractDetails.name : contractDetails.contract.methods.name().call();
+    })
+    .then((name) => {
       if (name) {
         contractToSave = contractToSave || contractDetails.name !== name;
         contractDetails.name = name;
@@ -143,22 +143,22 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         contractDetails.retrievedAttributes++;
       }
     })
-    .catch(e => {
+    .catch((e) => {
       contractDetails.contractType = -1;
-      console.debug("retrieveContractDetails method - error retrieving name", contractDetails.address, new Error(e));
+      console.debug('retrieveContractDetails method - error retrieving name', contractDetails.address, new Error(e));
     })
     .then(() => {
-      return contractDetails.contractType < 0 ? null : (contractDetails.hasOwnProperty("totalSupply") ? contractDetails.totalSupply : contractDetails.contract.methods.totalSupply().call());
+      return contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty('totalSupply') ? contractDetails.totalSupply : contractDetails.contract.methods.totalSupply().call();
     })
-    .then(totalSupply =>  {
+    .then((totalSupply) => {
       if (totalSupply) {
         contractToSave = contractToSave || Number(contractDetails.totalSupply) !== Number(totalSupply);
         contractDetails.totalSupply = totalSupply;
         contractDetails.retrievedAttributes++;
       }
     })
-    .catch(e => {
-      console.debug("retrieveContractDetails method - error retrieving totalSupply", contractDetails.address, new Error(e));
+    .catch((e) => {
+      console.debug('retrieveContractDetails method - error retrieving totalSupply', contractDetails.address, new Error(e));
     })
     .then(() => contractDetails.contractType > 0 && isAdministration && computeBalance(contractDetails.address))
     .then((contractBalance) => {
@@ -167,50 +167,48 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         contractDetails.contractBalanceFiat = contractBalance.balanceFiat;
       }
     })
-    .catch(e => {
-      console.debug("retrieveContractDetails method - error retrieving balance of contract", contractDetails.address, new Error(e));
+    .catch((e) => {
+      console.debug('retrieveContractDetails method - error retrieving balance of contract', contractDetails.address, new Error(e));
     })
     .then(() => {
       if (!contractDetails.contractType || contractDetails.contractType <= 0) {
         return;
       }
       // Compute ERT Token attributes
-      return (contractDetails.sellPrice && !isAdministration ?
-        Promise.resolve(contractDetails.sellPrice)
-        :contractDetails.contract.methods.getSellPrice().call())
-        .then(sellPrice => {
-          contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), "ether");
+      return (contractDetails.sellPrice && !isAdministration ? Promise.resolve(contractDetails.sellPrice) : contractDetails.contract.methods.getSellPrice().call())
+        .then((sellPrice) => {
+          contractDetails.sellPrice = window.localWeb3.utils.fromWei(String(sellPrice), 'ether');
           contractDetails.retrievedAttributes++;
         })
-        .catch(e => {
-          console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
+        .catch((e) => {
+          console.debug('retrieveContractDetails method - error retrieving sellPrice', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return (contractDetails.hasOwnProperty("owner") && !isAdministration) ? contractDetails.owner : contractDetails.contract.methods.owner().call();
+          return contractDetails.hasOwnProperty('owner') && !isAdministration ? contractDetails.owner : contractDetails.contract.methods.owner().call();
         })
-        .then(owner =>  {
+        .then((owner) => {
           if (owner) {
             contractDetails.owner = owner;
             contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
           }
           contractDetails.retrievedAttributes++;
         })
-        .catch(e => {
-          console.debug("retrieveContractDetails method - error retrieving sellPrice", contractDetails.address, new Error(e));
+        .catch((e) => {
+          console.debug('retrieveContractDetails method - error retrieving sellPrice', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return (contractDetails.hasOwnProperty("isApproved") && !isAdministration) ? contractDetails.isApproved : contractDetails.contract.methods.isApprovedAccount(account).call();
+          return contractDetails.hasOwnProperty('isApproved') && !isAdministration ? contractDetails.isApproved : contractDetails.contract.methods.isApprovedAccount(account).call();
         })
-        .then(approvedAccount =>  {
+        .then((approvedAccount) => {
           contractDetails.isApproved = approvedAccount;
         })
-        .catch(e => {
-          console.debug("retrieveContractDetails method - error retrieving isApprovedAccount", contractDetails.address, new Error(e));
+        .catch((e) => {
+          console.debug('retrieveContractDetails method - error retrieving isApprovedAccount', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return (contractDetails.hasOwnProperty("adminLevel") && !isAdministration) ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call();
+          return contractDetails.hasOwnProperty('adminLevel') && !isAdministration ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call();
         })
-        .then(habilitationLevel =>  {
+        .then((habilitationLevel) => {
           if (habilitationLevel) {
             contractDetails.adminLevel = Number(habilitationLevel);
             contractDetails.isAdmin = habilitationLevel > 0;
@@ -219,22 +217,22 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
             }
           }
         })
-        .catch(e => {
-          console.debug("retrieveContractDetails method - error retrieving getAdminLevel", contractDetails.address, new Error(e));
+        .catch((e) => {
+          console.debug('retrieveContractDetails method - error retrieving getAdminLevel', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return (contractDetails.hasOwnProperty("isPaused") && !isAdministration) ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call();
+          return contractDetails.hasOwnProperty('isPaused') && !isAdministration ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call();
         })
-        .then(isPaused =>  {
-          contractDetails.isPaused = isPaused ? true: false;
+        .then((isPaused) => {
+          contractDetails.isPaused = isPaused ? true : false;
           contractDetails.retrievedAttributes++;
         })
-        .catch(e => {
-          console.debug("retrieveContractDetails method - error retrieving isPaused", contractDetails.address, new Error(e));
+        .catch((e) => {
+          console.debug('retrieveContractDetails method - error retrieving isPaused', contractDetails.address, new Error(e));
         });
     })
-    .catch(e => {
-      console.debug("retrieveContractDetails method - error retrieving ERT Token", account, contractDetails, new Error(e), e);
+    .catch((e) => {
+      console.debug('retrieveContractDetails method - error retrieving ERT Token', account, contractDetails, new Error(e), e);
       return contractDetails;
     })
     .then(() => {
@@ -248,7 +246,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         contractDetails.contractTypeLabel = 'ERT Token';
         window.walletContractsDetails[contractDetails.address] = contractDetails;
         window.walletContractsDetails[contractDetails.address.toLowerCase()] = contractDetails;
-      } else if(contractDetails.contractType === 0) {
+      } else if (contractDetails.contractType === 0) {
         contractDetails.contractTypeLabel = 'Standard ERC20 Token';
         window.walletContractsDetails[contractDetails.address] = contractDetails;
         window.walletContractsDetails[contractDetails.address.toLowerCase()] = contractDetails;
@@ -269,11 +267,11 @@ export function newContractInstance(abi, bin, ...args) {
   if (args && args.length) {
     return new window.localWeb3.eth.Contract(abi).deploy({
       data: bin,
-      arguments: args
+      arguments: args,
     });
   } else {
     return new window.localWeb3.eth.Contract(abi).deploy({
-      data: bin
+      data: bin,
     });
   }
 }
@@ -283,15 +281,16 @@ export function newContractInstance(abi, bin, ...args) {
  */
 export function deployContract(contractInstance, account, gasLimit, gasPrice, transactionHashCallback) {
   let transactionHash;
-  return contractInstance.send({
-    from: account,
-    gas: gasLimit,
-    gasPrice: gasPrice
-  })
-    .on('transactionHash', hash => {
-      return transactionHashCallback && transactionHashCallback(transactionHash = hash);
+  return contractInstance
+    .send({
+      from: account,
+      gas: gasLimit,
+      gasPrice: gasPrice,
     })
-    .on('receipt', receipt => {
+    .on('transactionHash', (hash) => {
+      return transactionHashCallback && transactionHashCallback((transactionHash = hash));
+    })
+    .on('receipt', (receipt) => {
       return transactionHashCallback && transactionHashCallback(transactionHash);
     });
 }
@@ -302,21 +301,21 @@ export function deployContract(contractInstance, account, gasLimit, gasPrice, tr
 export function getSavedContractDetails(address, networkId) {
   return fetch(`/portal/rest/wallet/api/contract/getContract?address=${address}&networkId=${networkId}`, {
     method: 'GET',
-    credentials: 'include'
+    credentials: 'include',
   })
-    .then(resp => {
-      if(resp && resp.ok) {
+    .then((resp) => {
+      if (resp && resp.ok) {
         return resp.json();
       } else {
         throw new Error(`Error getting contract details from server with address ${address} on network with id ${networkId}`);
       }
     })
-    .then(contractDetails => {
+    .then((contractDetails) => {
       return contractDetails && contractDetails.address ? contractDetails : null;
     })
-    .catch(e => {
-      console.debug("Error getting contract details from server", e);
-      return null; 
+    .catch((e) => {
+      console.debug('Error getting contract details from server', e);
+      return null;
     });
 }
 
@@ -327,28 +326,30 @@ export function newContractInstanceByName(tokenName, ...args) {
   let contractBin, contractAbi;
   return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
     method: 'GET',
-    credentials: 'include'
+    credentials: 'include',
   })
-    .then(resp => {
-      if(resp && resp.ok) {
+    .then((resp) => {
+      if (resp && resp.ok) {
         return resp.text();
       } else {
         throw new Error(`Cannot find contract BIN with name ${tokenName}`);
       }
     })
-    .then(bin => contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`)
-    .then(() => fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
-      method: 'GET',
-      credentials: 'include'
-    }))
-    .then(resp => {
-      if(resp && resp.ok) {
+    .then((bin) => (contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`))
+    .then(() =>
+      fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+    )
+    .then((resp) => {
+      if (resp && resp.ok) {
         return resp.json();
       } else {
         throw new Error(`Cannot find contract ABI with name ${tokenName}`);
       }
     })
-    .then(abi => contractAbi = abi)
+    .then((abi) => (contractAbi = abi))
     .then(() => newContractInstance(contractAbi, contractBin, ...args));
 }
 
@@ -359,28 +360,30 @@ export function newContractInstanceByNameAndAddress(tokenName, tokenAddress) {
   let contractBin, contractAbi;
   return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
     method: 'GET',
-    credentials: 'include'
+    credentials: 'include',
   })
-    .then(resp => {
-      if(resp && resp.ok) {
+    .then((resp) => {
+      if (resp && resp.ok) {
         return resp.text();
       } else {
         throw new Error(`Cannot find contract BIN with name ${tokenName}`);
       }
     })
-    .then(bin => contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`)
-    .then(() => fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
-      method: 'GET',
-      credentials: 'include'
-    }))
-    .then(resp => {
-      if(resp && resp.ok) {
+    .then((bin) => (contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`))
+    .then(() =>
+      fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+    )
+    .then((resp) => {
+      if (resp && resp.ok) {
         return resp.json();
       } else {
         throw new Error(`Cannot find contract ABI with name ${tokenName}`);
       }
     })
-    .then(abi => contractAbi = abi)
+    .then((abi) => (contractAbi = abi))
     .then(() => getContractInstance(window.localWeb3.eth.defaultAccount, tokenAddress, false, contractAbi, contractBin));
 }
 
@@ -401,13 +404,13 @@ export function removeContractAddressFromDefault(address) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: $.param({
       address: address,
-      networkId: window.walletSettings.currentNetworkId
-    })
-  }).then(resp => {
+      networkId: window.walletSettings.currentNetworkId,
+    }),
+  }).then((resp) => {
     if (resp && resp.ok) {
       window.walletSettings.defaultContractsToDisplay.splice(window.walletSettings.defaultContractsToDisplay.indexOf(address), 1);
     } else {
@@ -420,7 +423,7 @@ export function removeContractAddressFromDefault(address) {
  * Save a new Contract address as default contract to display for all users
  */
 export function saveContractAddressAsDefault(contractDetails) {
-  console.debug("save contract as default", contractDetails);
+  console.debug('save contract as default', contractDetails);
   contractDetails.defaultContract = true;
   return saveContractAddressOnServer(contractDetails);
 }
@@ -434,8 +437,8 @@ export function saveContractAddressOnServer(contractDetails) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       name: contractDetails.name,
@@ -446,18 +449,17 @@ export function saveContractAddressOnServer(contractDetails) {
       contractType: contractDetails.contractType,
       sellPrice: contractDetails.sellPrice,
       decimals: contractDetails.decimals,
-      defaultContract: contractDetails.defaultContract ? contractDetails.defaultContract : false
-    })
-  })
-    .then(resp => {
-      if (!window.walletSettings.defaultContractsToDisplay) {
-        window.walletSettings.defaultContractsToDisplay = [];
-      }
-      if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
-        window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
-      }
-      return resp;
-    });
+      defaultContract: contractDetails.defaultContract ? contractDetails.defaultContract : false,
+    }),
+  }).then((resp) => {
+    if (!window.walletSettings.defaultContractsToDisplay) {
+      window.walletSettings.defaultContractsToDisplay = [];
+    }
+    if (resp && resp.ok && window.walletSettings.defaultContractsToDisplay.indexOf(contractDetails.address) < 0) {
+      window.walletSettings.defaultContractsToDisplay.push(contractDetails.address);
+    }
+    return resp;
+  });
 }
 
 /*
@@ -481,24 +483,23 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       }
 
       let overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
-      overviewAccounts = overviewAccounts.filter(contractAddress => contractAddress && contractAddress.indexOf('0x') === 0);
+      overviewAccounts = overviewAccounts.filter((contractAddress) => contractAddress && contractAddress.indexOf('0x') === 0);
       if (isDefaultContract || overviewAccounts.indexOf(address) < 0) {
-        return retrieveContractDetails(account, {address: address, networkId: netId}, true)
-          .then((contractDetails, error) => {
-            if (error) {
-              throw error;
-            }
-            if (contractDetails && !contractDetails.error) {
-              return contractDetails;
-            } else {
-              return false;
-            }
-          });
+        return retrieveContractDetails(account, {address: address, networkId: netId}, true).then((contractDetails, error) => {
+          if (error) {
+            throw error;
+          }
+          if (contractDetails && !contractDetails.error) {
+            return contractDetails;
+          } else {
+            return false;
+          }
+        });
       } else if (!isDefaultContract) {
         throw new Error('Contract already exists');
       }
     })
-    .then(contractDetails => {
+    .then((contractDetails) => {
       if (contractDetails && isDefaultContract) {
         return saveContractAddressAsDefault(contractDetails).then(() => contractDetails);
       }
@@ -533,16 +534,12 @@ export function removeContractDeploymentTransactionsInProgress(networkId, transa
 
 export function getContractInstance(account, address, usePromise, abi, bin) {
   try {
-    const contractInstance = new window.localWeb3.eth.Contract(
-      abi ? abi : window.walletSettings.contractAbi,
-      address,
-      {
-        from: account && account.toLowerCase(),
-        gas: window.walletSettings.userPreferences.defaultGas,
-        gasPrice: window.walletSettings.normalGasPrice,
-        data: bin ? bin : window.walletSettings.contractBin
-      }
-    );
+    const contractInstance = new window.localWeb3.eth.Contract(abi ? abi : window.walletSettings.contractAbi, address, {
+      from: account && account.toLowerCase(),
+      gas: window.walletSettings.userPreferences.defaultGas,
+      gasPrice: window.walletSettings.normalGasPrice,
+      data: bin ? bin : window.walletSettings.contractBin,
+    });
     if (usePromise) {
       return Promise.resolve(contractInstance);
     } else {

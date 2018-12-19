@@ -1,5 +1,5 @@
-import NodeWeb3 from "../main/webapp/js/lib/web3.min.js";
-import EthereumQRPlugin from "../main/webapp/js/lib/ethereum-qr-code.min.js";
+import NodeWeb3 from '../main/webapp/js/lib/web3.min.js';
+import EthereumQRPlugin from '../main/webapp/js/lib/ethereum-qr-code.min.js';
 import $ from 'jquery';
 
 import WalletAdminApp from './components/WalletAdminApp.vue';
@@ -15,5 +15,5 @@ Vue.use(Vuetify);
 
 const vueInstance = new Vue({
   el: '#WalletAdminApp',
-  render: h => h(WalletAdminApp)
+  render: (h) => h(WalletAdminApp),
 });

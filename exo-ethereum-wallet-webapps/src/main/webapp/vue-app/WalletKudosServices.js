@@ -1,18 +1,17 @@
 export function getKudosBudget() {
   return fetch('/portal/rest/wallet/api/kudos/getKudosBudget', {
     method: 'GET',
-    credentials: 'include'
+    credentials: 'include',
   })
-    .then(resp => resp && resp.ok && resp.text())
-    .then(value => Number(value));
+    .then((resp) => resp && resp.ok && resp.text())
+    .then((value) => Number(value));
 }
 
 export function getKudosContract() {
   return fetch('/portal/rest/wallet/api/kudos/getKudosContract', {
     method: 'GET',
-    credentials: 'include'
-  })
-    .then(resp => resp && resp.ok && resp.text());
+    credentials: 'include',
+  }).then((resp) => resp && resp.ok && resp.text());
 }
 
 export function saveKudosTotalBudget(budget) {
@@ -20,17 +19,16 @@ export function saveKudosTotalBudget(budget) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: $.param({budget: Number(budget)})
-  })
-    .then(resp => {
-      if(resp && resp.ok) {
-        return;
-      } else {
-        throw new Error("Error saving parameter");
-      }
-    });
+    body: $.param({budget: Number(budget)}),
+  }).then((resp) => {
+    if (resp && resp.ok) {
+      return;
+    } else {
+      throw new Error('Error saving parameter');
+    }
+  });
 }
 
 export function saveKudosContract(kudosContractAddress) {
@@ -38,15 +36,14 @@ export function saveKudosContract(kudosContractAddress) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: $.param({kudosContract: kudosContractAddress})
-  })
-    .then(resp => {
-      if(resp && resp.ok) {
-        return;
-      } else {
-        throw new Error("Error saving parameter");
-      }
-    });
+    body: $.param({kudosContract: kudosContractAddress}),
+  }).then((resp) => {
+    if (resp && resp.ok) {
+      return;
+    } else {
+      throw new Error('Error saving parameter');
+    }
+  });
 }

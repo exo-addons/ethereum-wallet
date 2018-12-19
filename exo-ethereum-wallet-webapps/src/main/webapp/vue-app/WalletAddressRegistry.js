@@ -9,11 +9,11 @@
 export function searchContact(filter) {
   let items = null;
   return searchUsers(filter)
-    .then(users => items = users && users.length ? users : [])
+    .then((users) => (items = users && users.length ? users : []))
     .then(() => searchSpaces(filter))
-    .then(spaces => items = items.concat(spaces))
+    .then((spaces) => (items = items.concat(spaces)))
     .catch((e) => {
-      console.debug("searchContact method - error", e);
+      console.debug('searchContact method - error', e);
     });
 }
 
@@ -26,29 +26,28 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       type: type,
       id: id,
-      address: address
-    })
-  })
-    .then(resp => {
-      if (resp && resp.ok) {
-        if (isBrowserWallet) {
-          // Save the address as generated using a browser wallet
-          localStorage.setItem(`exo-wallet-${type}-${id}`, address);
-        }
-
-        // Save user's or space's associated address in local storage
-        sessionStorage.setItem(`exo-wallet-address-${type}-${id}`, address);
-        return resp;
-      } else {
-        throw new Error("Error saving wallet address");
+      address: address,
+    }),
+  }).then((resp) => {
+    if (resp && resp.ok) {
+      if (isBrowserWallet) {
+        // Save the address as generated using a browser wallet
+        localStorage.setItem(`exo-wallet-${type}-${id}`, address);
       }
-    });
+
+      // Save user's or space's associated address in local storage
+      sessionStorage.setItem(`exo-wallet-address-${type}-${id}`, address);
+      return resp;
+    } else {
+      throw new Error('Error saving wallet address');
+    }
+  });
 }
 
 /*
@@ -59,18 +58,17 @@ export function searchAddress(id, type) {
   if (address) {
     return Promise.resolve(address);
   }
-  return searchUserOrSpaceObject(id, type)
-    .then(data => {
-      if(data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
-        if (sessionStorage) {
-          sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
-        }
-        return data.address;
-      } else {
-        sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
-        return null;
+  return searchUserOrSpaceObject(id, type).then((data) => {
+    if (data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
+      if (sessionStorage) {
+        sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
       }
-    });
+      return data.address;
+    } else {
+      sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
+      return null;
+    }
+  });
 }
 
 /*
@@ -85,14 +83,13 @@ export function searchAddress(id, type) {
  * }
  */
 export function searchUserOrSpaceObject(id, type) {
-  return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'})
-    .then(resp =>  {
-      if (resp.ok) {
-        return resp.json();
-      } else {
-        return null;
-      }
-    });
+  return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'}).then((resp) => {
+    if (resp.ok) {
+      return resp.json();
+    } else {
+      return null;
+    }
+  });
 }
 
 /*
@@ -113,32 +110,31 @@ export function searchFullName(address) {
   address = address.toLowerCase();
 
   // Get user information from session storage (refreshed when browser closes)
-  const item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase())
-    || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
+  const item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase()) || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
 
   if (item) {
     return Promise.resolve(JSON.parse(item));
   }
 
   return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`, {credentials: 'include'})
-    .then(resp =>  {
+    .then((resp) => {
       if (resp.ok) {
         return resp.json();
       } else {
         return null;
       }
     })
-    .then(item => {
+    .then((item) => {
       if (item && item.name && item.name.length) {
         if (!item.avatar) {
-          item.avatar = item.type === 'user' ? `/rest/v1/social/users/${item.id}/avatar`: `/rest/v1/social/spaces/${item.id}/avatar`;
+          item.avatar = item.type === 'user' ? `/rest/v1/social/users/${item.id}/avatar` : `/rest/v1/social/spaces/${item.id}/avatar`;
         }
         sessionStorage.setItem(`exo-wallet-address-${item.type}-${address}`.toLowerCase(), JSON.stringify(item));
         return item;
       }
     })
     .catch((e) => {
-      console.debug("searchFullName method - error", e);
+      console.debug('searchFullName method - error', e);
     });
 }
 
@@ -150,17 +146,17 @@ export function searchUsers(filter, includeCurrentUserInResults) {
     nameToSearch: filter,
     typeOfRelation: 'mention_activity_stream',
     currentUser: includeCurrentUserInResults ? '' : eXo.env.portal.userName,
-    spaceURL: isOnlySpaceMembers() ? getAccessPermission() : null
+    spaceURL: isOnlySpaceMembers() ? getAccessPermission() : null,
   });
   return fetch(`/portal/rest/social/people/suggest.json?${params}`, {credentials: 'include'})
-    .then(resp =>  {
+    .then((resp) => {
       if (resp.ok) {
         return resp.json();
       } else {
         return null;
       }
     })
-    .then(items => {
+    .then((items) => {
       if (items) {
         if (items.options) {
           items = items.options;
@@ -185,16 +181,16 @@ export function searchUsers(filter, includeCurrentUserInResults) {
  * Search spaces from eXo Platform, used for suggester
  */
 export function searchSpaces(filter, withMembers) {
-  const params = $.param({fields: ["id","prettyName","displayName","avatarUrl"], keyword: filter});
+  const params = $.param({fields: ['id', 'prettyName', 'displayName', 'avatarUrl'], keyword: filter});
   return fetch(`/portal/rest/space/user/searchSpace?${params}`, {credentials: 'include'})
-    .then(resp =>  {
+    .then((resp) => {
       if (resp.ok) {
         return resp.json();
       } else {
         return null;
       }
     })
-    .then(items => {
+    .then((items) => {
       const result = [];
       items.forEach((item) => {
         result.push({
@@ -203,7 +199,7 @@ export function searchSpaces(filter, withMembers) {
           id: item.prettyName,
           id_type: `space_${item.prettyName}`,
           technicalId: item.id,
-          members: withMembers ? item.members : null
+          members: withMembers ? item.members : null,
         });
       });
       return result;

@@ -5,12 +5,9 @@
     </template>
     <v-card class="elevation-12">
       <div v-if="title" class="popupHeader ClearFix">
-        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">{{ title }}</span>
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">{{ title }}</span>
       </div>
-      <v-card-text>
-        <slot name="content"></slot>
-      </v-card-text>
+      <v-card-text> <slot name="content"></slot> </v-card-text>
     </v-card>
   </v-dialog>
 </template>
@@ -22,14 +19,13 @@ export default {
       type: String,
       default: function() {
         return null;
-      }
-    }
+      },
+    },
   },
-  data () {
+  data() {
     return {
-      dialog: false
+      dialog: false,
     };
-  }
+  },
 };
 </script>
-

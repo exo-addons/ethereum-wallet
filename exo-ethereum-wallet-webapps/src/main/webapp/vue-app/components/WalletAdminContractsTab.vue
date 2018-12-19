@@ -1,89 +1,39 @@
 <template>
   <v-card flat>
     <div v-if="newTokenAddress" class="alert alert-success v-content">
-      <i class="uiIconSuccess"></i>
-      Contract created under address: 
+      <i class="uiIconSuccess"></i> Contract created under address:
       <wallet-address :value="newTokenAddress" />
     </div>
-    <div v-if="error && !loading" class="alert alert-error v-content">
-      <i class="uiIconError"></i>{{ error }}
-    </div>
+    <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
     <v-data-table :headers="headers" :items="contracts" :loading="loadingContracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
       <template slot="items" slot-scope="props">
-        <td :class="props.item.error ? 'red--text' : ''" class="clickable" @click="openContractDetails(props.item)">
-          {{ props.item.error ? props.item.error : props.item.name }}
-        </td>
+        <td :class="props.item.error ? 'red--text' : ''" class="clickable" @click="openContractDetails(props.item)">{{ props.item.error ? props.item.error : props.item.name }}</td>
         <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
           <v-progress-circular v-if="props.item.loadingBalance" color="primary" indeterminate size="20" />
-          <span v-else>
-            {{ toFixed(props.item.contractBalance) }} ether
-          </span>
+          <span v-else> {{ toFixed(props.item.contractBalance) }} ether </span>
         </td>
-        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
-          {{ props.item.contractType > 0 && props.item.sellPrice ? `${props.item.sellPrice} ether` : "-" }}
-        </td>
-        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
-          {{ props.item.contractTypeLabel }}
-        </td>
+        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">{{ props.item.contractType > 0 && props.item.sellPrice ? `${props.item.sellPrice} ether` : '-' }}</td>
+        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">{{ props.item.contractTypeLabel }}</td>
         <td v-if="props.item.error" class="text-xs-right">
           <del>{{ props.item.address }}</del>
         </td>
         <td v-else class="text-xs-center">
-          <a
-            v-if="tokenEtherscanLink"
-            :href="`${tokenEtherscanLink}${props.item.address}`"
-            target="_blank"
-            title="Open on etherscan">{{ props.item.address }}</a>
-          <span v-else>{{ props.item.address }}</span>
+          <a v-if="tokenEtherscanLink" :href="`${tokenEtherscanLink}${props.item.address}`" target="_blank" title="Open on etherscan">{{ props.item.address }}</a> <span v-else>{{ props.item.address }}</span>
         </td>
         <td class="text-xs-right">
           <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
-          <v-btn v-else icon ripple @click="deleteContract(props.item, $event)">
-            <i class="uiIconTrash uiIconBlue"></i>
-          </v-btn>
+          <v-btn v-else icon ripple @click="deleteContract(props.item, $event)"> <i class="uiIconTrash uiIconBlue"></i> </v-btn>
         </td>
       </template>
     </v-data-table>
     <v-divider />
     <div class="text-xs-center pt-2 pb-2">
-      <deploy-new-contract 
-        :account="walletAddress"
-        :network-id="networkId"
-        :fiat-symbol="fiatSymbol"
-        @list-updated="updateList($event)"/>
-      <button class="btn mt-3" @click="showAddContractModal = true">
-        Add Existing contract Address
-      </button>
-      <add-contract-modal
-        :net-id="networkId"
-        :account="walletAddress"
-        :open="showAddContractModal"
-        is-default-contract
-        @added="contractsModified"
-        @close="showAddContractModal = false" />
+      <deploy-new-contract :account="walletAddress" :network-id="networkId" :fiat-symbol="fiatSymbol" @list-updated="updateList($event)" />
+      <button class="btn mt-3" @click="showAddContractModal = true">Add Existing contract Address</button>
+      <add-contract-modal :net-id="networkId" :account="walletAddress" :open="showAddContractModal" is-default-contract @added="contractsModified" @close="showAddContractModal = false" />
     </div>
     <!-- The selected account detail -->
-    <v-navigation-drawer
-      id="contractDetailsDrawer"
-      v-model="seeContractDetails"
-      fixed
-      temporary
-      right
-      stateless
-      width="700"
-      max-width="100vw">
-      <contract-detail
-        ref="contractDetail"
-        :wallet-address="walletAddress"
-        :contract-details="selectedContractDetails"
-        :network-id="networkId"
-        :is-display-only="!selectedContractDetails || !selectedContractDetails.isAdmin"
-        :fiat-symbol="fiatSymbol"
-        :wallets="wallets"
-        :loading-wallets="loadingWallets"
-        @back="back()"
-        @pending-transaction="watchPendingTransaction" />
-    </v-navigation-drawer>
+    <v-navigation-drawer id="contractDetailsDrawer" v-model="seeContractDetails" fixed temporary right stateless width="700" max-width="100vw"> <contract-detail ref="contractDetail" :wallet-address="walletAddress" :contract-details="selectedContractDetails" :network-id="networkId" :is-display-only="!selectedContractDetails || !selectedContractDetails.isAdmin" :fiat-symbol="fiatSymbol" :wallets="wallets" :loading-wallets="loadingWallets" @back="back()" @pending-transaction="watchPendingTransaction" /> </v-navigation-drawer>
   </v-card>
 </template>
 <script>
@@ -100,53 +50,53 @@ export default {
     DeployNewContract,
     AddContractModal,
     WalletAddress,
-    ContractDetail
+    ContractDetail,
   },
   props: {
     networkId: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     walletAddress: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     loading: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     loadingWallets: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     fiatSymbol: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     tokenEtherscanLink: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     wallets: {
       type: Object,
       default: function() {
         return null;
-      }
-    }
+      },
+    },
   },
-  data () {
+  data() {
     return {
       loadingContracts: false,
       newTokenAddress: null,
@@ -161,149 +111,148 @@ export default {
           text: 'Token name',
           align: 'left',
           sortable: false,
-          value: 'name'
+          value: 'name',
         },
         {
           text: 'Contract balance',
           align: 'center',
           sortable: false,
-          value: 'contractBalance'
+          value: 'contractBalance',
         },
         {
           text: 'Token sell price',
           align: 'center',
           sortable: false,
-          value: 'sellPrice'
+          value: 'sellPrice',
         },
         {
           text: 'Contract type',
           align: 'center',
           sortable: false,
-          value: 'contractType'
+          value: 'contractType',
         },
         {
           text: 'Contract address',
           align: 'center',
           sortable: false,
-          value: 'address'
+          value: 'address',
         },
         {
           text: '',
           align: 'center',
           sortable: false,
-          value: 'action'
-        }
-      ]
+          value: 'action',
+        },
+      ],
     };
   },
   watch: {
     loading() {
-      if(this.loading) {
+      if (this.loading) {
         this.back();
       }
     },
     seeContractDetails() {
       if (this.seeContractDetails) {
-        $("body").addClass("hide-scroll");
+        $('body').addClass('hide-scroll');
         const thiss = this;
         setTimeout(() => {
           thiss.seeContractDetailsPermanent = true;
         }, 200);
       } else {
-        $("body").removeClass("hide-scroll");
+        $('body').removeClass('hide-scroll');
         this.seeContractDetailsPermanent = false;
       }
     },
     contracts() {
-      this.$emit("contract-list-modified");
-    }
+      this.$emit('contract-list-modified');
+    },
   },
   methods: {
     init(avoidReloading) {
       const previouslyRetrievedContracts = this.contracts;
       this.contracts = [];
       return (avoidReloading ? Promise.resolve(previouslyRetrievedContracts) : getContractsDetails(this.walletAddress, this.networkId, true, true))
-        .then(contracts => this.contracts = contracts ? contracts.filter(contract => contract.isDefault) : [])
+        .then((contracts) => (this.contracts = contracts ? contracts.filter((contract) => contract.isDefault) : []))
         .then(() => getContractDeploymentTransactionsInProgress(this.networkId))
-        .then(contractsInProgress => {
-          Object.keys(contractsInProgress).forEach(hash => {
+        .then((contractsInProgress) => {
+          Object.keys(contractsInProgress).forEach((hash) => {
             const contractInProgress = contractsInProgress[hash];
-            getTransactionReceipt(contractInProgress.hash)
-              .then(receipt => {
-                if (!receipt) {
-                  // pending transaction
-                  this.contracts.push({
-                    name: contractInProgress.name,
-                    hash: contractInProgress.hash,
-                    address: 'Transaction in progress...',
-                    isPending: true
-                  });
-                  const thiss = this;
-                  watchTransactionStatus(contractInProgress.hash, () => {
-                    thiss.init();
-                  });
-                } else if(receipt.status && receipt.contractAddress) {
-                  const contractAddress = receipt.contractAddress.toLowerCase();
-                  // success transaction
-                  // Add contract as default if not yet present
-                  if (contractInProgress.isDefault && !this.contracts.find(contract => contract.address === contractAddress)) {
-                    // This may happen when the contract is already added in //
-                    if (window.walletSettings.defaultContractsToDisplay.indexOf(contractAddress)) {
-                      this.newTokenAddress = contractAddress;
-                      removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
-                      this.contractsModified();
-                    } else {
-                      // Save newly created contract as default
-                      return saveContractAddress(this.walletAddress, contractAddress, this.networkId, contractInProgress.isDefault)
-                        .then((added, error) => {
-                          if (error) {
-                            throw error;
-                          }
-                          if (added) {
-                            this.newTokenAddress = contractAddress;
-                            removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
-                            this.contractsModified();
-                          } else {
-                            this.error = `Address ${contractAddress} is not recognized as ERC20 Token contract's address`;
-                          }
-                          this.loadingContracts = false;
-                        })
-                        .catch(err => {
-                          console.debug("saveContractAddress method - error", err);
-                          this.loadingContracts = false;
-                          this.error = `${err}`;
-                        });
-                    }
-                  } else {
-                    // The contract was already saved
+            getTransactionReceipt(contractInProgress.hash).then((receipt) => {
+              if (!receipt) {
+                // pending transaction
+                this.contracts.push({
+                  name: contractInProgress.name,
+                  hash: contractInProgress.hash,
+                  address: 'Transaction in progress...',
+                  isPending: true,
+                });
+                const thiss = this;
+                watchTransactionStatus(contractInProgress.hash, () => {
+                  thiss.init();
+                });
+              } else if (receipt.status && receipt.contractAddress) {
+                const contractAddress = receipt.contractAddress.toLowerCase();
+                // success transaction
+                // Add contract as default if not yet present
+                if (contractInProgress.isDefault && !this.contracts.find((contract) => contract.address === contractAddress)) {
+                  // This may happen when the contract is already added in //
+                  if (window.walletSettings.defaultContractsToDisplay.indexOf(contractAddress)) {
+                    this.newTokenAddress = contractAddress;
                     removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
+                    this.contractsModified();
+                  } else {
+                    // Save newly created contract as default
+                    return saveContractAddress(this.walletAddress, contractAddress, this.networkId, contractInProgress.isDefault)
+                      .then((added, error) => {
+                        if (error) {
+                          throw error;
+                        }
+                        if (added) {
+                          this.newTokenAddress = contractAddress;
+                          removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
+                          this.contractsModified();
+                        } else {
+                          this.error = `Address ${contractAddress} is not recognized as ERC20 Token contract's address`;
+                        }
+                        this.loadingContracts = false;
+                      })
+                      .catch((err) => {
+                        console.debug('saveContractAddress method - error', err);
+                        this.loadingContracts = false;
+                        this.error = `${err}`;
+                      });
                   }
                 } else {
-                  // failed transaction
-                  this.contracts.push({
-                    name: contractInProgress.name,
-                    hash: contractInProgress.hash,
-                    address: '',
-                    error: `Transaction failed on contract ${contractInProgress.name}`
-                  });
+                  // The contract was already saved
+                  removeContractDeploymentTransactionsInProgress(this.networkId, contractInProgress.hash);
                 }
-              });
+              } else {
+                // failed transaction
+                this.contracts.push({
+                  name: contractInProgress.name,
+                  hash: contractInProgress.hash,
+                  address: '',
+                  error: `Transaction failed on contract ${contractInProgress.name}`,
+                });
+              }
+            });
           });
         })
-        .then(() => this.$emit("contracts-loaded", this.contracts));
+        .then(() => this.$emit('contracts-loaded', this.contracts));
     },
     contractsModified() {
       this.init()
-        .then(() => this.loadingContracts = false)
-        .catch(e => {
-          console.debug("init method - error", e);
+        .then(() => (this.loadingContracts = false))
+        .catch((e) => {
+          console.debug('init method - error', e);
           this.loadingContracts = false;
           this.error = `Error adding new contract address: ${e}`;
         });
     },
     deleteContract(item, event) {
       if (!item || !item.address) {
-        this.error = 'Contract doesn\'t have an address';
+        this.error = "Contract doesn't have an address";
       }
       this.loadingContracts = true;
       if (item.hash) {
@@ -318,9 +267,9 @@ export default {
               return this.init();
             }
           })
-          .then(() => this.loadingContracts = false)
-          .catch(e => {
-            console.debug("removeContractAddressFromDefault method - error", e);
+          .then(() => (this.loadingContracts = false))
+          .catch((e) => {
+            console.debug('removeContractAddressFromDefault method - error', e);
             this.loadingContracts = false;
             this.error = 'Error deleting contract as default';
           });
@@ -334,9 +283,9 @@ export default {
         this.newTokenAddress = address;
       }
       this.init()
-        .then(() => this.loadingContracts = false)
-        .catch(e => {
-          console.debug("init method - error", e);
+        .then(() => (this.loadingContracts = false))
+        .catch((e) => {
+          console.debug('init method - error', e);
           this.loadingContracts = false;
           this.error = `Error encountered: ${e}`;
         });
@@ -350,9 +299,11 @@ export default {
 
       this.$nextTick(() => {
         const thiss = this;
-        $('.v-overlay').off('click').on('click', event => {
-          thiss.back();
-        });
+        $('.v-overlay')
+          .off('click')
+          .on('click', (event) => {
+            thiss.back();
+          });
       });
     },
     back() {
@@ -362,7 +313,7 @@ export default {
     },
     watchPendingTransaction(...args) {
       this.$emit('pending-transaction', ...args);
-    }
-  }
+    },
+  },
 };
 </script>

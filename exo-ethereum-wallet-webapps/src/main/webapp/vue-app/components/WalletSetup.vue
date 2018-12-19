@@ -1,55 +1,31 @@
 <template>
   <v-flex id="walletSetup" class="text-xs-center">
     <div v-if="displayWalletBackup" class="alert alert-warning">
-      <i class="uiIconWarning"></i>
-      Your wallet is not backed up yet.
+      <i class="uiIconWarning"></i> Your wallet is not backed up yet.
       <wallet-backup-modal class="ml-3" display-complete-message @copied="hideBackupMessage()" />
       <a class="ml-3" href="javascript:void(0);" @click="skipWalletBackedUp">Don't ask me again</a>
     </div>
 
     <div v-if="displayResetPassword" class="alert alert-warning">
-      <i class="uiIconWarning"></i>
-      Your wallet is not secured yet.
-      <wallet-reset-modal class="ml-3" button-label="Set a password" @reseted="hideSetPasswordMessage();$emit('refresh');"/>
+      <i class="uiIconWarning"></i> Your wallet is not secured yet.
+      <wallet-reset-modal
+        class="ml-3"
+        button-label="Set a password"
+        @reseted="
+          hideSetPasswordMessage();
+          $emit('refresh');
+        "
+      />
       <a class="ml-3" href="javascript:void(0);" @click="hideSetPasswordMessage">Don't ask me again</a>
     </div>
 
     <div v-if="displayWalletCreationToolbar" class="alert alert-info">
-      <i class="uiIconInfo"></i>
-      <span v-if="isSpace">No private key was found in current browser. <strong>Space wallet</strong> is displayed in readonly mode.</span>
-      <span v-else>No private key was found in current browser. <strong>Your wallet</strong> is displayed in readonly mode.</span>
-      <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="displayWalletSetupActions()">More options</a>
+      <i class="uiIconInfo"></i> <span v-if="isSpace">No private key was found in current browser. <strong>Space wallet</strong> is displayed in readonly mode.</span> <span v-else>No private key was found in current browser. <strong>Your wallet</strong> is displayed in readonly mode.</span> <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="displayWalletSetupActions()">More options</a>
     </div>
 
-    <div v-if="displayWalletNotExistingYet" class="alert alert-info">
-      <i class="uiIconInfo"></i>
-      Space administrator hasn't set a Wallet for this space yet
-    </div>
-    <wallet-metamask-setup
-      v-else-if="useMetamask"
-      ref="walletMetamaskSetup"
-      :is-space="isSpace"
-      :is-space-administrator="isSpaceAdministrator"
-      :wallet-address="walletAddress"
-      :refresh-index="refreshIndex"
-      :is-administration="isAdministration"
-      :loading="loading"
-      @loading="$emit('loading')"
-      @refresh="refresh()"
-      @end-loading="$emit('end-loading')"
-      @error="$emit('error', $event)" />
-    <wallet-browser-setup
-      v-else-if="displayWalletSetup"
-      ref="walletBrowserSetup"
-      :is-space="isSpace"
-      :is-space-administrator="isSpaceAdministrator"
-      :refresh-index="refreshIndex"
-      :is-administration="isAdministration"
-      :loading="loading"
-      @configured="refresh()"
-      @loading="$emit('loading')"
-      @end-loading="$emit('end-loading')"
-      @error="$emit('error', $event)" />
+    <div v-if="displayWalletNotExistingYet" class="alert alert-info"><i class="uiIconInfo"></i> Space administrator hasn't set a Wallet for this space yet</div>
+    <wallet-metamask-setup v-else-if="useMetamask" ref="walletMetamaskSetup" :is-space="isSpace" :is-space-administrator="isSpaceAdministrator" :wallet-address="walletAddress" :refresh-index="refreshIndex" :is-administration="isAdministration" :loading="loading" @loading="$emit('loading')" @refresh="refresh()" @end-loading="$emit('end-loading')" @error="$emit('error', $event)" />
+    <wallet-browser-setup v-else-if="displayWalletSetup" ref="walletBrowserSetup" :is-space="isSpace" :is-space-administrator="isSpaceAdministrator" :refresh-index="refreshIndex" :is-administration="isAdministration" :loading="loading" @configured="refresh()" @loading="$emit('loading')" @end-loading="$emit('end-loading')" @error="$emit('error', $event)" />
   </v-flex>
 </template>
 
@@ -66,39 +42,39 @@ export default {
     WalletBrowserSetup,
     WalletMetamaskSetup,
     WalletResetModal,
-    WalletBackupModal
+    WalletBackupModal,
   },
   props: {
     isSpace: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     loading: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     isAdministration: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     walletAddress: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     refreshIndex: {
       type: Number,
       default: function() {
         return 0;
-      }
-    }
+      },
+    },
   },
   data() {
     return {
@@ -111,7 +87,7 @@ export default {
       displayWalletSetup: false,
       browserWalletBackedUp: true,
       watchMetamaskAccountInterval: null,
-      detectedMetamaskAccount: null
+      detectedMetamaskAccount: null,
     };
   },
   computed: {
@@ -126,16 +102,16 @@ export default {
     },
     displayResetPassword() {
       return !this.isAdministration && this.walletAddress && !this.useMetamask && this.browserWalletExists && !this.skipWalletPasswordSet && this.autoGenerated;
-    }
+    },
   },
   watch: {
     refreshIndex() {
       this.init();
-    }
+    },
   },
   methods: {
     refresh() {
-      this.$emit("refresh");
+      this.$emit('refresh');
     },
     init() {
       if (!window.walletSettings) {
@@ -150,7 +126,6 @@ export default {
       this.skipWalletPasswordSet = window.walletSettings.userPreferences.skipWalletPasswordSet;
 
       this.displayWalletSetup = !this.walletAddress && (!this.isSpace || this.isSpaceAdministrator);
-
 
       if (this.useMetamask && window.walletSettings.enablingMetamaskAccountDone) {
         this.detectedMetamaskAccount = window.walletSettings.detectedMetamaskAccount;
@@ -193,16 +168,13 @@ export default {
           return;
         }
 
-        window.walletSettings.detectedMetamaskAccount = window.web3
-                                                        && window.web3.eth
-                                                        && window.web3.eth.defaultAccount
-                                                        && window.web3.eth.defaultAccount.toLowerCase();
+        window.walletSettings.detectedMetamaskAccount = window.web3 && window.web3.eth && window.web3.eth.defaultAccount && window.web3.eth.defaultAccount.toLowerCase();
         if (window.walletSettings.detectedMetamaskAccount && window.walletSettings.detectedMetamaskAccount !== thiss.detectedMetamaskAccount) {
           thiss.$emit('refresh');
           return;
         }
       }, 2000);
-    }
-  }
+    },
+  },
 };
 </script>

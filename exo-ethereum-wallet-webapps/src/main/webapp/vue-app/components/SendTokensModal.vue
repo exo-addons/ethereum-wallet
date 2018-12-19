@@ -6,21 +6,10 @@
         <v-icon>send</v-icon>
       </v-btn>
     </v-bottom-nav>
-    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">
-      Send tokens
-    </button>
+    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">Send tokens</button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix">
-        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">Send Tokens</span>
-      </div>
-      <send-tokens-form ref="sendTokensForm"
-                        :account="account"
-                        :contract-details="contractDetails"
-                        class="pt-4"
-                        @sent="$emit('sent', $event, contractDetails)"
-                        @close="dialog = false"
-                        @error="$emit('error', $event)" />
+      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Send Tokens</span></div>
+      <send-tokens-form ref="sendTokensForm" :account="account" :contract-details="contractDetails" class="pt-4" @sent="$emit('sent', $event, contractDetails)" @close="dialog = false" @error="$emit('error', $event)" />
     </v-card>
   </v-dialog>
 </template>
@@ -32,53 +21,53 @@ import {setDraggable} from '../WalletUtils.js';
 
 export default {
   components: {
-    SendTokensForm
+    SendTokensForm,
   },
   props: {
     account: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     contractDetails: {
       type: Object,
       default: function() {
         return {};
-      }
+      },
     },
     noButton: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     useNavigation: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     isReadonly: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     open: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     contract: {
       type: Object,
       default: function() {
         return {};
-      }
-    }
+      },
+    },
   },
-  data () {
+  data() {
     return {
       dialog: null,
     };
@@ -91,16 +80,8 @@ export default {
       return this.contractDetails && this.contractDetails.etherBalance;
     },
     disabled() {
-      return this.isReadonly
-        || !this.balance
-        || this.balance === 0
-        || (typeof this.balance === "string" 
-            && (!this.balance.length || this.balance.trim() === "0"))
-        || !this.etherBalance
-        || this.etherBalance === 0
-        || (typeof this.etherBalance === "string" 
-            && (!this.etherBalance.length || this.etherBalance.trim() === "0"));
-    }
+      return this.isReadonly || !this.balance || this.balance === 0 || (typeof this.balance === 'string' && (!this.balance.length || this.balance.trim() === '0')) || !this.etherBalance || this.etherBalance === 0 || (typeof this.etherBalance === 'string' && (!this.etherBalance.length || this.etherBalance.trim() === '0'));
+    },
   },
   watch: {
     open() {
@@ -117,8 +98,7 @@ export default {
       } else {
         this.$emit('close');
       }
-    }
-  }
+    },
+  },
 };
 </script>
-

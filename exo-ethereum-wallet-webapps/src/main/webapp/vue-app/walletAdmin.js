@@ -7,5 +7,5 @@ Vue.use(Vuetify);
 
 const vueInstance = new Vue({
   el: '#WalletAdminApp',
-  render: h => h(WalletAdminApp)
+  render: (h) => h(WalletAdminApp),
 });

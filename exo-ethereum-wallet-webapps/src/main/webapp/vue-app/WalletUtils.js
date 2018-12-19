@@ -5,21 +5,21 @@ const DECIMALS = 3;
 const DECIMALS_POW = Math.pow(10, DECIMALS);
 
 export function etherToFiat(amount) {
-  if (window.walletSettings.fiatPrice && amount)  {
+  if (window.walletSettings.fiatPrice && amount) {
     return toFixed(window.walletSettings.fiatPrice * amount);
   }
   return 0;
 }
 
 export function gasToEther(amount, gasPriceInEther) {
-  if (gasPriceInEther && amount)  {
-    return (gasPriceInEther * amount);
+  if (gasPriceInEther && amount) {
+    return gasPriceInEther * amount;
   }
   return 0;
 }
 
 export function gasToFiat(amount, gasPriceInEther) {
-  if (window.walletSettings && window.walletSettings.fiatPrice && gasPriceInEther && amount)  {
+  if (window.walletSettings && window.walletSettings.fiatPrice && gasPriceInEther && amount) {
     return toFixed(gasPriceInEther * window.walletSettings.fiatPrice * amount);
   }
   return 0;
@@ -31,7 +31,7 @@ export function retrieveFiatExchangeRate() {
   const currency = window.walletSettings && window.walletSettings.userPreferences.currency ? window.walletSettings.userPreferences.currency : 'usd';
   // Retrieve Fiat <=> Ether exchange rate
   return retrieveFiatExchangeRateOnline(currency)
-    .then(content => {
+    .then((content) => {
       if (content && content.length && content[0][`price_${currency}`]) {
         localStorage.setItem(`exo-wallet-exchange-${currency}`, JSON.stringify(content));
       } else {
@@ -66,28 +66,22 @@ export function initWeb3(isSpace, isAdmin) {
     throw new Error(constants.ERROR_WALLET_SETTINGS_NOT_LOADED);
   }
 
-  if (window.walletSettings.userPreferences.useMetamask
-      && window.ethereum
-      && window.ethereum.isMetaMask
-      && window.web3
-      && window.web3.isConnected
-      && window.web3.isConnected()) {
-
+  if (window.walletSettings.userPreferences.useMetamask && window.ethereum && window.ethereum.isMetaMask && window.web3 && window.web3.isConnected && window.web3.isConnected()) {
     const tempWeb3 = new LocalWeb3(window.web3.currentProvider);
 
     try {
       return checkMetamaskEnabled()
-        .then(accounts => window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length && accounts[0] && accounts[0].toLowerCase())
-        .then(address => {
+        .then((accounts) => (window.walletSettings.detectedMetamaskAccount = tempWeb3.eth.defaultAccount = accounts && accounts.length && accounts[0] && accounts[0].toLowerCase()))
+        .then((address) => {
           if (address) {
             window.walletSettings.metamaskConnected = true;
           } else {
             window.walletSettings.metamaskConnected = false;
           }
-  
+
           // Display wallet in read only mode when selected Metamask account is
           // not the associated one
-          if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected ||  !tempWeb3.eth.defaultAccount || (!isAdmin && window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
+          if ((isSpace && !window.walletSettings.isSpaceAdministrator) || !window.walletSettings.metamaskConnected || !tempWeb3.eth.defaultAccount || (!isAdmin && window.walletSettings.userPreferences.walletAddress && tempWeb3.eth.defaultAccount.toLowerCase() !== window.walletSettings.userPreferences.walletAddress)) {
             createLocalWeb3Instance(isSpace, true);
           } else {
             window.localWeb3 = tempWeb3;
@@ -95,9 +89,9 @@ export function initWeb3(isSpace, isAdmin) {
           }
           return checkNetworkStatus();
         })
-        .catch(e => {
-          console.debug("error retrieving metamask connection status. Consider Metamask as disconnected", e);
-  
+        .catch((e) => {
+          console.debug('error retrieving metamask connection status. Consider Metamask as disconnected', e);
+
           window.walletSettings.metamaskConnected = false;
           createLocalWeb3Instance(isSpace, true);
           return checkNetworkStatus();
@@ -105,8 +99,8 @@ export function initWeb3(isSpace, isAdmin) {
         .finally(() => {
           window.walletSettings.enablingMetamaskAccountDone = true;
         });
-    } catch(e) {
-      console.error("Error while enabling Metamask", e);
+    } catch (e) {
+      console.error('Error while enabling Metamask', e);
     }
   } else {
     createLocalWeb3Instance(isSpace, window.walletSettings.userPreferences.useMetamask);
@@ -120,26 +114,22 @@ export function initSettings(isSpace) {
   clearCache();
 
   return fetch(`/portal/rest/wallet/api/global-settings?networkId=0&spaceId=${spaceId}`, {credentials: 'include'})
-    .then(resp =>  {
+    .then((resp) => {
       if (resp && resp.ok) {
         return resp.json();
       } else {
         return null;
       }
     })
-    .then(settings => {
-      if (settings && (settings.isWalletEnabled ||  settings.isAdmin)) {
+    .then((settings) => {
+      if (settings && (settings.isWalletEnabled || settings.isAdmin)) {
         window.walletSettings = window.walletSettings || {};
         window.walletSettings.userPreferences = {};
         window.walletSettings = $.extend(window.walletSettings, settings);
         window.walletSettings.enableDelegation = window.walletSettings.hasOwnProperty('enableDelegation') ? window.walletSettings.enableDelegation : true;
         window.walletSettings.defaultGas = window.walletSettings.defaultGas || 35000;
-        window.walletSettings.userPreferences.defaultGas = 
-          window.walletSettings.userPreferences.defaultGas || window.walletSettings.defaultGas;
-        window.walletSettings.userPreferences.enableDelegation =
-          window.walletSettings.userPreferences.hasOwnProperty('enableDelegation') ?
-            window.walletSettings.userPreferences.enableDelegation
-            : window.walletSettings.enableDelegation;
+        window.walletSettings.userPreferences.defaultGas = window.walletSettings.userPreferences.defaultGas || window.walletSettings.defaultGas;
+        window.walletSettings.userPreferences.enableDelegation = window.walletSettings.userPreferences.hasOwnProperty('enableDelegation') ? window.walletSettings.userPreferences.enableDelegation : window.walletSettings.enableDelegation;
 
         if (!window.walletSettings.defaultOverviewAccounts || !window.walletSettings.defaultOverviewAccounts.length) {
           if (window.walletSettings.defaultContractsToDisplay) {
@@ -150,19 +140,18 @@ export function initSettings(isSpace) {
           }
         }
         window.walletSettings.defaultPrincipalAccount = window.walletSettings.defaultPrincipalAccount || window.walletSettings.defaultOverviewAccounts[0];
-        window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts
-          || window.walletSettings.defaultOverviewAccounts || [];
+        window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || window.walletSettings.defaultOverviewAccounts || [];
 
         // Remove contracts that are removed from administration
-        if(window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.length) {
-          window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts.filter(contractAddress =>  contractAddress && (contractAddress.trim().indexOf("0x") < 0 || window.walletSettings.defaultContractsToDisplay.indexOf(contractAddress.trim()) >= 0));
+        if (window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.length) {
+          window.walletSettings.userPreferences.overviewAccounts = window.walletSettings.userPreferences.overviewAccounts.filter((contractAddress) => contractAddress && (contractAddress.trim().indexOf('0x') < 0 || window.walletSettings.defaultContractsToDisplay.indexOf(contractAddress.trim()) >= 0));
         }
 
         // Display configured default contracts to display in administration
         window.walletSettings.userPreferences.overviewAccountsToDisplay = window.walletSettings.userPreferences.overviewAccounts.slice(0);
         if (window.walletSettings.defaultOverviewAccounts && window.walletSettings.defaultOverviewAccounts.length) {
-          window.walletSettings.defaultOverviewAccounts.forEach(defaultOverviewAccount => {
-            if (defaultOverviewAccount && defaultOverviewAccount.indexOf("0x") === 0 && window.walletSettings.userPreferences.overviewAccountsToDisplay.indexOf(defaultOverviewAccount) < 0) {
+          window.walletSettings.defaultOverviewAccounts.forEach((defaultOverviewAccount) => {
+            if (defaultOverviewAccount && defaultOverviewAccount.indexOf('0x') === 0 && window.walletSettings.userPreferences.overviewAccountsToDisplay.indexOf(defaultOverviewAccount) < 0) {
               window.walletSettings.userPreferences.overviewAccountsToDisplay.unshift(defaultOverviewAccount);
             }
           });
@@ -185,15 +174,14 @@ export function initSettings(isSpace) {
         }
 
         if (isSpace && spaceGroup) {
-          return initSpaceAccount(spaceGroup)
-            .then(retrieveFiatExchangeRate);
+          return initSpaceAccount(spaceGroup).then(retrieveFiatExchangeRate);
         } else {
           return retrieveFiatExchangeRate();
         }
       }
     })
-    .catch(e => {
-      console.debug("initSettings method - error", e);
+    .catch((e) => {
+      console.debug('initSettings method - error', e);
       throw e;
     });
 }
@@ -224,17 +212,16 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
     window.watchingTransactions[hash] = [];
     initWatching = true;
   }
-  window.localWeb3.eth.getTransaction(hash)
-    .then(transaction => {
-      if(transaction) {
-        window.watchingTransactions[hash].push(transactionFinishedcallback);
-        if(initWatching) {
-          waitAsyncForTransactionStatus(hash);
-        }
-      } else {
-        transactionFinishedcallback(null);
+  window.localWeb3.eth.getTransaction(hash).then((transaction) => {
+    if (transaction) {
+      window.watchingTransactions[hash].push(transactionFinishedcallback);
+      if (initWatching) {
+        waitAsyncForTransactionStatus(hash);
       }
-    });
+    } else {
+      transactionFinishedcallback(null);
+    }
+  });
 }
 
 export function getTransactionReceipt(hash) {
@@ -242,10 +229,11 @@ export function getTransactionReceipt(hash) {
 }
 
 export function computeNetwork() {
-  return window.localWeb3.eth.net.getId()
+  return window.localWeb3.eth.net
+    .getId()
     .then((networkId, error) => {
       if (error) {
-        console.debug("Error computing network id", error);
+        console.debug('Error computing network id', error);
         throw error;
       }
       if (networkId) {
@@ -253,18 +241,18 @@ export function computeNetwork() {
         window.walletSettings.currentNetworkId = networkId;
         return window.localWeb3.eth.net.getNetworkType();
       } else {
-        console.debug("Network is disconnected");
-        throw new Error("Network is disconnected");
+        console.debug('Network is disconnected');
+        throw new Error('Network is disconnected');
       }
     })
     .then((netType, error) => {
       if (error) {
-        console.debug("Error computing network type", error);
+        console.debug('Error computing network type', error);
         throw error;
       }
       if (netType) {
         window.walletSettings.currentNetworkType = netType;
-        console.debug("Detected network type:", netType);
+        console.debug('Detected network type:', netType);
       }
     });
 }
@@ -273,14 +261,15 @@ export function computeBalance(account) {
   if (!window.localWeb3) {
     return Promise.reject(new Error("You don't have a wallet yet"));
   }
-  return window.localWeb3.eth.getBalance(account)
+  return window.localWeb3.eth
+    .getBalance(account)
     .then((retrievedBalance, error) => {
       if (error && !retrievedBalance) {
         console.debug(`error retrieving balance of ${account}`, new Error(error));
         throw error;
       }
       if (retrievedBalance) {
-        return window.localWeb3.utils.fromWei(String(retrievedBalance), "ether");
+        return window.localWeb3.utils.fromWei(String(retrievedBalance), 'ether');
       } else {
         return 0;
       }
@@ -291,11 +280,11 @@ export function computeBalance(account) {
       }
       return {
         balance: retrievedBalance,
-        balanceFiat: etherToFiat(retrievedBalance)
+        balanceFiat: etherToFiat(retrievedBalance),
       };
     })
-    .catch(e => {
-      console.debug("Error retrieving balance of account", account, e);
+    .catch((e) => {
+      console.debug('Error retrieving balance of account', account, e);
       return null;
     });
 }
@@ -304,11 +293,7 @@ export function saveBrowerWalletInstance(wallet, password, isSpace, autoGenerate
   const account = window.localWeb3.eth.accounts.wallet.add(wallet);
   const address = account['address'].toLowerCase();
 
-  return saveNewAddress(
-    isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName,
-    isSpace ? 'space' : 'user',
-    address,
-    true)
+  return saveNewAddress(isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName, isSpace ? 'space' : 'user', address, true)
     .then((resp, error) => {
       if (error) {
         throw error;
@@ -336,13 +321,13 @@ export function saveBrowerWallet(password, phrase, address, autoGenerated, save)
   }
 
   if (!password || !password.length) {
-    throw new Error("Password is mandatory");
+    throw new Error('Password is mandatory');
   }
   if (!phrase || !phrase.length) {
-    throw new Error("Empty user settings");
+    throw new Error('Empty user settings');
   }
   if (!address || !address.length) {
-    throw new Error("Address is empty");
+    throw new Error('Address is empty');
   }
 
   password = hashCode(password);
@@ -352,19 +337,19 @@ export function saveBrowerWallet(password, phrase, address, autoGenerated, save)
   // single location
   const saved = window.localWeb3.eth.accounts.wallet.save(password + phrase, address);
   if (!saved || !browserWalletExists(address)) {
-    throw new Error("An unknown error occrred while saving new wallet");
+    throw new Error('An unknown error occrred while saving new wallet');
   }
 
   rememberPassword(save || autoGenerated, password, address);
 
   if (autoGenerated) {
-    localStorage.setItem(`exo-wallet-${address}-userp-autoGenerated`, "true");
+    localStorage.setItem(`exo-wallet-${address}-userp-autoGenerated`, 'true');
   } else {
     localStorage.removeItem(`exo-wallet-${address}-userp-autoGenerated`);
   }
 
   if (!unlockBrowerWallet(password, phrase, address)) {
-    throw new Error("An unknown error occrred while unlocking newly saved wallet");
+    throw new Error('An unknown error occrred while unlocking newly saved wallet');
   } else {
     lockBrowerWallet(address);
   }
@@ -386,45 +371,44 @@ export function rememberPassword(remember, password, address) {
   }
 }
 
-export function getAddressEtherscanlink(networkId)  {
+export function getAddressEtherscanlink(networkId) {
   if (networkId) {
     switch (networkId) {
-    case 1:
-      return "https://etherscan.io/address/";
-    case 3:
-      return "https://ropsten.etherscan.io/address/";
+      case 1:
+        return 'https://etherscan.io/address/';
+      case 3:
+        return 'https://ropsten.etherscan.io/address/';
     }
   }
   return null;
 }
 
-export function getTokenEtherscanlink(networkId)  {
+export function getTokenEtherscanlink(networkId) {
   if (networkId) {
     switch (networkId) {
-    case 1:
-      return "https://etherscan.io/token/";
-    case 3:
-      return "https://ropsten.etherscan.io/token/";
+      case 1:
+        return 'https://etherscan.io/token/';
+      case 3:
+        return 'https://ropsten.etherscan.io/token/';
     }
   }
   return null;
 }
 
-export function getTransactionEtherscanlink(networkId)  {
+export function getTransactionEtherscanlink(networkId) {
   if (networkId) {
     switch (networkId) {
-    case 1:
-      return "https://etherscan.io/tx/";
-    case 3:
-      return "https://ropsten.etherscan.io/tx/";
+      case 1:
+        return 'https://etherscan.io/tx/';
+      case 3:
+        return 'https://ropsten.etherscan.io/tx/';
     }
   }
   return null;
 }
 
 export function getCurrentBrowerWallet() {
-  return window && window.localWeb3 && window.localWeb3.eth.accounts.wallet
-    && window.walletSettings.userPreferences.walletAddress && window.localWeb3.eth.accounts.wallet[window.walletSettings.userPreferences.walletAddress];
+  return window && window.localWeb3 && window.localWeb3.eth.accounts.wallet && window.walletSettings.userPreferences.walletAddress && window.localWeb3.eth.accounts.wallet[window.walletSettings.userPreferences.walletAddress];
 }
 
 export function lockBrowerWallet(address) {
@@ -442,7 +426,7 @@ export function unlockBrowerWallet(password, phrase, address) {
   if (!address || !address.length) {
     address = window.walletSettings.userPreferences.walletAddress;
   }
-  
+
   if (!password || !password.length) {
     password = window.walletSettings.userP;
   }
@@ -459,7 +443,7 @@ export function unlockBrowerWallet(password, phrase, address) {
 
     window.localWeb3.eth.accounts.wallet.load(password + phrase, address);
   } catch (e) {
-    console.debug("error while unlocking wallet", e);
+    console.debug('error while unlocking wallet', e);
     return false;
   }
 
@@ -475,7 +459,7 @@ export function setWalletBackedUp(address, backedUp) {
     address = window.walletSettings.userPreferences.walletAddress;
   }
   if (backedUp) {
-    localStorage.setItem(`exo-wallet-${address}-userp-backedup`, "true");
+    localStorage.setItem(`exo-wallet-${address}-userp-backedup`, 'true');
   } else {
     localStorage.removeItem(`exo-wallet-${address}-userp-backedup`);
   }
@@ -484,21 +468,22 @@ export function setWalletBackedUp(address, backedUp) {
 
 export function skipWalletBackedUp() {
   const address = window.walletSettings.userPreferences.walletAddress;
-  localStorage.setItem(`exo-wallet-${address}-userp-skipBackup`, "true");
+  localStorage.setItem(`exo-wallet-${address}-userp-skipBackup`, 'true');
   window.walletSettings.userPreferences.skipBackup = true;
 }
 
 export function skipWalletPasswordSet() {
   const address = window.walletSettings.userPreferences.walletAddress;
-  localStorage.setItem(`exo-wallet-${address}-skipWalletPasswordSet`, "true");
+  localStorage.setItem(`exo-wallet-${address}-skipWalletPasswordSet`, 'true');
   window.walletSettings.userPreferences.skipWalletPasswordSet = true;
 }
 
 export function hashCode(s) {
-  let h = 0, i = 0;
-  if ( s.length > 0 ) {
+  let h = 0,
+    i = 0;
+  if (s.length > 0) {
     while (i < s.length) {
-      h = (h << 5) - h + s.charCodeAt(i++) | 0;
+      h = ((h << 5) - h + s.charCodeAt(i++)) | 0;
     }
   }
   return String(h);
@@ -509,7 +494,7 @@ export function truncateError(error) {
     return '';
   }
   error = String(error);
-  if(error.indexOf(' at ') > 0) {
+  if (error.indexOf(' at ') > 0) {
     error = error.substring(0, error.indexOf(' at '));
   }
 
@@ -520,39 +505,39 @@ export function truncateError(error) {
 }
 
 export function generatePassword() {
-  return Math.random().toString(36).slice(2);
+  return Math.random()
+    .toString(36)
+    .slice(2);
 }
 
 export function markFundRequestAsSent(notificationId) {
-  return fetch(`/portal/rest/wallet/api/account/markFundRequestAsSent?notificationId=${notificationId}`, {credentials: 'include'})
-    .then(resp =>  {
-      return resp && resp.ok;
-    });
+  return fetch(`/portal/rest/wallet/api/account/markFundRequestAsSent?notificationId=${notificationId}`, {credentials: 'include'}).then((resp) => {
+    return resp && resp.ok;
+  });
 }
 
 export function checkFundRequestStatus(notificationId) {
   return fetch(`/portal/rest/wallet/api/account/fundRequestSent?notificationId=${notificationId}`, {credentials: 'include'})
-    .then(resp =>  {
+    .then((resp) => {
       return resp && resp.ok && resp.text();
     })
-    .then(content =>  content === "true");
+    .then((content) => content === 'true');
 }
 
 export function getWallets() {
-  return fetch(`/portal/rest/wallet/api/account/list`, {credentials: 'include'})
-    .then(resp =>  {
-      return resp && resp.ok && resp.json();
-    });
+  return fetch(`/portal/rest/wallet/api/account/list`, {credentials: 'include'}).then((resp) => {
+    return resp && resp.ok && resp.json();
+  });
 }
 
 export function setDraggable() {
   if (!$.draggable) {
     return;
   }
-  if ($("#WalletApp .v-dialog:not(.not-draggable)").length) {
-    $("#WalletApp .v-dialog:not(.not-draggable)").draggable();
-  } else if ($("#WalletAdminApp .v-dialog:not(.not-draggable)").length) {
-    $("#WalletAdminApp .v-dialog:not(.not-draggable)").draggable();
+  if ($('#WalletApp .v-dialog:not(.not-draggable)').length) {
+    $('#WalletApp .v-dialog:not(.not-draggable)').draggable();
+  } else if ($('#WalletAdminApp .v-dialog:not(.not-draggable)').length) {
+    $('#WalletAdminApp .v-dialog:not(.not-draggable)').draggable();
   }
 }
 
@@ -581,7 +566,7 @@ export function convertTokenAmountToSend(amount, decimals) {
   }
   integer = toBN(integer);
   fraction = toBN(fraction);
-  let result = (integer.mul(base)).add(fraction);
+  let result = integer.mul(base).add(fraction);
   if (negative) {
     result = result.mul(-1);
   }
@@ -621,7 +606,7 @@ export function estimateTransactionFeeEther(gas, gasPrice) {
     return 0;
   }
   const gasFeeWei = parseInt(gas * gasPrice);
-  return window.localWeb3.utils.fromWei(String(gasFeeWei), "ether");
+  return window.localWeb3.utils.fromWei(String(gasFeeWei), 'ether');
 }
 
 export function estimateTransactionFeeFiat(gas, gasPrice) {
@@ -632,11 +617,11 @@ export function estimateTransactionFeeFiat(gas, gasPrice) {
 }
 
 export function toFixed(value, decimals) {
-  if(!decimals) {
+  if (!decimals) {
     decimals = 3;
   }
   const number = Number(value);
-  if(Number.isNaN(number) || !Number.isFinite(number) || !number || !value) {
+  if (Number.isNaN(number) || !Number.isFinite(number) || !number || !value) {
     return 0;
   }
   value = String(number);
@@ -649,16 +634,16 @@ export function toFixed(value, decimals) {
   let integer = comps[0];
   let fraction = comps[1] ? comps[1] : '0';
   if (fraction && fraction.length > decimals) {
-    fraction = String(Math.round(Number("0." + fraction) * DECIMALS_POW) / DECIMALS_POW).substring(2); // eslint-disable-line prefer-template
+    fraction = String(Math.round(Number('0.' + fraction) * DECIMALS_POW) / DECIMALS_POW).substring(2); // eslint-disable-line prefer-template
   }
-  if(!fraction || Number(fraction) === 0) {
+  if (!fraction || Number(fraction) === 0) {
     fraction = null;
   }
   integer = toBN(integer);
   if (negative) {
     integer = integer.mul(-1);
   }
-  if(fraction && fraction.length) {
+  if (fraction && fraction.length) {
     return `${integer}.${fraction}`;
   } else {
     return integer.toString();
@@ -698,23 +683,22 @@ function checkNetworkStatus(waitTime, tentativesCount) {
     tentativesCount = 1;
   }
   // Test if network is connected: isListening operation can hang up forever
-  window.localWeb3.eth.net.isListening()
-    .then(listening => window.walletSettings.isListening = window.walletSettings.isListening || listening);
-  return new Promise(resolve => setTimeout(resolve, waitTime))
+  window.localWeb3.eth.net.isListening().then((listening) => (window.walletSettings.isListening = window.walletSettings.isListening || listening));
+  return new Promise((resolve) => setTimeout(resolve, waitTime))
     .then(() => {
       if (!window.walletSettings.isListening) {
-        console.debug("The network seems to be disconnected");
+        console.debug('The network seems to be disconnected');
         throw new Error(constants.ERROR_WALLET_DISCONNECTED);
       }
     })
     .then(() => computeNetwork())
-    .then(() => console.debug("Network status: OK"))
+    .then(() => console.debug('Network status: OK'))
     .then(() => constants.OK)
-    .catch(error => {
-      if(tentativesCount > 10) {
+    .catch((error) => {
+      if (tentativesCount > 10) {
         throw error;
       }
-      console.debug("Reattempt to connect with wait time:", waitTime, " tentative : ", tentativesCount);
+      console.debug('Reattempt to connect with wait time:', waitTime, ' tentative : ', tentativesCount);
       return checkNetworkStatus(waitTime, ++tentativesCount);
     });
 }
@@ -731,58 +715,59 @@ function checkMetamaskEnabled(waitTime) {
   }
   // Test if Metamask is enabled: ethereum.enable operation can hang up forever
   let accounts = null;
-  window.ethereum.enable()
-    .then(enableAccounts => {
+  window.ethereum
+    .enable()
+    .then((enableAccounts) => {
       accounts = enableAccounts ? enableAccounts : null;
     })
     .finally(() => {
       // If enablement discarded by user
       window.walletSettings.metamaskEnableResponseRetrieved = true;
-      console.debug("Response received from user");
+      console.debug('Response received from user');
     });
-  console.debug("Checking ethereum.enable");
-  return new Promise(resolve => setTimeout(resolve, waitTime))
+  console.debug('Checking ethereum.enable');
+  return new Promise((resolve) => setTimeout(resolve, waitTime))
     .then(() => {
       if (!window.walletSettings.metamaskEnableResponseRetrieved) {
-        console.debug("The ethereum.enable seems to hang up");
+        console.debug('The ethereum.enable seems to hang up');
         throw new Error();
       } else {
-        console.debug("Metamask enable status: OK");
+        console.debug('Metamask enable status: OK');
         return accounts;
       }
     })
-    .catch(error => {
+    .catch((error) => {
       // Wait for the second time for 2 seconds
       waitTime = 2000;
-      console.debug("Reattempt to enable Metamask, wait time:", waitTime);
+      console.debug('Reattempt to enable Metamask, wait time:', waitTime);
       return checkMetamaskEnabled(waitTime);
     });
 }
 
 function initSpaceAccount(spaceGroup) {
-  return searchUserOrSpaceObject(spaceGroup, 'space')
-    .then((spaceObject, error) => {
-      if (error) {
-        throw error;
-      }
-      if(spaceObject && spaceObject.spaceAdministrator) {
-        return window.walletSettings.isSpaceAdministrator = true;
-      } else {
-        window.walletSettings.isReadOnly = true;
-        return window.walletSettings.isSpaceAdministrator = false;
-      }
-    });
+  return searchUserOrSpaceObject(spaceGroup, 'space').then((spaceObject, error) => {
+    if (error) {
+      throw error;
+    }
+    if (spaceObject && spaceObject.spaceAdministrator) {
+      return (window.walletSettings.isSpaceAdministrator = true);
+    } else {
+      window.walletSettings.isReadOnly = true;
+      return (window.walletSettings.isSpaceAdministrator = false);
+    }
+  });
 }
 
 function waitAsyncForTransactionStatus(hash) {
   getTransactionReceipt(hash)
-    .then(receipt => {
+    .then((receipt) => {
       if (receipt) {
-        window.localWeb3.eth.getBlock(receipt.blockNumber)
-          .then(block => {
+        window.localWeb3.eth
+          .getBlock(receipt.blockNumber)
+          .then((block) => {
             if (block) {
               if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
-                window.watchingTransactions[hash].forEach(callback => {
+                window.watchingTransactions[hash].forEach((callback) => {
                   callback(receipt, block);
                 });
                 window.watchingTransactions[hash] = null;
@@ -804,9 +789,9 @@ function waitAsyncForTransactionStatus(hash) {
         }, 2000);
       }
     })
-    .catch(error => {
+    .catch((error) => {
       if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
-        window.watchingTransactions[hash].forEach(callback => {
+        window.watchingTransactions[hash].forEach((callback) => {
           callback(null, null);
         });
       }
@@ -823,14 +808,11 @@ function browserWalletExists(address) {
     encryptedWalletObject = JSON.parse(encryptedWalletObject);
   }
 
-  return encryptedWalletObject !== null && encryptedWalletObject.length > 0 && encryptedWalletObject[0] != null
-    && encryptedWalletObject[0].address
-    && (encryptedWalletObject[0].address.toLowerCase() === address.toLowerCase()
-        || `0x${encryptedWalletObject[0].address.toLowerCase()}` === address.toLowerCase());
+  return encryptedWalletObject !== null && encryptedWalletObject.length > 0 && encryptedWalletObject[0] != null && encryptedWalletObject[0].address && (encryptedWalletObject[0].address.toLowerCase() === address.toLowerCase() || `0x${encryptedWalletObject[0].address.toLowerCase()}` === address.toLowerCase());
 }
 
 function clearCache() {
-  Object.keys(sessionStorage).forEach(key => {
+  Object.keys(sessionStorage).forEach((key) => {
     // Remove association of (address <=> user/space)
     if (key.indexOf('exo-wallet-address-') === 0) {
       sessionStorage.removeItem(key);
@@ -841,17 +823,17 @@ function clearCache() {
 function retrieveFiatExchangeRateOnline(currency) {
   // Retrieve Fiat <=> Ether exchange rate
   return fetch(`https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=${currency}`, {
-    referrerPolicy: "no-referrer",
+    referrerPolicy: 'no-referrer',
     headers: {
-      'Origin': ''
-    }
+      Origin: '',
+    },
   })
-    .then(resp => {
+    .then((resp) => {
       if (resp && resp.ok) {
         return resp.json();
       }
     })
-    .catch (error => {
-      console.debug("error retrieving currency exchange, trying to get exchange from local store", error);
+    .catch((error) => {
+      console.debug('error retrieving currency exchange, trying to get exchange from local store', error);
     });
 }

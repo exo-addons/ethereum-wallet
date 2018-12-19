@@ -7,7 +7,7 @@ import WalletApp from './WalletApp.vue';
 
 export default {
   components: {
-    WalletApp
-  }
+    WalletApp,
+  },
 };
 </script>

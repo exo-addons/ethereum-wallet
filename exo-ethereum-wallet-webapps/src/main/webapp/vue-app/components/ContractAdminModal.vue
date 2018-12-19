@@ -8,85 +8,38 @@
     </v-bottom-nav>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
-        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">{{ title }}</span>
+        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">{{ title }}</span>
       </div>
 
-      <div v-if="error && !loading" class="alert alert-error v-content">
-        <i class="uiIconError"></i>{{ error }}
-      </div>
+      <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
 
-      <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
-        <i class="uiIconWarning"></i>{{ warning }}
-      </div>
+      <div v-if="!error && warning && warning.length" class="alert alert-warning v-content"><i class="uiIconWarning"></i>{{ warning }}</div>
 
       <v-card flat>
         <v-card-text class="pt-0">
-          <v-form @submit="$event.preventDefault();$event.stopPropagation();">
-            <address-auto-complete
-              v-show="autocompleteLabel"
-              ref="autocompleteInput"
-              :disabled="loading"
-              :input-label="autocompleteLabel"
-              :input-placeholder="autocompletePlaceholder"
-              class="mt-3"
-              @item-selected="autocompleteValue = $event.address" />
-    
-            <v-text-field
-              v-show="inputLabel"
-              v-model="inputValue"
-              :disabled="loading"
-              :label="inputLabel"
-              :placeholder="inputPlaceholder"
-              class="mt-3"
-              name="inputValue" />
-    
-            <v-text-field
-              v-if="!storedPassword"
-              v-model="walletPassword"
-              :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
-              :type="walletPasswordShow ? 'text' : 'password'"
-              :disabled="loading"
-              name="walletPassword"
-              label="Wallet password"
-              placeholder="Enter your wallet password"
-              counter
-              class="mt-3"
-              autocomplete="current-passord"
-              @click:append="walletPasswordShow = !walletPasswordShow"
-            />
+          <v-form
+            @submit="
+              $event.preventDefault();
+              $event.stopPropagation();
+            "
+          >
+            <address-auto-complete v-show="autocompleteLabel" ref="autocompleteInput" :disabled="loading" :input-label="autocompleteLabel" :input-placeholder="autocompletePlaceholder" class="mt-3" @item-selected="autocompleteValue = $event.address" />
+
+            <v-text-field v-show="inputLabel" v-model="inputValue" :disabled="loading" :label="inputLabel" :placeholder="inputPlaceholder" class="mt-3" name="inputValue" />
+
+            <v-text-field v-if="!storedPassword" v-model="walletPassword" :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'" :type="walletPasswordShow ? 'text' : 'password'" :disabled="loading" name="walletPassword" label="Wallet password" placeholder="Enter your wallet password" counter class="mt-3" autocomplete="current-passord" @click:append="walletPasswordShow = !walletPasswordShow" />
 
             <slot></slot>
 
-            <v-text-field
-              v-model="transactionLabel"
-              :disabled="loading"
-              :class="inputLabel || 'mt-3'"
-              type="text"
-              name="transactionLabel"
-              label="Label (Optional)"
-              placeholder="Enter label for your transaction" />
-            <v-textarea
-              v-model="transactionMessage"
-              :disabled="loading"
-              name="transactionMessage"
-              label="Message (Optional)"
-              placeholder="Enter a custom message to send with your transaction"
-              class="mt-4"
-              rows="3"
-              flat
-              no-resize />
+            <v-text-field v-model="transactionLabel" :disabled="loading" :class="inputLabel || 'mt-3'" type="text" name="transactionLabel" label="Label (Optional)" placeholder="Enter label for your transaction" />
+            <v-textarea v-model="transactionMessage" :disabled="loading" name="transactionMessage" label="Message (Optional)" placeholder="Enter a custom message to send with your transaction" class="mt-4" rows="3" flat no-resize />
 
-            <gas-price-choice
-              :estimated-fee="`${toFixed(transactionFeeFiat)} ${fiatSymbol}`"
-              @changed="gasPrice = $event" />
-
+            <gas-price-choice :estimated-fee="`${toFixed(transactionFeeFiat)} ${fiatSymbol}`" @changed="gasPrice = $event" />
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <button :disabled="disableSend" :loading="loading" class="btn btn-primary mr-1" @click="send">Send</button>
-          <button :disabled="loading" class="btn" color="secondary" @click="dialog = false">Close</button>
+          <button :disabled="disableSend" :loading="loading" class="btn btn-primary mr-1" @click="send">Send</button> <button :disabled="loading" class="btn" color="secondary" @click="dialog = false">Close</button>
           <v-spacer />
         </v-card-actions>
       </v-card>
@@ -104,65 +57,65 @@ import {saveTransactionDetails} from '../WalletTransactions.js';
 export default {
   components: {
     AddressAutoComplete,
-    GasPriceChoice
+    GasPriceChoice,
   },
   props: {
     title: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     autocompleteLabel: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     autocompletePlaceholder: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     inputLabel: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     inputPlaceholder: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     walletAddress: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     contractDetails: {
       type: Object,
       default: function() {
         return {};
-      }
+      },
     },
     convertWei: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     methodName: {
       type: String,
       default: function() {
         return null;
-      }
-    }
+      },
+    },
   },
-  data () {
+  data() {
     return {
       dialog: null,
       loading: false,
@@ -179,7 +132,7 @@ export default {
       gasEstimation: null,
       gasPrice: 0,
       warning: null,
-      error: null
+      error: null,
     };
   },
   computed: {
@@ -196,7 +149,7 @@ export default {
       return this.inputValueFormatted || 1;
     },
     autocompleteValueForEstimation() {
-      return this.autocompleteValue || "0x1111111111111111111111111111111111111111";
+      return this.autocompleteValue || '0x1111111111111111111111111111111111111111';
     },
     argumentsForEstimation() {
       const parameters = [];
@@ -220,7 +173,7 @@ export default {
     },
     inputValueFormatted() {
       if (this.inputValue && this.convertWei) {
-        return window.localWeb3.utils.toWei(this.inputValue, "ether").toString();
+        return window.localWeb3.utils.toWei(this.inputValue, 'ether').toString();
       } else {
         return this.inputValue;
       }
@@ -236,7 +189,7 @@ export default {
       } else {
         this.$emit('close');
       }
-    }
+    },
   },
   methods: {
     init() {
@@ -262,7 +215,7 @@ export default {
     },
     preselectAutocomplete(id, type) {
       if (!id || !type) {
-        console.debug("preselectAutocomplete - empty parameters", id, type);
+        console.debug('preselectAutocomplete - empty parameters', id, type);
         return;
       }
       this.dialog = true;
@@ -278,14 +231,14 @@ export default {
         .estimateGas({
           from: this.contractDetails.contract.options.from,
           gas: window.walletSettings.userPreferences.defaultGas,
-          gasPrice: this.gasPrice
+          gasPrice: this.gasPrice,
         })
-        .then(estimatedGas => {
+        .then((estimatedGas) => {
           // Add 10% of estimated gas
           this.gasEstimation = estimatedGas * 1.1;
         })
-        .catch(e => {
-          console.debug("Error while estimating gas", e);
+        .catch((e) => {
+          console.debug('Error while estimating gas', e);
         });
     },
     send() {
@@ -293,7 +246,7 @@ export default {
       this.warning = null;
 
       if (!this.storedPassword && (!this.walletPassword || !this.walletPassword.length)) {
-        this.error = "Password field is mandatory";
+        this.error = 'Password field is mandatory';
         return;
       }
 
@@ -309,7 +262,7 @@ export default {
 
       const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
       if (!unlocked) {
-        this.error = "Wrong password";
+        this.error = 'Wrong password';
         return;
       }
 
@@ -319,9 +272,9 @@ export default {
           .estimateGas({
             from: this.contractDetails.contract.options.from,
             gas: window.walletSettings.userPreferences.defaultGas,
-            gasPrice: this.gasPrice
+            gasPrice: this.gasPrice,
           })
-          .then(estimatedGas => {
+          .then((estimatedGas) => {
             if (estimatedGas > window.walletSettings.userPreferences.defaultGas) {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${estimatedGas}. Please change it in your preferences.`;
               return;
@@ -330,9 +283,9 @@ export default {
               .send({
                 from: this.contractDetails.contract.options.from,
                 gas: window.walletSettings.userPreferences.defaultGas,
-                gasPrice: this.gasPrice
+                gasPrice: this.gasPrice,
               })
-              .on('transactionHash', hash => {
+              .on('transactionHash', (hash) => {
                 this.transactionHash = hash;
                 const sender = this.contractDetails.contract.options.from;
                 const receiver = this.autocompleteValue ? this.autocompleteValue : this.contractDetails.address;
@@ -344,67 +297,66 @@ export default {
                   from: sender,
                   to: receiver,
                   type: 'contract',
-                  value : 0,
+                  value: 0,
                   gas: window.walletSettings.userPreferences.defaultGas,
                   gasPrice: this.gasPrice,
                   pending: true,
                   isAdminOperation: true,
                   contractAddress: this.contractDetails.address,
                   contractMethodName: this.methodName,
-                  contractAmount : this.inputValue,
-                  contractSymbol : this.contractSymbol,
-                  contractAmountLabel : this.contractAmountLabel,
+                  contractAmount: this.inputValue,
+                  contractSymbol: this.contractSymbol,
+                  contractAmountLabel: this.contractAmountLabel,
                   label: this.transactionLabel,
                   message: this.transactionMessage,
                   timestamp: Date.now(),
-                  feeFiat: this.transactionFeeFiat
+                  feeFiat: this.transactionFeeFiat,
                 };
 
                 // *async* save transaction message for contract, sender and (avoid alarm receiver for admin operations)
                 saveTransactionDetails(pendingTransaction);
 
                 // The transaction has been hashed and will be sent
-                this.$emit("sent", pendingTransaction, this.contractDetails);
+                this.$emit('sent', pendingTransaction, this.contractDetails);
                 const thiss = this;
                 // FIXME workaround when can't execute .then(...) method, especially in pause, unpause.
                 watchTransactionStatus(hash, () => {
-                  thiss.$emit("success", thiss.transactionHash, thiss.contractDetails, thiss.methodName, thiss.autocompleteValue, thiss.inputValue);
+                  thiss.$emit('success', thiss.transactionHash, thiss.contractDetails, thiss.methodName, thiss.autocompleteValue, thiss.inputValue);
                 });
                 this.dialog = false;
               })
               .on('error', (error, receipt) => {
-                console.debug("Error while sending admin transaction", error);
+                console.debug('Error while sending admin transaction', error);
                 // The transaction has failed
                 this.error = truncateError(error);
                 // Display error on main screen only when dialog is not opened
                 if (!this.dialog) {
-                  this.$emit("error", this.error);
+                  this.$emit('error', this.error);
                 }
               })
               .then(() => {
-                this.$emit("success", this.transactionHash, this.contractDetails, this.methodName, this.autocompleteValue, this.inputValue);
+                this.$emit('success', this.transactionHash, this.contractDetails, this.methodName, this.autocompleteValue, this.inputValue);
               })
               .finally(() => {
                 this.loading = false;
               });
           })
-          .catch (e => {
-            console.debug("Error while sending admin transaction", e);
+          .catch((e) => {
+            console.debug('Error while sending admin transaction', e);
             this.error = truncateError(e);
           })
           .finally(() => {
             this.loading = false;
-            if(!this.useMetamask) {
+            if (!this.useMetamask) {
               lockBrowerWallet();
             }
           });
-      } catch(e) {
-        console.debug("Error while sending admin transaction", e);
+      } catch (e) {
+        console.debug('Error while sending admin transaction', e);
         this.loading = false;
         this.error = truncateError(e);
       }
-    }
-  }
+    },
+  },
 };
 </script>
-

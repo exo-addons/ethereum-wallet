@@ -3,15 +3,15 @@ export function savePeriodRewardTransactions(transactions) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(transactions)
-  }).then(resp => {
-    if(resp && resp.ok) {
+    body: JSON.stringify(transactions),
+  }).then((resp) => {
+    if (resp && resp.ok) {
       return;
     } else {
-      throw new Error("Error saving reward transactions");
+      throw new Error('Error saving reward transactions');
     }
   });
 }
@@ -21,15 +21,15 @@ export function savePeriodRewardTransaction(transaction) {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(transaction)
-  }).then(resp => {
-    if(resp && resp.ok) {
+    body: JSON.stringify(transaction),
+  }).then((resp) => {
+    if (resp && resp.ok) {
       return;
     } else {
-      throw new Error("Error saving reward transaction");
+      throw new Error('Error saving reward transaction');
     }
   });
 }
@@ -37,12 +37,12 @@ export function savePeriodRewardTransaction(transaction) {
 export function getPeriodRewardTransactions(networkId, periodType, startDateInSeconds, rewardType) {
   return fetch(`/portal/rest/wallet/api/reward/getPeriodRewardTransactions?networkId=${networkId}&periodType=${periodType}&startDateInSeconds=${startDateInSeconds}&rewardType=${rewardType}`, {
     method: 'GET',
-    credentials: 'include'
-  }).then(resp => {
-    if(resp && resp.ok) {
+    credentials: 'include',
+  }).then((resp) => {
+    if (resp && resp.ok) {
       return resp.json();
     } else {
-      throw new Error("Error saving reward transactions");
+      throw new Error('Error saving reward transactions');
     }
   });
 }
@@ -53,8 +53,8 @@ export function getPeriodRewardDates(date, periodType) {
   return fetch(`/portal/rest/wallet/api/reward/getPeriodRewardDates?dateInSeconds=${date}&periodType=${periodType}`, {
     credentials: 'include',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  }).then(resp => resp && resp.ok && resp.json());
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+  }).then((resp) => resp && resp.ok && resp.json());
 }

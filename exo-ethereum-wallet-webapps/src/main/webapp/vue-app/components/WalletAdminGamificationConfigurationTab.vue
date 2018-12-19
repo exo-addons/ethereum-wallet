@@ -3,25 +3,12 @@
     <v-card-text>
       <div class="text-xs-left gamificationWalletConfiguration">
         <span>Minimal gamification points threshold to reward users: </span>
-        <v-text-field
-          v-model.number="selectedThreshold"
-          :disabled="!configurationEditable"
-          name="threshold"
-          class="input-text-center" />
+        <v-text-field v-model.number="selectedThreshold" :disabled="!configurationEditable" name="threshold" class="input-text-center" />
       </div>
       <div class="text-xs-left gamificationWalletConfiguration">
         <span>Reward periodicity: </span>
         <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
-          <v-combobox
-            v-model="selectedPeriodType"
-            :disabled="!configurationEditable"
-            :items="periods"
-            :return-object="false"
-            attach="#selectedPeriodType"
-            class="selectBoxVuetify"
-            hide-no-data
-            hide-selected
-            small-chips>
+          <v-combobox v-model="selectedPeriodType" :disabled="!configurationEditable" :items="periods" :return-object="false" attach="#selectedPeriodType" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
             <template slot="selection" slot-scope="data">
               {{ selectedPeriodName }}
             </template>
@@ -34,27 +21,10 @@
           <v-radio-group v-model="selectedRewardType">
             <v-radio :disabled="!configurationEditable" value="FIXED" label="By a fixed budget of" />
             <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
-              <v-text-field
-                v-model.number="selectedTotalBudget"
-                :disabled="!configurationEditable"
-                placeholder="Enter the fixed total budget"
-                type="number"
-                class="pt-0 pb-0"
-                name="totalBudget" />
+              <v-text-field v-model.number="selectedTotalBudget" :disabled="!configurationEditable" placeholder="Enter the fixed total budget" type="number" class="pt-0 pb-0" name="totalBudget" />
               <span> using token </span>
               <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedContractAddress"
-                  :disabled="!configurationEditable"
-                  :items="contracts"
-                  :return-object="false"
-                  attach="#selectedContractAddress"
-                  item-value="address"
-                  item-text="name"
-                  class="selectBoxVuetify"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
+                <v-combobox v-model="selectedContractAddress" :disabled="!configurationEditable" :items="contracts" :return-object="false" attach="#selectedContractAddress" item-value="address" item-text="name" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
                   <template slot="selection" slot-scope="data">
                     {{ selectedContractName }}
                   </template>
@@ -63,27 +33,10 @@
             </v-flex>
             <v-radio :disabled="!configurationEditable" value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member on period of" />
             <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
-              <v-text-field
-                v-model="selectedBudgetPerMember"
-                :disabled="!configurationEditable"
-                placeholder="Enter the fixed budget per eligible member on period"
-                type="number"
-                class="pt-0 pb-0"
-                name="budgetPerMember" />
+              <v-text-field v-model="selectedBudgetPerMember" :disabled="!configurationEditable" placeholder="Enter the fixed budget per eligible member on period" type="number" class="pt-0 pb-0" name="budgetPerMember" />
               <span> using token </span>
               <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedContractAddress"
-                  :disabled="!configurationEditable"
-                  :items="contracts"
-                  :return-object="false"
-                  attach="#selectedContractAddress"
-                  item-value="address"
-                  item-text="name"
-                  class="selectBoxVuetify"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
+                <v-combobox v-model="selectedContractAddress" :disabled="!configurationEditable" :items="contracts" :return-object="false" attach="#selectedContractAddress" item-value="address" item-text="name" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
                   <template slot="selection" slot-scope="data">
                     {{ selectedContractName }}
                   </template>
@@ -96,12 +49,8 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <v-btn v-if="configurationEditable" :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save">
-        Save
-      </v-btn>
-      <v-btn v-else class="btn btn-primary ml-2" dark @click="configurationEditable = true">
-        Edit
-      </v-btn>
+      <v-btn v-if="configurationEditable" :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save"> Save </v-btn>
+      <v-btn v-else class="btn btn-primary ml-2" dark @click="configurationEditable = true"> Edit </v-btn>
       <v-spacer />
     </v-card-actions>
   </v-card>
@@ -116,8 +65,8 @@ export default {
       type: Array,
       default: function() {
         return [];
-      }
-    }
+      },
+    },
   },
   data() {
     return {
@@ -132,38 +81,38 @@ export default {
       periods: [
         {
           text: 'Week',
-          value: 'WEEK'
+          value: 'WEEK',
         },
         {
           text: 'Month',
-          value: 'MONTH'
+          value: 'MONTH',
         },
         {
           text: 'Quarter',
-          value: 'QUARTER'
+          value: 'QUARTER',
         },
         {
           text: 'Semester',
-          value: 'SEMESTER'
+          value: 'SEMESTER',
         },
         {
           text: 'Year',
-          value: 'YEAR'
-        }
-      ]
+          value: 'YEAR',
+        },
+      ],
     };
   },
   computed: {
     selectedPeriodName() {
-      const selectedPeriodName = this.periods.find(period => period.value === this.selectedPeriodType);
+      const selectedPeriodName = this.periods.find((period) => period.value === this.selectedPeriodType);
       return selectedPeriodName && selectedPeriodName.text ? selectedPeriodName.text : this.selectedPeriodType && (this.selectedPeriodType.text || this.selectedPeriodType);
     },
     selectedContractDetails() {
-      return this.selectedContractAddress && this.contracts && this.contracts.find(contract => contract.address === this.selectedContractAddress);
+      return this.selectedContractAddress && this.contracts && this.contracts.find((contract) => contract.address === this.selectedContractAddress);
     },
     selectedContractName() {
       return this.selectedContractDetails && this.selectedContractDetails.name;
-    }
+    },
   },
   methods: {
     init(settings) {
@@ -187,26 +136,26 @@ export default {
           budgetPerMember: thiss.selectedBudgetPerMember,
           rewardType: thiss.selectedRewardType,
           threshold: thiss.selectedThreshold,
-          contractAddress : thiss.selectedContractAddress,
-          periodType: thiss.selectedPeriodType && (thiss.selectedPeriodType.value || thiss.selectedPeriodType)
+          contractAddress: thiss.selectedContractAddress,
+          periodType: thiss.selectedPeriodType && (thiss.selectedPeriodType.value || thiss.selectedPeriodType),
         })
-          .then(settings => {
-            if(settings) {
+          .then((settings) => {
+            if (settings) {
               this.init(settings);
               thiss.configurationEditable = false;
-              return this.$emit("saved", {
+              return this.$emit('saved', {
                 contractAddress: settings.contractAddress,
                 periodType: settings.periodType,
                 threshold: settings.threshold,
                 rewardType: settings.rewardType,
                 totalBudget: settings.totalBudget,
-                budgetPerMember: settings.budgetPerMember
+                budgetPerMember: settings.budgetPerMember,
               });
             } else {
               throw new Error("Settings aren't loaded from REST call", settings);
             }
           })
-          .catch(error => {
+          .catch((error) => {
             console.debug("Error while saving 'Gamification settings'", error);
             thiss.$emit('error', "Error while saving 'Gamification settings'");
           })
@@ -214,7 +163,7 @@ export default {
             thiss.loadingSettings = false;
           });
       }, 200);
-    }
-  }
+    },
+  },
 };
 </script>

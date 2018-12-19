@@ -1,34 +1,36 @@
 <template>
   <v-flex class="pt-4">
-    <div id="sendFundsFormSlot" class="pl-3 pr-3">
-      <slot></slot>
-    </div>
+    <div id="sendFundsFormSlot" class="pl-3 pr-3"><slot></slot></div>
 
-    <send-ether-form 
+    <send-ether-form
       v-if="formName === 'ether'"
       ref="sendEtherForm"
       :account="walletAddress"
       :balance="selectedAccount && selectedAccount.balance"
-      @receiver-selected="receiver = $event.id; receiverType = $event.type"
+      @receiver-selected="
+        receiver = $event.id;
+        receiverType = $event.type;
+      "
       @amount-selected="amount = $event"
       @sent="addPendingTransaction($event)"
-      @close="$emit('close')">
-
+      @close="$emit('close')"
+    >
       <div id="sendEtherFormSlot" class="ml-1"></div>
-
     </send-ether-form>
     <send-tokens-form
       v-else-if="formName === 'token'"
       ref="sendTokensForm"
       :account="walletAddress"
       :contract-details="selectedAccount"
-      @receiver-selected="receiver = $event.id; receiverType = $event.type"
+      @receiver-selected="
+        receiver = $event.id;
+        receiverType = $event.type;
+      "
       @amount-selected="amount = $event"
       @sent="addPendingTransaction($event)"
-      @close="$emit('close')">
-
+      @close="$emit('close')"
+    >
       <div id="sendTokensFormSlot" class="ml-1"></div>
-
     </send-tokens-form>
   </v-flex>
 </template>
@@ -43,33 +45,33 @@ import {markFundRequestAsSent} from '../WalletUtils.js';
 export default {
   components: {
     SendEtherForm,
-    SendTokensForm
+    SendTokensForm,
   },
   props: {
     networkId: {
       type: Number,
       default: function() {
         return 0;
-      }
+      },
     },
     addPendingToReceiver: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     walletAddress: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     selectedAccount: {
       type: Object,
       default: function() {
         return {};
-      }
-    }
+      },
+    },
   },
   data() {
     return {
@@ -77,7 +79,7 @@ export default {
       receiver: null,
       receiverType: null,
       notificationId: null,
-      amount: null
+      amount: null,
     };
   },
   watch: {
@@ -85,23 +87,23 @@ export default {
       // This is a workaround for a cyclic dependency problem using multiple slot locations
       this.$nextTick(() => {
         if (!this.selectedAccount) {
-          $("#sendFundsAccount").appendTo("#sendFundsFormSlot");
+          $('#sendFundsAccount').appendTo('#sendFundsFormSlot');
           this.formName = 'standalone';
         } else if (!this.selectedAccount.isContract) {
           // Move to original location as temporary location
-          $("#sendFundsAccount").appendTo("#sendFundsFormSlot");
+          $('#sendFundsAccount').appendTo('#sendFundsFormSlot');
           this.formName = 'ether';
           // Move combobox to final location
           this.$nextTick(() => {
-            $("#sendFundsAccount").appendTo("#sendEtherFormSlot");
+            $('#sendFundsAccount').appendTo('#sendEtherFormSlot');
           });
         } else {
           // Move to original location as temporary location
-          $("#sendFundsAccount").appendTo("#sendFundsFormSlot");
+          $('#sendFundsAccount').appendTo('#sendFundsFormSlot');
           this.formName = 'token';
           // Move combobox to final location
           this.$nextTick(() => {
-            $("#sendFundsAccount").appendTo("#sendTokensFormSlot");
+            $('#sendFundsAccount').appendTo('#sendTokensFormSlot');
           });
         }
 
@@ -121,7 +123,7 @@ export default {
           }
         });
       });
-    }
+    },
   },
   methods: {
     prepareSendForm(receiver, receiverType, amount, contractAddress, notificationId, keepDialogOpen) {
@@ -129,22 +131,22 @@ export default {
         this.receiver = receiver;
         this.receiverType = receiverType;
         this.notificationId = notificationId;
-        if(amount) {
+        if (amount) {
           this.amount = amount;
         }
       } else {
         if (receiver && receiverType) {
-          this.$emit("dialog-error", "Selected currency is not displayed switch your preferences");
+          this.$emit('dialog-error', 'Selected currency is not displayed switch your preferences');
         }
 
-        if(!keepDialogOpen) {
-          this.$emit("close");
+        if (!keepDialogOpen) {
+          this.$emit('close');
         }
       }
     },
     addPendingTransaction(transaction) {
       if (!transaction) {
-        console.debug("Pending transaction is empty");
+        console.debug('Pending transaction is empty');
         return;
       }
 
@@ -154,23 +156,14 @@ export default {
       const selectedAccount = this.selectedAccount;
       const recipient = transaction.to.toLowerCase();
       transaction.addLoadingToRecipient = this.addPendingToReceiver;
-      addTransaction(this.networkId,
-        this.walletAddress,
-        selectedAccount,
-        [],
-        transaction,
-        null,
-        null,
-        () => this.$emit('success', selectedAccount, recipient),
-        error => this.$emit('error', error));
+      addTransaction(this.networkId, this.walletAddress, selectedAccount, [], transaction, null, null, () => this.$emit('success', selectedAccount, recipient), (error) => this.$emit('error', error));
 
       this.$emit('pending', transaction);
 
       if (this.notificationId) {
         markFundRequestAsSent(this.notificationId);
       }
-    }
-  }
+    },
+  },
 };
 </script>
-

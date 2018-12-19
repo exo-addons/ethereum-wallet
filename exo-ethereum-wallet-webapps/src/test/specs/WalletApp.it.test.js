@@ -10,7 +10,7 @@ import WalletMetamaskSetup from '../../main/webapp/vue-app/components/WalletMeta
 import WalletBackupModal from '../../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../../main/webapp/vue-app/components/WalletResetModal';
 
-const {mount} = require('@vue/test-utils');
+const {mount} = require('vue-test-utils');
 
 describe('WalletApp.test.js', () => {
   let app;
@@ -30,9 +30,9 @@ describe('WalletApp.test.js', () => {
         'wallet-reset-modal': WalletResetModal,
       },
       propsData: {
-        isSpace: false
+        isSpace: false,
       },
-      attachToDocument: true
+      attachToDocument: true,
     });
     return app.vm.init();
   });
@@ -40,7 +40,7 @@ describe('WalletApp.test.js', () => {
   it('WalletApp data', () => {
     expect(app.vm.networkId).toBe(4452365);
     expect(app.vm.browserWalletExists).toBeFalsy();
-    expect(app.vm.walletAddress).toBe("0xb460a021b66a1f421970b07262ed11d626b798ef");
+    expect(app.vm.walletAddress).toBe('0xb460a021b66a1f421970b07262ed11d626b798ef');
     expect(app.vm.selectedTransactionHash).toBeNull();
     expect(app.vm.selectedAccount).toBeNull();
     expect(app.vm.fiatSymbol).toBe('$');
@@ -51,13 +51,13 @@ describe('WalletApp.test.js', () => {
     expect(app.vm.isSpaceAdministrator).toBeFalsy();
     expect(app.vm.seeAccountDetails).toBeFalsy();
     expect(app.vm.seeAccountDetailsPermanent).toBeFalsy();
-    expect(app.vm.principalAccount).toBe("ether");
+    expect(app.vm.principalAccount).toBe('ether');
     expect(app.vm.fiatSymbol).toBe('$');
     expect(app.vm.error).toBeNull();
     expect(app.vm.showSettingsModal).toBeFalsy();
     expect(app.vm.showAddContractModal).toBeFalsy();
-    expect(app.vm.overviewAccounts).toEqual(["ether"]);
-    expect(app.vm.overviewAccountsToDisplay).toEqual(["ether"]);
+    expect(app.vm.overviewAccounts).toEqual(['ether']);
+    expect(app.vm.overviewAccountsToDisplay).toEqual(['ether']);
     expect(Number(app.vm.gasPriceInEther)).toBe(0.000000008);
 
     expect(Number(app.vm.displayAccountsList)).toBeTruthy();
@@ -84,7 +84,7 @@ describe('WalletApp.test.js', () => {
   it('WalletSetup data', () => {
     expect(app.vm.$refs.walletSetup.isReadOnly).toBeTruthy();
     expect(app.vm.$refs.walletSetup.displayWalletCreationToolbar).toBeTruthy();
-    expect(app.vm.$refs.walletSetup.walletAddress).toBe("0xb460a021b66a1f421970b07262ed11d626b798ef");
+    expect(app.vm.$refs.walletSetup.walletAddress).toBe('0xb460a021b66a1f421970b07262ed11d626b798ef');
     expect(app.vm.$refs.walletSetup.isSpace).toBeFalsy();
     expect(app.vm.$refs.walletSetup.loading).toBeFalsy();
     expect(app.vm.$refs.walletSetup.isAdministration).toBeFalsy();
@@ -119,7 +119,7 @@ describe('WalletApp.test.js', () => {
   it('WalletAppMenu data', () => {
     expect(app.vm.$refs.walletAppMenu.isSpace).toBeFalsy();
     expect(app.vm.$refs.walletAppMenu.isSpaceAdministrator).toBeFalsy();
-    expect(app.vm.$refs.walletAppMenu.walletAddress).toBe("0xb460a021b66a1f421970b07262ed11d626b798ef");
+    expect(app.vm.$refs.walletAppMenu.walletAddress).toBe('0xb460a021b66a1f421970b07262ed11d626b798ef');
     expect(app.vm.$refs.walletAppMenu.isMaximized).toBeTruthy();
   });
 
@@ -131,5 +131,4 @@ describe('WalletApp.test.js', () => {
 
     expect(walletAppMenuHTML).not.toContain('Open wallet application');
   });
-
 });

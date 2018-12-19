@@ -6,22 +6,10 @@
         <v-icon>send</v-icon>
       </v-btn>
     </v-bottom-nav>
-    <button v-else-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">
-      Send Ether
-    </button>
+    <button v-else-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">Send Ether</button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix">
-        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a>
-        <span class="PopupTitle popupTitle">Send Ether</span>
-      </div>
-      <send-ether-form ref="sendEtherForm"
-                       :account="account"
-                       :balance="balance"
-                       class="pt-4"
-                       @success="$emit('success', $event)"
-                       @sent="$emit('sent', $event)"
-                       @close="dialog = false"
-                       @error="$emit('error', $event)" />
+      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Send Ether</span></div>
+      <send-ether-form ref="sendEtherForm" :account="account" :balance="balance" class="pt-4" @success="$emit('success', $event)" @sent="$emit('sent', $event)" @close="dialog = false" @error="$emit('error', $event)" />
     </v-card>
   </v-dialog>
 </template>
@@ -33,61 +21,61 @@ import {setDraggable} from '../WalletUtils.js';
 
 export default {
   components: {
-    SendEtherForm
+    SendEtherForm,
   },
   props: {
     account: {
       type: String,
       default: function() {
         return null;
-      }
+      },
     },
     isReadonly: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     noButton: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     useNavigation: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     open: {
       type: Boolean,
       default: function() {
         return false;
-      }
+      },
     },
     balance: {
       type: Number,
       default: function() {
         return 0;
-      }
+      },
     },
     recipient: {
       type: Number,
       default: function() {
         return 0;
-      }
-    }
+      },
+    },
   },
-  data () {
+  data() {
     return {
-      dialog: null
+      dialog: null,
     };
   },
   computed: {
     disabled() {
       return this.isReadonly || !this.balance || Number(this.balance) === 0;
-    }
+    },
   },
   watch: {
     open() {
@@ -109,8 +97,7 @@ export default {
       } else {
         this.$emit('close');
       }
-    }
-  }
+    },
+  },
 };
 </script>
-
