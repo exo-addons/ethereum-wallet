@@ -11,7 +11,8 @@
     "dev": "webpack-dev-server --config webpack.dev.js --mode development --hot",
     "watch": "webpack --config webpack.watch.js --progress --colors --watch -d",
     "test": "jest",
-    "lint": "eslint .",
+    "format": "prettier --config ./.prettierrc --write ./packages/**/*.js",
+    "lint": "eslint --cache --fix .",
     "build": "webpack --config webpack.prod.js --mode production",
     "ganache-cli": "ganache-cli -a 10 -e 100 -h 0.0.0.0"
   },
