@@ -400,7 +400,7 @@ export default {
         let budget = 0;
         if (team.rewardType === 'FIXED' || team.rewardType === 'FIXED_PER_MEMBER') {
           budget = team.fixedBudget ? Number(team.fixedBudget) : 0;
-          team.exceedingBudget = this.rewardType === 'FIXED' && fixedGlobalBudget <= budget;
+          team.exceedingBudget = fixedGlobalBudget <= budget;
         } else if (team.rewardType === 'COMPUTED') {
           if (tokenPerRecipient > 0) {
             budget = team.computedBudget = tokenPerRecipient * team.validMembersWallets.length;
