@@ -43,10 +43,9 @@
             v-if="walletAddress"
             for="walletPrivateKey"
             class="mb-3">
-            Please enter the private key for the following wallet (Find your private key in Backup section): <br>
-                                                                                                   <code>
-                                                                                                     {{ walletAddress }}
-                                                                                                   </code>
+            <span>Please enter the private key for the following wallet (Find your private key in Backup section):</span>
+            <br>
+            <code>{{ walletAddress }}</code>
           </label>
           <label v-else for="walletPrivateKey">
             This is the private key to import a new wallet address

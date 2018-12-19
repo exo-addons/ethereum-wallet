@@ -33,9 +33,7 @@
               <i class="uiIconWarning"></i> Some users are members of multiple pools, the budget computing could be wrong:
               <ul>
                 <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
-                  <code>
-                    {{ duplicatedWallet.name }}
-                  </code>
+                  <code>{{ duplicatedWallet.name }}</code>
                 </li>
               </ul>
             </div>
@@ -84,9 +82,7 @@
               <i class="uiIconWarning"></i> Some users are members of multiple pools, the budget computing could be wrong:
               <ul>
                 <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
-                  <code>
-                    {{ duplicatedWallet.name }}
-                  </code>
+                  <code>{{ duplicatedWallet.name }}</code>
                 </li>
               </ul>
             </div>

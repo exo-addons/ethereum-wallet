@@ -78,15 +78,11 @@
     </div>
     <div v-else-if="isAdministration && isPrincipalContractAdmin" class="alert alert-info">
       <i class="uiIconInfo"></i> <span>
-        You are using <code>
-          Admin
-        </code> address in metamask
+        You are using <code>Admin</code> address in metamask
       </span>
     </div>
     <div v-else-if="isAdministration && !isPrincipalContractAdmin" class="alert alert-warning">
-      <i class="uiIconWarning"></i> Attention: you are using an account different from<code>
-        Admin
-      </code> account
+      <i class="uiIconWarning"></i> Attention: you are using an account different from<code>Admin</code> account
     </div>
     <div v-else-if="newAddressDetected">
       <div v-if="associatedWalletAddress" class="alert alert-warning">

@@ -1,8 +1,6 @@
 <template>
   <div class="copyToClipboard walletAddress">
-    <code :class="allowCopy && 'pr-4'" class="pt-2 pb-1">
-      {{ value }}
-    </code>
+    <code :class="allowCopy && 'pr-4'" class="pt-2 pb-1">{{ value }}</code>
     <v-btn
       v-if="allowCopy"
       title="Copy to clipboard"

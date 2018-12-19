@@ -7,9 +7,8 @@
     rel="nofollow"
     target="_blank">
     {{ displayName }}
-  </a> <code v-else-if="displayName">
-    {{ displayName }}
-  </code>
+  </a>
+  <code v-else-if="displayName">{{ displayName }}</code>
   <wallet-address v-else :value="address" />
 </template>
 
