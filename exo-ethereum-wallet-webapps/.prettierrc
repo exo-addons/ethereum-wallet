@@ -7,6 +7,3 @@ singleQuote: true
 bracketSpacing: false
 arrowParens: "always"
 proseWrap: "never"
-- files: "*.js"
-  options:
-    parser: "flow"

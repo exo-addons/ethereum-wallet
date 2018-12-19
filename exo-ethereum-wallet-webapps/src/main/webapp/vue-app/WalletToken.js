@@ -45,7 +45,6 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
  * Retrieve an ERC20 contract instance at specified address
  */
 export function retrieveContractDetails(account, contractDetails, isAdministration, ignoreSavedDetails) {
-  let adminLevelComputed;
   contractDetails.retrievedAttributes = 0;
   let contractToSave = false;
   try {
@@ -89,7 +88,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       if (version) {
         version = Number(version);
         const originalContractType = contractDetails.contractType;
-        contractDetails.contractType = version && !Number.isNaN(version) && Number.isInteger(version) ? 1 : 0;
+        contractDetails.contractType = version && !Number.isNaN(Number(version)) && Number.isInteger(version) ? Number(version) : 0;
         contractToSave = contractToSave || Number(contractDetails.contractType) !== originalContractType;
       }
       contractDetails.retrievedAttributes++;
@@ -152,7 +151,6 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     })
     .then((totalSupply) => {
       if (totalSupply) {
-        contractToSave = contractToSave || Number(contractDetails.totalSupply) !== Number(totalSupply);
         contractDetails.totalSupply = totalSupply;
         contractDetails.retrievedAttributes++;
       }

@@ -157,9 +157,6 @@ export function initSettings(isSpace) {
           });
         }
 
-        const username = eXo.env.portal.userName;
-        const spaceGroup = eXo.env.portal.spaceGroup;
-
         const accountId = getRemoteId(isSpace);
         window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${accountId}-metamask`);
 
@@ -173,8 +170,8 @@ export function initSettings(isSpace) {
           window.walletSettings.userPreferences.skipWalletPasswordSet = localStorage.getItem(`exo-wallet-${address}-skipWalletPasswordSet`);
         }
 
-        if (isSpace && spaceGroup) {
-          return initSpaceAccount(spaceGroup).then(retrieveFiatExchangeRate);
+        if (isSpace && accountId) {
+          return initSpaceAccount(accountId).then(retrieveFiatExchangeRate);
         } else {
           return retrieveFiatExchangeRate();
         }
@@ -494,11 +491,11 @@ export function truncateError(error) {
     return '';
   }
   error = String(error);
-  if (error.indexOf(' at ') > 0) {
+  if (error.indexOf(' at ') >= 0) {
     error = error.substring(0, error.indexOf(' at '));
   }
 
-  if (error.indexOf('replacement transaction underpriced') > 0 || error.indexOf('known transaction') > 0) {
+  if (error.indexOf('replacement transaction underpriced') >= 0 || error.indexOf('known transaction') >= 0) {
     error = 'Another transaction is in progress please wait until the first transaction is finished';
   }
   return error;
@@ -654,9 +651,6 @@ function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));
     window.localWeb3.eth.defaultAccount = window.walletSettings.userPreferences.walletAddress.toLowerCase();
-
-    const accountId = getRemoteId(isSpace);
-    const accountType = isSpace ? 'space' : 'user';
 
     if (useMetamask || (isSpace && !window.walletSettings.isSpaceAdministrator)) {
       window.walletSettings.isReadOnly = true;

@@ -1,6 +1,6 @@
 import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
-import {getContractInstance, getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
+import {getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
 
 export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, transactionsLimit, transactionHashToSearch, refreshCallback) {
   if (!transactionsLimit) {
