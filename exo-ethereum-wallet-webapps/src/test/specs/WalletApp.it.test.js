@@ -9,32 +9,13 @@ import WalletBrowserSetup from '../../main/webapp/vue-app/components/WalletBrows
 import WalletMetamaskSetup from '../../main/webapp/vue-app/components/WalletMetamaskSetup';
 import WalletBackupModal from '../../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../../main/webapp/vue-app/components/WalletResetModal';
-
-const {mount} = require('@vue/test-utils');
+import {getWalletApp, initApp} from '../TestUtils.js';
 
 describe('WalletApp.test.js', () => {
-  let app;
+  const app = getWalletApp();
 
   beforeAll(() => {
-    app = mount(WalletApp, {
-      stubs: {
-        'wallet-setup': WalletSetup,
-        'wallet-app-menu': WalletAppMenu,
-        'wallet-accounts-list': WalletAccountsList,
-        'wallet-settings-modal': WalletSettingsModal,
-        'wallet-summary': WalletSummary,
-        'account-detail': AccountDetail,
-        'wallet-browser-setup': WalletBrowserSetup,
-        'wallet-metamask-setup': WalletMetamaskSetup,
-        'wallet-backup-modal': WalletBackupModal,
-        'wallet-reset-modal': WalletResetModal,
-      },
-      propsData: {
-        isSpace: false,
-      },
-      attachToDocument: true,
-    });
-    return app.vm.init();
+    return initApp(app);
   });
 
   it('WalletApp data', () => {
