@@ -34,13 +34,11 @@
             </v-avatar>
           </td>
           <td class="text-xs-left">
-            <a
+            <profile-chip
               v-if="props.item.address"
-              :href="props.item.url"
-              rel="nofollow"
-              target="_blank">
-              {{ props.item.name }}
-            </a>
+              :profile-id="props.item.id"
+              :display-name="props.item.name"
+              tiptip-position="top_left" />
             <div v-else>
               <del>
                 <a
@@ -162,6 +160,7 @@
 
 <script>
 import SendRewardModal from './SendRewardModal.vue';
+import ProfileChip from './ProfileChip.vue';
 
 import {getPeriodRewardTransactions} from '../WalletRewardServices.js';
 import {watchTransactionStatus} from '../WalletUtils.js';
@@ -169,6 +168,7 @@ import {watchTransactionStatus} from '../WalletUtils.js';
 export default {
   components: {
     SendRewardModal,
+    ProfileChip,
   },
   props: {
     walletAddress: {

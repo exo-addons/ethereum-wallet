@@ -451,6 +451,7 @@ export default {
           identitiesListPromises.push(
             getGamificationPoints(wallet.id, startDate, endDate).then((object) => {
               wallet.points = object && object.points;
+              wallet.url = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/profile/${wallet.id}`;
               this.identitiesList.push(wallet);
             })
           );

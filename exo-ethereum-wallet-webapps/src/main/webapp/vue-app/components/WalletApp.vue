@@ -531,7 +531,7 @@ export default {
         }
         $('.userNavigation').append(` \
           <li id='myWalletTad' class='item${this.isMaximized ? ' active' : ''}'> \
-            <a href='/portal/intranet/wallet'> \
+            <a href='${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet'> \
               <div class='uiIconAppWallet uiIconDefaultApp' /> \
               <span class='tabName'>My Wallet</span> \
             </a> \

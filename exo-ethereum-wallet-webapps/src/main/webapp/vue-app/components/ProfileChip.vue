@@ -56,6 +56,12 @@ export default {
         return null;
       },
     },
+    tiptipPosition: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
   },
   data() {
     return {
@@ -77,7 +83,7 @@ export default {
   },
   computed: {
     url() {
-      if (this.profileType === 'user') {
+      if (!this.profileType || this.profileType === 'user') {
         return `${eXo.env.portal.context}/${eXo.env.portal.portalName}/profile/${this.profileId}`;
       } else if (this.profileType === 'space') {
         return `${eXo.env.portal.context}/g/:spaces:${this.profileId}/`;
@@ -115,7 +121,7 @@ export default {
             labels: this.labels,
             content: false,
             keepAlive: true,
-            defaultPosition: 'left_bottom',
+            defaultPosition: this.tiptipPosition || 'left_bottom',
             maxWidth: '240px',
           });
         });
@@ -127,7 +133,7 @@ export default {
             labels: this.labels,
             content: false,
             keepAlive: true,
-            defaultPosition: 'left_bottom',
+            defaultPosition: this.tiptipPosition || 'left_bottom',
             maxWidth: '240px',
           });
         });
