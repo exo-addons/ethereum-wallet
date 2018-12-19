@@ -292,9 +292,8 @@ import ContractAdminModal from './ContractAdminModal.vue';
 import TransactionsList from './TransactionsList.vue';
 import WalletAddress from './WalletAddress.vue';
 
-import {retrieveContractDetails} from '../WalletToken.js';
 import {addTransaction} from '../WalletTransactions.js';
-import {etherToFiat, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
+import {computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
 
 export default {
   components: {

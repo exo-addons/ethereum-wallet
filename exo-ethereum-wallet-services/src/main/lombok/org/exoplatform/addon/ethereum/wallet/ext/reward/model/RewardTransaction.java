@@ -95,16 +95,21 @@ public class RewardTransaction implements Serializable {
         jsonObject.put("tokensAmountSent", tokensAmountSent);
       }
     } catch (JSONException e) {
-      throw new RuntimeException("Error while converting Object to JSON", e);
+      throw new IllegalStateException("Error while converting Object to JSON", e);
     }
     return jsonObject;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null || !(obj instanceof RewardTransaction)) {
+    if (!(obj instanceof RewardTransaction)) {
       return false;
     }
     return StringUtils.equalsIgnoreCase(hash, ((RewardTransaction) obj).getHash());
+  }
+
+  @Override
+  public int hashCode() {
+    return hash == null ? 0 : hash.hashCode();
   }
 }

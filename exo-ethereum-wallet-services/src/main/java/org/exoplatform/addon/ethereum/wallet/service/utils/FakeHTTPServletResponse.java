@@ -8,6 +8,7 @@ import javax.servlet.http.*;
 
 import org.apache.commons.collections.MapUtils;
 
+@SuppressWarnings("all")
 class FakeHTTPServletResponse implements HttpServletRequest {
   @Override
   public AsyncContext startAsync(ServletRequest servletRequest,

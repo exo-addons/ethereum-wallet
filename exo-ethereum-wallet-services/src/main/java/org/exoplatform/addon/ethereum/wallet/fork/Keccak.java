@@ -1,5 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.fork;
 
+@SuppressWarnings("all")
 public class Keccak {
 
   static public class DigestKeccak extends BCMessageDigest implements Cloneable {

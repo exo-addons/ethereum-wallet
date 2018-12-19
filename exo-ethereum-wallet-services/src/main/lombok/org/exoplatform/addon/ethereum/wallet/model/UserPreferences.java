@@ -3,7 +3,7 @@ package org.exoplatform.addon.ethereum.wallet.model;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.jsonArrayToList;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.*;
@@ -15,23 +15,39 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserPreferences implements Serializable {
 
-  private static final long serialVersionUID = -5725443183560646198L;
+  private static final String OVERVIEW_ACCOUNTS_PARAM = "overviewAccounts";
 
-  private Integer           dataVersion      = 0;
+  private static final String PRINCIPAL_ACCOUNT_PARAM = "principalAccount";
 
-  private Long              defaultGas       = 0L;
+  private static final String ENABLE_DELEGATION_PARAM = "enableDelegation";
 
-  private String            currency         = "usd";
+  private static final String DATA_VERSION_PARAM      = "dataVersion";
 
-  private String            walletAddress    = null;
+  private static final String PHRASE_PARAM            = "phrase";
 
-  private String            phrase           = null;
+  private static final String WALLET_ADDRESS_PARAM    = "walletAddress";
 
-  private String            principalAccount = null;
+  private static final String DEFAULT_GAS_PARAM       = "defaultGas";
 
-  private List<String>      overviewAccounts = null;
+  private static final String CURRENCY_PARAM          = "currency";
 
-  private Boolean           enableDelegation = null;
+  private static final long   serialVersionUID        = -5725443183560646198L;
+
+  private Integer             dataVersion             = 0;
+
+  private Long                defaultGas              = 0L;
+
+  private String              currency                = "usd";
+
+  private String              walletAddress           = null;
+
+  private String              phrase                  = null;
+
+  private String              principalAccount        = null;
+
+  private Set<String>         overviewAccounts;
+
+  private Boolean             enableDelegation        = null;
 
   public String toJSONString() {
     return toJSONObject().toString();
@@ -40,22 +56,22 @@ public class UserPreferences implements Serializable {
   public JSONObject toJSONObject() {
     JSONObject jsonObject = new JSONObject();
     try {
-      jsonObject.put("currency", currency);
-      jsonObject.put("defaultGas", defaultGas);
-      jsonObject.put("walletAddress", walletAddress);
-      jsonObject.put("phrase", phrase);
-      jsonObject.put("dataVersion", dataVersion);
+      jsonObject.put(CURRENCY_PARAM, currency);
+      jsonObject.put(DEFAULT_GAS_PARAM, defaultGas);
+      jsonObject.put(WALLET_ADDRESS_PARAM, walletAddress);
+      jsonObject.put(PHRASE_PARAM, phrase);
+      jsonObject.put(DATA_VERSION_PARAM, dataVersion);
       if (enableDelegation != null) {
-        jsonObject.put("enableDelegation", enableDelegation);
+        jsonObject.put(ENABLE_DELEGATION_PARAM, enableDelegation);
       }
       if (principalAccount != null) {
-        jsonObject.put("principalAccount", principalAccount);
+        jsonObject.put(PRINCIPAL_ACCOUNT_PARAM, principalAccount);
       }
       if (overviewAccounts != null) {
-        jsonObject.put("overviewAccounts", new JSONArray(overviewAccounts));
+        jsonObject.put(OVERVIEW_ACCOUNTS_PARAM, new JSONArray(overviewAccounts));
       }
     } catch (JSONException e) {
-      throw new RuntimeException("Error while converting Object to JSON", e);
+      throw new IllegalStateException("Error while converting Object to JSON", e);
     }
     return jsonObject;
   }
@@ -67,31 +83,31 @@ public class UserPreferences implements Serializable {
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       UserPreferences userPreferences = new UserPreferences();
-      if (jsonObject.has("currency")) {
-        userPreferences.setCurrency(jsonObject.getString("currency"));
+      if (jsonObject.has(CURRENCY_PARAM)) {
+        userPreferences.setCurrency(jsonObject.getString(CURRENCY_PARAM));
       }
-      if (jsonObject.has("defaultGas")) {
-        userPreferences.setDefaultGas(jsonObject.getLong("defaultGas"));
+      if (jsonObject.has(DEFAULT_GAS_PARAM)) {
+        userPreferences.setDefaultGas(jsonObject.getLong(DEFAULT_GAS_PARAM));
       }
-      if (jsonObject.has("walletAddress")) {
-        userPreferences.setWalletAddress(jsonObject.getString("walletAddress"));
+      if (jsonObject.has(WALLET_ADDRESS_PARAM)) {
+        userPreferences.setWalletAddress(jsonObject.getString(WALLET_ADDRESS_PARAM));
       }
-      if (jsonObject.has("phrase")) {
-        userPreferences.setWalletAddress(jsonObject.getString("phrase"));
+      if (jsonObject.has(PHRASE_PARAM)) {
+        userPreferences.setWalletAddress(jsonObject.getString(PHRASE_PARAM));
       }
-      if (jsonObject.has("principalAccount")) {
-        userPreferences.setPrincipalAccount(jsonObject.getString("principalAccount"));
+      if (jsonObject.has(PRINCIPAL_ACCOUNT_PARAM)) {
+        userPreferences.setPrincipalAccount(jsonObject.getString(PRINCIPAL_ACCOUNT_PARAM));
       }
-      if (jsonObject.has("enableDelegation")) {
-        userPreferences.setEnableDelegation(jsonObject.getBoolean("enableDelegation"));
+      if (jsonObject.has(ENABLE_DELEGATION_PARAM)) {
+        userPreferences.setEnableDelegation(jsonObject.getBoolean(ENABLE_DELEGATION_PARAM));
       }
-      if (jsonObject.has("dataVersion")) {
-        userPreferences.setDataVersion(jsonObject.getInt("dataVersion"));
+      if (jsonObject.has(DATA_VERSION_PARAM)) {
+        userPreferences.setDataVersion(jsonObject.getInt(DATA_VERSION_PARAM));
       }
-      userPreferences.setOverviewAccounts(jsonArrayToList(jsonObject, "overviewAccounts"));
+      userPreferences.setOverviewAccounts(jsonArrayToList(jsonObject, OVERVIEW_ACCOUNTS_PARAM));
       return userPreferences;
     } catch (JSONException e) {
-      throw new RuntimeException("Error while converting JSON String to Object", e);
+      throw new IllegalStateException("Error while converting JSON String to Object", e);
     }
   }
 

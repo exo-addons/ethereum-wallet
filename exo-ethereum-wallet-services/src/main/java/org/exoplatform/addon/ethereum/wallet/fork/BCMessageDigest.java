@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 
 import org.bouncycastle.crypto.Digest;
 
+@SuppressWarnings("all")
 public class BCMessageDigest
     extends MessageDigest
 {

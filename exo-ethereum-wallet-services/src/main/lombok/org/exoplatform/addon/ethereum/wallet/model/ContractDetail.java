@@ -13,25 +13,43 @@ import lombok.*;
 @NoArgsConstructor
 public class ContractDetail implements Serializable {
 
-  private static final long serialVersionUID = 1459881604949041768L;
+  private static final String DEFAULT_CONTRACT_PARAM = "defaultContract";
 
-  private String            address;
+  private static final String CONTRACT_TYPE_PARAM    = "contractType";
 
-  private String            name;
+  private static final String SELL_PRICE_PARAM       = "sellPrice";
 
-  private String            symbol;
+  private static final String OWNER_PARAM            = "owner";
 
-  private Integer           decimals;
+  private static final String NETWORK_ID_PARAM       = "networkId";
 
-  private Long              networkId;
+  private static final String DECIMALS_PARAM         = "decimals";
 
-  private String            owner;
+  private static final String SYMBOL_PARAM           = "symbol";
 
-  private String            sellPrice;
+  private static final String NAME_PARAM             = "name";
 
-  private String            contractType;
+  private static final String ADDRESS_PARAM          = "address";
 
-  private boolean           defaultContract;
+  private static final long   serialVersionUID       = 1459881604949041768L;
+
+  private String              address;
+
+  private String              name;
+
+  private String              symbol;
+
+  private Integer             decimals;
+
+  private Long                networkId;
+
+  private String              owner;
+
+  private String              sellPrice;
+
+  private String              contractType;
+
+  private boolean             defaultContract;
 
   public String toJSONString() {
     return toJSONObject().toString();
@@ -41,32 +59,32 @@ public class ContractDetail implements Serializable {
     JSONObject jsonObject = new JSONObject();
     try {
       if (StringUtils.isNotBlank(name)) {
-        jsonObject.put("address", address);
+        jsonObject.put(ADDRESS_PARAM, address);
       }
       if (StringUtils.isNotBlank(name)) {
-        jsonObject.put("name", name);
+        jsonObject.put(NAME_PARAM, name);
       }
       if (StringUtils.isNotBlank(symbol)) {
-        jsonObject.put("symbol", symbol);
+        jsonObject.put(SYMBOL_PARAM, symbol);
       }
       if (decimals != null) {
-        jsonObject.put("decimals", decimals);
+        jsonObject.put(DECIMALS_PARAM, decimals);
       }
       if (networkId != null) {
-        jsonObject.put("networkId", networkId);
+        jsonObject.put(NETWORK_ID_PARAM, networkId);
       }
       if (StringUtils.isNotBlank(owner)) {
-        jsonObject.put("owner", owner);
+        jsonObject.put(OWNER_PARAM, owner);
       }
       if (StringUtils.isNotBlank(sellPrice)) {
-        jsonObject.put("sellPrice", sellPrice);
+        jsonObject.put(SELL_PRICE_PARAM, sellPrice);
       }
       if (StringUtils.isNotBlank(contractType)) {
-        jsonObject.put("contractType", contractType);
+        jsonObject.put(CONTRACT_TYPE_PARAM, contractType);
       }
-      jsonObject.put("defaultContract", defaultContract);
+      jsonObject.put(DEFAULT_CONTRACT_PARAM, defaultContract);
     } catch (JSONException e) {
-      throw new RuntimeException("Error while converting Object to JSON", e);
+      throw new IllegalStateException("Error while converting Object to JSON", e);
     }
     return jsonObject;
   }
@@ -78,18 +96,19 @@ public class ContractDetail implements Serializable {
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
       ContractDetail contractDetail = new ContractDetail();
-      contractDetail.setNetworkId(jsonObject.has("networkId") ? jsonObject.getLong("networkId") : 0);
-      contractDetail.setAddress(jsonObject.has("address") ? jsonObject.getString("address") : null);
-      contractDetail.setName(jsonObject.has("name") ? jsonObject.getString("name") : null);
-      contractDetail.setSymbol(jsonObject.has("symbol") ? jsonObject.getString("symbol") : null);
-      contractDetail.setDecimals(jsonObject.has("decimals") ? jsonObject.getInt("decimals") : 0);
-      contractDetail.setOwner(jsonObject.has("owner") ? jsonObject.getString("owner") : null);
-      contractDetail.setSellPrice(jsonObject.has("sellPrice") ? jsonObject.getString("sellPrice") : null);
-      contractDetail.setContractType(jsonObject.has("contractType") ? jsonObject.getString("contractType") : null);
-      contractDetail.setDefaultContract(jsonObject.has("defaultContract") ? jsonObject.getBoolean("defaultContract") : true);
+      contractDetail.setNetworkId(jsonObject.has(NETWORK_ID_PARAM) ? jsonObject.getLong(NETWORK_ID_PARAM) : 0);
+      contractDetail.setAddress(jsonObject.has(ADDRESS_PARAM) ? jsonObject.getString(ADDRESS_PARAM) : null);
+      contractDetail.setName(jsonObject.has(NAME_PARAM) ? jsonObject.getString(NAME_PARAM) : null);
+      contractDetail.setSymbol(jsonObject.has(SYMBOL_PARAM) ? jsonObject.getString(SYMBOL_PARAM) : null);
+      contractDetail.setDecimals(jsonObject.has(DECIMALS_PARAM) ? jsonObject.getInt(DECIMALS_PARAM) : 0);
+      contractDetail.setOwner(jsonObject.has(OWNER_PARAM) ? jsonObject.getString(OWNER_PARAM) : null);
+      contractDetail.setSellPrice(jsonObject.has(SELL_PRICE_PARAM) ? jsonObject.getString(SELL_PRICE_PARAM) : null);
+      contractDetail.setContractType(jsonObject.has(CONTRACT_TYPE_PARAM) ? jsonObject.getString(CONTRACT_TYPE_PARAM) : null);
+      contractDetail.setDefaultContract(jsonObject.has(DEFAULT_CONTRACT_PARAM) ? jsonObject.getBoolean(DEFAULT_CONTRACT_PARAM)
+                                                                               : Boolean.TRUE);
       return contractDetail;
     } catch (JSONException e) {
-      throw new RuntimeException("Error while converting JSON String to Object", e);
+      throw new IllegalStateException("Error while converting JSON String to Object", e);
     }
   }
 

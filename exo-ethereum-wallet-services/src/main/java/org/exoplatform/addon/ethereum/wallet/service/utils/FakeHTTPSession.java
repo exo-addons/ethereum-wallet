@@ -6,7 +6,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionContext;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("all")
 class FakeHTTPSession implements HttpSession {
   @Override
   public void setMaxInactiveInterval(int interval) {

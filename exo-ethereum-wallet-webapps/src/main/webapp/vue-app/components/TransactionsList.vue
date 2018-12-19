@@ -681,7 +681,7 @@ import WalletAddress from './WalletAddress.vue';
 import ProfileChip from './ProfileChip.vue';
 
 import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
-import {loadTransactions, loadContractTransactions, addTransaction} from '../WalletTransactions.js';
+import {loadTransactions, addTransaction} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -812,7 +812,6 @@ export default {
       this.loading = true;
       this.error = null;
 
-      const thiss = this;
       // Get transactions to latest block with maxBlocks to load
       return this.loadRecentTransaction(this.transactionsLimit)
         .then(() => {

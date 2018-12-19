@@ -75,11 +75,7 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("NOTIFICATION_ID", notification.getId());
       templateContext.put("READ", Boolean.valueOf(notificationRead) ? "read" : "unread");
       templateContext.put("FUNDS_REQUEST_SENT", Boolean.valueOf(fundRequestSent));
-      try {
-        templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
-      } catch (Exception e) {
-        templateContext.put("LAST_UPDATED_TIME", "");
-      }
+      setLastModifiedDate(notification, language, templateContext);
 
       String body = TemplateUtils.processGroovy(templateContext);
       // binding the exception throws by processing template
@@ -102,6 +98,14 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
     }
   }
 
+  protected void setLastModifiedDate(NotificationInfo notification, String language, TemplateContext templateContext) {
+    try {
+      templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
+    } catch (Exception e) {
+      templateContext.put("LAST_UPDATED_TIME", "");
+    }
+  }
+
   @Override
   protected boolean makeDigest(NotificationContext ctx, Writer writer) {
     return false;
@@ -120,11 +124,10 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
   private String getLastModifiedDate(NotificationInfo notification, String language) {
     Calendar lastModified = Calendar.getInstance();
     lastModified.setTimeInMillis(notification.getLastModifiedDate());
-    String date = TimeConvertUtils.convertXTimeAgoByTimeServer(lastModified.getTime(),
-                                                               "EE, dd yyyy",
-                                                               new Locale(language),
-                                                               TimeConvertUtils.YEAR);
-    return date;
+    return TimeConvertUtils.convertXTimeAgoByTimeServer(lastModified.getTime(),
+                                                        "EE, dd yyyy",
+                                                        new Locale(language),
+                                                        TimeConvertUtils.YEAR);
   }
 
   private static PluginConfig getPluginConfig(String pluginId) {
@@ -137,4 +140,4 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
     return pluginConfig;
   }
 
-};
+}

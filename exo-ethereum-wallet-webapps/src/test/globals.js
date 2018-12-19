@@ -31,7 +31,6 @@ global.eXo = {
 global.fetch = require('jest-fetch-mock');
 fetch.mockImplementation((url) => {
   let resultJson = null;
-  let resultText = '';
   if (url.indexOf('/portal/rest/wallet/api/global-settings') === 0) {
     resultJson = {
       defaultNetworkId: 4452365, // Configured netword in global settings
@@ -110,9 +109,7 @@ fetch.mockImplementation((url) => {
       type: 'user',
     };
   } else {
-    resultText = '';
-    resultJson = {};
     console.warn(new Error(`URL ${url} isn't mocked`));
   }
-  return Promise.resolve(resultJson ? new Response(JSON.stringify(resultJson)) : resultText);
+  return Promise.resolve(resultJson ? new Response(JSON.stringify(resultJson)) : '');
 });

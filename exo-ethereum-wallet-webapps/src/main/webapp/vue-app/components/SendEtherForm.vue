@@ -205,7 +205,7 @@ export default {
         const transaction = {
           from: sender,
           to: receiver,
-          value: window.localWeb3.utils.toWei(this.amount.toString(), 'ether'),
+          value: amount,
           gas: gas,
           gasPrice: this.gasPrice,
         };

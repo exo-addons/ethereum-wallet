@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.ext.gamification.model;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.ArrayList;
 
 import lombok.Data;
 import lombok.ToString;
@@ -10,26 +10,26 @@ import lombok.ToString;
 @ToString
 public class GamificationTeam implements Serializable {
 
-  private static final long            serialVersionUID = 4475704534821391132L;
+  private static final long                 serialVersionUID = 4475704534821391132L;
 
-  private Long                         id;
+  private Long                              id;
 
-  private String                       name;
+  private String                            name;
 
-  private String                       description;
+  private String                            description;
 
-  private GamificationRewardType   rewardType;
+  private GamificationRewardType            rewardType;
 
-  private Double                       budget;
+  private Double                            budget;
 
-  private Double                       rewardPerMember;
+  private Double                            rewardPerMember;
 
-  private Long                         spaceId;
+  private Long                              spaceId;
 
-  private String                       spacePrettyName;
+  private String                            spacePrettyName;
 
-  private GamificationTeamMember       manager;
+  private GamificationTeamMember            manager;
 
-  private List<GamificationTeamMember> members          = null;
+  private ArrayList<GamificationTeamMember> members          = null;
 
 }

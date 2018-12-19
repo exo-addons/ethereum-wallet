@@ -31,6 +31,8 @@ import org.exoplatform.portal.config.model.ApplicationType;
  */
 public class SetupApplicationRegistryService implements Startable {
 
+  private static final List<String> EVERYONE_PERMISSION_LIST = Collections.singletonList("Everyone");
+
   private static final String        WALLET_CATEGORY_NAME = "EthereumWallet";
 
   private ExoContainer               container;
@@ -49,13 +51,13 @@ public class SetupApplicationRegistryService implements Startable {
       ApplicationCategory applicationCategory = applicationRegistryService.getApplicationCategory(WALLET_CATEGORY_NAME);
       if (applicationCategory == null) {
         applicationCategory = new ApplicationCategory();
-        applicationCategory.setAccessPermissions(Arrays.asList(new String[] { "Everyone" }));
+        applicationCategory.setAccessPermissions(EVERYONE_PERMISSION_LIST);
         applicationCategory.setName(WALLET_CATEGORY_NAME);
         applicationCategory.setDescription("Ethereum Wallet");
         applicationCategory.setDisplayName("Ethereum Wallet");
         Application application = new Application();
         applicationCategory.setApplications(Collections.singletonList(application));
-        application.setAccessPermissions(new ArrayList<String>(Arrays.asList(new String[] { "Everyone" })));
+        application.setAccessPermissions(new ArrayList<String>(EVERYONE_PERMISSION_LIST));
         application.setDisplayName("Ethereum Space Wallet");
         application.setDescription("Ethereum Space Wallet");
         application.setApplicationName("EthereumSpaceWallet");
@@ -73,5 +75,6 @@ public class SetupApplicationRegistryService implements Startable {
 
   @Override
   public void stop() {
+    // Nothing to shutdown
   }
 }

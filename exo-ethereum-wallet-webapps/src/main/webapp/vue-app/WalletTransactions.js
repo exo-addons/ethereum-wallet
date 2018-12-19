@@ -704,7 +704,8 @@ function getStoredTransactionsHashes(networkId, account, noPending) {
       }
     })
     .then((transactions) => {
-      return transactions && transactions.length ? transactions.filter((transaction) => !noPending || !new Boolean(transaction.pending)) : [];
+      /* eslint-disable no-extra-boolean-cast */
+      return transactions && transactions.length ? transactions.filter((transaction) => !noPending || !Boolean(transaction.pending)) : [];
     })
     .catch((error) => {
       throw new Error('Error fetching stored transactions', error);

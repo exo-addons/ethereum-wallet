@@ -129,7 +129,7 @@
 import AddressAutoComplete from './AddressAutoComplete.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, etherToFiat, setDraggable, watchTransactionStatus, estimateTransactionFeeFiat} from '../WalletUtils.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, setDraggable, watchTransactionStatus, estimateTransactionFeeFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
@@ -376,7 +376,7 @@ export default {
                   to: receiver,
                   type: 'contract',
                   value: 0,
-                  gas: window.walletSettings.userPreferences.defaultGas,
+                  gas: gas,
                   gasPrice: this.gasPrice,
                   pending: true,
                   isAdminOperation: true,

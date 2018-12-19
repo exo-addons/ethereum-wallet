@@ -18,6 +18,7 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.ObjectFactory;
 import org.exoplatform.services.rest.impl.ResourceBinder;
 import org.exoplatform.services.rest.resource.AbstractResourceDescriptor;
+import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 public class WalletGamificationService {
 
@@ -44,7 +45,7 @@ public class WalletGamificationService {
     this.restResourceBinder = restResourceBinder;
   }
 
-  public GamificationSettings getSettings() throws Exception {
+  public GamificationSettings getSettings() throws JsonException {
     if (this.gamificationRestResource == null && !gamificationRestSearched) {
       try {
         // Check if gamification is deployed
@@ -55,7 +56,7 @@ public class WalletGamificationService {
                                                      && resource.getPathValue().getPath() != null
                                                      && resource.getPathValue().getPath().contains("gamification/api"))
                                                  .findFirst()
-                                                 .get();
+                                                 .orElse(null);
       } catch (Exception e) {
         LOG.warn("Error getting gamification REST resource", e);
       }
@@ -66,9 +67,7 @@ public class WalletGamificationService {
       if (this.gamificationSettings == null) {
         SettingValue<?> value = settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, EXT_GAMIFICATION_SETTINGS_KEY_NAME);
         if (value != null && value.getValue() != null) {
-          this.gamificationSettings = value == null
-              || value.getValue() == null ? this.gamificationSettings
-                                          : GamificationSettings.fromString(value.getValue().toString());
+          this.gamificationSettings = GamificationSettings.fromString(value.getValue().toString());
         }
       }
       return this.gamificationSettings;

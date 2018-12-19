@@ -8,8 +8,7 @@ import java.io.Serializable;
 import org.apache.commons.lang3.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.ext.reward.model.RewardPeriodType;
-import org.exoplatform.ws.frameworks.json.impl.JsonDefaultHandler;
-import org.exoplatform.ws.frameworks.json.impl.ObjectBuilder;
+import org.exoplatform.ws.frameworks.json.impl.*;
 
 import lombok.Data;
 
@@ -22,7 +21,7 @@ public class GamificationSettings implements Serializable {
 
   private String                 contractAddress;
 
-  private RewardPeriodType periodType       = RewardPeriodType.DEFAULT;
+  private RewardPeriodType       periodType       = RewardPeriodType.DEFAULT;
 
   private GamificationRewardType rewardType       = GamificationRewardType.FIXED;
 
@@ -30,7 +29,7 @@ public class GamificationSettings implements Serializable {
 
   private double                 budgetPerMember;
 
-  public static GamificationSettings fromString(String value) throws Exception {
+  public static GamificationSettings fromString(String value) throws JsonException {
     if (StringUtils.isBlank(value)) {
       return null;
     }
@@ -43,7 +42,7 @@ public class GamificationSettings implements Serializable {
     try {
       return JSON_GENERATOR.createJsonObject(this).toString();
     } catch (Exception e) {
-      throw new RuntimeException("Can't transform current GamificationSettings to string", e);
+      throw new IllegalStateException("Can't transform current GamificationSettings to string", e);
     }
   }
 }

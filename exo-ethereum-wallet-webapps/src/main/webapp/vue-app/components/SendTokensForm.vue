@@ -358,7 +358,7 @@ export default {
                   from: sender.toLowerCase(),
                   to: receiver,
                   value: 0,
-                  gas: window.walletSettings.userPreferences.defaultGas,
+                  gas: gas,
                   gasPrice: this.gasPrice,
                   pending: true,
                   contractAddress: contractDetails.address,

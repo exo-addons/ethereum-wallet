@@ -47,7 +47,9 @@ import rx.Subscription;
  */
 public class EthereumClientConnector implements Startable {
 
-  private static final Log         LOG                      = ExoLogger.getLogger(EthereumClientConnector.class);
+  private static final String      ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
+
+  private static final Log         LOG                              = ExoLogger.getLogger(EthereumClientConnector.class);
 
   private ExoContainer             container;
 
@@ -55,23 +57,23 @@ public class EthereumClientConnector implements Startable {
 
   private ListenerService          listenerService;
 
-  private GlobalSettings           globalSettings           = null;
+  private GlobalSettings           globalSettings                   = null;
 
-  private Web3j                    web3j                    = null;
+  private Web3j                    web3j                            = null;
 
-  private WebSocketClient          webSocketClient          = null;
+  private WebSocketClient          webSocketClient                  = null;
 
-  private WebSocketService         web3jService             = null;
+  private WebSocketService         web3jService                     = null;
 
-  private Subscription             transactionSubscription  = null;
+  private Subscription             transactionSubscription          = null;
 
-  private Queue<Transaction>       queue                    = new ConcurrentLinkedQueue<>();
+  private Queue<Transaction>       queue                            = new ConcurrentLinkedQueue<>();
 
-  private ScheduledExecutorService scheduledExecutorService = null;
+  private ScheduledExecutorService scheduledExecutorService         = null;
 
-  private long                     lastWatchedBlockNumber   = 0;
+  private long                     lastWatchedBlockNumber           = 0;
 
-  private boolean                  initializing             = false;
+  private boolean                  initializing                     = false;
 
   public EthereumClientConnector(EthereumWalletService ethereumWalletService,
                                  ListenerService listenerService,
@@ -144,21 +146,16 @@ public class EthereumClientConnector implements Startable {
 
   /**
    * Add subscription on Ethereum network to listen on all new transactions
-   * 
-   * @throws Exception
    */
-  public void startListeninigToTransactions() throws Exception {
+  public void startListeninigToTransactions() {
     if (this.lastWatchedBlockNumber == 0) {
       LOG.info("Initiate subscription to Ethereum transaction events starting from latest block");
-      this.transactionSubscription = web3j.transactionObservable().subscribe(tx -> {
-        queue.add(tx);
-      });
+      this.transactionSubscription = web3j.transactionObservable().subscribe(tx -> queue.add(tx));
     } else {
       LOG.info("Initiate subscription to Ethereum transaction events starting from block {}", this.lastWatchedBlockNumber);
       DefaultBlockParameterNumber startBlock = new DefaultBlockParameterNumber(this.lastWatchedBlockNumber);
-      this.transactionSubscription = web3j.catchUpToLatestAndSubscribeToNewTransactionsObservable(startBlock).subscribe(tx -> {
-        queue.add(tx);
-      });
+      this.transactionSubscription = web3j.catchUpToLatestAndSubscribeToNewTransactionsObservable(startBlock)
+                                          .subscribe(tx -> queue.add(tx));
     }
   }
 
@@ -185,7 +182,7 @@ public class EthereumClientConnector implements Startable {
    * @throws ExecutionException
    * @throws InterruptedException
    */
-  public TransactionReceipt getTransactionReceipt(String transactionHash) throws Exception {
+  public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
     EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
     if (ethGetTransactionReceipt != null && ethGetTransactionReceipt.getResult() != null) {
       return ethGetTransactionReceipt.getResult();
@@ -207,9 +204,8 @@ public class EthereumClientConnector implements Startable {
    * Change currently used globalSettings and re-init
    * 
    * @param newGlobalSettings
-   * @throws Exception
    */
-  public void changeSettings(GlobalSettings newGlobalSettings) throws Exception {
+  public void changeSettings(GlobalSettings newGlobalSettings) {
     if (newGlobalSettings == null) {
       throw new IllegalArgumentException("GlobalSettings argument is mandatory");
     }
@@ -243,24 +239,22 @@ public class EthereumClientConnector implements Startable {
 
   private void closeConnection() {
     stopListeninigToTransactions();
-    if (web3jService != null) {
-      if (web3j != null) {
-        try {
-          web3j.shutdown();
-        } catch (Throwable e) {
-          LOG.warn("Error closing old web3j connection: {}", e.getMessage());
-          if (this.web3jService != null && webSocketClient != null && webSocketClient.isOpen()) {
-            try {
-              web3jService.close();
-            } catch (Throwable e1) {
-              LOG.warn("Error closing old websocket connection: {}", e1.getMessage());
-            }
-          } else if (webSocketClient != null && webSocketClient.isOpen()) {
-            try {
-              webSocketClient.close();
-            } catch (Throwable e1) {
-              LOG.warn("Error closing old websocket connection: {}", e1.getMessage());
-            }
+    if (web3j != null) {
+      try {
+        web3j.shutdown();
+      } catch (Throwable e) {
+        LOG.warn("Error closing old web3j connection: {}", e.getMessage());
+        if (this.web3jService != null && webSocketClient != null && webSocketClient.isOpen()) {
+          try {
+            web3jService.close();
+          } catch (Throwable e1) {
+            LOG.warn("Error closing old websocket connection: {}", e1.getMessage());
+          }
+        } else if (webSocketClient != null && webSocketClient.isOpen()) {
+          try {
+            webSocketClient.close();
+          } catch (Throwable e1) {
+            LOG.warn("Error closing old websocket connection: {}", e1.getMessage());
           }
         }
       }
@@ -270,7 +264,7 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
-  private boolean initWeb3Connection() throws Exception {
+  private boolean initWeb3Connection() {
     if (initializing) {
       return false;
     }
@@ -298,7 +292,7 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
-  private void establishConnection() throws Exception {
+  private void establishConnection() {
     closeConnection();
 
     LOG.info("Connecting to Ethereum network endpoint {}", getWebsocketProviderURL());
@@ -312,7 +306,7 @@ public class EthereumClientConnector implements Startable {
    * Test to synchronously test connection, else, it will wait infinitely until
    * a connection is established
    */
-  private WebSocketService testConnection() throws Exception {
+  private WebSocketService testConnection() {
     try {
       this.webSocketClient = new WebSocketClient(new URI(getWebsocketProviderURL()));
       this.webSocketClient.setConnectionLostTimeout(10);
@@ -320,15 +314,17 @@ public class EthereumClientConnector implements Startable {
       this.webSocketClient.setListener(new WebSocketListener() {
         @Override
         public void onMessage(String message) throws IOException {
+          LOG.debug("A new message is received in testConnection method");
         }
 
         @Override
         public void onError(Exception e) {
-          LOG.warn("Connection failed to " + getWebsocketProviderURL());
+          LOG.warn(getConnectionFailedMessage());
         }
 
         @Override
         public void onClose() {
+          LOG.debug("Websocket connection closed for testConnection method");
         }
       });
       this.web3jService.connect();
@@ -347,7 +343,7 @@ public class EthereumClientConnector implements Startable {
       try {
         this.web3j.shutdown();
       } catch (Exception e1) {
-        LOG.debug("Error closing web socket", e1);
+        LOG.debug(ERROR_CLOSING_WEB_SOCKET_MESSAGE, e1);
       } finally {
         this.web3j = null;
         this.webSocketClient = null;
@@ -358,7 +354,7 @@ public class EthereumClientConnector implements Startable {
       try {
         this.web3jService.close();
       } catch (Exception e1) {
-        LOG.debug("Error closing web socket", e1);
+        LOG.debug(ERROR_CLOSING_WEB_SOCKET_MESSAGE, e1);
       } finally {
         this.web3jService = null;
         this.webSocketClient = null;
@@ -368,7 +364,7 @@ public class EthereumClientConnector implements Startable {
       try {
         this.webSocketClient.close();
       } catch (Exception e1) {
-        LOG.debug("Error closing web socket", e1);
+        LOG.debug(ERROR_CLOSING_WEB_SOCKET_MESSAGE, e1);
       } finally {
         this.web3j = null;
         this.webSocketClient = null;
@@ -376,9 +372,13 @@ public class EthereumClientConnector implements Startable {
       }
     }
     if (e == null) {
-      throw new IllegalStateException("Connection failed to " + getWebsocketProviderURL());
+      throw new IllegalStateException(getConnectionFailedMessage());
     } else {
-      throw new IllegalStateException("Connection failed to " + getWebsocketProviderURL(), e);
+      throw new IllegalStateException(getConnectionFailedMessage(), e);
     }
+  }
+
+  protected String getConnectionFailedMessage() {
+    return "Connection failed to " + getWebsocketProviderURL();
   }
 }

@@ -148,7 +148,7 @@ import WalletAddress from './WalletAddress.vue';
 import * as constants from '../WalletConstants.js';
 
 import {setDraggable, disableMetamask} from '../WalletUtils.js';
-import {searchFullName, searchUserOrSpaceObject, saveNewAddress} from '../WalletAddressRegistry.js';
+import {searchFullName, saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
   components: {

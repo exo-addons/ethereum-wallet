@@ -52,8 +52,12 @@ import org.exoplatform.webui.application.WebuiRequestContext;
  * Utils class to provide common tools and constants
  */
 public class Utils {
-  private static final Log                               LOG                                   = ExoLogger.getLogger(Utils.class);
+  private static final Log LOG = ExoLogger.getLogger(Utils.class);
 
+  private Utils() {
+  }
+
+  @SuppressWarnings("all")
   public static final char[]                             SIMPLE_CHARS                          = new char[] { 'A', 'B', 'C', 'D',
       'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
       'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1',
@@ -278,6 +282,7 @@ public class Utils {
     }
   }
 
+  @SuppressWarnings("all")
   public static String getPermanentLink(AccountDetail account) {
     String profileLink = null;
     try {
@@ -368,16 +373,16 @@ public class Utils {
     }
   }
 
-  public static List<String> jsonArrayToList(JSONObject jsonObject, String key) throws JSONException {
-    List<String> list = null;
+  public static Set<String> jsonArrayToList(JSONObject jsonObject, String key) throws JSONException {
+    Set<String> set = null;
     if (jsonObject.has(key)) {
-      list = new ArrayList<String>();
+      set = new HashSet<>();
       JSONArray arrayValue = jsonObject.getJSONArray(key);
       for (int i = 0; i < arrayValue.length(); i++) {
-        list.add(arrayValue.getString(i));
+        set.add(arrayValue.getString(i));
       }
     }
-    return list;
+    return set;
   }
 
   public static String encodeString(String content) {

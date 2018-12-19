@@ -426,7 +426,7 @@ export default {
           if (this.principalAccount) {
             this.$set(kudosWallet, 'status', 'pending');
           }
-          if (transaction && transaction.contractAmount) {
+          if (transaction.contractAmount) {
             this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
           }
           this.selectedKudosIdentitiesList.splice(kudosWalletIndex, 1);

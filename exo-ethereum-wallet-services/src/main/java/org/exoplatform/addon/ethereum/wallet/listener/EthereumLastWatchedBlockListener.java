@@ -50,11 +50,11 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
     RequestLifeCycle.begin(this.container);
     try {
       GlobalSettings globalSettings = ethereumWalletService.getSettings();
-      long networkId = globalSettings.getDefaultNetworkId();
-      if (networkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
+      long defaultNetworkId = globalSettings.getDefaultNetworkId();
+      if (defaultNetworkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
         this.lastSavedBlockNumber = blockNumber;
-        this.networkId = networkId;
-        this.ethereumWalletService.saveLastWatchedBlockNumber(networkId, blockNumber);
+        this.networkId = defaultNetworkId;
+        this.ethereumWalletService.saveLastWatchedBlockNumber(defaultNetworkId, blockNumber);
       }
     } finally {
       RequestLifeCycle.end();

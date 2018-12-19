@@ -8,9 +8,12 @@ import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.core.methods.response.Log;
 
-@SuppressWarnings("rawtypes")
 public class ContractUtils {
 
+  private ContractUtils() {
+  }
+
+  @SuppressWarnings("rawtypes")
   public static EventValues staticExtractEventParameters(Event event, Log log) {
 
     List<String> topics = log.getTopics();

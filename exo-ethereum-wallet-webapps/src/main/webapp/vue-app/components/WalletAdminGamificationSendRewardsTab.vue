@@ -164,7 +164,7 @@
 import SendRewardModal from './SendRewardModal.vue';
 
 import {getPeriodRewardTransactions} from '../WalletRewardServices.js';
-import {watchTransactionStatus, getTransactionEtherscanlink} from '../WalletUtils.js';
+import {watchTransactionStatus} from '../WalletUtils.js';
 
 export default {
   components: {

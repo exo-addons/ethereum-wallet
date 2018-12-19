@@ -8,6 +8,7 @@ import org.bouncycastle.util.Arrays;
  * <p>
  * Following the naming conventions used in the C source code to enable easy review of the implementation.
  */
+@SuppressWarnings("all")
 public class KeccakDigest
     implements ExtendedDigest
 {

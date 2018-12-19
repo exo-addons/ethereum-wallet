@@ -13,7 +13,7 @@ import org.web3j.abi.datatypes.Type;
 /**
  * Utility functions.
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("all")
 public class Utils {
     private Utils() {}
 

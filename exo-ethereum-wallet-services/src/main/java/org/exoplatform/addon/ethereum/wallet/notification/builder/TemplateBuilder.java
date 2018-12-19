@@ -75,11 +75,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
       templateContext.put("HASH", hash);
       String absoluteMyWalletLink = getWalletLink(receiverType, receiver);
       templateContext.put("BASE_URL", absoluteMyWalletLink);
-      try {
-        templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
-      } catch (Exception e) {
-        templateContext.put("LAST_UPDATED_TIME", "");
-      }
+      setLastUpdateDate(notification, language, templateContext);
 
       String body = TemplateUtils.processGroovy(templateContext);
       // binding the exception throws by processing template
@@ -97,6 +93,14 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
     } catch (Exception e) {
       LOG.warn("An error occurred while building notification message", e);
       throw e;
+    }
+  }
+
+  protected void setLastUpdateDate(NotificationInfo notification, String language, TemplateContext templateContext) {
+    try {
+      templateContext.put("LAST_UPDATED_TIME", getLastModifiedDate(notification, language));
+    } catch (Exception e) {
+      templateContext.put("LAST_UPDATED_TIME", "");
     }
   }
 
@@ -118,11 +122,10 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
   private String getLastModifiedDate(NotificationInfo notification, String language) {
     Calendar lastModified = Calendar.getInstance();
     lastModified.setTimeInMillis(notification.getLastModifiedDate());
-    String date = TimeConvertUtils.convertXTimeAgoByTimeServer(lastModified.getTime(),
-                                                               "EE, dd yyyy",
-                                                               new Locale(language),
-                                                               TimeConvertUtils.YEAR);
-    return date;
+    return TimeConvertUtils.convertXTimeAgoByTimeServer(lastModified.getTime(),
+                                                        "EE, dd yyyy",
+                                                        new Locale(language),
+                                                        TimeConvertUtils.YEAR);
   }
 
   private static PluginConfig getPluginConfig(String pluginId) {
@@ -135,4 +138,4 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
     return pluginConfig;
   }
 
-};
+}

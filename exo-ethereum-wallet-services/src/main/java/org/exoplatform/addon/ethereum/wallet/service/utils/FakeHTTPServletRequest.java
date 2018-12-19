@@ -2,13 +2,13 @@ package org.exoplatform.addon.ethereum.wallet.service.utils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Locale;
+import java.util.*;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
+@SuppressWarnings("all")
 class FakeHTTPServletRequest implements HttpServletResponse {
   @Override
   public void setLocale(Locale loc) {
@@ -117,7 +117,7 @@ class FakeHTTPServletRequest implements HttpServletResponse {
 
   @Override
   public Collection<String> getHeaders(String name) {
-    return null;
+    return Collections.emptySet();
   }
 
   @Override

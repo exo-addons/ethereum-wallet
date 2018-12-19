@@ -18,8 +18,10 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -66,6 +68,8 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  * A storage service to save/load information used by users and spaces wallets
  */
 public class EthereumWalletService implements Startable {
+
+  private static final String ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE = "address parameter is mandatory";
 
   private static final Log                                                                   LOG                      =
                                                                                                  ExoLogger.getLogger(EthereumWalletService.class);
@@ -200,7 +204,7 @@ public class EthereumWalletService implements Startable {
       LOG.warn("Contract BIN path is empty, thus no contract deployment is possible");
     }
     this.accountDetailFutureCache =
-                                  new FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>>(new Loader<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>>() {
+                                  new FutureExoCache<>(new Loader<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>>() {
                                     @Override
                                     public AccountDetail retrieve(ServiceContext<AccountDetail> context,
                                                                   AccountDetailCacheId key) throws Exception {
@@ -304,7 +308,8 @@ public class EthereumWalletService implements Startable {
       // Retrieve stored global settings from memory
       return this.storedSettings;
     }
-    return this.storedSettings = getSettings(null);
+    this.storedSettings = getSettings(null);
+    return this.storedSettings;
   }
 
   /**
@@ -384,10 +389,8 @@ public class EthereumWalletService implements Startable {
           userSettings.setWalletAddress(getUserAddress(username));
           userSettings.setPhrase(getUserPhrase(username));
         }
-        if (this.storedSettings != null) {
-          if (StringUtils.isNotBlank(this.storedSettings.getPrincipalContractAdminAddress())) {
-            globalSettings.setPrincipalContractAdminAddress(this.storedSettings.getPrincipalContractAdminAddress());
-          }
+        if (this.storedSettings != null && StringUtils.isNotBlank(this.storedSettings.getPrincipalContractAdminAddress())) {
+          globalSettings.setPrincipalContractAdminAddress(this.storedSettings.getPrincipalContractAdminAddress());
         }
       }
       globalSettings.setContractAbi(getContractAbi());
@@ -407,7 +410,7 @@ public class EthereumWalletService implements Startable {
    */
   public void saveContract(ContractDetail contractDetail) {
     if (StringUtils.isBlank(contractDetail.getAddress())) {
-      throw new IllegalArgumentException("address parameter is mandatory");
+      throw new IllegalArgumentException(ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE);
     }
     if (contractDetail.getNetworkId() == null || contractDetail.getNetworkId() == 0) {
       throw new IllegalArgumentException("networkId parameter is mandatory");
@@ -527,7 +530,7 @@ public class EthereumWalletService implements Startable {
       String[] contractAddresses = defaultContractsAddressesString.split(",");
       return Arrays.stream(contractAddresses).map(String::toLowerCase).collect(Collectors.toSet());
     }
-    return null;
+    return Collections.emptySet();
   }
 
   /**
@@ -591,7 +594,7 @@ public class EthereumWalletService implements Startable {
    */
   public AccountDetail getAccountDetailsByAddress(String address) {
     if (address == null) {
-      throw new IllegalArgumentException("address parameter is mandatory");
+      throw new IllegalArgumentException(ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE);
     }
     AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(address.toLowerCase()));
     if (accountDetails != null && StringUtils.isNotBlank(accountDetails.getAddress())) {
@@ -756,7 +759,7 @@ public class EthereumWalletService implements Startable {
    */
   public void saveAccountTransaction(Long networkId, String address, String hash, boolean sender) {
     if (StringUtils.isBlank(address)) {
-      throw new IllegalArgumentException("address parameter is mandatory");
+      throw new IllegalArgumentException(ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE);
     }
     if (StringUtils.isBlank(hash)) {
       throw new IllegalArgumentException("transaction hash parameter is mandatory");
@@ -810,15 +813,13 @@ public class EthereumWalletService implements Startable {
       if (cachedTransactionDetail != null) {
         transactionDetail = cachedTransactionDetail;
       }
-      if (!StringUtils.isBlank(transactionDetail.getFrom())
-          && !StringUtils.equalsIgnoreCase(transactionDetail.getFrom(), address)) {
-        // If user is admin and no user is associated to sender account, then
-        // display label
-        if (!displayLabelFinal) {
-          AccountDetail txAccountDetails = getAccountDetailsByAddress(transactionDetail.getFrom());
-          if (txAccountDetails != null && !StringUtils.equalsIgnoreCase(txAccountDetails.getAddress(), address)) {
-            transactionDetail.setLabel(null);
-          }
+      // If user is admin and no user is associated to sender account, then
+      // display label
+      if (!StringUtils.isBlank(transactionDetail.getFrom()) && !StringUtils.equalsIgnoreCase(transactionDetail.getFrom(), address)
+          && !displayLabelFinal) {
+        AccountDetail txAccountDetails = getAccountDetailsByAddress(transactionDetail.getFrom());
+        if (txAccountDetails != null && !StringUtils.equalsIgnoreCase(txAccountDetails.getAddress(), address)) {
+          transactionDetail.setLabel(null);
         }
       }
       return transactionDetail.toJSONObject();
@@ -836,15 +837,15 @@ public class EthereumWalletService implements Startable {
 
     AccountDetail requestSender = getAccountDetailsByAddress(fundsRequest.getAddress());
     if (requestSender == null) {
-      throw new IllegalStateException("Bad request sent to server with invalid sender address");
+      throw new IllegalStateException("Bad request sent to server with unknown sender address");
     }
 
     String requestSenderId = requestSender.getId();
     String requestSenderType = requestSender.getType();
 
     if (StringUtils.equals(requestSenderType, USER_ACCOUNT_TYPE) && !StringUtils.equals(currentUser, requestSenderId)) {
-      LOG.warn("Bad request sent to server with invalid sender address");
-      throw new IllegalAccessException("Bad request sent to server with invalid sender address");
+      LOG.warn("Bad request sent to server with invalid sender type or id {} / {}", requestSenderType, requestSenderId);
+      throw new IllegalAccessException("Bad request sent to server with invalid sender");
     }
 
     if (StringUtils.equals(requestSenderType, SPACE_ACCOUNT_TYPE)) {
@@ -942,10 +943,10 @@ public class EthereumWalletService implements Startable {
     LOG.info("Retrieve list of wallets");
     Set<AccountDetail> wallets = new HashSet<>();
     Map<String, String> usernames = getListOfWalletsOfType(USER_ACCOUNT_TYPE);
-    for (String username : usernames.keySet()) {
-      AccountDetail details = getUserDetails(username);
+    for (Entry<String, String> user : usernames.entrySet()) {
+      AccountDetail details = getUserDetails(user.getKey());
       if (details != null) {
-        details.setAddress(usernames.get(username));
+        details.setAddress(user.getValue());
         wallets.add(details);
       }
     }
@@ -953,10 +954,10 @@ public class EthereumWalletService implements Startable {
     LOG.info("{} user wallets has been loaded", this.walletsCount);
 
     Map<String, String> spaces = getListOfWalletsOfType(SPACE_ACCOUNT_TYPE);
-    for (String spaceId : spaces.keySet()) {
-      AccountDetail details = getSpaceDetails(spaceId);
+    for (Entry<String, String> space : spaces.entrySet()) {
+      AccountDetail details = getSpaceDetails(space.getKey());
       if (details != null) {
-        details.setAddress(spaces.get(spaceId));
+        details.setAddress(space.getValue());
         wallets.add(details);
       }
     }
@@ -1044,7 +1045,7 @@ public class EthereumWalletService implements Startable {
    */
   public TransactionDetail getTransactionDetailFromCache(String transactionHash) {
     TransactionDetail transactionDetail = this.transactionDetailsCache.get(transactionHash);
-    return transactionDetail == null ? null : (TransactionDetail) transactionDetail.clone();
+    return transactionDetail == null ? null : transactionDetail.copy();
   }
 
   /**
@@ -1062,9 +1063,9 @@ public class EthereumWalletService implements Startable {
    * 
    * @param name
    * @return
-   * @throws Exception
+   * @throws IOException
    */
-  public String getContract(String name, String extension) throws Exception {
+  public String getContract(String name, String extension) throws IOException {
     try (InputStream abiInputStream = this.getClass()
                                           .getClassLoader()
                                           .getResourceAsStream("org/exoplatform/addon/ethereum/wallet/contract/" + name + "."

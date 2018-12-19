@@ -21,6 +21,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventValues;
@@ -78,13 +79,11 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
                                                                             : ethereumWalletService.getContractDetail(transaction.getTo(),
                                                                                                                       settings.getDefaultNetworkId());
     // Save transaction in contract transactions list
-    if (contractDetails != null) {
-      if (StringUtils.isNotBlank(contractDetails.getName())) {
-        ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(),
-                                                     transaction.getTo(),
-                                                     transaction.getHash(),
-                                                     false);
-      }
+    if (contractDetails != null && StringUtils.isNotBlank(contractDetails.getName())) {
+      ethereumWalletService.saveAccountTransaction(settings.getDefaultNetworkId(),
+                                                   transaction.getTo(),
+                                                   transaction.getHash(),
+                                                   false);
     }
 
     BigInteger amountBigInteger = transaction.getValue();
@@ -157,19 +156,15 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     // Send notification to sender if the address is recognized
     if (sender != null && sender.getId() != null) {
-      if (sendNotification) {
-        if (isContractTransaction || checkTransactionStatus(transaction) != null) {
-          transactionStatusOk = true;
-          // Chack if ether was sent to contract
-          if (!isContractTransaction && StringUtils.isBlank(receiver.getId())) {
-            if (contractDetails != null) {
-              receiver.setName("Contract: " + contractDetails.getName());
-            }
-          }
+      if (sendNotification && isContractTransaction || checkTransactionStatus(transaction) != null) {
+        transactionStatusOk = true;
+        // Chack if ether was sent to contract
+        if (!isContractTransaction && StringUtils.isBlank(receiver.getId()) && contractDetails != null) {
+          receiver.setName("Contract: " + contractDetails.getName());
+        }
 
-          if (isTransactionPendingInCache) {
-            sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.SENDER, amount);
-          }
+        if (isTransactionPendingInCache) {
+          sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.SENDER, amount);
         }
       }
 
@@ -182,20 +177,20 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     // Send notification to receiver if the address is recognized
     if (receiver != null && receiver.getId() != null
-        && (sender == null || sender.getId() == null || !sender.getId().equals(receiver.getId()))) {
-      if (sendNotification) {
-        if (isContractTransaction || transactionStatusOk || checkTransactionStatus(transaction) != null) {
-          // Change address to 'Admin' if the sender address equals to the
-          // principal contract owner
-          if (sender != null && sender.getId() == null && settings != null && settings.getPrincipalContractAdminAddress() != null
-              && StringUtils.equalsIgnoreCase(settings.getPrincipalContractAdminAddress(), sender.getAddress())) {
-            sender.setName(settings.getPrincipalContractAdminName());
-          }
+        && (sender == null || sender.getId() == null || !sender.getId().equals(receiver.getId())))
 
-          if (isTransactionPendingInCache) {
-            // Send notification to receiver
-            sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.RECEIVER, amount);
-          }
+    {
+      if (sendNotification && isContractTransaction || transactionStatusOk || checkTransactionStatus(transaction) != null) {
+        // Change address to 'Admin' if the sender address equals to the
+        // principal contract owner
+        if (sender != null && sender.getId() == null && settings != null && settings.getPrincipalContractAdminAddress() != null
+            && StringUtils.equalsIgnoreCase(settings.getPrincipalContractAdminAddress(), sender.getAddress())) {
+          sender.setName(settings.getPrincipalContractAdminName());
+        }
+
+        if (isTransactionPendingInCache) {
+          // Send notification to receiver
+          sendNotification(transaction.getHash(), sender, receiver, contractDetails, TransactionStatus.RECEIVER, amount);
         }
       }
 
@@ -238,7 +233,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
   private TransactionDetail getReceiverAddressFromContractData(GlobalSettings settings,
                                                                ContractDetail contractDetail,
-                                                               Transaction transaction) throws Exception {
+                                                               Transaction transaction) throws InterruptedException,
+                                                                                        ExecutionException {
     if (transaction == null || transaction.getTo() == null || contractDetail == null) {
       // Contract Transaction type is not considered for notifications
       return null;
@@ -246,30 +242,29 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
 
     String contractAddress = transaction.getTo();
     Set<String> defaultContracts = settings.getDefaultContractsToDisplay();
-    if (defaultContracts != null && defaultContracts.contains(contractAddress)) {
-      // Default contract transaction, need to check receiver address if
-      // he's recognized
-      if (transaction.getInput() != null && !transaction.getInput().equals("0x")) {
-        TransactionReceipt transactionReceipt = checkTransactionStatus(transaction);
+    // Default contract transaction, need to check receiver address if
+    // he's recognized
+    if (defaultContracts != null && defaultContracts.contains(contractAddress) && transaction.getInput() != null
+        && !transaction.getInput().equals("0x")) {
+      TransactionReceipt transactionReceipt = checkTransactionStatus(transaction);
 
-        if (transactionReceipt == null || transactionReceipt.getLogs() == null || transactionReceipt.getLogs().size() == 0) {
-          // Transaction may have failed
-          return null;
-        }
+      if (transactionReceipt == null || transactionReceipt.getLogs() == null || transactionReceipt.getLogs().isEmpty()) {
+        // Transaction may have failed
+        return null;
+      }
 
-        try {
-          for (int i = 0; i < transactionReceipt.getLogs().size(); i++) {
-            TransactionDetail contractTransactionDetail = getContractTransactiondetail(contractDetail,
-                                                                                       contractAddress,
-                                                                                       transactionReceipt,
-                                                                                       i);
-            if (contractTransactionDetail != null) {
-              return contractTransactionDetail;
-            }
+      try {
+        for (int i = 0; i < transactionReceipt.getLogs().size(); i++) {
+          TransactionDetail contractTransactionDetail = getContractTransactiondetail(contractDetail,
+                                                                                     contractAddress,
+                                                                                     transactionReceipt,
+                                                                                     i);
+          if (contractTransactionDetail != null) {
+            return contractTransactionDetail;
           }
-        } catch (Throwable e) {
-          LOG.warn("Error occurred while parsing transaction", e);
         }
+      } catch (Throwable e) {
+        LOG.warn("Error occurred while parsing transaction", e);
       }
     }
     // Contract address is not recognized
@@ -303,7 +298,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     return null;
   }
 
-  private TransactionReceipt checkTransactionStatus(Transaction transaction) throws Exception {
+  private TransactionReceipt checkTransactionStatus(Transaction transaction) throws InterruptedException, ExecutionException {
     TransactionReceipt transactionReceipt = ethereumClientConnector.getTransactionReceipt(transaction.getHash());
     if (transactionReceipt == null || "0x0".equals(transactionReceipt.getStatus())) {
       // Transaction may have failed

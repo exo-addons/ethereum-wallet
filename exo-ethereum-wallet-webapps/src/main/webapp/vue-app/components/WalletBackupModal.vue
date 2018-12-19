@@ -107,7 +107,7 @@
 <script>
 import WalletAddress from './WalletAddress.vue';
 
-import {setDraggable, unlockBrowerWallet, lockBrowerWallet, getCurrentBrowerWallet, setWalletBackedUp, hashCode} from '../WalletUtils.js';
+import {setDraggable, unlockBrowerWallet, lockBrowerWallet, getCurrentBrowerWallet, hashCode} from '../WalletUtils.js';
 
 export default {
   components: {

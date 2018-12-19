@@ -15,7 +15,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class TransactionDetail implements Serializable, Cloneable {
+public class TransactionDetail implements Serializable {
 
   private static final long serialVersionUID = 658273092293607458L;
 
@@ -56,13 +56,20 @@ public class TransactionDetail implements Serializable, Cloneable {
     return transactionMessage;
   }
 
-  @Override
-  public Object clone() {
-    try {
-      return super.clone();
-    } catch (CloneNotSupportedException e) {
-      return null;
-    }
+  public TransactionDetail copy() {
+    return new TransactionDetail(networkId,
+                                 hash,
+                                 contractAddress,
+                                 contractMethodName,
+                                 pending,
+                                 isAdminOperation,
+                                 from,
+                                 to,
+                                 label,
+                                 message,
+                                 value,
+                                 contractAmount,
+                                 timestamp);
   }
 
   /**
@@ -117,7 +124,7 @@ public class TransactionDetail implements Serializable, Cloneable {
         jsonObject.put("isAdminOperation", isAdminOperation);
       }
     } catch (JSONException e) {
-      throw new RuntimeException("Error while converting Object to JSON", e);
+      throw new IllegalStateException("Error while converting Object to JSON", e);
     }
     return jsonObject;
   }

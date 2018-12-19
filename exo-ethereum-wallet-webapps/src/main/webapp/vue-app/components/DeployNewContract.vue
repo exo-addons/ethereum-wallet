@@ -433,7 +433,6 @@ export default {
 
       const step = this.step;
       try {
-        const thiss = this;
         if (step < 4) {
           const contractInstance = this.contractInstancesByStep[step];
           if (!contractInstance) {

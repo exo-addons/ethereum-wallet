@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.service.utils;
 
 import java.time.*;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.exoplatform.addon.ethereum.wallet.ext.gamification.entity.GamificationTeamEntity;
@@ -22,6 +22,9 @@ public class GamificationUtils {
   public static final JsonParser    JSON_PARSER    = new JsonParserImpl();
 
   public static final JsonGenerator JSON_GENERATOR = new JsonGeneratorImpl();
+
+  private GamificationUtils() {
+  }
 
   public static LocalDateTime timeFromSeconds(long createdDate) {
     return LocalDateTime.ofInstant(Instant.ofEpochSecond(createdDate), TimeZone.getDefault().toZoneId());
@@ -48,7 +51,7 @@ public class GamificationUtils {
     if (gamificationTeam.getSpaceId() != null && gamificationTeam.getSpaceId() != 0) {
       teamEntity.setSpaceId(gamificationTeam.getSpaceId());
     }
-    if (gamificationTeam.getMembers() != null && gamificationTeam.getMembers().size() > 0) {
+    if (gamificationTeam.getMembers() != null && !gamificationTeam.getMembers().isEmpty()) {
       teamEntity.setMembers(gamificationTeam.getMembers()
                                             .stream()
                                             .map(gamificationTeamMember -> getGamificationTeamMemberEntity(teamEntity,
@@ -78,11 +81,12 @@ public class GamificationUtils {
         gamificationTeam.setSpacePrettyName(space.getPrettyName());
       }
     }
-    if (teamEntity.getMembers() != null && teamEntity.getMembers().size() > 0) {
-      gamificationTeam.setMembers(teamEntity.getMembers()
-                                            .stream()
-                                            .map(teamMemberEntity -> getGamificationTeamMember(teamMemberEntity))
-                                            .collect(Collectors.toList()));
+    if (teamEntity.getMembers() != null && !teamEntity.getMembers().isEmpty()) {
+      List<GamificationTeamMember> list = teamEntity.getMembers()
+                                                    .stream()
+                                                    .map(teamMemberEntity -> getGamificationTeamMember(teamMemberEntity))
+                                                    .collect(Collectors.toList());
+      gamificationTeam.setMembers(new ArrayList<>(list));
     }
     return gamificationTeam;
   }

@@ -355,10 +355,12 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       String currentUserId = getCurrentUserId();
       if (accountDetails == null || (USER_ACCOUNT_TYPE.equals(accountDetails.getType())
           && !StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId))) {
-        LOG.warn("User {} attempts to display transactions of {} {}",
-                 currentUserId,
-                 accountDetails.getType(),
-                 accountDetails.getId());
+        if(accountDetails != null) {
+          LOG.warn("User {} attempts to display transactions of {} {}",
+                   currentUserId,
+                   accountDetails.getType(),
+                   accountDetails.getId());
+        }
         return Response.status(403).build();
       }
     }
