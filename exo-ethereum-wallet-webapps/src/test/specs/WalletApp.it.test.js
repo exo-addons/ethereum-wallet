@@ -10,7 +10,7 @@ import WalletMetamaskSetup from '../../main/webapp/vue-app/components/WalletMeta
 import WalletBackupModal from '../../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../../main/webapp/vue-app/components/WalletResetModal';
 
-const {mount} = require('vue-test-utils');
+const {mount} = require('@vue/test-utils');
 
 describe('WalletApp.test.js', () => {
   let app;

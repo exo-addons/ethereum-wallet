@@ -247,7 +247,6 @@
 </template>
 
 <script>
-import TransactionsList from './TransactionsList.vue';
 import WalletAddress from './WalletAddress.vue';
 import ProfileChip from './ProfileChip.vue';
 
@@ -258,7 +257,6 @@ export default {
   components: {
     ProfileChip,
     WalletAddress,
-    TransactionsList,
   },
   props: {
     networkId: {

@@ -1,5 +1,5 @@
 <template>
-  <a v-if="profileId" :id="id" :title="profileId" :href="url" rel="nofollow" target="_blank"> <span v-html="displayName"></span> </a> <code v-else-if="displayName" v-html="displayName"></code>
+  <a v-if="profileId" :id="id" :title="profileId" :href="url" rel="nofollow" target="_blank"> {{ displayName }} </a> <code v-else-if="displayName">{{ displayName }}</code>
   <wallet-address v-else :value="address" />
 </template>
 

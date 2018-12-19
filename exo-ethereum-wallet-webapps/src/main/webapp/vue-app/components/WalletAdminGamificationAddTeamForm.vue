@@ -28,7 +28,7 @@
               </v-chip>
             </template>
 
-            <template slot="item" slot-scope="{item, tile}">
+            <template slot="item" slot-scope="{item}">
               <v-list-tile-avatar v-if="item.avatar" tile size="20"> <img :src="item.avatar" /> </v-list-tile-avatar>
               <v-list-tile-title v-text="item.name" />
             </template>
@@ -55,6 +55,8 @@
                 <td colspan="3" class="text-xs-center">No pool members</td>
               </tr>
             </template>
+            <!-- Without slot-scope, the template isn't displayed -->
+            <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template slot="headers" slot-scope="props">
               <tr>
                 <th colspan="2" class="text-xs-center">Name</th>

@@ -206,6 +206,7 @@ export default {
       } else if (this.rewardType === 'FIXED_PER_MEMBER') {
         return this.budgetPerMember * this.eligibleUsersCount;
       }
+      return 0;
     },
   },
   watch: {

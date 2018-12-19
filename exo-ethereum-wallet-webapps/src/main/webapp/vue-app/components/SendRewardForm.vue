@@ -2,7 +2,7 @@
   <v-card v-if="contractDetails">
     <v-flex v-if="loading" class="pt-0 text-xs-center"> <v-progress-circular color="primary" indeterminate size="20" /> </v-flex>
     <v-card-text class="pt-0">
-      <div v-if="errors" class="alert alert-error v-content"><i class="uiIconError"></i> <span v-html="errors"></span></div>
+      <div v-if="errors" class="alert alert-error v-content"><i class="uiIconError"></i> {{ errors }}</div>
       <div v-if="!errors && warning && warning.length" class="alert alert-warning v-content"><i class="uiIconWarning"></i>{{ warning }}</div>
       <div v-if="!errors && !warning && information && information.length" class="alert alert-info v-content"><i class="uiIconInfo"></i>{{ information }}</div>
       <v-form

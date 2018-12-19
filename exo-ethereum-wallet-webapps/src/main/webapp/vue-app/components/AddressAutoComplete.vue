@@ -17,7 +17,7 @@
         <v-label v-else :selected="selected" class="black--text" solo @input="selectItem(item)"> {{ item.name }} </v-label>
       </template>
 
-      <template slot="item" slot-scope="{item, tile}">
+      <template slot="item" slot-scope="{item}">
         <v-list-tile-avatar v-if="item.avatar" tile size="20"> <img :src="item.avatar" /> </v-list-tile-avatar>
         <v-list-tile-title v-text="item.name" />
       </template>

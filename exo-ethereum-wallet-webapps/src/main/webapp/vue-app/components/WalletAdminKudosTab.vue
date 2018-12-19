@@ -10,6 +10,8 @@
         <v-text-field v-model.number="kudosBudget" name="kudosBudget" class="input-text-center" />
         <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
           <v-combobox v-model="selectedKudosContractAddress" :items="contracts" :return-object="false" attach="#selectedKudosContractAddress" item-value="address" item-text="name" class="selectedContractAddress" hide-no-data hide-selected small-chips>
+            <!-- Without slot-scope, the template isn't displayed -->
+            <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template slot="selection" slot-scope="data">
               {{ selectedKudosContractName }}
             </template>
@@ -68,8 +70,8 @@
                 >-</template
               >
             </td>
-            <td v-html="props.item.received"></td>
-            <td v-html="props.item.sent"></td>
+            <td>{{ props.item.received }}</td>
+            <td>{{ props.item.sent }}</td>
           </tr>
         </template>
       </v-data-table>

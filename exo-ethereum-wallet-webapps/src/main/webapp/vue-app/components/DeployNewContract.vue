@@ -58,7 +58,6 @@
 </template>
 
 <script>
-import WalletAddress from './WalletAddress.vue';
 import ContractDeploymentStep from './ContractDeploymentStep.vue';
 
 import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault, retrieveContractDetails} from '../WalletToken.js';
@@ -67,7 +66,6 @@ import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, 
 export default {
   components: {
     ContractDeploymentStep,
-    WalletAddress,
   },
   props: {
     account: {
@@ -123,9 +121,7 @@ export default {
       return this.calculateGasPriceInFiat(this.gasByStep[this.step], this.gasPrice);
     },
     tokenEtherscanLink() {
-      if (this.contractAddressByStep[2]) {
-        return getTokenEtherscanlink(this.networkId) + this.contractAddressByStep[2];
-      }
+      return this.contractAddressByStep && this.contractAddressByStep[2] ? getTokenEtherscanlink(this.networkId) + this.contractAddressByStep[2] : null;
     },
     contractDeploymentParameters() {
       if (this.step === 3) {

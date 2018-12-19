@@ -40,7 +40,7 @@
               >-</template
             >
           </td>
-          <td v-html="props.item.points"></td>
+          <td>{{ props.item.points }}</td>
         </tr>
       </template>
       <template slot="footer">

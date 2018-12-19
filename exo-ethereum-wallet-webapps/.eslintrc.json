@@ -87,6 +87,9 @@
         "yoda": ["error", "never", { "exceptRange": true }],
         "vue/html-self-closing": "off",
         "vue/max-attributes-per-line": "off",
-        "prettier/prettier": "warn"
+        "vue/component-name-in-template-casing": ["error", "kebab-case", { 
+          "ignores": []
+        }],
+        "prettier/prettier": "error"
     }
 }

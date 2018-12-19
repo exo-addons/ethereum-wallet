@@ -13,14 +13,12 @@
 </template>
 
 <script>
-import WalletAddress from './WalletAddress.vue';
 import WalletImportKeyModal from './WalletImportKeyModal.vue';
 
-import {enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWalletInstance, generatePassword} from '../WalletUtils.js';
+import {enableMetamask, initEmptyWeb3Instance, saveBrowerWalletInstance, generatePassword} from '../WalletUtils.js';
 
 export default {
   components: {
-    WalletAddress,
     WalletImportKeyModal,
   },
   props: {

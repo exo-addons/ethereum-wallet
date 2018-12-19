@@ -110,14 +110,10 @@ export default {
   },
   computed: {
     tokenEtherscanLink() {
-      if (this.contractAddress) {
-        return `${this.tokenParentEtherscanLink}${this.contractAddress}`;
-      }
+      return this.contractAddress ? `${this.tokenParentEtherscanLink}${this.contractAddress}` : null;
     },
     transactionEtherscanLink() {
-      if (this.transactionHash) {
-        return `${this.transactionParentEtherscanLink}${this.transactionHash}`;
-      }
+      return this.transactionHash ? `${this.transactionParentEtherscanLink}${this.transactionHash}` : null;
     },
   },
   created() {

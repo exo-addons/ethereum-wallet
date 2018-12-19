@@ -9,7 +9,7 @@
         <span>Reward periodicity: </span>
         <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
           <v-combobox v-model="selectedPeriodType" :disabled="!configurationEditable" :items="periods" :return-object="false" attach="#selectedPeriodType" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
-            <template slot="selection" slot-scope="data">
+            <template slot="selection">
               {{ selectedPeriodName }}
             </template>
           </v-combobox>
@@ -25,6 +25,8 @@
               <span> using token </span>
               <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
                 <v-combobox v-model="selectedContractAddress" :disabled="!configurationEditable" :items="contracts" :return-object="false" attach="#selectedContractAddress" item-value="address" item-text="name" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
+                  <!-- Without slot-scope, the template isn't displayed -->
+                  <!-- eslint-disable-next-line vue/no-unused-vars -->
                   <template slot="selection" slot-scope="data">
                     {{ selectedContractName }}
                   </template>
@@ -37,6 +39,8 @@
               <span> using token </span>
               <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
                 <v-combobox v-model="selectedContractAddress" :disabled="!configurationEditable" :items="contracts" :return-object="false" attach="#selectedContractAddress" item-value="address" item-text="name" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
+                  <!-- Without slot-scope, the template isn't displayed -->
+                  <!-- eslint-disable-next-line vue/no-unused-vars -->
                   <template slot="selection" slot-scope="data">
                     {{ selectedContractName }}
                   </template>

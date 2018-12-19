@@ -35,15 +35,9 @@
 </template>
 
 <script>
-import WalletAddress from './WalletAddress.vue';
-
-import {setDraggable, enableMetamask, disableMetamask, initEmptyWeb3Instance, saveBrowerWalletInstance, setWalletBackedUp, generatePassword} from '../WalletUtils.js';
-import {saveNewAddress} from '../WalletAddressRegistry.js';
+import {setDraggable, saveBrowerWalletInstance, generatePassword} from '../WalletUtils.js';
 
 export default {
-  components: {
-    WalletAddress,
-  },
   props: {
     isSpace: {
       type: Boolean,

@@ -34,7 +34,6 @@
 </template>
 
 <script>
-import AddContractModal from './AddContractModal.vue';
 import TransactionsList from './TransactionsList.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import DelegateTokensModal from './DelegateTokensModal.vue';
@@ -47,7 +46,6 @@ import {etherToFiat} from '../WalletUtils.js';
 
 export default {
   components: {
-    AddContractModal,
     SendEtherModal,
     SendTokensModal,
     DelegateTokensModal,
