@@ -1,10 +1,35 @@
 <template>
-  <v-dialog v-model="show" content-class="uiPopup with-overflow" width="500px" max-width="100vw" @keydown.esc="show = false">
+  <v-dialog
+    v-model="show"
+    content-class="uiPopup with-overflow"
+    width="500px"
+    max-width="100vw"
+    @keydown.esc="show = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
-        <a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a> <span class="PopupTitle popupTitle">{{ title }}</span>
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="show = false"></a> <span class="PopupTitle popupTitle">
+            {{ title }}
+          </span>
       </div>
-      <v-card-text> <qr-code ref="qrCode" :net-id="netId" :from="from" :to="to" :is-contract="isContract" :function-payable="functionPayable" :function-name="functionName" :args-names="argsNames" :args-types="argsTypes" :args-values="argsValues" :amount="amount" :open="open" :information="information" /> </v-card-text>
+      <v-card-text>
+        <qr-code
+          ref="qrCode"
+          :net-id="netId"
+          :from="from"
+          :to="to"
+          :is-contract="isContract"
+          :function-payable="functionPayable"
+          :function-name="functionName"
+          :args-names="argsNames"
+          :args-types="argsTypes"
+          :args-values="argsValues"
+          :amount="amount"
+          :open="open"
+          :information="information" />
+      </v-card-text>
     </v-card>
   </v-dialog>
 </template>

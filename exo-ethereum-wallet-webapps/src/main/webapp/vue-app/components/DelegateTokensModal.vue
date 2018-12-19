@@ -1,33 +1,113 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup with-overflow" width="600px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
-      <v-btn :disabled="disabled" flat value="send">
-        <span>Delegate Tokens</span>
-        <v-icon>fa-user-check</v-icon>
+  <v-dialog
+    v-model="dialog"
+    :disabled="disabled"
+    content-class="uiPopup with-overflow"
+    width="600px"
+    max-width="100vw"
+    persistent
+    @keydown.esc="dialog = false">
+    <v-bottom-nav
+      v-if="useNavigation"
+      slot="activator"
+      :disabled="disabled"
+      :value="true"
+      color="white"
+      class="elevation-0 buttomNavigation">
+      <v-btn
+        :disabled="disabled"
+        flat
+        value="send">
+        <span>
+          Delegate Tokens
+        </span>
+        <v-icon>
+          fa-user-check
+        </v-icon>
       </v-btn>
     </v-bottom-nav>
-    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">Delegate Tokens</button>
-    <qr-code-modal :to="recipient" :is-contract="true" :function-payable="false" :args-names="['_spender', '_value']" :args-types="['address', 'uint256']" :args-values="[recipient, amount]" :open="showQRCodeModal" title="Delegate Token QR Code" information="You can scan this QR code by using a different application that supports QR code transaction generation to delegate tokens" function-name="approve" @close="showQRCodeModal = false" />
+    <button
+      v-else-if="!noButton"
+      slot="activator"
+      :disabled="disabled"
+      class="btn btn-primary mt-1 mb-1">
+      Delegate Tokens
+    </button>
+    <qr-code-modal
+      :to="recipient"
+      :is-contract="true"
+      :function-payable="false"
+      :args-names="['_spender', '_value']"
+      :args-types="['address', 'uint256']"
+      :args-values="[recipient, amount]"
+      :open="showQRCodeModal"
+      title="Delegate Token QR Code"
+      information="You can scan this QR code by using a different application that supports QR code transaction generation to delegate tokens"
+      function-name="approve"
+      @close="showQRCodeModal = false" />
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Delegate Tokens</span></div>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
+            Delegate Tokens
+          </span>
+      </div>
       <v-card-text>
-        <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
-        <div v-if="!error && warning && warning.length" class="alert alert-warning v-content"><i class="uiIconWarning"></i>{{ warning }}</div>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div> <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
+          <i class="uiIconWarning"></i>{{ warning }}
+        </div>
         <v-form
           @submit="
             $event.preventDefault();
             $event.stopPropagation();
-          "
-        >
-          <address-auto-complete ref="autocomplete" :disabled="loading" input-label="Recipient" input-placeholder="Select a recipient for token delegation" @item-selected="recipient = $event.address" />
-          <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount" placeholder="Select an amount to delegate to recipient" class="mt-4" />
-          <v-text-field v-if="!storedPassword" v-model="walletPassword" :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'" :type="walletPasswordShow ? 'text' : 'password'" :disabled="loading" name="walletPassword" label="Wallet password" placeholder="Enter your wallet password" counter autocomplete="current-passord" @click:append="walletPasswordShow = !walletPasswordShow" />
+          ">
+          <address-auto-complete
+            ref="autocomplete"
+            :disabled="loading"
+            input-label="Recipient"
+            input-placeholder="Select a recipient for token delegation"
+            @item-selected="recipient = $event.address" />
+          <v-text-field
+            v-model.number="amount"
+            :disabled="loading"
+            name="amount"
+            label="Amount"
+            placeholder="Select an amount to delegate to recipient"
+            class="mt-4" />
+          <v-text-field
+            v-if="!storedPassword"
+            v-model="walletPassword"
+            :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+            :type="walletPasswordShow ? 'text' : 'password'"
+            :disabled="loading"
+            name="walletPassword"
+            label="Wallet password"
+            placeholder="Enter your wallet password"
+            counter
+            autocomplete="current-passord"
+            @click:append="walletPasswordShow = !walletPasswordShow" />
           <gas-price-choice @changed="gasPrice = $event" />
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button :disabled="loading || !recipient || !amount" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Delegate</button> <button :disabled="loading || !recipient || !amount" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+        <button
+          :disabled="loading || !recipient || !amount"
+          :loading="loading"
+          class="btn btn-primary mr-1"
+          @click="sendTokens">
+          Delegate
+        </button> <button
+          :disabled="loading || !recipient || !amount"
+          class="btn"
+          color="secondary"
+          @click="showQRCodeModal = true">
+          QRCode
+        </button>
         <v-spacer />
       </v-card-actions>
     </v-card>

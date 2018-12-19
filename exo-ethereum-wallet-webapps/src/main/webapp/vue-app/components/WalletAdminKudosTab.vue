@@ -1,15 +1,34 @@
 <template>
   <v-card flat>
     <v-card-title class="text-xs-center">
-      <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content"><i class="uiIconError"></i> {{ error }}</div>
+      <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
+        <i class="uiIconError"></i> {{ error }}
+      </div>
     </v-card-title>
-    <h3 class="text-xs-left ml-3 ">Configuration</h3>
+    <h3 class="text-xs-left ml-3 ">
+      Configuration
+    </h3>
     <v-card-text class="text-xs-left">
       <div class="text-xs-left kudosWalletConfiguration">
-        <span>Kudos total budget is </span>
-        <v-text-field v-model.number="kudosBudget" name="kudosBudget" class="input-text-center" />
+        <span>
+          Kudos total budget is
+        </span>
+        <v-text-field
+          v-model.number="kudosBudget"
+          name="kudosBudget"
+          class="input-text-center" />
         <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
-          <v-combobox v-model="selectedKudosContractAddress" :items="contracts" :return-object="false" attach="#selectedKudosContractAddress" item-value="address" item-text="name" class="selectedContractAddress" hide-no-data hide-selected small-chips>
+          <v-combobox
+            v-model="selectedKudosContractAddress"
+            :items="contracts"
+            :return-object="false"
+            attach="#selectedKudosContractAddress"
+            item-value="address"
+            item-text="name"
+            class="selectedContractAddress"
+            hide-no-data
+            hide-selected
+            small-chips>
             <!-- Without slot-scope, the template isn't displayed -->
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template slot="selection" slot-scope="data">
@@ -17,23 +36,66 @@
             </template>
           </v-combobox>
         </div>
-        <span> per kudos</span> <button class="btn btn-primary mb-3" @click="save">Save</button>
+        <span>
+          per kudos
+        </span> <button class="btn btn-primary mb-3" @click="save">
+          Save
+        </button>
       </div>
     </v-card-text>
-    <h3 class="text-xs-left ml-3">Send Rewards</h3>
-    <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning"><i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token</div>
+    <h3 class="text-xs-left ml-3">
+      Send Rewards
+    </h3> <div v-if="isContractDifferentFromPrincipal" class="alert alert-warning">
+      <i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token
+    </div>
     <v-card-text class="text-xs-center" data-app>
-      <v-menu ref="selectedDateMenu" v-model="selectedDateMenu" transition="scale-transition" lazy offset-y class="dateSelector">
-        <v-text-field slot="activator" v-model="periodDatesDisplay" label="Select the period date" prepend-icon="event" />
-        <v-date-picker v-model="selectedDate" :first-day-of-week="1" :type="!kudosPeriodType || kudosPeriodType === 'WEEK' ? 'date' : 'month'" @input="selectedDateMenu = false" />
+      <v-menu
+        ref="selectedDateMenu"
+        v-model="selectedDateMenu"
+        transition="scale-transition"
+        lazy
+        offset-y
+        class="dateSelector">
+        <v-text-field
+          slot="activator"
+          v-model="periodDatesDisplay"
+          label="Select the period date"
+          prepend-icon="event" />
+        <v-date-picker
+          v-model="selectedDate"
+          :first-day-of-week="1"
+          :type="!kudosPeriodType || kudosPeriodType === 'WEEK' ? 'date' : 'month'"
+          @input="selectedDateMenu = false" />
       </v-menu>
-      <v-data-table v-model="selectedKudosIdentitiesList" :headers="kudosIdentitiesHeaders" :items="kudosIdentitiesList" :loading="loading" :sortable="true" select-all item-key="idType" class="elevation-1 mr-3 mb-2" hide-actions>
+      <v-data-table
+        v-model="selectedKudosIdentitiesList"
+        :headers="kudosIdentitiesHeaders"
+        :items="kudosIdentitiesList"
+        :loading="loading"
+        :sortable="true"
+        select-all
+        item-key="idType"
+        class="elevation-1 mr-3 mb-2"
+        hide-actions>
         <template slot="headers" slot-scope="props">
           <tr>
-            <th v-if="selectableRecipients.length"><v-checkbox :input-value="props.all" :indeterminate="props.indeterminate" primary hide-details @click.native="toggleAll" /></th>
-            <th v-for="header in props.headers" :key="header.text" :class="['column sortable', header.value === pagination.sortBy ? 'active' : '', header.align === 'center' ? 'text-xs-center' : header.align === 'right' ? 'text-xs-right' : 'text-xs-left']" @click="changeSort(header.value)">
+            <th v-if="selectableRecipients.length">
+              <v-checkbox
+                :input-value="props.all"
+                :indeterminate="props.indeterminate"
+                primary
+                hide-details
+                @click.native="toggleAll" />
+            </th>
+            <th
+              v-for="header in props.headers"
+              :key="header.text"
+              :class="['column sortable', header.value === pagination.sortBy ? 'active' : '', header.align === 'center' ? 'text-xs-center' : header.align === 'right' ? 'text-xs-right' : 'text-xs-left']"
+              @click="changeSort(header.value)">
               <template v-if="header.value === pagination.sortBy">
-                <v-icon small>{{ paginationIcon }}</v-icon>
+                <v-icon small>
+                  {{ paginationIcon }}
+                </v-icon>
               </template>
               {{ header.text }}
             </th>
@@ -41,41 +103,111 @@
         </template>
         <template slot="items" slot-scope="props">
           <tr :active="props.selected">
-            <td v-if="selectableRecipients.length"><v-checkbox v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" :input-value="props.selected" hide-details @click="props.selected = !props.selected" /></td>
+            <td v-if="selectableRecipients.length">
+              <v-checkbox
+                v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')"
+                :input-value="props.selected"
+                hide-details
+                @click="props.selected = !props.selected" />
+            </td>
             <td>
-              <v-avatar size="36px"> <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" /> </v-avatar>
+              <v-avatar size="36px">
+                <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+              </v-avatar>
             </td>
             <td class="text-xs-left">
-              <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
+              <a
+                v-if="props.item.address"
+                :href="props.item.url"
+                rel="nofollow"
+                target="_blank">
+                {{ props.item.name }}
+              </a>
               <div v-else>
                 <del>
-                  <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
+                  <a
+                    :href="props.item.url"
+                    rel="nofollow"
+                    target="_blank"
+                    class="red--text">
+                    {{ props.item.name }}
+                  </a>
                 </del>
                 (No address)
               </div>
             </td>
             <td>
-              <a v-if="addressEtherscanLink" :href="`${addressEtherscanLink}${props.item.address}`" target="_blank" title="Open on etherscan">{{ props.item.address }}</a> <span v-else>{{ props.item.address }}</span>
+              <a
+                v-if="addressEtherscanLink"
+                :href="`${addressEtherscanLink}${props.item.address}`"
+                target="_blank"
+                title="Open on etherscan">
+                {{ props.item.address }}
+              </a> <span v-else>
+                {{ props.item.address }}
+              </span>
             </td>
-            <td><a v-if="props.item.hash" href="javascript:void(0);" target="_blank" title="Open transaction in wallet" @click="$emit('open-wallet-transaction', props.item)"> Open in wallet </a> <span v-else>-</span></td>
             <td>
-              <div v-if="!props.item.status">-</div>
-              <v-progress-circular v-else-if="props.item.status === 'pending'" color="primary" indeterminate size="20" />
-              <v-icon v-else :color="props.item.status === 'success' ? 'success' : 'error'" :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'" v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+              <a
+                v-if="props.item.hash"
+                href="javascript:void(0);"
+                target="_blank"
+                title="Open transaction in wallet"
+                @click="$emit('open-wallet-transaction', props.item)">
+                Open in wallet
+              </a> <span v-else>
+                -
+              </span>
             </td>
             <td>
-              <v-text-field v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')" v-model="props.item.tokensToSend" class="input-text-center" />
-              <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
-              <template v-else
-                >-</template
-              >
+              <div v-if="!props.item.status">
+                -
+              </div>
+              <v-progress-circular
+                v-else-if="props.item.status === 'pending'"
+                color="primary"
+                indeterminate
+                size="20" />
+              <v-icon
+                v-else
+                :color="props.item.status === 'success' ? 'success' : 'error'"
+                :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
+                v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
             </td>
-            <td>{{ props.item.received }}</td>
-            <td>{{ props.item.sent }}</td>
+            <td>
+              <v-text-field
+                v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')"
+                v-model="props.item.tokensToSend"
+                class="input-text-center" />
+              <template v-else-if="props.item.status === 'success'">
+                {{ toFixed(props.item.tokensSent) }}
+              </template>
+              <template
+                v-else>
+                -
+              </template>
+            </td>
+            <td>
+              {{ props.item.received }}
+            </td> <td>
+              {{ props.item.sent }}
+            </td>
           </tr>
         </template>
       </v-data-table>
-      <send-reward-modal :account="walletAddress" :contract-details="contractDetails" :recipients="recipients" :period-type="kudosPeriodType" :start-date-in-seconds="selectedStartDateInSeconds" :end-date-in-seconds="selectedEndDateInSeconds" :reward-type="rewardType" default-transaction-label="kudos reward" default-transaction-message="kudos reward" reward-count-field="received" @sent="newPendingTransaction" @error="error = $event" />
+      <send-reward-modal
+        :account="walletAddress"
+        :contract-details="contractDetails"
+        :recipients="recipients"
+        :period-type="kudosPeriodType"
+        :start-date-in-seconds="selectedStartDateInSeconds"
+        :end-date-in-seconds="selectedEndDateInSeconds"
+        :reward-type="rewardType"
+        default-transaction-label="kudos reward"
+        default-transaction-message="kudos reward"
+        reward-count-field="received"
+        @sent="newPendingTransaction"
+        @error="error = $event" />
     </v-card-text>
   </v-card>
 </template>

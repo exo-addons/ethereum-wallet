@@ -1,46 +1,127 @@
 <template>
   <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
-    <v-combobox v-model="selectedNetwork" :items="networks" label="Select ethereum network" />
+    <v-combobox
+      v-model="selectedNetwork"
+      :items="networks"
+      label="Select ethereum network" />
 
-    <v-text-field v-if="showSpecificNetworkFields" v-model="selectedNetwork.value" :rules="mandatoryRule" :label="`Ethereum Network ID (current id: ${networkId})`" type="number" name="defaultNetworkId" />
+    <v-text-field
+      v-if="showSpecificNetworkFields"
+      v-model="selectedNetwork.value"
+      :rules="mandatoryRule"
+      :label="`Ethereum Network ID (current id: ${networkId})`"
+      type="number"
+      name="defaultNetworkId" />
 
-    <v-text-field v-if="showSpecificNetworkFields" ref="providerURL" v-model="selectedNetwork.httpLink" :rules="mandatoryRule" type="text" name="providerURL" label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)" autofocus />
+    <v-text-field
+      v-if="showSpecificNetworkFields"
+      ref="providerURL"
+      v-model="selectedNetwork.httpLink"
+      :rules="mandatoryRule"
+      type="text"
+      name="providerURL"
+      label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
+      autofocus />
 
-    <v-text-field v-if="showSpecificNetworkFields" ref="websocketProviderURL" v-model="selectedNetwork.wsLink" :rules="mandatoryRule" type="text" name="websocketProviderURL" label="Ethereum Network Websocket URL used for notifications" />
+    <v-text-field
+      v-if="showSpecificNetworkFields"
+      ref="websocketProviderURL"
+      v-model="selectedNetwork.wsLink"
+      :rules="mandatoryRule"
+      type="text"
+      name="websocketProviderURL"
+      label="Ethereum Network Websocket URL used for notifications" />
 
     <v-flex id="accessPermissionAutoComplete" class="contactAutoComplete mt-4">
-      <v-autocomplete v-if="sameConfiguredNetwork" ref="accessPermissionAutoComplete" v-model="accessPermission" :items="accessPermissionOptions" :loading="isLoadingSuggestions" :search-input.sync="accessPermissionSearchTerm" attach="#accessPermissionAutoComplete" label="Wallet access permission (Spaces only)" class="contactAutoComplete" placeholder="Start typing to Search a space" content-class="contactAutoCompleteContent" max-width="100%" item-text="name" item-value="id" hide-details hide-selected chips cache-items dense flat>
+      <v-autocomplete
+        v-if="sameConfiguredNetwork"
+        ref="accessPermissionAutoComplete"
+        v-model="accessPermission"
+        :items="accessPermissionOptions"
+        :loading="isLoadingSuggestions"
+        :search-input.sync="accessPermissionSearchTerm"
+        attach="#accessPermissionAutoComplete"
+        label="Wallet access permission (Spaces only)"
+        class="contactAutoComplete"
+        placeholder="Start typing to Search a space"
+        content-class="contactAutoCompleteContent"
+        max-width="100%"
+        item-text="name"
+        item-value="id"
+        hide-details
+        hide-selected
+        chips
+        cache-items
+        dense
+        flat>
         <template slot="no-data">
           <v-list-tile>
-            <v-list-tile-title> Search for a <strong>Space</strong> </v-list-tile-title>
+            <v-list-tile-title>
+              Search for a <strong>
+                Space
+              </strong>
+            </v-list-tile-title>
           </v-list-tile>
         </template>
 
         <template slot="selection" slot-scope="{item, selected}">
-          <v-chip v-if="item.error" :selected="selected" class="autocompleteSelectedItem">
-            <del
-              ><span>{{ item.name }}</span></del
-            >
+          <v-chip
+            v-if="item.error"
+            :selected="selected"
+            class="autocompleteSelectedItem">
+            <del>
+              <span>
+                {{ item.name }}
+              </span>
+            </del>
           </v-chip>
-          <v-chip v-else :selected="selected" class="autocompleteSelectedItem">
-            <span>{{ item.name }}</span>
+          <v-chip
+            v-else
+            :selected="selected"
+            class="autocompleteSelectedItem">
+            <span>
+              {{ item.name }}
+            </span>
           </v-chip>
         </template>
 
         <template slot="item" slot-scope="{item}">
-          <v-list-tile-avatar v-if="item.avatar" tile size="20"> <img :src="item.avatar" /> </v-list-tile-avatar>
+          <v-list-tile-avatar
+            v-if="item.avatar"
+            tile
+            size="20">
+            <img :src="item.avatar">
+          </v-list-tile-avatar>
           <v-list-tile-title v-text="item.name" />
         </template>
       </v-autocomplete>
     </v-flex>
 
-    <v-combobox v-if="sameConfiguredNetwork" v-model="selectedPrincipalAccount" :items="accountsList" class="mt-4" item-disabled="itemDisabled" label="Select principal account displayed in wallet overview" placeholder="Select principal account displayed in wallet overview" chips />
+    <v-combobox
+      v-if="sameConfiguredNetwork"
+      v-model="selectedPrincipalAccount"
+      :items="accountsList"
+      class="mt-4"
+      item-disabled="itemDisabled"
+      label="Select principal account displayed in wallet overview"
+      placeholder="Select principal account displayed in wallet overview"
+      chips />
 
-    <v-combobox v-if="sameConfiguredNetwork" v-model="selectedOverviewAccounts" :items="accountsList" label="List of currencies to use (by order)" placeholder="List of contracts, ether and fiat to use in wallet application (by order)" multiple deletable-chips chips />
+    <v-combobox
+      v-if="sameConfiguredNetwork"
+      v-model="selectedOverviewAccounts"
+      :items="accountsList"
+      label="List of currencies to use (by order)"
+      placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
+      multiple
+      deletable-chips
+      chips />
 
     <v-card-actions>
       <v-spacer />
-      <button class="btn btn-primary mb-3" @click="save">Save</button>
+      <button class="btn btn-primary mb-3" @click="save">
+        Save
+      </button>
       <v-spacer />
     </v-card-actions>
   </v-card>

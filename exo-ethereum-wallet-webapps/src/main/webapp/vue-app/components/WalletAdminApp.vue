@@ -1,9 +1,14 @@
 <template>
-  <v-app id="WalletAdminApp" color="transaprent" flat>
+  <v-app
+    id="WalletAdminApp"
+    color="transaprent"
+    flat>
     <main>
       <v-layout>
         <v-flex class="white text-xs-center" flat>
-          <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+          <div v-if="error && !loading" class="alert alert-error v-content">
+            <i class="uiIconError"></i>{{ error }}
+          </div>
 
           <wallet-setup
             ref="walletSetup"
@@ -18,43 +23,173 @@
             @error="
               loadingContracts = false;
               error = $event;
-            "
-          />
+            " />
 
-          <v-dialog v-model="loading" persistent width="300">
+          <v-dialog
+            v-model="loading"
+            persistent
+            width="300">
             <v-card color="primary" dark>
               <v-card-text>
                 Loading ...
-                <v-progress-linear indeterminate color="white" class="mb-0" />
+                <v-progress-linear
+                  indeterminate
+                  color="white"
+                  class="mb-0" />
               </v-card-text>
             </v-card>
           </v-dialog>
 
-          <wallet-summary v-if="walletAddress && !loading && accountsDetails" ref="walletSummary" :accounts-details="accountsDetails" :overview-accounts="overviewAccounts" :principal-account="principalAccountAddress" :refresh-index="refreshIndex" :network-id="networkId" :wallet-address="walletAddress" :ether-balance="walletAddressEtherBalance" :total-balance="walletAddressEtherBalance" :total-fiat-balance="walletAddressFiatBalance" :fiat-symbol="fiatSymbol" is-maximized hide-actions @refresh-balance="refreshBalance" @error="error = $event" />
+          <wallet-summary
+            v-if="walletAddress && !loading && accountsDetails"
+            ref="walletSummary"
+            :accounts-details="accountsDetails"
+            :overview-accounts="overviewAccounts"
+            :principal-account="principalAccountAddress"
+            :refresh-index="refreshIndex"
+            :network-id="networkId"
+            :wallet-address="walletAddress"
+            :ether-balance="walletAddressEtherBalance"
+            :total-balance="walletAddressEtherBalance"
+            :total-fiat-balance="walletAddressFiatBalance"
+            :fiat-symbol="fiatSymbol"
+            is-maximized
+            hide-actions
+            @refresh-balance="refreshBalance"
+            @error="error = $event" />
 
           <v-tabs v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
-            <v-tab key="general">Settings</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="funds">Initial accounts funds</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="overview">Advanced settings</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="contracts">Contracts</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="wallets">Wallets</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="kudosList" :class="kudosListRetrieved || 'hidden'">Kudos</v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="gamificationTab" :class="gamificationRetrieved || 'hidden'">Gamification</v-tab>
+            <v-tab key="general">
+              Settings
+            </v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="funds">
+              Initial accounts funds
+            </v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="overview">
+              Advanced settings
+            </v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="contracts">
+              Contracts
+            </v-tab>
+            <v-tab v-if="sameConfiguredNetwork" key="wallets">
+              Wallets
+            </v-tab>
+            <v-tab
+              v-if="sameConfiguredNetwork"
+              key="kudosList"
+              :class="kudosListRetrieved || 'hidden'">
+              Kudos
+            </v-tab>
+            <v-tab
+              v-if="sameConfiguredNetwork"
+              key="gamificationTab"
+              :class="gamificationRetrieved || 'hidden'">
+              Gamification
+            </v-tab>
           </v-tabs>
 
           <v-tabs-items v-model="selectedTab">
-            <v-tab-item id="general"> <general-tab ref="generalTab" :network-id="networkId" :default-network-id="defaultNetworkId" :wallet-address="walletAddress" :loading="loading" :loading-settings="loadingSettings" :ether-balance="walletAddressEtherBalance" :contracts="contracts" :same-configured-network="sameConfiguredNetwork" @principal-contract-loaded="principalContract = $event" @principal-account-loaded="principalAccount = $event" @principal-account-address-loaded="principalAccountAddress = $event" @accounts-details-loaded="accountsDetails = $event" @overview-accounts-loaded="overviewAccounts = $event" @save="saveGlobalSettings" /> </v-tab-item>
-            <v-tab-item v-if="sameConfiguredNetwork" id="funds"> <initial-funds-tab ref="fundsTab" :default-network-id="defaultNetworkId" :loading="loading" :contracts="contracts" :same-configured-network="sameConfiguredNetwork" @initial-funds-loaded="initialFunds = $event" @save="saveGlobalSettings" /> </v-tab-item>
+            <v-tab-item id="general">
+              <general-tab
+                ref="generalTab"
+                :network-id="networkId"
+                :default-network-id="defaultNetworkId"
+                :wallet-address="walletAddress"
+                :loading="loading"
+                :loading-settings="loadingSettings"
+                :ether-balance="walletAddressEtherBalance"
+                :contracts="contracts"
+                :same-configured-network="sameConfiguredNetwork"
+                @principal-contract-loaded="principalContract = $event"
+                @principal-account-loaded="principalAccount = $event"
+                @principal-account-address-loaded="principalAccountAddress = $event"
+                @accounts-details-loaded="accountsDetails = $event"
+                @overview-accounts-loaded="overviewAccounts = $event"
+                @save="saveGlobalSettings" />
+            </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="funds">
+              <initial-funds-tab
+                ref="fundsTab"
+                :default-network-id="defaultNetworkId"
+                :loading="loading"
+                :contracts="contracts"
+                :same-configured-network="sameConfiguredNetwork"
+                @initial-funds-loaded="initialFunds = $event"
+                @save="saveGlobalSettings" />
+            </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" id="overview"> <advanced-settings-tab ref="advancedTab" :default-network-id="defaultNetworkId" :loading="loading" :contracts="contracts" :principal-contract="principalContract" :fiat-symbol="fiatSymbol" :same-configured-network="sameConfiguredNetwork" @save="saveGlobalSettings" /> </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="overview">
+              <advanced-settings-tab
+                ref="advancedTab"
+                :default-network-id="defaultNetworkId"
+                :loading="loading"
+                :contracts="contracts"
+                :principal-contract="principalContract"
+                :fiat-symbol="fiatSymbol"
+                :same-configured-network="sameConfiguredNetwork"
+                @save="saveGlobalSettings" />
+            </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" id="contracts"> <contracts-tab ref="contractsTab" :network-id="networkId" :wallet-address="walletAddress" :loading="loading" :loading-wallets="loadingWallets" :fiat-symbol="fiatSymbol" :token-etherscan-link="tokenEtherscanLink" :wallets="wallets" @contract-list-modified="$refs.walletsTab && $refs.walletsTab.init()" @pending-transaction="watchPendingTransaction" @contracts-loaded="contracts = $event" /> </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="contracts">
+              <contracts-tab
+                ref="contractsTab"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :loading="loading"
+                :loading-wallets="loadingWallets"
+                :fiat-symbol="fiatSymbol"
+                :token-etherscan-link="tokenEtherscanLink"
+                :wallets="wallets"
+                @contract-list-modified="$refs.walletsTab && $refs.walletsTab.init()"
+                @pending-transaction="watchPendingTransaction"
+                @contracts-loaded="contracts = $event" />
+            </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" id="wallets"> <wallets-tab ref="walletsTab" :network-id="networkId" :wallet-address="walletAddress" :loading="loading" :fiat-symbol="fiatSymbol" :refresh-index="refreshIndex" :address-etherscan-link="addressEtherscanLink" :principal-account-address="principalAccountAddress" :principal-account="principalAccount" :principal-contract="principalContract" :initial-funds="initialFunds" :accounts-details="accountsDetails" @pending="pendingTransaction" @wallets-loaded="wallets = $event" @loading-wallets-changed="loadingWallets = $event" @refresh-balance="refreshBalance" /> </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="wallets">
+              <wallets-tab
+                ref="walletsTab"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :loading="loading"
+                :fiat-symbol="fiatSymbol"
+                :refresh-index="refreshIndex"
+                :address-etherscan-link="addressEtherscanLink"
+                :principal-account-address="principalAccountAddress"
+                :principal-account="principalAccount"
+                :principal-contract="principalContract"
+                :initial-funds="initialFunds"
+                :accounts-details="accountsDetails"
+                @pending="pendingTransaction"
+                @wallets-loaded="wallets = $event"
+                @loading-wallets-changed="loadingWallets = $event"
+                @refresh-balance="refreshBalance" />
+            </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" id="kudosList"> <kudos-tab v-if="!loading" ref="kudosList" :wallets="wallets" :wallet-address="walletAddress" :contracts="contracts" :principal-account="principalAccountAddress" @pending="pendingTransaction" @open-wallet-transaction="openWalletTransaction" @list-retrieved="kudosListRetrieved = true" /> </v-tab-item>
-            <v-tab-item v-if="sameConfiguredNetwork" id="gamificationTab"> <gamification-tab v-if="!loading" ref="kudosList" :wallets="wallets" :wallet-address="walletAddress" :contracts="contracts" :principal-account="principalAccountAddress" @pending="pendingTransaction" @open-wallet-transaction="openWalletTransaction" @list-retrieved="gamificationRetrieved = true" /> </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="kudosList">
+              <kudos-tab
+                v-if="!loading"
+                ref="kudosList"
+                :wallets="wallets"
+                :wallet-address="walletAddress"
+                :contracts="contracts"
+                :principal-account="principalAccountAddress"
+                @pending="pendingTransaction"
+                @open-wallet-transaction="openWalletTransaction"
+                @list-retrieved="kudosListRetrieved = true" />
+            </v-tab-item>
+            <v-tab-item v-if="sameConfiguredNetwork" id="gamificationTab">
+              <gamification-tab
+                v-if="!loading"
+                ref="kudosList"
+                :wallets="wallets"
+                :wallet-address="walletAddress"
+                :contracts="contracts"
+                :principal-account="principalAccountAddress"
+                @pending="pendingTransaction"
+                @open-wallet-transaction="openWalletTransaction"
+                @list-retrieved="gamificationRetrieved = true" />
+            </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-layout>

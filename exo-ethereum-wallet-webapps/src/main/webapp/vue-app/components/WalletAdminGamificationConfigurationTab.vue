@@ -2,29 +2,72 @@
   <v-card flat>
     <v-card-text>
       <div class="text-xs-left gamificationWalletConfiguration">
-        <span>Minimal gamification points threshold to reward users: </span>
-        <v-text-field v-model.number="selectedThreshold" :disabled="!configurationEditable" name="threshold" class="input-text-center" />
+        <span>
+          Minimal gamification points threshold to reward users:
+        </span>
+        <v-text-field
+          v-model.number="selectedThreshold"
+          :disabled="!configurationEditable"
+          name="threshold"
+          class="input-text-center" />
       </div>
       <div class="text-xs-left gamificationWalletConfiguration">
-        <span>Reward periodicity: </span>
+        <span>
+          Reward periodicity:
+        </span>
         <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
-          <v-combobox v-model="selectedPeriodType" :disabled="!configurationEditable" :items="periods" :return-object="false" attach="#selectedPeriodType" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
-            <template slot="selection">
+          <v-combobox
+            v-model="selectedPeriodType"
+            :disabled="!configurationEditable"
+            :items="periods"
+            :return-object="false"
+            attach="#selectedPeriodType"
+            class="selectBoxVuetify"
+            hide-no-data
+            hide-selected
+            small-chips>
+            <!-- Without slot-scope, the template isn't displayed -->
+            <!-- eslint-disable-next-line vue/no-unused-vars -->
+            <template slot="selection" slot-scope="data">
               {{ selectedPeriodName }}
             </template>
           </v-combobox>
         </div>
       </div>
       <div class="text-xs-left mt-4">
-        <div>The total gamification reward buget is set:</div>
+        <div>
+          The total gamification reward buget is set:
+        </div>
         <v-flex class="ml-4">
           <v-radio-group v-model="selectedRewardType">
-            <v-radio :disabled="!configurationEditable" value="FIXED" label="By a fixed budget of" />
+            <v-radio
+              :disabled="!configurationEditable"
+              value="FIXED"
+              label="By a fixed budget of" />
             <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
-              <v-text-field v-model.number="selectedTotalBudget" :disabled="!configurationEditable" placeholder="Enter the fixed total budget" type="number" class="pt-0 pb-0" name="totalBudget" />
-              <span> using token </span>
+              <v-text-field
+                v-model.number="selectedTotalBudget"
+                :disabled="!configurationEditable"
+                placeholder="Enter the fixed total budget"
+                type="number"
+                class="pt-0 pb-0"
+                name="totalBudget" />
+              <span>
+                using token
+              </span>
               <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox v-model="selectedContractAddress" :disabled="!configurationEditable" :items="contracts" :return-object="false" attach="#selectedContractAddress" item-value="address" item-text="name" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
+                <v-combobox
+                  v-model="selectedContractAddress"
+                  :disabled="!configurationEditable"
+                  :items="contracts"
+                  :return-object="false"
+                  attach="#selectedContractAddress"
+                  item-value="address"
+                  item-text="name"
+                  class="selectBoxVuetify"
+                  hide-no-data
+                  hide-selected
+                  small-chips>
                   <!-- Without slot-scope, the template isn't displayed -->
                   <!-- eslint-disable-next-line vue/no-unused-vars -->
                   <template slot="selection" slot-scope="data">
@@ -33,12 +76,34 @@
                 </v-combobox>
               </div>
             </v-flex>
-            <v-radio :disabled="!configurationEditable" value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member on period of" />
+            <v-radio
+              :disabled="!configurationEditable"
+              value="FIXED_PER_MEMBER"
+              label="By a fixed budget per eligible member on period of" />
             <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
-              <v-text-field v-model="selectedBudgetPerMember" :disabled="!configurationEditable" placeholder="Enter the fixed budget per eligible member on period" type="number" class="pt-0 pb-0" name="budgetPerMember" />
-              <span> using token </span>
+              <v-text-field
+                v-model="selectedBudgetPerMember"
+                :disabled="!configurationEditable"
+                placeholder="Enter the fixed budget per eligible member on period"
+                type="number"
+                class="pt-0 pb-0"
+                name="budgetPerMember" />
+              <span>
+                using token
+              </span>
               <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox v-model="selectedContractAddress" :disabled="!configurationEditable" :items="contracts" :return-object="false" attach="#selectedContractAddress" item-value="address" item-text="name" class="selectBoxVuetify" hide-no-data hide-selected small-chips>
+                <v-combobox
+                  v-model="selectedContractAddress"
+                  :disabled="!configurationEditable"
+                  :items="contracts"
+                  :return-object="false"
+                  attach="#selectedContractAddress"
+                  item-value="address"
+                  item-text="name"
+                  class="selectBoxVuetify"
+                  hide-no-data
+                  hide-selected
+                  small-chips>
                   <!-- Without slot-scope, the template isn't displayed -->
                   <!-- eslint-disable-next-line vue/no-unused-vars -->
                   <template slot="selection" slot-scope="data">
@@ -53,8 +118,21 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <v-btn v-if="configurationEditable" :loading="loadingSettings" class="btn btn-primary ml-2" dark @click="save"> Save </v-btn>
-      <v-btn v-else class="btn btn-primary ml-2" dark @click="configurationEditable = true"> Edit </v-btn>
+      <v-btn
+        v-if="configurationEditable"
+        :loading="loadingSettings"
+        class="btn btn-primary ml-2"
+        dark
+        @click="save">
+        Save
+      </v-btn>
+      <v-btn
+        v-else
+        class="btn btn-primary ml-2"
+        dark
+        @click="configurationEditable = true">
+        Edit
+      </v-btn>
       <v-spacer />
     </v-card-actions>
   </v-card>

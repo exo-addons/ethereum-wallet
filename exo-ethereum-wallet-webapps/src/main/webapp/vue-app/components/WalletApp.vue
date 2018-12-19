@@ -1,28 +1,76 @@
 <template>
-  <v-app id="WalletApp" :class="isMaximized ? 'maximized' : 'minimized'" color="transaprent" flat>
+  <v-app
+    id="WalletApp"
+    :class="isMaximized ? 'maximized' : 'minimized'"
+    color="transaprent"
+    flat>
     <main v-if="isWalletEnabled">
       <v-layout>
         <v-flex>
           <v-card :class="isMaximized && 'transparent'" flat>
-            <v-toolbar :class="isMaximized ? 'mb-3' : 'no-padding'" class="walletAppToolbar" color="white" flat dense>
-              <v-toolbar-title v-if="isSpace && isMaximized">Space Wallet</v-toolbar-title>
-              <v-toolbar-title v-else-if="isMaximized">My Wallet</v-toolbar-title>
-              <v-toolbar-title v-else class="head-container">Wallet</v-toolbar-title>
+            <v-toolbar
+              :class="isMaximized ? 'mb-3' : 'no-padding'"
+              class="walletAppToolbar"
+              color="white"
+              flat
+              dense>
+              <v-toolbar-title v-if="isSpace && isMaximized">
+                Space Wallet
+              </v-toolbar-title>
+              <v-toolbar-title v-else-if="isMaximized">
+                My Wallet
+              </v-toolbar-title>
+              <v-toolbar-title v-else class="head-container">
+                Wallet
+              </v-toolbar-title>
               <div v-if="displayEtherBalanceTooLow" id="etherTooLowWarningParent">
-                <v-tooltip content-class="etherTooLowWarning" attach="#etherTooLowWarningParent" absolute top class="ml-2">
-                  <v-icon slot="activator" color="orange">warning</v-icon>
-                  <span>Not enough funds to send transactions</span>
+                <v-tooltip
+                  content-class="etherTooLowWarning"
+                  attach="#etherTooLowWarningParent"
+                  absolute
+                  top
+                  class="ml-2">
+                  <v-icon slot="activator" color="orange">
+                    warning
+                  </v-icon>
+                  <span>
+                    Not enough funds to send transactions
+                  </span>
                 </v-tooltip>
               </div>
 
               <v-spacer />
 
-              <wallet-app-menu ref="walletAppMenu" :is-space="isSpace" :wallet-address="walletAddress" :is-maximized="isMaximized" :is-space-administrator="isSpaceAdministrator" @refresh="init()" @maximize="maximize()" @modify-settings="showSettingsModal = true" />
+              <wallet-app-menu
+                ref="walletAppMenu"
+                :is-space="isSpace"
+                :wallet-address="walletAddress"
+                :is-maximized="isMaximized"
+                :is-space-administrator="isSpaceAdministrator"
+                @refresh="init()"
+                @maximize="maximize()"
+                @modify-settings="showSettingsModal = true" />
 
-              <wallet-settings-modal ref="walletSettingsModal" :is-space="isSpace" :open="showSettingsModal" :app-loading="loading" :fiat-symbol="fiatSymbol" :display-reset-option="displayWalletResetOption" :accounts-details="accountsDetails" :overview-accounts="overviewAccounts" :principal-account-address="principalAccount" @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()" @close="showSettingsModal = false" @settings-changed="init()" />
+              <wallet-settings-modal
+                ref="walletSettingsModal"
+                :is-space="isSpace"
+                :open="showSettingsModal"
+                :app-loading="loading"
+                :fiat-symbol="fiatSymbol"
+                :display-reset-option="displayWalletResetOption"
+                :accounts-details="accountsDetails"
+                :overview-accounts="overviewAccounts"
+                :principal-account-address="principalAccount"
+                @copied="$refs.walletSetup && $refs.walletSetup.hideBackupMessage()"
+                @close="showSettingsModal = false"
+                @settings-changed="init()" />
             </v-toolbar>
 
-            <v-toolbar class="additionalToolbar" color="white" flat dense>
+            <v-toolbar
+              class="additionalToolbar"
+              color="white"
+              flat
+              dense>
               <wallet-setup
                 ref="walletSetup"
                 :is-space="isSpace"
@@ -36,23 +84,82 @@
                 @error="
                   loading = false;
                   error = $event;
-                "
-              />
+                " />
             </v-toolbar>
 
             <!-- Body -->
-            <v-card v-if="displayAccountsList" class="text-xs-center" flat>
-              <div v-if="error && !loading" class="alert alert-error"><i class="uiIconError"></i> {{ error }}</div>
+            <v-card
+              v-if="displayAccountsList"
+              class="text-xs-center"
+              flat>
+              <div v-if="error && !loading" class="alert alert-error">
+                <i class="uiIconError"></i> {{ error }}
+              </div>
 
-              <v-progress-circular v-if="loading" color="primary" class="mb-2" indeterminate />
+              <v-progress-circular
+                v-if="loading"
+                color="primary"
+                class="mb-2"
+                indeterminate />
 
-              <wallet-summary v-if="walletAddress && !loading && accountsDetails[walletAddress]" ref="walletSummary" :is-maximized="isMaximized" :is-space="isSpace" :is-space-administrator="isSpaceAdministrator" :accounts-details="accountsDetails" :overview-accounts="overviewAccountsToDisplay" :principal-account="principalAccount" :refresh-index="refreshIndex" :network-id="networkId" :wallet-address="walletAddress" :ether-balance="etherBalance" :total-balance="totalBalance" :total-fiat-balance="totalFiatBalance" :is-read-only="isReadOnly" :fiat-symbol="fiatSymbol" @refresh-balance="refreshBalance" @refresh-token-balance="refreshTokenBalance" @error="error = $event" />
+              <wallet-summary
+                v-if="walletAddress && !loading && accountsDetails[walletAddress]"
+                ref="walletSummary"
+                :is-maximized="isMaximized"
+                :is-space="isSpace"
+                :is-space-administrator="isSpaceAdministrator"
+                :accounts-details="accountsDetails"
+                :overview-accounts="overviewAccountsToDisplay"
+                :principal-account="principalAccount"
+                :refresh-index="refreshIndex"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :ether-balance="etherBalance"
+                :total-balance="totalBalance"
+                :total-fiat-balance="totalFiatBalance"
+                :is-read-only="isReadOnly"
+                :fiat-symbol="fiatSymbol"
+                @refresh-balance="refreshBalance"
+                @refresh-token-balance="refreshTokenBalance"
+                @error="error = $event" />
 
-              <wallet-accounts-list v-if="isMaximized && !loading" ref="walletAccountsList" :is-read-only="isReadOnly" :accounts-details="accountsDetails" :overview-accounts="overviewAccountsToDisplay" :wallet-address="walletAddress" :network-id="networkId" :refresh-index="refreshIndex" :fiat-symbol="fiatSymbol" @account-details-selected="openAccountDetail" @refresh-contracts="forceUpdate" @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()" @error="error = $event" />
+              <wallet-accounts-list
+                v-if="isMaximized && !loading"
+                ref="walletAccountsList"
+                :is-read-only="isReadOnly"
+                :accounts-details="accountsDetails"
+                :overview-accounts="overviewAccountsToDisplay"
+                :wallet-address="walletAddress"
+                :network-id="networkId"
+                :refresh-index="refreshIndex"
+                :fiat-symbol="fiatSymbol"
+                @account-details-selected="openAccountDetail"
+                @refresh-contracts="forceUpdate"
+                @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
+                @error="error = $event" />
             </v-card>
 
             <!-- The selected account detail -->
-            <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right stateless width="700" max-width="100vw"> <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :is-read-only="isReadOnly" :network-id="networkId" :wallet-address="walletAddress" :contract-details="selectedAccount" :selected-transaction-hash="selectedTransactionHash" @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()" @back="back()" /> </v-navigation-drawer>
+            <v-navigation-drawer
+              id="accountDetailsDrawer"
+              v-model="seeAccountDetails"
+              fixed
+              temporary
+              right
+              stateless
+              width="700"
+              max-width="100vw">
+              <account-detail
+                ref="accountDetail"
+                :fiat-symbol="fiatSymbol"
+                :is-read-only="isReadOnly"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :contract-details="selectedAccount"
+                :selected-transaction-hash="selectedTransactionHash"
+                @transaction-sent="$refs && $refs.walletSummary && $refs.walletSummary.loadPendingTransactions()"
+                @back="back()" />
+            </v-navigation-drawer>
           </v-card>
         </v-flex>
       </v-layout>
@@ -62,7 +169,9 @@
         <v-flex>
           <v-card-title class="transparent" flat>
             <v-spacer />
-            <div class="alert alert-warning"><i class="uiIconWarning"></i> You don't have enough access rights to use Ethereum Wallet application</div>
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i> You don't have enough access rights to use Ethereum Wallet application
+            </div>
             <v-spacer />
           </v-card-title>
         </v-flex>

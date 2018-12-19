@@ -1,39 +1,127 @@
 <template>
   <v-card flat>
-    <div v-if="error" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
-    <v-data-table :headers="walletHeaders" :items="wallets" :loading="loadingWallets" hide-actions>
+    <div v-if="error" class="alert alert-error v-content">
+      <i class="uiIconError"></i>{{ error }}
+    </div>
+    <v-data-table
+      :headers="walletHeaders"
+      :items="wallets"
+      :loading="loadingWallets"
+      hide-actions>
       <template slot="items" slot-scope="props">
         <td class="clickable" @click="openAccountDetail(props.item)">
-          <v-avatar size="36px"> <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" /> </v-avatar>
+          <v-avatar size="36px">
+            <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+          </v-avatar>
         </td>
-        <td class="clickable" @click="openAccountDetail(props.item)">{{ props.item.name }}</td>
+        <td class="clickable" @click="openAccountDetail(props.item)">
+          {{ props.item.name }}
+        </td>
         <td>
-          <a v-if="addressEtherscanLink" :href="`${addressEtherscanLink}${props.item.address}`" target="_blank" title="Open on etherscan">{{ props.item.address }}</a> <span v-else>{{ props.item.address }}</span>
+          <a
+            v-if="addressEtherscanLink"
+            :href="`${addressEtherscanLink}${props.item.address}`"
+            target="_blank"
+            title="Open on etherscan">
+            {{ props.item.address }}
+          </a> <span v-else>
+            {{ props.item.address }}
+          </span>
         </td>
         <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-badge v-if="props.item.loadingBalancePrincipal" color="red" right title="A transaction is in progress"> <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular> </v-badge>
+          <v-badge
+            v-if="props.item.loadingBalancePrincipal"
+            color="red"
+            right
+            title="A transaction is in progress">
+            <v-progress-circular
+              color="primary"
+              indeterminate
+              size="20" />
+          </v-badge>
           <template v-if="props.item.balancePrincipal">
             {{ toFixed(props.item.balancePrincipal) }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
-            <v-btn class="bottomNavigationItem transparent" title="Send funds" flat icon @click="openSendFundsModal($event, props.item, true)"> <v-icon>send</v-icon> </v-btn>
+            <v-btn
+              class="bottomNavigationItem transparent"
+              title="Send funds"
+              flat
+              icon
+              @click="openSendFundsModal($event, props.item, true)">
+              <v-icon>
+                send
+              </v-icon>
+            </v-btn>
           </template>
-          <template v-else
-            >-</template
-          >
+          <template
+            v-else>
+            -
+          </template>
         </td>
         <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-badge v-if="props.item.loadingBalance" color="red" right title="A transaction is in progress"> <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular> </v-badge>
+          <v-badge
+            v-if="props.item.loadingBalance"
+            color="red"
+            right
+            title="A transaction is in progress">
+            <v-progress-circular
+              color="primary"
+              indeterminate
+              size="20" />
+          </v-badge>
           <template>
             {{ toFixed(props.item.balance) }} eth
-            <v-btn class="bottomNavigationItem transparent" title="Send funds" flat icon @click="openSendFundsModal($event, props.item)"> <v-icon>send</v-icon> </v-btn>
+            <v-btn
+              class="bottomNavigationItem transparent"
+              title="Send funds"
+              flat
+              icon
+              @click="openSendFundsModal($event, props.item)">
+              <v-icon>
+                send
+              </v-icon>
+            </v-btn>
           </template>
         </td>
       </template>
     </v-data-table>
 
     <!-- The selected account detail -->
-    <v-navigation-drawer id="accountDetailsDrawer" v-model="seeAccountDetails" fixed temporary right stateless width="700" max-width="100vw"> <account-detail ref="accountDetail" :fiat-symbol="fiatSymbol" :network-id="networkId" :wallet-address="selectedWalletAddress" :contract-details="selectedWalletDetails" :selected-transaction-hash="selectedTransactionHash" :wallet="selectedWallet" is-read-only is-display-only is-administration @back="back()" /> </v-navigation-drawer>
+    <v-navigation-drawer
+      id="accountDetailsDrawer"
+      v-model="seeAccountDetails"
+      fixed
+      temporary
+      right
+      stateless
+      width="700"
+      max-width="100vw">
+      <account-detail
+        ref="accountDetail"
+        :fiat-symbol="fiatSymbol"
+        :network-id="networkId"
+        :wallet-address="selectedWalletAddress"
+        :contract-details="selectedWalletDetails"
+        :selected-transaction-hash="selectedTransactionHash"
+        :wallet="selectedWallet"
+        is-read-only
+        is-display-only
+        is-administration
+        @back="back()" />
+    </v-navigation-drawer>
 
-    <send-funds-modal ref="sendFundsModal" :accounts-details="accountsDetails" :principal-account="principalAccountAddress" :refresh-index="refreshIndex" :network-id="networkId" :wallet-address="walletAddress" no-button display-all-accounts add-pending-to-receiver @success="refreshBalance" @pending="$emit('pending', $event)" @error="refreshBalance(null, null, $event)" />
+    <send-funds-modal
+      ref="sendFundsModal"
+      :accounts-details="accountsDetails"
+      :principal-account="principalAccountAddress"
+      :refresh-index="refreshIndex"
+      :network-id="networkId"
+      :wallet-address="walletAddress"
+      no-button
+      display-all-accounts
+      add-pending-to-receiver
+      @success="refreshBalance"
+      @pending="$emit('pending', $event)"
+      @error="refreshBalance(null, null, $event)" />
   </v-card>
 </template>
 <script>

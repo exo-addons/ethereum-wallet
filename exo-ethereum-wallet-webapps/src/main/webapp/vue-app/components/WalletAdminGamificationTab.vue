@@ -1,15 +1,28 @@
 <template>
   <v-card flat>
     <v-card-text v-if="error && String(error).trim() != '{}'" class="text-xs-center">
-      <div class="alert alert-error v-content"><i class="uiIconError"></i> {{ error }}</div>
+      <div class="alert alert-error v-content">
+        <i class="uiIconError"></i> {{ error }}
+      </div>
     </v-card-text>
     <v-card-text v-if="isContractDifferentFromPrincipal" class="text-xs-center">
-      <div class="alert alert-warning"><i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token</div>
+      <div class="alert alert-warning">
+        <i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token
+      </div>
     </v-card-text>
-    <v-tabs v-model="selectedTab" grow hide-slider>
-      <v-tab key="SendRewards">Send Rewards</v-tab>
-      <v-tab key="RewardPools">Reward pools</v-tab>
-      <v-tab key="Configuration">Configuration</v-tab>
+    <v-tabs
+      v-model="selectedTab"
+      grow
+      hide-slider>
+      <v-tab key="SendRewards">
+        Send Rewards
+      </v-tab>
+      <v-tab key="RewardPools">
+        Reward pools
+      </v-tab>
+      <v-tab key="Configuration">
+        Configuration
+      </v-tab>
     </v-tabs>
 
     <v-tabs-items v-model="selectedTab">
@@ -20,18 +33,48 @@
               <i class="uiIconWarning"></i> Some users are members of multiple pools, the budget computing could be wrong:
               <ul>
                 <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
-                  <code>{{ duplicatedWallet.name }}</code>
+                  <code>
+                    {{ duplicatedWallet.name }}
+                  </code>
                 </li>
               </ul>
             </div>
           </v-card-text>
-          <v-card-text v-if="selectedTab === 0" class="text-xs-center" data-app>
-            <v-menu ref="selectedDateMenu" v-model="selectedDateMenu" transition="scale-transition" lazy offset-y class="dateSelector">
-              <v-text-field slot="activator" v-model="periodDatesDisplay" label="Select the period date" prepend-icon="event" />
-              <v-date-picker v-model="selectedDate" :first-day-of-week="1" :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'" @input="selectedDateMenu = false" />
+          <v-card-text
+            v-if="selectedTab === 0"
+            class="text-xs-center"
+            data-app>
+            <v-menu
+              ref="selectedDateMenu"
+              v-model="selectedDateMenu"
+              transition="scale-transition"
+              lazy
+              offset-y
+              class="dateSelector">
+              <v-text-field
+                slot="activator"
+                v-model="periodDatesDisplay"
+                label="Select the period date"
+                prepend-icon="event" />
+              <v-date-picker
+                v-model="selectedDate"
+                :first-day-of-week="1"
+                :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+                @input="selectedDateMenu = false" />
             </v-menu>
           </v-card-text>
-          <send-rewards-tab ref="sendRewards" :wallet-address="walletAddress" :loading="loading" :identities-list="identitiesList" :contract-details="contractDetails" :threshold="threshold" :period-type="periodType" :start-date-in-seconds="selectedStartDateInSeconds" :end-date-in-seconds="selectedEndDateInSeconds" @open-wallet-transaction="$emit('open-wallet-transaction', $event)" @pending="$emit('pending', $event)" />
+          <send-rewards-tab
+            ref="sendRewards"
+            :wallet-address="walletAddress"
+            :loading="loading"
+            :identities-list="identitiesList"
+            :contract-details="contractDetails"
+            :threshold="threshold"
+            :period-type="periodType"
+            :start-date-in-seconds="selectedStartDateInSeconds"
+            :end-date-in-seconds="selectedEndDateInSeconds"
+            @open-wallet-transaction="$emit('open-wallet-transaction', $event)"
+            @pending="$emit('pending', $event)" />
         </v-card>
       </v-tab-item>
       <v-tab-item id="RewardPools">
@@ -41,21 +84,56 @@
               <i class="uiIconWarning"></i> Some users are members of multiple pools, the budget computing could be wrong:
               <ul>
                 <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
-                  <code>{{ duplicatedWallet.name }}</code>
+                  <code>
+                    {{ duplicatedWallet.name }}
+                  </code>
                 </li>
               </ul>
             </div>
           </v-card-text>
           <v-card-text v-if="displayDateSelector && selectedTab === 1" class="text-xs-center">
-            <v-menu ref="selectedDateMenu" v-model="selectedDateMenu" transition="scale-transition" lazy offset-y class="dateSelector">
-              <v-text-field slot="activator" v-model="periodDatesDisplay" label="Select the period date" prepend-icon="event" width="150px" />
-              <v-date-picker v-model="selectedDate" :first-day-of-week="1" :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'" @input="selectedDateMenu = false" />
+            <v-menu
+              ref="selectedDateMenu"
+              v-model="selectedDateMenu"
+              transition="scale-transition"
+              lazy
+              offset-y
+              class="dateSelector">
+              <v-text-field
+                slot="activator"
+                v-model="periodDatesDisplay"
+                label="Select the period date"
+                prepend-icon="event"
+                width="150px" />
+              <v-date-picker
+                v-model="selectedDate"
+                :first-day-of-week="1"
+                :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+                @input="selectedDateMenu = false" />
             </v-menu>
           </v-card-text>
-          <gamification-teams-tab ref="gamificationTeams" :wallets="validRecipients" :contract-details="contractDetails" :period="periodDatesDisplay" :computed-total-budget="computedTeamsBudget" :reward-type="rewardType" :budget-per-member="budgetPerMember" :total-budget="totalBudget" @teams-retrieved="refresh" @form-opened="displayDateSelector = false" @form-closed="displayDateSelector = true" />
+          <gamification-teams-tab
+            ref="gamificationTeams"
+            :wallets="validRecipients"
+            :contract-details="contractDetails"
+            :period="periodDatesDisplay"
+            :computed-total-budget="computedTeamsBudget"
+            :sent-total-budget="sentTotalBudget"
+            :reward-type="rewardType"
+            :budget-per-member="budgetPerMember"
+            :total-budget="totalBudget"
+            @teams-retrieved="refresh"
+            @form-opened="displayDateSelector = false"
+            @form-closed="displayDateSelector = true" />
         </v-card>
       </v-tab-item>
-      <v-tab-item id="Configuration"> <configuration-tab ref="configurationTab" :contracts="contracts" @saved="changeSettings" @error="error = $event" /> </v-tab-item>
+      <v-tab-item id="Configuration">
+        <configuration-tab
+          ref="configurationTab"
+          :contracts="contracts"
+          @saved="changeSettings"
+          @error="error = $event" />
+      </v-tab-item>
     </v-tabs-items>
   </v-card>
 </template>
@@ -144,6 +222,17 @@ export default {
         return '';
       }
     },
+    sentTotalBudget() {
+      if (this.identitiesList && this.identitiesList.length) {
+        let sentTokens = 0;
+        this.identitiesList.forEach((wallet) => {
+          sentTokens += wallet.tokensSent ? Number(wallet.tokensSent) : 0;
+        });
+        return sentTokens;
+      } else {
+        return 0;
+      }
+    },
     validRecipients() {
       return this.identitiesList ? this.identitiesList.filter((item) => item.address && item.points && item.points >= this.threshold) : [];
     },
@@ -189,7 +278,7 @@ export default {
     refresh() {
       this.duplicatedWallets = [];
       if (this.$refs && this.$refs.gamificationTeams && this.$refs.gamificationTeams.teamsRetrieved) {
-        let teams = this.$refs.gamificationTeams.teams;
+        const teams = this.$refs.gamificationTeams.teams;
         const wallets = this.identitiesList;
         wallets.forEach((wallet) => {
           delete wallet.gamificationTeams;
@@ -229,7 +318,7 @@ export default {
         }
 
         if (teams && teams.length) {
-          teams = teams.sort((team1, team2) => Number(team1.id) - Number(team2.id));
+          teams.sort((team1, team2) => Number(team1.id) - Number(team2.id));
         }
 
         this.computeBudgets();
@@ -358,7 +447,8 @@ export default {
           wallet = Object.assign({}, wallet);
           wallet.hash = null;
           wallet.status = null;
-          wallet.tokensSent = null;
+          wallet.tokensSent = 0;
+          wallet.tokensToSend = 0;
 
           const startDate = new Date(this.selectedStartDate);
           const endDate = new Date(this.selectedEndDate);

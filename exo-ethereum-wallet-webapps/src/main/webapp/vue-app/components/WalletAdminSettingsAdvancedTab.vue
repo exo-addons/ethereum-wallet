@@ -1,18 +1,54 @@
 <template>
   <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
-    <div><v-switch v-model="enableDelegation" label="Enable token delegation operations for wallets by default"></v-switch></div>
+    <div>
+      <v-switch v-model="enableDelegation" label="Enable token delegation operations for wallets by default" />
+    </div>
 
-    <v-slider v-model="defaultGas" :label="`Maximum gas: ${defaultGas}`" :min="35000" :max="200000" :step="1000" type="number" class="mt-4" required />
+    <v-slider
+      v-model="defaultGas"
+      :label="`Maximum gas: ${defaultGas}`"
+      :min="35000"
+      :max="200000"
+      :step="1000"
+      type="number"
+      class="mt-4"
+      required />
 
-    <v-slider v-model="minGasPrice" :label="`Cheap transaction gas price: ${minGasPriceGwei} Gwei ${minGasFiatPrice}${minGasPriceToken}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4" required />
+    <v-slider
+      v-model="minGasPrice"
+      :label="`Cheap transaction gas price: ${minGasPriceGwei} Gwei ${minGasFiatPrice}${minGasPriceToken}`"
+      :min="1000000000"
+      :max="20000000000"
+      :step="1000000000"
+      type="number"
+      class="mt-4"
+      required />
 
-    <v-slider v-model="normalGasPrice" :label="`Normal transaction gas price: ${normalGasPriceGwei} Gwei ${normalGasFiatPrice}${normalGasPriceToken}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4" required />
+    <v-slider
+      v-model="normalGasPrice"
+      :label="`Normal transaction gas price: ${normalGasPriceGwei} Gwei ${normalGasFiatPrice}${normalGasPriceToken}`"
+      :min="1000000000"
+      :max="20000000000"
+      :step="1000000000"
+      type="number"
+      class="mt-4"
+      required />
 
-    <v-slider v-model="maxGasPrice" :label="` Fast transaction gas price: ${maxGasPriceGwei} Gwei ${maxGasFiatPrice}${maxGasPriceToken}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4" required />
+    <v-slider
+      v-model="maxGasPrice"
+      :label="` Fast transaction gas price: ${maxGasPriceGwei} Gwei ${maxGasFiatPrice}${maxGasPriceToken}`"
+      :min="1000000000"
+      :max="20000000000"
+      :step="1000000000"
+      type="number"
+      class="mt-4"
+      required />
 
     <v-card-actions>
       <v-spacer />
-      <button class="btn btn-primary mb-3" @click="save">Save</button>
+      <button class="btn btn-primary mb-3" @click="save">
+        Save
+      </button>
       <v-spacer />
     </v-card-actions>
   </v-card>

@@ -1,17 +1,70 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup with-overflow" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-btn v-if="icon && !noButton" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Send funds" flat value="send">
-      <span>Send</span>
-      <v-icon>send</v-icon>
+  <v-dialog
+    v-model="dialog"
+    :disabled="disabled"
+    content-class="uiPopup with-overflow"
+    width="500px"
+    max-width="100vw"
+    persistent
+    @keydown.esc="dialog = false">
+    <v-btn
+      v-if="icon && !noButton"
+      slot="activator"
+      :disabled="disabled"
+      class="bottomNavigationItem"
+      title="Send funds"
+      flat
+      value="send">
+      <span>
+        Send
+      </span>
+      <v-icon>
+        send
+      </v-icon>
     </v-btn>
-    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mr-1 mt-2">Send</button>
+    <button
+      v-else-if="!noButton"
+      slot="activator"
+      :disabled="disabled"
+      class="btn btn-primary mr-1 mt-2">
+      Send
+    </button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Send Funds</span></div>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
+            Send Funds
+          </span>
+      </div>
 
-      <div v-if="error" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+      <div v-if="error" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
 
-      <send-funds-form ref="sendFundsForm" :wallet-address="walletAddress" :network-id="networkId" :selected-account="selectedOption && selectedOption.value" :add-pending-to-receiver="addPendingToReceiver" @success="success" @error="$emit('error', $event)" @dialog-error="error = $event" @sent="addPendingTransaction($event)" @pending="$emit('pending', $event)" @close="dialog = false">
-        <div id="sendFundsAccount" class="selectBoxVuetifyParent"><v-combobox v-model="selectedOption" :items="accountsList" attach="#sendFundsAccount" label="Select currency" placeholder="Select a currency to use for requesting funds" absolute cache-items /></div>
+      <send-funds-form
+        ref="sendFundsForm"
+        :wallet-address="walletAddress"
+        :network-id="networkId"
+        :selected-account="selectedOption && selectedOption.value"
+        :add-pending-to-receiver="addPendingToReceiver"
+        @success="success"
+        @error="$emit('error', $event)"
+        @dialog-error="error = $event"
+        @sent="addPendingTransaction($event)"
+        @pending="$emit('pending', $event)"
+        @close="dialog = false">
+        <div id="sendFundsAccount" class="selectBoxVuetifyParent">
+          <v-combobox
+            v-model="selectedOption"
+            :items="accountsList"
+            attach="#sendFundsAccount"
+            label="Select currency"
+            placeholder="Select a currency to use for requesting funds"
+            absolute
+            cache-items />
+        </div>
       </send-funds-form>
     </v-card>
   </v-dialog>

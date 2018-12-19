@@ -1,95 +1,288 @@
 <template>
-  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white layout column">
+  <v-flex
+    v-if="contractDetails && contractDetails.title"
+    id="accountDetail"
+    class="text-xs-center white layout column">
     <v-card-title class="align-start accountDetailSummary">
       <v-layout column>
         <v-flex id="accountDetailTitle" class="mt-3">
           <div class="headline title align-start">
-            <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
+            <v-icon class="primary--text accountDetailIcon">
+              {{ contractDetails.icon }}
+            </v-icon>
             Contract Details: {{ contractDetails.title }}
           </div>
-          <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">Contract balance: {{ toFixed(contractDetails.contractBalanceFiat) }} {{ fiatSymbol }} / {{ toFixed(contractDetails.contractBalance) }} ether</h3>
-          <h4 v-if="contractDetails.owner" class="grey--text font-weight-light">Owner: <wallet-address :value="contractDetails.owner" /></h4>
-          <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">Sell price: {{ contractDetails.sellPrice }} ether</h4>
-          <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">Total supply: {{ toFixed(totalSupply) }} {{ contractDetails && contractDetails.symbol }}</h4>
+          <h3 v-if="contractDetails.contractBalanceFiat" class="font-weight-light">
+            Contract balance: {{ toFixed(contractDetails.contractBalanceFiat) }} {{ fiatSymbol }} / {{ toFixed(contractDetails.contractBalance) }} ether
+          </h3> <h4 v-if="contractDetails.owner" class="grey--text font-weight-light">
+            Owner: <wallet-address :value="contractDetails.owner" />
+          </h4> <h4 v-if="contractDetails.sellPrice" class="grey--text font-weight-light">
+            Sell price: {{ contractDetails.sellPrice }} ether
+          </h4> <h4 v-if="contractDetails.totalSupply" class="grey--text font-weight-light">
+            Total supply: {{ toFixed(totalSupply) }} {{ contractDetails && contractDetails.symbol }}
+          </h4>
         </v-flex>
 
         <v-flex v-if="!isDisplayOnly" id="accountDetailActions">
           <!-- Send ether -->
-          <send-ether-modal v-if="contractDetails.isOwner" :account="walletAddress" :balance="contractDetails.balance" :recipient="contractDetails.address" use-navigation @success="successSendingEther" @sent="newTransactionPending" @error="transactionError" />
+          <send-ether-modal
+            v-if="contractDetails.isOwner"
+            :account="walletAddress"
+            :balance="contractDetails.balance"
+            :recipient="contractDetails.address"
+            use-navigation
+            @success="successSendingEther"
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- add/remove admin -->
-          <contract-admin-modal v-if="contractDetails.adminLevel >= 5" ref="addAdminModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="addAdmin" title="Add administrator" autocomplete-label="Administrator account" autocomplete-placeholder="Choose an administrator account to add" input-label="Habilitation level" input-placeholder="Choose a value between 1 and 5" @success="successTransaction" @sent="newTransactionPending" @error="transactionError">
+          <contract-admin-modal
+            v-if="contractDetails.adminLevel >= 5"
+            ref="addAdminModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="addAdmin"
+            title="Add administrator"
+            autocomplete-label="Administrator account"
+            autocomplete-placeholder="Choose an administrator account to add"
+            input-label="Habilitation level"
+            input-placeholder="Choose a value between 1 and 5"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError">
             <div class="alert alert-info">
               <i class="uiIconInfo"></i>Habilitation levels:
               <ul>
-                <li><strong>Level 1 to 4</strong>: add/remove approved accounts</li>
-                <li><strong>Level 5</strong>: manage approved accounts, set sell price, manage administrators, pause/unpause contract and send ether to contract.</li>
+                <li>
+                  <strong>
+                    Level 1 to 4
+                  </strong>: add/remove approved accounts
+                </li>
+                <li>
+                  <strong>
+                    Level 5
+                  </strong>: manage approved accounts, set sell price, manage administrators, pause/unpause contract and send ether to contract.
+                </li>
               </ul>
             </div>
           </contract-admin-modal>
-          <contract-admin-modal v-if="contractDetails.adminLevel >= 5" ref="removeAdminModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="removeAdmin" title="Remove administrator" autocomplete-label="Administrator account" autocomplete-placeholder="Choose an administrator account to remove" @success="successTransaction" @sent="newTransactionPending" @error="transactionError" />
+          <contract-admin-modal
+            v-if="contractDetails.adminLevel >= 5"
+            ref="removeAdminModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="removeAdmin"
+            title="Remove administrator"
+            autocomplete-label="Administrator account"
+            autocomplete-placeholder="Choose an administrator account to remove"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- approve/disapprove account -->
-          <contract-admin-modal v-if="contractDetails.adminLevel >= 1" ref="approveAccountModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="approveAccount" title="Approve account" autocomplete-label="Account" autocomplete-placeholder="Choose a user or space to approve" @success="successTransaction" @sent="newTransactionPending" @error="transactionError" />
-          <contract-admin-modal v-if="contractDetails.adminLevel >= 1" ref="disapproveAccountModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="disapproveAccount" title="Disapprove account" autocomplete-label="Account" autocomplete-placeholder="Choose a user or space to disapprove" @success="successTransaction" @sent="newTransactionPending" @error="transactionError" />
+          <contract-admin-modal
+            v-if="contractDetails.adminLevel >= 1"
+            ref="approveAccountModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="approveAccount"
+            title="Approve account"
+            autocomplete-label="Account"
+            autocomplete-placeholder="Choose a user or space to approve"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
+          <contract-admin-modal
+            v-if="contractDetails.adminLevel >= 1"
+            ref="disapproveAccountModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="disapproveAccount"
+            title="Disapprove account"
+            autocomplete-label="Account"
+            autocomplete-placeholder="Choose a user or space to disapprove"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- pause/unpause contract -->
-          <contract-admin-modal v-if="!contractDetails.isPaused && contractDetails.adminLevel >= 5" ref="pauseModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="pause" title="Pause contract" @success="successTransaction" @sent="newTransactionPending" @error="transactionError" />
-          <contract-admin-modal v-if="contractDetails.isPaused && contractDetails.adminLevel >= 5" ref="unPauseModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="unPause" title="Unpause contract" @success="successTransaction" @sent="newTransactionPending" @error="transactionError" />
+          <contract-admin-modal
+            v-if="!contractDetails.isPaused && contractDetails.adminLevel >= 5"
+            ref="pauseModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="pause"
+            title="Pause contract"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
+          <contract-admin-modal
+            v-if="contractDetails.isPaused && contractDetails.adminLevel >= 5"
+            ref="unPauseModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="unPause"
+            title="Unpause contract"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
           <!-- set sell price -->
-          <contract-admin-modal v-if="contractDetails.adminLevel >= 5" ref="setSellPriceModal" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="setSellPrice" title="Set sell price" input-label="Token sell price" input-placeholder="Token sell price in ether" convert-wei @sent="newTransactionPending" @error="transactionError" />
+          <contract-admin-modal
+            v-if="contractDetails.adminLevel >= 5"
+            ref="setSellPriceModal"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="setSellPrice"
+            title="Set sell price"
+            input-label="Token sell price"
+            input-placeholder="Token sell price in ether"
+            convert-wei
+            @sent="newTransactionPending"
+            @error="transactionError" />
 
-          <contract-admin-modal v-if="contractDetails.isOwner" ref="transferOwnership" :contract-details="contractDetails" :wallet-address="walletAddress" method-name="transferOwnership" title="Transfer ownership" autocomplete-label="New owner" autocomplete-placeholder="Choose a new owner of the contract" @success="successTransaction" @sent="newTransactionPending" @error="transactionError" />
+          <contract-admin-modal
+            v-if="contractDetails.isOwner"
+            ref="transferOwnership"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            method-name="transferOwnership"
+            title="Transfer ownership"
+            autocomplete-label="New owner"
+            autocomplete-placeholder="Choose a new owner of the contract"
+            @success="successTransaction"
+            @sent="newTransactionPending"
+            @error="transactionError" />
         </v-flex>
-        <v-btn icon class="rightIcon" @click="$emit('back')"> <v-icon>close</v-icon> </v-btn>
+        <v-btn
+          icon
+          class="rightIcon"
+          @click="$emit('back')">
+          <v-icon>
+            close
+          </v-icon>
+        </v-btn>
       </v-layout>
     </v-card-title>
 
-    <v-tabs v-if="contractDetails.contractType > 0" v-model="selectedTab" grow>
+    <v-tabs
+      v-if="contractDetails.contractType > 0"
+      v-model="selectedTab"
+      grow>
       <v-tabs-slider color="primary" />
-      <v-tab key="transactions">Transactions{{ totalTransactionsCount ? ` (${totalTransactionsCount})` : '' }}</v-tab>
-      <v-tab key="approvedAccounts">Approved accounts</v-tab>
-      <v-tab key="adminAccounts">Admin accounts</v-tab>
+      <v-tab key="transactions">
+        Transactions{{ totalTransactionsCount ? ` (${totalTransactionsCount})` : '' }}
+      </v-tab>
+      <v-tab key="approvedAccounts">
+        Approved accounts
+      </v-tab>
+      <v-tab key="adminAccounts">
+        Admin accounts
+      </v-tab>
     </v-tabs>
     <v-tabs-items v-if="contractDetails.contractType > 0" v-model="selectedTab">
-      <v-tab-item key="transactions"> <transactions-list id="transactionsList" ref="transactionsList" :network-id="networkId" :account="contractDetails.address" :contract-details="contractDetails" :fiat-symbol="fiatSymbol" :error="error" display-full-transaction @loaded="computeTransactionsCount" @error="error = $event" /> </v-tab-item>
+      <v-tab-item key="transactions">
+        <transactions-list
+          id="transactionsList"
+          ref="transactionsList"
+          :network-id="networkId"
+          :account="contractDetails.address"
+          :contract-details="contractDetails"
+          :fiat-symbol="fiatSymbol"
+          :error="error"
+          display-full-transaction
+          @loaded="computeTransactionsCount"
+          @error="error = $event" />
+      </v-tab-item>
       <v-tab-item key="approvedAccountsTable">
-        <v-progress-linear v-if="loadingWallets" indeterminate color="primary" class="mb-0 mt-0" />
-        <v-data-table v-if="contractDetails" :items="wallets" hide-actions hide-headers>
+        <v-progress-linear
+          v-if="loadingWallets"
+          indeterminate
+          color="primary"
+          class="mb-0 mt-0" />
+        <v-data-table
+          v-if="contractDetails"
+          :items="wallets"
+          hide-actions
+          hide-headers>
           <template slot="items" slot-scope="props">
             <tr v-if="(props.item.approved && props.item.approved[contractDetails.address] === 'approved') || (props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1)">
               <td>
-                <v-avatar size="36px"> <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" /> </v-avatar>
+                <v-avatar size="36px">
+                  <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                </v-avatar>
               </td>
-              <td>{{ props.item.name }}</td>
+              <td>
+                {{ props.item.name }}
+              </td>
               <td v-if="$refs.disapproveAccountModal">
-                <span v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1"> Admin level: {{ props.item.accountAdminLevel[contractDetails.address] }} </span>
-                <v-btn v-else icon right @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type)"> <v-icon>close</v-icon> </v-btn>
+                <span v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
+                  Admin level: {{ props.item.accountAdminLevel[contractDetails.address] }}
+                </span>
+                <v-btn
+                  v-else
+                  icon
+                  right
+                  @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type)">
+                  <v-icon>
+                    close
+                  </v-icon>
+                </v-btn>
               </td>
             </tr>
           </template>
         </v-data-table>
       </v-tab-item>
       <v-tab-item key="adminAccountsTable">
-        <v-progress-linear v-if="loadingWallets" indeterminate color="primary" class="mb-0 mt-0" />
-        <v-data-table v-if="contractDetails" :items="wallets" hide-actions hide-headers>
+        <v-progress-linear
+          v-if="loadingWallets"
+          indeterminate
+          color="primary"
+          class="mb-0 mt-0" />
+        <v-data-table
+          v-if="contractDetails"
+          :items="wallets"
+          hide-actions
+          hide-headers>
           <template slot="items" slot-scope="props">
             <tr v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
               <td>
-                <v-avatar size="36px"> <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" /> </v-avatar>
+                <v-avatar size="36px">
+                  <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                </v-avatar>
               </td>
-              <td>{{ props.item.name }}</td>
-              <td>{{ props.item.accountAdminLevel[contractDetails.address] }} level</td>
+              <td>
+                {{ props.item.name }}
+              </td> <td>
+                {{ props.item.accountAdminLevel[contractDetails.address] }} level
+              </td>
               <td v-if="$refs.removeAdminModal">
-                <v-btn icon right @click="$refs.removeAdminModal.preselectAutocomplete(props.item.id, props.item.type)"> <v-icon>close</v-icon> </v-btn>
+                <v-btn
+                  icon
+                  right
+                  @click="$refs.removeAdminModal.preselectAutocomplete(props.item.id, props.item.type)">
+                  <v-icon>
+                    close
+                  </v-icon>
+                </v-btn>
               </td>
             </tr>
           </template>
         </v-data-table>
       </v-tab-item>
     </v-tabs-items>
-    <transactions-list v-if="contractDetails.contractType === 0" id="transactionsList" ref="transactionsList" :network-id="networkId" :account="contractDetails.address" :contract-details="contractDetails" :fiat-symbol="fiatSymbol" :error="error" display-full-transaction @loaded="computeTransactionsCount" @error="error = $event" />
+    <transactions-list
+      v-if="contractDetails.contractType === 0"
+      id="transactionsList"
+      ref="transactionsList"
+      :network-id="networkId"
+      :account="contractDetails.address"
+      :contract-details="contractDetails"
+      :fiat-symbol="fiatSymbol"
+      :error="error"
+      display-full-transaction
+      @loaded="computeTransactionsCount"
+      @error="error = $event" />
   </v-flex>
 </template>
 

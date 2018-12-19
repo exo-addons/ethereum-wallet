@@ -1,15 +1,55 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup" width="600px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
-      <v-btn :disabled="disabled" flat value="send">
-        <span>Send tokens</span>
-        <v-icon>send</v-icon>
+  <v-dialog
+    v-model="dialog"
+    :disabled="disabled"
+    content-class="uiPopup"
+    width="600px"
+    max-width="100vw"
+    persistent
+    @keydown.esc="dialog = false">
+    <v-bottom-nav
+      v-if="useNavigation"
+      slot="activator"
+      :disabled="disabled"
+      :value="true"
+      color="white"
+      class="elevation-0 buttomNavigation">
+      <v-btn
+        :disabled="disabled"
+        flat
+        value="send">
+        <span>
+          Send tokens
+        </span>
+        <v-icon>
+          send
+        </v-icon>
       </v-btn>
     </v-bottom-nav>
-    <button v-else-if="!noButton" slot="activator" :disabled="disabled" class="btn btn-primary mt-1 mb-1">Send tokens</button>
+    <button
+      v-else-if="!noButton"
+      slot="activator"
+      :disabled="disabled"
+      class="btn btn-primary mt-1 mb-1">
+      Send tokens
+    </button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Send Tokens</span></div>
-      <send-tokens-form ref="sendTokensForm" :account="account" :contract-details="contractDetails" class="pt-4" @sent="$emit('sent', $event, contractDetails)" @close="dialog = false" @error="$emit('error', $event)" />
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
+            Send Tokens
+          </span>
+      </div>
+      <send-tokens-form
+        ref="sendTokensForm"
+        :account="account"
+        :contract-details="contractDetails"
+        class="pt-4"
+        @sent="$emit('sent', $event, contractDetails)"
+        @close="dialog = false"
+        @error="$emit('error', $event)" />
     </v-card>
   </v-dialog>
 </template>

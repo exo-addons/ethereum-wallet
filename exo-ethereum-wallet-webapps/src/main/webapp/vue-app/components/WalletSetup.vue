@@ -2,8 +2,16 @@
   <v-flex id="walletSetup" class="text-xs-center">
     <div v-if="displayWalletBackup" class="alert alert-warning">
       <i class="uiIconWarning"></i> Your wallet is not backed up yet.
-      <wallet-backup-modal class="ml-3" display-complete-message @copied="hideBackupMessage()" />
-      <a class="ml-3" href="javascript:void(0);" @click="skipWalletBackedUp">Don't ask me again</a>
+      <wallet-backup-modal
+        class="ml-3"
+        display-complete-message
+        @copied="hideBackupMessage()" />
+      <a
+        class="ml-3"
+        href="javascript:void(0);"
+        @click="skipWalletBackedUp">
+        Don't ask me again
+      </a>
     </div>
 
     <div v-if="displayResetPassword" class="alert alert-warning">
@@ -14,18 +22,60 @@
         @reseted="
           hideSetPasswordMessage();
           $emit('refresh');
-        "
-      />
-      <a class="ml-3" href="javascript:void(0);" @click="hideSetPasswordMessage">Don't ask me again</a>
+        " />
+      <a
+        class="ml-3"
+        href="javascript:void(0);"
+        @click="hideSetPasswordMessage">
+        Don't ask me again
+      </a>
     </div>
 
     <div v-if="displayWalletCreationToolbar" class="alert alert-info">
-      <i class="uiIconInfo"></i> <span v-if="isSpace">No private key was found in current browser. <strong>Space wallet</strong> is displayed in readonly mode.</span> <span v-else>No private key was found in current browser. <strong>Your wallet</strong> is displayed in readonly mode.</span> <a v-if="!displayWalletSetup" href="javascript:void(0);" @click="displayWalletSetupActions()">More options</a>
+      <i class="uiIconInfo"></i> <span v-if="isSpace">
+        No private key was found in current browser. <strong>
+          Space wallet
+        </strong> is displayed in readonly mode.
+      </span> <span v-else>
+        No private key was found in current browser. <strong>
+          Your wallet
+        </strong> is displayed in readonly mode.
+      </span> <a
+        v-if="!displayWalletSetup"
+        href="javascript:void(0);"
+        @click="displayWalletSetupActions()">
+        More options
+      </a>
     </div>
 
-    <div v-if="displayWalletNotExistingYet" class="alert alert-info"><i class="uiIconInfo"></i> Space administrator hasn't set a Wallet for this space yet</div>
-    <wallet-metamask-setup v-else-if="useMetamask" ref="walletMetamaskSetup" :is-space="isSpace" :is-space-administrator="isSpaceAdministrator" :wallet-address="walletAddress" :refresh-index="refreshIndex" :is-administration="isAdministration" :loading="loading" @loading="$emit('loading')" @refresh="refresh()" @end-loading="$emit('end-loading')" @error="$emit('error', $event)" />
-    <wallet-browser-setup v-else-if="displayWalletSetup" ref="walletBrowserSetup" :is-space="isSpace" :is-space-administrator="isSpaceAdministrator" :refresh-index="refreshIndex" :is-administration="isAdministration" :loading="loading" @configured="refresh()" @loading="$emit('loading')" @end-loading="$emit('end-loading')" @error="$emit('error', $event)" />
+    <div v-if="displayWalletNotExistingYet" class="alert alert-info">
+      <i class="uiIconInfo"></i> Space administrator hasn't set a Wallet for this space yet
+    </div>
+    <wallet-metamask-setup
+      v-else-if="useMetamask"
+      ref="walletMetamaskSetup"
+      :is-space="isSpace"
+      :is-space-administrator="isSpaceAdministrator"
+      :wallet-address="walletAddress"
+      :refresh-index="refreshIndex"
+      :is-administration="isAdministration"
+      :loading="loading"
+      @loading="$emit('loading')"
+      @refresh="refresh()"
+      @end-loading="$emit('end-loading')"
+      @error="$emit('error', $event)" />
+    <wallet-browser-setup
+      v-else-if="displayWalletSetup"
+      ref="walletBrowserSetup"
+      :is-space="isSpace"
+      :is-space-administrator="isSpaceAdministrator"
+      :refresh-index="refreshIndex"
+      :is-administration="isAdministration"
+      :loading="loading"
+      @configured="refresh()"
+      @loading="$emit('loading')"
+      @end-loading="$emit('end-loading')"
+      @error="$emit('error', $event)" />
   </v-flex>
 </template>
 

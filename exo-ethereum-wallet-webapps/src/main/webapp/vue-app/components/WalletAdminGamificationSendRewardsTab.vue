@@ -1,60 +1,162 @@
 <template>
   <v-flex>
-    <v-card-title class="ml-5 mr-5"> <v-text-field v-model="search" append-icon="search" label="Search in name, pools, wallet address" single-line hide-details /> </v-card-title>
-    <v-data-table v-model="selectedIdentitiesList" :headers="identitiesHeaders" :items="filteredIdentitiesList" :loading="loading" :sortable="true" item-key="address" class="elevation-1 mr-3 mb-2" select-all disable-initial-sort hide-actions>
+    <v-card-title class="ml-5 mr-5">
+      <v-text-field
+        v-model="search"
+        append-icon="search"
+        label="Search in name, pools, wallet address"
+        single-line
+        hide-details />
+    </v-card-title>
+    <v-data-table
+      v-model="selectedIdentitiesList"
+      :headers="identitiesHeaders"
+      :items="filteredIdentitiesList"
+      :loading="loading"
+      :sortable="true"
+      item-key="address"
+      class="elevation-1 mr-3 mb-2"
+      select-all
+      disable-initial-sort
+      hide-actions>
       <template slot="items" slot-scope="props">
         <tr :active="props.selected">
-          <td><v-checkbox v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')" :input-value="props.selected" hide-details @click="props.selected = !props.selected" /></td>
           <td>
-            <v-avatar size="36px"> <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" /> </v-avatar>
+            <v-checkbox
+              v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+              :input-value="props.selected"
+              hide-details
+              @click="props.selected = !props.selected" />
+          </td>
+          <td>
+            <v-avatar size="36px">
+              <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+            </v-avatar>
           </td>
           <td class="text-xs-left">
-            <a v-if="props.item.address" :href="props.item.url" rel="nofollow" target="_blank">{{ props.item.name }}</a>
+            <a
+              v-if="props.item.address"
+              :href="props.item.url"
+              rel="nofollow"
+              target="_blank">
+              {{ props.item.name }}
+            </a>
             <div v-else>
               <del>
-                <a :href="props.item.url" rel="nofollow" target="_blank" class="red--text">{{ props.item.name }}</a>
+                <a
+                  :href="props.item.url"
+                  rel="nofollow"
+                  target="_blank"
+                  class="red--text">
+                  {{ props.item.name }}
+                </a>
               </del>
               (No address)
             </div>
           </td>
           <td class="text-xs-left">
             <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">
-              <li v-for="team in props.item.gamificationTeams" :key="team.id">{{ team.name }}</li>
+              <li v-for="team in props.item.gamificationTeams" :key="team.id">
+                {{ team.name }}
+              </li>
             </ul>
-            <div v-else>-</div>
+            <div v-else>
+              -
+            </div>
           </td>
-          <td><a v-if="props.item.hash" href="javascript:void(0);" target="_blank" title="Open transaction in wallet" @click="$emit('open-wallet-transaction', props.item)"> Open in wallet </a> <span v-else>-</span></td>
+          <td>
+            <a
+              v-if="props.item.hash"
+              href="javascript:void(0);"
+              target="_blank"
+              title="Open transaction in wallet"
+              @click="$emit('open-wallet-transaction', props.item)">
+              Open in wallet
+            </a> <span v-else>
+              -
+            </span>
+          </td>
           <td>
             <template v-if="!props.item.status">
-              <v-icon v-if="!props.item.address" color="warning" title="No address"> warning </v-icon>
-              <v-icon v-else-if="!props.item.points || props.item.points < threshold" :title="`Not enough points, minimum: ${threshold} points`" color="warning"> warning </v-icon>
-              <div v-else>-</div>
+              <v-icon
+                v-if="!props.item.address"
+                color="warning"
+                title="No address">
+                warning
+              </v-icon>
+              <v-icon
+                v-else-if="!props.item.points || props.item.points < threshold"
+                :title="`Not enough points, minimum: ${threshold} points`"
+                color="warning">
+                warning
+              </v-icon>
+              <div v-else>
+                -
+              </div>
             </template>
-            <v-progress-circular v-else-if="props.item.status === 'pending'" color="primary" indeterminate size="20" />
-            <v-icon v-else :color="props.item.status === 'success' ? 'success' : 'error'" :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'" v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+            <v-progress-circular
+              v-else-if="props.item.status === 'pending'"
+              color="primary"
+              indeterminate
+              size="20" />
+            <v-icon
+              v-else
+              :color="props.item.status === 'success' ? 'success' : 'error'"
+              :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
+              v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
           </td>
           <td>
-            <v-text-field v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')" v-model.number="props.item.tokensToSend" type="number" class="input-text-center" />
-            <template v-else-if="props.item.status === 'success'">{{ toFixed(props.item.tokensSent) }}</template>
-            <template v-else
-              >-</template
-            >
+            <v-text-field
+              v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+              v-model.number="props.item.tokensToSend"
+              type="number"
+              class="input-text-center"
+              @change="refreshIndex++" />
+            <template v-else-if="props.item.status === 'success'">
+              {{ toFixed(props.item.tokensSent) }}
+            </template>
+            <template
+              v-else>
+              -
+            </template>
           </td>
-          <td>{{ props.item.points }}</td>
+          <td>
+            {{ props.item.points }}
+          </td>
         </tr>
       </template>
       <template slot="footer">
-        <td :colspan="identitiesHeaders.length - 1"><strong>Total</strong></td>
-        <td>
-          <strong>{{ totalTokens }}</strong>
+        <td :colspan="identitiesHeaders.length - 1">
+          <strong>
+            Total
+          </strong>
         </td>
         <td>
-          <strong>{{ totalPoints }}</strong>
+          <strong>
+            {{ totalTokens }}
+          </strong>
+        </td>
+        <td>
+          <strong>
+            {{ totalPoints }}
+          </strong>
         </td>
       </template>
     </v-data-table>
 
-    <send-reward-modal :account="walletAddress" :contract-details="contractDetails" :recipients="recipients" :period-type="periodType" :start-date-in-seconds="startDateInSeconds" :end-date-in-seconds="endDateInSeconds" :reward-type="rewardType" default-transaction-label="gamification points reward" default-transaction-message="gamification points reward" reward-count-field="points" @sent="newPendingTransaction" @error="error = $event" />
+    <send-reward-modal
+      :account="walletAddress"
+      :contract-details="contractDetails"
+      :recipients="recipients"
+      :period-type="periodType"
+      :start-date-in-seconds="startDateInSeconds"
+      :end-date-in-seconds="endDateInSeconds"
+      :reward-type="rewardType"
+      default-transaction-label="gamification points reward"
+      default-transaction-message="gamification points reward"
+      reward-count-field="points"
+      @sent="newPendingTransaction"
+      @error="error = $event" />
   </v-flex>
 </template>
 
@@ -121,6 +223,7 @@ export default {
   data() {
     return {
       search: '',
+      refreshIndex: 1,
       selectedIdentitiesList: [],
       rewardType: 'GAMIFICATION_PERIOD_TRANSACTIONS',
       identitiesHeaders: [
@@ -179,7 +282,7 @@ export default {
       return this.identitiesList ? this.identitiesList.filter((item) => item.address && item.points >= this.threshold) : [];
     },
     filteredIdentitiesList() {
-      return this.identitiesList ? this.identitiesList.filter((wallet) => this.filterItemFromList(wallet, this.search)) : [];
+      return this.refreshIndex && this.identitiesList ? this.identitiesList.filter((wallet) => this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
       return this.validRecipients.filter((item) => !item.status || item.status === 'error');
@@ -199,12 +302,17 @@ export default {
       if (this.filteredIdentitiesList) {
         let result = 0;
         this.filteredIdentitiesList.forEach((wallet) => {
-          result += wallet.tokensToSend ? Number(wallet.tokensToSend) : 0 + wallet.tokensSent ? Number(wallet.tokensSent) : 0;
+          result += wallet.tokensSent ? (wallet.tokensSent ? Number(wallet.tokensSent) : 0) : Number(wallet.tokensToSend);
         });
         return result;
       } else {
         return 0;
       }
+    },
+  },
+  watch: {
+    refreshIndex() {
+      this.$forceUpdate();
     },
   },
   methods: {

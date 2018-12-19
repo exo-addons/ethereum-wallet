@@ -1,78 +1,195 @@
 <template>
   <v-card class="elevation-12 pt-4">
     <v-card-title v-if="error && String(error).trim() != '{}'" class="text-xs-center">
-      <div class="alert alert-error v-content"><i class="uiIconError"></i> {{ error }}</div>
+      <div class="alert alert-error v-content">
+        <i class="uiIconError"></i> {{ error }}
+      </div>
     </v-card-title>
     <v-container grid-list-md class="pt-2">
       <v-layout wrap class="rewardPoolForm">
-        <v-flex xs12 sm6> <v-text-field v-model="name" label="Pool name *" placeholder="Enter pool name" name="name" required /> </v-flex>
+        <v-flex xs12 sm6>
+          <v-text-field
+            v-model="name"
+            label="Pool name *"
+            placeholder="Enter pool name"
+            name="name"
+            required />
+        </v-flex>
 
-        <v-flex xs12 sm6> <v-text-field v-model="description" label="Pool description" placeholder="Enter pool description" name="description" /> </v-flex>
+        <v-flex xs12 sm6>
+          <v-text-field
+            v-model="description"
+            label="Pool description"
+            placeholder="Enter pool description"
+            name="description" />
+        </v-flex>
 
-        <v-flex id="rewardTeamSpaceAutoComplete" class="contactAutoComplete" xs12 sm6>
-          <v-autocomplete ref="rewardTeamSpaceAutoComplete" v-model="rewardTeamSpace" :items="rewardTeamSpaceOptions" :loading="isLoadingSpaceSuggestions" :search-input.sync="rewardTeamSpaceSearchTerm" attach="#rewardTeamSpaceAutoComplete" label="Pool space (optional, add its members in pool and display avatar)" class="contactAutoComplete" placeholder="Start typing to Search a space" content-class="contactAutoCompleteContent bigContactAutoComplete" max-width="100%" item-text="name" item-value="id" hide-details hide-selected chips cache-items dense flat>
+        <v-flex
+          id="rewardTeamSpaceAutoComplete"
+          class="contactAutoComplete"
+          xs12
+          sm6>
+          <v-autocomplete
+            ref="rewardTeamSpaceAutoComplete"
+            v-model="rewardTeamSpace"
+            :items="rewardTeamSpaceOptions"
+            :loading="isLoadingSpaceSuggestions"
+            :search-input.sync="rewardTeamSpaceSearchTerm"
+            attach="#rewardTeamSpaceAutoComplete"
+            label="Pool space (optional, add its members in pool and display avatar)"
+            class="contactAutoComplete"
+            placeholder="Start typing to Search a space"
+            content-class="contactAutoCompleteContent bigContactAutoComplete"
+            max-width="100%"
+            item-text="name"
+            item-value="id"
+            hide-details
+            hide-selected
+            chips
+            cache-items
+            dense
+            flat>
             <template slot="no-data">
               <v-list-tile>
-                <v-list-tile-title> Search for a <strong>Space</strong> </v-list-tile-title>
+                <v-list-tile-title>
+                  Search for a <strong>
+                    Space
+                  </strong>
+                </v-list-tile-title>
               </v-list-tile>
             </template>
 
             <template slot="selection" slot-scope="{item, selected}">
-              <v-chip v-if="item.error" :selected="selected" class="autocompleteSelectedItem">
-                <del
-                  ><span>{{ item.name }}</span></del
-                >
+              <v-chip
+                v-if="item.error"
+                :selected="selected"
+                class="autocompleteSelectedItem">
+                <del>
+                  <span>
+                    {{ item.name }}
+                  </span>
+                </del>
               </v-chip>
-              <v-chip v-else :selected="selected" class="autocompleteSelectedItem">
-                <span>{{ item.name }}</span>
+              <v-chip
+                v-else
+                :selected="selected"
+                class="autocompleteSelectedItem">
+                <span>
+                  {{ item.name }}
+                </span>
               </v-chip>
             </template>
 
             <template slot="item" slot-scope="{item}">
-              <v-list-tile-avatar v-if="item.avatar" tile size="20"> <img :src="item.avatar" /> </v-list-tile-avatar>
+              <v-list-tile-avatar
+                v-if="item.avatar"
+                tile
+                size="20">
+                <img :src="item.avatar">
+              </v-list-tile-avatar>
               <v-list-tile-title v-text="item.name" />
             </template>
           </v-autocomplete>
         </v-flex>
 
-        <address-auto-complete ref="managerAutocomplete" input-label="Pool manager" input-placeholder="Select a pool manager" no-data-label="Search for a user" no-address big-field class="xs12 sm6" @item-selected="manager = $event && $event.id" />
+        <address-auto-complete
+          ref="managerAutocomplete"
+          input-label="Pool manager"
+          input-placeholder="Select a pool manager"
+          no-data-label="Search for a user"
+          no-address
+          big-field
+          class="xs12 sm6"
+          @item-selected="manager = $event && $event.id" />
 
         <v-flex xs12>
           <v-radio-group v-model="rewardType" label="Reward pool members">
             <v-radio value="COMPUTED" label="By computing pool reward from total budget" />
             <v-radio value="FIXED" label="By a total fixed budget (not retained from global budget)" />
-            <v-flex xs12 sm6> <v-text-field v-if="rewardType === 'FIXED'" v-model="budget" placeholder="Enter the pool fixed budget" type="number" class="pt-0 pb-0" name="budget" /> </v-flex>
+            <v-flex xs12 sm6>
+              <v-text-field
+                v-if="rewardType === 'FIXED'"
+                v-model="budget"
+                placeholder="Enter the pool fixed budget"
+                type="number"
+                class="pt-0 pb-0"
+                name="budget" />
+            </v-flex>
             <v-radio value="FIXED_PER_MEMBER" label="By a fixed budget per eligible member (not retained from global budget)" />
-            <v-flex v-if="rewardType === 'FIXED_PER_MEMBER'" xs12 sm6> <v-text-field v-model="budgetPerMember" placeholder="Enter the fixed budget per pool member" type="number" class="pt-0 pb-0" name="budgetPerMember" /> </v-flex>
+            <v-flex
+              v-if="rewardType === 'FIXED_PER_MEMBER'"
+              xs12
+              sm6>
+              <v-text-field
+                v-model="budgetPerMember"
+                placeholder="Enter the fixed budget per pool member"
+                type="number"
+                class="pt-0 pb-0"
+                name="budgetPerMember" />
+            </v-flex>
           </v-radio-group>
         </v-flex>
 
         <v-flex xs12>
-          <address-auto-complete ref="memberAutocomplete" :ignore-items="members" input-label="Pool members" input-placeholder="Add new member" no-data-label="Search for a user" no-address big-field @item-selected="addMember($event)" />
-          <v-data-table :items="membersObjects" item-key="id" class="elevation-1 mt-2" sortable>
+          <address-auto-complete
+            ref="memberAutocomplete"
+            :ignore-items="members"
+            input-label="Pool members"
+            input-placeholder="Add new member"
+            no-data-label="Search for a user"
+            no-address
+            big-field
+            @item-selected="addMember($event)" />
+          <v-data-table
+            :items="membersObjects"
+            item-key="id"
+            class="elevation-1 mt-2"
+            sortable>
             <template slot="no-data">
               <tr>
-                <td colspan="3" class="text-xs-center">No pool members</td>
+                <td colspan="3" class="text-xs-center">
+                  No pool members
+                </td>
               </tr>
             </template>
             <!-- Without slot-scope, the template isn't displayed -->
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template slot="headers" slot-scope="props">
               <tr>
-                <th colspan="2" class="text-xs-center">Name</th>
+                <th colspan="2" class="text-xs-center">
+                  Name
+                </th>
                 <th class="text-xs-right">
-                  <v-btn icon title="Delete all" @click="members = []"> <v-icon>delete</v-icon> </v-btn>
+                  <v-btn
+                    icon
+                    title="Delete all"
+                    @click="members = []">
+                    <v-icon>
+                      delete
+                    </v-icon>
+                  </v-btn>
                 </th>
               </tr>
             </template>
             <template slot="items" slot-scope="props">
               <tr>
                 <td class="text-xs-left">
-                  <v-avatar size="36px"> <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" /> </v-avatar>
+                  <v-avatar size="36px">
+                    <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                  </v-avatar>
                 </td>
-                <td class="text-xs-center">{{ props.item.name }}</td>
+                <td class="text-xs-center">
+                  {{ props.item.name }}
+                </td>
                 <td class="text-xs-right">
-                  <v-btn icon title="Delete" @click="deleteMember(props.item)"> <v-icon>delete</v-icon> </v-btn>
+                  <v-btn
+                    icon
+                    title="Delete"
+                    @click="deleteMember(props.item)">
+                    <v-icon>
+                      delete
+                    </v-icon>
+                  </v-btn>
                 </td>
               </tr>
             </template>
@@ -82,8 +199,19 @@
     </v-container>
     <v-card-actions>
       <v-spacer />
-      <v-btn :loading="loading" class="btn btn-primary mr-1" dark @click="save">Save</v-btn>
-      <v-btn class="btn" color="white" @click="$emit('close')">Cancel</v-btn>
+      <v-btn
+        :loading="loading"
+        class="btn btn-primary mr-1"
+        dark
+        @click="save">
+        Save
+      </v-btn>
+      <v-btn
+        class="btn"
+        color="white"
+        @click="$emit('close')">
+        Cancel
+      </v-btn>
       <v-spacer />
     </v-card-actions>
   </v-card>

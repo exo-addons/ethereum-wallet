@@ -1,53 +1,229 @@
 <template>
-  <v-dialog v-model="createNewToken" content-class="uiPopup createNewToken" fullscreen hide-overlay transition="dialog-bottom-transition" persistent>
-    <button slot="activator" class="btn btn-primary mt-3" @click="createNewToken = true">Deploy new Token</button>
+  <v-dialog
+    v-model="createNewToken"
+    content-class="uiPopup createNewToken"
+    fullscreen
+    hide-overlay
+    transition="dialog-bottom-transition"
+    persistent>
+    <button
+      slot="activator"
+      class="btn btn-primary mt-3"
+      @click="createNewToken = true">
+      Deploy new Token
+    </button>
     <v-card flat>
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="createNewToken = false"></a> <span class="PopupTitle popupTitle">Deploy new token contracts</span></div>
-      <div v-if="error" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="createNewToken = false"></a> <span class="PopupTitle popupTitle">
+            Deploy new token contracts
+          </span>
+      </div> <div v-if="error" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
       <v-stepper v-model="step">
         <v-stepper-header flat>
-          <v-stepper-step :complete="step > 1" step="1">Deployment of Data contract</v-stepper-step>
+          <v-stepper-step :complete="step > 1" step="1">
+            Deployment of Data contract
+          </v-stepper-step>
           <v-divider />
-          <v-stepper-step :complete="step > 2" step="2">Deployment of Token contract</v-stepper-step>
+          <v-stepper-step :complete="step > 2" step="2">
+            Deployment of Token contract
+          </v-stepper-step>
           <v-divider />
-          <v-stepper-step :complete="step > 3" step="3">Deployment of Proxy contract</v-stepper-step>
+          <v-stepper-step :complete="step > 3" step="3">
+            Deployment of Proxy contract
+          </v-stepper-step>
           <v-divider />
-          <v-stepper-step :complete="step > 4" step="4">Transfer data ownership</v-stepper-step>
+          <v-stepper-step :complete="step > 4" step="4">
+            Transfer data ownership
+          </v-stepper-step>
           <v-divider />
-          <v-stepper-step :complete="step > 5" step="5">ERC 20 initialization</v-stepper-step>
+          <v-stepper-step :complete="step > 5" step="5">
+            ERC 20 initialization
+          </v-stepper-step>
           <v-divider />
-          <v-stepper-step :complete="step === 6" step="6">Completed</v-stepper-step>
+          <v-stepper-step :complete="step === 6" step="6">
+            Completed
+          </v-stepper-step>
         </v-stepper-header>
         <v-stepper-items>
           <v-stepper-content step="1">
-            <contract-deployment-step :network-id="networkId" :stored-password="storedPassword" :transaction-hash="transactionHashByStep[step]" :gas="gasByStep[step]" :contract-address="contractAddressByStep[step]" :processing="processingStep[step]" :processed="processedStep[step]" :transaction-fee="gasFee" :disabled-button="disabledButton" :fiat-symbol="fiatSymbol" button-title="Deploy" @proceed="proceedStep($event)" @next="step++"> <v-slider v-model="gasPrice" :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4 mr-5" required /> </contract-deployment-step>
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :contract-address="contractAddressByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="gasFee"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Deploy"
+              @proceed="proceedStep($event)"
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="2">
-            <contract-deployment-step :network-id="networkId" :stored-password="storedPassword" :transaction-hash="transactionHashByStep[step]" :gas="gasByStep[step]" :contract-address="contractAddressByStep[step]" :processing="processingStep[step]" :processed="processedStep[step]" :transaction-fee="gasFee" :disabled-button="disabledButton" :fiat-symbol="fiatSymbol" button-title="Deploy" @proceed="proceedStep($event)" @next="step++"> <v-slider v-model="gasPrice" :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4 mr-5" required /> </contract-deployment-step>
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :contract-address="contractAddressByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="gasFee"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Deploy"
+              @proceed="proceedStep($event)"
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="3">
-            <contract-deployment-step :network-id="networkId" :stored-password="storedPassword" :transaction-hash="transactionHashByStep[step]" :gas="gasByStep[step]" :contract-address="contractAddressByStep[step]" :processing="processingStep[step]" :processed="processedStep[step]" :transaction-fee="gasFee" :disabled-button="disabledButton" :fiat-symbol="fiatSymbol" button-title="Deploy" @proceed="proceedStep($event)" @next="step++"> <v-slider v-model="gasPrice" :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4 mr-5" required /> </contract-deployment-step>
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :contract-address="contractAddressByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="gasFee"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Deploy"
+              @proceed="proceedStep($event)"
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="4">
-            <contract-deployment-step :network-id="networkId" :stored-password="storedPassword" :transaction-hash="transactionHashByStep[step]" :gas="gasByStep[step]" :processing="processingStep[step]" :processed="processedStep[step]" :transaction-fee="gasFee" :disabled-button="disabledButton" :fiat-symbol="fiatSymbol" button-title="Send" @proceed="proceedStep($event)" @next="step++"> <v-slider v-model="gasPrice" :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4 mr-5" required /> </contract-deployment-step>
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="gasFee"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Send"
+              @proceed="proceedStep($event)"
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
+            </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="5">
-            <contract-deployment-step :network-id="networkId" :stored-password="storedPassword" :transaction-hash="transactionHashByStep[step]" :gas="gasByStep[step]" :processing="processingStep[step]" :processed="processedStep[step]" :transaction-fee="gasFee" :disabled-button="disabledButton" :fiat-symbol="fiatSymbol" button-title="Send" @proceed="proceedStep($event)" @next="step++">
-              <v-slider v-model="gasPrice" :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee} ${fiatSymbol}`" :min="1000000000" :max="20000000000" :step="1000000000" type="number" class="mt-4 mr-5" required />
+            <contract-deployment-step
+              :network-id="networkId"
+              :stored-password="storedPassword"
+              :transaction-hash="transactionHashByStep[step]"
+              :gas="gasByStep[step]"
+              :processing="processingStep[step]"
+              :processed="processedStep[step]"
+              :transaction-fee="gasFee"
+              :disabled-button="disabledButton"
+              :fiat-symbol="fiatSymbol"
+              button-title="Send"
+              @proceed="proceedStep($event)"
+              @next="step++">
+              <v-slider
+                v-model="gasPrice"
+                :label="`Gas price: ${gasPriceGwei} Gwei ${gasFee} ${fiatSymbol}`"
+                :min="1000000000"
+                :max="20000000000"
+                :step="1000000000"
+                type="number"
+                class="mt-4 mr-5"
+                required />
 
               <v-form ref="form" class="pl-5 pr-5 pt-3 flex">
-                <v-text-field v-model="newTokenName" :rules="mandatoryRule" label="Token name" placeholder="Enter the ERC20 token name" required />
-                <v-text-field v-model="newTokenSymbol" :rules="mandatoryRule" label="Token symbol" placeholder="Enter the token symbol to uses to display token amounts" required />
-                <v-text-field v-model="newTokenInitialCoins" :rules="mandatoryRule" label="Initial token coins supply" placeholder="Enter an amount of initial token supply" required />
-                <v-slider v-model="newTokenDecimals" :label="`Token coins decimals: ${newTokenDecimals}`" :min="0" :max="18" :step="1" type="number" required />
+                <v-text-field
+                  v-model="newTokenName"
+                  :rules="mandatoryRule"
+                  label="Token name"
+                  placeholder="Enter the ERC20 token name"
+                  required />
+                <v-text-field
+                  v-model="newTokenSymbol"
+                  :rules="mandatoryRule"
+                  label="Token symbol"
+                  placeholder="Enter the token symbol to uses to display token amounts"
+                  required />
+                <v-text-field
+                  v-model="newTokenInitialCoins"
+                  :rules="mandatoryRule"
+                  label="Initial token coins supply"
+                  placeholder="Enter an amount of initial token supply"
+                  required />
+                <v-slider
+                  v-model="newTokenDecimals"
+                  :label="`Token coins decimals: ${newTokenDecimals}`"
+                  :min="0"
+                  :max="18"
+                  :step="1"
+                  type="number"
+                  required />
               </v-form>
             </contract-deployment-step>
           </v-stepper-content>
           <v-stepper-content step="6">
             <v-card flat>
-              <v-card-title> The Token has been deployed. <a :href="tokenEtherscanLink" target="_blank"> See it on etherscan</a> </v-card-title>
+              <v-card-title>
+                The Token has been deployed. <a :href="tokenEtherscanLink" target="_blank">
+                  See it on etherscan
+                </a>
+              </v-card-title>
               <v-card-actions>
-                <v-btn :loading="processingStep[step]" :disabled="processingStep[step]" color="primary" @click="finishInstallation"><span class="ml-2 mr-2">Finish deployment</span></v-btn>
+                <v-btn
+                  :loading="processingStep[step]"
+                  :disabled="processingStep[step]"
+                  color="primary"
+                  @click="finishInstallation">
+                  <span class="ml-2 mr-2">
+                    Finish deployment
+                  </span>
+                </v-btn>
               </v-card-actions>
             </v-card>
           </v-stepper-content>

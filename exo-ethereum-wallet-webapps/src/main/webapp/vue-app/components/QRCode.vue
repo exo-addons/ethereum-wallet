@@ -1,7 +1,8 @@
 <template>
   <v-flex>
-    <div v-if="information" class="alert alert-info"><i class="uiIconInfo"></i> {{ information }}</div>
-    <div :id="id" class="text-xs-center"></div>
+    <div v-if="information" class="alert alert-info">
+      <i class="uiIconInfo"></i> {{ information }}
+    </div> <div :id="id" class="text-xs-center"></div>
   </v-flex>
 </template>
 

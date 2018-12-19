@@ -1,15 +1,18 @@
 <template>
   <v-card>
     <v-card-text class="pt-0">
-      <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
-      <div v-if="!error && warning && warning.length" class="alert alert-warning v-content"><i class="uiIconWarning"></i>{{ warning }}</div>
-      <div v-if="!error && !warning && information && information.length" class="alert alert-info v-content"><i class="uiIconInfo"></i>{{ information }}</div>
+      <div v-if="error && !loading" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div> <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
+        <i class="uiIconWarning"></i>{{ warning }}
+      </div> <div v-if="!error && !warning && information && information.length" class="alert alert-info v-content">
+        <i class="uiIconInfo"></i>{{ information }}
+      </div>
       <v-form
         @submit="
           $event.preventDefault();
           $event.stopPropagation();
-        "
-      >
+        ">
         <address-auto-complete
           ref="autocomplete"
           :disabled="loading"
@@ -18,26 +21,86 @@
           @item-selected="
             recipient = $event.address;
             $emit('receiver-selected', $event);
-          "
-        />
+          " />
 
-        <v-container flat fluid grid-list-lg class="mt-4 pl-2">
+        <v-container
+          flat
+          fluid
+          grid-list-lg
+          class="mt-4 pl-2">
           <v-layout row wrap>
-            <v-text-field v-model.number="amount" :disabled="loading" name="amount" label="Amount" placeholder="Select an amount of tokens to send" @input="$emit('amount-selected', amount)" />
+            <v-text-field
+              v-model.number="amount"
+              :disabled="loading"
+              name="amount"
+              label="Amount"
+              placeholder="Select an amount of tokens to send"
+              @input="$emit('amount-selected', amount)" />
             <slot></slot>
           </v-layout>
         </v-container>
 
-        <v-text-field v-if="!storedPassword" v-model="walletPassword" :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'" :type="walletPasswordShow ? 'text' : 'password'" :disabled="loading" name="walletPassword" label="Wallet password" placeholder="Enter your wallet password" counter autocomplete="current-passord" @click:append="walletPasswordShow = !walletPasswordShow" />
+        <v-text-field
+          v-if="!storedPassword"
+          v-model="walletPassword"
+          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+          :type="walletPasswordShow ? 'text' : 'password'"
+          :disabled="loading"
+          name="walletPassword"
+          label="Wallet password"
+          placeholder="Enter your wallet password"
+          counter
+          autocomplete="current-passord"
+          @click:append="walletPasswordShow = !walletPasswordShow" />
         <gas-price-choice :estimated-fee="transactionFeeString" @changed="gasPrice = $event" />
-        <v-text-field v-model="transactionLabel" :disabled="loading" type="text" name="transactionLabel" label="Label (Optional)" placeholder="Enter label for your transaction" />
-        <v-textarea v-model="transactionMessage" :disabled="loading" name="tokenTransactionMessage" label="Message (Optional)" placeholder="Enter a custom message to send to the receiver with your transaction" class="mt-4" rows="3" flat no-resize />
+        <v-text-field
+          v-model="transactionLabel"
+          :disabled="loading"
+          type="text"
+          name="transactionLabel"
+          label="Label (Optional)"
+          placeholder="Enter label for your transaction" />
+        <v-textarea
+          v-model="transactionMessage"
+          :disabled="loading"
+          name="tokenTransactionMessage"
+          label="Message (Optional)"
+          placeholder="Enter a custom message to send to the receiver with your transaction"
+          class="mt-4"
+          rows="3"
+          flat
+          no-resize />
       </v-form>
-      <qr-code-modal :to="recipient" :from="account" :amount="0" :is-contract="true" :args-names="['_to', '_value']" :args-types="['address', 'uint256']" :args-values="[recipient, amount]" :open="showQRCodeModal" :function-payable="false" function-name="transfer" title="Send Tokens QR Code" information="You can scan this QR code by using a different application that supports QR code transaction generation to send tokens" @close="showQRCodeModal = false" />
+      <qr-code-modal
+        :to="recipient"
+        :from="account"
+        :amount="0"
+        :is-contract="true"
+        :args-names="['_to', '_value']"
+        :args-types="['address', 'uint256']"
+        :args-values="[recipient, amount]"
+        :open="showQRCodeModal"
+        :function-payable="false"
+        function-name="transfer"
+        title="Send Tokens QR Code"
+        information="You can scan this QR code by using a different application that supports QR code transaction generation to send tokens"
+        @close="showQRCodeModal = false" />
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !recipient || !amount || !canSendToken" :loading="loading" class="btn btn-primary mr-1" @click="sendTokens">Send</button> <button :disabled="loading || !recipient || !amount || !canSendToken" class="btn" color="secondary" @click="showQRCodeModal = true">QRCode</button>
+      <button
+        :disabled="loading || !recipient || !amount || !canSendToken"
+        :loading="loading"
+        class="btn btn-primary mr-1"
+        @click="sendTokens">
+        Send
+      </button> <button
+        :disabled="loading || !recipient || !amount || !canSendToken"
+        class="btn"
+        color="secondary"
+        @click="showQRCodeModal = true">
+        QRCode
+      </button>
       <v-spacer />
     </v-card-actions>
   </v-card>

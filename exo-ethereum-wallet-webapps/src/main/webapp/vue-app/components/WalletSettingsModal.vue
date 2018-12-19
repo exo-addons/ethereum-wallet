@@ -1,24 +1,65 @@
 <template>
-  <v-dialog v-model="show" content-class="uiPopup with-overflow not-draggable" width="700px" max-width="100vw" persistent @keydown.esc="show = false">
+  <v-dialog
+    v-model="show"
+    content-class="uiPopup with-overflow not-draggable"
+    width="700px"
+    max-width="100vw"
+    persistent
+    @keydown.esc="show = false">
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a> <span class="PopupTitle popupTitle">Preferences</span></div>
-      <v-card-text v-if="loading || appLoading" class="text-xs-center"> <v-progress-circular color="primary" class="mb-2" indeterminate /> </v-card-text>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="show = false"></a> <span class="PopupTitle popupTitle">
+            Preferences
+          </span>
+      </div>
+      <v-card-text v-if="loading || appLoading" class="text-xs-center">
+        <v-progress-circular
+          color="primary"
+          class="mb-2"
+          indeterminate />
+      </v-card-text>
       <v-card-text v-show="!loading && !appLoading">
-        <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
         <v-flex>
-          <v-tabs ref="settingsTabs" v-model="selectedTab" class="pl-3 pr-3">
+          <v-tabs
+            ref="settingsTabs"
+            v-model="selectedTab"
+            class="pl-3 pr-3">
             <v-tabs-slider />
-            <v-tab v-if="!isSpace">Display</v-tab>
-            <v-tab v-if="walletAddress">Security</v-tab>
-            <v-tab v-if="!isSpace">Advanced</v-tab>
-            <v-tab v-if="walletAddress">Details</v-tab>
+            <v-tab v-if="!isSpace">
+              Display
+            </v-tab>
+            <v-tab v-if="walletAddress">
+              Security
+            </v-tab>
+            <v-tab v-if="!isSpace">
+              Advanced
+            </v-tab>
+            <v-tab v-if="walletAddress">
+              Details
+            </v-tab>
           </v-tabs>
           <v-tabs-items v-model="selectedTab">
             <v-tab-item v-if="!isSpace">
               <v-card>
                 <v-card-text>
-                  <v-combobox v-model="selectedCurrency" :items="currencies" label="Select fiat currency used to display ether amounts conversion" />
-                  <v-combobox v-model="selectedOverviewAccounts" :items="accountsList" label="List of currencies to use (by order)" placeholder="List of contracts, ether and fiat to use in wallet application (by order)" multiple deletable-chips chips />
+                  <v-combobox
+                    v-model="selectedCurrency"
+                    :items="currencies"
+                    label="Select fiat currency used to display ether amounts conversion" />
+                  <v-combobox
+                    v-model="selectedOverviewAccounts"
+                    :items="accountsList"
+                    label="List of currencies to use (by order)"
+                    placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
+                    multiple
+                    deletable-chips
+                    chips />
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -29,16 +70,28 @@
                     <h4>
                       Account type
                       <information-bubble>
-                        <v-btn class="inlineIconButton" icon> <i class="uiIconInformation"></i> </v-btn>
+                        <v-btn class="inlineIconButton" icon>
+                          <i class="uiIconInformation"></i>
+                        </v-btn>
                         <template slot="content">
                           <ul>
                             <li>
-                              <strong>Connect with browser (recommended):</strong>
-                              <p>Your wallet credentials are stored securely <strong>only</strong> in your current browser's local storage</p>
+                              <strong>
+                                Connect with browser (recommended):
+                              </strong> <p>
+                                Your wallet credentials are stored securely <strong>
+                                  only
+                                </strong> in your current browser's local storage
+                              </p>
                             </li>
                             <li>
-                              <strong>Connect with Metamask:</strong>
-                              <p><a href="https://metamask.io" target="_blank">MetaMask</a> is a browser extension that can manage multiple identities</p>
+                              <strong>
+                                Connect with Metamask:
+                              </strong> <p>
+                                <a href="https://metamask.io" target="_blank">
+                                  MetaMask
+                                </a> is a browser extension that can manage multiple identities
+                              </p>
                             </li>
                           </ul>
                         </template>
@@ -54,7 +107,9 @@
                     <h4>
                       Password
                       <information-bubble v-if="autoGeneratedPassword">
-                        <v-btn class="inlineIconButton alert" icon> <i class="uiIconWarning"></i> </v-btn>
+                        <v-btn class="inlineIconButton alert" icon>
+                          <i class="uiIconWarning"></i>
+                        </v-btn>
                         <template slot="content">
                           Your wallet has no password. You can set a password to better protect your funds.
                         </template>
@@ -66,14 +121,15 @@
                       @reseted="
                         $emit('settings-changed');
                         refreshFromSettings();
-                      "
-                    />
+                      " />
                   </div>
                   <div v-if="displayWalletResetOption">
                     <h4>
                       Backup
                       <information-bubble v-if="!backedUp">
-                        <v-btn class="inlineIconButton alert" icon> <i class="uiIconWarning"></i> </v-btn>
+                        <v-btn class="inlineIconButton alert" icon>
+                          <i class="uiIconWarning"></i>
+                        </v-btn>
                         <template slot="content">
                           Your wallet is not backed up yet. You may loose access to your funds permanently!
                         </template>
@@ -84,16 +140,14 @@
                       @copied="
                         $emit('copied');
                         refreshFromSettings();
-                      "
-                    />
+                      " />
                     <wallet-import-key-modal
                       :wallet-address="walletAddress"
                       class="ml-3"
                       @configured="
                         $emit('settings-changed');
                         refreshFromSettings();
-                      "
-                    />
+                      " />
                   </div>
                 </v-card-text>
               </v-card>
@@ -102,19 +156,38 @@
               <v-card>
                 <v-card-text>
                   <div v-if="!isSpace">
-                    <span>Maximum transaction fee</span>
-                    <v-slider v-model="defaultGas" :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`" :max="200000" :min="35000" :step="1000" type="number" />
+                    <span>
+                      Maximum transaction fee
+                    </span>
+                    <v-slider
+                      v-model="defaultGas"
+                      :label="`${defaultGas}${defaulGasPriceFiat ? ' (' + defaulGasPriceFiat + ' ' + fiatSymbol + ')' : ''}`"
+                      :max="200000"
+                      :min="35000"
+                      :step="1000"
+                      type="number" />
                   </div>
-                  <div><v-switch v-if="!isSpace" v-model="enableDelegation" label="Enable token delegation operations"></v-switch></div>
+                  <div>
+                    <v-switch
+                      v-if="!isSpace"
+                      v-model="enableDelegation"
+                      label="Enable token delegation operations" />
+                  </div>
                 </v-card-text>
               </v-card>
             </v-tab-item>
             <v-tab-item v-if="walletAddress">
               <v-card>
                 <v-card-text>
-                  <qr-code ref="qrCode" :to="walletAddress" title="Address QR Code" information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
+                  <qr-code
+                    ref="qrCode"
+                    :to="walletAddress"
+                    title="Address QR Code"
+                    information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
 
-                  <div class="text-xs-center"><wallet-address :value="walletAddress" /></div>
+                  <div class="text-xs-center">
+                    <wallet-address :value="walletAddress" />
+                  </div>
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -123,7 +196,20 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button v-if="!isSpace && selectedTab !== 1 && selectedTab !== 3" :disabled="loading" :loading="loading" class="btn btn-primary mr-1" @click="savePreferences">Save</button> <button :disabled="loading" :loading="loading" class="btn" @click="show = false">Close</button>
+        <button
+          v-if="!isSpace && selectedTab !== 1 && selectedTab !== 3"
+          :disabled="loading"
+          :loading="loading"
+          class="btn btn-primary mr-1"
+          @click="savePreferences">
+          Save
+        </button> <button
+          :disabled="loading"
+          :loading="loading"
+          class="btn"
+          @click="show = false">
+          Close
+        </button>
         <v-spacer />
       </v-card-actions>
     </v-card>

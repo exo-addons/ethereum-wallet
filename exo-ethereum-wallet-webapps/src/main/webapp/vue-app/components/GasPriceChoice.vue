@@ -1,6 +1,8 @@
 <template>
   <div class="mt-3">
-    {{ title ? title : 'Transaction fee' }} <code v-if="estimatedFee" class="ml-2">{{ estimatedFee }}</code>
+    {{ title ? title : 'Transaction fee' }} <code v-if="estimatedFee" class="ml-2">
+      {{ estimatedFee }}
+    </code>
     <v-radio-group v-model="choice" :disabled="disabled">
       <v-radio label="Cheap (could take 1 day)" value="1" />
       <v-radio label="Normal (could take few hours)" value="2" />

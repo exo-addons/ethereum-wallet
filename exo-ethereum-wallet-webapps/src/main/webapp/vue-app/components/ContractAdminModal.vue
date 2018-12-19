@@ -1,19 +1,44 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup with-overflow" width="500px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-bottom-nav slot="activator" :value="true" color="white" class="elevation-0 buttomNavigation">
+  <v-dialog
+    v-model="dialog"
+    :disabled="disabled"
+    content-class="uiPopup with-overflow"
+    width="500px"
+    max-width="100vw"
+    persistent
+    @keydown.esc="dialog = false">
+    <v-bottom-nav
+      slot="activator"
+      :value="true"
+      color="white"
+      class="elevation-0 buttomNavigation">
       <v-btn flat value="send">
-        <span>{{ title }}</span>
-        <v-icon>send</v-icon>
+        <span>
+          {{ title }}
+        </span>
+        <v-icon>
+          send
+        </v-icon>
       </v-btn>
     </v-bottom-nav>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
-        <a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">{{ title }}</span>
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a>
+        <span class="PopupTitle popupTitle">
+          {{ title }}
+        </span>
       </div>
 
-      <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+      <div v-if="error && !loading" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
 
-      <div v-if="!error && warning && warning.length" class="alert alert-warning v-content"><i class="uiIconWarning"></i>{{ warning }}</div>
+      <div v-if="!error && warning && warning.length" class="alert alert-warning v-content">
+        <i class="uiIconWarning"></i>{{ warning }}
+      </div>
 
       <v-card flat>
         <v-card-text class="pt-0">
@@ -21,25 +46,78 @@
             @submit="
               $event.preventDefault();
               $event.stopPropagation();
-            "
-          >
-            <address-auto-complete v-show="autocompleteLabel" ref="autocompleteInput" :disabled="loading" :input-label="autocompleteLabel" :input-placeholder="autocompletePlaceholder" class="mt-3" @item-selected="autocompleteValue = $event.address" />
+            ">
+            <address-auto-complete
+              v-show="autocompleteLabel"
+              ref="autocompleteInput"
+              :disabled="loading"
+              :input-label="autocompleteLabel"
+              :input-placeholder="autocompletePlaceholder"
+              class="mt-3"
+              @item-selected="autocompleteValue = $event.address" />
 
-            <v-text-field v-show="inputLabel" v-model="inputValue" :disabled="loading" :label="inputLabel" :placeholder="inputPlaceholder" class="mt-3" name="inputValue" />
+            <v-text-field
+              v-show="inputLabel"
+              v-model="inputValue"
+              :disabled="loading"
+              :label="inputLabel"
+              :placeholder="inputPlaceholder"
+              class="mt-3"
+              name="inputValue" />
 
-            <v-text-field v-if="!storedPassword" v-model="walletPassword" :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'" :type="walletPasswordShow ? 'text' : 'password'" :disabled="loading" name="walletPassword" label="Wallet password" placeholder="Enter your wallet password" counter class="mt-3" autocomplete="current-passord" @click:append="walletPasswordShow = !walletPasswordShow" />
+            <v-text-field
+              v-if="!storedPassword"
+              v-model="walletPassword"
+              :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+              :type="walletPasswordShow ? 'text' : 'password'"
+              :disabled="loading"
+              name="walletPassword"
+              label="Wallet password"
+              placeholder="Enter your wallet password"
+              counter
+              class="mt-3"
+              autocomplete="current-passord"
+              @click:append="walletPasswordShow = !walletPasswordShow" />
 
             <slot></slot>
 
-            <v-text-field v-model="transactionLabel" :disabled="loading" :class="inputLabel || 'mt-3'" type="text" name="transactionLabel" label="Label (Optional)" placeholder="Enter label for your transaction" />
-            <v-textarea v-model="transactionMessage" :disabled="loading" name="transactionMessage" label="Message (Optional)" placeholder="Enter a custom message to send with your transaction" class="mt-4" rows="3" flat no-resize />
+            <v-text-field
+              v-model="transactionLabel"
+              :disabled="loading"
+              :class="inputLabel || 'mt-3'"
+              type="text"
+              name="transactionLabel"
+              label="Label (Optional)"
+              placeholder="Enter label for your transaction" />
+            <v-textarea
+              v-model="transactionMessage"
+              :disabled="loading"
+              name="transactionMessage"
+              label="Message (Optional)"
+              placeholder="Enter a custom message to send with your transaction"
+              class="mt-4"
+              rows="3"
+              flat
+              no-resize />
 
             <gas-price-choice :estimated-fee="`${toFixed(transactionFeeFiat)} ${fiatSymbol}`" @changed="gasPrice = $event" />
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <button :disabled="disableSend" :loading="loading" class="btn btn-primary mr-1" @click="send">Send</button> <button :disabled="loading" class="btn" color="secondary" @click="dialog = false">Close</button>
+          <button
+            :disabled="disableSend"
+            :loading="loading"
+            class="btn btn-primary mr-1"
+            @click="send">
+            Send
+          </button> <button
+            :disabled="loading"
+            class="btn"
+            color="secondary"
+            @click="dialog = false">
+            Close
+          </button>
           <v-spacer />
         </v-card-actions>
       </v-card>

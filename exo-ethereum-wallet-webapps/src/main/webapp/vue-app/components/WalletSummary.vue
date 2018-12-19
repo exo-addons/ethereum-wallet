@@ -1,33 +1,54 @@
 <template>
   <v-card id="waletSummary" class="elevation-0">
-    <v-card-title v-if="pendingTransactionsCount" primary-title class="pb-0">
+    <v-card-title
+      v-if="pendingTransactionsCount"
+      primary-title
+      class="pb-0">
       <v-spacer />
-      <v-badge color="red" right title="A transaction is in progress">
-        <span slot="badge">{{ pendingTransactionsCount }}</span>
-        <v-progress-circular color="primary" indeterminate size="20"></v-progress-circular>
+      <v-badge
+        color="red"
+        right
+        title="A transaction is in progress">
+        <span slot="badge">
+          {{ pendingTransactionsCount }}
+        </span>
+        <v-progress-circular
+          color="primary"
+          indeterminate
+          size="20" />
       </v-badge>
       <v-spacer />
     </v-card-title>
 
     <v-card-title primary-title class="pt-2 pb-0">
       <v-flex class="flex-center">
-        <h4 v-if="principalAccount === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</h4>
-        <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</h4>
-        <h4 v-else class="headline">{{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
+        <h4 v-if="principalAccount === 'fiat'" class="headline">
+          {{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}
+        </h4> <h4 v-else-if="principalAccount === 'ether'" class="headline">
+          {{ toFixed(totalBalance) }} ether
+        </h4> <h4 v-else class="headline">
+          {{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}
+        </h4>
       </v-flex>
     </v-card-title>
 
     <v-card-title primary-title class="pt-0 flex-center">
       <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index">
-        <template v-if="accountDetails.key === 'fiat'" class="headline"
-          >{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</template
-        >
-        <template v-else-if="accountDetails.key === 'ether'" class="headline"
-          >{{ toFixed(totalBalance) }} ether</template
-        >
-        <template v-else class="headline"
-          >{{ toFixed(accountDetails.balance) }} {{ accountDetails && accountDetails.symbol }}</template
-        >
+        <template
+          v-if="accountDetails.key === 'fiat'"
+          class="headline">
+          {{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}
+        </template>
+        <template
+          v-else-if="accountDetails.key === 'ether'"
+          class="headline">
+          {{ toFixed(totalBalance) }} ether
+        </template>
+        <template
+          v-else
+          class="headline">
+          {{ toFixed(accountDetails.balance) }} {{ accountDetails && accountDetails.symbol }}
+        </template>
       </v-flex>
     </v-card-title>
 
@@ -35,7 +56,10 @@
       <v-spacer />
       <v-layout row wrap>
         <v-flex>
-          <v-bottom-nav :value="true" color="white" class="elevation-0 buttomNavigation">
+          <v-bottom-nav
+            :value="true"
+            color="white"
+            class="elevation-0 buttomNavigation">
             <send-funds-modal
               v-if="!isSpace || isSpaceAdministrator"
               ref="sendFundsModal"
@@ -52,12 +76,22 @@
               @error="
                 loadPendingTransactions();
                 $emit('error', $event);
-              "
-            />
+              " />
             <v-divider v-if="!isMaximized" vertical />
-            <wallet-receive-modal :wallet-address="walletAddress" :icon="!isMaximized" @pending="loadPendingTransactions()" @error="$emit('error', $event)" />
+            <wallet-receive-modal
+              :wallet-address="walletAddress"
+              :icon="!isMaximized"
+              @pending="loadPendingTransactions()"
+              @error="$emit('error', $event)" />
             <v-divider v-if="!isMaximized" vertical />
-            <wallet-request-funds-modal v-if="!isSpace || isSpaceAdministrator" :accounts-details="accountsDetails" :overview-accounts="overviewAccounts" :principal-account="principalAccount" :refresh-index="refreshIndex" :wallet-address="walletAddress" :icon="!isMaximized" />
+            <wallet-request-funds-modal
+              v-if="!isSpace || isSpaceAdministrator"
+              :accounts-details="accountsDetails"
+              :overview-accounts="overviewAccounts"
+              :principal-account="principalAccount"
+              :refresh-index="refreshIndex"
+              :wallet-address="walletAddress"
+              :icon="!isMaximized" />
           </v-bottom-nav>
         </v-flex>
       </v-layout>

@@ -1,15 +1,57 @@
 <template>
-  <v-dialog v-model="dialog" :disabled="disabled" content-class="uiPopup with-overflow" width="600px" max-width="100vw" persistent @keydown.esc="dialog = false">
-    <v-bottom-nav v-if="useNavigation" slot="activator" :disabled="disabled" :value="true" color="white" class="elevation-0 buttomNavigation">
-      <v-btn :disabled="disabled" flat value="send">
-        <span>Send Ether</span>
-        <v-icon>send</v-icon>
+  <v-dialog
+    v-model="dialog"
+    :disabled="disabled"
+    content-class="uiPopup with-overflow"
+    width="600px"
+    max-width="100vw"
+    persistent
+    @keydown.esc="dialog = false">
+    <v-bottom-nav
+      v-if="useNavigation"
+      slot="activator"
+      :disabled="disabled"
+      :value="true"
+      color="white"
+      class="elevation-0 buttomNavigation">
+      <v-btn
+        :disabled="disabled"
+        flat
+        value="send">
+        <span>
+          Send Ether
+        </span>
+        <v-icon>
+          send
+        </v-icon>
       </v-btn>
     </v-bottom-nav>
-    <button v-else-if="!noButton" slot="activator" :disabled="disabled" :dark="!disabled" class="btn btn-primary mt-1 mb-1">Send Ether</button>
+    <button
+      v-else-if="!noButton"
+      slot="activator"
+      :disabled="disabled"
+      :dark="!disabled"
+      class="btn btn-primary mt-1 mb-1">
+      Send Ether
+    </button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Send Ether</span></div>
-      <send-ether-form ref="sendEtherForm" :account="account" :balance="balance" class="pt-4" @success="$emit('success', $event)" @sent="$emit('sent', $event)" @close="dialog = false" @error="$emit('error', $event)" />
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
+            Send Ether
+          </span>
+      </div>
+      <send-ether-form
+        ref="sendEtherForm"
+        :account="account"
+        :balance="balance"
+        class="pt-4"
+        @success="$emit('success', $event)"
+        @sent="$emit('sent', $event)"
+        @close="dialog = false"
+        @error="$emit('error', $event)" />
     </v-card>
   </v-dialog>
 </template>

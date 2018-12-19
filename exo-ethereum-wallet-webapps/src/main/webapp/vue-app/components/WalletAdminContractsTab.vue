@@ -4,36 +4,110 @@
       <i class="uiIconSuccess"></i> Contract created under address:
       <wallet-address :value="newTokenAddress" />
     </div>
-    <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
-    <v-data-table :headers="headers" :items="contracts" :loading="loadingContracts" :sortable="false" class="elevation-1 mr-3 ml-3" hide-actions>
+    <div v-if="error && !loading" class="alert alert-error v-content">
+      <i class="uiIconError"></i>{{ error }}
+    </div>
+    <v-data-table
+      :headers="headers"
+      :items="contracts"
+      :loading="loadingContracts"
+      :sortable="false"
+      class="elevation-1 mr-3 ml-3"
+      hide-actions>
       <template slot="items" slot-scope="props">
-        <td :class="props.item.error ? 'red--text' : ''" class="clickable" @click="openContractDetails(props.item)">{{ props.item.error ? props.item.error : props.item.name }}</td>
-        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
-          <v-progress-circular v-if="props.item.loadingBalance" color="primary" indeterminate size="20" />
-          <span v-else> {{ toFixed(props.item.contractBalance) }} ether </span>
+        <td
+          :class="props.item.error ? 'red--text' : ''"
+          class="clickable"
+          @click="openContractDetails(props.item)">
+          {{ props.item.error ? props.item.error : props.item.name }}
         </td>
-        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">{{ props.item.contractType > 0 && props.item.sellPrice ? `${props.item.sellPrice} ether` : '-' }}</td>
-        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">{{ props.item.contractTypeLabel }}</td>
+        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
+          <v-progress-circular
+            v-if="props.item.loadingBalance"
+            color="primary"
+            indeterminate
+            size="20" />
+          <span v-else>
+            {{ toFixed(props.item.contractBalance) }} ether
+          </span>
+        </td>
+        <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
+          {{ props.item.contractType > 0 && props.item.sellPrice ? `${props.item.sellPrice} ether` : '-' }}
+        </td> <td class="clickable text-xs-center" @click="openContractDetails(props.item)">
+          {{ props.item.contractTypeLabel }}
+        </td>
         <td v-if="props.item.error" class="text-xs-right">
-          <del>{{ props.item.address }}</del>
+          <del>
+            {{ props.item.address }}
+          </del>
         </td>
         <td v-else class="text-xs-center">
-          <a v-if="tokenEtherscanLink" :href="`${tokenEtherscanLink}${props.item.address}`" target="_blank" title="Open on etherscan">{{ props.item.address }}</a> <span v-else>{{ props.item.address }}</span>
+          <a
+            v-if="tokenEtherscanLink"
+            :href="`${tokenEtherscanLink}${props.item.address}`"
+            target="_blank"
+            title="Open on etherscan">
+            {{ props.item.address }}
+          </a> <span v-else>
+            {{ props.item.address }}
+          </span>
         </td>
         <td class="text-xs-right">
-          <v-progress-circular v-if="props.item.isPending" :width="3" indeterminate color="primary" />
-          <v-btn v-else icon ripple @click="deleteContract(props.item, $event)"> <i class="uiIconTrash uiIconBlue"></i> </v-btn>
+          <v-progress-circular
+            v-if="props.item.isPending"
+            :width="3"
+            indeterminate
+            color="primary" />
+          <v-btn
+            v-else
+            icon
+            ripple
+            @click="deleteContract(props.item, $event)">
+            <i class="uiIconTrash uiIconBlue"></i>
+          </v-btn>
         </td>
       </template>
     </v-data-table>
     <v-divider />
     <div class="text-xs-center pt-2 pb-2">
-      <deploy-new-contract :account="walletAddress" :network-id="networkId" :fiat-symbol="fiatSymbol" @list-updated="updateList($event)" />
-      <button class="btn mt-3" @click="showAddContractModal = true">Add Existing contract Address</button>
-      <add-contract-modal :net-id="networkId" :account="walletAddress" :open="showAddContractModal" is-default-contract @added="contractsModified" @close="showAddContractModal = false" />
+      <deploy-new-contract
+        :account="walletAddress"
+        :network-id="networkId"
+        :fiat-symbol="fiatSymbol"
+        @list-updated="updateList($event)" />
+      <button class="btn mt-3" @click="showAddContractModal = true">
+        Add Existing contract Address
+      </button>
+      <add-contract-modal
+        :net-id="networkId"
+        :account="walletAddress"
+        :open="showAddContractModal"
+        is-default-contract
+        @added="contractsModified"
+        @close="showAddContractModal = false" />
     </div>
     <!-- The selected account detail -->
-    <v-navigation-drawer id="contractDetailsDrawer" v-model="seeContractDetails" fixed temporary right stateless width="700" max-width="100vw"> <contract-detail ref="contractDetail" :wallet-address="walletAddress" :contract-details="selectedContractDetails" :network-id="networkId" :is-display-only="!selectedContractDetails || !selectedContractDetails.isAdmin" :fiat-symbol="fiatSymbol" :wallets="wallets" :loading-wallets="loadingWallets" @back="back()" @pending-transaction="watchPendingTransaction" /> </v-navigation-drawer>
+    <v-navigation-drawer
+      id="contractDetailsDrawer"
+      v-model="seeContractDetails"
+      fixed
+      temporary
+      right
+      stateless
+      width="700"
+      max-width="100vw">
+      <contract-detail
+        ref="contractDetail"
+        :wallet-address="walletAddress"
+        :contract-details="selectedContractDetails"
+        :network-id="networkId"
+        :is-display-only="!selectedContractDetails || !selectedContractDetails.isAdmin"
+        :fiat-symbol="fiatSymbol"
+        :wallets="wallets"
+        :loading-wallets="loadingWallets"
+        @back="back()"
+        @pending-transaction="watchPendingTransaction" />
+    </v-navigation-drawer>
   </v-card>
 </template>
 <script>

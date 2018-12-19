@@ -1,25 +1,69 @@
 <template>
   <v-card v-if="contractDetails">
-    <v-flex v-if="loading" class="pt-0 text-xs-center"> <v-progress-circular color="primary" indeterminate size="20" /> </v-flex>
+    <v-flex v-if="loading" class="pt-0 text-xs-center">
+      <v-progress-circular
+        color="primary"
+        indeterminate
+        size="20" />
+    </v-flex>
     <v-card-text class="pt-0">
-      <div v-if="errors" class="alert alert-error v-content"><i class="uiIconError"></i> {{ errors }}</div>
-      <div v-if="!errors && warning && warning.length" class="alert alert-warning v-content"><i class="uiIconWarning"></i>{{ warning }}</div>
-      <div v-if="!errors && !warning && information && information.length" class="alert alert-info v-content"><i class="uiIconInfo"></i>{{ information }}</div>
+      <div v-if="errors" class="alert alert-error v-content">
+        <i class="uiIconError"></i> {{ errors }}
+      </div> <div v-if="!errors && warning && warning.length" class="alert alert-warning v-content">
+        <i class="uiIconWarning"></i>{{ warning }}
+      </div> <div v-if="!errors && !warning && information && information.length" class="alert alert-info v-content">
+        <i class="uiIconInfo"></i>{{ information }}
+      </div>
       <v-form
         @submit="
           $event.preventDefault();
           $event.stopPropagation();
-        "
-      >
-        <gas-price-choice :estimated-fee="transactionFeeString" :title="`${validRecipientsCount} transactions with a total amount to send ${totalTokens} ${contractDetails && contractDetails.symbol}. Overall transactions fee:`" :disabled="loading" @changed="gasPrice = $event" />
-        <v-text-field v-if="!storedPassword" v-model="walletPassword" :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'" :type="walletPasswordShow ? 'text' : 'password'" :disabled="loading" name="walletPassword" label="Wallet password" placeholder="Enter your wallet password" counter autocomplete="current-passord" @click:append="walletPasswordShow = !walletPasswordShow" />
-        <v-text-field v-model="transactionLabel" :disabled="loading" type="text" name="transactionLabel" label="Private transactions label" placeholder="Enter label for your transaction" />
-        <v-textarea v-model="transactionMessage" :disabled="loading" name="tokenTransactionMessage" label="Message to send to receiver" placeholder="Enter a custom message to send to receivers with your transaction" class="mt-4" rows="3" flat no-resize />
+        ">
+        <gas-price-choice
+          :estimated-fee="transactionFeeString"
+          :title="`${validRecipientsCount} transactions with a total amount to send ${totalTokens} ${contractDetails && contractDetails.symbol}. Overall transactions fee:`"
+          :disabled="loading"
+          @changed="gasPrice = $event" />
+        <v-text-field
+          v-if="!storedPassword"
+          v-model="walletPassword"
+          :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+          :type="walletPasswordShow ? 'text' : 'password'"
+          :disabled="loading"
+          name="walletPassword"
+          label="Wallet password"
+          placeholder="Enter your wallet password"
+          counter
+          autocomplete="current-passord"
+          @click:append="walletPasswordShow = !walletPasswordShow" />
+        <v-text-field
+          v-model="transactionLabel"
+          :disabled="loading"
+          type="text"
+          name="transactionLabel"
+          label="Private transactions label"
+          placeholder="Enter label for your transaction" />
+        <v-textarea
+          v-model="transactionMessage"
+          :disabled="loading"
+          name="tokenTransactionMessage"
+          label="Message to send to receiver"
+          placeholder="Enter a custom message to send to receivers with your transaction"
+          class="mt-4"
+          rows="3"
+          flat
+          no-resize />
       </v-form>
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <button :disabled="loading || !totalTokens" :loading="loading" class="btn btn-primary mr-1" @click="sendRewards">Send</button>
+      <button
+        :disabled="loading || !totalTokens"
+        :loading="loading"
+        class="btn btn-primary mr-1"
+        @click="sendRewards">
+        Send
+      </button>
       <v-spacer />
     </v-card-actions>
   </v-card>

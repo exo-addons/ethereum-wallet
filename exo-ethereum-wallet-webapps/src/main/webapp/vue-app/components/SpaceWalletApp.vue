@@ -1,5 +1,5 @@
 <template id="WalletSpaceApp">
-  <wallet-app :is-space="true"></wallet-app>
+  <wallet-app :is-space="true" />
 </template>
 
 <script>

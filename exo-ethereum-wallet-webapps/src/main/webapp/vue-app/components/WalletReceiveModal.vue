@@ -1,19 +1,53 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="500px" max-width="100vw" @keydown.esc="dialog = false">
-    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Receive funds" flat value="receive">
-      <span>Receive</span>
-      <v-icon>fa-hand-holding-usd</v-icon>
+  <v-dialog
+    v-model="dialog"
+    content-class="uiPopup with-overflow"
+    width="500px"
+    max-width="100vw"
+    @keydown.esc="dialog = false">
+    <v-btn
+      v-if="icon"
+      slot="activator"
+      :disabled="disabled"
+      class="bottomNavigationItem"
+      title="Receive funds"
+      flat
+      value="receive">
+      <span>
+        Receive
+      </span>
+      <v-icon>
+        fa-hand-holding-usd
+      </v-icon>
     </v-btn>
-    <button v-else slot="activator" class="btn ml-1 mt-2">Receive</button>
+    <button
+      v-else
+      slot="activator"
+      class="btn ml-1 mt-2">
+      Receive
+    </button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Receive funds</span></div>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
+            Receive funds
+          </span>
+      </div>
       <v-card-text class="text-xs-center">
-        <qr-code ref="qrCode" :to="walletAddress" title="Address QR Code" information="You can send this Wallet address or QR code to other users to send you ether or tokens" />
+        <qr-code
+          ref="qrCode"
+          :to="walletAddress"
+          title="Address QR Code"
+          information="You can send this Wallet address or QR code to other users to send you ether or tokens" />
         <wallet-address :value="walletAddress" />
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button class="btn" @click="dialog = false">Close</button>
+        <button class="btn" @click="dialog = false">
+          Close
+        </button>
         <v-spacer />
       </v-card-actions>
     </v-card>

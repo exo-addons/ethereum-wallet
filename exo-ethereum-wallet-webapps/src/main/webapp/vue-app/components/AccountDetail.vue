@@ -1,35 +1,98 @@
 <template>
-  <v-flex v-if="contractDetails && contractDetails.title" id="accountDetail" class="text-xs-center white layout column">
+  <v-flex
+    v-if="contractDetails && contractDetails.title"
+    id="accountDetail"
+    class="text-xs-center white layout column">
     <v-card-title class="align-start accountDetailSummary">
       <v-layout column>
         <v-flex id="accountDetailTitle">
           <div class="headline title align-start">
-            <v-icon class="primary--text accountDetailIcon">{{ contractDetails.icon }}</v-icon>
+            <v-icon class="primary--text accountDetailIcon">
+              {{ contractDetails.icon }}
+            </v-icon>
             <span v-if="wallet">
               Wallet transactions of:
-              <profile-chip :profile-technical-id="wallet.technicalId" :profile-id="wallet.id" :profile-type="wallet.type" :avatar="wallet.avatar" :display-name="wallet.name" :address="wallet.address" />
+              <profile-chip
+                :profile-technical-id="wallet.technicalId"
+                :profile-id="wallet.id"
+                :profile-type="wallet.type"
+                :avatar="wallet.avatar"
+                :display-name="wallet.name"
+                :address="wallet.address" />
             </span>
-            <span v-else>{{ contractDetails.title }}</span>
+            <span v-else>
+              {{ contractDetails.title }}
+            </span>
           </div>
-          <h3 v-if="!contractDetails.isContract" class="font-weight-light">{{ fiatBalance }}</h3>
-          <h4 v-if="!contractDetails.isContract" class="grey--text font-weight-light">{{ balance }}</h4>
-          <h3 v-else class="font-weight-light">{{ balance }}</h3>
+          <h3 v-if="!contractDetails.isContract" class="font-weight-light">
+            {{ fiatBalance }}
+          </h3>
+          <h4 v-if="!contractDetails.isContract" class="grey--text font-weight-light">
+            {{ balance }}
+          </h4>
+          <h3 v-else class="font-weight-light">
+            {{ balance }}
+          </h3>
         </v-flex>
 
         <v-flex v-if="!isDisplayOnly" id="accountDetailActions">
           <!-- Ether action -->
-          <send-ether-modal v-if="!contractDetails.isContract" :is-readonly="isReadOnly" :account="walletAddress" :balance="contractDetails.balance" use-navigation @sent="newTransactionPending" @error="error = $event" />
+          <send-ether-modal
+            v-if="!contractDetails.isContract"
+            :is-readonly="isReadOnly"
+            :account="walletAddress"
+            :balance="contractDetails.balance"
+            use-navigation
+            @sent="newTransactionPending"
+            @error="error = $event" />
 
           <!-- Contract actions -->
-          <send-tokens-modal v-if="contractDetails.isContract" :is-readonly="isReadOnly" :account="walletAddress" :contract-details="contractDetails" use-navigation @sent="newTransactionPending" @error="error = $event" />
-          <send-delegated-tokens-modal v-if="contractDetails.isContract && enableDelegation" :wallet-address="walletAddress" :is-readonly="isReadOnly" :contract-details="contractDetails" use-navigation @sent="newTransactionPending" @error="error = $event" />
-          <delegate-tokens-modal v-if="contractDetails.isContract && enableDelegation" :is-readonly="isReadOnly" :contract-details="contractDetails" use-navigation @sent="newTransactionPending" @error="error = $event" />
+          <send-tokens-modal
+            v-if="contractDetails.isContract"
+            :is-readonly="isReadOnly"
+            :account="walletAddress"
+            :contract-details="contractDetails"
+            use-navigation
+            @sent="newTransactionPending"
+            @error="error = $event" />
+          <send-delegated-tokens-modal
+            v-if="contractDetails.isContract && enableDelegation"
+            :wallet-address="walletAddress"
+            :is-readonly="isReadOnly"
+            :contract-details="contractDetails"
+            use-navigation
+            @sent="newTransactionPending"
+            @error="error = $event" />
+          <delegate-tokens-modal
+            v-if="contractDetails.isContract && enableDelegation"
+            :is-readonly="isReadOnly"
+            :contract-details="contractDetails"
+            use-navigation
+            @sent="newTransactionPending"
+            @error="error = $event" />
         </v-flex>
-        <v-btn icon class="rightIcon" @click="$emit('back')"> <v-icon>close</v-icon> </v-btn>
+        <v-btn
+          icon
+          class="rightIcon"
+          @click="$emit('back')">
+          <v-icon>
+            close
+          </v-icon>
+        </v-btn>
       </v-layout>
     </v-card-title>
 
-    <transactions-list id="transactionsList" ref="transactionsList" :network-id="networkId" :account="walletAddress" :contract-details="contractDetails" :fiat-symbol="fiatSymbol" :selected-transaction-hash="selectedTransactionHash" :error="error" @error="error = $event" @refresh-balance="refreshBalance" />
+    <transactions-list
+      id="transactionsList"
+      ref="transactionsList"
+      :network-id="networkId"
+      :account="walletAddress"
+      :contract-details="contractDetails"
+      :fiat-symbol="fiatSymbol"
+      :selected-transaction-hash="selectedTransactionHash"
+      :error="error"
+      @error="error = $event"
+      @refresh-balance="refreshBalance" />
   </v-flex>
 </template>
 

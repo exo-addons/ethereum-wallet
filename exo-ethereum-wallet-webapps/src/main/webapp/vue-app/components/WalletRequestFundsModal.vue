@@ -1,29 +1,104 @@
 <template>
-  <v-dialog v-model="dialog" content-class="uiPopup with-overflow" width="500px" max-width="100vw" draggable="true" @keydown.esc="dialog = false">
-    <v-btn v-if="icon" slot="activator" :disabled="disabled" class="bottomNavigationItem" title="Request funds" flat value="request">
-      <span>Request</span>
-      <v-icon>fa-comment-dollar</v-icon>
+  <v-dialog
+    v-model="dialog"
+    content-class="uiPopup with-overflow"
+    width="500px"
+    max-width="100vw"
+    draggable="true"
+    @keydown.esc="dialog = false">
+    <v-btn
+      v-if="icon"
+      slot="activator"
+      :disabled="disabled"
+      class="bottomNavigationItem"
+      title="Request funds"
+      flat
+      value="request">
+      <span>
+        Request
+      </span>
+      <v-icon>
+        fa-comment-dollar
+      </v-icon>
     </v-btn>
-    <button v-else slot="activator" class="btn ml-1 mt-2">Request</button>
+    <button
+      v-else
+      slot="activator"
+      class="btn ml-1 mt-2">
+      Request
+    </button>
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="dialog = false"></a> <span class="PopupTitle popupTitle">Request funds</span></div>
-      <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
+            Request funds
+          </span>
+      </div> <div v-if="error && !loading" class="alert alert-error v-content">
+        <i class="uiIconError"></i>{{ error }}
+      </div>
       <v-card-text>
-        <address-auto-complete v-if="selectedAccount" ref="autocomplete" :disabled="loading" input-label="Recipient" input-placeholder="Select a recipient for your funds request" @item-selected="recipient = $event" />
+        <address-auto-complete
+          v-if="selectedAccount"
+          ref="autocomplete"
+          :disabled="loading"
+          input-label="Recipient"
+          input-placeholder="Select a recipient for your funds request"
+          @item-selected="recipient = $event" />
 
-        <v-container flat fluid grid-list-lg class="mt-4 pl-2">
+        <v-container
+          flat
+          fluid
+          grid-list-lg
+          class="mt-4 pl-2">
           <v-layout row wrap>
-            <v-text-field v-if="selectedAccount" v-model.number="amount" :disabled="loading" name="amount" label="Amount" placeholder="Select a suggested amount to request funds" />
+            <v-text-field
+              v-if="selectedAccount"
+              v-model.number="amount"
+              :disabled="loading"
+              name="amount"
+              label="Amount"
+              placeholder="Select a suggested amount to request funds" />
 
-            <div id="requestFundsAccount" class="ml-1"><v-combobox v-model="selectedOption" :items="accountsList" attach="#requestFundsAccount" label="Select currency" placeholder="Select a currency to use for requesting funds" cache-items /></div>
+            <div id="requestFundsAccount" class="ml-1">
+              <v-combobox
+                v-model="selectedOption"
+                :items="accountsList"
+                attach="#requestFundsAccount"
+                label="Select currency"
+                placeholder="Select a currency to use for requesting funds"
+                cache-items />
+            </div>
           </v-layout>
         </v-container>
 
-        <v-textarea v-if="selectedAccount" id="requestMessage" v-model="requestMessage" :disabled="loading" name="requestMessage" label="Request message (Optional)" placeholder="You can enter a custom message to send with your request" class="mt-4" rows="7" flat no-resize />
+        <v-textarea
+          v-if="selectedAccount"
+          id="requestMessage"
+          v-model="requestMessage"
+          :disabled="loading"
+          name="requestMessage"
+          label="Request message (Optional)"
+          placeholder="You can enter a custom message to send with your request"
+          class="mt-4"
+          rows="7"
+          flat
+          no-resize />
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button :disabled="loading" class="btn btn-primary" @click="requestFunds">Send request</button> <button :disabled="loading" class="btn ml-2" @click="dialog = false">Close</button>
+        <button
+          :disabled="loading"
+          class="btn btn-primary"
+          @click="requestFunds">
+          Send request
+        </button> <button
+          :disabled="loading"
+          class="btn ml-2"
+          @click="dialog = false">
+          Close
+        </button>
         <v-spacer />
       </v-card-actions>
     </v-card>

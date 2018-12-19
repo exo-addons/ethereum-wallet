@@ -1,6 +1,8 @@
 <template>
   <v-flex class="pt-4">
-    <div id="sendFundsFormSlot" class="pl-3 pr-3"><slot></slot></div>
+    <div id="sendFundsFormSlot" class="pl-3 pr-3">
+      <slot></slot>
+    </div>
 
     <send-ether-form
       v-if="formName === 'ether'"
@@ -13,8 +15,7 @@
       "
       @amount-selected="amount = $event"
       @sent="addPendingTransaction($event)"
-      @close="$emit('close')"
-    >
+      @close="$emit('close')">
       <div id="sendEtherFormSlot" class="ml-1"></div>
     </send-ether-form>
     <send-tokens-form
@@ -28,8 +29,7 @@
       "
       @amount-selected="amount = $event"
       @sent="addPendingTransaction($event)"
-      @close="$emit('close')"
-    >
+      @close="$emit('close')">
       <div id="sendTokensFormSlot" class="ml-1"></div>
     </send-tokens-form>
   </v-flex>

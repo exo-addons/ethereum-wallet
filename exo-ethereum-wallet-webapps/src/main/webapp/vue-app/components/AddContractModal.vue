@@ -1,21 +1,46 @@
 <template>
-  <v-dialog v-model="show" content-class="uiPopup" width="500px" max-width="100vw" @keydown.esc="show = false">
+  <v-dialog
+    v-model="show"
+    content-class="uiPopup"
+    width="500px"
+    max-width="100vw"
+    @keydown.esc="show = false">
     <v-card class="elevation-12">
-      <div class="popupHeader ClearFix"><a class="uiIconClose pull-right" aria-hidden="true" @click="show = false"></a> <span class="PopupTitle popupTitle">Add Token address</span></div>
+      <div class="popupHeader ClearFix">
+        <a
+          class="uiIconClose pull-right"
+          aria-hidden="true"
+          @click="show = false"></a>
+        <span class="PopupTitle popupTitle">
+          Add Token address
+        </span>
+      </div>
       <v-card-text>
-        <div v-if="error && !loading" class="alert alert-error v-content"><i class="uiIconError"></i>{{ error }}</div>
+        <div v-if="error && !loading" class="alert alert-error v-content">
+          <i class="uiIconError"></i>{{ error }}
+        </div>
         <v-form
           @submit="
             $event.preventDefault();
             $event.stopPropagation();
-          "
-        >
-          <v-text-field v-model="address" name="address" label="Address" placeholder="Select ERC20 Token address" type="text" />
+          ">
+          <v-text-field
+            v-model="address"
+            name="address"
+            label="Address"
+            placeholder="Select ERC20 Token address"
+            type="text" />
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <button :disabled="loading" :loading="loading" class="btn btn-primary" @click="addToken">Save</button>
+        <button
+          :disabled="loading"
+          :loading="loading"
+          class="btn btn-primary"
+          @click="addToken">
+          Save
+        </button>
       </v-card-actions>
     </v-card>
   </v-dialog>
