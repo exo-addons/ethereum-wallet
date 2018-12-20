@@ -22,13 +22,9 @@
 
     <v-card-title primary-title class="pt-2 pb-0">
       <v-flex class="flex-center">
-        <h4 v-if="principalAccount === 'fiat'" class="headline">
-          {{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}
-        </h4> <h4 v-else-if="principalAccount === 'ether'" class="headline">
-          {{ toFixed(totalBalance) }} ether
-        </h4> <h4 v-else class="headline">
-          {{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}
-        </h4>
+        <h4 v-if="principalAccount === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</h4>
+        <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</h4>
+        <h4 v-else class="headline">{{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
       </v-flex>
     </v-card-title>
 

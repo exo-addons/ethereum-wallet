@@ -77,7 +77,6 @@
                 :wallet-address="walletAddress"
                 :refresh-index="refreshIndex"
                 :loading="loading"
-                class="mb-3"
                 @loading="loading = true"
                 @end-loading="loading = false"
                 @refresh="init()"

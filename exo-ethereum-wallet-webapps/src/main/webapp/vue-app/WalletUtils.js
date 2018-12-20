@@ -617,8 +617,8 @@ export function toFixed(value, decimals) {
   if (!decimals) {
     decimals = 3;
   }
-  const number = Number(value);
-  if (Number.isNaN(number) || !Number.isFinite(number) || !number || !value) {
+  const number = value ? Number(String(value).trim()) : 0;
+  if (Number.isNaN(number) || !Number.isFinite(number) || !number) {
     return 0;
   }
   value = String(number);
@@ -629,7 +629,7 @@ export function toFixed(value, decimals) {
   }
   const comps = value.split('.');
   let integer = comps[0];
-  let fraction = comps[1] ? comps[1] : '0';
+  let fraction = comps.length > 0 ? comps[1] : '0';
   if (fraction && fraction.length > decimals) {
     fraction = String(Math.round(Number('0.' + fraction) * DECIMALS_POW) / DECIMALS_POW).substring(2); // eslint-disable-line prefer-template
   }
