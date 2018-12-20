@@ -5,6 +5,8 @@ import LocalWeb3 from '../main/webapp/js/lib/web3.min.js';
 
 import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
 
+global.fetch = require('jest-fetch-mock');
+
 global.Vuetify = Vuetify;
 global.$ = $;
 global.Vue = Vue;
@@ -28,12 +30,16 @@ global.eXo = {
   },
 };
 
-global.fetch = require('jest-fetch-mock');
-fetch.mockImplementation((url) => {
+global.walletAddresses = ['0x2d232d448fb0b5b370d3abad2681399e2002ae2a', '0xb460a021b66a1f421970b07262ed11d626b798ef', '0x0a6b396f8eb23cdaf2db137410ff7c1f20bbbc57', '0xf8622910fa3c83d9a5b22c5e5f00d719a93deb38', '0xc48aee6064444d6a62b0fd41f79818b3a77e3ab9', '0x1C970755CaC148a89C01F39B3a148199fC4B8329', '0x79032C0930f9cEb7546946eBc94e0cb00732C8a7', '0xb64F82a96569F932Aa7Cb9B997E73E6B3B299cCF', '0x5743fE9068772006C9e337917dFE493db8207F6C', '0x8f651bD0238E9515612fcB1b668ddBc70894E3F1'];
+global.defaultWalletAddress = global.walletAddress = global.walletAddresses[1];
+
+global.testNetworkId = 4452365;
+
+global.fetch.mockImplementation((url) => {
   let resultJson = null;
   if (url.indexOf('/portal/rest/wallet/api/global-settings') === 0) {
     resultJson = {
-      defaultNetworkId: 4452365, // Configured netword in global settings
+      defaultNetworkId: global.testNetworkId, // Configured netword in global settings
       isWalletEnabled: true, // true if the wallet application is enabled for current user
       minGasPrice: 4000000000, // Cheap gas price choice amount to use when sending a transaction
       normalGasPrice: 8000000000, // Normal gas price choice amount to use when sending a transaction
@@ -71,7 +77,7 @@ fetch.mockImplementation((url) => {
         dataVersion: 0, // User preferences data version
         currency: 'usd', // User currency used to display fiat amounts
         defaultGas: 0, // User gas limit preference
-        walletAddress: '0xb460A021b66A1f421970B07262Ed11d626B798EF', // associated user address
+        walletAddress: global.walletAddress, // associated user address
       },
       contractBin: '', // Principal ERT Token contract BIN
     };
@@ -95,7 +101,7 @@ fetch.mockImplementation((url) => {
         last_updated: '1545137119',
       },
     ];
-  } else if (url === '/portal/rest/wallet/api/account/getTransactions?networkId=4452365&address=0xb460a021b66a1f421970b07262ed11d626b798ef') {
+  } else if (url.toLowerCase() === `/portal/rest/wallet/api/account/getTransactions?networkId=${global.testNetworkId}&address=${global.walletAddress}`.toLowerCase()) {
     resultJson = [];
   } else if (url === '/portal/rest/wallet/api/account/detailsById?id=testuser&type=user') {
     resultJson = {
@@ -103,7 +109,7 @@ fetch.mockImplementation((url) => {
       technicalId: '2',
       spaceAdministrator: false,
       enabled: true,
-      address: '0xb460a021b66a1f421970b07262ed11d626b798ef',
+      address: global.walletAddress,
       name: 'testuser testuser',
       id: 'testuser',
       type: 'user',
