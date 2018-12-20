@@ -72,7 +72,8 @@
             :start-date-in-seconds="selectedStartDateInSeconds"
             :end-date-in-seconds="selectedEndDateInSeconds"
             @open-wallet-transaction="$emit('open-wallet-transaction', $event)"
-            @pending="$emit('pending', $event)" />
+            @pending="pendingTransaction"
+            @success="successTransaction" />
         </v-card>
       </v-tab-item>
       <v-tab-item id="RewardPools">
@@ -237,25 +238,23 @@ export default {
     selectedDate() {
       this.loadAll();
     },
-    wallets() {
-      this.refresh();
-    },
     periodType() {
       this.loadAll();
     },
   },
   created() {
-    getSettings().then((settings) => {
-      if (settings) {
-        this.contractAddress = settings.contractAddress;
-        this.rewardType = settings.rewardType;
-        this.budgetPerMember = settings.budgetPerMember;
-        this.totalBudget = settings.totalBudget;
-        this.threshold = settings.threshold;
-        this.periodType = settings.periodType;
-        this.$refs.configurationTab.init(settings);
-      }
-    });
+    getSettings()
+      .then((settings) => {
+        if (settings) {
+          this.contractAddress = settings.contractAddress;
+          this.rewardType = settings.rewardType;
+          this.budgetPerMember = settings.budgetPerMember;
+          this.totalBudget = settings.totalBudget;
+          this.threshold = settings.threshold;
+          this.periodType = settings.periodType;
+          this.$refs.configurationTab.init(settings);
+        }
+      });
   },
   methods: {
     changeSettings(settings) {
@@ -321,6 +320,7 @@ export default {
       }
     },
     computeBudgets() {
+      console.warn("-------- computeBudgets------");
       if (this.identitiesList && this.identitiesList.length) {
         this.identitiesList.forEach((wallet) => {
           wallet.tokensToSend = 0;
@@ -329,21 +329,12 @@ export default {
 
       let teams = [];
       if (this.$refs.gamificationTeams && this.$refs.gamificationTeams.teams && this.$refs.gamificationTeams.teams.length) {
-        teams = this.$refs.gamificationTeams.teams.slice();
+        teams = this.$refs.gamificationTeams.teams;
       }
 
       let computedRecipientsCount = 0;
-      let fixedGlobalBudget = 0;
-      let computedTotalBudget = 0;
 
-      this.computedTeamsBudget = 0;
-      if (this.rewardType === 'FIXED') {
-        fixedGlobalBudget = computedTotalBudget = this.totalBudget ? Number(this.totalBudget) : 0;
-      } else if (this.rewardType === 'FIXED_PER_MEMBER') {
-        computedTotalBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
-      }
-
-      // Compute fixed budgets for teams
+      // Compute valid members, 'computed' recipients count, total points per team
       teams.forEach((team) => {
         this.$set(team, 'validMembersWallets', []);
         this.$set(team, 'computedBudget', 0);
@@ -358,11 +349,13 @@ export default {
         }
 
         team.members.forEach((memberObject) => {
-          let wallet = memberObject.address ? memberObject : this.validRecipients.find((wallet) => wallet.id === memberObject.id);
+          let wallet = this.validRecipients.find((wallet) => wallet.id === memberObject.id);
           if (wallet) {
             team.totalPoints += wallet.points;
-            team.totalValidPoints += wallet.points;
-            team.validMembersWallets.push(wallet);
+            if(wallet.address && wallet.points && wallet.points >= this.threshold) {
+              team.totalValidPoints += wallet.points;
+              team.validMembersWallets.push(wallet);
+            }
           } else {
             wallet = memberObject.points ? memberObject : this.identitiesList.find((wallet) => wallet.id === memberObject.id);
             if (wallet) {
@@ -371,6 +364,22 @@ export default {
           }
         });
 
+        if (team.rewardType === 'COMPUTED') {
+          computedRecipientsCount += team.validMembersWallets.length;
+        }
+      });
+
+      let fixedGlobalBudget = 0;
+      let computedTotalBudget = 0;
+      this.computedTeamsBudget = 0;
+
+      if (this.rewardType === 'FIXED') {
+        fixedGlobalBudget = computedTotalBudget = this.totalBudget ? Number(this.totalBudget) : 0;
+      } else if (this.rewardType === 'FIXED_PER_MEMBER') {
+        computedTotalBudget = this.budgetPerMember && computedRecipientsCount ? computedRecipientsCount * this.budgetPerMember : 0;
+      }
+
+      teams.forEach((team) => {
         if (team.validMembersWallets.length) {
           if (team.rewardType === 'FIXED') {
             this.$set(team, 'fixedBudget', team.budget ? Number(team.budget) : 0);
@@ -382,8 +391,6 @@ export default {
             this.$set(team, 'computedBudget', team.fixedBudget);
             computedTotalBudget -= team.fixedBudget;
             this.computedTeamsBudget += team.fixedBudget;
-          } else if (team.rewardType === 'COMPUTED') {
-            computedRecipientsCount += team.validMembersWallets.length;
           }
         }
       });
@@ -409,7 +416,8 @@ export default {
           }
         }
 
-        if (budget) {
+        if (budget && budget > 0) {
+          // Estimate budget per member
           team.validMembersWallets.forEach((wallet) => {
             const tokensToSend = (budget * wallet.points) / team.totalValidPoints;
             this.$set(wallet, 'tokensToSend', this.toFixed(tokensToSend));
@@ -443,7 +451,6 @@ export default {
           wallet = Object.assign({}, wallet);
           wallet.hash = null;
           wallet.status = null;
-          wallet.tokensSent = 0;
           wallet.tokensToSend = 0;
 
           const startDate = new Date(this.selectedStartDate);
@@ -472,6 +479,29 @@ export default {
       const dateString = date.toString();
       // Example: 'Feb 01 2018'
       return dateString.substring(dateString.indexOf(' ') + 1, dateString.indexOf(':') - 3);
+    },
+    successTransaction(transaction, receipt) {
+      if(transaction && transaction.to) {
+        const wallet = this.identitiesList.find(wallet => wallet.address && wallet.address.toLowerCase() === transaction.to.toLowerCase());
+        if(wallet) {
+          this.$set(wallet, 'hash', transaction.hash);
+          this.$set(wallet, 'status', receipt && receipt.status ? 'success' : 'error');
+          if(transaction.tokensAmountSent || transaction.contractAmount) {
+            this.$set(wallet, 'tokensSent', transaction.tokensAmountSent ? transaction.tokensAmountSent : transaction.contractAmount);
+          }
+        }
+      }
+    },
+    pendingTransaction(transaction) {
+      if(transaction && transaction.to) {
+        this.$emit('pending', transaction);
+        const wallet = this.identitiesList.find(wallet => wallet.address && wallet.address.toLowerCase() === transaction.to.toLowerCase());
+        if(wallet) {
+          this.$set(wallet, 'hash', transaction.hash);
+          this.$set(wallet, 'status', 'pending');
+          this.$set(wallet, 'tokensSent', transaction.tokensAmountSent ? transaction.tokensAmountSent : transaction.contractAmount);
+        }
+      }
     },
   },
 };
