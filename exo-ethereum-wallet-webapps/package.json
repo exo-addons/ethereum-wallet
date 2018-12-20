@@ -11,6 +11,7 @@
     "dev": "webpack-dev-server --config webpack.dev.js --mode development --hot",
     "watch": "webpack --config webpack.watch.js --progress --colors --watch -d",
     "test": "jest",
+    "test-coverage": "jest --coverage",
     "format": "prettier --config ./.prettierrc --write ./src/test/**/*.js ./src/main/webapp/vue-app/**.js ./src/test/**.js",
     "lint": "eslint --fix ./src/main/webapp/vue-app ./src/main/webapp/vue-app/components/*.vue ./src/test",
     "eslint-check": "eslint --print-config . | eslint-config-prettier-check",
@@ -60,6 +61,12 @@
   },
   "dependencies": {},
   "jest": {
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "<rootDir>/src/main/webapp/vue-app/*.js",
+      "<rootDir>/src/main/webapp/vue-app/**/*.js",
+      "<rootDir>/src/main/webapp/vue-app/**/*.vue"
+    ],
     "projects": [
       {
         "displayName": "test",
