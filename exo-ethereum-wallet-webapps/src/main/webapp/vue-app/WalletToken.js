@@ -173,7 +173,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         return;
       }
       // Compute ERT Token attributes
-      return (contractDetails.sellPrice && !isAdministration ? Promise.resolve(contractDetails.sellPrice) : contractDetails.contract.methods.getSellPrice().call())
+      return (contractDetails.sellPrice ? Promise.resolve(contractDetails.sellPrice) : contractDetails.contract.methods.getSellPrice().call())
         .then((sellPrice) => {
           if(sellPrice != null) {
             contractDetails.sellPrice = sellPrice;
@@ -184,7 +184,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
           console.debug('retrieveContractDetails method - error retrieving sellPrice', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return contractDetails.hasOwnProperty('owner') && !isAdministration ? contractDetails.owner : contractDetails.contract.methods.owner().call();
+          return contractDetails.hasOwnProperty('owner') ? contractDetails.owner : contractDetails.contract.methods.owner().call();
         })
         .then((owner) => {
           if (owner) {
@@ -206,7 +206,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
           console.debug('retrieveContractDetails method - error retrieving isApprovedAccount', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return contractDetails.hasOwnProperty('adminLevel') && !isAdministration ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call();
+          return contractDetails.hasOwnProperty('adminLevel') ? contractDetails.adminLevel : contractDetails.contract.methods.getAdminLevel(account).call();
         })
         .then((habilitationLevel) => {
           if (habilitationLevel) {
@@ -221,7 +221,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
           console.debug('retrieveContractDetails method - error retrieving getAdminLevel', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return contractDetails.hasOwnProperty('isPaused') && !isAdministration ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call();
+          return contractDetails.hasOwnProperty('isPaused') ? contractDetails.isPaused : contractDetails.contract.methods.isPaused().call();
         })
         .then((isPaused) => {
           contractDetails.isPaused = isPaused ? true : false;

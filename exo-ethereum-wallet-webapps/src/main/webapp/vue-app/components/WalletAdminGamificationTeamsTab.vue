@@ -63,20 +63,19 @@
       </v-btn>
     </h3>
     <h4 v-show="!selectedTeam">
-      Total budget: <strong>
-        {{ computedTotalBudget }} {{ symbol }}
-      </strong>
-            <template v-if="rewardType === 'FIXED'">
-              ({{ eligibleUsersCount }} eligible users)
-            </template>
+      <span>Total budget: <strong>{{ computedTotalBudget }} {{ symbol }}</strong></span>
+      <template v-if="rewardType === 'FIXED'">
+        ({{ eligibleUsersCount }} eligible users)
+      </template>
     </h4>
     <h4 v-show="!selectedTeam">
-      Configured budget: <strong>
-        {{ configuredBudget }} {{ symbol }}
-      </strong>
-                 <template v-if="rewardType === 'FIXED_PER_MEMBER'">
-                   ({{ budgetPerMember }} {{ symbol }} per eligible user with {{ eligibleUsersCount }} eligible users)
-                 </template>
+      <span>Configured budget: <strong>{{ configuredBudget }} {{ symbol }}</strong></span>
+      <template v-if="rewardType === 'FIXED_PER_MEMBER'">
+        ({{ budgetPerMember }} {{ symbol }} per eligible user with {{ eligibleUsersCount }} eligible users)
+      </template>
+    </h4>
+    <h4 v-show="!selectedTeam">
+      Sent tokens: <strong>{{ sentTotalBudget }} {{ symbol }}</strong>
     </h4>
     <v-container
       v-show="!selectedTeam"
@@ -305,6 +304,12 @@ export default {
       },
     },
     totalBudget: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
+    sentTotalBudget: {
       type: Number,
       default: function() {
         return 0;

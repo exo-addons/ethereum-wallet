@@ -111,7 +111,8 @@
               class="input-text-center"
               @change="refreshIndex++" />
             <template v-else-if="props.item.status === 'success'">
-              {{ toFixed(props.item.tokensSent) }}
+              <span>{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
+              <span v-if="Number(props.item.tokensSent) !== Number(props.item.tokensToSend)"> (instead of {{ toFixed(props.item.tokensToSend) }} {{ symbol }})</span>
             </template>
             <template
               v-else>
@@ -263,7 +264,7 @@ export default {
           align: 'center',
           sortable: true,
           value: 'tokensToSend',
-          width: '70px',
+          width: '80px',
         },
         {
           text: 'Points',
@@ -275,6 +276,9 @@ export default {
     };
   },
   computed: {
+    symbol() {
+      return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
+    },
     recipients() {
       return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.points && item.points >= this.threshold && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
@@ -302,9 +306,9 @@ export default {
       if (this.filteredIdentitiesList) {
         let result = 0;
         this.filteredIdentitiesList.forEach((wallet) => {
-          result += wallet.tokensSent ? (wallet.tokensSent ? Number(wallet.tokensSent) : 0) : Number(wallet.tokensToSend);
+          result += wallet.tokensSent ? (wallet.tokensSent ? Number(wallet.tokensSent) : 0) : (wallet.tokensToSend && wallet.tokensToSend > 0 ? Number(wallet.tokensToSend) : 0);
         });
-        return result;
+        return this.toFixed(result);
       } else {
         return 0;
       }
@@ -355,6 +359,8 @@ export default {
         if (resultWallet) {
           this.$set(resultWallet, 'hash', transaction.hash);
           this.$set(resultWallet, 'status', 'pending');
+          this.$emit('pending', transaction);
+
           if (transaction.contractAmount) {
             this.$set(resultWallet, 'tokensSent', transaction.contractAmount);
           }
@@ -362,6 +368,7 @@ export default {
           const thiss = this;
           watchTransactionStatus(transaction.hash, (receipt) => {
             thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
+            this.$emit('success', transaction, receipt);
           });
         }
       } else {
@@ -374,9 +381,12 @@ export default {
                   this.$set(resultWallet, 'tokensSent', resultTransaction.tokensAmountSent ? Number(resultTransaction.tokensAmountSent) : 0);
                   this.$set(resultWallet, 'hash', resultTransaction.hash);
                   this.$set(resultWallet, 'status', 'pending');
+                  this.$emit('pending', resultTransaction);
+
                   const thiss = this;
                   watchTransactionStatus(resultTransaction.hash, (receipt) => {
                     thiss.$set(resultWallet, 'status', receipt.status ? 'success' : 'error');
+                    this.$emit('success', resultTransaction, receipt);
                   });
                 } else {
                   console.error("Can't find wallet of a sent result token transaction, resultTransaction=", resultTransaction);
