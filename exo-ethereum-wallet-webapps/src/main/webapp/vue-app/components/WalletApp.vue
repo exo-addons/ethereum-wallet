@@ -247,7 +247,7 @@ export default {
     etherBalance() {
       if (this.refreshIndex > 0 && this.walletAddress && this.accountsDetails && this.accountsDetails[this.walletAddress]) {
         let balance = this.accountsDetails[this.walletAddress].balance;
-        balance = balance ? Number(balance) : balance;
+        balance = balance ? Number(balance) : 0;
         return balance;
       }
       return 0;
@@ -434,7 +434,7 @@ export default {
             this.$set(this.accountsDetails, this.walletAddress, {
               title: 'ether',
               icon: 'warning',
-              balance: 0,
+              balance: '0',
               symbol: 'ether',
               isContract: false,
               address: this.walletAddress,
@@ -449,8 +449,8 @@ export default {
             symbol: 'ether',
             isContract: false,
             address: this.walletAddress,
-            balance: balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0,
-            balanceFiat: balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0,
+            balance: balanceDetails && balanceDetails.balance ? balanceDetails.balance : '0',
+            balanceFiat: balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : '0',
           };
           this.$set(this.accountsDetails, this.walletAddress, accountDetails);
           this.forceUpdate();

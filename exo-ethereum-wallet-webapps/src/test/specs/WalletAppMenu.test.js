@@ -5,16 +5,15 @@ describe('WalletAppMenu.test.js', () => {
   let walletAppMenu;
 
   beforeAll(() => {
-    return initApp(app)
-      .then(() => walletAppMenu = app.vm.$refs.walletAppMenu);
+    return initApp(app).then(() => (walletAppMenu = app.vm.$refs.walletAppMenu));
   });
 
   const defaultAttributesValues = {
-      isSpace: false,
-      isSpaceAdministrator: false,
-      walletAddress: '0xb460a021b66a1f421970b07262ed11d626b798ef',
-      isMaximized: true,
-  }
+    isSpace: false,
+    isSpaceAdministrator: false,
+    walletAddress: global.defaultWalletAddress,
+    isMaximized: true,
+  };
 
   it('WalletAppMenu data', () => {
     expectObjectValueEqual(walletAppMenu, defaultAttributesValues);
