@@ -1,6 +1,7 @@
 <template>
   <div id="walletAppMenu">
     <v-btn
+      id="walletAppMenuRefreshButton"
       icon
       flat
       title="Refresh wallet"
@@ -12,6 +13,7 @@
     </v-btn>
     <v-btn
       v-if="isMaximized && (!isSpace || isSpaceAdministrator)"
+      id="walletAppMenuSettingsButton"
       class="mr-0 ml-0"
       icon
       flat
@@ -23,6 +25,7 @@
     </v-btn>
     <v-btn
       v-if="!isMaximized"
+      id="walletAppMenuMaximizeButton"
       icon
       title="Open wallet application"
       class="maximizeIcon ml-0"
@@ -47,12 +50,6 @@ export default {
       type: Boolean,
       default: function() {
         return false;
-      },
-    },
-    walletAddress: {
-      type: String,
-      default: function() {
-        return null;
       },
     },
     isMaximized: {

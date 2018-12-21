@@ -59,17 +59,18 @@ export function searchAddress(id, type) {
   if (address) {
     return Promise.resolve(address);
   }
-  return searchUserOrSpaceObject(id, type).then((data) => {
-    if (data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
-      if (sessionStorage) {
-        sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
+  return searchUserOrSpaceObject(id, type)
+    .then((data) => {
+      if (data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
+        if (sessionStorage) {
+          sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
+        }
+        return data.address;
+      } else {
+        sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
+        return null;
       }
-      return data.address;
-    } else {
-      sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
-      return null;
-    }
-  });
+    });
 }
 
 /*
@@ -84,13 +85,14 @@ export function searchAddress(id, type) {
  * }
  */
 export function searchUserOrSpaceObject(id, type) {
-  return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'}).then((resp) => {
-    if (resp.ok) {
-      return resp.json();
-    } else {
-      return null;
-    }
-  });
+  return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'})
+    .then((resp) => {
+      if (resp && resp.ok) {
+        return resp.json();
+      } else {
+        return null;
+      }
+    });
 }
 
 /*

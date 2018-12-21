@@ -175,7 +175,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       // Compute ERT Token attributes
       return (contractDetails.sellPrice ? Promise.resolve(contractDetails.sellPrice) : contractDetails.contract.methods.getSellPrice().call())
         .then((sellPrice) => {
-          if(sellPrice != null) {
+          if (sellPrice != null) {
             contractDetails.sellPrice = sellPrice;
           }
           contractDetails.retrievedAttributes++;
