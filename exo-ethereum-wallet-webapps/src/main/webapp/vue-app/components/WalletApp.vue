@@ -4,7 +4,7 @@
     :class="isMaximized ? 'maximized' : 'minimized'"
     color="transaprent"
     flat>
-    <main v-if="isWalletEnabled">
+    <main v-if="isWalletEnabled" id="walletEnabledContent">
       <v-layout>
         <v-flex>
           <v-card :class="isMaximized && 'transparent'" flat>
@@ -44,7 +44,6 @@
               <wallet-app-menu
                 ref="walletAppMenu"
                 :is-space="isSpace"
-                :wallet-address="walletAddress"
                 :is-maximized="isMaximized"
                 :is-space-administrator="isSpaceAdministrator"
                 @refresh="init()"
@@ -163,7 +162,7 @@
         </v-flex>
       </v-layout>
     </main>
-    <main v-else-if="isMaximized && !loading">
+    <main v-else-if="isMaximized && !loading" id="walletDisabledContent">
       <v-layout>
         <v-flex>
           <v-card-title class="transparent" flat>
@@ -369,7 +368,6 @@ export default {
           if (error) {
             throw error;
           }
-
           this.networkId = window.walletSettings.currentNetworkId;
           this.walletAddress = window.localWeb3.eth.defaultAccount.toLowerCase();
 
@@ -427,16 +425,17 @@ export default {
       this.$forceUpdate();
     },
     refreshBalance() {
-      return computeBalance(this.walletAddress)
+      const walletAddress = String(this.walletAddress);
+      return computeBalance(walletAddress)
         .then((balanceDetails, error) => {
           if (error) {
-            this.$set(this.accountsDetails, this.walletAddress, {
+            this.$set(this.accountsDetails, walletAddress, {
               title: 'ether',
               icon: 'warning',
               balance: '0',
               symbol: 'ether',
               isContract: false,
-              address: this.walletAddress,
+              address: walletAddress,
               error: `Error retrieving balance of wallet: ${error}`,
             });
             this.forceUpdate();
@@ -447,23 +446,23 @@ export default {
             icon: 'fab fa-ethereum',
             symbol: 'ether',
             isContract: false,
-            address: this.walletAddress,
+            address: walletAddress,
             balance: balanceDetails && balanceDetails.balance ? balanceDetails.balance : '0',
             balanceFiat: balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : '0',
           };
-          this.$set(this.accountsDetails, this.walletAddress, accountDetails);
+          this.$set(this.accountsDetails, walletAddress, accountDetails);
           this.forceUpdate();
           return accountDetails;
         })
         .catch((e) => {
           console.debug('refreshBalance method - error', e);
-          this.$set(this.accountsDetails, this.walletAddress, {
+          this.$set(this.accountsDetails, walletAddress, {
             title: 'ether',
             icon: 'warning',
             balance: 0,
             symbol: 'ether',
             isContract: false,
-            address: this.walletAddress,
+            address: walletAddress,
             error: `Error retrieving balance of wallet ${e}`,
           });
           throw e;

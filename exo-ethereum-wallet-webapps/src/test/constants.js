@@ -45,8 +45,9 @@ global.WALLET_ACCOUNTS = [
     balance: '100000000000000000000',
   },
   {
+    // This account will not have 100 ether
     secretKey: '0x817f258f52af8741f1082ad1f46bbd6caa87947e547eb13965dfad47b10cb803',
     address: '0x8f651bd0238e9515612fcb1b668ddbc70894e3f1',
-    balance: '100000000000000000000',
+    balance: '0',
   },
 ];
