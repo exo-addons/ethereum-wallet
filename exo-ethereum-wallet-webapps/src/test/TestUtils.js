@@ -9,8 +9,10 @@ import WalletBrowserSetup from '../main/webapp/vue-app/components/WalletBrowserS
 import WalletMetamaskSetup from '../main/webapp/vue-app/components/WalletMetamaskSetup';
 import WalletBackupModal from '../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../main/webapp/vue-app/components/WalletResetModal';
+import {saveBrowerWalletInstance} from '../main/webapp/vue-app/WalletUtils.js';
 
 const {mount} = require('@vue/test-utils');
+
 
 export function initApp(app) {
   return app.vm.init();
@@ -39,6 +41,30 @@ export function getWalletApp() {
 
 export function expectCountElement(app, id, count) {
   expect(app.findAll(`#${id}`)).toHaveLength(count);
+}
+
+export function setWalletDetails(type, id, walletAddress, name) {
+  const details = {
+    avatar: `/rest/v1/social/users/${id}/avatar`,
+    technicalId: '2',
+    spaceAdministrator: false,
+    enabled: true,
+    address: walletAddress,
+    name: name ? name : 'NAME',
+    type: type,
+    id: id,
+  };
+
+  global.addressAssociations[walletAddress.toLowerCase()] = details;
+  global.userAddresses[`${type}_${id}`.toLowerCase()] = details;
+}
+
+export function getWalletDetailsBTypeId(type, id) {
+  return global.userAddresses[`${type}_${id}`.toLowerCase()];
+}
+
+export function getWalletDetailsBTypeAddress(walletAddress) {
+  return global.addressAssociations[walletAddress.toLowerCase()];
 }
 
 export function getEtherAccountDetails(walletAddress, balance, balanceFiat) {
@@ -107,4 +133,18 @@ export function expectObjectValueEqual(value, expected, ignoredKeys) {
   if(error) {
     throw new Error('there is some errors in test, see log below');
   }
+}
+
+export function initiateBrowserWallet(index, password, isSpace, generated, backedUp) {
+  const walletDetails = global.WALLET_ACCOUNTS[index];
+  const wallet = window.localWeb3.eth.accounts.wallet.add(walletDetails.secretKey);
+  return saveBrowerWalletInstance(wallet, password, isSpace, generated, backedUp);
+}
+
+export function getParameter(url, param) {
+  let urlPart;
+  if(!param || !(url = url && url.trim()) || url.indexOf('?') < 0 || !(urlPart = url.match(new RegExp(`[\?&]{1}${param}=[^&#]*`)))) {
+    return null;
+  }
+  return urlPart.length ? urlPart[0].split('=')[1] : null;
 }
