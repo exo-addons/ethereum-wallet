@@ -45,6 +45,7 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
       sessionStorage.setItem(`exo-wallet-address-${type}-${id}`, address);
       return resp;
     } else {
+      console.error('Error saving wallet address', resp);
       throw new Error('Error saving wallet address');
     }
   });

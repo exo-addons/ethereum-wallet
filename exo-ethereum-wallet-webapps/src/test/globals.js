@@ -1,9 +1,13 @@
 import $ from 'jquery';
 import Vue from 'vue';
 import Vuetify from '../main/webapp/js/lib/vuetify.min.js';
-import LocalWeb3 from '../main/webapp/js/lib/web3.min.js';
+import LocalWeb3 from 'web3';
 
 import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
+
+import {setWalletDetails, getWalletDetailsBTypeId, getParameter, getWalletDetailsBTypeAddress} from './TestUtils.js';
+
+require('./constants.js');
 
 global.fetch = require('jest-fetch-mock');
 
@@ -19,6 +23,16 @@ Vue.config.silent = true;
 
 window.testWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider('http://localhost:8545'));
 
+$.urlParam = function(url, name){
+  var results = new RegExp('[\?&]' + name + '=([^]*)').exec(url);
+  if (results==null){
+     return null;
+  }
+  else{
+     return results[1] || 0;
+  }
+}
+
 global.eXo = {
   env: {
     portal: {
@@ -30,12 +44,14 @@ global.eXo = {
   },
 };
 
-global.walletAddresses = ['0x2d232d448fb0b5b370d3abad2681399e2002ae2a', '0xb460a021b66a1f421970b07262ed11d626b798ef', '0x0a6b396f8eb23cdaf2db137410ff7c1f20bbbc57', '0xf8622910fa3c83d9a5b22c5e5f00d719a93deb38', '0xc48aee6064444d6a62b0fd41f79818b3a77e3ab9', '0x1C970755CaC148a89C01F39B3a148199fC4B8329', '0x79032C0930f9cEb7546946eBc94e0cb00732C8a7', '0xb64F82a96569F932Aa7Cb9B997E73E6B3B299cCF', '0x5743fE9068772006C9e337917dFE493db8207F6C', '0x8f651bD0238E9515612fcB1b668ddBc70894E3F1'];
+global.walletAddresses = global.WALLET_ACCOUNTS.map(account => account.address);
 global.defaultWalletAddress = global.walletAddress = global.walletAddresses[1];
-
 global.testNetworkId = 4452365;
+global.addressAssociations = {};
+global.userAddresses = {};
+setWalletDetails("user", "testuser", global.defaultWalletAddress);
 
-global.fetch.mockImplementation((url) => {
+global.fetch.mockImplementation((url, options) => {
   let resultJson = null;
   if (url.indexOf('/portal/rest/wallet/api/global-settings') === 0) {
     resultJson = {
@@ -79,7 +95,7 @@ global.fetch.mockImplementation((url) => {
         defaultGas: 0, // User gas limit preference
         walletAddress: global.walletAddress, // associated user address
       },
-      contractBin: '', // Principal ERT Token contract BIN
+      contractBin: '', // Principal ERT Token contract BIN, used to estimate gas for tokens transfer
     };
   } else if (url === 'https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=usd') {
     resultJson = [
@@ -103,19 +119,23 @@ global.fetch.mockImplementation((url) => {
     ];
   } else if (url.toLowerCase() === `/portal/rest/wallet/api/account/getTransactions?networkId=${global.testNetworkId}&address=${global.walletAddress}`.toLowerCase()) {
     resultJson = [];
-  } else if (url === '/portal/rest/wallet/api/account/detailsById?id=testuser&type=user') {
-    resultJson = {
-      avatar: '/rest/v1/social/users/testuser/avatar',
-      technicalId: '2',
-      spaceAdministrator: false,
-      enabled: true,
-      address: global.walletAddress,
-      name: 'testuser testuser',
-      id: 'testuser',
-      type: 'user',
-    };
+  } else if (url.indexOf('/portal/rest/wallet/api/account/detailsById') === 0) {
+    const type = getParameter(url, 'type');
+    const id = getParameter(url, 'id');
+    resultJson = getWalletDetailsBTypeId(type, id);
+    if(!resultJson) {
+      console.warn(`Can't find ${type} with id ${id} in `, global.userAddresses);
+    }
+  } else if (url === '/portal/rest/wallet/api/account/saveAddress') {
+    if(!options || !options.body) {
+      console.warn(new Error(`URL ${url} has empty parameters`, options));
+      return;
+    }
+    const parameters = JSON.parse(options.body);
+    console.log("parameters", parameters);
+    setWalletDetails(parameters.type, parameters.id, parameters.address);
   } else {
     console.warn(new Error(`URL ${url} isn't mocked`));
   }
-  return Promise.resolve(resultJson ? new Response(JSON.stringify(resultJson)) : '');
+  return Promise.resolve(new Response(JSON.stringify(resultJson)));
 });

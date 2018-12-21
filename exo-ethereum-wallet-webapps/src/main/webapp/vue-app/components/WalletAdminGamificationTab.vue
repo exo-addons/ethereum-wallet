@@ -320,7 +320,6 @@ export default {
       }
     },
     computeBudgets() {
-      console.warn("-------- computeBudgets------");
       if (this.identitiesList && this.identitiesList.length) {
         this.identitiesList.forEach((wallet) => {
           wallet.tokensToSend = 0;
