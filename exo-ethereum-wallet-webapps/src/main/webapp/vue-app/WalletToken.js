@@ -116,6 +116,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     })
     .catch((e) => {
       contractDetails.contractType = -1;
+      console.debug('retrieveContractDetails method - error computing balance', e);
     })
     .then(() => {
       return contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty('symbol') ? contractDetails.symbol : contractDetails.contract.methods.symbol().call();
@@ -173,10 +174,12 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         return;
       }
       // Compute ERT Token attributes
-      return (contractDetails.sellPrice ? Promise.resolve(contractDetails.sellPrice) : contractDetails.contract.methods.getSellPrice().call())
+      return (contractDetails.sellPrice ? Promise.resolve(Number(contractDetails.sellPrice) * 1000000000000000000) : contractDetails.contract.methods.getSellPrice().call())
         .then((sellPrice) => {
-          if (sellPrice != null) {
-            contractDetails.sellPrice = sellPrice;
+          if (sellPrice && !Number.isNaN(Number(sellPrice))) {
+            contractDetails.sellPrice = Number(sellPrice) / 1000000000000000000;
+          } else {
+            contractDetails.sellPrice = 0;
           }
           contractDetails.retrievedAttributes++;
         })
@@ -184,12 +187,12 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
           console.debug('retrieveContractDetails method - error retrieving sellPrice', contractDetails.address, new Error(e));
         })
         .then(() => {
-          return contractDetails.hasOwnProperty('owner') ? contractDetails.owner : contractDetails.contract.methods.owner().call();
+          return contractDetails.owner ? contractDetails.owner : contractDetails.contract.methods.owner().call();
         })
         .then((owner) => {
           if (owner) {
-            contractDetails.owner = owner;
-            contractDetails.isOwner = owner.toLowerCase() === account && account.toLowerCase();
+            contractDetails.owner = owner.toLowerCase();
+            contractDetails.isOwner = contractDetails.owner === account && account.toLowerCase();
           }
           contractDetails.retrievedAttributes++;
         })
@@ -350,7 +353,12 @@ export function newContractInstanceByName(tokenName, ...args) {
       }
     })
     .then((abi) => (contractAbi = abi))
-    .then(() => newContractInstance(contractAbi, contractBin, ...args));
+    .then(() => newContractInstance(contractAbi, contractBin, ...args))
+    .then((contractInstance) => {
+      contractInstance.abi = contractAbi;
+      contractInstance.bin = contractBin.substring(2);
+      return contractInstance;
+    });
 }
 
 /*
@@ -470,8 +478,12 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
     return Promise.reject(new Error('Contract already exists in the list'));
   }
   return getContractInstance(account, address, true)
+    .catch((e) => {
+      console.debug('saveContractAddress method - error getting contract instance', e);
+    })
     .then((foundContract, error) => {
       if (error) {
+        console.debug('saveContractAddress method - error getting contract instance', error);
         throw error;
       }
       // Test on existence of balanceOf method in contract code
@@ -479,6 +491,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
     })
     .then((balance, error) => {
       if (error) {
+        console.debug('saveContractAddress method - error getting balance of user', error);
         throw new Error('Invalid contract address');
       }
 
@@ -498,6 +511,10 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       } else if (!isDefaultContract) {
         throw new Error('Contract already exists');
       }
+    })
+    .catch((e) => {
+      console.debug('saveContractAddress method - error getting balance of user', e);
+      throw new Error('It seems that the addres is not a valid ERC20 contract');
     })
     .then((contractDetails) => {
       if (contractDetails && isDefaultContract) {

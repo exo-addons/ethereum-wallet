@@ -62,20 +62,20 @@
 
       <!-- Current project artifacts -->
       <dependency>
-        <groupId>org.exoplatform.addons.wallet</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>exo-ethereum-wallet-webapps</artifactId>
         <version>${project.version}</version>
         <type>war</type>
       </dependency>
 
       <dependency>
-        <groupId>org.exoplatform.addons.wallet</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>exo-ethereum-wallet-services</artifactId>
         <version>${project.version}</version>
       </dependency>
 
       <dependency>
-        <groupId>org.exoplatform.addons.wallet</groupId>
+        <groupId>${project.groupId}</groupId>
         <artifactId>exo-ethereum-wallet-contracts</artifactId>
         <version>${project.version}</version>
       </dependency>

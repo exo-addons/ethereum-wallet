@@ -385,7 +385,7 @@ export default {
 
                   const thiss = this;
                   watchTransactionStatus(resultTransaction.hash, (receipt) => {
-                    thiss.$set(resultWallet, 'status', receipt.status ? 'success' : 'error');
+                    thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
                     this.$emit('success', resultTransaction, receipt);
                   });
                 } else {

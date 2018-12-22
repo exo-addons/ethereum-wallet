@@ -1,7 +1,7 @@
 global.WALLET_ACCOUNTS = [
   {
-    secretKey: '0x40899e93e69cf79747e4030a2be582e23faac3ccbdf81de602bafd1e531f379f',
-    address: '0x2d232d448fb0b5b370d3abad2681399e2002ae2a',
+    secretKey: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3',
+    address: '0x627306090abab3a6e1400e9345bc60c78a8bef57',
     balance: '100000000000000000000', // 100 eth
   },
   {

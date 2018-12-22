@@ -8,10 +8,40 @@
   <artifactId>exo-ethereum-wallet-webapps</artifactId>
   <packaging>war</packaging>
   <name>eXo Add-on:: eXo Ethereum Wallet - Application</name>
-
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>exo-ethereum-wallet-contracts</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
   <build>
     <finalName>exo-ethereum-wallet</finalName>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>exo-ethereum-wallet-contracts</artifactId>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/contracts</outputDirectory>
+                  <includes>**/*.bin,**/*.json</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
@@ -25,8 +55,8 @@
               <goal>install-node-and-npm</goal>
             </goals>
             <configuration>
-              <nodeVersion>v10.4.1</nodeVersion>
-              <npmVersion>6.1.0</npmVersion>
+              <nodeVersion>v11.4.0</nodeVersion>
+              <npmVersion>6.5.0</npmVersion>
             </configuration>
           </execution>
           <execution>
@@ -50,10 +80,10 @@
           <execution>
             <id>npm run test</id>
             <goals>
-                <goal>npm</goal>
+              <goal>npm</goal>
             </goals>
             <configuration>
-                <arguments>test</arguments>
+              <arguments>test</arguments>
             </configuration>
           </execution>
           <execution>

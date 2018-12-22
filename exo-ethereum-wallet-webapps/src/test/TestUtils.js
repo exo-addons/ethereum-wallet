@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import WalletApp from '../main/webapp/vue-app/components/WalletApp';
 import WalletAppMenu from '../main/webapp/vue-app/components/WalletAppMenu';
 import WalletSetup from '../main/webapp/vue-app/components/WalletSetup';
@@ -9,12 +11,14 @@ import WalletBrowserSetup from '../main/webapp/vue-app/components/WalletBrowserS
 import WalletMetamaskSetup from '../main/webapp/vue-app/components/WalletMetamaskSetup';
 import WalletBackupModal from '../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../main/webapp/vue-app/components/WalletResetModal';
+
+import {deployContract, newContractInstanceByName, newContractInstanceByNameAndAddress, saveContractAddressAsDefault} from '../main/webapp/vue-app/WalletToken.js';
 import {saveBrowerWalletInstance} from '../main/webapp/vue-app/WalletUtils.js';
 
 const {mount} = require('@vue/test-utils');
 
 export function initApp(app) {
-  return app.vm.init();
+  return app.vm.init().then(() => deployTokenContract(global.walletAddresses[0]));
 }
 
 export function getWalletApp(isSpace) {
@@ -41,7 +45,7 @@ export function getWalletApp(isSpace) {
 export function expectCountElement(app, id, count) {
   try {
     expect(app.findAll(`#${id}`)).toHaveLength(count);
-  } catch(e) {
+  } catch (e) {
     console.error(`expectCountElement error - app doesn't have element with id ${id} count = ${count}`);
     throw e;
   }
@@ -65,7 +69,7 @@ export function setWalletDetails(type, id, walletAddress, name) {
 
 export function getWalletDetailsBTypeId(type, id) {
   const walletDetails = global.userAddresses[`${type}_${id}`.toLowerCase()];
-  if(global.defaultWalletSettings.isSpaceAdministrator) {
+  if (global.defaultWalletSettings.isSpaceAdministrator) {
     walletDetails.spaceAdministrator = true;
   }
   return walletDetails;
@@ -87,23 +91,41 @@ export function getEtherAccountDetails(walletAddress, balance, balanceFiat) {
   };
 }
 
+export function getTokenAccountDetails(address, balance) {
+  return {
+    isDefault: true,
+    isContract: true,
+    contractType: 1,
+    contractTypeLabel: 'ERT Token',
+    networkId: global.testNetworkId,
+    address: global.tokenAddress,
+    name: global.tokenName,
+    symbol: global.tokenSymbol,
+    decimals: global.tokenDecimals,
+    owner: global.tokenOwner,
+    sellPrice: Number(global.tokenSellPrice),
+    title: global.tokenName,
+    balance: balance ? Number(balance) : global.tokenSupply / Math.pow(10, global.tokenDecimals),
+  };
+}
+
 export function expectHasClass(app, id, className) {
   try {
     expect(app.find(`#${id}`).classes()).toContain(className);
-  } catch(e) {
+  } catch (e) {
     console.error(`expectHasClass error - app doesn't have element with id ${id} having a class ${className}`);
     throw e;
   }
 }
 
-export function expectObjectValueEqual(value, expected, ignoredKeys) {
+export function expectObjectValueEqual(value, expected, ignoredKeys, notStrictObjectComparaison) {
   expect(expected).not.toBeNull();
   expect(value).not.toBeNull();
 
   expect(typeof expected).toBe('object');
   expect(typeof value).toBe('object');
 
-  let error = null;
+  const errors = [];
 
   Object.keys(expected).forEach((key) => {
     if (ignoredKeys && ignoredKeys.indexOf(key) >= 0) {
@@ -113,40 +135,73 @@ export function expectObjectValueEqual(value, expected, ignoredKeys) {
       expect(value.hasOwnProperty(key) || (value.hasOwnProperty('_computedWatchers') && value['_computedWatchers'] && Object.keys(value['_computedWatchers']).indexOf(key) >= 0) || (value.hasOwnProperty('_props') && value['_props'] && Object.keys(value['_props']).indexOf(key) >= 0)).toBeTruthy();
     } catch (e) {
       console.error("can't find element with key in result", key);
-      error = e;
+      errors.push(e);
       return;
     }
-    const expectedValue = expected[key];
-    try {
-      if (typeof expectedValue === 'boolean') {
-        if (expectedValue) {
-          expect(value[key]).toBeTruthy();
-        } else {
-          expect(value[key]).toBeFalsy();
-        }
-      } else if (typeof expectedValue === 'number') {
-        expect(value[key]).toBe(expectedValue);
-      } else if (typeof expectedValue === 'string') {
-        expect(value[key]).toBe(expectedValue);
-      } else if (typeof expectedValue === 'object' && expectedValue.reduceRight) {
-        // Array
-        expect(value[key]).toEqual(expectedValue);
-      } else if (typeof expectedValue === 'object') {
-        // Pure object
-        expect(value[key]).toEqual(expectedValue);
-      } else {
-        error = new Error(`cannot find type of key: ${key}`);
-        return;
-      }
-    } catch (e) {
-      console.error('Wrong value for key in result', key, ', \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', value && value[key] && JSON.parse(JSON.stringify(value[key])));
-      error = e;
-      return;
-    }
+    compareValues(key, expected[key], value[key], notStrictObjectComparaison, errors);
   });
 
-  if (error) {
-    throw new Error('there is some errors in test, see log below');
+  if (errors.length) {
+    throw new Error('there is some errors in test, see log below', ...errors);
+  }
+}
+
+function compareValues(key, expectedValue, receivedValue, notStrictObjectComparaison, errors) {
+  try {
+    if (typeof expectedValue === 'boolean') {
+      // Boolean
+      if (expectedValue) {
+        expect(receivedValue).toBeTruthy();
+      } else {
+        expect(receivedValue).toBeFalsy();
+      }
+    } else if (typeof expectedValue === 'number') {
+      // Number
+      if (notStrictObjectComparaison) {
+        expect(Number(receivedValue)).toBe(Number(expectedValue));
+      } else {
+        expect(receivedValue).toBe(expectedValue);
+      }
+    } else if (typeof expectedValue === 'string') {
+      // String
+      if (notStrictObjectComparaison) {
+        expect(String(receivedValue)).toBe(String(expectedValue));
+      } else {
+        expect(receivedValue).toBe(expectedValue);
+      }
+    } else if (typeof expectedValue === 'object' && expectedValue.reduceRight) {
+      // Array
+      expect(receivedValue).toEqual(expectedValue);
+    } else if (typeof expectedValue === 'object') {
+      // Object
+      if (notStrictObjectComparaison) {
+        Object.keys(expectedValue).forEach((subKey) => {
+          if (!receivedValue || !receivedValue.hasOwnProperty(subKey)) {
+            console.error(`receivedValue doesn't have sub-key ${subKey}`);
+            throw new Error(`Wrong value for sub-key = ${subKey} \r\n -- expectedValue -- \r\n ${expectedValue} \r\n -- found -- \r\n ${JSON.parse(stringify(receivedValue))}`);
+          }
+          const error = compareValues(subKey, expectedValue[subKey], receivedValue[subKey], notStrictObjectComparaison);
+          if(error) {
+            errors.push(error);
+          }
+        });
+      } else {
+        // Pure object
+        expect(receivedValue).toEqual(expectedValue);
+      }
+    } else {
+      errors.push(new Error(`cannot find type of key: ${key}`));
+      return;
+    }
+  } catch (e) {
+    try {
+      console.error('Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
+    } catch (error) {
+      // Workaround for circular dependency
+      delete receivedValue.contract;
+      console.error('Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
+    }
+    errors.push(e);
   }
 }
 
@@ -169,6 +224,185 @@ export function getParameter(url, param) {
   return urlPart.length ? urlPart[0].split('=')[1] : null;
 }
 
+export function deployTokenContract(adminAddress) {
+  try {
+    global.tokenAddress = fs.readFileSync('target/contractAddress.txt', 'utf-8');
+    if (global.tokenAddress) {
+      global.contractAbi = JSON.parse(fs.readFileSync('target/contractAbi', 'utf-8'));
+      global.contractBin = fs.readFileSync('target/contractBin', 'utf-8');
+      return;
+    }
+  } catch (e) {
+    console.debug('Token address not found from cache');
+  }
+
+  const gasLimit = 10000000;
+  const gasPrice = 4000000000;
+
+  let ertDataContractInstance, ertERTTokenImplInstance, ertTokenContractInstance;
+  let ertDataContractAddress, ertERTTokenImplAddress, ertTokenContractAddress;
+
+  return (
+    // Deploy Data contract
+    newContractInstanceByName('ERTTokenDataV1')
+      .then((newContractInstance, error) => {
+        if (error) {
+          throw error;
+        }
+        if (!newContractInstance) {
+          throw new Error('Cannot instantiate contract ERTTokenDataV1');
+        }
+        ertDataContractInstance = newContractInstance;
+        return deployContract(ertDataContractInstance, adminAddress, gasLimit, gasPrice);
+      })
+      .then((newContractInstance, error) => {
+        if (error) {
+          throw error;
+        }
+        if (!newContractInstance || !newContractInstance.options || !(ertDataContractAddress = newContractInstance.options.address)) {
+          throw new Error('Cannot find address of newly deployed address');
+        }
+        ertDataContractInstance = newContractInstance;
+      })
+      // Verify attributes
+      .then(() => ertDataContractInstance.methods.implementation().call())
+      .then((owner) => {
+        expect(owner).not.toBeNull();
+        expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
+      })
+      // Deploy implementation contract
+      .then(() => newContractInstanceByName('ERTTokenV1'))
+      .then((newContractInstance, error) => {
+        if (!newContractInstance) {
+          throw new Error('Cannot instantiate contract ERTTokenV1');
+        }
+        ertERTTokenImplInstance = newContractInstance;
+        global.contractAbi = ertERTTokenImplInstance.abi;
+        global.contractBin = ertERTTokenImplInstance.bin;
+        fs.writeFileSync('target/contractAbi', JSON.stringify(global.contractAbi));
+        fs.writeFileSync('target/contractBin', global.contractBin);
+        return deployContract(ertERTTokenImplInstance, adminAddress, gasLimit, gasPrice);
+      })
+      .then((newContractInstance, error) => {
+        if (error) {
+          throw error;
+        }
+        if (!newContractInstance || !newContractInstance.options || !(ertERTTokenImplAddress = newContractInstance.options.address)) {
+          throw new Error('Cannot find address of newly deployed address');
+        }
+        ertERTTokenImplInstance = newContractInstance;
+      })
+      // Verify attributes
+      .then(() => ertERTTokenImplInstance.methods.owner().call())
+      .then((owner) => {
+        expect(owner).not.toBeNull();
+        expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
+      })
+      // Deploy proxy contract
+      .then(() => newContractInstanceByName('ERTToken', ertERTTokenImplAddress, ertDataContractAddress))
+      .then((newContractInstance, error) => {
+        ertERTTokenImplInstance = newContractInstance;
+        if (!newContractInstance) {
+          throw new Error('Cannot instantiate contract ERTToken');
+        }
+        ertTokenContractInstance = newContractInstance;
+        return deployContract(ertTokenContractInstance, adminAddress, gasLimit, gasPrice);
+      })
+      .then((newContractInstance, error) => {
+        if (error) {
+          throw error;
+        }
+        if (!newContractInstance || !newContractInstance.options || !(ertTokenContractAddress = newContractInstance.options.address)) {
+          throw new Error('Cannot find address of newly deployed address');
+        }
+        ertTokenContractInstance = newContractInstance;
+      })
+      // Verify attributes
+      .then(() => ertTokenContractInstance.methods.implementationAddress().call())
+      .then((implementationAddress) => {
+        expect(implementationAddress).not.toBeNull();
+        expect(implementationAddress.toLowerCase()).toBe(ertERTTokenImplAddress.toLowerCase());
+      })
+      .then(() => ertTokenContractInstance.methods.getDataAddress(1).call())
+      .then((dataAddress) => {
+        expect(dataAddress).not.toBeNull();
+        expect(dataAddress.toLowerCase()).toBe(ertDataContractAddress.toLowerCase());
+      })
+      .then(() => ertTokenContractInstance.methods.owner().call())
+      .then((owner) => {
+        expect(owner).not.toBeNull();
+        expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
+      })
+      // Transfer ownership to proxy and real implementation
+      .then(() =>
+        ertDataContractInstance.methods.transferDataOwnership(ertTokenContractAddress, ertERTTokenImplAddress).send({
+          from: adminAddress,
+          gasPrice: gasPrice,
+          gas: gasLimit,
+        })
+      )
+      // Refresh Proxy Token contract instance with Impl ABI
+      .then(() => newContractInstanceByNameAndAddress('ERTTokenV1', ertTokenContractAddress))
+      .then((contractInstance) => (ertTokenContractInstance = contractInstance))
+      // Initialize Token attributes
+      .then(() =>
+        ertTokenContractInstance.methods.initialize(global.tokenSupply, global.tokenName, global.tokenDecimals, global.tokenSymbol).send({
+          from: adminAddress,
+          gasPrice: gasPrice,
+          gas: gasLimit,
+        })
+      )
+      // Verify attributes
+      .then(() => ertTokenContractInstance.methods.totalSupply().call())
+      .then((totalSupply) => {
+        expect(totalSupply).not.toBeNull();
+        expect(Number(totalSupply)).toBe(Number(global.tokenSupply));
+      })
+      .then(() => ertTokenContractInstance.methods.name().call())
+      .then((name) => {
+        expect(name).not.toBeNull();
+        expect(name).toBe(global.tokenName);
+      })
+      .then(() => ertTokenContractInstance.methods.decimals().call())
+      .then((decimals) => {
+        expect(decimals).not.toBeNull();
+        expect(Number(decimals)).toBe(Number(global.tokenDecimals));
+      })
+      .then(() => ertTokenContractInstance.methods.symbol().call())
+      .then((symbol) => {
+        expect(symbol).not.toBeNull();
+        expect(symbol).toBe(global.tokenSymbol);
+      })
+      .then(() => ertTokenContractInstance.methods.balanceOf(adminAddress).call())
+      .then((adminBalance) => {
+        expect(adminBalance).not.toBeNull();
+        expect(Number(adminBalance)).toBe(Number(global.tokenSupply));
+      })
+
+      // Save contract details
+      .then(() =>
+        saveContractAddressAsDefault({
+          networkId: global.testNetworkId,
+          address: ertTokenContractAddress,
+          isContract: true,
+          name: global.tokenName,
+          symbol: global.tokenSymbol,
+          decimals: global.tokenDecimals,
+        })
+      )
+      // Return Token address
+      .then(() => {
+        global.tokenAddress = ertTokenContractAddress.toLowerCase();
+        fs.writeFileSync('target/contractAddress.txt', global.tokenAddress);
+        return ertTokenContractAddress;
+      })
+      .catch((e) => {
+        console.error('Error deploying contracts', e);
+        throw e;
+      })
+  );
+}
+
 export function getDefaultSettings() {
   return {
     defaultNetworkId: global.testNetworkId, // Configured netword in global settings
@@ -178,7 +412,7 @@ export function getDefaultSettings() {
     maxGasPrice: 15000000000, // Max gas price choice amount to use when sending a transaction
     dataVersion: 2, // Global Settings data version
     websocketProviderURL: 'http://localhost:8545', // Not used in UI, only server side to listen to blockchain events
-    defaultGas: 150000, // Default gas limit to use for transactions to send
+    defaultGas: 1500000, // Default gas limit to use for transactions to send
     isAdmin: false, // Whether the current user is in /platform/administrators group or not
     defaultPrincipalAccount: global.defaultWalletSettings.defaultPrincipalAccount, // Default contract/ether account to display for user in Wallet Application UI
     // Contracts List to display in UI in Wallet Application (may use 'ether' and 'fiat' to display ether account details)
@@ -206,7 +440,25 @@ export function getDefaultSettings() {
       currency: 'usd', // User currency used to display fiat amounts
       defaultGas: global.defaultWalletSettings.userPreferences.defaultGas, // User gas limit preference
       walletAddress: global.walletAddress, // associated user address
+      overviewAccountsToDisplay: global.defaultWalletSettings.defaultOverviewAccounts, // user contracts to display
     },
-    contractBin: '', // Principal ERT Token contract BIN, used to estimate gas for tokens transfer
+    contractBin: global.contractBin, // Principal ERT Token contract BIN, used to estimate gas for tokens transfer
+    contractAbi: global.contractAbi, // Principal ERT Token contract ABI
   };
+}
+
+function stringify(obj) {
+  const getCircularReplacer = () => {
+    const seen = new WeakSet();
+    return (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+  };
+  return JSON.stringify(obj, getCircularReplacer());
 }

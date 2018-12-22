@@ -741,18 +741,17 @@ function checkMetamaskEnabled(waitTime) {
 }
 
 function initSpaceAccount(spaceGroup) {
-  return searchUserOrSpaceObject(spaceGroup, 'space')
-    .then((spaceObject, error) => {
-      if (error) {
-        throw error;
-      }
-      if (spaceObject && spaceObject.spaceAdministrator) {
-        return (window.walletSettings.isSpaceAdministrator = true);
-      } else {
-        window.walletSettings.isReadOnly = true;
-        return (window.walletSettings.isSpaceAdministrator = false);
-      }
-    });
+  return searchUserOrSpaceObject(spaceGroup, 'space').then((spaceObject, error) => {
+    if (error) {
+      throw error;
+    }
+    if (spaceObject && spaceObject.spaceAdministrator) {
+      return (window.walletSettings.isSpaceAdministrator = true);
+    } else {
+      window.walletSettings.isReadOnly = true;
+      return (window.walletSettings.isSpaceAdministrator = false);
+    }
+  });
 }
 
 function waitAsyncForTransactionStatus(hash) {
