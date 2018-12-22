@@ -476,22 +476,23 @@ export default {
       }
     },
     reloadContracts() {
-      return getContractsDetails(this.walletAddress, this.networkId, false, false).then((contractsDetails, error) => {
-        if (error) {
-          throw error;
-        }
-        if (contractsDetails && contractsDetails.length) {
-          contractsDetails.forEach((contractDetails) => {
-            if (contractDetails && contractDetails.address) {
-              if (this.accountsDetails[this.walletAddress]) {
-                contractDetails.etherBalance = this.accountsDetails[this.walletAddress].balance;
+      return getContractsDetails(this.walletAddress, this.networkId, false, false)
+        .then((contractsDetails, error) => {
+          if (error) {
+            throw error;
+          }
+          if (contractsDetails && contractsDetails.length) {
+            contractsDetails.forEach((contractDetails) => {
+              if (contractDetails && contractDetails.address) {
+                if (this.accountsDetails[this.walletAddress]) {
+                  contractDetails.etherBalance = this.accountsDetails[this.walletAddress].balance;
+                }
+                this.$set(this.accountsDetails, contractDetails.address, contractDetails);
               }
-              this.$set(this.accountsDetails, contractDetails.address, contractDetails);
-            }
-          });
-          this.forceUpdate();
-        }
-      });
+            });
+            this.forceUpdate();
+          }
+        });
     },
     openAccountDetail(accountDetails, hash) {
       if (!accountDetails.error) {

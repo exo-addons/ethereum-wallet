@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, getTokenAccountDetails, initiateBrowserWallet} from '../TestUtils.js';
 
 describe('WalletApp.test.js', () => {
   let app;
@@ -7,6 +7,10 @@ describe('WalletApp.test.js', () => {
     global.walletAddress = global.defaultWalletAddress;
     app = getWalletApp();
     return initApp(app);
+  });
+
+  beforeEach(() => {
+    global.defaultWalletSettings.isWalletEnabled = true;
   });
 
   const defaultAttributesValues = {
@@ -63,7 +67,7 @@ describe('WalletApp.test.js', () => {
   it('WalletApp - test account having a browser wallet with generated password', () => {
     console.log('--- Test account having a browser wallet with generated password');
 
-    global.walletAddress = global.walletAddresses[0];
+    global.walletAddress = global.walletAddresses[1];
     const app = getWalletApp();
 
     return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
@@ -125,6 +129,37 @@ describe('WalletApp.test.js', () => {
       expectObjectValueEqual(app.vm, {isWalletEnabled: false});
       expectCountElement(app, 'walletDisabledContent', 1);
       expectCountElement(app, 'walletEnabledContent', 0);
+    });
+  });
+
+  it('WalletApp - test display token account', () => {
+    console.log('--- Test display token account');
+
+    // Last address having 0 ether in its account
+    global.walletAddress = global.walletAddresses[0];
+    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
+    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
+
+    const app = getWalletApp();
+
+    const expectedData = Object.assign({}, defaultAttributesValues);
+    expectedData.walletAddress = global.walletAddresses[0];
+    expectedData.accountsDetails = {};
+    expectedData.accountsDetails[global.walletAddress] = getEtherAccountDetails(global.walletAddress, '0', '0');
+    // Can't test on ether balance since this account is used to create contract
+    delete expectedData.etherBalance;
+    delete expectedData.totalBalance;
+    delete expectedData.totalFiatBalance;
+    delete expectedData.accountsDetails[global.walletAddress].balance;
+    delete expectedData.accountsDetails[global.walletAddress].balanceFiat;
+
+    expectedData.principalAccount = global.tokenAddress;
+    expectedData.overviewAccounts = [global.tokenAddress, 'ether'];
+    expectedData.overviewAccountsToDisplay = [global.tokenAddress, 'ether'];
+    expectedData.accountsDetails[global.tokenAddress] = getTokenAccountDetails();
+
+    return initApp(app).then(() => {
+      expectObjectValueEqual(app.vm, expectedData, null, true);
     });
   });
 });

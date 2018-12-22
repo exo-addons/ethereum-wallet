@@ -16,7 +16,7 @@
     "lint": "eslint --fix ./src/main/webapp/vue-app/*.js ./src/main/webapp/vue-app/components/*.vue ./src/test/*.js ./src/test/specs/*.js",
     "eslint-check": "eslint --print-config . | eslint-config-prettier-check",
     "build": "webpack --config webpack.prod.js --mode production",
-    "ganache-cli": "ganache-cli -a 10 -e 100 -h 0.0.0.0"
+    "ganache-cli": "ganache-cli --networkId 4452364 --debug --db target/ganache-data"
   },
   "author": "eXo",
   "license": "LGPL",
@@ -54,7 +54,7 @@
     "vue-jest": "^3.0.1",
     "vue-loader": "^14.2.3",
     "vue-template-compiler": "^2.5.16",
-    "web3": "^1.0.0-beta.37",
+    "web3": "^1.0.0-beta.36",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.1",
     "webpack-dev-server": "^3.1.10",
