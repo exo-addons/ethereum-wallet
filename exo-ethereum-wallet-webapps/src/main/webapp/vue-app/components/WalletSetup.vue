@@ -1,6 +1,9 @@
 <template>
   <v-flex id="walletSetup" class="text-xs-center">
-    <div v-if="displayWalletBackup" class="alert alert-warning">
+    <div
+      v-if="displayWalletBackup"
+      id="walletBackupWarning"
+      class="alert alert-warning">
       <i class="uiIconWarning"></i> Your wallet is not backed up yet.
       <wallet-backup-modal
         class="ml-3"
@@ -14,7 +17,10 @@
       </a>
     </div>
 
-    <div v-if="displayResetPassword" class="alert alert-warning">
+    <div
+      v-if="displayResetPassword"
+      id="walletResetPasswordWarning"
+      class="alert alert-warning">
       <i class="uiIconWarning"></i> Your wallet is not secured yet.
       <wallet-reset-modal
         class="ml-3"
@@ -85,7 +91,7 @@ import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
 import WalletBackupModal from './WalletBackupModal.vue';
 import WalletResetModal from './WalletResetModal.vue';
 
-import {setWalletBackedUp, skipWalletPasswordSet, skipWalletBackedUp} from '../WalletUtils.js';
+import {watchMetamaskAccount, setWalletBackedUp, skipWalletPasswordSet, skipWalletBackedUp} from '../WalletUtils.js';
 
 export default {
   components: {
@@ -135,8 +141,7 @@ export default {
       skipWalletPasswordSet: false,
       browserWalletExists: false,
       displayWalletSetup: false,
-      browserWalletBackedUp: true,
-      watchMetamaskAccountInterval: null,
+      browserWalletBackedUp: false,
       detectedMetamaskAccount: null,
     };
   },
@@ -159,6 +164,9 @@ export default {
       this.init();
     },
   },
+  created() {
+    document.addEventListener('exo-wallet-metamask-changed', this.refresh);
+  },
   methods: {
     refresh() {
       this.$emit('refresh');
@@ -178,8 +186,7 @@ export default {
       this.displayWalletSetup = !this.walletAddress && (!this.isSpace || this.isSpaceAdministrator);
 
       if (this.useMetamask && window.walletSettings.enablingMetamaskAccountDone) {
-        this.detectedMetamaskAccount = window.walletSettings.detectedMetamaskAccount;
-        this.$nextTick(this.watchMetamaskAccount);
+        this.$nextTick(() => watchMetamaskAccount(window.walletSettings.detectedMetamaskAccount));
       }
       this.$nextTick(() => {
         if (this.$refs.walletBrowserSetup) {
@@ -203,27 +210,6 @@ export default {
     skipWalletBackedUp() {
       skipWalletBackedUp();
       this.browserWalletBackedUp = true;
-    },
-    watchMetamaskAccount() {
-      const thiss = this;
-
-      if (this.watchMetamaskAccountInterval) {
-        clearInterval(this.watchMetamaskAccountInterval);
-      }
-
-      // In case account switched in Metamask
-      // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
-      this.watchMetamaskAccountInterval = setInterval(function() {
-        if (!thiss.useMetamask || !window || !window.ethereum) {
-          return;
-        }
-
-        window.walletSettings.detectedMetamaskAccount = window.web3 && window.web3.eth && window.web3.eth.defaultAccount && window.web3.eth.defaultAccount.toLowerCase();
-        if (window.walletSettings.detectedMetamaskAccount && window.walletSettings.detectedMetamaskAccount !== thiss.detectedMetamaskAccount) {
-          thiss.$emit('refresh');
-          return;
-        }
-      }, 2000);
     },
   },
 };

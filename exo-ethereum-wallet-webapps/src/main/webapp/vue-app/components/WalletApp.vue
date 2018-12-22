@@ -338,10 +338,7 @@ export default {
 
       return initSettings(this.isSpace)
         .then((result, error) => {
-          if (error) {
-            throw error;
-          }
-
+          this.handleError(error);
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
             this.isWalletEnabled = false;
             this.forceUpdate();
@@ -359,15 +356,11 @@ export default {
           }
         })
         .then((result, error) => {
-          if (error) {
-            throw error;
-          }
+          this.handleError(error);
           return initWeb3(this.isSpace);
         })
         .then((result, error) => {
-          if (error) {
-            throw error;
-          }
+          this.handleError(error);
           this.networkId = window.walletSettings.currentNetworkId;
           this.walletAddress = window.localWeb3.eth.defaultAccount.toLowerCase();
 
@@ -387,15 +380,11 @@ export default {
           return this.refreshBalance();
         })
         .then((result, error) => {
-          if (error) {
-            throw error;
-          }
+          this.handleError(error);
           return this.reloadContracts();
         })
         .then((result, error) => {
-          if (error) {
-            throw error;
-          }
+          this.handleError(error);
           this.loading = false;
           this.forceUpdate();
         })
@@ -439,7 +428,7 @@ export default {
               error: `Error retrieving balance of wallet: ${error}`,
             });
             this.forceUpdate();
-            throw error;
+            this.handleError(error);
           }
           const accountDetails = {
             title: 'ether',
@@ -470,17 +459,13 @@ export default {
     },
     refreshTokenBalance(accountDetail) {
       if (accountDetail) {
-        retrieveContractDetails(this.walletAddress, accountDetail, false).then(() => this.forceUpdate());
-      } else {
-        console.debug('Empty contract');
+        return retrieveContractDetails(this.walletAddress, accountDetail, false).then(() => this.forceUpdate());
       }
     },
     reloadContracts() {
       return getContractsDetails(this.walletAddress, this.networkId, false, false)
         .then((contractsDetails, error) => {
-          if (error) {
-            throw error;
-          }
+          this.handleError(error);
           if (contractsDetails && contractsDetails.length) {
             contractsDetails.forEach((contractDetails) => {
               if (contractDetails && contractDetails.address) {
@@ -515,6 +500,11 @@ export default {
     },
     maximize() {
       window.location.href = `${eXo.env.portal.context}/${eXo.env.portal.portalName}/wallet`;
+    },
+    handleError(error) {
+      if(error) {
+        throw error;
+      }
     },
     initMenuApp() {
       if (!this.isWalletEnabled || this.isSpace) {

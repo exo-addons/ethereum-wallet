@@ -1,6 +1,10 @@
 import Vue from 'vue';
 
+import WalletAppMenu from '../../main/webapp/vue-app/components/WalletAppMenu';
+
 import {getWalletApp, initApp, expectObjectValueEqual, expectCountElement} from '../TestUtils.js';
+
+const {mount} = require('@vue/test-utils');
 
 describe('WalletAppMenu.test.js', () => {
   const app = getWalletApp();
@@ -16,9 +20,18 @@ describe('WalletAppMenu.test.js', () => {
     isMaximized: true,
   };
 
+  it('WalletAppMenu default data', () => {
+    console.log('-- Test WalletAppMenu default data');
+
+    const walletAppMenu = mount(WalletAppMenu, {
+      attachToDocument: true,
+    });
+    expectObjectValueEqual(walletAppMenu.vm, defaultAttributesValues);
+  });
+
   it('WalletAppMenu data', () => {
     console.log('-- Test WalletAppMenu data');
-
+    
     expectObjectValueEqual(walletAppMenu, defaultAttributesValues);
   });
 
