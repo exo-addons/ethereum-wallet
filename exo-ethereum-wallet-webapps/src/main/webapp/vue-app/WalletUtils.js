@@ -453,6 +453,26 @@ function isWalletUnlocked(address) {
   return window.localWeb3.eth.accounts.wallet.length > 0 && window.localWeb3.eth.accounts.wallet[address] && window.localWeb3.eth.accounts.wallet[address].privateKey;
 }
 
+export function watchMetamaskAccount(address) {
+  if (window.watchMetamaskAccountInterval) {
+    clearInterval(window.watchMetamaskAccountInterval);
+  }
+
+  // In case account switched in Metamask
+  // See https://github.com/MetaMask/faq/blob/master/DEVELOPERS.md
+  window.watchMetamaskAccountInterval = setInterval(function() {
+    if (!(window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.useMetamask) || !window || !window.ethereum || !window.web3) {
+      return;
+    }
+
+    window.walletSettings.detectedMetamaskAccount = window.web3 && window.web3.eth && window.web3.eth.defaultAccount && window.web3.eth.defaultAccount.toLowerCase();
+    if (window.walletSettings.detectedMetamaskAccount && window.walletSettings.detectedMetamaskAccount !== address) {
+      document.dispatchEvent(new CustomEvent('exo-wallet-metamask-changed'));
+      return;
+    }
+  }, 2000);
+}
+
 export function setWalletBackedUp(address, backedUp) {
   if (!address || !address.length) {
     address = window.walletSettings.userPreferences.walletAddress;

@@ -120,6 +120,24 @@ describe('WalletApp.test.js', () => {
       });
   });
 
+  it('WalletApp - test open token account details', () => {
+    console.log('--- test open token account details');
+
+    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
+    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
+
+    const app = getWalletApp();
+    return initApp(app).then(() => {
+      const accountDetails = app.vm.accountsDetails[global.tokenAddress];
+      app.vm.openAccountDetail(accountDetails);
+      return app.vm.$nextTick(() => {
+        expectCountElement(app, 'accountDetail', 1);
+        app.vm.back();
+        expectCountElement(app, 'accountDetail', 0);
+      });
+    });
+  });
+
   it('WalletApp - test when disabled wallet', () => {
     console.log('--- Test when disabled wallet');
 
@@ -162,4 +180,31 @@ describe('WalletApp.test.js', () => {
       expectObjectValueEqual(app.vm, expectedData, null, true);
     });
   });
+
+  it('WalletApp - test refresh token balance', () => {
+    console.log('--- test refresh token balance');
+
+    global.walletAddress = global.walletAddresses[0];
+    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
+    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
+
+    const app = getWalletApp();
+    let contractDetails, initialBalance;
+    return initApp(app).then(() => {
+      contractDetails = app.vm.accountsDetails[global.tokenAddress];
+      initialBalance = contractDetails.balance;
+      return contractDetails.contract.methods
+        .transfer(global.walletAddresses[2], 3 * Math.pow(10, global.tokenDecimals))
+        .send({
+          from: global.walletAddresses[0],
+          gas: window.walletSettings.userPreferences.defaultGas,
+          gasPrice: window.walletSettings.maxGasPrice,
+        })
+    })
+    .then(() => app.vm.refreshTokenBalance(contractDetails))
+    .then(() => {
+      expect(Number(contractDetails.balance)).toBe(Number(initialBalance) - 3);
+    });
+  });
+
 });
