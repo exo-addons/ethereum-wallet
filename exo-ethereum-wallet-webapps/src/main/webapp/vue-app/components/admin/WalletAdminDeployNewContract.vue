@@ -236,7 +236,7 @@
 <script>
 import ContractDeploymentStep from './WalletAdminContractDeploymentStep.vue';
 
-import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault, retrieveContractDetails} from '../../WalletToken.js';
+import {createNewContractInstanceByNameAndAddress, estimateContractDeploymentGas, createNewContractInstanceByName, deployContract, saveContractAddressAsDefault, retrieveContractDetails} from '../../WalletToken.js';
 import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend, watchTransactionStatus} from '../../WalletUtils.js';
 
 export default {
@@ -346,11 +346,11 @@ export default {
       if (step > 0 && !this.gasByStep[step]) {
         if (step < 4) {
           if (this.contractAddressByStep[step] && this.contractNameByStep[step]) {
-            return newContractInstanceByNameAndAddress(this.contractNameByStep[step === 3 ? 2 : step], this.contractAddressByStep[step])
+            return createNewContractInstanceByNameAndAddress(this.contractNameByStep[step === 3 ? 2 : step], this.contractAddressByStep[step])
               .then((instance) => this.$set(this.contractInstancesByStep, step, instance) && this.$set(this.processedStep, step, true))
               .catch((e) => (this.error = `Error getting contract with address ${this.contractAddressByStep[step]}: ${e}`));
           } else if (this.contractNameByStep[step]) {
-            return newContractInstanceByName(this.contractNameByStep[step], ...this.contractDeploymentParameters)
+            return createNewContractInstanceByName(this.contractNameByStep[step], ...this.contractDeploymentParameters)
               .then((instance) => {
                 this.$set(this.contractInstancesByStep, step, instance);
                 return estimateContractDeploymentGas(instance);
@@ -454,12 +454,12 @@ export default {
                 this.saveState();
                 if (step === 3) {
                   // For Proxy contract, use ABI and BIN files of Implementation instead
-                  return newContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[step]).then((newContractInstance) => {
+                  return createNewContractInstanceByNameAndAddress(this.contractNameByStep[2], this.contractAddressByStep[step]).then((newContractInstance) => {
                     this.$set(this.contractInstancesByStep, step, newContractInstance);
                   });
                 } else {
                   // For Proxy contract, use ABI and BIN files of Implementation instead
-                  return newContractInstanceByNameAndAddress(this.contractNameByStep[step], this.contractAddressByStep[step]).then((newContractInstance) => {
+                  return createNewContractInstanceByNameAndAddress(this.contractNameByStep[step], this.contractAddressByStep[step]).then((newContractInstance) => {
                     this.$set(this.contractInstancesByStep, step, newContractInstance);
                   });
                 }

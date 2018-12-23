@@ -38,5 +38,4 @@ describe('SendFundsModal.test.js', () => {
     expectObjectValueEqual(sendFundsModal.vm, defaultAttributesValues);
     expectCountElement(sendFundsModal, 'sendFundsModal', 1);
   });
-
 });

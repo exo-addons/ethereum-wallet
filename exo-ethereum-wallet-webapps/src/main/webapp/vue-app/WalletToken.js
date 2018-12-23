@@ -325,7 +325,7 @@ export function getSavedContractDetails(address, networkId) {
 /*
  * Creates a Web3 conract instance
  */
-export function newContractInstanceByName(tokenName, ...args) {
+export function createNewContractInstanceByName(tokenName, ...args) {
   let contractBin, contractAbi;
   return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
     method: 'GET',
@@ -364,7 +364,7 @@ export function newContractInstanceByName(tokenName, ...args) {
 /*
  * Creates a Web3 conract instance
  */
-export function newContractInstanceByNameAndAddress(tokenName, tokenAddress) {
+export function createNewContractInstanceByNameAndAddress(tokenName, tokenAddress) {
   let contractBin, contractAbi;
   return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
     method: 'GET',

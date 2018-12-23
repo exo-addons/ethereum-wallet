@@ -57,8 +57,8 @@ describe('AccountDetail.test.js', () => {
     expect(accountDetail.emitted()['transaction-sent']).toBeTruthy();
   });
 
-  it('AccountDetail - test open token account details', (done) => {
-    console.log('--- test open token account details');
+  it('AccountDetail - test send ether and refresh balance', (done) => {
+    console.log('--- test send ether and refresh balance');
 
     global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
@@ -66,7 +66,8 @@ describe('AccountDetail.test.js', () => {
 
     const app = getWalletApp();
     return initApp(app).then(() => {
-      const accountDetails = app.vm.accountsDetails[global.tokenAddress];
+      const accountDetails = app.vm.accountsDetails[global.walletAddress];
+      expect(accountDetails).not.toBeNull();
       app.vm.openAccountDetail(accountDetails);
 
       return app.vm.$nextTick(() => {
@@ -74,44 +75,16 @@ describe('AccountDetail.test.js', () => {
           expectCountElement(app, 'accountDetail', 1);
 
           const accountDetailCmp = app.vm.$refs.accountDetail;
-
-          const expectedData = Object.assign({}, defaultAttributesValues);
-          expectedData.isReadOnly = true;
-          expectedData.networkId = global.testNetworkId;
-          expectedData.walletAddress = global.walletAddress;
-          expectedData.contractDetails = {
-            address: global.tokenAddress,
-            isContract: true,
-            isDefault: true,
-            defaultContract: true,
-            isApproved: true,
-            isAdmin: true,
-            isPaused: false,
-            contractType: 1,
-            contractTypeLabel: 'ERT Token',
-            networkId: global.testNetworkId,
-            name: global.tokenName,
-            title: global.tokenName,
-            symbol: global.tokenSymbol,
-            decimals: global.tokenDecimals,
-            totalSupply: global.tokenSupply,
-            sellPrice: global.tokenSellPrice,
-            owner: global.walletAddresses[0],
-            isOwner: true,
-            adminLevel: 5,
-          };
-
-          expectObjectValueEqual(accountDetailCmp, expectedData, ['icon', 'contract', 'retrievedAttributes', 'balance', 'etherBalance'], true);
-
-          expect(accountDetailCmp.contractDetails.balance > 0).toBeTruthy();
-          expect(accountDetailCmp.contractDetails.etherBalance > 0).toBeTruthy();
-
-          app.vm.back();
-          expectCountElement(app, 'accountDetail', 0);
+          const initialBalance = accountDetailCmp.contractDetails.balance;
+          return sendEther(global.walletAddress, global.walletAddresses[2], 3)
+            .then(() => accountDetailCmp.refreshBalance())
+            .then(() => {
+              expect(Number(accountDetailCmp.contractDetails.balance) < Number(initialBalance) - 3).toBeTruthy();
+              done();
+            });
         } catch (e) {
           return done(e);
         }
-        done();
       });
     });
   });
@@ -126,6 +99,7 @@ describe('AccountDetail.test.js', () => {
     const app = getWalletApp();
     return initApp(app).then(() => {
       const accountDetails = app.vm.accountsDetails[global.walletAddress];
+      expect(accountDetails).not.toBeNull();
       app.vm.openAccountDetail(accountDetails);
 
       return app.vm.$nextTick(() => {
@@ -160,22 +134,89 @@ describe('AccountDetail.test.js', () => {
     });
   });
 
+  it('AccountDetail - test open token account details', (done) => {
+    console.log('--- test open token account details');
+
+    global.walletAddress = global.walletAddresses[0];
+    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
+    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
+
+    const app = getWalletApp();
+    return initApp(app).then(() => {
+      return app.vm.$nextTick(() => {
+        try {
+          const accountDetails = app.vm.accountsDetails[global.tokenAddress];
+          expect(accountDetails).not.toBeNull();
+          app.vm.openAccountDetail(accountDetails);
+
+          return app.vm.$nextTick(() => {
+            try {
+              expectCountElement(app, 'accountDetail', 1);
+
+              const accountDetailCmp = app.vm.$refs.accountDetail;
+
+              const expectedData = Object.assign({}, defaultAttributesValues);
+              expectedData.isReadOnly = true;
+              expectedData.networkId = global.testNetworkId;
+              expectedData.walletAddress = global.walletAddress;
+              expectedData.contractDetails = {
+                address: global.tokenAddress,
+                isContract: true,
+                isDefault: true,
+                defaultContract: true,
+                isApproved: true,
+                isAdmin: true,
+                isPaused: false,
+                contractType: 1,
+                contractTypeLabel: 'ERT Token',
+                networkId: global.testNetworkId,
+                name: global.tokenName,
+                title: global.tokenName,
+                symbol: global.tokenSymbol,
+                decimals: global.tokenDecimals,
+                totalSupply: global.tokenSupply,
+                sellPrice: global.tokenSellPrice,
+                owner: global.walletAddresses[0],
+                isOwner: true,
+                adminLevel: 5,
+              };
+
+              expectObjectValueEqual(accountDetailCmp, expectedData, ['icon', 'contract', 'retrievedAttributes', 'balance', 'etherBalance'], true);
+
+              expect(accountDetailCmp.contractDetails.balance > 0).toBeTruthy();
+              expect(accountDetailCmp.contractDetails.etherBalance > 0).toBeTruthy();
+
+              app.vm.back();
+              expectCountElement(app, 'accountDetail', 0);
+            } catch (e) {
+              return done(e);
+            }
+            done();
+          });
+        } catch (e) {
+          return done(e);
+        }
+      });
+    });
+  });
+
   it('AccountDetail - test send tokens and refresh balance', (done) => {
     console.log('--- test send tokens and refresh balance');
 
     global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
-    
+
     const app = getWalletApp();
     return initApp(app).then(() => {
       const accountDetails = app.vm.accountsDetails[global.tokenAddress];
+      expect(accountDetails).not.toBeNull();
       app.vm.openAccountDetail(accountDetails);
-      
+
       return app.vm.$nextTick(() => {
         try {
           expectCountElement(app, 'accountDetail', 1);
-          
+
           const accountDetailCmp = app.vm.$refs.accountDetail;
           const initialBalance = accountDetailCmp.contractDetails.balance;
           return sendTokens(accountDetailCmp.contractDetails.contract, global.walletAddress, global.walletAddresses[2], 3)
@@ -190,36 +231,4 @@ describe('AccountDetail.test.js', () => {
       });
     });
   });
-
-  it('AccountDetail - test send ether and refresh balance', (done) => {
-    console.log('--- test send ether and refresh balance');
-
-    global.walletAddress = global.walletAddresses[0];
-    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
-    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
-    
-    const app = getWalletApp();
-    return initApp(app).then(() => {
-      const accountDetails = app.vm.accountsDetails[global.walletAddress];
-      app.vm.openAccountDetail(accountDetails);
-
-      return app.vm.$nextTick(() => {
-        try {
-          expectCountElement(app, 'accountDetail', 1);
-
-          const accountDetailCmp = app.vm.$refs.accountDetail;
-          const initialBalance = accountDetailCmp.contractDetails.balance;
-          return sendEther(global.walletAddress, global.walletAddresses[2], 3)
-            .then(() => accountDetailCmp.refreshBalance())
-            .then(() => {
-              expect(Number(accountDetailCmp.contractDetails.balance) < (Number(initialBalance) - 3)).toBeTruthy();
-              done();
-            });
-        } catch (e) {
-          return done(e);
-        }
-      });
-    });
-  });
-
 });

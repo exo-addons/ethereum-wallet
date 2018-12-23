@@ -12,7 +12,7 @@ import WalletMetamaskSetup from '../main/webapp/vue-app/components/WalletMetamas
 import WalletBackupModal from '../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../main/webapp/vue-app/components/WalletResetModal';
 
-import {deployContract, newContractInstanceByName, newContractInstanceByNameAndAddress, saveContractAddressAsDefault} from '../main/webapp/vue-app/WalletToken.js';
+import {deployContract, createNewContractInstanceByName, createNewContractInstanceByNameAndAddress, saveContractAddressAsDefault} from '../main/webapp/vue-app/WalletToken.js';
 import {saveBrowerWalletInstance} from '../main/webapp/vue-app/WalletUtils.js';
 
 const {mount} = require('@vue/test-utils');
@@ -262,165 +262,163 @@ export function deployTokenContract(adminAddress) {
   let ertDataContractInstance, ertERTTokenImplInstance, ertTokenContractInstance;
   let ertDataContractAddress, ertERTTokenImplAddress, ertTokenContractAddress;
 
-  return (
-    // Deploy Data contract
-    newContractInstanceByName('ERTTokenDataV1')
-      .then((newContractInstance, error) => {
-        if (error) {
-          throw error;
-        }
-        if (!newContractInstance) {
-          throw new Error('Cannot instantiate contract ERTTokenDataV1');
-        }
-        ertDataContractInstance = newContractInstance;
-        return deployContract(ertDataContractInstance, adminAddress, gasLimit, gasPrice);
+  // Deploy Data contract
+  return createNewContractInstanceByName('ERTTokenDataV1')
+    .then((newContractInstance, error) => {
+      if (error) {
+        throw error;
+      }
+      if (!newContractInstance) {
+        throw new Error('Cannot instantiate contract ERTTokenDataV1');
+      }
+      ertDataContractInstance = newContractInstance;
+      return deployContract(ertDataContractInstance, adminAddress, gasLimit, gasPrice);
+    })
+    .then((newContractInstance, error) => {
+      if (error) {
+        throw error;
+      }
+      if (!newContractInstance || !newContractInstance.options || !(ertDataContractAddress = newContractInstance.options.address)) {
+        throw new Error('Cannot find address of newly deployed address');
+      }
+      ertDataContractInstance = newContractInstance;
+    })
+    // Verify attributes
+    .then(() => ertDataContractInstance.methods.implementation().call())
+    .then((owner) => {
+      expect(owner).not.toBeNull();
+      expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
+    })
+    // Deploy implementation contract
+    .then(() => createNewContractInstanceByName('ERTTokenV1'))
+    .then((newContractInstance, error) => {
+      if (!newContractInstance) {
+        throw new Error('Cannot instantiate contract ERTTokenV1');
+      }
+      ertERTTokenImplInstance = newContractInstance;
+      global.contractAbi = ertERTTokenImplInstance.abi;
+      global.contractBin = ertERTTokenImplInstance.bin;
+      fs.writeFileSync('target/contractAbi', JSON.stringify(global.contractAbi));
+      fs.writeFileSync('target/contractBin', global.contractBin);
+      return deployContract(ertERTTokenImplInstance, adminAddress, gasLimit, gasPrice);
+    })
+    .then((newContractInstance, error) => {
+      if (error) {
+        throw error;
+      }
+      if (!newContractInstance || !newContractInstance.options || !(ertERTTokenImplAddress = newContractInstance.options.address)) {
+        throw new Error('Cannot find address of newly deployed address');
+      }
+      ertERTTokenImplInstance = newContractInstance;
+    })
+    // Verify attributes
+    .then(() => ertERTTokenImplInstance.methods.owner().call())
+    .then((owner) => {
+      expect(owner).not.toBeNull();
+      expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
+    })
+    // Deploy proxy contract
+    .then(() => createNewContractInstanceByName('ERTToken', ertERTTokenImplAddress, ertDataContractAddress))
+    .then((newContractInstance, error) => {
+      ertERTTokenImplInstance = newContractInstance;
+      if (!newContractInstance) {
+        throw new Error('Cannot instantiate contract ERTToken');
+      }
+      ertTokenContractInstance = newContractInstance;
+      return deployContract(ertTokenContractInstance, adminAddress, gasLimit, gasPrice);
+    })
+    .then((newContractInstance, error) => {
+      if (error) {
+        throw error;
+      }
+      if (!newContractInstance || !newContractInstance.options || !(ertTokenContractAddress = newContractInstance.options.address)) {
+        throw new Error('Cannot find address of newly deployed address');
+      }
+      ertTokenContractInstance = newContractInstance;
+    })
+    // Verify attributes
+    .then(() => ertTokenContractInstance.methods.implementationAddress().call())
+    .then((implementationAddress) => {
+      expect(implementationAddress).not.toBeNull();
+      expect(implementationAddress.toLowerCase()).toBe(ertERTTokenImplAddress.toLowerCase());
+    })
+    .then(() => ertTokenContractInstance.methods.getDataAddress(1).call())
+    .then((dataAddress) => {
+      expect(dataAddress).not.toBeNull();
+      expect(dataAddress.toLowerCase()).toBe(ertDataContractAddress.toLowerCase());
+    })
+    .then(() => ertTokenContractInstance.methods.owner().call())
+    .then((owner) => {
+      expect(owner).not.toBeNull();
+      expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
+    })
+    // Transfer ownership to proxy and real implementation
+    .then(() =>
+      ertDataContractInstance.methods.transferDataOwnership(ertTokenContractAddress, ertERTTokenImplAddress).send({
+        from: adminAddress,
+        gasPrice: gasPrice,
+        gas: gasLimit,
       })
-      .then((newContractInstance, error) => {
-        if (error) {
-          throw error;
-        }
-        if (!newContractInstance || !newContractInstance.options || !(ertDataContractAddress = newContractInstance.options.address)) {
-          throw new Error('Cannot find address of newly deployed address');
-        }
-        ertDataContractInstance = newContractInstance;
+    )
+    // Refresh Proxy Token contract instance with Impl ABI
+    .then(() => createNewContractInstanceByNameAndAddress('ERTTokenV1', ertTokenContractAddress))
+    .then((contractInstance) => (ertTokenContractInstance = contractInstance))
+    // Initialize Token attributes
+    .then(() =>
+      ertTokenContractInstance.methods.initialize(global.tokenSupply, global.tokenName, global.tokenDecimals, global.tokenSymbol).send({
+        from: adminAddress,
+        gasPrice: gasPrice,
+        gas: gasLimit,
       })
-      // Verify attributes
-      .then(() => ertDataContractInstance.methods.implementation().call())
-      .then((owner) => {
-        expect(owner).not.toBeNull();
-        expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
-      })
-      // Deploy implementation contract
-      .then(() => newContractInstanceByName('ERTTokenV1'))
-      .then((newContractInstance, error) => {
-        if (!newContractInstance) {
-          throw new Error('Cannot instantiate contract ERTTokenV1');
-        }
-        ertERTTokenImplInstance = newContractInstance;
-        global.contractAbi = ertERTTokenImplInstance.abi;
-        global.contractBin = ertERTTokenImplInstance.bin;
-        fs.writeFileSync('target/contractAbi', JSON.stringify(global.contractAbi));
-        fs.writeFileSync('target/contractBin', global.contractBin);
-        return deployContract(ertERTTokenImplInstance, adminAddress, gasLimit, gasPrice);
-      })
-      .then((newContractInstance, error) => {
-        if (error) {
-          throw error;
-        }
-        if (!newContractInstance || !newContractInstance.options || !(ertERTTokenImplAddress = newContractInstance.options.address)) {
-          throw new Error('Cannot find address of newly deployed address');
-        }
-        ertERTTokenImplInstance = newContractInstance;
-      })
-      // Verify attributes
-      .then(() => ertERTTokenImplInstance.methods.owner().call())
-      .then((owner) => {
-        expect(owner).not.toBeNull();
-        expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
-      })
-      // Deploy proxy contract
-      .then(() => newContractInstanceByName('ERTToken', ertERTTokenImplAddress, ertDataContractAddress))
-      .then((newContractInstance, error) => {
-        ertERTTokenImplInstance = newContractInstance;
-        if (!newContractInstance) {
-          throw new Error('Cannot instantiate contract ERTToken');
-        }
-        ertTokenContractInstance = newContractInstance;
-        return deployContract(ertTokenContractInstance, adminAddress, gasLimit, gasPrice);
-      })
-      .then((newContractInstance, error) => {
-        if (error) {
-          throw error;
-        }
-        if (!newContractInstance || !newContractInstance.options || !(ertTokenContractAddress = newContractInstance.options.address)) {
-          throw new Error('Cannot find address of newly deployed address');
-        }
-        ertTokenContractInstance = newContractInstance;
-      })
-      // Verify attributes
-      .then(() => ertTokenContractInstance.methods.implementationAddress().call())
-      .then((implementationAddress) => {
-        expect(implementationAddress).not.toBeNull();
-        expect(implementationAddress.toLowerCase()).toBe(ertERTTokenImplAddress.toLowerCase());
-      })
-      .then(() => ertTokenContractInstance.methods.getDataAddress(1).call())
-      .then((dataAddress) => {
-        expect(dataAddress).not.toBeNull();
-        expect(dataAddress.toLowerCase()).toBe(ertDataContractAddress.toLowerCase());
-      })
-      .then(() => ertTokenContractInstance.methods.owner().call())
-      .then((owner) => {
-        expect(owner).not.toBeNull();
-        expect(owner.toLowerCase()).toBe(adminAddress.toLowerCase());
-      })
-      // Transfer ownership to proxy and real implementation
-      .then(() =>
-        ertDataContractInstance.methods.transferDataOwnership(ertTokenContractAddress, ertERTTokenImplAddress).send({
-          from: adminAddress,
-          gasPrice: gasPrice,
-          gas: gasLimit,
-        })
-      )
-      // Refresh Proxy Token contract instance with Impl ABI
-      .then(() => newContractInstanceByNameAndAddress('ERTTokenV1', ertTokenContractAddress))
-      .then((contractInstance) => (ertTokenContractInstance = contractInstance))
-      // Initialize Token attributes
-      .then(() =>
-        ertTokenContractInstance.methods.initialize(global.tokenSupply, global.tokenName, global.tokenDecimals, global.tokenSymbol).send({
-          from: adminAddress,
-          gasPrice: gasPrice,
-          gas: gasLimit,
-        })
-      )
-      // Verify attributes
-      .then(() => ertTokenContractInstance.methods.totalSupply().call())
-      .then((totalSupply) => {
-        expect(totalSupply).not.toBeNull();
-        expect(Number(totalSupply)).toBe(Number(global.tokenSupply));
-      })
-      .then(() => ertTokenContractInstance.methods.name().call())
-      .then((name) => {
-        expect(name).not.toBeNull();
-        expect(name).toBe(global.tokenName);
-      })
-      .then(() => ertTokenContractInstance.methods.decimals().call())
-      .then((decimals) => {
-        expect(decimals).not.toBeNull();
-        expect(Number(decimals)).toBe(Number(global.tokenDecimals));
-      })
-      .then(() => ertTokenContractInstance.methods.symbol().call())
-      .then((symbol) => {
-        expect(symbol).not.toBeNull();
-        expect(symbol).toBe(global.tokenSymbol);
-      })
-      .then(() => ertTokenContractInstance.methods.balanceOf(adminAddress).call())
-      .then((adminBalance) => {
-        expect(adminBalance).not.toBeNull();
-        expect(Number(adminBalance)).toBe(Number(global.tokenSupply));
-      })
+    )
+    // Verify attributes
+    .then(() => ertTokenContractInstance.methods.totalSupply().call())
+    .then((totalSupply) => {
+      expect(totalSupply).not.toBeNull();
+      expect(Number(totalSupply)).toBe(Number(global.tokenSupply));
+    })
+    .then(() => ertTokenContractInstance.methods.name().call())
+    .then((name) => {
+      expect(name).not.toBeNull();
+      expect(name).toBe(global.tokenName);
+    })
+    .then(() => ertTokenContractInstance.methods.decimals().call())
+    .then((decimals) => {
+      expect(decimals).not.toBeNull();
+      expect(Number(decimals)).toBe(Number(global.tokenDecimals));
+    })
+    .then(() => ertTokenContractInstance.methods.symbol().call())
+    .then((symbol) => {
+      expect(symbol).not.toBeNull();
+      expect(symbol).toBe(global.tokenSymbol);
+    })
+    .then(() => ertTokenContractInstance.methods.balanceOf(adminAddress).call())
+    .then((adminBalance) => {
+      expect(adminBalance).not.toBeNull();
+      expect(Number(adminBalance)).toBe(Number(global.tokenSupply));
+    })
 
-      // Save contract details
-      .then(() =>
-        saveContractAddressAsDefault({
-          networkId: global.testNetworkId,
-          address: ertTokenContractAddress,
-          isContract: true,
-          name: global.tokenName,
-          symbol: global.tokenSymbol,
-          decimals: global.tokenDecimals,
-        })
-      )
-      // Return Token address
-      .then(() => {
-        global.tokenAddress = ertTokenContractAddress.toLowerCase();
-        fs.writeFileSync('target/contractAddress.txt', global.tokenAddress);
-        return ertTokenContractAddress;
+    // Save contract details
+    .then(() =>
+      saveContractAddressAsDefault({
+        networkId: global.testNetworkId,
+        address: ertTokenContractAddress,
+        isContract: true,
+        name: global.tokenName,
+        symbol: global.tokenSymbol,
+        decimals: global.tokenDecimals,
       })
-      .catch((e) => {
-        console.error('Error deploying contracts', e);
-        throw e;
-      })
-  );
+    )
+    // Return Token address
+    .then(() => {
+      global.tokenAddress = ertTokenContractAddress.toLowerCase();
+      fs.writeFileSync('target/contractAddress.txt', global.tokenAddress);
+      return ertTokenContractAddress;
+    })
+    .catch((e) => {
+      console.error('Error deploying contracts', e);
+      throw e;
+    });
 }
 
 export function getDefaultSettings() {

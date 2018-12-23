@@ -1,6 +1,6 @@
 <template>
   <v-flex
-    v-if="contractDetails && contractDetails.title"
+    v-if="contractDetails && contractDetails.icon"
     id="accountDetail"
     class="text-xs-center white layout column">
     <v-card-title class="align-start accountDetailSummary">
