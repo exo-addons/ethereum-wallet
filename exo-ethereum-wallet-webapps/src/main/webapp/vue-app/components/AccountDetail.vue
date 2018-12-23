@@ -150,7 +150,7 @@ export default {
     fiatSymbol: {
       type: String,
       default: function() {
-        return null;
+        return '$';
       },
     },
     selectedTransactionHash: {
@@ -176,7 +176,7 @@ export default {
     return {
       // Avoid refreshing list and balance twice
       refreshing: false,
-      enableDelegation: true,
+      enableDelegation: false,
       error: null,
     };
   },
@@ -214,9 +214,6 @@ export default {
           this.$forceUpdate();
         }
       });
-    },
-    isEtherBalanceSame(balance) {
-      return this.contractDetails.isContract ? this.contractDetails.etherBalance === balance : this.contractDetails.balance === balance;
     },
     newTransactionPending(transaction, contractDetails) {
       if (this.$refs.transactionsList) {

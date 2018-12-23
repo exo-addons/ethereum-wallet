@@ -31,7 +31,7 @@ describe('WalletAppMenu.test.js', () => {
 
   it('WalletAppMenu data', () => {
     console.log('-- Test WalletAppMenu data');
-    
+
     expectObjectValueEqual(walletAppMenu, defaultAttributesValues);
   });
 

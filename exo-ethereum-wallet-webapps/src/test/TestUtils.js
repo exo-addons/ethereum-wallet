@@ -127,26 +127,30 @@ export function expectObjectValueEqual(value, expected, ignoredKeys, notStrictOb
 
   const errors = [];
 
-  Object.keys(expected).forEach((key) => {
-    if (ignoredKeys && ignoredKeys.indexOf(key) >= 0) {
-      return;
-    }
-    try {
-      expect(value.hasOwnProperty(key) || (value.hasOwnProperty('_computedWatchers') && value['_computedWatchers'] && Object.keys(value['_computedWatchers']).indexOf(key) >= 0) || (value.hasOwnProperty('_props') && value['_props'] && Object.keys(value['_props']).indexOf(key) >= 0)).toBeTruthy();
-    } catch (e) {
-      console.error("can't find element with key in result", key);
-      errors.push(e);
-      return;
-    }
-    compareValues(key, expected[key], value[key], notStrictObjectComparaison, errors);
-  });
+  try {
+    Object.keys(expected).forEach((key) => {
+      if (ignoredKeys && ignoredKeys.indexOf(key) >= 0) {
+        return;
+      }
+      try {
+        expect(value.hasOwnProperty(key) || (value.hasOwnProperty('_computedWatchers') && value['_computedWatchers'] && Object.keys(value['_computedWatchers']).indexOf(key) >= 0) || (value.hasOwnProperty('_props') && value['_props'] && Object.keys(value['_props']).indexOf(key) >= 0)).toBeTruthy();
+      } catch (e) {
+        console.error(`Can't find element with key ${key} in result`);
+        errors.push(e);
+        return;
+      }
+      compareValues(key, expected[key], value[key], ignoredKeys, notStrictObjectComparaison, errors);
+    });
+  } catch (e) {
+    errors.push(e);
+  }
 
   if (errors.length) {
     throw new Error('there is some errors in test, see log below', ...errors);
   }
 }
 
-function compareValues(key, expectedValue, receivedValue, notStrictObjectComparaison, errors) {
+function compareValues(key, expectedValue, receivedValue, ignoredKeys, notStrictObjectComparaison, errors) {
   try {
     if (typeof expectedValue === 'boolean') {
       // Boolean
@@ -176,12 +180,15 @@ function compareValues(key, expectedValue, receivedValue, notStrictObjectCompara
       // Object
       if (notStrictObjectComparaison) {
         Object.keys(expectedValue).forEach((subKey) => {
+          if (ignoredKeys && ignoredKeys.indexOf(subKey) >= 0) {
+            return;
+          }
           if (!receivedValue || !receivedValue.hasOwnProperty(subKey)) {
             console.error(`receivedValue doesn't have sub-key ${subKey}`);
             throw new Error(`Wrong value for sub-key = ${subKey} \r\n -- expectedValue -- \r\n ${expectedValue} \r\n -- found -- \r\n ${JSON.parse(stringify(receivedValue))}`);
           }
-          const error = compareValues(subKey, expectedValue[subKey], receivedValue[subKey], notStrictObjectComparaison);
-          if(error) {
+          const error = compareValues(subKey, expectedValue[subKey], receivedValue[subKey], ignoredKeys, notStrictObjectComparaison, errors);
+          if (error) {
             errors.push(error);
           }
         });
@@ -194,15 +201,28 @@ function compareValues(key, expectedValue, receivedValue, notStrictObjectCompara
       return;
     }
   } catch (e) {
-    try {
-      console.error('Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
-    } catch (error) {
-      // Workaround for circular dependency
-      delete receivedValue.contract;
-      console.error('Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
-    }
+    console.warn('Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
     errors.push(e);
   }
+}
+
+export function sendEther(from, to, amount) {
+  amount = window.localWeb3.utils.toWei(String(amount), 'ether').toString();
+  return window.localWeb3.eth.sendTransaction({
+    from: from,
+    to: to,
+    value: amount,
+    gas: window.walletSettings.userPreferences.defaultGas,
+    gasPrice: window.walletSettings.maxGasPrice,
+  });
+}
+
+export function sendTokens(contract, from, to, amount) {
+  return contract.methods.transfer(to, amount * Math.pow(10, global.tokenDecimals)).send({
+    from: from,
+    gas: window.walletSettings.userPreferences.defaultGas,
+    gasPrice: window.walletSettings.maxGasPrice,
+  });
 }
 
 export function initiateBrowserWallet(address, password, isSpace, generated, backedUp) {
