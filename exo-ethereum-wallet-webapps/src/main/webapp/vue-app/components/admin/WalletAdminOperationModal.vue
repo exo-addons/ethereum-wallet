@@ -126,11 +126,11 @@
 </template>
 
 <script>
-import AddressAutoComplete from './AddressAutoComplete.vue';
-import GasPriceChoice from './GasPriceChoice.vue';
+import AddressAutoComplete from '../AddressAutoComplete.vue';
+import GasPriceChoice from '../GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, setDraggable, watchTransactionStatus, estimateTransactionFeeFiat} from '../WalletUtils.js';
-import {saveTransactionDetails} from '../WalletTransactions.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, setDraggable, watchTransactionStatus, estimateTransactionFeeFiat} from '../../WalletUtils.js';
+import {saveTransactionDetails} from '../../WalletTransactions.js';
 
 export default {
   components: {

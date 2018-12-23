@@ -2,7 +2,9 @@ import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initi
 
 import AccountDetail from '../../main/webapp/vue-app/components/AccountDetail';
 
-const {mount} = require('@vue/test-utils');
+import {mount} from '@vue/test-utils';
+
+jest.setTimeout(30000);
 
 describe('AccountDetail.test.js', () => {
   const app = getWalletApp();

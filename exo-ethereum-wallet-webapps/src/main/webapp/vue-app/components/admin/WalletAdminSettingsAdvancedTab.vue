@@ -54,7 +54,7 @@
   </v-card>
 </template>
 <script>
-import {gasToFiat} from '../WalletUtils.js';
+import {gasToFiat} from '../../WalletUtils.js';
 
 export default {
   props: {

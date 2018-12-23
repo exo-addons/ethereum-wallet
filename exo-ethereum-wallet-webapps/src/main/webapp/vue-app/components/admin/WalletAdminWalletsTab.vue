@@ -125,10 +125,10 @@
   </v-card>
 </template>
 <script>
-import SendFundsModal from './SendFundsModal.vue';
-import AccountDetail from './AccountDetail.vue';
+import SendFundsModal from '../SendFundsModal.vue';
+import AccountDetail from '../AccountDetail.vue';
 
-import {getWallets, computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
+import {getWallets, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
 export default {
   components: {

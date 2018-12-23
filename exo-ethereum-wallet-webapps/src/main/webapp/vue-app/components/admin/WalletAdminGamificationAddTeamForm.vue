@@ -218,10 +218,10 @@
 </template>
 
 <script>
-import AddressAutoComplete from './AddressAutoComplete.vue';
+import AddressAutoComplete from '../AddressAutoComplete.vue';
 
-import {searchSpaces, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
-import {saveTeam} from '../WalletGamificationServices.js';
+import {searchSpaces, searchUserOrSpaceObject} from '../../WalletAddressRegistry.js';
+import {saveTeam} from '../../WalletGamificationServices.js';
 
 export default {
   components: {

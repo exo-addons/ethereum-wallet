@@ -96,7 +96,7 @@
   </v-card>
 </template>
 <script>
-import {searchUsers} from '../WalletAddressRegistry.js';
+import {searchUsers} from '../../WalletAddressRegistry.js';
 
 export default {
   props: {

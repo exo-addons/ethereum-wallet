@@ -2,7 +2,9 @@ import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initi
 
 import WalletSetup from '../../main/webapp/vue-app/components/WalletSetup';
 
-const {mount} = require('@vue/test-utils');
+import {mount} from '@vue/test-utils';
+
+jest.setTimeout(30000);
 
 describe('WalletSetup.test.js', () => {
   const app = getWalletApp();

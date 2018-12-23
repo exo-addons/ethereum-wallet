@@ -213,11 +213,11 @@
 </template>
 
 <script>
-import SendRewardModal from './SendRewardModal.vue';
+import SendRewardModal from './WalletAdminSendRewardModal.vue';
 
-import {getKudosContract, getKudosBudget, saveKudosContract, saveKudosTotalBudget} from '../WalletKudosServices.js';
-import {getPeriodRewardTransactions} from '../WalletRewardServices.js';
-import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
+import {getKudosContract, getKudosBudget, saveKudosContract, saveKudosTotalBudget} from '../../WalletKudosServices.js';
+import {getPeriodRewardTransactions} from '../../WalletRewardServices.js';
+import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, getTransactionEtherscanlink} from '../../WalletUtils.js';
 
 export default {
   components: {

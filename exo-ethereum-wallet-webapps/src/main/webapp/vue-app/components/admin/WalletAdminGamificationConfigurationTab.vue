@@ -139,7 +139,7 @@
 </template>
 
 <script>
-import {saveSettings} from '../WalletGamificationServices.js';
+import {saveSettings} from '../../WalletGamificationServices.js';
 
 export default {
   props: {

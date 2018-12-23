@@ -1,5 +1,5 @@
 <template>
-  <v-flex class="pt-4">
+  <v-flex id="sendFundsForm" class="pt-4">
     <div id="sendFundsFormSlot" class="pl-3 pr-3">
       <slot></slot>
     </div>

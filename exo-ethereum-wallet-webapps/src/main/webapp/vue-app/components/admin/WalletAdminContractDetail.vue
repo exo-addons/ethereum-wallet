@@ -287,13 +287,13 @@
 </template>
 
 <script>
-import SendEtherModal from './SendEtherModal.vue';
+import SendEtherModal from '../SendEtherModal.vue';
 import ContractAdminModal from './WalletAdminOperationModal.vue';
-import TransactionsList from './TransactionsList.vue';
-import WalletAddress from './WalletAddress.vue';
+import TransactionsList from '../TransactionsList.vue';
+import WalletAddress from '../WalletAddress.vue';
 
-import {addTransaction} from '../WalletTransactions.js';
-import {computeBalance, convertTokenAmountReceived} from '../WalletUtils.js';
+import {addTransaction} from '../../WalletTransactions.js';
+import {computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
 export default {
   components: {

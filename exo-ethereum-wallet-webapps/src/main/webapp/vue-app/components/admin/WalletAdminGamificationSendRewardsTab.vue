@@ -160,11 +160,11 @@
 </template>
 
 <script>
-import SendRewardModal from './SendRewardModal.vue';
-import ProfileChip from './ProfileChip.vue';
+import SendRewardModal from './WalletAdminSendRewardModal.vue';
+import ProfileChip from '../ProfileChip.vue';
 
-import {getPeriodRewardTransactions} from '../WalletRewardServices.js';
-import {watchTransactionStatus} from '../WalletUtils.js';
+import {getPeriodRewardTransactions} from '../../WalletRewardServices.js';
+import {watchTransactionStatus} from '../../WalletUtils.js';
 
 export default {
   components: {

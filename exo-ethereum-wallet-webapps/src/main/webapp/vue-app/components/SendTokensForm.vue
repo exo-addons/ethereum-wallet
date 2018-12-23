@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card id="sendTokenForm">
     <v-card-text class="pt-0">
       <div v-if="error && !loading" class="alert alert-error v-content">
         <i class="uiIconError"></i>{{ error }}
