@@ -18,7 +18,7 @@ module.exports = () => {
       const removeFolderRecursive = (dirPath) => {
         if (fs.existsSync(dirPath)) {
           fs.readdirSync(dirPath).forEach((filePath, index) => {
-            filePath = `${dirPath  }/${  filePath}`;
+            filePath = `${dirPath}/${filePath}`;
             if (fs.lstatSync(filePath).isDirectory()) {
               removeFolderRecursive(filePath);
             } else {

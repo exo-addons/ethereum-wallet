@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, getTokenAccountDetails, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, getTokenAccountDetails, initiateBrowserWallet, sendTokens} from '../TestUtils.js';
 
 describe('WalletApp.test.js', () => {
   let app;
@@ -120,7 +120,7 @@ describe('WalletApp.test.js', () => {
       });
   });
 
-  it('WalletApp - test open token account details', () => {
+  it('WalletApp - test open token account details', (done) => {
     console.log('--- test open token account details');
 
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
@@ -131,9 +131,14 @@ describe('WalletApp.test.js', () => {
       const accountDetails = app.vm.accountsDetails[global.tokenAddress];
       app.vm.openAccountDetail(accountDetails);
       return app.vm.$nextTick(() => {
-        expectCountElement(app, 'accountDetail', 1);
-        app.vm.back();
-        expectCountElement(app, 'accountDetail', 0);
+        try {
+          expectCountElement(app, 'accountDetail', 1);
+          app.vm.back();
+          expectCountElement(app, 'accountDetail', 0);
+        } catch (e) {
+          return done(e);
+        }
+        done();
       });
     });
   });
@@ -190,21 +195,15 @@ describe('WalletApp.test.js', () => {
 
     const app = getWalletApp();
     let contractDetails, initialBalance;
-    return initApp(app).then(() => {
-      contractDetails = app.vm.accountsDetails[global.tokenAddress];
-      initialBalance = contractDetails.balance;
-      return contractDetails.contract.methods
-        .transfer(global.walletAddresses[2], 3 * Math.pow(10, global.tokenDecimals))
-        .send({
-          from: global.walletAddresses[0],
-          gas: window.walletSettings.userPreferences.defaultGas,
-          gasPrice: window.walletSettings.maxGasPrice,
-        })
-    })
-    .then(() => app.vm.refreshTokenBalance(contractDetails))
-    .then(() => {
-      expect(Number(contractDetails.balance)).toBe(Number(initialBalance) - 3);
-    });
+    return initApp(app)
+      .then(() => {
+        contractDetails = app.vm.accountsDetails[global.tokenAddress];
+        initialBalance = contractDetails.balance;
+        return sendTokens(contractDetails.contract, global.walletAddress, global.walletAddresses[2], 3);
+      })
+      .then(() => app.vm.refreshTokenBalance(contractDetails))
+      .then(() => {
+        expect(Number(contractDetails.balance)).toBe(Number(initialBalance) - 3);
+      });
   });
-
 });
