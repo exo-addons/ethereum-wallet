@@ -234,7 +234,7 @@
 </template>
 
 <script>
-import ContractDeploymentStep from './ContractDeploymentStep.vue';
+import ContractDeploymentStep from './WalletAdminContractDeploymentStep.vue';
 
 import {newContractInstanceByNameAndAddress, estimateContractDeploymentGas, newContractInstanceByName, deployContract, saveContractAddressAsDefault, retrieveContractDetails} from '../WalletToken.js';
 import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend, watchTransactionStatus} from '../WalletUtils.js';

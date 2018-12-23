@@ -288,7 +288,7 @@
 
 <script>
 import SendEtherModal from './SendEtherModal.vue';
-import ContractAdminModal from './ContractAdminModal.vue';
+import ContractAdminModal from './WalletAdminOperationModal.vue';
 import TransactionsList from './TransactionsList.vue';
 import WalletAddress from './WalletAddress.vue';
 
