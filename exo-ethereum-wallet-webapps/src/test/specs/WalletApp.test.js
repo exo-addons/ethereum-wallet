@@ -182,7 +182,7 @@ describe('WalletApp.test.js', () => {
     expectedData.accountsDetails[global.tokenAddress] = getTokenAccountDetails();
 
     return initApp(app).then(() => {
-      expectObjectValueEqual(app.vm, expectedData, null, true);
+      expectObjectValueEqual(app.vm, expectedData, ['etherBalance', 'totalBalance', 'totalFiatBalance'], true);
     });
   });
 

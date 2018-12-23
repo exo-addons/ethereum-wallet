@@ -111,10 +111,10 @@
   </v-card>
 </template>
 <script>
-import DeployNewContract from './DeployNewContract.vue';
-import AddContractModal from './AddContractModal.vue';
+import DeployNewContract from './WalletAdminDeployNewContract.vue';
+import AddContractModal from './WalletAdminAddContractModal.vue';
 import WalletAddress from './WalletAddress.vue';
-import ContractDetail from './ContractDetail.vue';
+import ContractDetail from './WalletAdminContractDetail.vue';
 
 import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
 import {getTransactionReceipt, watchTransactionStatus} from '../WalletUtils.js';
