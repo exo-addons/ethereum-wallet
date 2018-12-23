@@ -480,6 +480,10 @@ export default {
         });
     },
     openAccountDetail(accountDetails, hash) {
+      if(!accountDetails) {
+        console.error(`Can't open empty account details`);
+        return;
+      }
       if (!accountDetails.error) {
         this.selectedAccount = accountDetails;
         this.selectedTransactionHash = hash;
