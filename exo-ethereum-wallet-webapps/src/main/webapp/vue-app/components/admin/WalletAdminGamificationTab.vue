@@ -140,8 +140,8 @@ import GamificationTeamsTab from './WalletAdminGamificationTeamsTab.vue';
 import SendRewardsTab from './WalletAdminGamificationSendRewardsTab.vue';
 import ConfigurationTab from './WalletAdminGamificationConfigurationTab.vue';
 
-import {getSettings, getGamificationPoints} from '../WalletGamificationServices.js';
-import {getPeriodRewardDates} from '../WalletRewardServices.js';
+import {getSettings, getGamificationPoints} from '../../WalletGamificationServices.js';
+import {getPeriodRewardDates} from '../../WalletRewardServices.js';
 
 export default {
   components: {

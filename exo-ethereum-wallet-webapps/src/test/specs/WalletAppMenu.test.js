@@ -4,7 +4,9 @@ import WalletAppMenu from '../../main/webapp/vue-app/components/WalletAppMenu';
 
 import {getWalletApp, initApp, expectObjectValueEqual, expectCountElement} from '../TestUtils.js';
 
-const {mount} = require('@vue/test-utils');
+import {mount} from '@vue/test-utils';
+
+jest.setTimeout(30000);
 
 describe('WalletAppMenu.test.js', () => {
   const app = getWalletApp();

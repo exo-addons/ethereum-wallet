@@ -47,8 +47,8 @@
 </template>
 
 <script>
-import {saveContractAddress} from '../WalletToken.js';
-import {setDraggable} from '../WalletUtils.js';
+import {saveContractAddress} from '../../WalletToken.js';
+import {setDraggable} from '../../WalletUtils.js';
 
 export default {
   props: {

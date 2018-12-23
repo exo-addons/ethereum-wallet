@@ -1,7 +1,8 @@
-const GasPriceChoice = require('../../main/webapp/vue-app/components/GasPriceChoice');
-const {getWalletApp, initApp} = require('../TestUtils.js');
+import GasPriceChoice from '../../main/webapp/vue-app/components/GasPriceChoice';
 
-const {shallowMount} = require('@vue/test-utils');
+import {getWalletApp, initApp} from '../TestUtils.js';
+
+import {shallowMount} from '@vue/test-utils';
 
 describe('GasPriceChoice.test.js', () => {
   let app;

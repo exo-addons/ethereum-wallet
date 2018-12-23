@@ -198,13 +198,13 @@
 </template>
 
 <script>
-import GeneralTab from './WalletAdminSettingsTab.vue';
-import InitialFundsTab from './WalletAdminInitialFundsTab.vue';
-import AdvancedSettingsTab from './WalletAdminSettingsAdvancedTab.vue';
-import ContractsTab from './WalletAdminContractsTab.vue';
-import WalletsTab from './WalletAdminWalletsTab.vue';
-import KudosTab from './WalletAdminKudosTab.vue';
-import GamificationTab from './WalletAdminGamificationTab.vue';
+import GeneralTab from './admin/WalletAdminSettingsTab.vue';
+import InitialFundsTab from './admin/WalletAdminInitialFundsTab.vue';
+import AdvancedSettingsTab from './admin/WalletAdminSettingsAdvancedTab.vue';
+import ContractsTab from './admin/WalletAdminContractsTab.vue';
+import WalletsTab from './admin/WalletAdminWalletsTab.vue';
+import KudosTab from './admin/WalletAdminKudosTab.vue';
+import GamificationTab from './admin/WalletAdminGamificationTab.vue';
 
 import WalletSetup from './WalletSetup.vue';
 import WalletSummary from './WalletSummary.vue';

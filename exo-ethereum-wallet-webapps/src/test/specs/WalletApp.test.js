@@ -1,5 +1,7 @@
 import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, getTokenAccountDetails, initiateBrowserWallet, sendTokens} from '../TestUtils.js';
 
+jest.setTimeout(30000);
+
 describe('WalletApp.test.js', () => {
   let app;
 
@@ -182,7 +184,7 @@ describe('WalletApp.test.js', () => {
     expectedData.accountsDetails[global.tokenAddress] = getTokenAccountDetails();
 
     return initApp(app).then(() => {
-      expectObjectValueEqual(app.vm, expectedData, ['etherBalance', 'totalBalance', 'totalFiatBalance'], true);
+      expectObjectValueEqual(app.vm, expectedData, ['etherBalance', 'totalBalance', 'totalFiatBalance', 'balance', 'balanceFiat'], true);
     });
   });
 

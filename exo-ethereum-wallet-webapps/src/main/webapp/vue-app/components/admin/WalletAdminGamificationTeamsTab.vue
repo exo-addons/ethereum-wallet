@@ -266,7 +266,7 @@
 <script>
 import AddTeamForm from './WalletAdminGamificationAddTeamForm.vue';
 
-import {getTeams, removeTeam} from '../WalletGamificationServices.js';
+import {getTeams, removeTeam} from '../../WalletGamificationServices.js';
 
 export default {
   components: {

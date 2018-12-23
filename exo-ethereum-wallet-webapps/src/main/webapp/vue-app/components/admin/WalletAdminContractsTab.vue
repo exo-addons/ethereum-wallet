@@ -113,11 +113,11 @@
 <script>
 import DeployNewContract from './WalletAdminDeployNewContract.vue';
 import AddContractModal from './WalletAdminAddContractModal.vue';
-import WalletAddress from './WalletAddress.vue';
+import WalletAddress from '../WalletAddress.vue';
 import ContractDetail from './WalletAdminContractDetail.vue';
 
-import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../WalletToken.js';
-import {getTransactionReceipt, watchTransactionStatus} from '../WalletUtils.js';
+import {getContractsDetails, removeContractAddressFromDefault, getContractDeploymentTransactionsInProgress, removeContractDeploymentTransactionsInProgress, saveContractAddress} from '../../WalletToken.js';
+import {getTransactionReceipt, watchTransactionStatus} from '../../WalletUtils.js';
 
 export default {
   components: {

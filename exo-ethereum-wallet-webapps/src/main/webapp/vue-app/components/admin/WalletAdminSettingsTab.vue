@@ -127,7 +127,7 @@
   </v-card>
 </template>
 <script>
-import {searchSpaces} from '../WalletAddressRegistry.js';
+import {searchSpaces} from '../../WalletAddressRegistry.js';
 
 export default {
   props: {

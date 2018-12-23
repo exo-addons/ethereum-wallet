@@ -62,9 +62,9 @@
 </template>
 
 <script>
-import WalletAddress from './WalletAddress.vue';
+import WalletAddress from '../WalletAddress.vue';
 
-import {getAddressEtherscanlink, getTransactionEtherscanlink} from '../WalletUtils.js';
+import {getAddressEtherscanlink, getTransactionEtherscanlink} from '../../WalletUtils.js';
 
 export default {
   components: {

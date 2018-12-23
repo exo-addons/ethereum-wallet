@@ -70,11 +70,11 @@
 </template>
 
 <script>
-import GasPriceChoice from './GasPriceChoice.vue';
+import GasPriceChoice from '../GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
-import {saveTransactionDetails} from '../WalletTransactions.js';
-import {savePeriodRewardTransactions, savePeriodRewardTransaction} from '../WalletRewardServices.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../../WalletUtils.js';
+import {saveTransactionDetails} from '../../WalletTransactions.js';
+import {savePeriodRewardTransactions, savePeriodRewardTransaction} from '../../WalletRewardServices.js';
 
 export default {
   components: {

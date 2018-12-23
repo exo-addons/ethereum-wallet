@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import SendRewardForm from './SendRewardForm.vue';
+import SendRewardForm from './WalletAdminSendRewardForm.vue';
 
 export default {
   components: {
