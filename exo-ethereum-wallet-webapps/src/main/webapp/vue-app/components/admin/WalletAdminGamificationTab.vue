@@ -179,7 +179,7 @@ export default {
     return {
       loading: false,
       error: null,
-      selectedDate: new Date().toISOString().substr(0, 10),
+      selectedDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
       selectedDateMenu: false,
       displayDateSelector: true,
       contractAddress: null,

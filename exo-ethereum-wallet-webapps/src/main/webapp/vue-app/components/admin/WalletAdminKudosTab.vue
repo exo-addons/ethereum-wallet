@@ -397,7 +397,8 @@ export default {
       if (window.kudosSettings) {
         this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
       }
-      this.selectedDate = new Date().toISOString().substr(0, 10);
+      const now = new Date();
+      this.selectedDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
       document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
     });
     getKudosBudget().then((value) => (this.defaultKudosBudget = this.kudosBudget = value));
