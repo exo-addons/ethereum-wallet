@@ -1,6 +1,6 @@
 export function getGamificationPoints(userId, startDate, endDate) {
-  startDate = `${startDate.toISOString().substring(0, 10)} 00:00:00`;
-  endDate = `${endDate.toISOString().substring(0, 10)} 00:00:00`;
+  startDate = `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()} 00:00:00`;
+  endDate = `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()} 00:00:00`;
   return fetch(`/portal/rest/gamification/api/v1/points/date?userId=${userId}&startDate=${startDate}&endDate=${endDate}`, {
     credentials: 'include',
     headers: {
