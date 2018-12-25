@@ -210,7 +210,7 @@ export default {
           gasPrice: this.gasPrice,
         };
         // Send an amount of ether to a third person
-        window.localWeb3.eth
+        return window.localWeb3.eth
           .sendTransaction(transaction)
           .on('transactionHash', (hash) => {
             this.transactionHash = hash;

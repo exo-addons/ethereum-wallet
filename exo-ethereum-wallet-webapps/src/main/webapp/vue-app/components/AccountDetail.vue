@@ -39,6 +39,7 @@
           <!-- Ether action -->
           <send-ether-modal
             v-if="!contractDetails.isContract"
+            ref="sendEtherModal"
             :is-readonly="isReadOnly"
             :account="walletAddress"
             :balance="contractDetails.balance"

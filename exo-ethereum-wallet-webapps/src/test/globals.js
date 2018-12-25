@@ -120,6 +120,7 @@ global.fetch.mockImplementation((url, options) => {
     }
     const parameters = JSON.parse(options.body);
     setWalletDetails(parameters.type, parameters.id, parameters.address);
+    resultText = 'JBkPvc838ZhHBAIKGeKc';
   } else if (url.indexOf('/portal/rest/wallet/api/contract/save') === 0) {
     if (!options || !options.body) {
       throw new Error(`URL ${url} has empty parameters`, options);
