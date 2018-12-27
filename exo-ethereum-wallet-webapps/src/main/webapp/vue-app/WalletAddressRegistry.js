@@ -130,7 +130,7 @@ export function searchFullName(address) {
         if (!item.avatar) {
           item.avatar = item.type === 'user' ? `/rest/v1/social/users/${item.id}/avatar` : `/rest/v1/social/spaces/${item.id}/avatar`;
         }
-        if(!item.id_type) {
+        if (!item.id_type && item.type && item.id) {
           item.id_type = `${item.type}_${item.id}`;
         }
         sessionStorage.setItem(`exo-wallet-address-${item.type}-${address}`.toLowerCase(), JSON.stringify(item));

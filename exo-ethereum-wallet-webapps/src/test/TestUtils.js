@@ -148,7 +148,7 @@ export function expectObjectValueEqual(value, expected, message, ignoredKeys, no
   }
 
   if (errors.length) {
-    throw new Error('there is some errors in test, see log below');
+    throw new Error('there is some errors in test, see log below', errors);
   }
 }
 
@@ -164,38 +164,52 @@ function compareValues(key, expectedValue, receivedValue, message, ignoredKeys, 
     } else if (typeof expectedValue === 'number') {
       // Number
       if (notStrictObjectComparaison) {
-        expect(Number(receivedValue)).toBe(Number(expectedValue));
+        expect(Number(receivedValue)).toEqual(Number(expectedValue));
       } else {
-        expect(receivedValue).toBe(expectedValue);
+        expect(receivedValue).toEqual(expectedValue);
       }
     } else if (typeof expectedValue === 'string') {
       // String
       if (notStrictObjectComparaison) {
-        expect(String(receivedValue)).toBe(String(expectedValue));
+        expect(String(receivedValue)).toEqual(String(expectedValue));
       } else {
-        expect(receivedValue).toBe(expectedValue);
+        expect(receivedValue).toEqual(expectedValue);
       }
-    } else if (typeof expectedValue === 'object' && expectedValue.reduceRight) {
+    } else if (typeof expectedValue === 'object' && expectedValue && expectedValue.reduceRight) {
       // Array
-      expect(receivedValue).toEqual(expectedValue);
+      if (notStrictObjectComparaison) {
+        expect(receivedValue).not.toBeNull();
+        expect(receivedValue).toHaveLength(expectedValue.length);
+        for (let i = 0; i < expectedValue.length; i++) {
+          try {
+            compareValues(key, expectedValue[i], receivedValue[i], message, ignoredKeys, notStrictObjectComparaison, errors);
+          } catch (e) {
+            errors.push(e);
+          }
+        }
+      } else {
+        // Pure object comparaison
+        expect(receivedValue).toEqual(expectedValue);
+      }
     } else if (typeof expectedValue === 'object') {
       // Object
       if (notStrictObjectComparaison) {
         Object.keys(expectedValue).forEach((subKey) => {
-          if (ignoredKeys && ignoredKeys.indexOf(subKey) >= 0) {
-            return;
-          }
-          if (!receivedValue || !receivedValue.hasOwnProperty(subKey)) {
-            console.error(`${message} receivedValue doesn't have sub-key ${subKey}`);
-            throw new Error(`${message} Wrong value for sub-key = ${subKey} \r\n -- expectedValue -- \r\n ${expectedValue} \r\n -- found -- \r\n ${JSON.parse(stringify(receivedValue))}`);
-          }
-          const error = compareValues(subKey, expectedValue[subKey], receivedValue[subKey], message, ignoredKeys, notStrictObjectComparaison, errors);
-          if (error) {
-            errors.push(error);
+          try {
+            if (ignoredKeys && ignoredKeys.indexOf(subKey) >= 0) {
+              return;
+            }
+            if (!receivedValue || !receivedValue.hasOwnProperty(subKey)) {
+              console.warn(`${message} receivedValue doesn't have sub-key ${subKey}`, receivedValue);
+              throw new Error(`${message} Wrong value for sub-key = ${subKey} \r\n -- expectedValue -- \r\n ${expectedValue} \r\n -- found -- \r\n ${JSON.parse(stringify(receivedValue))}`);
+            }
+            compareValues(subKey, expectedValue[subKey], receivedValue[subKey], message, ignoredKeys, notStrictObjectComparaison, errors);
+          } catch (e) {
+            errors.push(e);
           }
         });
       } else {
-        // Pure object
+        // Pure object comparaison
         expect(receivedValue).toEqual(expectedValue);
       }
     } else {
@@ -243,7 +257,7 @@ export function getParameter(url, param) {
   if (!param || !(url = url && url.trim()) || url.indexOf('?') < 0 || !(urlPart = url.match(new RegExp(`[\?&]{1}${param}=[^&#]*`)))) {
     return null;
   }
-  return urlPart.length ? urlPart[0].split('=')[1] : null;
+  return urlPart.length ? decodeURIComponent(urlPart[0].split('=')[1]) : null;
 }
 
 export function deployTokenContract(adminAddress) {

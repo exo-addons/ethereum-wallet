@@ -148,31 +148,44 @@ export default {
   watch: {
     searchTerm(value) {
       if (!this.noAddress && window.localWeb3.utils.isAddress(value)) {
-        this.items = [
-          {
-            address: value,
-            name: value,
-            id: value,
-          },
-        ];
+        this.isLoadingSuggestions = true;
+        return searchFullName(value).then((details) => {
+          if(details && details.type) {
+            this.items.push({
+              address: details.address,
+              name: details.name,
+              id: details.id,
+              type: details.type,
+              id_type: `${details.type}_${details.id}`,
+            });
+          } else {
+            this.items.push({
+              address: value,
+              name: value,
+              id: value,
+            });
+          }
+        })
+        .finally(() => {
+          this.isLoadingSuggestions = false;
+        });
       } else if (value && value.length) {
         this.isLoadingSuggestions = true;
-        try {
-          return searchContact(value).then((data) => {
-            this.items = data;
-            if (!this.items) {
-              if (this.currentUserItem) {
-                this.items = [this.currentUserItem];
-              } else {
-                this.items = [];
-              }
-            } else if (this.currentUserItem) {
-              this.items.push(this.currentUserItem);
+        return searchContact(value).then((data) => {
+          this.items = data;
+          if (!this.items) {
+            if (this.currentUserItem) {
+              this.items = [this.currentUserItem];
+            } else {
+              this.items = [];
             }
-          });
-        } finally {
+          } else if (this.currentUserItem) {
+            this.items.push(this.currentUserItem);
+          }
+        })
+        .finally(() => {
           this.isLoadingSuggestions = false;
-        }
+        });
       } else if (this.currentUserItem) {
         this.items = [this.currentUserItem];
       } else {
@@ -271,8 +284,8 @@ export default {
       if (!id) {
         this.$refs.selectAutoComplete.selectItem(null);
       } else if (type) {
-        searchUserOrSpaceObject(id, type).then((item) => {
-          item.id_type = `${item.type}_${item.id}`;
+        return searchUserOrSpaceObject(id, type).then((item) => {
+          item.id_type = item.type && item.id ? `${item.type}_${item.id}` : null;
           this.items.push(item);
           if (this.$refs.selectAutoComplete) {
             this.$refs.selectAutoComplete.selectItem(item);

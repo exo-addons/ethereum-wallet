@@ -116,13 +116,22 @@ global.fetch.mockImplementation((url, options) => {
     const id = getParameter(url, 'id');
     resultJson = getWalletDetailsBTypeId(type, id);
     if (!resultJson) {
-      console.warn(`Can't find ${type} with id ${id} in `, global.userAddresses);
+      console.warn(`Can't find ${type} details with id ${id}`);
+      resultJson = {};
     }
+  } else if (url.indexOf('/portal/rest/social/people/suggest.json') === 0) {
+    const searchTerm = getParameter(url, 'nameToSearch');
+    const currentUser = getParameter(url, 'currentUser');
+    resultJson = Object.values(global.addressAssociations).filter((details) => details.type === 'user' && details.name.indexOf(searchTerm) >= 0 && details.id !== currentUser);
+  } else if (url.indexOf('/portal/rest/space/user/searchSpace') === 0) {
+    const searchTerm = getParameter(url, 'keyword');
+    resultJson = Object.values(global.addressAssociations).filter((details) => details.type === 'space' && details.name.indexOf(searchTerm) >= 0);
   } else if (url.indexOf('/portal/rest/wallet/api/account/detailsByAddress') === 0) {
     const address = getParameter(url, 'address');
     resultJson = getWalletDetailsBTypeAddress(address);
     if (!resultJson) {
       console.warn(`Can't find user/space with address ${address}`);
+      resultJson = {};
     }
   } else if (url.indexOf('/portal/rest/wallet/api/contract/bin/') === 0) {
     const contractBinName = url.replace('/portal/rest/wallet/api/contract/bin/', '');
