@@ -37,7 +37,7 @@ describe('SendEtherForm.test.js', () => {
       attachToDocument: true,
     });
 
-    expectObjectValueEqual(sendEtherForm.vm, defaultAttributesValues);
+    expectObjectValueEqual(sendEtherForm.vm, defaultAttributesValues, 'SendEtherForm default data');
     expectCountElement(sendEtherForm, 'sendEtherForm', 1);
   });
 

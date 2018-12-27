@@ -35,7 +35,7 @@ describe('SendFundsModal.test.js', () => {
       attachToDocument: true,
     });
 
-    expectObjectValueEqual(sendFundsModal.vm, defaultAttributesValues);
+    expectObjectValueEqual(sendFundsModal.vm, defaultAttributesValues, 'SendFundsModal default data');
     expectCountElement(sendFundsModal, 'sendFundsModal', 1);
   });
 });

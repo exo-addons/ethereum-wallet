@@ -37,7 +37,7 @@ describe('AccountDetail.test.js', () => {
       attachToDocument: true,
     });
 
-    expectObjectValueEqual(accountDetail.vm, defaultAttributesValues);
+    expectObjectValueEqual(accountDetail.vm, defaultAttributesValues, 'AccountDetail default data: ');
     expectCountElement(accountDetail, 'accountDetail', 0);
   });
 
@@ -119,7 +119,7 @@ describe('AccountDetail.test.js', () => {
             title: 'ether',
           };
 
-          expectObjectValueEqual(accountDetailCmp, expectedData, ['icon', 'contract', 'retrievedAttributes', 'balance', 'etherBalance', 'fiatBalance'], true);
+          expectObjectValueEqual(accountDetailCmp, expectedData, 'AccountDetail - test open ether account details: ', ['icon', 'contract', 'retrievedAttributes', 'balance', 'etherBalance', 'fiatBalance'], true);
 
           expect(accountDetailCmp.contractDetails.balance > 0).toBeTruthy();
           expect(accountDetailCmp.fiatBalance).toBe(`${accountDetailCmp.contractDetails.balanceFiat} ${accountDetailCmp.fiatSymbol}`);
@@ -181,7 +181,7 @@ describe('AccountDetail.test.js', () => {
                 adminLevel: 5,
               };
 
-              expectObjectValueEqual(accountDetailCmp, expectedData, ['icon', 'contract', 'retrievedAttributes', 'balance', 'etherBalance'], true);
+              expectObjectValueEqual(accountDetailCmp, expectedData, 'AccountDetail - test open token account details', ['icon', 'contract', 'retrievedAttributes', 'balance', 'etherBalance'], true);
 
               expect(accountDetailCmp.contractDetails.balance > 0).toBeTruthy();
               expect(accountDetailCmp.contractDetails.etherBalance > 0).toBeTruthy();

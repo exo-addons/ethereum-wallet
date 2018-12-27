@@ -28,13 +28,13 @@ describe('WalletAppMenu.test.js', () => {
     const walletAppMenu = mount(WalletAppMenu, {
       attachToDocument: true,
     });
-    expectObjectValueEqual(walletAppMenu.vm, defaultAttributesValues);
+    expectObjectValueEqual(walletAppMenu.vm, defaultAttributesValues, 'WalletApp - test refresh token balance');
   });
 
   it('WalletAppMenu data', () => {
     console.log('-- Test WalletAppMenu data');
 
-    expectObjectValueEqual(walletAppMenu, defaultAttributesValues);
+    expectObjectValueEqual(walletAppMenu, defaultAttributesValues, 'WalletAppMenu data');
   });
 
   it('WalletAppMenu visible components', () => {
@@ -69,7 +69,7 @@ describe('WalletAppMenu.test.js', () => {
 
       const expectedData = Object.assign({}, defaultAttributesValues);
       expectedData.isSpace = true;
-      expectObjectValueEqual(walletAppMenu, expectedData);
+      expectObjectValueEqual(walletAppMenu, expectedData, 'WalletAppMenu visible components when isSpace and no space administrator');
     });
   });
 
@@ -92,7 +92,7 @@ describe('WalletAppMenu.test.js', () => {
       const expectedData = Object.assign({}, defaultAttributesValues);
       expectedData.isSpace = true;
       expectedData.isSpaceAdministrator = true;
-      expectObjectValueEqual(walletAppMenu, expectedData);
+      expectObjectValueEqual(walletAppMenu, expectedData, 'WalletAppMenu visible components when isSpace and is space administrator');
     });
   });
 
@@ -118,7 +118,7 @@ describe('WalletAppMenu.test.js', () => {
       expectedData.isSpace = true;
       expectedData.isSpaceAdministrator = true;
       expectedData.isMaximized = false;
-      expectObjectValueEqual(walletAppMenu, expectedData);
+      expectObjectValueEqual(walletAppMenu, expectedData, 'WalletAppMenu visible components when not maximized');
     });
   });
 });

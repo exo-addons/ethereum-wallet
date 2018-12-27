@@ -48,7 +48,7 @@ describe('WalletApp.test.js', () => {
 
   it('WalletApp default data', () => {
     console.log('--- Test default data');
-    expectObjectValueEqual(app.vm, defaultAttributesValues);
+    expectObjectValueEqual(app.vm, defaultAttributesValues, 'WalletApp default data');
   });
 
   it('WalletApp visible components', () => {
@@ -83,7 +83,7 @@ describe('WalletApp.test.js', () => {
         expectedData.browserWalletExists = true;
         expectedData.displayWalletResetOption = true;
 
-        expectObjectValueEqual(app.vm, expectedData);
+        expectObjectValueEqual(app.vm, expectedData, 'WalletApp - test account having a browser wallet with generated password: ');
       });
   });
 
@@ -105,7 +105,7 @@ describe('WalletApp.test.js', () => {
 
     return initApp(app)
       .then(() => {
-        expectObjectValueEqual(app.vm, expectedData);
+        expectObjectValueEqual(app.vm, expectedData, 'WalletApp - test change newly created account associated address');
 
         // Disable ReadOnly mode to be able to display displayEtherBalanceTooLow warning
         console.log('--- Test displayEtherBalanceTooLow');
@@ -118,7 +118,7 @@ describe('WalletApp.test.js', () => {
         expectedData.displayWalletResetOption = true;
         expectedData.displayEtherBalanceTooLow = true;
 
-        expectObjectValueEqual(app.vm, expectedData);
+        expectObjectValueEqual(app.vm, expectedData, 'WalletApp - test change newly created account associated address: ');
       });
   });
 
@@ -151,7 +151,7 @@ describe('WalletApp.test.js', () => {
     global.defaultWalletSettings.isWalletEnabled = false;
 
     return initApp(app).then(() => {
-      expectObjectValueEqual(app.vm, {isWalletEnabled: false});
+      expectObjectValueEqual(app.vm, {isWalletEnabled: false}, 'WalletApp - test open token account details', null, true);
       expectCountElement(app, 'walletDisabledContent', 1);
       expectCountElement(app, 'walletEnabledContent', 0);
     });
@@ -184,7 +184,7 @@ describe('WalletApp.test.js', () => {
     expectedData.accountsDetails[global.tokenAddress] = getTokenAccountDetails();
 
     return initApp(app).then(() => {
-      expectObjectValueEqual(app.vm, expectedData, ['etherBalance', 'totalBalance', 'totalFiatBalance', 'balance', 'balanceFiat'], true);
+      expectObjectValueEqual(app.vm, expectedData, 'WalletApp - test display token account: ', ['etherBalance', 'totalBalance', 'totalFiatBalance', 'balance', 'balanceFiat'], true);
     });
   });
 

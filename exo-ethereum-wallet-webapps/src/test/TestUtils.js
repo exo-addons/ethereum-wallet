@@ -118,7 +118,7 @@ export function expectHasClass(app, id, className) {
   }
 }
 
-export function expectObjectValueEqual(value, expected, ignoredKeys, notStrictObjectComparaison) {
+export function expectObjectValueEqual(value, expected, message, ignoredKeys, notStrictObjectComparaison) {
   expect(expected).not.toBeNull();
   expect(value).not.toBeNull();
 
@@ -126,6 +126,8 @@ export function expectObjectValueEqual(value, expected, ignoredKeys, notStrictOb
   expect(typeof value).toBe('object');
 
   const errors = [];
+
+  message = message ? message : '';
 
   try {
     Object.keys(expected).forEach((key) => {
@@ -135,22 +137,22 @@ export function expectObjectValueEqual(value, expected, ignoredKeys, notStrictOb
       try {
         expect(value.hasOwnProperty(key) || (value.hasOwnProperty('_computedWatchers') && value['_computedWatchers'] && Object.keys(value['_computedWatchers']).indexOf(key) >= 0) || (value.hasOwnProperty('_props') && value['_props'] && Object.keys(value['_props']).indexOf(key) >= 0)).toBeTruthy();
       } catch (e) {
-        console.error(`Can't find element with key ${key} in result`);
+        console.error(`${message} Can't find element with key ${key} in result`);
         errors.push(e);
         return;
       }
-      compareValues(key, expected[key], value[key], ignoredKeys, notStrictObjectComparaison, errors);
+      compareValues(key, expected[key], value[key], message, ignoredKeys, notStrictObjectComparaison, errors);
     });
   } catch (e) {
     errors.push(e);
   }
 
   if (errors.length) {
-    throw new Error('there is some errors in test, see log below', ...errors);
+    throw new Error('there is some errors in test, see log below');
   }
 }
 
-function compareValues(key, expectedValue, receivedValue, ignoredKeys, notStrictObjectComparaison, errors) {
+function compareValues(key, expectedValue, receivedValue, message, ignoredKeys, notStrictObjectComparaison, errors) {
   try {
     if (typeof expectedValue === 'boolean') {
       // Boolean
@@ -184,10 +186,10 @@ function compareValues(key, expectedValue, receivedValue, ignoredKeys, notStrict
             return;
           }
           if (!receivedValue || !receivedValue.hasOwnProperty(subKey)) {
-            console.error(`receivedValue doesn't have sub-key ${subKey}`);
-            throw new Error(`Wrong value for sub-key = ${subKey} \r\n -- expectedValue -- \r\n ${expectedValue} \r\n -- found -- \r\n ${JSON.parse(stringify(receivedValue))}`);
+            console.error(`${message} receivedValue doesn't have sub-key ${subKey}`);
+            throw new Error(`${message} Wrong value for sub-key = ${subKey} \r\n -- expectedValue -- \r\n ${expectedValue} \r\n -- found -- \r\n ${JSON.parse(stringify(receivedValue))}`);
           }
-          const error = compareValues(subKey, expectedValue[subKey], receivedValue[subKey], ignoredKeys, notStrictObjectComparaison, errors);
+          const error = compareValues(subKey, expectedValue[subKey], receivedValue[subKey], message, ignoredKeys, notStrictObjectComparaison, errors);
           if (error) {
             errors.push(error);
           }
@@ -197,11 +199,11 @@ function compareValues(key, expectedValue, receivedValue, ignoredKeys, notStrict
         expect(receivedValue).toEqual(expectedValue);
       }
     } else {
-      errors.push(new Error(`cannot find type of key: ${key}`));
+      errors.push(new Error(`${message} cannot find type of key: ${key}`));
       return;
     }
   } catch (e) {
-    console.warn('Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
+    console.warn(message, 'Wrong value for key = ', key, ' in result, \r\n -- expectedValue -- \r\n ', expectedValue, '\r\n -- found -- \r\n ', typeof receivedValue === 'object' ? JSON.parse(stringify(receivedValue)) : receivedValue, e);
     errors.push(e);
   }
 }

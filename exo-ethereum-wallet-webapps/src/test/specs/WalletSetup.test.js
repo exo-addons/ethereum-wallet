@@ -56,11 +56,11 @@ describe('WalletSetup.test.js', () => {
       displayWalletNotExistingYet: false,
       displayWalletBackup: false,
       displayResetPassword: false,
-    });
+    }, 'WalletSetup default data');
   });
 
   it('WalletSetup data', () => {
-    expectObjectValueEqual(walletSetup, defaultAttributesValues);
+    expectObjectValueEqual(walletSetup, defaultAttributesValues, 'WalletSetup data');
   });
 
   it('WalletSetup refresh', () => {
@@ -113,7 +113,7 @@ describe('WalletSetup.test.js', () => {
         expectedData.displayWalletBackup = true;
         expectedData.displayResetPassword = true;
 
-        expectObjectValueEqual(walletSetup, expectedData);
+        expectObjectValueEqual(walletSetup, expectedData, 'WalletSetup display Wallet backup and set password warnings actions');
 
         expectCountElement(app, 'walletBrowserSetup', 0);
         expectCountElement(app, 'walletMetamaskSetup', 0);

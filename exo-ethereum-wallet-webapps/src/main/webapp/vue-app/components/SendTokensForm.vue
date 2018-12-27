@@ -208,7 +208,7 @@ export default {
         // Admin will implicitly approve account, so not necessary
         // to check if the receiver is approved or not
         if (this.contractDetails.contractType > 0) {
-          this.contractDetails.contract.methods
+          return this.contractDetails.contract.methods
             .isApprovedAccount(this.recipient)
             .call()
             .then((isApproved) => {

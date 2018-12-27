@@ -6,7 +6,7 @@ import fs from 'fs';
 
 import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
 
-import {getDefaultSettings, setWalletDetails, getWalletDetailsBTypeId, getParameter} from './TestUtils.js';
+import {getDefaultSettings, setWalletDetails, getWalletDetailsBTypeId, getWalletDetailsBTypeAddress, getParameter} from './TestUtils.js';
 
 require('./constants.js');
 
@@ -14,6 +14,8 @@ global.fetch = require('jest-fetch-mock');
 
 global.Vuetify = Vuetify;
 global.$ = $;
+$.prototype.userPopup = () => {};
+$.prototype.spacePopup = () => {};
 global.Vue = Vue;
 global.LocalWeb3 = LocalWeb3;
 
@@ -39,7 +41,7 @@ global.eXo = {
       context: 'portal',
       rest: 'rest',
       language: 'en',
-      userName: 'testuser',
+      userName: 'testuser1',
       spaceGroup: 'testspace',
     },
   },
@@ -71,8 +73,16 @@ global.defaultWalletSettings = {
   },
 };
 
-setWalletDetails('user', global.eXo.env.portal.userName, global.defaultWalletAddress);
-setWalletDetails('space', global.eXo.env.portal.spaceGroup, global.walletAddresses[2]);
+setWalletDetails('user', 'testuser', global.walletAddresses[0], 'Test User');
+setWalletDetails('user', 'testuser1', global.walletAddresses[1], 'Test User 1');
+setWalletDetails('space', global.eXo.env.portal.spaceGroup, global.walletAddresses[2], 'Test Space');
+setWalletDetails('user', 'testuser3', global.walletAddresses[3], 'Test User 3');
+setWalletDetails('user', 'testuser4', global.walletAddresses[4], 'Test User 4');
+setWalletDetails('user', 'testuser5', global.walletAddresses[5], 'Test User 5');
+setWalletDetails('user', 'testuser6', global.walletAddresses[6], 'Test User 6');
+setWalletDetails('user', 'testuser7', global.walletAddresses[7], 'Test User 7');
+setWalletDetails('user', 'testuser8', global.walletAddresses[8], 'Test User 8');
+setWalletDetails('user', 'testuser9', global.walletAddresses[9], 'Test User 9');
 
 global.fetch.mockImplementation((url, options) => {
   let resultJson = null;
@@ -107,6 +117,12 @@ global.fetch.mockImplementation((url, options) => {
     resultJson = getWalletDetailsBTypeId(type, id);
     if (!resultJson) {
       console.warn(`Can't find ${type} with id ${id} in `, global.userAddresses);
+    }
+  } else if (url.indexOf('/portal/rest/wallet/api/account/detailsByAddress') === 0) {
+    const address = getParameter(url, 'address');
+    resultJson = getWalletDetailsBTypeAddress(address);
+    if (!resultJson) {
+      console.warn(`Can't find user/space with address ${address}`);
     }
   } else if (url.indexOf('/portal/rest/wallet/api/contract/bin/') === 0) {
     const contractBinName = url.replace('/portal/rest/wallet/api/contract/bin/', '');

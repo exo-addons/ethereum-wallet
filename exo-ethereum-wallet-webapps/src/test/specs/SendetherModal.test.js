@@ -30,6 +30,6 @@ describe('SendEtherModal.test.js', () => {
       attachToDocument: true,
     });
 
-    expectObjectValueEqual(sendFundsModal.vm, defaultAttributesValues);
+    expectObjectValueEqual(sendFundsModal.vm, defaultAttributesValues, 'SendEtherModal default data');
   });
 });

@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import {searchAddress, searchContact, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
+import {searchAddress, searchContact, searchFullName, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
 
 export default {
   props: {
@@ -158,7 +158,7 @@ export default {
       } else if (value && value.length) {
         this.isLoadingSuggestions = true;
         try {
-          searchContact(value).then((data) => {
+          return searchContact(value).then((data) => {
             this.items = data;
             if (!this.items) {
               if (this.currentUserItem) {
@@ -187,14 +187,27 @@ export default {
         const type = isAddress ? null : this.selectedValue.substring(0, this.selectedValue.indexOf('_'));
         const id = isAddress ? this.selectedValue : this.selectedValue.substring(this.selectedValue.indexOf('_') + 1);
         if (this.noAddress || isAddress) {
-          this.addressLoad = 'success';
-          this.$emit('item-selected', {
-            id: id,
-            type: null,
-            address: id,
-          });
+          return searchFullName(this.selectedValue)
+            .then(details => {
+              if(details && details.type) {
+                this.addressLoad = 'success';
+                this.$emit('item-selected', {
+                  id: details.id,
+                  type: details.type,
+                  address: details.address,
+                  id_type: `${details.type}_${details.id}`,
+                });
+              } else {
+                this.addressLoad = 'success';
+                this.$emit('item-selected', {
+                  id: id,
+                  type: null,
+                  address: id,
+                });
+              }
+            });
         } else {
-          searchAddress(id, type)
+          return searchAddress(id, type)
             .then((address) => {
               if (address && address.length) {
                 this.addressLoad = 'success';
