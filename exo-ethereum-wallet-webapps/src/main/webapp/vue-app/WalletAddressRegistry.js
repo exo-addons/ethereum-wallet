@@ -110,11 +110,16 @@ export function searchFullName(address) {
 
   address = address.toLowerCase();
 
-  // Get user information from session storage (refreshed when browser closes)
-  const item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase()) || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
+  try {
+    // Get user information from session storage (refreshed when browser closes)
+    const item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase()) || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
 
-  if (item) {
-    return Promise.resolve(JSON.parse(item));
+    if (item) {
+      return Promise.resolve(JSON.parse(item));
+    }
+  } catch (e) {
+    // This could happen in tests
+    console.debug('Error getting item from session storage');
   }
 
   return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`, {credentials: 'include'})

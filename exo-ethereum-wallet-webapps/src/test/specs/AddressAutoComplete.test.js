@@ -241,7 +241,7 @@ describe('AddressAutoComplete.test.js', () => {
 
   it('AddressAutoComplete test filter ignored items', (done) => {
     console.log('-- Test AddressAutoComplete test filter ignored items');
-    
+
     const addressAutoComplete = mount(AddressAutoComplete, {
       propsData: {
         ignoreItems: ['testuser1', 'testuser3'],
@@ -259,14 +259,14 @@ describe('AddressAutoComplete.test.js', () => {
       expect(addressAutoComplete.vm.filterIgnoredItems(testuser4Details, 'Test', testuser4Details.name)).toBeTruthy();
       expect(addressAutoComplete.vm.filterIgnoredItems(testuser4Details, '1', testuser4Details.name)).toBeFalsy();
       done();
-    } catch(e) {
+    } catch (e) {
       done(e);
     }
   });
 
   it('AddressAutoComplete test filter without ignored items', (done) => {
     console.log('-- Test AddressAutoComplete test filter ignored items');
-    
+
     const addressAutoComplete = mount(AddressAutoComplete, {
       attachToDocument: true,
     });
@@ -283,7 +283,7 @@ describe('AddressAutoComplete.test.js', () => {
       expect(addressAutoComplete.vm.filterIgnoredItems(testuser3Details, '1', testuser3Details.name)).toBeFalsy();
       expect(addressAutoComplete.vm.filterIgnoredItems(testuser4Details, '1', testuser4Details.name)).toBeFalsy();
       done();
-    } catch(e) {
+    } catch (e) {
       done(e);
     }
   });

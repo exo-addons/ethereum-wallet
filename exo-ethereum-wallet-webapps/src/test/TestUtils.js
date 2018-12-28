@@ -260,16 +260,48 @@ export function getParameter(url, param) {
   return urlPart.length ? decodeURIComponent(urlPart[0].split('=')[1]) : null;
 }
 
+export function getTransactions(address) {
+  if (!address) {
+    console.warn('Empty address is provided', new Error());
+    return [];
+  }
+  if (global.walletTransactions) {
+    return global.walletTransactions[address.toLowerCase()];
+  } else {
+    global.walletTransactions = {};
+    return [];
+  }
+}
+
+export function saveTransaction(transaction) {
+  saveTransactionForAddress(transaction.from, transaction);
+  saveTransactionForAddress(transaction.to, transaction);
+}
+
+export function saveTransactionForAddress(address, transaction) {
+  if (!global.walletTransactions) {
+    global.walletTransactions = {};
+  }
+  address = address && address.toLowerCase();
+  if (!global.walletTransactions[address]) {
+    global.walletTransactions[address] = [];
+  }
+  if (transaction && address) {
+    global.walletTransactions[address].push(Object.assign({}, transaction));
+  } else {
+    console.warn('Empty parameters are provided', address, transaction);
+  }
+}
+
 export function deployTokenContract(adminAddress) {
-  try {
+  if(fs.existsSync('target/contractAddress.txt')) {
     global.tokenAddress = fs.readFileSync('target/contractAddress.txt', 'utf-8');
     if (global.tokenAddress) {
+      global.tokenAddress = global.tokenAddress.toLowerCase();
       global.contractAbi = JSON.parse(fs.readFileSync('target/contractAbi', 'utf-8'));
       global.contractBin = fs.readFileSync('target/contractBin', 'utf-8');
-      return;
+      return global.tokenAddress;
     }
-  } catch (e) {
-    console.debug('Token address not found from cache');
   }
 
   const gasLimit = 10000000;
@@ -443,9 +475,9 @@ export function getDefaultSettings() {
   return {
     defaultNetworkId: global.testNetworkId, // Configured netword in global settings
     isWalletEnabled: global.defaultWalletSettings.isWalletEnabled, // true if the wallet application is enabled for current user
-    minGasPrice: 4000000000, // Cheap gas price choice amount to use when sending a transaction
-    normalGasPrice: 8000000000, // Normal gas price choice amount to use when sending a transaction
-    maxGasPrice: 15000000000, // Max gas price choice amount to use when sending a transaction
+    minGasPrice: global.defaultWalletSettings.minGasPrice, // Cheap gas price choice amount to use when sending a transaction
+    normalGasPrice: global.defaultWalletSettings.normalGasPrice, // Normal gas price choice amount to use when sending a transaction
+    maxGasPrice: global.defaultWalletSettings.maxGasPrice, // Max gas price choice amount to use when sending a transaction
     dataVersion: 2, // Global Settings data version
     websocketProviderURL: 'http://localhost:8545', // Not used in UI, only server side to listen to blockchain events
     defaultGas: 1500000, // Default gas limit to use for transactions to send
@@ -456,7 +488,7 @@ export function getDefaultSettings() {
     // List of accounts configured in administration that the user can display in his wallet
     defaultOverviewAccounts: global.defaultWalletSettings.defaultOverviewAccounts,
     providerURL: 'http://localhost:8545', // The blockchain URL to use
-    enableDelegation: false, // Whether the end delegate tokens is enabled or not for current user
+    enableDelegation: global.defaultWalletSettings.enableDelegation, // Whether the end delegate tokens is enabled or not for current user
     fundsHolderType: 'user', // Funds holder type: 'space' or 'user'
     fundsHolder: 'root', // Funds holder username/spacePrettyName
     principalContractAdminName: 'Admin', // The name to use in UI to replace principal token/contract owner address

@@ -3,6 +3,7 @@
     v-model="dialog"
     :disabled="disabled"
     content-class="uiPopup with-overflow"
+    class="delegateTokenModal"
     width="600px"
     max-width="100vw"
     persistent
@@ -96,13 +97,14 @@
       <v-card-actions>
         <v-spacer />
         <button
-          :disabled="loading || !recipient || !amount"
+          :disabled="buttonDisabled"
           :loading="loading"
           class="btn btn-primary mr-1"
           @click="sendTokens">
           Delegate
-        </button> <button
-          :disabled="loading || !recipient || !amount"
+        </button>
+        <button
+          :disabled="buttonDisabled"
           class="btn"
           color="secondary"
           @click="showQRCodeModal = true">
@@ -120,6 +122,7 @@ import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
 import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
+import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -128,12 +131,6 @@ export default {
     AddressAutoComplete,
   },
   props: {
-    contract: {
-      type: Object,
-      default: function() {
-        return {};
-      },
-    },
     contractDetails: {
       type: Object,
       default: function() {
@@ -187,6 +184,9 @@ export default {
     },
     etherBalance() {
       return this.contractDetails && this.contractDetails.etherBalance;
+    },
+    buttonDisabled() {
+      return this.disabled || this.loading || !this.recipient || !this.amount;
     },
     disabled() {
       return this.isReadonly || !this.balance || this.balance === 0 || (typeof this.balance === 'string' && (!this.balance.length || this.balance.trim() === '0')) || !this.etherBalance || this.etherBalance === 0 || (typeof this.etherBalance === 'string' && (!this.etherBalance.length || this.etherBalance.trim() === '0'));
@@ -246,8 +246,13 @@ export default {
         return;
       }
 
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
-      if (!unlocked) {
+      try {
+        const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+        if (!unlocked) {
+          this.error = 'Wrong password';
+          return;
+        }
+      } catch(e) {
         this.error = 'Wrong password';
         return;
       }
@@ -259,7 +264,7 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods
+        return this.contractDetails.contract.methods
           .approve(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
           .estimateGas({
             from: this.contractDetails.contract.options.from,
@@ -281,22 +286,27 @@ export default {
               .on('transactionHash', (hash) => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
+                const pendingTransaction = {
+                  hash: hash,
+                  from: this.contractDetails.contract.options.from,
+                  to: this.recipient,
+                  value: 0,
+                  gas: gas,
+                  gasPrice: this.gasPrice,
+                  contractAddress: this.contractDetails.address,
+                  contractMethodName: 'approve',
+                  contractAmount: this.amount,
+                  pending: true,
+                  timestamp: Date.now(),
+                };
+                    
+                // *async* save transaction message for contract, sender and receiver
+                saveTransactionDetails(pendingTransaction);
+
                 // The transaction has been hashed and will be sent
                 this.$emit(
                   'sent',
-                  {
-                    hash: hash,
-                    from: this.account,
-                    to: this.recipient,
-                    value: 0,
-                    gas: gas,
-                    gasPrice: this.gasPrice,
-                    contractAddress: this.contractDetails.address,
-                    contractMethodName: 'approve',
-                    contractAmount: this.amount,
-                    pending: true,
-                    timestamp: Date.now(),
-                  },
+                  pendingTransaction,
                   this.contractDetails
                 );
 

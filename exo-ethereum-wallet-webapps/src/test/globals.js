@@ -3,10 +3,11 @@ import Vue from 'vue';
 import Vuetify from '../main/webapp/js/lib/vuetify.min.js';
 import LocalWeb3 from 'web3';
 import fs from 'fs';
+import abiDecoder from 'abi-decoder';
 
 import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
 
-import {getDefaultSettings, setWalletDetails, getWalletDetailsBTypeId, getWalletDetailsBTypeAddress, getParameter} from './TestUtils.js';
+import {getDefaultSettings, setWalletDetails, getWalletDetailsBTypeId, getWalletDetailsBTypeAddress, getParameter, saveTransaction, getTransactions} from './TestUtils.js';
 
 require('./constants.js');
 
@@ -14,8 +15,13 @@ global.fetch = require('jest-fetch-mock');
 
 global.Vuetify = Vuetify;
 global.$ = $;
-$.prototype.userPopup = () => {};
-$.prototype.spacePopup = () => {};
+global.abiDecoder = abiDecoder;
+$.prototype.userPopup = () => {
+  // Nothing to implement
+};
+$.prototype.spacePopup = () => {
+  // Nothing to implement
+};
 global.Vue = Vue;
 global.LocalWeb3 = LocalWeb3;
 
@@ -63,6 +69,9 @@ global.tokenSellPrice = '0.002';
 global.defaultWalletSettings = {
   isWalletEnabled: true,
   isAdmin: false,
+  minGasPrice: 4000000000,
+  normalGasPrice: 8000000000,
+  maxGasPrice: 15000000000,
   enableDelegation: false,
   isSpaceAdministrator: false,
   defaultPrincipalAccount: 'ether',
@@ -109,8 +118,17 @@ global.fetch.mockImplementation((url, options) => {
         last_updated: '1545137119',
       },
     ];
-  } else if (url.toLowerCase() === `/portal/rest/wallet/api/account/getTransactions?networkId=${global.testNetworkId}&address=${global.walletAddress}`.toLowerCase()) {
-    resultJson = [];
+  } else if (url.indexOf('/portal/rest/wallet/api/account/getTransactions') >= 0) {
+    const address = getParameter(url, 'address');
+    const transactions = getTransactions(address);
+    resultJson = transactions ? transactions : [];
+  } else if (url.indexOf('/portal/rest/wallet/api/account/saveTransactionDetails') >= 0) {
+    if (!options || !options.body) {
+      throw new Error(`URL ${url} has empty parameters`, options);
+    }
+    const transaction = JSON.parse(options.body);
+    saveTransaction(transaction);
+    resultJson = {};
   } else if (url.indexOf('/portal/rest/wallet/api/account/detailsById') === 0) {
     const type = getParameter(url, 'type');
     const id = getParameter(url, 'id');
@@ -153,6 +171,8 @@ global.fetch.mockImplementation((url, options) => {
     const contractDetails = options.body;
     const parameters = JSON.parse(contractDetails);
     fs.writeFileSync(`target/${parameters.address.toLowerCase()}`, contractDetails);
+    fs.writeFileSync('target/contractAddress.txt', contractDetails.address);
+    global.tokenAddress = contractDetails.address;
   } else if (url.indexOf(`/portal/rest/wallet/api/contract/getContract`) === 0) {
     const contractAddress = getParameter(url, 'address').toLowerCase();
     if (fs.existsSync(`target/${contractAddress.toLowerCase()}`)) {

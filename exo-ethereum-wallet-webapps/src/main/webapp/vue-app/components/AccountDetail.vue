@@ -58,6 +58,7 @@
             @error="error = $event" />
           <send-delegated-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
+            ref="sendDelegatedTokensModal"
             :wallet-address="walletAddress"
             :is-readonly="isReadOnly"
             :contract-details="contractDetails"
@@ -66,6 +67,7 @@
             @error="error = $event" />
           <delegate-tokens-modal
             v-if="contractDetails.isContract && enableDelegation"
+            ref="delegateTokensModal"
             :is-readonly="isReadOnly"
             :contract-details="contractDetails"
             use-navigation
