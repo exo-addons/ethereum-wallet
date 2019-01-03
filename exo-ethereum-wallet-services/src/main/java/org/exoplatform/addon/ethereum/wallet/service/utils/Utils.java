@@ -323,6 +323,10 @@ public class Utils {
     return space;
   }
 
+  public static String getSpaceId(Space space) {
+    return space.getGroupId().split("/")[2];
+  }
+
   public static String getWalletLink(String receiverType, String receiverId) {
     if (receiverType == null || receiverId == null || USER_ACCOUNT_TYPE.equals(receiverType)) {
       return CommonsUtils.getCurrentDomain() + getMyWalletLink();
