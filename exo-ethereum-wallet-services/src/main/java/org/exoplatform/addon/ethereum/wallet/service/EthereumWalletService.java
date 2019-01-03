@@ -61,6 +61,7 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 
@@ -69,9 +70,10 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
-  private static final String ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE = "address parameter is mandatory";
+  private static final String                                                                ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE =
+                                                                                                                                    "address parameter is mandatory";
 
-  private static final Log                                                                   LOG                      =
+  private static final Log                                                                   LOG                                    =
                                                                                                  ExoLogger.getLogger(EthereumWalletService.class);
 
   private ExoContainer                                                                       container;
@@ -90,7 +92,7 @@ public class EthereumWalletService implements Startable {
 
   private ConfigurationManager                                                               configurationManager;
 
-  private GlobalSettings                                                                     defaultSettings          =
+  private GlobalSettings                                                                     defaultSettings                        =
                                                                                                              new GlobalSettings();
 
   private GlobalSettings                                                                     storedSettings;
@@ -103,21 +105,26 @@ public class EthereumWalletService implements Startable {
 
   private String                                                                             contractBinary;
 
-  private ExoCache<String, TransactionDetail>                                                transactionDetailsCache  = null;
+  private ExoCache<String, TransactionDetail>                                                transactionDetailsCache                =
+                                                                                                                     null;
 
   // Added as cache instead of Set<AccountDetail> for future usage in clustered
   // environments
-  private ExoCache<AccountDetailCacheId, AccountDetail>                                      accountDetailCache       = null;
+  private ExoCache<AccountDetailCacheId, AccountDetail>                                      accountDetailCache                     =
+                                                                                                                null;
 
   /*
    * Key: Address or id of entity (space group id prefix or username). Value:
    * account details. Context: Type of entity or address if null.
    */
-  private FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>> accountDetailFutureCache = null;
+  private FutureExoCache<AccountDetailCacheId, AccountDetail, ServiceContext<AccountDetail>> accountDetailFutureCache               =
+                                                                                                                      null;
 
-  private long                                                                               walletsCount             = 0;
+  private long                                                                               walletsCount                           =
+                                                                                                          0;
 
-  private ScheduledExecutorService                                                           scheduledExecutorService = null;
+  private ScheduledExecutorService                                                           scheduledExecutorService               =
+                                                                                                                      null;
 
   public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
@@ -940,7 +947,6 @@ public class EthereumWalletService implements Startable {
       return new HashSet<>(cachedObjects);
     }
 
-    LOG.info("Retrieve list of wallets");
     Set<AccountDetail> wallets = new HashSet<>();
     Map<String, String> usernames = getListOfWalletsOfType(USER_ACCOUNT_TYPE);
     for (Entry<String, String> user : usernames.entrySet()) {
@@ -1081,6 +1087,46 @@ public class EthereumWalletService implements Startable {
     return userACL.isUserInGroup(ADMINISTRATORS_GROUP);
   }
 
+  /**
+   * Remove from cache the account detail of an address
+   * 
+   * @param address
+   */
+  public void removeFromCache(String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Enmpty cache key address");
+      return;
+    }
+    AccountDetailCacheId addressKey = new AccountDetailCacheId(address);
+    AccountDetail accountDetail = accountDetailCache.get(addressKey);
+    if (accountDetail != null) {
+      accountDetailFutureCache.remove(addressKey);
+      accountDetailFutureCache.remove(new AccountDetailCacheId(accountDetail.getType(), accountDetail.getId()));
+    }
+  }
+
+  /**
+   * Removes from cache an account detail identified by type and id
+   * 
+   * @param type
+   * @param id
+   */
+  public void removeFromCache(String type, String id) {
+    if (StringUtils.isBlank(type) || StringUtils.isBlank(id)) {
+      LOG.warn("Enmpty cache key: {}/{}", type, id);
+      return;
+    }
+    AccountDetailCacheId typeIdKey = new AccountDetailCacheId(type, id);
+    AccountDetail accountDetail = accountDetailCache.get(typeIdKey);
+    if (accountDetail != null) {
+      accountDetailFutureCache.remove(typeIdKey);
+      String address = accountDetail.getAddress();
+      if (StringUtils.isNotBlank(address)) {
+        accountDetailFutureCache.remove(new AccountDetailCacheId(address));
+      }
+    }
+  }
+
   private Map<String, String> getListOfWalletsOfType(String walletType) throws Exception {
     if (StringUtils.isBlank(walletType) || !(USER_ACCOUNT_TYPE.equals(walletType) || SPACE_ACCOUNT_TYPE.equals(walletType))) {
       throw new IllegalArgumentException("Unrecognized wallet type: " + walletType);
@@ -1114,10 +1160,15 @@ public class EthereumWalletService implements Startable {
         spaces = spacesListAccress.load(current, pageSize);
         if (spaces != null && spaces.length > 0) {
           for (Space space : spaces) {
-            String spaceId = getSpaceId(space);
-            SettingValue<?> spaceAddress = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, spaceId);
+            SettingValue<?> spaceAddress = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, space.getPrettyName());
             if (spaceAddress != null && spaceAddress.getValue() != null) {
-              names.put(spaceId, spaceAddress.getValue().toString());
+              names.put(space.getPrettyName(), spaceAddress.getValue().toString());
+            } else if (!StringUtils.equals(space.getPrettyName(), getSpaceId(space))) {
+              String spaceId = getSpaceId(space);
+              spaceAddress = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, spaceId);
+              if (spaceAddress != null && spaceAddress.getValue() != null) {
+                names.put(spaceId, spaceAddress.getValue().toString());
+              }
             }
           }
         }
@@ -1170,10 +1221,6 @@ public class EthereumWalletService implements Startable {
     } catch (Exception e) {
       LOG.warn("Can't upgrade global settings", e);
     }
-  }
-
-  private String getSpaceId(Space space) {
-    return space.getGroupId().split("/")[2];
   }
 
   private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {
@@ -1312,17 +1359,31 @@ public class EthereumWalletService implements Startable {
           }
 
           String avatarUrl = space.getAvatarUrl();
+          String prettyName = space.getPrettyName();
+          String oldPrettyName = space.getGroupId().substring(SpaceUtils.SPACE_GROUP.length() + 1);
           if (StringUtils.isBlank(avatarUrl)) {
-            avatarUrl = "/rest/v1/social/spaces/" + space.getPrettyName() + "/avatar";
+            avatarUrl = "/rest/v1/social/spaces/" + prettyName + "/avatar";
           }
-          return new AccountDetail(id,
-                                   space.getId(),
-                                   SPACE_ACCOUNT_TYPE,
-                                   space.getDisplayName(),
-                                   getSpaceAddressFromStorage(id),
-                                   spaceService.isManager(space, currentUserId) || spaceService.isSuperManager(currentUserId),
-                                   true,
-                                   avatarUrl);
+          String spaceAddress = getSpaceAddressFromStorage(id);
+          AccountDetail spaceAccountDetail = new AccountDetail(id,
+                                                               space.getId(),
+                                                               SPACE_ACCOUNT_TYPE,
+                                                               space.getDisplayName(),
+                                                               spaceAddress,
+                                                               spaceService.isManager(space, currentUserId)
+                                                                   || spaceService.isSuperManager(currentUserId),
+                                                               true,
+                                                               avatarUrl);
+          if (StringUtils.isBlank(spaceAccountDetail.getAddress()) && !StringUtils.equals(id, prettyName)) {
+            // Detected renamed space
+            fixRenamedSpaceAssociation(spaceAccountDetail, id, prettyName);
+          }
+          if (StringUtils.isBlank(spaceAccountDetail.getAddress()) && !StringUtils.equals(id, oldPrettyName)
+              && !StringUtils.equals(prettyName, oldPrettyName)) {
+            // Detected renamed space
+            fixRenamedSpaceAssociation(spaceAccountDetail, id, oldPrettyName);
+          }
+          return spaceAccountDetail;
         }
         return accountDetail;
       }
@@ -1360,26 +1421,28 @@ public class EthereumWalletService implements Startable {
     return null;
   }
 
-  private void removeFromCache(String oldAddress) {
-    if (StringUtils.isBlank(oldAddress)) {
-      LOG.warn("Enmpty cache key address");
-      return;
-    }
-    accountDetailFutureCache.remove(new AccountDetailCacheId(oldAddress));
-  }
-
-  private void removeFromCache(String type, String id) {
-    if (StringUtils.isBlank(type) || StringUtils.isBlank(id)) {
-      LOG.warn("Enmpty cache key: {}/{}", type, id);
-      return;
-    }
-    accountDetailFutureCache.remove(new AccountDetailCacheId(type, id));
-  }
-
   private void putInCache(AccountDetail details) {
     if (details != null) {
       accountDetailCache.putLocal(new AccountDetailCacheId(details.getAddress()), details);
       accountDetailCache.putLocal(new AccountDetailCacheId(details.getType(), details.getId()), details);
+    }
+  }
+
+  private void fixRenamedSpaceAssociation(AccountDetail spaceAccountDetail, String prettyName, String oldPrettyName) {
+    try {
+      String spaceAddress = getSpaceAddressFromStorage(prettyName);
+      if (StringUtils.isBlank(spaceAddress)) {
+        spaceAddress = getSpaceAddressFromStorage(oldPrettyName);
+        if (StringUtils.isNotBlank(spaceAddress)) {
+          spaceAccountDetail.setAddress(spaceAddress);
+          settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, oldPrettyName);
+          settingService.set(WALLET_CONTEXT, WALLET_SCOPE, spaceAddress, SettingValue.create(SPACE_ACCOUNT_TYPE + prettyName));
+          settingService.set(WALLET_CONTEXT, WALLET_SCOPE, prettyName, SettingValue.create(spaceAddress));
+          removeFromCache(SPACE_ACCOUNT_TYPE, oldPrettyName);
+        }
+      }
+    } catch (Exception e) {
+      LOG.warn("Error when fixing space '" + prettyName + "' address association after renaming", e);
     }
   }
 
