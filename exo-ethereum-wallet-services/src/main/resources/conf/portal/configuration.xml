@@ -356,4 +356,13 @@
       </init-params>
     </component-plugin>
   </external-component-plugins>
+
+  <external-component-plugins>
+    <target-component>org.exoplatform.social.core.space.spi.SpaceService</target-component>
+    <component-plugin>
+      <name>WalletSpaceListener</name>
+      <set-method>addSpaceListener</set-method>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.SpaceListener</type>
+    </component-plugin>
+  </external-component-plugins>
 </configuration>
