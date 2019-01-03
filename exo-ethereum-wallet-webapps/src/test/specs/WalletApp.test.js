@@ -129,20 +129,20 @@ describe('WalletApp.test.js', () => {
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
 
     const app = getWalletApp();
-    return initApp(app).then(() => {
-      const accountDetails = app.vm.accountsDetails[global.tokenAddress];
-      app.vm.openAccountDetail(accountDetails);
-      return app.vm.$nextTick(() => {
-        try {
-          expectCountElement(app, 'accountDetail', 1);
-          app.vm.back();
-          expectCountElement(app, 'accountDetail', 0);
-        } catch (e) {
-          return done(e);
-        }
+    return initApp(app)
+      .then(() => {
+        const accountDetails = app.vm.accountsDetails[global.tokenAddress];
+        app.vm.openAccountDetail(accountDetails);
+        return app.vm.$nextTick();
+      })
+      .then(() => {
+        expectCountElement(app, 'accountDetail', 1);
+        app.vm.back();
+        expectCountElement(app, 'accountDetail', 0);
         done();
-      });
-    });
+      })
+      .then(() => done())
+      .catch((e) => done(e));
   });
 
   it('WalletApp - test when disabled wallet', () => {

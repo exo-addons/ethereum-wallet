@@ -142,9 +142,9 @@
               id="accountDetailsDrawer"
               v-model="seeAccountDetails"
               fixed
-              temporary
               right
               stateless
+              temporary
               width="700"
               max-width="100vw">
               <account-detail

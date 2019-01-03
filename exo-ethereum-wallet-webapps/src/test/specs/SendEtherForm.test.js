@@ -4,6 +4,9 @@ import SendEtherForm from '../../main/webapp/vue-app/components/SendEtherForm';
 
 import {mount} from '@vue/test-utils';
 import {hashCode} from '../../main/webapp/vue-app/WalletUtils.js';
+import flushPromises from 'flush-promises';
+
+jest.setTimeout(30000);
 
 describe('SendEtherForm.test.js', () => {
   const app = getWalletApp();
@@ -30,82 +33,80 @@ describe('SendEtherForm.test.js', () => {
     error: false,
   };
 
-  it('SendEtherForm default data', () => {
+  it('SendEtherForm default data', (done) => {
     console.log('-- Test SendEtherForm default data');
 
-    const sendEtherForm = mount(SendEtherForm, {
-      attachToDocument: true,
-    });
+    try {
+      const sendEtherForm = mount(SendEtherForm, {
+        attachToDocument: true,
+      });
 
-    expectObjectValueEqual(sendEtherForm.vm, defaultAttributesValues, 'SendEtherForm default data');
-    expectCountElement(sendEtherForm, 'sendEtherForm', 1);
+      expectObjectValueEqual(sendEtherForm.vm, defaultAttributesValues, 'SendEtherForm default data');
+      expectCountElement(sendEtherForm, 'sendEtherForm', 1);
+      done();
+    } catch(e) {
+      done(e);
+    }
   });
 
   it('SendEtherModal - test send tokens and refresh balance', (done) => {
     console.log('--- test send tokens and refresh balance');
 
     global.walletAddress = global.walletAddresses[0];
-    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
-    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
 
-    const app = getWalletApp();
+    let sendEtherModal, sendEtherForm, accountDetails;
+    console.warn("initiateBrowserWallet");
     return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
       .then(() => initApp(app))
+      .then(() => flushPromises())
       .then(() => {
-        const accountDetails = app.vm.accountsDetails[global.walletAddress];
+        accountDetails = app.vm.accountsDetails[global.walletAddress];
         expect(accountDetails).not.toBeNull();
         app.vm.openAccountDetail(accountDetails);
+        return app.vm.$nextTick();
+      })
+      .then(() => flushPromises())
+      .then(() => {
+        expectCountElement(app, 'accountDetail', 1);
 
-        return app.vm.$nextTick(() => {
-          try {
-            expectCountElement(app, 'accountDetail', 1);
+        const accountDetailCmp = app.vm.$refs.accountDetail;
+        sendEtherModal = accountDetailCmp.$refs.sendEtherModal;
+        expect(sendEtherModal).not.toBeNull();
+        sendEtherModal.dialog = true;
 
-            const accountDetailCmp = app.vm.$refs.accountDetail;
-            const sendEtherModal = accountDetailCmp.$refs.sendEtherModal;
-            expect(sendEtherModal).not.toBeNull();
-            sendEtherModal.dialog = true;
+        return app.vm.$nextTick();
+      })
+      .then(() => flushPromises())
+      .then(() => {
+        sendEtherForm = sendEtherModal.$refs.sendEtherForm;
+        expect(sendEtherForm).not.toBeNull();
 
-            return app.vm.$nextTick(() => {
-              const sendEtherForm = sendEtherModal.$refs.sendEtherForm;
-              expect(sendEtherForm).not.toBeNull();
+        // Send empty form
+        sendEtherForm.sendEther();
+        expect(sendEtherForm.error).not.toBeNull();
 
-              console.log(sendEtherForm.account);
-              console.log(window.walletSettings.userP);
-              console.log(hashCode('testpassword'));
+        // Send empty amount
+        sendEtherForm.recipient = global.walletAddresses[3];
+        sendEtherForm.sendEther();
+        expect(sendEtherForm.error).not.toBeNull();
 
-              // Send empty form
-              sendEtherForm.sendEther();
-              expect(sendEtherForm.error).not.toBeNull();
+        // Send empty amount
+        sendEtherForm.amount = 'invalid number';
+        sendEtherForm.sendEther();
+        expect(sendEtherForm.error).not.toBeNull();
 
-              // Send empty amount
-              sendEtherForm.recipient = global.walletAddresses[3];
-              sendEtherForm.sendEther();
-              expect(sendEtherForm.error).not.toBeNull();
-
-              // Send empty amount
-              sendEtherForm.amount = 'invalid number';
-              sendEtherForm.sendEther();
-              expect(sendEtherForm.error).not.toBeNull();
-
-              // Send form
-              sendEtherForm.amount = 1;
-              const promiseResult = sendEtherForm.sendEther();
-              console.warn(sendEtherForm.error);
-              expect(sendEtherForm.error).toBeNull();
-              expect(promiseResult && promiseResult.then).toBeTruthy();
-              return promiseResult
-                .then(() => {
-                  expect(sendEtherForm.transactionHash).not.toBeNull();
-                  done();
-                })
-                .catch((e) => {
-                  done(e);
-                });
-            });
-          } catch (e) {
-            done(e);
-          }
-        });
-      });
+        // Send form
+        sendEtherForm.amount = 1;
+        const promiseResult = sendEtherForm.sendEther();
+        expect(sendEtherForm.error).toBeNull();
+        expect(promiseResult && promiseResult.then).toBeTruthy();
+        return promiseResult;
+      })
+      .then(() => flushPromises())
+      .then(() => {
+        expect(sendEtherForm.transactionHash).not.toBeNull();
+      })
+      .then(() => done())
+      .catch((e) => done(e));
   });
 });

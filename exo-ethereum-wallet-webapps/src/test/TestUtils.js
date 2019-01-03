@@ -294,7 +294,7 @@ export function saveTransactionForAddress(address, transaction) {
 }
 
 export function deployTokenContract(adminAddress) {
-  if(fs.existsSync('target/contractAddress.txt')) {
+  if (fs.existsSync('target/contractAddress.txt')) {
     global.tokenAddress = fs.readFileSync('target/contractAddress.txt', 'utf-8');
     if (global.tokenAddress) {
       global.tokenAddress = global.tokenAddress.toLowerCase();

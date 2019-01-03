@@ -92,7 +92,7 @@ describe('WalletSetup.test.js', () => {
 
   it('WalletSetup display Wallet Setup actions', (done) => {
     walletSetup.displayWalletSetupActions();
-    return app.vm.$nextTick(() => {
+    return app.vm.$nextTick().then(() => {
       try {
         expectCountElement(app, 'walletBrowserSetup', 1);
       } catch (e) {
@@ -122,47 +122,48 @@ describe('WalletSetup.test.js', () => {
         expectCountElement(app, 'walletBrowserSetup', 0);
         expectCountElement(app, 'walletMetamaskSetup', 0);
 
-        return app.vm.$nextTick(() => {
-          try {
-            expectCountElement(app, 'walletResetPasswordWarning', 1);
-            expectCountElement(app, 'walletBackupWarning', 1);
-          } catch (e) {
-            return done(e);
-          }
+        return app.vm.$nextTick();
+      })
+      .then(() => {
+        try {
+          expectCountElement(app, 'walletResetPasswordWarning', 1);
+          expectCountElement(app, 'walletBackupWarning', 1);
+        } catch (e) {
+          return done(e);
+        }
 
-          walletSetup.hideSetPasswordMessage();
-          return app.vm.$nextTick(() => {
-            try {
-              expectCountElement(app, 'walletResetPasswordWarning', 0);
-              expectCountElement(app, 'walletBackupWarning', 1);
-            } catch (e) {
-              return done(e);
-            }
+        walletSetup.hideSetPasswordMessage();
+        return app.vm.$nextTick();
+      })
+      .then(() => {
+        try {
+          expectCountElement(app, 'walletResetPasswordWarning', 0);
+          expectCountElement(app, 'walletBackupWarning', 1);
+        } catch (e) {
+          return done(e);
+        }
 
-            walletSetup.skipWalletBackedUp();
-            return app.vm.$nextTick(() => {
-              try {
-                expectCountElement(app, 'walletResetPasswordWarning', 0);
-                expectCountElement(app, 'walletBackupWarning', 0);
-                expect(window.walletSettings.userPreferences.backedUp).toBeFalsy();
-              } catch (e) {
-                return done(e);
-              }
+        walletSetup.skipWalletBackedUp();
+        return app.vm.$nextTick();
+      })
+      .then(() => {
+        try {
+          expectCountElement(app, 'walletResetPasswordWarning', 0);
+          expectCountElement(app, 'walletBackupWarning', 0);
+          expect(window.walletSettings.userPreferences.backedUp).toBeFalsy();
+        } catch (e) {
+          return done(e);
+        }
 
-              walletSetup.hideBackupMessage();
-              return app.vm.$nextTick(() => {
-                try {
-                  expectCountElement(app, 'walletResetPasswordWarning', 0);
-                  expectCountElement(app, 'walletBackupWarning', 0);
-                  expect(window.walletSettings.userPreferences.backedUp).toBeTruthy();
-                } catch (e) {
-                  return done(e);
-                }
-                done();
-              });
-            });
-          });
-        });
-      });
+        walletSetup.hideBackupMessage();
+        return app.vm.$nextTick();
+      })
+      .then(() => {
+        expectCountElement(app, 'walletResetPasswordWarning', 0);
+        expectCountElement(app, 'walletBackupWarning', 0);
+        expect(window.walletSettings.userPreferences.backedUp).toBeTruthy();
+      })
+      .then(() => done())
+      .catch((e) => done(e));
   });
 });

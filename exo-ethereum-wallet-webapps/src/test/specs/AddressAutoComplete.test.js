@@ -79,11 +79,9 @@ describe('AddressAutoComplete.test.js', () => {
             },
           ],
         ]);
-        done();
       })
-      .catch((e) => {
-        done(e);
-      });
+      .then(() => done())
+      .catch((e) => done(e));
   });
 
   it('AddressAutoComplete select unknown address value', (done) => {

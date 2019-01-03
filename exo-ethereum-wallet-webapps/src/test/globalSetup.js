@@ -1,3 +1,6 @@
+// TODO: Wait for https://github.com/facebook/jest/issues/5164 to delete 'runInBand' option for jest
+// and add contract deployment here with ES6
+
 module.exports = () => {
   const fs = require('fs');
   try {
