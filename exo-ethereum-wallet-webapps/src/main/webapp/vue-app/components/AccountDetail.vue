@@ -50,6 +50,7 @@
           <!-- Contract actions -->
           <send-tokens-modal
             v-if="contractDetails.isContract"
+            ref="sendTokensModal"
             :is-readonly="isReadOnly"
             :account="walletAddress"
             :contract-details="contractDetails"

@@ -324,7 +324,7 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods
+      return  this.contractDetails.contract.methods
           .transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
