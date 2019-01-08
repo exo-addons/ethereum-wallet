@@ -43,7 +43,6 @@ describe('SendFundsModal.test.js', () => {
     expectCountElement(sendFundsModal, 'sendFundsModal', 1);
   });
 
-
   it('SendFundsModal - Send Funds Modal Enabled', (done) => {
     console.log('--- SendFundsModal - Send Funds Modal Enabled');
 

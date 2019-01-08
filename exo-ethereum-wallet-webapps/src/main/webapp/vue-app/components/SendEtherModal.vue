@@ -3,6 +3,7 @@
     v-model="dialog"
     :disabled="disabled"
     content-class="uiPopup with-overflow"
+    class="sendEtherModal"
     width="600px"
     max-width="100vw"
     persistent
