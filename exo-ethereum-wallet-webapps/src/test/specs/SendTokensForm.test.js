@@ -144,12 +144,6 @@ describe('SendTokensForm.test.js', () => {
         expect(sendTokensForm.error).toBeTruthy();
         sendTokensForm.contractDetails.isPaused = false;
 
-        //        sendTokensForm.isApprovedRecipient = false;
-        //        sendTokensForm.sendTokens();
-        //        console.warn(sendTokensForm.error);
-        //        expect(sendTokensForm.error).toBeTruthy();
-        //        sendTokensForm.isApprovedRecipient = true;
-
         const initialBalance = contractDetails.balance;
         contractDetails.balance = 0;
         sendTokensForm.sendTokens();

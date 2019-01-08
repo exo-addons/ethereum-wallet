@@ -39,6 +39,31 @@ describe('SendTokensModal.test.js', () => {
     expectObjectValueEqual(sendTokensModal.vm, defaultAttributesValues, 'sendTokensModal default data');
   });
 
+  it('sendTokensModal - test send tokens activated', (done) => {
+    console.log('--- sendTokensModal - test send tokens activated');
+
+    global.walletAddress = global.walletAddresses[0];
+    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
+    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
+
+    const app = getWalletApp();
+    return initApp(app)
+      .then(() => flushPromises())
+      .then(() => {
+        const contractDetails = app.vm.accountsDetails[global.tokenAddress];
+        expect(contractDetails).toBeTruthy();
+        app.vm.openAccountDetail(contractDetails);
+        return app.vm.$nextTick();
+      })
+      .then(() => {
+        const accountDetailCmp = app.vm.$refs.accountDetail;
+        expect(accountDetailCmp).toBeTruthy();
+        expect(app.findAll('#accountDetail .sendTokensModal')).toHaveLength(1);
+      })
+      .then(() => done())
+      .catch((e) => done(e));
+  });
+
   it('SendTokensModal - test wallet browser enabled', (done) => {
     console.log('--- sendTokensModal - test wallet browser enabled');
 
