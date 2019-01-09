@@ -5,8 +5,27 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd">
 
    <portlet>
+     <portlet-name>EthereumWalletAPI</portlet-name>
+     <display-name xml:lang="EN">Ethereum Wallet API Application</display-name>
+     <portlet-class>org.exoplatform.commons.api.portlet.GenericDispatchedViewPortlet</portlet-class>
+     <init-param>
+      <name>portlet-view-dispatched-file-path</name>
+      <value>/walletAPI.html</value>
+     </init-param>
+     <expiration-cache>-1</expiration-cache>
+     <cache-scope>PUBLIC</cache-scope>
+     <supports>
+       <mime-type>text/html</mime-type>
+     </supports>
+     <supported-locale>en</supported-locale>
+     <portlet-info>
+       <title>Ethereum Wallet API Application</title>
+       <keywords>Ethereum Wallet API Application</keywords>
+     </portlet-info>
+   </portlet>
+   <portlet>
      <portlet-name>EthereumWalletLink</portlet-name>
-     <display-name xml:lang="EN">Ethereum Wallet Application</display-name>
+     <display-name xml:lang="EN">Ethereum Wallet Tip Tip Link Application</display-name>
      <portlet-class>org.exoplatform.commons.api.portlet.GenericDispatchedViewPortlet</portlet-class>
      <init-param>
       <name>portlet-view-dispatched-file-path</name>

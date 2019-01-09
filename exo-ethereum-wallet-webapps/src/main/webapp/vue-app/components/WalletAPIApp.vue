@@ -1,0 +1,306 @@
+<template>
+  <v-app id="WalletAPIApp" class="hidden" />
+</template>
+
+<script>
+import * as constants from '../WalletConstants.js';
+import {saveTransactionDetails} from '../WalletTransactions.js';
+import {retrieveContractDetails} from '../WalletToken.js';
+import {initWeb3, initSettings, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../WalletUtils.js';
+import {searchAddress} from '../WalletAddressRegistry.js';
+
+export default {
+  data() {
+    return {
+      isWalletEnabled: false,
+      loading: true,
+      networkId: false,
+      useMetamask: false,
+      needPassword: false,
+      isReadOnly: true,
+      walletAddress: null,
+      principalContractDetails: null,
+      error: null,
+    };
+  },
+  created() {
+    window.walletAddonInstalled = true;
+
+    document.dispatchEvent(new CustomEvent('exo-wallet-installed'));
+
+    if ((!eXo && eXo.env) || !eXo.env.portal || !eXo.env.portal.userName || !eXo.env.portal.userName.length) {
+      this.isWalletEnabled = false;
+      return;
+    }
+    if (eXo.env.portal.profileOwner && eXo.env.portal.profileOwner !== eXo.env.portal.userName) {
+      this.isWalletEnabled = false;
+      return;
+    }
+    document.addEventListener('exo-wallet-init', this.init);
+    document.addEventListener('exo-wallet-send-tokens', this.sendTokens);
+  },
+  methods: {
+    init() {
+      this.loading = true;
+      this.error = null;
+      this.needPassword = false;
+      this.principalContractDetails = null;
+      this.walletAddress = null;
+
+      return initSettings()
+        .then((result, error) => {
+          this.handleError(error);
+          if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
+            this.isWalletEnabled = false;
+            this.isReadOnly = true;
+            throw new Error('Wallet disabled for current user');
+          } else if (!window.walletSettings.userPreferences.walletAddress) {
+            this.isReadOnly = true;
+            throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
+          } else if (!window.walletSettings.defaultPrincipalAccount) {
+            this.isReadOnly = true;
+            throw new Error("Wallet principal account isn't configured");
+          }
+          this.isWalletEnabled = true;
+          this.isReadOnly = false;
+          return initWeb3();
+        })
+        .then((result, error) => {
+          this.handleError(error);
+          this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+          if ((!this.useMetamask && !window.walletSettings.browserWalletExists)
+              || (this.useMetamask
+                  && (!window.web3
+                      || !window.web3.eth
+                      || !window.web3.eth.defaultAccount
+                      || window.walletSettings.detectedMetamaskAccount !== this.walletAddress))) {
+            this.isReadOnly = true;
+            throw new Error("Wallet is in readonly state");
+          }
+          this.needPassword = !this.useMetamask && window.walletSettings.browserWalletExists && !window.walletSettings.storedPassword;
+          this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
+          this.networkId = window.walletSettings.currentNetworkId;
+          this.walletAddress = window.walletSettings.userPreferences.walletAddress;
+          this.isReadOnly = window.walletSettings.isReadOnly;
+          if (window.walletSettings.maxGasPrice) {
+            window.walletSettings.maxGasPriceEther = window.walletSettings.maxGasPriceEther || window.localWeb3.utils.fromWei(String(window.walletSettings.maxGasPrice), 'ether').toString();
+          }
+          this.principalContractDetails = {
+            networkId: this.networkId,
+            address: window.walletSettings.defaultPrincipalAccount,
+            isContract: true,
+            isDefault: true,
+          };
+          return retrieveContractDetails(this.walletAddress, this.principalContractDetails);
+        })
+        .then((result, error) => {
+          this.handleError(error);
+          if (this.principalContractDetails.error) {
+            this.isReadOnly = true;
+            throw new Error(this.principalContractDetails.error);
+          }
+        })
+        .catch((e) => {
+          console.debug('init method - error', e);
+          const error = `${e}`;
+
+          if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
+            this.error = 'Wallet not configured';
+          } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
+            this.error = 'Failed to load user settings';
+          } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
+            this.error = 'Failed to connect to network';
+          } else {
+            this.error = error;
+          }
+        })
+        .finally(() => {
+          this.loading = false;
+          const result = {
+            error : this.error,
+            needPassword : this.needPassword,
+          };
+          document.dispatchEvent(new CustomEvent('exo-wallet-init-result', {detail : result}));
+        });
+    },
+    handleError(error) {
+      if(error) {
+        throw error;
+      }
+    },
+    sendTokens(event) {
+      try {
+        if(!this.isWalletEnabled || this.isReadOnly) {
+          this.error = `Your wallet is't accessible`;
+        } else if(!this.principalContractDetails || !this.principalContractDetails.address || this.principalContractDetails.address.indexOf('0x') !== 0 || this.principalContractDetails.error || !this.principalContractDetails.contract || !this.principalContractDetails.contract.options || !this.principalContractDetails.contract.options.from) {
+          console.debug('Principal token seems inconsistent', this.principalContractDetails);
+          this.error = `Default token isn't configured`;
+        }
+  
+        if(this.error) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : this.error
+          }));
+          return;
+        }
+  
+        const sendTokensRequest = event && event.detail;
+        if (!sendTokensRequest) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : 'Empty payment request'
+          }));
+          return;
+        }
+  
+        const amount = sendTokensRequest.amount;
+        const password = sendTokensRequest.password;
+        const receiver = sendTokensRequest.receiver;
+        const label = sendTokensRequest.label;
+        const message = sendTokensRequest.message;
+  
+        if (!amount || Number.isNaN(parseFloat(amount)) || !Number.isFinite(amount) || amount <= 0) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : 'Invalid payment amount'
+          }));
+          return;
+        }
+  
+        if (!receiver || !receiver.type || !receiver.id) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : 'Empty payment receiver'
+          }));
+          return;
+        }
+  
+        if (!this.storedPassword && (!password || !password.length)) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : 'Empty password'
+          }));
+          return;
+        }
+  
+        try {
+          const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
+          if (!unlocked) {
+            document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+              detail : 'Wrong password'
+            }));
+            return;
+          }
+        } catch(e) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : 'Wrong password'
+          }));
+          return;
+        }
+  
+        if (this.principalContractDetails.balance < this.amount) {
+          document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+            detail : 'Unsufficient funds'
+          }));
+          return;
+        }
+  
+        const gasPrice = window.walletSettings.minGasPrice;
+        const defaultGas = window.walletSettings.userPreferences.defaultGas;
+        const senderAddress = this.principalContractDetails.contract.options.from;
+  
+        return searchAddress(receiver.id, receiver.type)
+          .then((receiver) => {
+  
+            if (!receiver || !receiver.length) {
+              throw new Error('Empty receiver address');
+            }
+  
+            this.principalContractDetails.contract.methods
+            .transfer(receiver, convertTokenAmountToSend(amount, this.principalContractDetails.decimals))
+            .estimateGas({
+              from: senderAddress,
+              gas: defaultGas,
+              gasPrice: gasPrice,
+            })
+            .catch((e) => {
+              console.debug('Error estimating transaction fee', {
+                from: senderAddress,
+                to: receiver,
+                gas: defaultGas,
+                gasPrice: gasPrice,
+              }, e);
+
+              document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+                detail : 'Transaction error, please contact your adminitrator'
+              }));
+              return;
+            })
+            .then((result) => {
+              if (!result) {
+                // Transaction estimation seems to have an error
+                return;
+              }
+              if (result > defaultGas) {
+                document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+                  detail : 'Payment transaction needs more fee, please contact your adminitrator'
+                }));
+                return;
+              }
+              return this.principalContractDetails.contract.methods
+                .transfer(receiver, convertTokenAmountToSend(amount, this.principalContractDetails.decimals))
+                .send({
+                  from: senderAddress,
+                  gas: defaultGas,
+                  gasPrice: gasPrice,
+                })
+                .on('transactionHash', (hash) => {
+                  const pendingTransaction = {
+                    hash: hash,
+                    from: senderAddress.toLowerCase(),
+                    to: receiver.toLowerCase(),
+                    value: 0,
+                    gas: defaultGas,
+                    gasPrice: gasPrice,
+                    pending: true,
+                    contractAddress: this.principalContractDetails.address,
+                    contractMethodName: 'transfer',
+                    contractAmount: amount,
+                    label: label,
+                    message: message,
+                    timestamp: Date.now()
+                  };
+  
+                  // *async* save transaction message for contract, sender and receiver
+                  saveTransactionDetails(pendingTransaction);
+  
+                  // The transaction has been hashed and will be sent
+                  document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-pending', {
+                    detail : pendingTransaction
+                  }));
+                })
+                .on('error', (error, receipt) => {
+                  console.debug('contract transfer method - error', error, receipt);
+                  document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+                    detail : `Payment transaction error: ${error}`
+                  }));
+                });
+            })
+            .catch((e) => {
+              console.debug('contract transfer method - error', e);
+              this.loading = false;
+              this.error = `Error delegating tokens: ${truncateError(e)}`;
+            })
+            .finally(() => this.useMetamask || lockBrowerWallet());
+          })
+          .catch((error) => {
+            console.debug('searchAddress method - error', error);
+            document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+              detail : `Receiver doesn't have a wallet: ${error}`
+            }));
+          });
+      } catch(e) {
+        document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+          detail : `Error while processing transaction: ${e}`
+        }));
+      }
+    },
+  },
+};
+</script>

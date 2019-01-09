@@ -245,6 +245,10 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
         saveContractAddressOnServer(contractDetails);
       }
 
+      if (!window.walletContractsDetails) {
+        window.walletContractsDetails = {};
+      }
+
       if (contractDetails.contractType > 0) {
         contractDetails.contractTypeLabel = 'ERT Token';
         window.walletContractsDetails[contractDetails.address] = contractDetails;
