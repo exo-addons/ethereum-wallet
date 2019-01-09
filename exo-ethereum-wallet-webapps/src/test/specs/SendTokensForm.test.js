@@ -124,7 +124,7 @@ describe('SendTokensForm.test.js', () => {
         sendTokensForm.amount = '2a'; // in tribe pass
         sendTokensForm.sendTokens();
         expect(sendTokensForm.error).toBeTruthy();
-        sendTokensForm.amount = 1;
+        sendTokensForm.amount = 35;
 
         sendTokensForm.storedPassword = false;
         sendTokensForm.sendTokens();
@@ -151,20 +151,20 @@ describe('SendTokensForm.test.js', () => {
         contractDetails.balance = initialBalance;
         return sendTokensForm.sendTokens();
       })
-      .then(() => contractDetails.contract.methods.transfer(sendTokensForm.recipient, sendTokensForm.amount).call())
-      .then((transfer) => {
-        expect(Number(transfer)).toEqual(1);
+      
+       .then(() => contractDetails.contract.methods.balanceOf(sendTokensForm.recipient).call())
+      .then((balance) => {
+        expect(Number(balance)).toEqual(3500000);
         return flushPromises();
       })
-
+       .then(() => contractDetails.contract.methods.balanceOf(global.walletAddress).call())
+      .then((balance) => {
+        expect(Number(balance)).toEqual(10000000000-3500000);
+        return flushPromises();
+      })
+      
+      
       .then(() => {
-        console.log('transactionFeeString :', sendTokensForm.transactionFeeString);
-        console.log('sellPriceInWei :', sendTokensForm.sellPriceInWei);
-        console.log('transactionFeeInWei :', sendTokensForm.transactionFeeInWei);
-        console.log('transactionFeeEther :', sendTokensForm.transactionFeeEther);
-        console.log('transactionFeeFiat :', sendTokensForm.transactionFeeFiat);
-        console.log('transactionFeeToken :', sendTokensForm.transactionFeeToken);
-        console.log('estimateGas :', sendTokensForm.estimatedGas);
 
         expect(sendTokensForm.transactionFeeString).not.toBe('');
         expect(sendTokensForm.sellPriceInWei).toBe('2000000000000000');
