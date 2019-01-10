@@ -62,7 +62,7 @@ describe('SendTokensForm.test.js', () => {
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
 
     const app = getWalletApp();
-    let accountDetailCmp, contractDetails, sendTokensModal, sendTokensForm;
+    let accountDetailCmp, contractDetails, sendTokensModal, sendTokensForm, initialBalance;
     return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
       .then(() => initApp(app))
       .then(() => flushPromises())
@@ -84,7 +84,15 @@ describe('SendTokensForm.test.js', () => {
       })
       .then(() => {
         sendTokensForm = sendTokensModal.$refs.sendTokensForm;
+
         expect(sendTokensForm).toBeTruthy();
+        expect(sendTokensForm.transactionFeeString).toBe('');
+        expect(sendTokensForm.transactionFeeInWei).toBe(0);
+        expect(sendTokensForm.transactionFeeInWei).toBe(0);
+        expect(sendTokensForm.transactionFeeEther).toBe(0);
+        expect(sendTokensForm.transactionFeeFiat).toBe(0);
+        expect(sendTokensForm.estimatedGas).toBe(0);
+
         return flushPromises();
       })
 
@@ -106,15 +114,12 @@ describe('SendTokensForm.test.js', () => {
         return flushPromises();
       })
 
+      .then(() => contractDetails.contract.methods.balanceOf(global.walletAddress).call())
+      .then((balance) => {
+        initialBalance = Number(balance);
+      })
       .then(() => {
         expect(sendTokensForm.error).toBeTruthy();
-
-        expect(sendTokensForm.transactionFeeString).toBe('');
-        expect(sendTokensForm.transactionFeeInWei).toBe(0);
-        expect(sendTokensForm.transactionFeeInWei).toBe(0);
-        expect(sendTokensForm.transactionFeeEther).toBe(0);
-        expect(sendTokensForm.transactionFeeFiat).toBe(0);
-        expect(sendTokensForm.estimatedGas).toBe(0);
 
         sendTokensForm.recipient = 0x1111111111111111111111111111111111111111111111111111111111111111;
         sendTokensForm.sendTokens();
@@ -151,23 +156,20 @@ describe('SendTokensForm.test.js', () => {
         contractDetails.balance = initialBalance;
         return sendTokensForm.sendTokens();
       })
-      
-       .then(() => contractDetails.contract.methods.balanceOf(sendTokensForm.recipient).call())
+
+      .then(() => contractDetails.contract.methods.balanceOf(sendTokensForm.recipient).call())
       .then((balance) => {
         expect(Number(balance)).toEqual(3500000);
         return flushPromises();
       })
-       .then(() => contractDetails.contract.methods.balanceOf(global.walletAddress).call())
+      .then(() => contractDetails.contract.methods.balanceOf(global.walletAddress).call())
       .then((balance) => {
-        expect(Number(balance)).toEqual(10000000000-3500000);
+        expect(Number(balance)).toEqual(initialBalance - 3500000);
         return flushPromises();
       })
-      
-      
-      .then(() => {
 
+      .then(() => {
         expect(sendTokensForm.transactionFeeString).not.toBe('');
-        expect(sendTokensForm.sellPriceInWei).toBe('2000000000000000');
         expect(sendTokensForm.transactionFeeInWei).not.toBe(0);
         expect(sendTokensForm.transactionFeeEther).not.toBe(0);
         expect(sendTokensForm.transactionFeeFiat).not.toBe(0);

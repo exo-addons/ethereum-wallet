@@ -241,6 +241,14 @@ export function sendTokens(contract, from, to, amount) {
   });
 }
 
+export function approveTokens(contract, from, spender, amount) {
+  return contract.methods.approve(spender, amount * Math.pow(10, global.tokenDecimals)).send({
+    from: from,
+    gas: window.walletSettings.userPreferences.defaultGas,
+    gasPrice: window.walletSettings.maxGasPrice,
+  });
+}
+
 export function initiateBrowserWallet(address, password, isSpace, generated, backedUp) {
   const walletDetails = global.WALLET_ACCOUNTS.find((wallet) => wallet.address === address);
   if (!walletDetails) {
