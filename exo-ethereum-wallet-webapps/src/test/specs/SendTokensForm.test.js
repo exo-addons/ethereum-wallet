@@ -159,12 +159,12 @@ describe('SendTokensForm.test.js', () => {
 
       .then(() => contractDetails.contract.methods.balanceOf(sendTokensForm.recipient).call())
       .then((balance) => {
-        expect(Number(balance)).toEqual(3500000);
+        expect(Number(balance)).toEqual(35 * Math.pow(10, global.tokenDecimals));
         return flushPromises();
       })
       .then(() => contractDetails.contract.methods.balanceOf(global.walletAddress).call())
       .then((balance) => {
-        expect(Number(balance)).toEqual(initialBalance - 3500000);
+        expect(Number(balance)).toEqual(initialBalance - 35 * Math.pow(10, global.tokenDecimals));
         return flushPromises();
       })
 

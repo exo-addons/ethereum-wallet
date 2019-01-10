@@ -249,6 +249,14 @@ export function approveTokens(contract, from, spender, amount) {
   });
 }
 
+export function approveAccount(contract, from, target) {
+  return contract.methods.approveAccount(target).send({
+    from: from,
+    gas: window.walletSettings.userPreferences.defaultGas,
+    gasPrice: window.walletSettings.maxGasPrice,
+  });
+}
+
 export function initiateBrowserWallet(address, password, isSpace, generated, backedUp) {
   const walletDetails = global.WALLET_ACCOUNTS.find((wallet) => wallet.address === address);
   if (!walletDetails) {

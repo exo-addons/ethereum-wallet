@@ -139,6 +139,7 @@ import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
 import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
+import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -277,7 +278,7 @@ export default {
 
       this.loading = true;
       try {
-        this.contractDetails.contract.methods
+        return this.contractDetails.contract.methods
           .transferFrom(this.from, this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
           .estimateGas({
             from: this.contractDetails.contract.options.from,
@@ -300,23 +301,27 @@ export default {
               .on('transactionHash', (hash) => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
+               const pendingTransaction = {
+                  hash: hash,
+                  from: this.from,
+                  to: this.recipient,
+                  by: this.walletAddress,
+                  value: 0,
+                  gas: gas,
+                  gasPrice: this.gasPrice,
+                  contractAddress: this.contractDetails.address,
+                  contractMethodName: 'transferFrom',
+                  contractAmount: this.amount,
+                  pending: true,
+                  timestamp: Date.now(),
+                };
+                
+                saveTransactionDetails(pendingTransaction);
+                
                 // The transaction has been hashed and will be sent
                 this.$emit(
                   'sent',
-                  {
-                    hash: hash,
-                    from: this.from,
-                    to: this.recipient,
-                    by: this.walletAddress,
-                    value: 0,
-                    gas: gas,
-                    gasPrice: this.gasPrice,
-                    contractAddress: this.contractDetails.address,
-                    contractMethodName: 'transferFrom',
-                    contractAmount: this.amount,
-                    pending: true,
-                    timestamp: Date.now(),
-                  },
+                  pendingTransaction,
                   this.contractDetails
                 );
 
