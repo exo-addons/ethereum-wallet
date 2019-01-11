@@ -1,5 +1,7 @@
 <template>
-  <v-app id="WalletAPIApp" class="hidden" />
+  <v-app id="WalletAPIApp" class="hidden">
+    <main>Wallet API Application</main>
+  </v-app>
 </template>
 
 <script>
@@ -24,10 +26,6 @@ export default {
     };
   },
   created() {
-    window.walletAddonInstalled = true;
-
-    document.dispatchEvent(new CustomEvent('exo-wallet-installed'));
-
     if ((!eXo && eXo.env) || !eXo.env.portal || !eXo.env.portal.userName || !eXo.env.portal.userName.length) {
       this.isWalletEnabled = false;
       return;
@@ -38,6 +36,10 @@ export default {
     }
     document.addEventListener('exo-wallet-init', this.init);
     document.addEventListener('exo-wallet-send-tokens', this.sendTokens);
+
+    window.walletAddonInstalled = true;
+
+    document.dispatchEvent(new CustomEvent('exo-wallet-installed'));
   },
   methods: {
     init() {
@@ -46,6 +48,8 @@ export default {
       this.needPassword = false;
       this.principalContractDetails = null;
       this.walletAddress = null;
+
+      console.debug("Wallet API application start loading");
 
       return initSettings()
         .then((result, error) => {
@@ -68,19 +72,23 @@ export default {
         .then((result, error) => {
           this.handleError(error);
           this.useMetamask = window.walletSettings.userPreferences.useMetamask;
-          if ((!this.useMetamask && !window.walletSettings.browserWalletExists)
+          this.walletAddress = window.walletSettings.userPreferences.walletAddress;
+
+          if(!this.walletAddress) {
+            this.isReadOnly = true;
+            throw new Error("No wallet is configured for current user");
+          } else if ((!this.useMetamask && !window.walletSettings.browserWalletExists)
               || (this.useMetamask
                   && (!window.web3
                       || !window.web3.eth
                       || !window.web3.eth.defaultAccount
-                      || window.walletSettings.detectedMetamaskAccount !== this.walletAddress))) {
+                      || window.web3.eth.defaultAccount.toLowerCase() !== this.walletAddress.toLowerCase()))) {
             this.isReadOnly = true;
             throw new Error("Wallet is in readonly state");
           }
           this.needPassword = !this.useMetamask && window.walletSettings.browserWalletExists && !window.walletSettings.storedPassword;
           this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
           this.networkId = window.walletSettings.currentNetworkId;
-          this.walletAddress = window.walletSettings.userPreferences.walletAddress;
           this.isReadOnly = window.walletSettings.isReadOnly;
           if (window.walletSettings.maxGasPrice) {
             window.walletSettings.maxGasPriceEther = window.walletSettings.maxGasPriceEther || window.localWeb3.utils.fromWei(String(window.walletSettings.maxGasPrice), 'ether').toString();
@@ -115,6 +123,7 @@ export default {
           }
         })
         .finally(() => {
+          console.debug("Wallet API application finished loading");
           this.loading = false;
           const result = {
             error : this.error,

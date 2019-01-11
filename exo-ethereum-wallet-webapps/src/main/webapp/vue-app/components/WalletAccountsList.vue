@@ -207,6 +207,12 @@ export default {
         return null;
       },
     },
+    principalAccount: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
     walletAddress: {
       type: String,
       default: function() {

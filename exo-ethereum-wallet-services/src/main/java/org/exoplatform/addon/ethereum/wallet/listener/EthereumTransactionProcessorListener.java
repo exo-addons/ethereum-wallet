@@ -113,9 +113,6 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
         sendNotification = false;
       } else {
         try {
-          if (transactionReceipt == null) {
-            transactionReceipt = getTransactionStatus(transaction);
-          }
           TransactionDetail contractTransactionDetail =
                                                       getReceiverAddressFromContractData(settings,
                                                                                          contractDetails,
@@ -262,7 +259,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
   private TransactionDetail getReceiverAddressFromContractData(GlobalSettings settings,
                                                                ContractDetail contractDetail,
                                                                Transaction transaction,
-                                                               TransactionReceipt transactionReceipt) {
+                                                               TransactionReceipt transactionReceipt) throws InterruptedException,
+                                                                                                      ExecutionException {
     if (transaction == null || transaction.getTo() == null || contractDetail == null) {
       // Contract Transaction type is not considered for notifications
       return null;
@@ -274,6 +272,9 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     // he's recognized
     if (defaultContracts != null && defaultContracts.contains(contractAddress) && transaction.getInput() != null
         && !transaction.getInput().equals("0x")) {
+      if (transactionReceipt == null) {
+        transactionReceipt = getTransactionStatus(transaction);
+      }
       if (transactionReceipt == null || !transactionReceipt.isStatusOK() || transactionReceipt.getLogs() == null
           || transactionReceipt.getLogs().isEmpty()) {
         // Transaction may have failed

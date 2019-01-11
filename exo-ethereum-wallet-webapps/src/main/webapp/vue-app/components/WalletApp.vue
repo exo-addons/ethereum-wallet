@@ -126,6 +126,7 @@
                 ref="walletAccountsList"
                 :is-read-only="isReadOnly"
                 :accounts-details="accountsDetails"
+                :principal-account="principalAccount"
                 :overview-accounts="overviewAccountsToDisplay"
                 :wallet-address="walletAddress"
                 :network-id="networkId"
