@@ -763,14 +763,22 @@ public class EthereumWalletService implements Startable {
    * @param address
    * @param hash
    * @param sender
+   * @param status
+   * @throws Exception
    */
-  public void saveAccountTransaction(Long networkId, String address, String hash, boolean sender) {
+  public void saveAccountTransaction(Long networkId,
+                                     String address,
+                                     String hash,
+                                     boolean sender,
+                                     Boolean status) throws Exception {
     if (StringUtils.isBlank(address)) {
       throw new IllegalArgumentException(ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE);
     }
     if (StringUtils.isBlank(hash)) {
       throw new IllegalArgumentException("transaction hash parameter is mandatory");
     }
+
+    broadcastNewTransactionEvent(hash, address, status);
 
     address = address.toLowerCase();
     String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
@@ -785,6 +793,16 @@ public class EthereumWalletService implements Startable {
       }
       addressTransactions = addressTransactions.isEmpty() ? content : content + "," + addressTransactions;
       settingService.set(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName, SettingValue.create(addressTransactions));
+    }
+  }
+
+  public void broadcastNewTransactionEvent(String hash, String address, Boolean status) throws Exception {
+    if (status != null) {
+      JSONObject transaction = new JSONObject();
+      transaction.put("hash", hash);
+      transaction.put("address", address);
+      transaction.put("status", status);
+      listenerService.broadcast(TRANSACTION_MINED_EVENT, null, transaction);
     }
   }
 
@@ -981,8 +999,9 @@ public class EthereumWalletService implements Startable {
    * sender and receiver account
    *
    * @param transactionMessage
+   * @throws Exception
    */
-  public void saveTransactionDetail(TransactionDetail transactionMessage) {
+  public void saveTransactionDetail(TransactionDetail transactionMessage) throws Exception {
     GlobalSettings settings = getSettings();
     if (settings != null && (transactionMessage.getNetworkId() == null || transactionMessage.getNetworkId() == 0)) {
       transactionMessage.setNetworkId(settings.getDefaultNetworkId());
@@ -996,7 +1015,8 @@ public class EthereumWalletService implements Startable {
         this.saveAccountTransaction(transactionMessage.getNetworkId(),
                                     transactionMessage.getFrom(),
                                     transactionMessage.getHash(),
-                                    true);
+                                    true,
+                                    null);
       }
     }
 
@@ -1006,7 +1026,8 @@ public class EthereumWalletService implements Startable {
       this.saveAccountTransaction(transactionMessage.getNetworkId(),
                                   transactionMessage.getTo(),
                                   transactionMessage.getHash(),
-                                  false);
+                                  false,
+                                  null);
     }
 
     String contractAddress = transactionMessage.getContractAddress();
@@ -1029,7 +1050,8 @@ public class EthereumWalletService implements Startable {
         this.saveAccountTransaction(transactionMessage.getNetworkId(),
                                     contractAddress,
                                     transactionMessage.getHash(),
-                                    saveLabelToContractTransactionsList);
+                                    saveLabelToContractTransactionsList,
+                                    null);
       }
     }
   }

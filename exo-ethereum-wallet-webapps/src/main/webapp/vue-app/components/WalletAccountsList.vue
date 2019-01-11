@@ -282,6 +282,8 @@ export default {
         if (this.walletAddress && this.accountsDetails && parameters && parameters.hash) {
           if (parameters.contract && this.accountsDetails[parameters.contract]) {
             this.$emit('account-details-selected', this.accountsDetails[parameters.contract], parameters.hash);
+          } else if (parameters.principal) {
+            this.$emit('account-details-selected', this.accountsDetails[this.principalAccount], parameters.hash);
           } else if (this.accountsDetails[this.walletAddress]) {
             this.$emit('account-details-selected', this.accountsDetails[this.walletAddress], parameters.hash);
           } else if (Object.keys(this.accountsDetails).length) {

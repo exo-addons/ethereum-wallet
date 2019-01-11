@@ -143,6 +143,9 @@ public class Utils {
   public static final String                             MODIFY_ADDRESS_ASSOCIATED_EVENT       =
                                                                                          "exo.addon.wallet.addressAssociation.modification";
 
+  public static final String                             TRANSACTION_MINED_EVENT               =
+                                                                                 "exo.addon.wallet.trnasaction.mined";
+
   public static final String                             UPGRADE_NOTIFICATION_SETTINGS         =
                                                                                        "exo.addon.wallet.notification.upgrade";
 
