@@ -107,7 +107,10 @@ describe('WalletSetup.test.js', () => {
 
     return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
       .then(() => initApp(app))
+      .then(() => app.vm.$nextTick())
       .then(() => {
+        walletSetup = app.vm.$refs.walletSetup;
+
         const expectedData = Object.assign({}, defaultAttributesValues);
         expectedData.isReadOnly = false;
         expectedData.displayWalletCreationToolbar = false;
