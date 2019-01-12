@@ -248,19 +248,18 @@ export default {
       if (!this.refreshIndex) {
         return;
       }
+
       const accountsList = [];
       let etherAccountAdded = false;
       this.overviewAccounts.forEach((selectedValue) => {
-        if (selectedValue !== this.principalAccount) {
-          if (selectedValue === 'fiat' || selectedValue === 'ether') {
-            if (!etherAccountAdded) {
-              const accountDetails = Object.assign({}, this.accountsDetails[this.walletAddress]);
-              accountsList.push(accountDetails);
-              etherAccountAdded = true;
-            }
-          } else if (this.accountsDetails[selectedValue]) {
-            accountsList.push(this.accountsDetails[selectedValue]);
+        if (selectedValue === 'fiat' || selectedValue === 'ether') {
+          if (!etherAccountAdded) {
+            const accountDetails = Object.assign({}, this.accountsDetails[this.walletAddress]);
+            accountsList.push(accountDetails);
+            etherAccountAdded = true;
           }
+        } else if (this.accountsDetails[selectedValue]) {
+          accountsList.push(this.accountsDetails[selectedValue]);
         }
       });
 
