@@ -220,27 +220,27 @@ export default {
         let approvedReceiver = false;
 
         return searchAddress(receiver.id, receiver.type)
-          .then((receiver) => {
+          .then((receiverAddress) => {
   
-            if (!receiver || !receiver.length) {
+            if (!receiverAddress || !receiverAddress.length) {
               throw new Error('Empty receiver address');
             }
   
-            isApprovedAccount(approvedSender).call()
+            isApprovedAccount(senderAddress).call()
             .then((approved) => {
               approvedSender = approved;
               if(!approved) {
                 throw new Error('Your wallet is not approved by administrator');
               }
             })
-            isApprovedAccount(receiver).call()
+            isApprovedAccount(receiverAddress).call()
             .then((approved) => {
               approvedReceiver = approved;
               if(!approved) {
                 throw new Error('Receiver wallet is not approved by administrator');
               }
             })
-            .then(() => transfer(receiver, amountWithDecimals).estimateGas({
+            .then(() => transfer(receiverAddress, amountWithDecimals).estimateGas({
               from: senderAddress,
               gas: defaultGas,
               gasPrice: gasPrice,
@@ -249,7 +249,7 @@ export default {
               if(approvedReceiver && approvedSender) {
                 console.debug('Error estimating transaction fee', {
                   from: senderAddress,
-                  to: receiver,
+                  to: receiverAddress,
                   gas: defaultGas,
                   gasPrice: gasPrice,
                   balance: this.principalContractDetails.balance,
@@ -277,7 +277,7 @@ export default {
                 }));
                 return;
               }
-              return transfer(receiver, amountWithDecimals)
+              return transfer(receiverAddress, amountWithDecimals)
                 .send({
                   from: senderAddress,
                   gas: defaultGas,
@@ -287,7 +287,7 @@ export default {
                   const pendingTransaction = {
                     hash: hash,
                     from: senderAddress.toLowerCase(),
-                    to: receiver.toLowerCase(),
+                    to: receiverAddress.toLowerCase(),
                     value: 0,
                     gas: defaultGas,
                     gasPrice: gasPrice,
@@ -325,12 +325,12 @@ export default {
           .catch((error) => {
             console.debug('searchAddress method - error', error);
             document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-              detail : `Receiver doesn't have a wallet: ${error}`
+              detail : `Receiver doesn't have a wallet`,
             }));
           });
       } catch(e) {
         document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-          detail : `Error while processing transaction: ${e}`
+          detail : `Error while processing transaction`,
         }));
       }
     },
