@@ -230,6 +230,17 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
                                 ContractDetail contractDetails,
                                 TransactionStatus transactionStatus,
                                 double amount) {
+    if (receiverAccountDetails == null || senderAccountDetails == null || StringUtils.isBlank(receiverAccountDetails.getAddress())
+        || StringUtils.isBlank(senderAccountDetails.getAddress())) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Can't send notification for transaction {} because sender address is '{}' and receiver address is '{}'",
+                  senderAccountDetails == null || senderAccountDetails.getAddress() == null ? "null"
+                                                                                            : senderAccountDetails.getAddress(),
+                  receiverAccountDetails == null
+                      || receiverAccountDetails.getAddress() == null ? "null" : receiverAccountDetails.getAddress());
+      }
+      return;
+    }
     NotificationContext ctx = NotificationContextImpl.cloneInstance();
     ctx.append(HASH_PARAMETER, transactionHash);
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, senderAccountDetails);
