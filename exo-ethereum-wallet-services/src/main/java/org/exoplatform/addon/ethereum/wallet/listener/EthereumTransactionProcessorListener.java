@@ -136,12 +136,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
 
     // Retrieve associated user/space names using addresses
-    if (senderAddress != null) {
-      sender = getAccountDetail(senderAddress);
-    }
-    if (receiverAddress != null) {
-      receiver = getAccountDetail(receiverAddress);
-    }
+    sender = getAccountDetail(senderAddress);
+    receiver = getAccountDetail(receiverAddress);
 
     if (sendNotification && senderAddress != null && receiverAddress != null
         && (sender.getId() != null || receiver.getId() != null)) {
@@ -336,6 +332,10 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
   }
 
   private AccountDetail getAccountDetail(String address) {
+    if (StringUtils.isBlank(address)) {
+      return new AccountDetail(null, null, null, address, address, false, true, LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
+    }
+
     AccountDetail accountDetails = ethereumWalletService.getAccountDetailsByAddress(address);
     if (accountDetails == null) {
       accountDetails =

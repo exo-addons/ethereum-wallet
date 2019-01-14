@@ -18,6 +18,8 @@ import org.exoplatform.commons.api.notification.template.Element;
 import org.exoplatform.commons.notification.NotificationUtils;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.notification.template.TemplateUtils;
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.service.LinkProvider;
@@ -31,8 +33,11 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
 
   private boolean          pushNotification;
 
-  public RequestFundsTemplateBuilder(TemplateProvider templateProvider, boolean pushNotification) {
+  private ExoContainer     container;
+
+  public RequestFundsTemplateBuilder(TemplateProvider templateProvider, ExoContainer container, boolean pushNotification) {
     this.templateProvider = templateProvider;
+    this.container = container;
     this.pushNotification = pushNotification;
   }
 
@@ -59,6 +64,8 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
     String message = notification.getValueOwnerParameter(MESSAGE);
     String notificationRead = notification.getValueOwnerParameter(NotificationMessageUtils.READ_PORPERTY.getKey());
     String fundRequestSent = notification.getValueOwnerParameter(FUNDS_REQUEST_SENT);
+
+    RequestLifeCycle.begin(container);
     try {
       templateContext.put("AMOUNT", amount);
       templateContext.put("ACCOUNT_TYPE", type);
@@ -95,6 +102,8 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
     } catch (Exception e) {
       LOG.warn("An error occurred while building notification message", e);
       throw e;
+    } finally {
+      RequestLifeCycle.end();
     }
   }
 

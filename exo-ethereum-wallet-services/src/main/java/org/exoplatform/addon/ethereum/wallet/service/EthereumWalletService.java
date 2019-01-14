@@ -802,7 +802,7 @@ public class EthereumWalletService implements Startable {
       transaction.put("hash", hash);
       transaction.put("address", address);
       transaction.put("status", status);
-      listenerService.broadcast(TRANSACTION_MINED_EVENT, null, transaction);
+      listenerService.broadcast(KNOWN_TRANSACTION_MINED_EVENT, null, transaction);
     }
   }
 

@@ -187,7 +187,7 @@ export default {
           }));
           return;
         }
-  
+
         try {
           const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
           if (!unlocked) {
@@ -203,7 +203,7 @@ export default {
           return;
         }
   
-        if (this.principalContractDetails.balance < this.amount) {
+        if (!this.principalContractDetails.balance || this.principalContractDetails.balance < amount) {
           document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
             detail : 'Unsufficient funds'
           }));
@@ -213,7 +213,12 @@ export default {
         const gasPrice = window.walletSettings.minGasPrice;
         const defaultGas = window.walletSettings.userPreferences.defaultGas;
         const senderAddress = this.principalContractDetails.contract.options.from;
-  
+        const transfer = this.principalContractDetails.contract.methods.transfer;
+        const isApprovedAccount = this.principalContractDetails.contract.methods.isApprovedAccount;
+        const amountWithDecimals = convertTokenAmountToSend(amount, this.principalContractDetails.decimals);
+        let approvedSender = false;
+        let approvedReceiver = false;
+
         return searchAddress(receiver.id, receiver.type)
           .then((receiver) => {
   
@@ -221,24 +226,44 @@ export default {
               throw new Error('Empty receiver address');
             }
   
-            this.principalContractDetails.contract.methods
-            .transfer(receiver, convertTokenAmountToSend(amount, this.principalContractDetails.decimals))
-            .estimateGas({
+            isApprovedAccount(approvedSender).call()
+            .then((approved) => {
+              approvedSender = approved;
+              if(!approved) {
+                throw new Error('Your wallet is not approved by administrator');
+              }
+            })
+            isApprovedAccount(receiver).call()
+            .then((approved) => {
+              approvedReceiver = approved;
+              if(!approved) {
+                throw new Error('Receiver wallet is not approved by administrator');
+              }
+            })
+            .then(() => transfer(receiver, amountWithDecimals).estimateGas({
               from: senderAddress,
               gas: defaultGas,
               gasPrice: gasPrice,
-            })
+            }))
             .catch((e) => {
-              console.debug('Error estimating transaction fee', {
-                from: senderAddress,
-                to: receiver,
-                gas: defaultGas,
-                gasPrice: gasPrice,
-              }, e);
+              if(approvedReceiver && approvedSender) {
+                console.debug('Error estimating transaction fee', {
+                  from: senderAddress,
+                  to: receiver,
+                  gas: defaultGas,
+                  gasPrice: gasPrice,
+                  balance: this.principalContractDetails.balance,
+                  amount: amount,
+                }, e);
 
-              document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-                detail : 'Transaction error, please contact your adminitrator'
-              }));
+                document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+                  detail : 'Error simulating transaction, please contact your adminitrator'
+                }));
+              } else {
+                document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+                  detail : e.message,
+                }));
+              }
               return;
             })
             .then((result) => {
@@ -252,8 +277,7 @@ export default {
                 }));
                 return;
               }
-              return this.principalContractDetails.contract.methods
-                .transfer(receiver, convertTokenAmountToSend(amount, this.principalContractDetails.decimals))
+              return transfer(receiver, amountWithDecimals)
                 .send({
                   from: senderAddress,
                   gas: defaultGas,
