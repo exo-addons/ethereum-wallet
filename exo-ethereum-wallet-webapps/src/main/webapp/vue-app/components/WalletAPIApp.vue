@@ -215,6 +215,7 @@ export default {
         const senderAddress = this.principalContractDetails.contract.options.from;
         const transfer = this.principalContractDetails.contract.methods.transfer;
         const isApprovedAccount = this.principalContractDetails.contract.methods.isApprovedAccount;
+        const contractType = this.principalContractDetails.contractType;
         const amountWithDecimals = convertTokenAmountToSend(amount, this.principalContractDetails.decimals);
         let approvedSender = false;
         let approvedReceiver = false;
@@ -226,14 +227,17 @@ export default {
               throw new Error('Empty receiver address');
             }
   
-            isApprovedAccount(senderAddress).call()
+            Promise.resolve(null)
+            // check approved account on ERT Token contract type only
+            .then(() => (contractType && isApprovedAccount(senderAddress).call()) || true)
             .then((approved) => {
               approvedSender = approved;
               if(!approved) {
                 throw new Error('Your wallet is not approved by administrator');
               }
             })
-            isApprovedAccount(receiverAddress).call()
+            // check approved account on ERT Token contract type only
+            .then(() => (contractType && isApprovedAccount(receiverAddress).call()) || true)
             .then((approved) => {
               approvedReceiver = approved;
               if(!approved) {
