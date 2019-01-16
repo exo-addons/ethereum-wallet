@@ -2,6 +2,7 @@
   <v-dialog
     v-model="show"
     content-class="uiPopup with-overflow not-draggable"
+    classe="walletSettingsModal"
     width="700px"
     max-width="100vw"
     persistent
@@ -136,6 +137,7 @@
                       </information-bubble>
                     </h4>
                     <wallet-backup-modal
+                       ref="walletBackupModal"
                       :display-complete-message="false"
                       @copied="
                         $emit('copied');

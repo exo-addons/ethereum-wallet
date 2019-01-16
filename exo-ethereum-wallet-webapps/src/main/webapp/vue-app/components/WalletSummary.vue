@@ -75,6 +75,7 @@
               " />
             <v-divider v-if="!isMaximized" vertical />
             <wallet-receive-modal
+              ref="walletReceiveModal"
               :wallet-address="walletAddress"
               :icon="!isMaximized"
               @pending="loadPendingTransactions()"
