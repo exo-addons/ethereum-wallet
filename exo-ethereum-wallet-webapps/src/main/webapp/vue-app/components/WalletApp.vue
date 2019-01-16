@@ -292,7 +292,7 @@ export default {
       return;
     }
 
-    if (this.isSpace && !(eXo && eXo.env && eXo.env.portal && eXo.env.portal.spaceGroup && eXo.env.portal.spaceGroup.length)) {
+    if (this.isSpace && !(window.walletSpaceGroup.length)) {
       this.isWalletEnabled = false;
       return;
     }

@@ -11,7 +11,10 @@
         Or
       </div>
 
-      <wallet-import-key-modal :wallet-address="walletAddress" @configured="$emit('configured')" />
+      <wallet-import-key-modal
+        :is-space="isSpace"
+        :wallet-address="walletAddress"
+        @configured="$emit('configured')" />
 
       <div>
         Or

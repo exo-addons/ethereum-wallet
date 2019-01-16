@@ -34,6 +34,7 @@ export default {
       this.isWalletEnabled = false;
       return;
     }
+
     document.addEventListener('exo-wallet-init', this.init);
     document.addEventListener('exo-wallet-send-tokens', this.sendTokens);
 
@@ -42,7 +43,16 @@ export default {
     document.dispatchEvent(new CustomEvent('exo-wallet-installed'));
   },
   methods: {
-    init() {
+    init(event) {
+      const settings = event && event.detail;
+      let isSpace = false;
+      if(settings && settings.sender) {
+        if(settings.sender.type === 'space') {
+          isSpace = true;
+          window.walletSpaceGroup = settings.sender.id;
+        }
+      }
+
       this.loading = true;
       this.error = null;
       this.needPassword = false;
@@ -51,7 +61,7 @@ export default {
 
       console.debug("Wallet API application start loading");
 
-      return initSettings()
+      return initSettings(isSpace)
         .then((result, error) => {
           this.handleError(error);
           if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
@@ -164,6 +174,7 @@ export default {
         const amount = sendTokensRequest.amount;
         const password = sendTokensRequest.password;
         const receiver = sendTokensRequest.receiver;
+        const sender = sendTokensRequest.sender;
         const label = sendTokensRequest.label;
         const message = sendTokensRequest.message;
   
@@ -212,22 +223,42 @@ export default {
   
         const gasPrice = window.walletSettings.minGasPrice;
         const defaultGas = window.walletSettings.userPreferences.defaultGas;
-        const senderAddress = this.principalContractDetails.contract.options.from;
         const transfer = this.principalContractDetails.contract.methods.transfer;
         const isApprovedAccount = this.principalContractDetails.contract.methods.isApprovedAccount;
         const contractType = this.principalContractDetails.contractType;
         const amountWithDecimals = convertTokenAmountToSend(amount, this.principalContractDetails.decimals);
+
         let approvedSender = false;
         let approvedReceiver = false;
+        let receiverAddress = null;
+        let senderAddress = null;
 
         return searchAddress(receiver.id, receiver.type)
-          .then((receiverAddress) => {
-  
+          .then((address) => {
+            receiverAddress = address;
             if (!receiverAddress || !receiverAddress.length) {
-              throw new Error('Empty receiver address');
+              throw new Error(`Receiver doesn't have a wallet`);
             }
-  
-            Promise.resolve(null)
+
+            return searchAddress(sender.id, sender.type)
+              .then((address) => {
+                senderAddress = address;
+
+                if (!senderAddress || !senderAddress.length) {
+                  throw new Error(`The sender wallet doesn't have an address`);
+                }
+
+                if(senderAddress.toLowerCase() !== this.walletAddress.toLowerCase()) {
+                  throw new Error(`The sender wallet isn't coherent with currently used wallet, please refresh the page.`);
+                }
+
+                if(senderAddress.toLowerCase() === receiverAddress.toLowerCase()) {
+                  throw new Error(`You can't send tokens to the same address.`);
+                }
+              });
+          })
+          .then(() => {
+            return Promise.resolve(null)
             // check approved account on ERT Token contract type only
             .then(() => (contractType && isApprovedAccount(senderAddress).call()) || true)
             .then((approved) => {
@@ -329,7 +360,7 @@ export default {
           .catch((error) => {
             console.debug('searchAddress method - error', error);
             document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-              detail : `Receiver doesn't have a wallet`,
+              detail : error.message,
             }));
           });
       } catch(e) {

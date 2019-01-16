@@ -290,7 +290,7 @@ export default {
         });
     },
     saveNewAddressInWallet() {
-      return saveNewAddress(this.isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName, this.isSpace ? 'space' : 'user', this.detectedMetamaskAccount)
+      return saveNewAddress(this.isSpace ? window.walletSpaceGroup : eXo.env.portal.userName, this.isSpace ? 'space' : 'user', this.detectedMetamaskAccount)
         .then((resp, error) => {
           if (error) {
             throw error;

@@ -137,13 +137,14 @@
                       </information-bubble>
                     </h4>
                     <wallet-backup-modal
-                       ref="walletBackupModal"
+                      ref="walletBackupModal"
                       :display-complete-message="false"
                       @copied="
                         $emit('copied');
                         refreshFromSettings();
                       " />
                     <wallet-import-key-modal
+                      :is-space="isSpace"
                       :wallet-address="walletAddress"
                       class="ml-3"
                       @configured="

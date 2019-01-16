@@ -108,8 +108,8 @@ export function initWeb3(isSpace, isAdmin) {
   }
 }
 
-export function initSettings(isSpace) {
-  const spaceId = isSpace ? eXo.env.portal.spaceGroup : '';
+export function initSettings(isSpace, spaceGroup) {
+  const spaceId = (isSpace && (spaceGroup || window.walletSpaceGroup)) || '';
 
   clearCache();
 
@@ -292,7 +292,7 @@ export function saveBrowerWalletInstance(wallet, password, isSpace, autoGenerate
   const account = window.localWeb3.eth.accounts.wallet.add(wallet);
   const address = account['address'].toLowerCase();
 
-  return saveNewAddress(isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName, isSpace ? 'space' : 'user', address, true)
+  return saveNewAddress(isSpace ? window.walletSpaceGroup : eXo.env.portal.userName, isSpace ? 'space' : 'user', address, true)
     .then((resp, error) => {
       if (error) {
         throw error;
@@ -816,7 +816,7 @@ function waitAsyncForTransactionStatus(hash) {
 }
 
 function getRemoteId(isSpace) {
-  return isSpace ? eXo.env.portal.spaceGroup : eXo.env.portal.userName;
+  return isSpace ? window.walletSpaceGroup : eXo.env.portal.userName;
 }
 
 function browserWalletExists(address) {

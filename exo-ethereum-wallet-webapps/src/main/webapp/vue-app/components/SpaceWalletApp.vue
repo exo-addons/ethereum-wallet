@@ -9,5 +9,8 @@ export default {
   components: {
     WalletApp,
   },
+  created() {
+    window.walletSpaceGroup = eXo.env.portal.spaceGroup;
+  },
 };
 </script>
