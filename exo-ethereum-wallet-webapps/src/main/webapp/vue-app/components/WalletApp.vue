@@ -146,7 +146,7 @@
               right
               stateless
               temporary
-              width="700"
+              width="700px"
               max-width="100vw">
               <account-detail
                 ref="accountDetail"
@@ -292,7 +292,7 @@ export default {
       return;
     }
 
-    if (this.isSpace && !(window.walletSpaceGroup.length)) {
+    if (this.isSpace && !(window.walletSpaceGroup && window.walletSpaceGroup.length)) {
       this.isWalletEnabled = false;
       return;
     }

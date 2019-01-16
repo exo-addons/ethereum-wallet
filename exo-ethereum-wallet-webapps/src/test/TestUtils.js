@@ -491,6 +491,7 @@ export function getDefaultSettings() {
   return {
     defaultNetworkId: global.testNetworkId, // Configured netword in global settings
     isWalletEnabled: global.defaultWalletSettings.isWalletEnabled, // true if the wallet application is enabled for current user
+    isSpaceAdministrator: global.defaultWalletSettings.isSpaceAdministrator, // true if the wallet application is enabled for current user
     minGasPrice: global.defaultWalletSettings.minGasPrice, // Cheap gas price choice amount to use when sending a transaction
     normalGasPrice: global.defaultWalletSettings.normalGasPrice, // Normal gas price choice amount to use when sending a transaction
     maxGasPrice: global.defaultWalletSettings.maxGasPrice, // Max gas price choice amount to use when sending a transaction
