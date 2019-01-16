@@ -66,7 +66,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
           contractDetails[key] = savedDetails[key];
         });
         // FIXME: Workaround for a unidentified bug
-        if (contractDetails.symbol && contractDetails.symbol === '?') {
+        if (contractDetails.symbol && contractDetails.symbol.trim() === '?') {
           contractDetails.symbol = null;
         }
 
@@ -119,7 +119,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       console.debug('retrieveContractDetails method - error computing balance', e);
     })
     .then(() => {
-      return contractDetails.contractType < 0 ? null : contractDetails.hasOwnProperty('symbol') ? contractDetails.symbol : contractDetails.contract.methods.symbol().call();
+      return contractDetails.contractType < 0 ? null : contractDetails.symbol ? contractDetails.symbol : contractDetails.contract.methods.symbol().call();
     })
     .then((symbol) => {
       if (symbol) {
