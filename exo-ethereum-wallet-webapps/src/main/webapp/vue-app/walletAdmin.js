@@ -1,4 +1,4 @@
-import WalletAdminApp from './components/WalletAdminApp.vue';
+import WalletAdminApp from './components/admin/WalletAdminApp.vue';
 import {toFixed} from './WalletUtils.js';
 import './../css/main.less';
 

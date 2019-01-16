@@ -5,11 +5,11 @@
 </template>
 
 <script>
-import * as constants from '../WalletConstants.js';
-import {saveTransactionDetails} from '../WalletTransactions.js';
-import {retrieveContractDetails} from '../WalletToken.js';
-import {initWeb3, initSettings, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../WalletUtils.js';
-import {searchAddress} from '../WalletAddressRegistry.js';
+import * as constants from '../../WalletConstants.js';
+import {saveTransactionDetails} from '../../WalletTransactions.js';
+import {retrieveContractDetails} from '../../WalletToken.js';
+import {initWeb3, initSettings, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../../WalletUtils.js';
+import {searchAddress} from '../../WalletAddressRegistry.js';
 
 export default {
   data() {

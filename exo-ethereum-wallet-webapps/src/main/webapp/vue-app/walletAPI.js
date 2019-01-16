@@ -1,4 +1,4 @@
-import WalletAPIApp from './components/WalletAPIApp.vue';
+import WalletAPIApp from './components/api/WalletAPIApp.vue';
 import {toFixed} from './WalletUtils.js';
 import './../css/main.less';
 
