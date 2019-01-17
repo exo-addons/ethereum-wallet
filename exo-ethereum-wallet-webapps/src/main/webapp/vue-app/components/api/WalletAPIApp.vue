@@ -113,9 +113,23 @@ export default {
         })
         .then((result, error) => {
           this.handleError(error);
-          if (this.principalContractDetails.error) {
+
+          if(!this.principalContractDetails || !this.principalContractDetails.address || this.principalContractDetails.address.indexOf('0x') !== 0) {
+            console.debug('Principal token seems inconsistent', this.principalContractDetails);
+            this.isReadOnly = true;
+            throw new Error(`Default token isn't configured`);
+          } else if(this.principalContractDetails.error) {
+            console.debug('Error retrieving principal contract details', this.principalContractDetails.error, this.principalContractDetails);
             this.isReadOnly = true;
             throw new Error(this.principalContractDetails.error);
+          } else if(!this.principalContractDetails.contract) {
+            console.debug('Principal account in wallet isn\'t a token contract', this.principalContractDetails);
+            this.isReadOnly = true;
+            throw new Error('Principal account in wallet isn\'t a token contract');
+          } else if(!this.principalContractDetails.contract.options || !this.principalContractDetails.contract.options.from) {
+            console.debug('Error retrieving sender address', this.principalContractDetails);
+            this.isReadOnly = true;
+            throw new Error('Error retrieving your wallet address');
           }
         })
         .catch((e) => {
@@ -129,7 +143,7 @@ export default {
           } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
             this.error = 'Failed to connect to network';
           } else {
-            this.error = error;
+            this.error = (e && e.message) || e;
           }
         })
         .finally(() => {
@@ -151,12 +165,15 @@ export default {
     sendTokens(event) {
       try {
         if(!this.isWalletEnabled || this.isReadOnly) {
-          this.error = `Your wallet is't accessible`;
-        } else if(!this.principalContractDetails || !this.principalContractDetails.address || this.principalContractDetails.address.indexOf('0x') !== 0 || this.principalContractDetails.error || !this.principalContractDetails.contract || !this.principalContractDetails.contract.options || !this.principalContractDetails.contract.options.from) {
+          throw new Error(`Your wallet is't accessible`);
+        } else if(!this.principalContractDetails || !this.principalContractDetails.address || this.principalContractDetails.address.indexOf('0x') !== 0) {
           console.debug('Principal token seems inconsistent', this.principalContractDetails);
-          this.error = `Default token isn't configured`;
+          throw new Error(`Default token isn't configured`);
+        } else if(this.principalContractDetails.error || !this.principalContractDetails.contract || !this.principalContractDetails.contract.options || !this.principalContractDetails.contract.options.from) {
+          console.debug('Principal token seems inconsistent', this.principalContractDetails);
+          throw new Error(`Error retrieving default token`);
         }
-  
+
         if(this.error) {
           document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
             detail : this.error
@@ -297,7 +314,7 @@ export default {
                 }));
               } else {
                 document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-                  detail : e.message,
+                  detail : (e && e.message) || e,
                 }));
               }
               return;
@@ -354,19 +371,19 @@ export default {
             .catch((e) => {
               console.debug('contract transfer method - error', e);
               this.loading = false;
-              this.error = `Error sending tokens: ${truncateError(e)}`;
+              throw new Error(`Error sending tokens: ${truncateError(e)}`);
             })
             .finally(() => this.useMetamask || lockBrowerWallet());
           })
           .catch((error) => {
-            console.debug('searchAddress method - error', error);
+            console.debug('sendTokens method - error', error);
             document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-              detail : error.message,
+              detail : (error && error.message) || error,
             }));
           });
       } catch(e) {
         document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-          detail : `Error while processing transaction`,
+          detail : (e && e.message) || e,
         }));
       }
     },
