@@ -353,7 +353,7 @@ export default {
             .catch((e) => {
               console.debug('contract transfer method - error', e);
               this.loading = false;
-              this.error = `Error delegating tokens: ${truncateError(e)}`;
+              this.error = `Error sending tokens: ${truncateError(e)}`;
             })
             .finally(() => this.useMetamask || lockBrowerWallet());
           })
