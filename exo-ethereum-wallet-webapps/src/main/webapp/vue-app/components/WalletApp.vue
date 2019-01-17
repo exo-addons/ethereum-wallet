@@ -146,7 +146,7 @@
               right
               stateless
               temporary
-              width="700px"
+              width="700"
               max-width="100vw">
               <account-detail
                 ref="accountDetail"
