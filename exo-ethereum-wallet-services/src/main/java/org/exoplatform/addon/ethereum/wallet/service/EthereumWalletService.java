@@ -70,6 +70,12 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  */
 public class EthereumWalletService implements Startable {
 
+  private static final String                                                                SPACE_WITH_ID_MESSAGE                  =
+                                                                                                                   "Space with id '";
+
+  private static final String                                                                IS_NOT_FOUND_MESSAGE                   =
+                                                                                                                  "' is not found";
+
   private static final String                                                                ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE =
                                                                                                                                     "address parameter is mandatory";
 
@@ -390,8 +396,18 @@ public class EthereumWalletService implements Startable {
         globalSettings.setUserPreferences(userSettings);
 
         if (StringUtils.isNotBlank(spaceId)) {
+
+          String spacePhrase = getSpacePhrase(spaceId);
+          if (StringUtils.isBlank(spacePhrase)) {
+            Space space = getSpace(spaceId);
+            if (space == null) {
+              throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + spaceId + IS_NOT_FOUND_MESSAGE);
+            }
+            spaceId = getSpaceId(space);
+            spacePhrase = getSpacePhrase(spaceId);
+          }
+          userSettings.setPhrase(spacePhrase);
           userSettings.setWalletAddress(getSpaceAddress(spaceId));
-          userSettings.setPhrase(getSpacePhrase(spaceId));
         } else {
           userSettings.setWalletAddress(getUserAddress(username));
           userSettings.setPhrase(getUserPhrase(username));
@@ -569,6 +585,12 @@ public class EthereumWalletService implements Startable {
       throw new IllegalArgumentException("id parameter is mandatory");
     }
 
+    Space space = getSpace(id);
+    if (space == null) {
+      throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + id + IS_NOT_FOUND_MESSAGE);
+    }
+    id = getSpaceId(space);
+
     AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(SPACE_ACCOUNT_TYPE, id));
     if (accountDetails != null && StringUtils.isNotBlank(accountDetails.getAddress())) {
       putInCache(accountDetails);
@@ -617,6 +639,12 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public String getSpaceAddress(String id) {
+    Space space = getSpace(id);
+    if (space == null) {
+      throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + id + IS_NOT_FOUND_MESSAGE);
+    }
+    id = getSpaceId(space);
+
     AccountDetail accountDetail = getAccountDetailsFromCache(new AccountDetailCacheId(SPACE_ACCOUNT_TYPE, id));
     if (accountDetail != null) {
       return accountDetail.getAddress();
@@ -652,6 +680,13 @@ public class EthereumWalletService implements Startable {
     String currentUserId = getCurrentUserId();
     String id = accountDetail.getId();
     String type = accountDetail.getType();
+    if (StringUtils.equals(type, SPACE_ACCOUNT_TYPE)) {
+      Space space = getSpace(id);
+      if (space == null) {
+        throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + id + IS_NOT_FOUND_MESSAGE);
+      }
+      id = getSpaceId(space);
+    }
     String address = accountDetail.getAddress();
     address = address.toLowerCase();
 
@@ -1305,11 +1340,11 @@ public class EthereumWalletService implements Startable {
     return checkCurrentUserIsSpaceManager(id, true);
   }
 
-  private boolean checkCurrentUserIsSpaceManager(String id, boolean throwException) throws IllegalAccessException {
+  private boolean checkCurrentUserIsSpaceManager(String spaceId, boolean throwException) throws IllegalAccessException {
     String currentUserId = getCurrentUserId();
-    Space space = getSpace(id);
+    Space space = getSpace(spaceId);
     if (space == null) {
-      LOG.warn("Space not found with id '{}'", id);
+      LOG.warn("Space not found with id '{}'", spaceId);
       throw new IllegalStateException();
     }
     if (!spaceService.isManager(space, currentUserId) && !spaceService.isSuperManager(currentUserId)) {
@@ -1379,6 +1414,7 @@ public class EthereumWalletService implements Startable {
           if (space == null) {
             return null;
           }
+          id = getSpaceId(space);
 
           String avatarUrl = space.getAvatarUrl();
           String prettyName = space.getPrettyName();
