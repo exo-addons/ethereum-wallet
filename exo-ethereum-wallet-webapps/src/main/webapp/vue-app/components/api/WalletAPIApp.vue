@@ -8,7 +8,7 @@
 import * as constants from '../../WalletConstants.js';
 import {saveTransactionDetails} from '../../WalletTransactions.js';
 import {retrieveContractDetails} from '../../WalletToken.js';
-import {initWeb3, initSettings, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../../WalletUtils.js';
+import {initWeb3, initSettings, watchMetamaskAccount, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../../WalletUtils.js';
 import {searchAddress} from '../../WalletAddressRegistry.js';
 
 export default {
@@ -36,6 +36,7 @@ export default {
     }
 
     document.addEventListener('exo-wallet-init', this.init);
+    document.addEventListener('exo-wallet-metamask-changed', this.init);
     document.addEventListener('exo-wallet-send-tokens', this.sendTokens);
 
     window.walletAddonInstalled = true;
@@ -44,118 +45,132 @@ export default {
   },
   methods: {
     init(event) {
-      const settings = event && event.detail;
-      let isSpace = false;
-      if(settings && settings.sender) {
-        if(settings.sender.type === 'space') {
-          isSpace = true;
-          window.walletSpaceGroup = settings.sender.id;
+      document.dispatchEvent(new CustomEvent('exo-wallet-init-loading'));
+      try {
+        this.loading = true;
+        this.error = null;
+        this.needPassword = false;
+        this.principalContractDetails = null;
+        this.walletAddress = null;
+
+        console.debug("Wallet API application start loading");
+
+        const settings = event && event.detail;
+        let isSpace = false;
+        if(settings && settings.sender) {
+          if(settings.sender.type === 'space') {
+            isSpace = true;
+            window.walletSpaceGroup = settings.sender.id;
+          }
         }
+
+        return initSettings(isSpace)
+          .then((result, error) => {
+            this.handleError(error);
+            if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
+              this.isWalletEnabled = false;
+              this.isReadOnly = true;
+              throw new Error('Wallet disabled for current user');
+            } else if (!window.walletSettings.userPreferences.walletAddress) {
+              this.isReadOnly = true;
+              throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
+            } else if (!window.walletSettings.defaultPrincipalAccount) {
+              this.isReadOnly = true;
+              throw new Error("Wallet principal account isn't configured");
+            }
+            this.isWalletEnabled = true;
+            this.isReadOnly = false;
+            return initWeb3();
+          })
+          .then((result, error) => {
+            this.handleError(error);
+            this.useMetamask = window.walletSettings.userPreferences.useMetamask;
+            this.walletAddress = window.walletSettings.userPreferences.walletAddress;
+
+            if(!this.walletAddress) {
+              this.isReadOnly = true;
+              throw new Error("No wallet is configured for current user");
+            } else if ((!this.useMetamask && !window.walletSettings.browserWalletExists)
+                || (this.useMetamask
+                    && (!window.web3
+                        || !window.web3.eth
+                        || !window.web3.eth.defaultAccount
+                        || window.web3.eth.defaultAccount.toLowerCase() !== this.walletAddress.toLowerCase()))) {
+              this.isReadOnly = true;
+              throw new Error("Wallet is in readonly state");
+            }
+            this.needPassword = !this.useMetamask && window.walletSettings.browserWalletExists && !window.walletSettings.storedPassword;
+            this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
+            this.networkId = window.walletSettings.currentNetworkId;
+            this.isReadOnly = window.walletSettings.isReadOnly;
+            if (window.walletSettings.maxGasPrice) {
+              window.walletSettings.maxGasPriceEther = window.walletSettings.maxGasPriceEther || window.localWeb3.utils.fromWei(String(window.walletSettings.maxGasPrice), 'ether').toString();
+            }
+            this.principalContractDetails = {
+              networkId: this.networkId,
+              address: window.walletSettings.defaultPrincipalAccount,
+              isContract: true,
+              isDefault: true,
+            };
+            return retrieveContractDetails(this.walletAddress, this.principalContractDetails);
+          })
+          .then((result, error) => {
+            this.handleError(error);
+
+            if(!this.principalContractDetails || !this.principalContractDetails.address || this.principalContractDetails.address.indexOf('0x') !== 0) {
+              console.debug('Principal token seems inconsistent', this.principalContractDetails);
+              this.isReadOnly = true;
+              throw new Error(`Default token isn't configured`);
+            } else if(this.principalContractDetails.error) {
+              console.debug('Error retrieving principal contract details', this.principalContractDetails.error, this.principalContractDetails);
+              this.isReadOnly = true;
+              throw new Error(this.principalContractDetails.error);
+            } else if(!this.principalContractDetails.contract) {
+              console.debug('Principal account in wallet isn\'t a token contract', this.principalContractDetails);
+              this.isReadOnly = true;
+              throw new Error('Principal account in wallet isn\'t a token contract');
+            } else if(!this.principalContractDetails.contract.options || !this.principalContractDetails.contract.options.from) {
+              console.debug('Error retrieving sender address', this.principalContractDetails);
+              this.isReadOnly = true;
+              throw new Error('Error retrieving your wallet address');
+            }
+          })
+          .catch((e) => {
+            console.debug('init method - error', e);
+            const error = `${e}`;
+
+            if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
+              this.error = 'Wallet not configured';
+            } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
+              this.error = 'Failed to load user settings';
+            } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
+              this.error = 'Failed to connect to network';
+            } else {
+              this.error = (e && e.message) || e;
+            }
+          })
+          .finally(() => {
+            console.debug("Wallet API application finished loading");
+            this.loading = false;
+            const result = {
+              error : this.error,
+              needPassword : this.needPassword,
+              symbol : this.principalContractDetails && this.principalContractDetails.symbol,
+            };
+            document.dispatchEvent(new CustomEvent('exo-wallet-init-result', {detail : result}));
+
+            if (this.useMetamask && window.walletSettings.enablingMetamaskAccountDone) {
+              this.$nextTick(() => watchMetamaskAccount(window.walletSettings.detectedMetamaskAccount));
+            }
+          });
+      } catch(e) {
+        console.debug('init method - error', e);
+        this.loading = false;
+        document.dispatchEvent(new CustomEvent('exo-wallet-init-result', {detail : {
+          error : (e && e.message) || e,
+          symbol : this.principalContractDetails && this.principalContractDetails.symbol,
+        }}));
       }
-
-      this.loading = true;
-      this.error = null;
-      this.needPassword = false;
-      this.principalContractDetails = null;
-      this.walletAddress = null;
-
-      console.debug("Wallet API application start loading");
-
-      return initSettings(isSpace)
-        .then((result, error) => {
-          this.handleError(error);
-          if (!window.walletSettings || !window.walletSettings.isWalletEnabled) {
-            this.isWalletEnabled = false;
-            this.isReadOnly = true;
-            throw new Error('Wallet disabled for current user');
-          } else if (!window.walletSettings.userPreferences.walletAddress) {
-            this.isReadOnly = true;
-            throw new Error(constants.ERROR_WALLET_NOT_CONFIGURED);
-          } else if (!window.walletSettings.defaultPrincipalAccount) {
-            this.isReadOnly = true;
-            throw new Error("Wallet principal account isn't configured");
-          }
-          this.isWalletEnabled = true;
-          this.isReadOnly = false;
-          return initWeb3();
-        })
-        .then((result, error) => {
-          this.handleError(error);
-          this.useMetamask = window.walletSettings.userPreferences.useMetamask;
-          this.walletAddress = window.walletSettings.userPreferences.walletAddress;
-
-          if(!this.walletAddress) {
-            this.isReadOnly = true;
-            throw new Error("No wallet is configured for current user");
-          } else if ((!this.useMetamask && !window.walletSettings.browserWalletExists)
-              || (this.useMetamask
-                  && (!window.web3
-                      || !window.web3.eth
-                      || !window.web3.eth.defaultAccount
-                      || window.web3.eth.defaultAccount.toLowerCase() !== this.walletAddress.toLowerCase()))) {
-            this.isReadOnly = true;
-            throw new Error("Wallet is in readonly state");
-          }
-          this.needPassword = !this.useMetamask && window.walletSettings.browserWalletExists && !window.walletSettings.storedPassword;
-          this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
-          this.networkId = window.walletSettings.currentNetworkId;
-          this.isReadOnly = window.walletSettings.isReadOnly;
-          if (window.walletSettings.maxGasPrice) {
-            window.walletSettings.maxGasPriceEther = window.walletSettings.maxGasPriceEther || window.localWeb3.utils.fromWei(String(window.walletSettings.maxGasPrice), 'ether').toString();
-          }
-          this.principalContractDetails = {
-            networkId: this.networkId,
-            address: window.walletSettings.defaultPrincipalAccount,
-            isContract: true,
-            isDefault: true,
-          };
-          return retrieveContractDetails(this.walletAddress, this.principalContractDetails);
-        })
-        .then((result, error) => {
-          this.handleError(error);
-
-          if(!this.principalContractDetails || !this.principalContractDetails.address || this.principalContractDetails.address.indexOf('0x') !== 0) {
-            console.debug('Principal token seems inconsistent', this.principalContractDetails);
-            this.isReadOnly = true;
-            throw new Error(`Default token isn't configured`);
-          } else if(this.principalContractDetails.error) {
-            console.debug('Error retrieving principal contract details', this.principalContractDetails.error, this.principalContractDetails);
-            this.isReadOnly = true;
-            throw new Error(this.principalContractDetails.error);
-          } else if(!this.principalContractDetails.contract) {
-            console.debug('Principal account in wallet isn\'t a token contract', this.principalContractDetails);
-            this.isReadOnly = true;
-            throw new Error('Principal account in wallet isn\'t a token contract');
-          } else if(!this.principalContractDetails.contract.options || !this.principalContractDetails.contract.options.from) {
-            console.debug('Error retrieving sender address', this.principalContractDetails);
-            this.isReadOnly = true;
-            throw new Error('Error retrieving your wallet address');
-          }
-        })
-        .catch((e) => {
-          console.debug('init method - error', e);
-          const error = `${e}`;
-
-          if (error.indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) >= 0) {
-            this.error = 'Wallet not configured';
-          } else if (error.indexOf(constants.ERROR_WALLET_SETTINGS_NOT_LOADED) >= 0) {
-            this.error = 'Failed to load user settings';
-          } else if (error.indexOf(constants.ERROR_WALLET_DISCONNECTED) >= 0) {
-            this.error = 'Failed to connect to network';
-          } else {
-            this.error = (e && e.message) || e;
-          }
-        })
-        .finally(() => {
-          console.debug("Wallet API application finished loading");
-          this.loading = false;
-          const result = {
-            error : this.error,
-            needPassword : this.needPassword,
-            symbol : this.principalContractDetails && this.principalContractDetails.symbol,
-          };
-          document.dispatchEvent(new CustomEvent('exo-wallet-init-result', {detail : result}));
-        });
     },
     handleError(error) {
       if(error) {
