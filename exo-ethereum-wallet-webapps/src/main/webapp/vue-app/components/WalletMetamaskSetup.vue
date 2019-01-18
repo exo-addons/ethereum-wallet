@@ -208,32 +208,32 @@ export default {
   },
   computed: {
     displayNotSameNetworkWarning() {
-      return this.refreshIndex && !this.sameConfiguredNetwork && (!this.isSpace || !this.associatedWalletAddress);
+      return !this.loading && this.refreshIndex && !this.sameConfiguredNetwork && (!this.isSpace || !this.associatedWalletAddress);
     },
     isPrincipalContractAdmin() {
-      return this.principalContractAdminAddress && this.detectedMetamaskAccount && this.principalContractAdminAddress.toLowerCase() === this.detectedMetamaskAccount.toLowerCase();
+      return !this.loading && this.principalContractAdminAddress && this.detectedMetamaskAccount && this.principalContractAdminAddress.toLowerCase() === this.detectedMetamaskAccount.toLowerCase();
     },
     displaySpaceAccountAssociationHelp() {
-      return this.refreshIndex && this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
+      return !this.loading && this.refreshIndex && this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
     },
     displayUserAccountAssociationHelp() {
-      return this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
+      return !this.loading && this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;
     },
     displayAddressAssociationBox() {
       // Display dialog association only when it's not a space or the space doesn't have an associated address yet
-      return this.refreshIndex && !this.isAdministration && (!this.isSpace || !this.associatedWalletAddress);
+      return !this.loading && this.refreshIndex && !this.isAdministration && (!this.isSpace || !this.associatedWalletAddress);
     },
     displayUserAccountChangeHelp() {
-      return this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && this.associatedWalletAddress && this.detectedMetamaskAccount;
+      return !this.loading && this.refreshIndex && !this.isSpace && this.sameConfiguredNetwork && this.associatedWalletAddress && this.detectedMetamaskAccount;
     },
     displayAccountHelpActions() {
-      return this.refreshIndex && this.sameConfiguredNetwork && !this.currentAccountAlreadyInUse && (this.displayUserAccountChangeHelp || this.displayUserAccountAssociationHelp || this.displaySpaceAccountAssociationHelp);
+      return !this.loading && this.refreshIndex && this.sameConfiguredNetwork && !this.currentAccountAlreadyInUse && (this.displayUserAccountChangeHelp || this.displayUserAccountAssociationHelp || this.displaySpaceAccountAssociationHelp);
     },
     displaySpaceMetamaskEnableHelp() {
-      return this.refreshIndex && this.isSpace && !this.associatedWalletAddress && !this.detectedMetamaskAccount;
+      return !this.loading && this.refreshIndex && this.isSpace && !this.associatedWalletAddress && !this.detectedMetamaskAccount;
     },
     newAddressDetected() {
-      return this.refreshIndex && this.sameConfiguredNetwork && this.detectedMetamaskAccount && this.associatedWalletAddress !== this.detectedMetamaskAccount && (!this.isSpace || this.isSpaceAdministrator);
+      return !this.loading && this.refreshIndex && this.sameConfiguredNetwork && this.detectedMetamaskAccount && this.associatedWalletAddress !== this.detectedMetamaskAccount && (!this.isSpace || this.isSpaceAdministrator);
     },
   },
   created() {
