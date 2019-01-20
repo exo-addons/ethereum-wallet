@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
+import org.exoplatform.management.annotations.ManagedBy;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -45,6 +46,7 @@ import rx.Subscription;
 /**
  * A Web3j connector class to interact with Ethereum Network
  */
+@ManagedBy(EthereumClientConnectorManaged.class)
 public class EthereumClientConnector implements Startable {
 
   private static final String      ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
@@ -67,13 +69,21 @@ public class EthereumClientConnector implements Startable {
 
   private Subscription             transactionSubscription          = null;
 
-  private Queue<Transaction>       queue                            = new ConcurrentLinkedQueue<>();
+  private Queue<Transaction>       transactionQueue                 = new ConcurrentLinkedQueue<>();
 
   private ScheduledExecutorService scheduledExecutorService         = null;
 
   private long                     lastWatchedBlockNumber           = 0;
 
   private boolean                  initializing                     = false;
+
+  private int                      connectionInterruptionCount      = -1;
+
+  private long                     watchingBlockchainStartTime      = 0;
+
+  private int                      watchedTransactionCount          = 0;
+
+  private int                      transactionQueueMaxSize          = 0;
 
   public EthereumClientConnector(EthereumWalletService ethereumWalletService,
                                  ListenerService listenerService,
@@ -118,7 +128,7 @@ public class EthereumClientConnector implements Startable {
         return;
       }
 
-      Transaction transaction = queue.poll();
+      Transaction transaction = transactionQueue.poll();
       while (transaction != null) {
         try {
           listenerService.broadcast(NEW_TRANSACTION_EVENT, transaction, null);
@@ -128,7 +138,7 @@ public class EthereumClientConnector implements Startable {
         } catch (Throwable e) {
           LOG.warn("Error while handling transaction", e);
         }
-        transaction = queue.poll();
+        transaction = transactionQueue.poll();
       }
       try {
         listenerService.broadcast(NEW_BLOCK_EVENT, this.lastWatchedBlockNumber, null);
@@ -150,12 +160,15 @@ public class EthereumClientConnector implements Startable {
   public void startListeninigToTransactions() {
     if (this.lastWatchedBlockNumber == 0) {
       LOG.info("Initiate subscription to Ethereum transaction events starting from latest block");
-      this.transactionSubscription = web3j.transactionObservable().subscribe(tx -> queue.add(tx));
+      this.transactionSubscription = web3j.transactionObservable().subscribe(tx -> addTransactionToQueue(tx));
     } else {
       LOG.info("Initiate subscription to Ethereum transaction events starting from block {}", this.lastWatchedBlockNumber);
       DefaultBlockParameterNumber startBlock = new DefaultBlockParameterNumber(this.lastWatchedBlockNumber);
       this.transactionSubscription = web3j.catchUpToLatestAndSubscribeToNewTransactionsObservable(startBlock)
-                                          .subscribe(tx -> queue.add(tx));
+                                          .subscribe(tx -> addTransactionToQueue(tx));
+    }
+    if (watchingBlockchainStartTime == 0) {
+      watchingBlockchainStartTime = System.currentTimeMillis();
     }
   }
 
@@ -233,8 +246,34 @@ public class EthereumClientConnector implements Startable {
     return lastWatchedBlockNumber;
   }
 
+  public int getConnectionInterruptionCount() {
+    return connectionInterruptionCount;
+  }
+
   public void setLastWatchedBlockNumber(long lastWatchedBlockNumber) {
     this.lastWatchedBlockNumber = lastWatchedBlockNumber;
+  }
+
+  public int getTransactionQueueSize() {
+    return transactionQueue.size();
+  }
+
+  public long getWatchingBlockchainStartTime() {
+    return watchingBlockchainStartTime;
+  }
+
+  public int getWatchedTransactionCount() {
+    return watchedTransactionCount;
+  }
+
+  public int getTransactionQueueMaxSize() {
+    return transactionQueueMaxSize;
+  }
+
+  private boolean addTransactionToQueue(Transaction tx) {
+    watchedTransactionCount++;
+    transactionQueueMaxSize = Math.max(transactionQueue.size() + 1, transactionQueueMaxSize);
+    return transactionQueue.add(tx);
   }
 
   private void closeConnection() {
@@ -278,6 +317,7 @@ public class EthereumClientConnector implements Startable {
           || this.transactionSubscription == null || this.transactionSubscription.isUnsubscribed()) {
 
         if (getWebsocketProviderURL().startsWith("ws:") || getWebsocketProviderURL().startsWith("wss:")) {
+          connectionInterruptionCount++;
           stopListeninigToTransactions();
           establishConnection();
           startListeninigToTransactions();
