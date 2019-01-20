@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.Event;
 import org.exoplatform.services.listener.Listener;
 import org.exoplatform.services.log.ExoLogger;
@@ -24,10 +25,6 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
 
   private EthereumWalletService ethereumWalletService;
 
-  public InitialFundsRequestListener(EthereumWalletService ethereumWalletService) {
-    this.ethereumWalletService = ethereumWalletService;
-  }
-
   @Override
   public void onEvent(Event<Object, AccountDetail> event) throws Exception {
     AccountDetail accountDetail = event.getData();
@@ -35,7 +32,7 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
       return;
     }
 
-    GlobalSettings settings = ethereumWalletService.getSettings();
+    GlobalSettings settings = getEthereumWalletService().getSettings();
     Map<String, Double> initialFunds = settings.getInitialFunds();
     if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null || settings.getFundsHolder().isEmpty()
         || accountDetail.getId() == null || settings.getFundsHolder().equals(accountDetail.getId())) {
@@ -67,7 +64,7 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
       request.setMessage(settings.getInitialFundsRequestMessage());
 
       try {
-        this.ethereumWalletService.requestFunds(request);
+        getEthereumWalletService().requestFunds(request);
       } catch (Exception e) {
         LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
             + accountDetail.getType() + "' with id '" + accountDetail.getId() + "'", e);
@@ -75,4 +72,12 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
       }
     }
   }
+
+  public EthereumWalletService getEthereumWalletService() {
+    if (ethereumWalletService == null) {
+      ethereumWalletService = CommonsUtils.getService(EthereumWalletService.class);
+    }
+    return ethereumWalletService;
+  }
+
 }

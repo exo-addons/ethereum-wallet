@@ -45,13 +45,13 @@ import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.cache.future.FutureExoCache;
 import org.exoplatform.commons.cache.future.Loader;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
-import org.exoplatform.commons.utils.IOUtil;
-import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.commons.utils.*;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.container.configuration.ConfigurationManager;
 import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.management.annotations.ManagedBy;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.cache.ExoCache;
@@ -68,6 +68,7 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 /**
  * A storage service to save/load information used by users and spaces wallets
  */
+@ManagedBy(EthereumWalletServiceManaged.class)
 public class EthereumWalletService implements Startable {
 
   private static final String                                                                SPACE_WITH_ID_MESSAGE                  =
@@ -83,6 +84,8 @@ public class EthereumWalletService implements Startable {
                                                                                                  ExoLogger.getLogger(EthereumWalletService.class);
 
   private ExoContainer                                                                       container;
+
+  private EthereumClientConnector                                                            ethereumClientConnector;
 
   private SettingService                                                                     settingService;
 
@@ -131,6 +134,9 @@ public class EthereumWalletService implements Startable {
 
   private ScheduledExecutorService                                                           scheduledExecutorService               =
                                                                                                                       null;
+
+  private int                                                                                knownTreatedTransactionsCount          =
+                                                                                                                           0;
 
   public EthereumWalletService(SettingService settingService,
                                SpaceService spaceService,
@@ -822,7 +828,7 @@ public class EthereumWalletService implements Startable {
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     if (!addressTransactions.contains(hash)) {
       String content = hash;
-      TransactionDetail transactionMessage = transactionDetailsCache.get(hash);
+      TransactionDetail transactionMessage = getTransactionDetailFromCache(hash);
       if (transactionMessage != null) {
         content = transactionMessage.getToStoreValue(sender);
       }
@@ -838,6 +844,7 @@ public class EthereumWalletService implements Startable {
       transaction.put("address", address);
       transaction.put("status", status);
       listenerService.broadcast(KNOWN_TRANSACTION_MINED_EVENT, null, transaction);
+      this.knownTreatedTransactionsCount++;
     }
   }
 
@@ -1091,13 +1098,20 @@ public class EthereumWalletService implements Startable {
     }
   }
 
+  public boolean isTransactionWatched(String hash) {
+    // Is watched if the connector has started watching latest block
+    // or the transaction is in cache
+    return getEthereumClientConnector().getLastWatchedBlockNumber() <= getEthereumClientConnector().getLastBlockNumberOnStartupTime()
+        || transactionDetailsCache.get(hash.toLowerCase()) != null;
+  }
+
   /**
    * Set transaction in cache
    * 
    * @param transactionMessage
    */
   public void setTransactionDetailInCache(TransactionDetail transactionMessage) {
-    this.transactionDetailsCache.put(transactionMessage.getHash(), transactionMessage);
+    this.transactionDetailsCache.put(transactionMessage.getHash().toLowerCase(), transactionMessage);
   }
 
   /**
@@ -1107,7 +1121,7 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public TransactionDetail getTransactionDetailFromCache(String transactionHash) {
-    TransactionDetail transactionDetail = this.transactionDetailsCache.get(transactionHash);
+    TransactionDetail transactionDetail = this.transactionDetailsCache.get(transactionHash.toLowerCase());
     return transactionDetail == null ? null : transactionDetail.copy();
   }
 
@@ -1118,7 +1132,7 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public TransactionDetail removeTransactionDetailFromCache(String hash) {
-    return this.transactionDetailsCache.remove(hash);
+    return this.transactionDetailsCache.remove(hash.toLowerCase());
   }
 
   /**
@@ -1182,6 +1196,14 @@ public class EthereumWalletService implements Startable {
         accountDetailFutureCache.remove(new AccountDetailCacheId(address));
       }
     }
+  }
+
+  public int getKnownTreatedTransactionsCount() {
+    return knownTreatedTransactionsCount;
+  }
+
+  public long getWalletsCount() {
+    return this.walletsCount;
   }
 
   private Map<String, String> getListOfWalletsOfType(String walletType) throws Exception {
@@ -1507,4 +1529,12 @@ public class EthereumWalletService implements Startable {
   public interface ServiceContext<V> {
     V execute();
   }
+
+  public EthereumClientConnector getEthereumClientConnector() {
+    if (ethereumClientConnector == null) {
+      ethereumClientConnector = CommonsUtils.getService(EthereumClientConnector.class);
+    }
+    return ethereumClientConnector;
+  }
+
 }

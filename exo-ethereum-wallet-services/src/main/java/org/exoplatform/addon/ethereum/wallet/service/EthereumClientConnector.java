@@ -27,13 +27,16 @@ import java.util.concurrent.*;
 import org.apache.commons.lang3.StringUtils;
 import org.picocontainer.Startable;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.*;
+import org.web3j.protocol.core.methods.response.EthBlock.Block;
 import org.web3j.protocol.websocket.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.annotations.ManagedBy;
@@ -75,6 +78,10 @@ public class EthereumClientConnector implements Startable {
 
   private long                     lastWatchedBlockNumber           = 0;
 
+  private long                     lastBlockNumberOnStartupTime     = 0;
+
+  private int                      transactionsCountPerBlock        = 0;
+
   private boolean                  initializing                     = false;
 
   private int                      connectionInterruptionCount      = -1;
@@ -86,10 +93,8 @@ public class EthereumClientConnector implements Startable {
   private int                      transactionQueueMaxSize          = 0;
 
   public EthereumClientConnector(EthereumWalletService ethereumWalletService,
-                                 ListenerService listenerService,
                                  ExoContainer container) {
     this.ethereumWalletService = ethereumWalletService;
-    this.listenerService = listenerService;
     this.container = container;
   }
 
@@ -131,7 +136,8 @@ public class EthereumClientConnector implements Startable {
       Transaction transaction = transactionQueue.poll();
       while (transaction != null) {
         try {
-          listenerService.broadcast(NEW_TRANSACTION_EVENT, transaction, null);
+          getListenerService().broadcast(NEW_TRANSACTION_EVENT, transaction, null);
+
           if (transaction.getBlockNumber() != null && transaction.getBlockNumber().longValue() > this.lastWatchedBlockNumber) {
             this.lastWatchedBlockNumber = transaction.getBlockNumber().longValue();
           }
@@ -141,7 +147,7 @@ public class EthereumClientConnector implements Startable {
         transaction = transactionQueue.poll();
       }
       try {
-        listenerService.broadcast(NEW_BLOCK_EVENT, this.lastWatchedBlockNumber, null);
+        getListenerService().broadcast(NEW_BLOCK_EVENT, this.lastWatchedBlockNumber, null);
       } catch (Throwable e) {
         LOG.warn("Error while broadcasting last watched block number event", e);
       }
@@ -169,6 +175,16 @@ public class EthereumClientConnector implements Startable {
     }
     if (watchingBlockchainStartTime == 0) {
       watchingBlockchainStartTime = System.currentTimeMillis();
+    }
+
+    if (this.lastBlockNumberOnStartupTime == 0) {
+      try {
+        Block block = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
+        this.lastBlockNumberOnStartupTime = block.getNumber().intValue();
+        this.transactionsCountPerBlock = block.getTransactions().size();
+      } catch (Throwable e) {
+        LOG.warn("Error while getting latest block number", e);
+      }
     }
   }
 
@@ -268,6 +284,14 @@ public class EthereumClientConnector implements Startable {
 
   public int getTransactionQueueMaxSize() {
     return transactionQueueMaxSize;
+  }
+
+  public long getLastBlockNumberOnStartupTime() {
+    return lastBlockNumberOnStartupTime;
+  }
+
+  public int getTransactionsCountPerBlock() {
+    return transactionsCountPerBlock;
   }
 
   private boolean addTransactionToQueue(Transaction tx) {
@@ -420,5 +444,12 @@ public class EthereumClientConnector implements Startable {
 
   protected String getConnectionFailedMessage() {
     return "Connection failed to " + getWebsocketProviderURL();
+  }
+
+  private ListenerService getListenerService() {
+    if (listenerService == null) {
+      listenerService = CommonsUtils.getService(ListenerService.class);
+    }
+    return listenerService;
   }
 }

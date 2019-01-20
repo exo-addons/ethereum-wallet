@@ -24,7 +24,7 @@ import org.exoplatform.management.jmx.annotations.NameTemplate;
 import org.exoplatform.management.jmx.annotations.Property;
 
 @Managed
-@NameTemplate(@Property(key = "connector", value = "ethereum"))
+@NameTemplate({ @Property(key = "service", value = "ethereum"), @Property(key = "view", value = "connector") })
 @ManagedDescription("Ethereum blockchain client connector")
 public class EthereumClientConnectorManaged {
 
@@ -93,7 +93,19 @@ public class EthereumClientConnectorManaged {
   @Managed
   @ManagedDescription("Get ethereum blockchain transactions treatment percentage")
   public String getTransactionTreatmentSpeedPercentage() {
-    return (getTreatingTransactionRatePerMinute() / getWatchingTransactionRatePerMinute() * 100) + "%";
+    return ((getTreatingTransactionRatePerMinute() * 100) / getWatchingTransactionRatePerMinute()) + "%";
+  }
+
+  @Managed
+  @ManagedDescription("Get last block number on startup time")
+  public long getLastBlockNumberOnStartupTime() {
+    return ethereumClientConnector.getLastBlockNumberOnStartupTime();
+  }
+
+  @Managed
+  @ManagedDescription("Get transactions count per block")
+  public int getTransactionsCountPerBlock() {
+    return ethereumClientConnector.getTransactionsCountPerBlock();
   }
 
   @Managed

@@ -1,8 +1,10 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
+
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.SPACE_ACCOUNT_TYPE;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getSpaceId;
 
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.social.core.space.SpaceListenerPlugin;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceLifeCycleEvent;
@@ -11,23 +13,19 @@ public class SpaceListener extends SpaceListenerPlugin {
 
   private EthereumWalletService ethereumWalletService;
 
-  public SpaceListener(EthereumWalletService ethereumWalletService) {
-    this.ethereumWalletService = ethereumWalletService;
-  }
-
   @Override
   public void spaceRemoved(SpaceLifeCycleEvent event) {
     Space space = event.getSpace();
-    this.ethereumWalletService.removeFromCache(SPACE_ACCOUNT_TYPE, space.getPrettyName());
+    getEthereumWalletService().removeFromCache(SPACE_ACCOUNT_TYPE, space.getPrettyName());
   }
 
   @Override
   public void spaceRenamed(SpaceLifeCycleEvent event) {
     Space space = event.getSpace();
-    this.ethereumWalletService.removeFromCache(SPACE_ACCOUNT_TYPE, getSpaceId(space));
-    this.ethereumWalletService.removeFromCache(SPACE_ACCOUNT_TYPE, space.getPrettyName());
+    getEthereumWalletService().removeFromCache(SPACE_ACCOUNT_TYPE, getSpaceId(space));
+    getEthereumWalletService().removeFromCache(SPACE_ACCOUNT_TYPE, space.getPrettyName());
     // Populate cache
-    this.ethereumWalletService.getSpaceAddress(space.getPrettyName());
+    getEthereumWalletService().getSpaceAddress(space.getPrettyName());
   }
 
   @Override
@@ -103,6 +101,13 @@ public class SpaceListener extends SpaceListenerPlugin {
   @Override
   public void spaceBannerEdited(SpaceLifeCycleEvent event) {
     // No implementation is required here
+  }
+
+  public EthereumWalletService getEthereumWalletService() {
+    if (ethereumWalletService == null) {
+      ethereumWalletService = CommonsUtils.getService(EthereumWalletService.class);
+    }
+    return ethereumWalletService;
   }
 
 }

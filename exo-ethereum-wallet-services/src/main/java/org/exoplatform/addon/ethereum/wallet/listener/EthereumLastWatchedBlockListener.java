@@ -18,6 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.listener;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.*;
@@ -36,8 +37,7 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
 
   private long                  networkId            = 0;
 
-  public EthereumLastWatchedBlockListener(ExoContainer container, EthereumWalletService ethereumWalletService) {
-    this.ethereumWalletService = ethereumWalletService;
+  public EthereumLastWatchedBlockListener(ExoContainer container) {
     this.container = container;
   }
 
@@ -49,15 +49,22 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
     }
     RequestLifeCycle.begin(this.container);
     try {
-      GlobalSettings globalSettings = ethereumWalletService.getSettings();
+      GlobalSettings globalSettings = getEthereumWalletService().getSettings();
       long defaultNetworkId = globalSettings.getDefaultNetworkId();
       if (defaultNetworkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
         this.lastSavedBlockNumber = blockNumber;
         this.networkId = defaultNetworkId;
-        this.ethereumWalletService.saveLastWatchedBlockNumber(defaultNetworkId, blockNumber);
+        getEthereumWalletService().saveLastWatchedBlockNumber(defaultNetworkId, blockNumber);
       }
     } finally {
       RequestLifeCycle.end();
     }
+  }
+
+  public EthereumWalletService getEthereumWalletService() {
+    if (ethereumWalletService == null) {
+      ethereumWalletService = CommonsUtils.getService(EthereumWalletService.class);
+    }
+    return ethereumWalletService;
   }
 }

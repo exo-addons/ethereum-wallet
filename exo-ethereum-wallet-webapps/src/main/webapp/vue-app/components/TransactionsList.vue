@@ -816,7 +816,7 @@ export default {
       return this.loadRecentTransaction(this.transactionsLimit)
         .then(() => {
           if (this.selectedTransactionHash) {
-            const selectedTransaction = this.transactions[this.selectedTransactionHash];
+            const selectedTransaction = this.transactions[this.selectedTransactionHash] || this.transactions[this.selectedTransactionHash.toLowerCase()];
             if (selectedTransaction) {
               this.$set(selectedTransaction, 'selected', true);
               this.$nextTick(() => {
