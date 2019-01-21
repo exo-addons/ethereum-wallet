@@ -300,6 +300,16 @@ public class EthereumWalletService implements Startable {
 
     GlobalSettings oldGlobalSettings = getSettings();
 
+    // Set not updatable data from UI
+    newGlobalSettings.setDataVersion(oldGlobalSettings.getDataVersion());
+
+    // Delete computed data
+    newGlobalSettings.setUserPreferences(null);
+    newGlobalSettings.setContractAbi(null);
+    newGlobalSettings.setContractBin(null);
+    newGlobalSettings.setWalletEnabled(false);
+    newGlobalSettings.setAdmin(false);
+
     LOG.debug("Saving new global settings", newGlobalSettings.toJSONString(false));
 
     settingService.set(WALLET_CONTEXT,
@@ -328,7 +338,7 @@ public class EthereumWalletService implements Startable {
       return this.storedSettings;
     }
     this.storedSettings = getSettings(null);
-    return this.storedSettings;
+    return this.storedSettings.clone();
   }
 
   /**
@@ -339,7 +349,12 @@ public class EthereumWalletService implements Startable {
    * @return
    */
   public GlobalSettings getSettings(Long networkId) {
-    return getSettings(networkId, null);
+    GlobalSettings globalStoredSettings = this.storedSettings;
+    if (globalStoredSettings != null && globalStoredSettings.getDefaultNetworkId() != null
+        && (networkId == null || globalStoredSettings.getDefaultNetworkId() == networkId)) {
+      return globalStoredSettings.clone();
+    }
+    return getSettings(networkId, null, null);
   }
 
   /**
@@ -349,86 +364,86 @@ public class EthereumWalletService implements Startable {
    * 
    * @param networkId
    * @param spaceId
+   * @param username
    * @return
    */
-  public GlobalSettings getSettings(Long networkId, String spaceId) {
-    SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
-
-    String username = getCurrentUserId();
-
-    GlobalSettings globalSettings = defaultSettings;
-    if (globalSettingsValue != null && globalSettingsValue.getValue() != null) {
-      globalSettings = GlobalSettings.parseStringToObject(defaultSettings, globalSettingsValue.getValue().toString());
-      if (StringUtils.isNotBlank(globalSettings.getAccessPermission())) {
-        Space space = getSpace(globalSettings.getAccessPermission());
-        // Disable wallet for users not member of the permitted space members
-        if (username != null && space != null
-            && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
-
-          LOG.info("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
-
-          globalSettings.setWalletEnabled(false);
-        }
+  public GlobalSettings getSettings(Long networkId, String spaceId, String username) {
+    GlobalSettings globalSettings = null;
+    if (StringUtils.isNotBlank(username)) {
+      globalSettings = getSettings(networkId);
+    } else {
+      // Global settings computing
+      SettingValue<?> globalSettingsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, GLOBAL_SETTINGS_KEY_NAME);
+      if (globalSettingsValue != null && globalSettingsValue.getValue() != null) {
+        globalSettings = GlobalSettings.parseStringToObject(defaultSettings, globalSettingsValue.getValue().toString());
       }
-      globalSettings.setAdmin(isUserAdmin());
-    }
 
-    if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
+      if (globalSettings == null) {
+        globalSettings = defaultSettings.clone();
+      }
+
       if ((networkId == null || networkId == 0) && globalSettings.getDefaultNetworkId() != null) {
         networkId = globalSettings.getDefaultNetworkId();
       }
+
       // Retrieve default contracts to display for all users
       globalSettings.setDefaultContractsToDisplay(getDefaultContractsAddresses(networkId));
 
-      if (StringUtils.isBlank(username)) {
-        // Generic global settings computing
-        String defaultPrincipalAccount = globalSettings.getDefaultPrincipalAccount();
-        if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
-          ContractDetail principalContractDetails = getContractDetail(defaultPrincipalAccount,
-                                                                      globalSettings.getDefaultNetworkId());
-          globalSettings.setPrincipalContractAdminAddress(principalContractDetails == null ? null
-                                                                                           : principalContractDetails.getOwner());
-        }
-      } else {
-        // Append user preferences
-        SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(username), WALLET_SCOPE, SETTINGS_KEY_NAME);
-        UserPreferences userSettings = null;
-        if (userSettingsValue != null && userSettingsValue.getValue() != null) {
-          userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
-          checkDataToUpgrade(username, userSettings);
-        } else {
-          userSettings = new UserPreferences();
-        }
-        globalSettings.setUserPreferences(userSettings);
-
-        if (StringUtils.isNotBlank(spaceId)) {
-
-          String spacePhrase = getSpacePhrase(spaceId);
-          if (StringUtils.isBlank(spacePhrase)) {
-            Space space = getSpace(spaceId);
-            if (space == null) {
-              throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + spaceId + IS_NOT_FOUND_MESSAGE);
-            }
-            spaceId = getSpaceId(space);
-            spacePhrase = getSpacePhrase(spaceId);
-          }
-          userSettings.setPhrase(spacePhrase);
-          userSettings.setWalletAddress(getSpaceAddress(spaceId));
-        } else {
-          userSettings.setWalletAddress(getUserAddress(username));
-          userSettings.setPhrase(getUserPhrase(username));
-        }
-        if (this.storedSettings != null && StringUtils.isNotBlank(this.storedSettings.getPrincipalContractAdminAddress())) {
-          globalSettings.setPrincipalContractAdminAddress(this.storedSettings.getPrincipalContractAdminAddress());
-        }
+      // Generic global settings computing
+      String defaultPrincipalAccount = globalSettings.getDefaultPrincipalAccount();
+      if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
+        ContractDetail principalContractDetails = getContractDetail(defaultPrincipalAccount,
+                                                                    globalSettings.getDefaultNetworkId());
+        globalSettings.setPrincipalContractAdminAddress(principalContractDetails == null ? null
+                                                                                         : principalContractDetails.getOwner());
       }
-      globalSettings.setContractAbi(getContractAbi());
-      globalSettings.setContractBin(getContractBinary());
-    } else {
-      globalSettings = new GlobalSettings();
-      globalSettings.setWalletEnabled(false);
+      return globalSettings;
     }
 
+    globalSettings.setAdmin(isUserAdmin());
+    globalSettings.setWalletEnabled(true);
+
+    if (StringUtils.isNotBlank(globalSettings.getAccessPermission())) {
+      Space space = getSpace(globalSettings.getAccessPermission());
+      // Disable wallet for users not member of the permitted space members
+      if (space != null && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
+        LOG.info("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
+        globalSettings.setWalletEnabled(false);
+      }
+    }
+
+    if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
+      // Append user preferences
+      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(username), WALLET_SCOPE, SETTINGS_KEY_NAME);
+      UserPreferences userSettings = null;
+      if (userSettingsValue != null && userSettingsValue.getValue() != null) {
+        userSettings = UserPreferences.parseStringToObject(userSettingsValue.getValue().toString());
+        checkDataToUpgrade(username, userSettings);
+      } else {
+        userSettings = new UserPreferences();
+      }
+      globalSettings.setUserPreferences(userSettings);
+
+      if (StringUtils.isNotBlank(spaceId)) {
+        String spacePhrase = getSpacePhrase(spaceId);
+        if (StringUtils.isBlank(spacePhrase)) {
+          Space space = getSpace(spaceId);
+          if (space == null) {
+            throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + spaceId + IS_NOT_FOUND_MESSAGE);
+          }
+          spaceId = getSpaceId(space);
+          spacePhrase = getSpacePhrase(spaceId);
+        }
+        userSettings.setPhrase(spacePhrase);
+        userSettings.setWalletAddress(getSpaceAddress(spaceId));
+      } else {
+        userSettings.setWalletAddress(getUserAddress(username));
+        userSettings.setPhrase(getUserPhrase(username));
+      }
+
+      globalSettings.setContractAbi(getContractAbi());
+      globalSettings.setContractBin(getContractBinary());
+    }
     return globalSettings;
   }
 

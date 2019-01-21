@@ -211,7 +211,7 @@ export default {
       return !this.loading && this.refreshIndex && !this.sameConfiguredNetwork && (!this.isSpace || !this.associatedWalletAddress);
     },
     isPrincipalContractAdmin() {
-      return !this.loading && this.principalContractAdminAddress && this.detectedMetamaskAccount && this.principalContractAdminAddress.toLowerCase() === this.detectedMetamaskAccount.toLowerCase();
+      return this.principalContractAdminAddress && this.detectedMetamaskAccount && this.principalContractAdminAddress.toLowerCase() === this.detectedMetamaskAccount.toLowerCase();
     },
     displaySpaceAccountAssociationHelp() {
       return !this.loading && this.refreshIndex && this.isSpace && this.sameConfiguredNetwork && !this.associatedWalletAddress && this.detectedMetamaskAccount;

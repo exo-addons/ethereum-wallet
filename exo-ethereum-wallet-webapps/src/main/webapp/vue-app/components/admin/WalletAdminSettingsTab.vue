@@ -100,25 +100,31 @@
         </v-autocomplete>
       </v-flex>
   
-      <v-combobox
-        v-if="sameConfiguredNetwork"
-        v-model="selectedPrincipalAccount"
-        :items="accountsList"
-        class="mt-4"
-        item-disabled="itemDisabled"
-        label="Select principal account displayed in wallet overview"
-        placeholder="Select principal account displayed in wallet overview"
-        chips />
-  
-      <v-combobox
-        v-if="sameConfiguredNetwork"
-        v-model="selectedOverviewAccounts"
-        :items="accountsList"
-        label="List of currencies to use (by order)"
-        placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
-        multiple
-        deletable-chips
-        chips />
+      <v-flex id="selectedPrincipalAccountParent" class="selectBoxVuetifyParent">
+        <v-combobox
+          v-if="sameConfiguredNetwork"
+          v-model="selectedPrincipalAccount"
+          :items="accountsList"
+          attach="#selectedPrincipalAccountParent"
+          class="mt-4"
+          item-disabled="itemDisabled"
+          label="Select principal account displayed in wallet overview"
+          placeholder="Select principal account displayed in wallet overview"
+          chips />
+      </v-flex>
+
+      <v-flex id="selectedOverviewAccountsParent" class="selectBoxVuetifyParent">
+        <v-combobox
+          v-if="sameConfiguredNetwork"
+          v-model="selectedOverviewAccounts"
+          :items="accountsList"
+          attach="#selectedOverviewAccountsParent"
+          label="List of currencies to use (by order)"
+          placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
+          multiple
+          deletable-chips
+          chips />
+      </v-flex>
     </v-form>
     <v-card-actions>
       <v-spacer />

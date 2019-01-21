@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class GlobalSettings implements Serializable {
+public class GlobalSettings implements Serializable, Cloneable {
 
   private static final String CONTRACT_BIN_PARAM                     = "contractBin";
 
@@ -68,11 +68,7 @@ public class GlobalSettings implements Serializable {
 
   private Integer             dataVersion                            = 0;
 
-  private boolean             walletEnabled                          = true;
-
   private boolean             enableDelegation                       = true;
-
-  private boolean             isAdmin                                = false;
 
   private String              accessPermission                       = null;
 
@@ -105,6 +101,12 @@ public class GlobalSettings implements Serializable {
   private Set<String>         defaultOverviewAccounts;
 
   private Map<String, Double> initialFunds;
+
+  // Computed
+  private boolean             walletEnabled                          = true;
+
+  // Computed
+  private boolean             isAdmin                                = false;
 
   private UserPreferences     userPreferences;
 
@@ -222,11 +224,7 @@ public class GlobalSettings implements Serializable {
       defaultSettings = new GlobalSettings();
     }
     if (StringUtils.isBlank(jsonString)) {
-      try {
-        return (GlobalSettings) defaultSettings.clone();
-      } catch (CloneNotSupportedException e) {
-        return null;
-      }
+      return defaultSettings.clone();
     }
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
@@ -317,4 +315,17 @@ public class GlobalSettings implements Serializable {
     return map;
   }
 
+  @Override
+  @SuppressWarnings("all")
+  public GlobalSettings clone() {
+    try {
+      GlobalSettings clonedSettings = (GlobalSettings) super.clone();
+      clonedSettings.setUserPreferences(userPreferences);
+      clonedSettings.setAdmin(false);
+      clonedSettings.setWalletEnabled(false);
+      return clonedSettings;
+    } catch (CloneNotSupportedException e) {
+      throw new IllegalStateException("Can't clone settings");
+    }
+  }
 }

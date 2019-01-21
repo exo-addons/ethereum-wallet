@@ -41,7 +41,7 @@
           </v-dialog>
 
           <wallet-summary
-            v-if="walletAddress && !loading && accountsDetails"
+            v-if="walletAddress && accountsDetails"
             ref="walletSummary"
             :accounts-details="accountsDetails"
             :overview-accounts="overviewAccounts"
@@ -311,7 +311,7 @@ export default {
             throw error;
           }
         })
-        .then((account) => {
+        .then(() => {
           this.walletAddress = window.localWeb3 && window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
           this.originalWalletAddress = window.walletSettings.userPreferences.walletAddress;
           this.networkId = window.walletSettings.currentNetworkId;
@@ -603,24 +603,22 @@ export default {
       if (globalSettings.defaultNetworkId) {
         reloadContract = String(window.walletSettings.defaultNetworkId) !== String(globalSettings.defaultNetworkId);
       }
-      const currentGlobalSettings = {
-        accessPermission: window.walletSettings.accessPermission,
-        fundsHolder: window.walletSettings.fundsHolder,
-        fundsHolderType: window.walletSettings.fundsHolderType,
-        initialFundsRequestMessage: window.walletSettings.initialFundsRequestMessage,
-        providerURL: window.walletSettings.providerURL,
-        websocketProviderURL: window.walletSettings.websocketProviderURL,
-        defaultNetworkId: window.walletSettings.defaultNetworkId,
-        defaultPrincipalAccount: window.walletSettings.defaultPrincipalAccount,
-        defaultOverviewAccounts: window.walletSettings.defaultOverviewAccounts,
-        defaultGas: window.walletSettings.defaultGas,
-        minGasPrice: window.walletSettings.minGasPrice,
-        normalGasPrice: window.walletSettings.normalGasPrice,
-        maxGasPrice: window.walletSettings.maxGasPrice,
-        enableDelegation: window.walletSettings.enableDelegation,
-        initialFunds: defaultInitialFundsMap,
-      };
-      globalSettings = Object.assign(currentGlobalSettings, globalSettings);
+      const currentGlobalSettings = Object.assign({}, window.walletSettings, {initialFunds: defaultInitialFundsMap});
+      const globalSettingsToSave = Object.assign(currentGlobalSettings, globalSettings);
+      if(globalSettingsToSave.contractAbi) {
+        delete globalSettingsToSave.contractAbi;
+      }
+      if(globalSettingsToSave.contractBin) {
+        delete globalSettingsToSave.contractBin;
+      }
+      if(globalSettingsToSave.contractBin) {
+        delete globalSettingsToSave.contractBin;
+      }
+      if(globalSettingsToSave.userPreferences) {
+        delete globalSettingsToSave.userPreferences;
+      }
+      delete globalSettingsToSave.walletEnabled;
+      delete globalSettingsToSave.admin;
       return fetch('/portal/rest/wallet/api/global-settings/save', {
         method: 'POST',
         credentials: 'include',
@@ -628,22 +626,13 @@ export default {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(globalSettings),
+        body: JSON.stringify(globalSettingsToSave),
       })
         .then((resp) => {
           if (resp && resp.ok) {
-            window.walletSettings.defaultNetworkId = globalSettings.defaultNetworkId;
-            window.walletSettings.providerURL = globalSettings.providerURL;
-            window.walletSettings.websocketProviderURL = globalSettings.websocketProviderURL;
-            window.walletSettings.accessPermission = globalSettings.accessPermission;
-            window.walletSettings.fundsHolder = globalSettings.fundsHolder;
-            window.walletSettings.defaultGas = globalSettings.defaultGas;
-            window.walletSettings.defaultPrincipalAccount = globalSettings.defaultPrincipalAccount;
-            this.sameConfiguredNetwork = String(this.networkId) === String(globalSettings.defaultNetworkId);
-
             return resp.text();
           } else {
-            this.error = 'Error saving global settings';
+            throw new Error('Error saving global settings');
           }
         })
         .then(() => {
