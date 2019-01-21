@@ -1,9 +1,12 @@
 <template>
   <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
-    <v-combobox
-      v-model="selectedNetwork"
-      :items="networks"
-      label="Select ethereum network" />
+    <v-flex id="selectedNetworkParent" class="selectBoxVuetifyParent">
+      <v-combobox
+        v-model="selectedNetwork"
+        :items="networks"
+        attach="#selectedNetworkParent"
+        label="Select ethereum network" />
+    </v-flex>
 
     <v-text-field
       v-if="showSpecificNetworkFields"
