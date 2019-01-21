@@ -37,7 +37,7 @@
           </v-combobox>
         </div>
         <span>
-          per kudos
+          per {{ kudosPeriodTypeLabel }}
         </span> <button class="btn btn-primary mb-3" @click="save">
           Save
         </button>
@@ -327,6 +327,9 @@ export default {
     };
   },
   computed: {
+    kudosPeriodTypeLabel() {
+      return this.kudosPeriodType && this.kudosPeriodType.toLowerCase();
+    },
     selectedKudosContractName() {
       return this.selectedContractDetails && this.selectedContractDetails.name;
     },
