@@ -194,6 +194,23 @@
             </td>
           </tr>
         </template>
+        <template slot="footer">
+          <td :colspan="kudosIdentitiesHeaders.length - 2">
+            <strong>
+              Total
+            </strong>
+          </td>
+          <td>
+            <strong>
+              {{ totalTokensToSend }}
+            </strong>
+          </td>
+          <td colspan="2">
+            <strong>
+              {{ totalKudosToSend }}
+            </strong>
+          </td>
+        </template>
       </v-data-table>
       <send-reward-modal
         :account="walletAddress"
@@ -368,6 +385,9 @@ export default {
     },
     totalKudosToSend() {
       return this.validSelectedKudosIdentitiesList && this.validSelectedKudosIdentitiesList.length ? this.validSelectedKudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
+    },
+    totalTokensToSend() {
+      return this.validSelectedKudosIdentitiesList && this.validSelectedKudosIdentitiesList.length ? this.validSelectedKudosIdentitiesList.reduce((accumulator, item) => accumulator + (item.tokensToSend && Number(item.tokensToSend)) || 0, 0) : 0;
     },
     totalKudos() {
       return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
