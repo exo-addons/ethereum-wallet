@@ -80,9 +80,9 @@ export default {
   data() {
     return {
       defaultGas: 50000,
-      minGasPrice: 4000000000,
-      normalGasPrice: 8000000000,
-      maxGasPrice: 15000000000,
+      minGasPrice: null,
+      normalGasPrice: null,
+      maxGasPrice: null,
       enableDelegation: true,
     };
   },
