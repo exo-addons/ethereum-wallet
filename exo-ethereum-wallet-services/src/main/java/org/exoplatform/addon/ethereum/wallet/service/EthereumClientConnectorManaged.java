@@ -110,13 +110,13 @@ public class EthereumClientConnectorManaged {
 
   @Managed
   @ManagedDescription("Clear all transactions in queue")
-  public void clearQueue() {
+  public void clearTransactionQueue() {
     throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Managed
   @ManagedDescription("Set last watched block on ethereum blockchain")
-  public void setLastWatchedBlockNumber() {
+  public void setLastWatchedBlockNumber(long lastWatchedBlockNumber) {
     throw new UnsupportedOperationException("Not yet implemented");
   }
 

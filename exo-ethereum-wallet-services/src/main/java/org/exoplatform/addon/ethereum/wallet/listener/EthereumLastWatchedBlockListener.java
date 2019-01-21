@@ -33,9 +33,9 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
 
   private ExoContainer          container;
 
-  private long                  lastSavedBlockNumber = 0;
+  private long                  blockNumberToSave = 0;
 
-  private long                  networkId            = 0;
+  private long                  networkId         = 0;
 
   public EthereumLastWatchedBlockListener(ExoContainer container) {
     this.container = container;
@@ -51,10 +51,16 @@ public class EthereumLastWatchedBlockListener extends Listener<Long, Object> {
     try {
       GlobalSettings globalSettings = getEthereumWalletService().getSettings();
       long defaultNetworkId = globalSettings.getDefaultNetworkId();
-      if (defaultNetworkId != this.networkId || blockNumber > this.lastSavedBlockNumber) {
-        this.lastSavedBlockNumber = blockNumber;
+      if (defaultNetworkId != this.networkId || blockNumber > this.blockNumberToSave) {
         this.networkId = defaultNetworkId;
-        getEthereumWalletService().saveLastWatchedBlockNumber(defaultNetworkId, blockNumber);
+        // save old value of blockNumberToSave if the corresponding block has
+        // been treeted entirely (which means we are processing a new block)
+        // This will avoid, when a server interruption occurs to mine from
+        // New block
+        if (this.blockNumberToSave > 0) {
+          getEthereumWalletService().saveLastWatchedBlockNumber(defaultNetworkId, this.blockNumberToSave);
+        }
+        this.blockNumberToSave = blockNumber;
       }
     } finally {
       RequestLifeCycle.end();
