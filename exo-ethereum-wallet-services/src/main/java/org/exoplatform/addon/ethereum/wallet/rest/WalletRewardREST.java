@@ -54,7 +54,7 @@ public class WalletRewardREST implements ResourceContainer {
    * @param networkId
    * @param periodType
    * @param startDateInSeconds
-   * @param rewardType
+   * @param walletRewardType : KUDOS_PERIOD_TRANSACTIONS, GAMIFICATION_PERIOD_TRANSACTIONS ...
    * @return
    */
   @GET
@@ -64,7 +64,7 @@ public class WalletRewardREST implements ResourceContainer {
   public Response getPeriodRewardTransactions(@QueryParam("networkId") long networkId,
                                               @QueryParam("periodType") String periodType,
                                               @QueryParam("startDateInSeconds") long startDateInSeconds,
-                                              @QueryParam("rewardType") String rewardType) {
+                                              @QueryParam("walletRewardType") String walletRewardType) {
     if (networkId == 0) {
       LOG.warn("Bad request sent to server with empty networkId {}", networkId);
       return Response.status(400).build();
@@ -81,7 +81,7 @@ public class WalletRewardREST implements ResourceContainer {
     List<JSONObject> periodTransactions = rewardService.getPeriodRewardTransactions(networkId,
                                                                                     periodType,
                                                                                     startDateInSeconds,
-                                                                                    rewardType);
+                                                                                    walletRewardType);
     JSONArray array = new JSONArray(periodTransactions);
     return Response.ok(array.toString()).build();
   }

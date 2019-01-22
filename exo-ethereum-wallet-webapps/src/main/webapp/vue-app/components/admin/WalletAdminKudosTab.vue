@@ -79,7 +79,7 @@
         hide-actions>
         <template slot="headers" slot-scope="props">
           <tr>
-            <th v-if="selectableRecipients.length">
+            <th>
               <v-checkbox
                 :input-value="props.all"
                 :indeterminate="props.indeterminate"
@@ -103,7 +103,7 @@
         </template>
         <template slot="items" slot-scope="props">
           <tr :active="props.selected">
-            <td v-if="selectableRecipients.length">
+            <td>
               <v-checkbox
                 v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')"
                 :input-value="props.selected"
@@ -179,8 +179,8 @@
                 v-if="props.item.address && props.item.received && (!props.item.status || props.item.status === 'error')"
                 v-model="props.item.tokensToSend"
                 class="input-text-center" />
-              <template v-else-if="props.item.status === 'success'">
-                {{ toFixed(props.item.tokensSent) }}
+              <template v-else-if="props.item.status === 'success' || props.item.status === 'pending'">
+                {{ toFixed(props.item.tokensSent) }} {{ symbol }}
               </template>
               <template
                 v-else>
@@ -202,13 +202,15 @@
           </td>
           <td>
             <strong>
-              {{ totalTokensToSend }}
+              {{ totalTokens }} {{ symbol }}
             </strong>
           </td>
-          <td colspan="2">
+          <td>
             <strong>
-              {{ totalKudosToSend }}
+              {{ totalKudosReceived }}
             </strong>
+          </td>
+          <td>
           </td>
         </template>
       </v-data-table>
@@ -219,7 +221,7 @@
         :period-type="kudosPeriodType"
         :start-date-in-seconds="selectedStartDateInSeconds"
         :end-date-in-seconds="selectedEndDateInSeconds"
-        :reward-type="rewardType"
+        :wallet-reward-type="walletRewardType"
         default-transaction-label="kudos reward"
         default-transaction-message="kudos reward"
         reward-count-field="received"
@@ -284,7 +286,7 @@ export default {
       selectedKudosIdentitiesList: [],
       selectedStartDate: null,
       selectedEndDate: null,
-      rewardType: 'KUDOS_PERIOD_TRANSACTIONS',
+      walletRewardType: 'KUDOS_PERIOD_TRANSACTIONS',
       pagination: {
         descending: true,
         sortBy: 'received',
@@ -359,6 +361,9 @@ export default {
     contractDetails() {
       return this.kudosContractAddress && this.contracts && this.contracts.find((contract) => contract.address === this.kudosContractAddress);
     },
+    symbol() {
+      return (this.contractDetails && this.contractDetails.symbol) || '';
+    },
     paginationDescending() {
       return this.pagination && this.pagination.descending;
     },
@@ -382,6 +387,12 @@ export default {
     },
     recipients() {
       return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter((item) => item.address && item.received && item.tokensToSend && (!item.status || item.status === 'error')) : [];
+    },
+    totalKudosReceived() {
+      return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.filter(item => item.received && Number(item.received)).reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
+    },
+    totalTokens() {
+      return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.filter(item => (item.tokensToSend && Number(item.tokensToSend)) || (item.tokensSent && Number(item.tokensSent))).reduce((accumulator, item) => accumulator + (item.tokensToSend && Number(item.tokensToSend)) || (item.tokensSent && Number(item.tokensSent)) || 0, 0) : 0;
     },
     totalKudosToSend() {
       return this.validSelectedKudosIdentitiesList && this.validSelectedKudosIdentitiesList.length ? this.validSelectedKudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
@@ -446,12 +457,12 @@ export default {
         const kudosWalletIndex = this.kudosIdentitiesList.findIndex((kudosWallet) => kudosWallet.address && kudosWallet.address.toLowerCase() === transaction.to.toLowerCase());
         const kudosWallet = this.kudosIdentitiesList[kudosWalletIndex];
         if (kudosWallet) {
+          if (transaction.contractAmount) {
+            this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
+          }
           this.$set(kudosWallet, 'hash', transaction.hash);
           if (this.principalAccount) {
             this.$set(kudosWallet, 'status', 'pending');
-          }
-          if (transaction.contractAmount) {
-            this.$set(kudosWallet, 'tokensSent', transaction.contractAmount);
           }
           this.selectedKudosIdentitiesList.splice(kudosWalletIndex, 1);
 
@@ -461,7 +472,16 @@ export default {
           });
         }
       } else {
-        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.kudosPeriodType, this.selectedStartDateInSeconds, this.rewardType).then((kudosTransactions) => {
+        this.walletRewardType = window.walletKudosRewardType || this.walletRewardType;
+        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.kudosPeriodType, this.selectedStartDateInSeconds, this.walletRewardType).then((kudosTransactions) => {
+          if (this.kudosIdentitiesList && this.kudosIdentitiesList.length) {
+            this.kudosIdentitiesList.forEach(kudosWallet => {
+              delete kudosWallet.tokensSent;
+              delete kudosWallet.hash;
+              delete kudosWallet.status;
+            });
+          }
+
           if (kudosTransactions) {
             kudosTransactions.forEach((kudosTransaction) => {
               if (kudosTransaction) {

@@ -34,8 +34,8 @@ export function savePeriodRewardTransaction(transaction) {
   });
 }
 
-export function getPeriodRewardTransactions(networkId, periodType, startDateInSeconds, rewardType) {
-  return fetch(`/portal/rest/wallet/api/reward/getPeriodRewardTransactions?networkId=${networkId}&periodType=${periodType}&startDateInSeconds=${startDateInSeconds}&rewardType=${rewardType}`, {
+export function getPeriodRewardTransactions(networkId, periodType, startDateInSeconds, walletRewardType) {
+  return fetch(`/portal/rest/wallet/api/reward/getPeriodRewardTransactions?networkId=${networkId}&periodType=${periodType}&startDateInSeconds=${startDateInSeconds}&walletRewardType=${walletRewardType}`, {
     method: 'GET',
     credentials: 'include',
   }).then((resp) => {

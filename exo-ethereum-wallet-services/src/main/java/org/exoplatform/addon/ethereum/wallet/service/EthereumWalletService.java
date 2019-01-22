@@ -1096,6 +1096,7 @@ public class EthereumWalletService implements Startable {
       }
     }
 
+    // Get contract address from "to"  field
     if (StringUtils.isNotBlank(contractAddress)) {
       if (contractDetail == null) {
         contractDetail = getContractDetail(contractAddress, transactionMessage.getNetworkId());

@@ -1,5 +1,10 @@
 <template>
   <v-flex>
+    <v-card-title class="text-xs-center">
+      <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
+        <i class="uiIconError"></i> {{ error }}
+      </div>
+    </v-card-title>
     <v-card-title class="ml-5 mr-5">
       <v-text-field
         v-model="search"
@@ -110,7 +115,7 @@
               type="number"
               class="input-text-center"
               @change="refreshIndex++" />
-            <template v-else-if="props.item.status === 'success'">
+            <template v-else-if="props.item.status === 'success' || props.item.status === 'pending'">
               <span>{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
               <span v-if="Number(props.item.tokensSent) !== Number(props.item.tokensToSend)"> (instead of {{ toFixed(props.item.tokensToSend) }} {{ symbol }})</span>
             </template>
@@ -132,7 +137,7 @@
         </td>
         <td>
           <strong>
-            {{ totalTokens }}
+            {{ totalTokens }} {{ symbol }}
           </strong>
         </td>
         <td>
@@ -150,7 +155,7 @@
       :period-type="periodType"
       :start-date-in-seconds="startDateInSeconds"
       :end-date-in-seconds="endDateInSeconds"
-      :reward-type="rewardType"
+      :wallet-reward-type="walletRewardType"
       default-transaction-label="gamification points reward"
       default-transaction-message="gamification points reward"
       reward-count-field="points"
@@ -172,10 +177,16 @@ export default {
     ProfileChip,
   },
   props: {
-    walletAddress: {
-      type: Boolean,
+    walletRewardType: {
+      type: String,
       default: function() {
-        return false;
+        return null;
+      },
+    },
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
       },
     },
     loading: {
@@ -226,7 +237,6 @@ export default {
       search: '',
       refreshIndex: 1,
       selectedIdentitiesList: [],
-      rewardType: 'GAMIFICATION_PERIOD_TRANSACTIONS',
       identitiesHeaders: [
         {
           text: '',
@@ -357,14 +367,15 @@ export default {
         const resultWalletIndex = this.selectedIdentitiesList.findIndex((resultWallet) => resultWallet.address && resultWallet.address.toLowerCase() === transaction.to.toLowerCase());
         const resultWallet = this.selectedIdentitiesList[resultWalletIndex];
         if (resultWallet) {
-          this.$set(resultWallet, 'hash', transaction.hash);
-          this.$set(resultWallet, 'status', 'pending');
-          this.$emit('pending', transaction);
-
-          if (transaction.contractAmount) {
+          if(transaction.contractAmount) {
             this.$set(resultWallet, 'tokensSent', transaction.contractAmount);
+            this.$set(resultWallet, 'hash', transaction.hash);
+            this.$set(resultWallet, 'status', 'pending');
+
+            this.$emit('pending', transaction);
+
+            this.selectedIdentitiesList.splice(resultWalletIndex, 1);
           }
-          this.selectedIdentitiesList.splice(resultWalletIndex, 1);
           const thiss = this;
           watchTransactionStatus(transaction.hash, (receipt) => {
             thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
@@ -372,7 +383,7 @@ export default {
           });
         }
       } else {
-        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.startDateInSeconds, this.rewardType).then((resultTransactions) => {
+        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.startDateInSeconds, this.walletRewardType).then((resultTransactions) => {
           if (resultTransactions) {
             resultTransactions.forEach((resultTransaction) => {
               if (resultTransaction) {

@@ -34,7 +34,7 @@
         :default-transaction-label="defaultTransactionLabel"
         :default-transaction-message="defaultTransactionMessage"
         :reward-count-field="rewardCountField"
-        :reward-type="rewardType"
+        :wallet-reward-type="walletRewardType"
         class="pt-4"
         @sent="$emit('sent', $event, contractDetails)"
         @close="dialog = false"
@@ -99,7 +99,7 @@ export default {
         return null;
       },
     },
-    rewardType: {
+    walletRewardType: {
       type: String,
       default: function() {
         return null;

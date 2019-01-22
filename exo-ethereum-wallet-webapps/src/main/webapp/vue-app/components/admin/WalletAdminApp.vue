@@ -451,7 +451,7 @@ export default {
       }
       const thiss = this;
       watchTransactionStatus(transaction.hash, (receipt) => {
-        if (receipt.status) {
+        if (receipt && receipt.status) {
           const wallet = thiss.wallets && thiss.wallets.find((wallet) => wallet && wallet.address && transaction.to && wallet.address.toLowerCase() === transaction.to.toLowerCase());
           if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {
             if (wallet) {

@@ -371,12 +371,14 @@ export default {
           });
         }
 
-        this.overviewAccounts.forEach((selectedValue) => {
-          const selectedObject = this.getOverviewAccountObject(selectedValue);
-          if (selectedObject) {
-            this.selectedOverviewAccounts.push(selectedObject);
-          }
-        });
+        if(this.overviewAccounts) {
+          this.overviewAccounts.forEach((selectedValue) => {
+            const selectedObject = this.getOverviewAccountObject(selectedValue);
+            if (selectedObject) {
+              this.selectedOverviewAccounts.push(selectedObject);
+            }
+          });
+        }
 
         this.selectedPrincipalAccount = this.getOverviewAccountObject(this.principalAccountAddress);
 

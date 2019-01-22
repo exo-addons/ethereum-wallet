@@ -129,7 +129,7 @@ export default {
         return null;
       },
     },
-    rewardType: {
+    walletRewardType: {
       type: String,
       default: function() {
         return null;
@@ -336,8 +336,13 @@ export default {
       let errorAppended = false;
       try {
         const amountToSendForReceiver = recipientWallet.tokensToSend;
+        const receiverAddress = recipientWallet.address;
+        const receiverType = recipientWallet.type;
+        const receiverId = recipientWallet.id;
+        const receiverIdentityId = recipientWallet.identityId;
+
         return this.contractDetails.contract.methods
-          .transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
+          .transfer(receiverAddress, convertTokenAmountToSend(amountToSendForReceiver, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
             gas: window.walletSettings.userPreferences.defaultGas,
@@ -355,7 +360,7 @@ export default {
             const sender = this.contractDetails.contract.options.from;
             const contractDetails = this.contractDetails;
             return contractDetails.contract.methods
-              .transfer(recipientWallet.address, convertTokenAmountToSend(amountToSendForReceiver, contractDetails.decimals).toString())
+              .transfer(receiverAddress, convertTokenAmountToSend(amountToSendForReceiver, contractDetails.decimals).toString())
               .send({
                 from: sender,
                 gas: window.walletSettings.userPreferences.defaultGas,
@@ -379,7 +384,7 @@ export default {
                 const pendingTransaction = {
                   hash: hash,
                   from: sender.toLowerCase(),
-                  to: recipientWallet.address,
+                  to: receiverAddress,
                   value: 0,
                   gas: gas,
                   gasPrice: this.gasPrice,
@@ -404,11 +409,11 @@ export default {
                   periodType: this.periodType,
                   startDateInSeconds: this.startDateInSeconds,
                   hash: pendingTransaction.hash,
-                  receiverType: recipientWallet.type,
-                  receiverId: recipientWallet.id,
-                  receiverIdentityId: recipientWallet.identityId,
+                  receiverType: receiverType,
+                  receiverId: receiverId,
+                  receiverIdentityId: receiverIdentityId,
                   tokensAmountSent: String(Number(amountToSendForReceiver)),
-                  rewardType: this.rewardType,
+                  walletRewardType: this.walletRewardType,
                 };
                 rewardTransactions.push(rewardTransaction);
                 savePeriodRewardTransaction(rewardTransaction);
@@ -416,7 +421,7 @@ export default {
                 // The transaction has been hashed and will be sent
                 this.$emit('sent', pendingTransaction, contractDetails);
 
-                if (this.transactionsSent === this.recipientsHavingAddress.length) {
+                if (!this.errors && this.transactionsSent === this.recipientsHavingAddress.length) {
                   this.$emit('close');
                 }
               })
@@ -426,7 +431,7 @@ export default {
                 errorAppended = true;
                 this.appendError(`Error sending tokens: ${truncateError(error)}`);
                 this.$emit('error', `Error sending tokens: ${truncateError(error)}`);
-                if (this.transactionsSent === this.recipientsHavingAddress.length) {
+                if (!this.errors && this.transactionsSent === this.recipientsHavingAddress.length) {
                   this.$emit('close');
                 }
               });
@@ -442,7 +447,7 @@ export default {
             if (!this.useMetamask) {
               lockBrowerWallet();
             }
-            if (this.transactionsSent === this.recipientsHavingAddress.length) {
+            if (!this.errors && this.transactionsSent === this.recipientsHavingAddress.length) {
               this.$emit('close');
             }
           });
@@ -456,8 +461,11 @@ export default {
       return Promise.resolve(null);
     },
     appendError(error) {
+      if(!this.errors) {
+        this.errors = '';
+      }
       if (error) {
-        this.errors += `<br />${error}`;
+        this.errors += `\r\n- ${error}`;
       }
     },
   },

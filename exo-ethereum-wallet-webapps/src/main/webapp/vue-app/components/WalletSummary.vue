@@ -224,6 +224,9 @@ export default {
       }
     },
     overviewAccountsArray() {
+      if(!this.overviewAccounts) {
+        return [];
+      }
       const accountsList = [];
       this.overviewAccounts.forEach((selectedValue) => {
         if (selectedValue !== this.principalAccount) {

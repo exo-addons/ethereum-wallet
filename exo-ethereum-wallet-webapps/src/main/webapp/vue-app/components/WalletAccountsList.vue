@@ -249,6 +249,9 @@ export default {
         return;
       }
 
+      if(!this.overviewAccounts) {
+        return [];
+      }
       const accountsList = [];
       let etherAccountAdded = false;
       this.overviewAccounts.forEach((selectedValue) => {

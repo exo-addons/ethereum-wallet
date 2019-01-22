@@ -206,21 +206,12 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
     window.watchingTransactions = {};
   }
 
-  let initWatching = false;
   if (!window.watchingTransactions[hash]) {
-    window.watchingTransactions[hash] = [];
-    initWatching = true;
+    window.watchingTransactions[hash] = [transactionFinishedcallback];
+    waitAsyncForTransactionStatus(hash, null, 0);
+  } else {
+    window.watchingTransactions[hash].push(transactionFinishedcallback);
   }
-  window.localWeb3.eth.getTransaction(hash).then((transaction) => {
-    if (transaction) {
-      window.watchingTransactions[hash].push(transactionFinishedcallback);
-      if (initWatching) {
-        waitAsyncForTransactionStatus(hash);
-      }
-    } else {
-      transactionFinishedcallback(null);
-    }
-  });
 }
 
 export function getTransactionReceipt(hash) {
@@ -775,44 +766,60 @@ function initSpaceAccount(spaceGroup) {
   });
 }
 
-function waitAsyncForTransactionStatus(hash) {
-  getTransactionReceipt(hash)
-    .then((receipt) => {
-      if (receipt) {
-        window.localWeb3.eth
-          .getBlock(receipt.blockNumber)
-          .then((block) => {
-            if (block) {
-              if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
-                window.watchingTransactions[hash].forEach((callback) => {
-                  callback(receipt, block);
-                });
-                window.watchingTransactions[hash] = null;
-              }
-            } else {
-              setTimeout(() => {
-                waitAsyncForTransactionStatus(hash);
-              }, 2000);
-            }
-          })
-          .catch(() => {
-            setTimeout(() => {
-              waitAsyncForTransactionStatus(hash);
-            }, 2000);
-          });
-      } else {
-        setTimeout(() => {
-          waitAsyncForTransactionStatus(hash);
-        }, 2000);
-      }
-    })
-    .catch((error) => {
-      if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
-        window.watchingTransactions[hash].forEach((callback) => {
-          callback(null, null);
+function waitAsyncForTransactionStatus(hash, transaction, transactionGetTentativeCount) {
+  if (!transaction) {
+    if (transactionGetTentativeCount < 100) {
+      window.localWeb3.eth.getTransaction(hash)
+        .then((transaction) => {
+          setTimeout(() => {
+            waitAsyncForTransactionStatus(hash, transaction, ++transactionGetTentativeCount);
+          }, 3000);
         });
-      }
-    });
+    } else {
+      window.watchingTransactions[hash].forEach((callback) => {
+        // Nothing to call, avoid calling the callback event when the transaction wasn't found
+        // callback();
+      });
+    }
+  } else {
+    getTransactionReceipt(hash)
+      .then((receipt) => {
+        if (receipt) {
+          window.localWeb3.eth
+            .getBlock(receipt.blockNumber)
+            .then((block) => {
+              if (block) {
+                if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
+                  window.watchingTransactions[hash].forEach((callback) => {
+                    callback(receipt, block);
+                  });
+                  window.watchingTransactions[hash] = null;
+                }
+              } else {
+                setTimeout(() => {
+                  waitAsyncForTransactionStatus(hash, transaction, transactionGetTentativeCount);
+                }, 2000);
+              }
+            })
+            .catch(() => {
+              setTimeout(() => {
+                waitAsyncForTransactionStatus(hash, transaction, transactionGetTentativeCount);
+              }, 2000);
+            });
+        } else {
+          setTimeout(() => {
+            waitAsyncForTransactionStatus(hash, transaction, transactionGetTentativeCount);
+          }, 2000);
+        }
+      })
+      .catch((error) => {
+        if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
+          window.watchingTransactions[hash].forEach((callback) => {
+            callback(null, null);
+          });
+        }
+      });
+  }
 }
 
 function getRemoteId(isSpace) {

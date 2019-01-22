@@ -45,11 +45,14 @@ public class WalletRewardService {
    * @param networkId
    * @param periodType
    * @param startDateInSeconds
-   * @param rewardType
+   * @param walletRewardType
    * @return
    */
-  public List<JSONObject> getPeriodRewardTransactions(Long networkId, String periodType, long startDateInSeconds, String rewardType) {
-    String periodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds, rewardType);
+  public List<JSONObject> getPeriodRewardTransactions(Long networkId,
+                                                      String periodType,
+                                                      long startDateInSeconds,
+                                                      String walletRewardType) {
+    String periodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds, walletRewardType);
     SettingValue<?> periodTransactionsValue =
                                             settingService.get(EXT_WALLET_CONTEXT, EXT_WALLET_SCOPE, periodTransactionsParamName);
 
@@ -93,7 +96,7 @@ public class WalletRewardService {
 
     String rewardPeriodTransactionsParamName = getPeriodTransactionsParamName(rewardTransaction.getPeriodType(),
                                                                               rewardTransaction.getStartDateInSeconds(),
-                                                                              rewardTransaction.getRewardType());
+                                                                              rewardTransaction.getWalletRewardType());
     SettingValue<?> periodTransactionsValue = settingService.get(EXT_WALLET_CONTEXT,
                                                                  EXT_WALLET_SCOPE,
                                                                  rewardPeriodTransactionsParamName);
@@ -111,7 +114,7 @@ public class WalletRewardService {
     }
   }
 
-  private String getPeriodTransactionsParamName(String periodType, long startDateInSeconds, String rewardType) {
-    return rewardType + periodType + startDateInSeconds;
+  private String getPeriodTransactionsParamName(String periodType, long startDateInSeconds, String walletRewardType) {
+    return walletRewardType + periodType + startDateInSeconds;
   }
 }

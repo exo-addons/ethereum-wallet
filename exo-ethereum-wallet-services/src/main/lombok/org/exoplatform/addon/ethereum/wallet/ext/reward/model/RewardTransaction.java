@@ -36,7 +36,7 @@ public class RewardTransaction implements Serializable {
 
   private String            tokensAmountSent;
 
-  private String            rewardType;
+  private String            walletRewardType;
 
   public static RewardTransaction fromStoredValue(String storedTransactionDetails) {
     RewardTransaction transactionMessage = new RewardTransaction();

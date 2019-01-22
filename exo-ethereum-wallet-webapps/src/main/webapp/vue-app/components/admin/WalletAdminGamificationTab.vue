@@ -1,10 +1,10 @@
 <template>
   <v-card flat>
-    <v-card-text v-if="error && String(error).trim() != '{}'" class="text-xs-center">
+    <v-flex v-if="error && String(error).trim() != '{}'" class="text-xs-center">
       <div class="alert alert-error v-content">
         <i class="uiIconError"></i> {{ error }}
       </div>
-    </v-card-text>
+    </v-flex>
     <v-card-text v-if="isContractDifferentFromPrincipal" class="text-xs-center">
       <div class="alert alert-warning">
         <i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token
@@ -73,6 +73,7 @@
             :identities-list="identitiesList"
             :contract-details="contractDetails"
             :threshold="threshold"
+            :wallet-reward-type="walletRewardType"
             :period-type="periodType"
             :start-date-in-seconds="selectedStartDateInSeconds"
             :end-date-in-seconds="selectedEndDateInSeconds"
@@ -184,6 +185,7 @@ export default {
     return {
       loading: false,
       error: null,
+      walletRewardType: 'GAMIFICATION_PERIOD_TRANSACTIONS',
       selectedDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
       selectedDateMenu: false,
       displayDateSelector: true,
@@ -468,6 +470,8 @@ export default {
           );
         });
       }
+
+      this.walletRewardType = window.walletGamificationRewardType || this.walletRewardType;
 
       return Promise.all(identitiesListPromises)
         .then(() => this.refresh())
