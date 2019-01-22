@@ -15,6 +15,7 @@
         </span>
         <v-text-field
           v-model.number="kudosBudget"
+          :disabled="!editConfiguration"
           name="kudosBudget"
           class="input-text-center" />
         <div id="selectedKudosContractAddress" class="selectBoxVuetifyParent">
@@ -22,6 +23,7 @@
             v-model="selectedKudosContractAddress"
             :items="contracts"
             :return-object="false"
+            :disabled="!editConfiguration"
             attach="#selectedKudosContractAddress"
             item-value="address"
             item-text="name"
@@ -38,8 +40,17 @@
         </div>
         <span>
           per {{ kudosPeriodTypeLabel }}
-        </span> <button class="btn btn-primary mb-3" @click="save">
-          Save
+        </span>
+        <template v-if="editConfiguration">
+          <button class="btn btn-primary" @click="save">
+            Save
+          </button>
+          <button class="btn ml-1" @click="editConfiguration = false">
+            Cancel
+          </button>
+        </template>
+        <button v-else class="btn btn-primary" @click="editConfiguration = true">
+          Edit
         </button>
       </div>
     </v-card-text>
@@ -276,6 +287,7 @@ export default {
       defaultKudosBudget: null,
       selectedDate: null,
       selectedDateMenu: false,
+      editConfiguration: false,
       kudosContractAddress: null,
       selectedKudosContractAddress: null,
       tokenEtherscanLink: null,
@@ -513,6 +525,7 @@ export default {
       return saveKudosContract(this.selectedKudosContractAddress)
         .then(() => {
           this.kudosContractAddress = this.selectedKudosContractAddress;
+          this.editConfiguration = false;
         })
         .catch((error) => {
           this.error = "Error while saving 'Kudos contract address' parameter";
