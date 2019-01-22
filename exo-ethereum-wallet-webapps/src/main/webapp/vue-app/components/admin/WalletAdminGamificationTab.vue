@@ -28,6 +28,11 @@
     <v-tabs-items v-model="selectedTab">
       <v-tab-item id="SendRewards">
         <v-card flat>
+          <v-card-text v-if="!contractDetails" class="text-xs-center">
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i> No token currency is configured, please review <a href="javascript:void(0);" @click="selectedTab = 2">settings</a>
+            </div>
+          </v-card-text>
           <v-card-text v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
             <div class="alert alert-warning">
               <i class="uiIconWarning"></i> Some users are members of multiple pools, the budget computing could be wrong:

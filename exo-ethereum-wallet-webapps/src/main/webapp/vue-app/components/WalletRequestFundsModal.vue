@@ -61,7 +61,7 @@
               label="Amount"
               placeholder="Select a suggested amount to request funds" />
 
-            <div id="requestFundsAccount" class="ml-1">
+            <div id="requestFundsAccount" class="selectBoxVuetifyParent ml-1">
               <v-combobox
                 v-model="selectedOption"
                 :items="accountsList"

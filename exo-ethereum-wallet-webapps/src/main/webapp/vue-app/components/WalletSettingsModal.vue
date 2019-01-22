@@ -49,18 +49,24 @@
             <v-tab-item v-if="!isSpace">
               <v-card>
                 <v-card-text>
-                  <v-combobox
-                    v-model="selectedCurrency"
-                    :items="currencies"
-                    label="Select fiat currency used to display ether amounts conversion" />
-                  <v-combobox
-                    v-model="selectedOverviewAccounts"
-                    :items="accountsList"
-                    label="List of currencies to use (by order)"
-                    placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
-                    multiple
-                    deletable-chips
-                    chips />
+                  <div id="selectedCurrencyParent" class="selectBoxVuetifyParent">
+                    <v-combobox
+                      v-model="selectedCurrency"
+                      :items="currencies"
+                      attach="#selectedCurrencyParent"
+                      label="Select fiat currency used to display ether amounts conversion" />
+                  </div>
+                  <div id="selectedOverviewAccountsParent" class="selectBoxVuetifyParent">
+                    <v-combobox
+                      v-model="selectedOverviewAccounts"
+                      :items="accountsList"
+                      attach="#selectedOverviewAccountsParent"
+                      label="List of currencies to use (by order)"
+                      placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
+                      multiple
+                      deletable-chips
+                      chips />
+                  </div>
                 </v-card-text>
               </v-card>
             </v-tab-item>
