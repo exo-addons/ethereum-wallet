@@ -155,16 +155,6 @@ export default {
     };
   },
   computed: {
-    defaultLabel() {
-      const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-      const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-      return `${this.defaultTransactionLabel} for period: ${startDate} to ${endDate}`;
-    },
-    defaultMessage() {
-      const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-      const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-      return `${this.defaultTransactionMessage} for period: ${startDate} to ${endDate}`;
-    },
     loading() {
       return this.loadingCount > 0;
     },
@@ -233,8 +223,8 @@ export default {
       this.showQRCodeModal = false;
       this.warning = null;
       this.errors = null;
-      this.transactionLabel = this.defaultLabel;
-      this.transactionMessage = this.defaultMessage;
+      this.transactionLabel = this.defaultTransactionLabel;
+      this.transactionMessage = this.defaultTransactionMessage;
       this.$emit('error', '');
       if (!this.gasPrice) {
         this.gasPrice = window.walletSettings.minGasPrice;
@@ -332,6 +322,15 @@ export default {
         }
       });
     },
+    transformMessage(message, amount, symbol, rewardCount, poolName, startDate, endDate) {
+      return message.trim()
+        .replace('{amount}', amount)
+        .replace('{symbol}', symbol)
+        .replace('{earned in pool_label}', poolName && poolName.trim().length ? `earned in pool ${poolName}` : '')
+        .replace('{rewardCount}', rewardCount)
+        .replace('{startDate}', startDate)
+        .replace('{endDate}', endDate);
+    },
     sendTokens(recipientWallet, rewardTransactions) {
       let errorAppended = false;
       try {
@@ -369,17 +368,27 @@ export default {
               .on('transactionHash', (hash) => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
-                // Add number of reward type received by user in label
-                let label = this.transactionLabel;
-                if (this.transactionLabel && this.rewardCountField && recipientWallet[this.rewardCountField] && this.transactionLabel.trim().indexOf(this.defaultLabel.trim()) >= 0) {
-                  label = label.replace(this.defaultLabel.trim(), `${recipientWallet[this.rewardCountField]} ${this.defaultLabel.trim()}`);
-                }
-
                 // Add number of reward type received by user in message
                 let message = this.transactionMessage;
-                if (this.transactionMessage && this.rewardCountField && recipientWallet[this.rewardCountField] && this.transactionMessage.trim().indexOf(this.defaultMessage.trim()) >= 0) {
-                  message = message.replace(this.defaultMessage.trim(), `${recipientWallet[this.rewardCountField]} ${this.defaultMessage.trim()}`);
+                if (!message) {
+                  message = this.defaultTransactionMessage;
                 }
+
+                // Add number of reward type received by user in label
+                let label = this.transactionLabel;
+                if (!label) {
+                  label = this.defaultTransactionLabel;
+                }
+
+                const amount = amountToSendForReceiver;
+                const symbol = this.contractDetails && this.contractDetails.symbol;
+                const rewardCount = recipientWallet[this.rewardCountField];
+                const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+                const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+                const poolName = (recipientWallet.gamificationTeams && recipientWallet.gamificationTeams.length && recipientWallet.gamificationTeams[0].name) || '';
+
+                message = this.transformMessage(message, amount, symbol, rewardCount, poolName, startDate, endDate);
+                label = this.transformMessage(label, amount, symbol, rewardCount, poolName, startDate, endDate);
 
                 const pendingTransaction = {
                   hash: hash,

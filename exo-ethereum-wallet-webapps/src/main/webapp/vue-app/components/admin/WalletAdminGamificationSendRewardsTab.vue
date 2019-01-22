@@ -156,8 +156,8 @@
       :start-date-in-seconds="startDateInSeconds"
       :end-date-in-seconds="endDateInSeconds"
       :wallet-reward-type="walletRewardType"
-      default-transaction-label="gamification points reward"
-      default-transaction-message="gamification points reward"
+      :default-transaction-label="defaultRewardLabelTemplate"
+      :default-transaction-message="defaultRewardMessageTemplate"
       reward-count-field="points"
       @sent="newPendingTransaction"
       @error="error = $event" />
@@ -235,6 +235,8 @@ export default {
   data() {
     return {
       search: '',
+      defaultRewardLabelTemplate: '{rewardCount} gamification points earned for period: {startDate} to {endDate}',
+      defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} gamification points {earned in pool_label} for period: {startDate} to {endDate}',
       refreshIndex: 1,
       selectedIdentitiesList: [],
       identitiesHeaders: [

@@ -49,7 +49,10 @@
             Cancel
           </button>
         </template>
-        <button v-else class="btn btn-primary" @click="editConfiguration = true">
+        <button
+          v-else
+          class="btn btn-primary"
+          @click="editConfiguration = true">
           Edit
         </button>
       </div>
