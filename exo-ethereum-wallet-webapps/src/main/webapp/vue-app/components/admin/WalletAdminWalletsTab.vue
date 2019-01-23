@@ -1,11 +1,32 @@
 <template>
-  <v-card flat>
+  <v-flex flat>
     <div v-if="error" class="alert alert-error v-content">
       <i class="uiIconError"></i>{{ error }}
     </div>
+    <v-container>
+      <v-layout>
+        <v-flex md4 xs12>
+          <v-switch v-model="displayUsers" label="Display users" />
+        </v-flex>
+        <v-flex md4 xs12>
+          <v-switch v-model="displayDisabledUsers" label="Display disabled users" />
+        </v-flex>
+        <v-flex md4 xs12>
+          <v-switch v-model="displaySpaces" label="Display spaces" />
+        </v-flex>
+      </v-layout>
+      <v-flex>
+        <v-text-field
+          v-model="search"
+          append-icon="search"
+          label="Search in name, address"
+          single-line
+          hide-details />
+      </v-flex>
+    </v-container>
     <v-data-table
       :headers="walletHeaders"
-      :items="wallets"
+      :items="filteredWallets"
       :loading="loadingWallets"
       hide-actions>
       <template slot="items" slot-scope="props">
@@ -15,7 +36,12 @@
           </v-avatar>
         </td>
         <td class="clickable" @click="openAccountDetail(props.item)">
-          {{ props.item.name }}
+          <template v-if="props.item.enabled">
+            {{ props.item.name }}
+          </template>
+          <span v-else>
+            <del class="red--text">{{ props.item.name }}</del> (Disabled)
+          </span>
         </td>
         <td>
           <a
@@ -126,7 +152,7 @@
       @success="refreshBalance"
       @pending="$emit('pending', $event)"
       @error="refreshBalance(null, null, $event)" />
-  </v-card>
+  </v-flex>
 </template>
 <script>
 import SendFundsModal from '../SendFundsModal.vue';
@@ -209,8 +235,12 @@ export default {
   },
   data() {
     return {
+      search: null,
       loadingWallets: false,
       appInitialized: false,
+      displayUsers: true,
+      displaySpaces: true,
+      displayDisabledUsers: true,
       sameConfiguredNetwork: true,
       selectedTransactionHash: null,
       seeAccountDetails: false,
@@ -252,6 +282,15 @@ export default {
         },
       ],
     };
+  },
+  computed: {
+    filteredWallets() {
+      if (this.displayUsers && this.displayDisabledUsers && this.displaySpaces && !this.search) {
+        return this.wallets;
+      } else {
+        return this.wallets.filter(wallet => (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search) >= 0 || wallet.address.toLowerCase().indexOf(this.search) >= 0));
+      }
+    }
   },
   watch: {
     loadingWallets(value) {

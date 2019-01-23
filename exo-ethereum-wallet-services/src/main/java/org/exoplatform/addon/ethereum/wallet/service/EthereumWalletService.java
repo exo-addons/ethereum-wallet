@@ -1017,6 +1017,11 @@ public class EthereumWalletService implements Startable {
       AccountDetail details = getUserDetails(user.getKey());
       if (details != null) {
         details.setAddress(user.getValue());
+        Identity identity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, user.getKey(), true);
+        if (identity == null || identity.getProfile() == null) {
+          continue;
+        }
+        details.setEnabled(identity.isEnable() && !identity.isDeleted());
         wallets.add(details);
       }
     }
