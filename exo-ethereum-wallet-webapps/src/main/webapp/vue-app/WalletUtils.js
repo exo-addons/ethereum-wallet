@@ -526,6 +526,11 @@ export function getWallets() {
   });
 }
 
+export function removeWalletAssociation(address) {
+  return fetch(`/portal/rest/wallet/api/account/remove?address=${address}`, {credentials: 'include'})
+    .then((resp) => resp && resp.ok);
+}
+
 export function setDraggable() {
   if (!$.draggable) {
     return;

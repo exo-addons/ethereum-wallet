@@ -43,7 +43,9 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("users")
 public class EthereumWalletAccountREST implements ResourceContainer {
 
-  private static final Log      LOG = ExoLogger.getLogger(EthereumWalletAccountREST.class);
+  private static final String   EMPTY_ADDRESS_ERROR = "Bad request sent to server with empty address {}";
+
+  private static final Log      LOG                 = ExoLogger.getLogger(EthereumWalletAccountREST.class);
 
   private EthereumWalletService ethereumWalletService;
 
@@ -101,14 +103,38 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @RolesAllowed("users")
   public Response getAccountByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
-      LOG.warn("Bad request sent to server with empty address {}", address);
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
       return Response.status(400).build();
     }
 
     address = address.toLowerCase();
     AccountDetail accountDetail = ethereumWalletService.getAccountDetailsByAddress(address);
-
     return Response.ok(accountDetail == null ? "{}" : accountDetail).build();
+  }
+
+  /**
+   * Retrieves the user or space details associated to an address
+   * 
+   * @param address
+   * @return
+   */
+  @Path("remove")
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed("administrators")
+  public Response removeAccountByAddress(@QueryParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
+      return Response.status(400).build();
+    }
+    address = address.toLowerCase();
+    try {
+      ethereumWalletService.removeAccountByAddress(address, getCurrentUserId());
+      return Response.ok().build();
+    } catch (Exception e) {
+      LOG.warn("Can't delete address '{}' association", address, e);
+      return Response.serverError().build();
+    }
   }
 
   /**
@@ -338,9 +364,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("getTransactions")
   @RolesAllowed("users")
-  public Response getTransactions(@QueryParam("networkId") long networkId, @QueryParam("address") String address, @QueryParam("administration") String administration) {
+  public Response getTransactions(@QueryParam("networkId") long networkId,
+                                  @QueryParam("address") String address,
+                                  @QueryParam("administration") String administration) {
     if (StringUtils.isBlank(address)) {
-      LOG.warn("Bad request sent to server with empty address {}", address);
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
       return Response.status(400).build();
     }
     if (networkId == 0) {
@@ -355,7 +383,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       String currentUserId = getCurrentUserId();
       if (accountDetails == null || (USER_ACCOUNT_TYPE.equals(accountDetails.getType())
           && !StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId))) {
-        if(accountDetails != null) {
+        if (accountDetails != null) {
           LOG.warn("User {} attempts to display transactions of {} {}",
                    currentUserId,
                    accountDetails.getType(),
@@ -365,7 +393,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       }
     }
 
-    List<JSONObject> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address, StringUtils.equals(administration, "true"));
+    List<JSONObject> userTransactions = ethereumWalletService.getAccountTransactions(networkId,
+                                                                                     address,
+                                                                                     StringUtils.equals(administration, "true"));
     JSONArray array = new JSONArray(userTransactions);
 
     return Response.ok(array.toString()).build();

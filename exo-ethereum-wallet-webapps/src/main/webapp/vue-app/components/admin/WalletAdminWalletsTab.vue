@@ -111,6 +111,21 @@
             </v-btn>
           </template>
         </td>
+        <td>
+          <v-menu offset-y>
+            <v-btn
+              slot="activator"
+              icon
+              small>
+              <v-icon size="20px">fa-ellipsis-v</v-icon>
+            </v-btn>
+            <v-list flat class="pt-0 pb-0">
+              <v-list-tile @click="removeWalletAssociation(props.item)">
+                <v-list-tile-title>Remove wallet</v-list-tile-title>
+              </v-list-tile>
+            </v-list>
+          </v-menu>
+        </td>
       </template>
     </v-data-table>
 
@@ -158,7 +173,7 @@
 import SendFundsModal from '../SendFundsModal.vue';
 import AccountDetail from '../AccountDetail.vue';
 
-import {getWallets, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
+import {getWallets, removeWalletAssociation, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
 export default {
   components: {
@@ -280,15 +295,21 @@ export default {
           align: 'center',
           value: 'balance',
         },
+        {
+          text: '',
+          align: 'center',
+          sortable: false,
+          value: '',
+        },
       ],
     };
   },
   computed: {
     filteredWallets() {
       if (this.displayUsers && this.displayDisabledUsers && this.displaySpaces && !this.search) {
-        return this.wallets;
+        return this.wallets.filter(wallet => wallet && wallet.address);
       } else {
-        return this.wallets.filter(wallet => (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search) >= 0 || wallet.address.toLowerCase().indexOf(this.search) >= 0));
+        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search) >= 0 || wallet.address.toLowerCase().indexOf(this.search) >= 0));
       }
     }
   },
@@ -460,6 +481,20 @@ export default {
       this.seeAccountDetailsPermanent = false;
       this.selectedWalletAddress = null;
       this.selectedWalletDetails = null;
+    },
+    removeWalletAssociation(wallet) {
+      return removeWalletAssociation(wallet.address)
+        .then((result) => {
+          if(result) {
+            const index = this.wallets.indexOf(wallet);
+            if(index >= 0) {
+              this.wallets.splice(index, 1);
+            }
+          } else {
+            this.error = 'An error occurred while removing wallet';
+          }
+        })
+        .catch(e => this.error = String(e));
     },
   },
 };

@@ -654,6 +654,32 @@ public class EthereumWalletService implements Startable {
   }
 
   /**
+   * Remove User or Space wallet address association
+   * 
+   * @param address
+   */
+  public void removeAccountByAddress(String address, String username) {
+    if (address == null) {
+      throw new IllegalArgumentException(ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE);
+    }
+    AccountDetail accountDetails = getAccountDetailsFromCache(new AccountDetailCacheId(address.toLowerCase()));
+    if (accountDetails == null || accountDetails.getAddress() == null) {
+      throw new IllegalStateException("Can't find an associated account to address " + address);
+    }
+    settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, address);
+    if (StringUtils.equals(accountDetails.getType(), SPACE_ACCOUNT_TYPE)) {
+      LOG.info("User {} is deleting wallet address association {} of space {}", username, address, accountDetails.getId());
+      settingService.remove(WALLET_CONTEXT, WALLET_SCOPE, accountDetails.getId());
+    } else {
+      LOG.info("User {} is deleting wallet address association {} of user {}", username, address, accountDetails.getId());
+      settingService.remove(Context.USER.id(accountDetails.getId()),
+                            WALLET_SCOPE,
+                            ADDRESS_KEY_NAME);
+    }
+    removeFromCache(address);
+  }
+
+  /**
    * Get associated address to a space
    * 
    * @param id
