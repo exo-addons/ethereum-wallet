@@ -336,7 +336,7 @@ export default {
         })
         .then(() => this.$refs.contractsTab && this.$refs.contractsTab.init())
         .then(() => this.$refs && this.$refs.generalTab && this.$refs.generalTab.setSelectedValues())
-        .then(() => this.$refs && this.$refs.walletsTab && this.$refs.walletsTab.init())
+        .then(() => this.$refs && this.$refs.walletsTab && this.$refs.walletsTab.init(true))
         .catch((error) => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
             console.debug('Error retrieving contracts', error);

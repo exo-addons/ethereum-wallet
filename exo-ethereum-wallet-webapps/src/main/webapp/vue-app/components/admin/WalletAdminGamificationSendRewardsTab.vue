@@ -89,7 +89,7 @@
               </v-icon>
               <v-icon
                 v-else-if="!props.item.points || props.item.points < threshold"
-                :title="`Not enough points, minimum: ${threshold} points`"
+                :title="`No enough points, minimum: ${threshold} points`"
                 color="warning">
                 warning
               </v-icon>

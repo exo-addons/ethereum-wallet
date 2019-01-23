@@ -29,17 +29,19 @@
           </span>
         </td>
         <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-badge
+          <v-progress-circular
             v-if="props.item.loadingBalancePrincipal"
-            color="red"
-            right
-            title="A transaction is in progress">
-            <v-progress-circular
-              color="primary"
-              indeterminate
-              size="20" />
-          </v-badge>
-          <template v-if="props.item.balancePrincipal">
+            :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
+            color="primary"
+            class="mr-4"
+            indeterminate
+            size="20" />
+          <span
+            v-else-if="loadingWallets && props.item.loadingBalancePrincipal !== false"
+            title="Loading balance...">
+            loading...
+          </span>
+          <template v-else-if="props.item.balancePrincipal">
             {{ toFixed(props.item.balancePrincipal) }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
             <v-btn
               class="bottomNavigationItem transparent"
@@ -52,23 +54,24 @@
               </v-icon>
             </v-btn>
           </template>
-          <template
-            v-else>
+          <template v-else>
             -
           </template>
         </td>
         <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-badge
+          <v-progress-circular
             v-if="props.item.loadingBalance"
-            color="red"
-            right
-            title="A transaction is in progress">
-            <v-progress-circular
-              color="primary"
-              indeterminate
-              size="20" />
-          </v-badge>
-          <template>
+            :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
+            color="primary"
+            class="mr-4"
+            indeterminate
+            size="20" />
+          <span
+            v-else-if="loadingWallets && props.item.loadingBalance !== false"
+            title="Loading balance...">
+            loading...
+          </span>
+          <template v-else>
             {{ toFixed(props.item.balance) }} eth
             <v-btn
               class="bottomNavigationItem transparent"
@@ -206,6 +209,7 @@ export default {
   data() {
     return {
       loadingWallets: false,
+      appInitialized: false,
       sameConfiguredNetwork: true,
       selectedTransactionHash: null,
       seeAccountDetails: false,
@@ -265,25 +269,43 @@ export default {
     },
   },
   methods: {
-    init() {
+    init(appInitialized) {
+      this.appInitialized = this.appInitialized || appInitialized;
+      if(!this.appInitialized) {
+        return;
+      }
+      if(this.loadingWallets) {
+        return;
+      }
       this.loadingWallets = true;
       getWallets()
         .then((wallets) => (this.wallets = wallets))
         .then(() => {
           this.$emit('wallets-loaded', this.wallets);
-          this.wallets.forEach((wallet) => {
-            if (wallet && wallet.address) {
-              this.$set(wallet, 'loadingBalance', true);
-              if (this.principalContract) {
-                this.$set(wallet, 'loadingBalancePrincipal', true);
-              }
-              this.computeBalance(this.principalContract, wallet);
-            }
-          });
+          return this.loadWalletsBalances(this.principalContract, this.wallets.sort(this.sortByName));
         })
         .finally(() => {
           this.loadingWallets = false;
         });
+    },
+    sortByName(a, b) {
+      // To use same Vuetify datable sort algorithm
+      const sortA = a.name.toLocaleLowerCase();
+      const sortB = b.name.toLocaleLowerCase();
+      return (sortA > sortB && 1) || (sortA < sortB && (-1)) || 0;
+    },
+    loadWalletsBalances(accountDetails, wallets, i) {
+      if(!wallets || !wallets.length) {
+        return;
+      }
+      if(!i) {
+        i = 0;
+      }
+      if(i >= wallets.length) {
+        return;
+      }
+      return this.computeBalance(accountDetails, wallets[i])
+        .then(() => this.loadWalletsBalances(accountDetails, wallets, ++i));
     },
     openSendFundsModal(event, wallet, principal) {
       event.preventDefault();
@@ -309,7 +331,11 @@ export default {
       this.$emit('refresh-balance', accountDetails, address, error);
     },
     computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
-      computeBalance(wallet.address)
+      if(!wallet.address) {
+        return Promise.resolve(null);
+      }
+      this.$set(wallet, 'loadingBalance', true);
+      return computeBalance(wallet.address)
         .then((balanceDetails, error) => {
           if (error) {
             this.$set(wallet, 'icon', 'warning');
@@ -318,33 +344,42 @@ export default {
             this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
             this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
           }
-          if (!ignoreUpdateLoadingBalanceParam) {
-            this.$set(wallet, 'loadingBalance', false);
+        })
+        .then(() => {
+          // check if we should reload contract balance too
+          if (accountDetails && accountDetails.contract && accountDetails.isContract) {
+            this.$set(wallet, 'loadingBalancePrincipal', true);
+            return accountDetails.contract.methods
+              .balanceOf(wallet.address)
+              .call()
+              .then((balance, error) => {
+                if (error) {
+                  throw new Error('Invalid contract address');
+                }
+                balance = String(balance);
+                balance = convertTokenAmountReceived(balance, accountDetails.decimals);
+                this.$set(wallet, 'balancePrincipal', balance);
+              })
+              .finally(() => {
+                if (!ignoreUpdateLoadingBalanceParam) {
+                  this.$set(wallet, 'loadingBalancePrincipal', false);
+                }
+              });
           }
-          this.$forceUpdate();
         })
         .catch((error) => {
+          this.$set(wallet, 'icon', 'warning');
+          this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
           this.error = String(error);
-        });
-      if (accountDetails && accountDetails.contract && accountDetails.isContract) {
-        accountDetails.contract.methods
-          .balanceOf(wallet.address)
-          .call()
-          .then((balance, error) => {
-            if (error) {
-              if (!ignoreUpdateLoadingBalanceParam) {
-                this.$set(wallet, 'loadingBalancePrincipal', false);
-              }
-              throw new Error('Invalid contract address');
-            }
-            balance = String(balance);
-            balance = convertTokenAmountReceived(balance, accountDetails.decimals);
-            this.$set(wallet, 'balancePrincipal', balance);
-            if (!ignoreUpdateLoadingBalanceParam) {
+        })
+        .finally(() => {
+          if (!ignoreUpdateLoadingBalanceParam) {
+            this.$set(wallet, 'loadingBalance', false);
+            if (wallet.loadingBalancePrincipal && accountDetails && accountDetails.contract && accountDetails.isContract) {
               this.$set(wallet, 'loadingBalancePrincipal', false);
             }
-          });
-      }
+          }
+        });
     },
     openAccountDetail(wallet, hash) {
       this.selectedTransactionHash = hash;

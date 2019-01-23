@@ -34,7 +34,7 @@
                     warning
                   </v-icon>
                   <span>
-                    Not enough funds to send transactions
+                    No enough funds to send transactions
                   </span>
                 </v-tooltip>
               </div>
