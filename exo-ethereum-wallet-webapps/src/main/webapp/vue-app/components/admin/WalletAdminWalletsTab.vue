@@ -128,6 +128,15 @@
         </td>
       </template>
     </v-data-table>
+    <v-layout v-if="showLoadMore" justify-center>
+      <v-btn
+        :loading="loading"
+        color="primary"
+        flat
+        @click="limit += pageSize">
+        Load More
+      </v-btn>
+    </v-layout>
 
     <!-- The selected account detail -->
     <v-navigation-drawer
@@ -266,6 +275,8 @@ export default {
       initialFundsMessage: null,
       error: null,
       wallets: [],
+      limit: 10,
+      pageSize: 10,
       walletHeaders: [
         {
           text: '',
@@ -305,15 +316,28 @@ export default {
     };
   },
   computed: {
+    showLoadMore() {
+      return this.wallets.length > this.limit && this.filteredWalletsLength >= this.pageSize;
+    },
+    filteredWalletsLength() {
+      return this.filteredWallets.length;
+    },
     filteredWallets() {
       if (this.displayUsers && this.displayDisabledUsers && this.displaySpaces && !this.search) {
-        return this.wallets.filter(wallet => wallet && wallet.address);
+        return this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
       } else {
-        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search) >= 0 || wallet.address.toLowerCase().indexOf(this.search) >= 0));
+        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search) >= 0 || wallet.address.toLowerCase().indexOf(this.search) >= 0)).slice(0, this.limit);
       }
     }
   },
   watch: {
+    filteredWallets(value, oldValue) {
+      if(value.length > 0 && (value.length !== oldValue.length || value[value.length -1].id !== oldValue[oldValue.length -1].id)) {
+        // Filter wallets that wasn't loaded before
+        const walletsToLoad = this.filteredWallets.filter(wallet => wallet && wallet.address && wallet.loadingBalance !== true && wallet.loadingBalance !== false);
+        return this.loadWalletsBalances(this.principalContract, walletsToLoad);
+      }
+    },
     loadingWallets(value) {
       this.$emit('loading-wallets-changed', value);
     },
@@ -328,6 +352,9 @@ export default {
         $('body').removeClass('hide-scroll');
         this.seeAccountDetailsPermanent = false;
       }
+    },
+    limit() {
+      this.$nextTick().then(() => this.loadWalletsBalances(this.principalContract, this.loadingWallets));
     },
   },
   methods: {
@@ -345,7 +372,7 @@ export default {
         .then((wallets) => (this.wallets = wallets))
         .then(() => {
           this.$emit('wallets-loaded', this.wallets);
-          return this.loadWalletsBalances(this.principalContract, this.wallets.sort(this.sortByName));
+          return this.loadWalletsBalances(this.principalContract, this.loadingWallets);
         })
         .finally(() => {
           this.loadingWallets = false;
@@ -367,8 +394,11 @@ export default {
       if(i >= wallets.length) {
         return;
       }
+      this.loadingWallets = true;
       return this.computeBalance(accountDetails, wallets[i])
-        .then(() => this.loadWalletsBalances(accountDetails, wallets, ++i));
+        .then(() => this.loadWalletsBalances(accountDetails, wallets, ++i))
+        // Stop loading wallets only when the first call is finished
+        .finally(() => this.loadingWallets = !i && true);
     },
     openSendFundsModal(event, wallet, principal) {
       event.preventDefault();
