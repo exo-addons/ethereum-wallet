@@ -780,7 +780,7 @@ public class EthereumWalletService implements Startable {
     if (StringUtils.isBlank(oldAddress)) {
       this.walletsCount += 1;
     }
-    return generateSecurityPhrase(accountDetail);
+    return getOrGenerateSecurityPhrase(accountDetail);
   }
 
   /**
@@ -1307,7 +1307,7 @@ public class EthereumWalletService implements Startable {
     }
   }
 
-  private String generateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {
+  private String getOrGenerateSecurityPhrase(AccountDetail accountDetail) throws IllegalAccessException {
     String currentUser = getCurrentUserId();
     String id = accountDetail.getId();
     String type = accountDetail.getType();
@@ -1330,6 +1330,7 @@ public class EthereumWalletService implements Startable {
     if (browserWalletPhraseValue != null && browserWalletPhraseValue.getValue() != null) {
       return browserWalletPhraseValue.getValue().toString();
     }
+
     String phrase = RandomStringUtils.random(20, SIMPLE_CHARS);
     settingService.set(context, WALLET_SCOPE, paramName, SettingValue.create(phrase));
     return phrase;

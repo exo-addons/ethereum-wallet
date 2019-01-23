@@ -1,6 +1,6 @@
 <template>
   <v-flex class="text-xs-center white">
-    <div id="walletBrowserSetup">
+    <div v-show="!loading" id="walletBrowserSetup">
       <button
         v-if="!walletAddress"
         :disabled="loadingWalletBrowser"

@@ -76,6 +76,7 @@
                 :wallet-address="walletAddress"
                 :refresh-index="refreshIndex"
                 :loading="loading"
+                :is-minimized="!isMaximized"
                 @loading="loading = true"
                 @end-loading="loading = false"
                 @refresh="init()"
@@ -88,6 +89,7 @@
             <!-- Body -->
             <v-card
               v-if="displayAccountsList"
+              id="walletAppBody"
               class="text-xs-center"
               flat>
               <div v-if="error && !loading" class="alert alert-error">
@@ -97,7 +99,7 @@
               <v-progress-circular
                 v-if="loading"
                 color="primary"
-                class="mb-2"
+                class="mt-4 mb-4"
                 indeterminate />
 
               <wallet-summary

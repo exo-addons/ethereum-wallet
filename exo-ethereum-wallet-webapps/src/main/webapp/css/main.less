@@ -208,6 +208,10 @@
     }
   }
 
+  #walletAppBody {
+    min-height: 190px;
+  }
+
   > #walletAppMenu {
     top: 40px!important;
     right: 20px!important;
@@ -299,6 +303,10 @@
     /* To fix links baseline positions */
     .popupWithLink {
       min-height: 33px;
+    }
+
+    a {
+      color: #385989;
     }
   }
 
@@ -532,6 +540,33 @@
     
     .v-list__tile__content.align-end {
       max-width: ~"calc(100% - 110px)";
+    }
+  }
+
+  .no-wrap {
+    white-space: nowrap;
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  #walletsSetupWarnings {
+    .v-snack__content {
+      white-space: pre-wrap;
+      flex-direction: column;
+      height: auto;
+      padding-top: 20px;
+      position: relative;
+
+      .uiIconClose {
+        position: absolute;
+        top: -3px;
+        right: 8px;
+      }
+      > div {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 2px;
+      }
     }
   }
 }
