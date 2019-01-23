@@ -19,9 +19,9 @@ import org.exoplatform.services.log.Log;
  * a space. Thus an initial funds request should be sent to funds holder when a
  * new address is added.
  */
-public class InitialFundsRequestListener extends Listener<Object, AccountDetail> {
+public class WalletAddressModifiedListener extends Listener<Object, AccountDetail> {
 
-  private static final Log      LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
+  private static final Log      LOG = ExoLogger.getLogger(WalletAddressModifiedListener.class);
 
   private EthereumWalletService ethereumWalletService;
 
@@ -61,7 +61,7 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
       request.setAddress(accountDetail.getAddress());
       request.setReceipient(settings.getFundsHolder());
       request.setReceipientType(settings.getFundsHolderType());
-      request.setMessage("A new wallet has been created");
+      request.setMessage("Wallet address has been modified. Would you like to send to user the initial funds ?");
 
       try {
         getEthereumWalletService().requestFunds(request);

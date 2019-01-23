@@ -238,7 +238,7 @@ export default {
   },
   computed: {
     displayAccountsList() {
-      return true;
+      return this.walletAddress;
     },
     displayWalletResetOption() {
       return !this.loading && !this.error && this.walletAddress && !this.useMetamask && this.browserWalletExists;
