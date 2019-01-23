@@ -53,6 +53,7 @@
             :total-balance="walletAddressEtherBalance"
             :total-fiat-balance="walletAddressFiatBalance"
             :fiat-symbol="fiatSymbol"
+            :loading="loading"
             is-maximized
             hide-actions
             @refresh-balance="refreshBalance"

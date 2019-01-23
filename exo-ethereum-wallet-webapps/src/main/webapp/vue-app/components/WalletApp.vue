@@ -117,6 +117,7 @@
                 :total-fiat-balance="totalFiatBalance"
                 :is-read-only="isReadOnly"
                 :fiat-symbol="fiatSymbol"
+                :loading="loading"
                 @refresh-balance="refreshBalance"
                 @refresh-token-balance="refreshTokenBalance"
                 @error="error = $event" />

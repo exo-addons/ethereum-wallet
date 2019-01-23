@@ -876,33 +876,22 @@ public class EthereumWalletService implements Startable {
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
 
-    AccountDetail accountDetails = getAccountDetailsByAddress(address);
     String currentUserId = getCurrentUserId();
-    boolean displayLabel = (accountDetails != null && USER_ACCOUNT_TYPE.equals(accountDetails.getId())
-        && StringUtils.equalsIgnoreCase(accountDetails.getId(), currentUserId));
 
-    if (!displayLabel && accountDetails != null && SPACE_ACCOUNT_TYPE.equals(accountDetails.getType())) {
-      Space space = getSpace(accountDetails.getId());
-      if (space != null && (spaceService.isManager(space, currentUserId) || spaceService.isSuperManager(currentUserId))) {
-        displayLabel = true;
-      }
-    }
-
-    final boolean displayLabelFinal = displayLabel;
+    AccountDetail accountToDisplayDetails = getAccountDetailsByAddress(address);
+    final boolean displayLabel = displayTransactionsLabel(accountToDisplayDetails, currentUserId);
+    final boolean isUserAdmin = isUserAdmin();
+    final String principalContractAddress = getSettings().getPrincipalContractAdminAddress();
     return Arrays.stream(addressTransactionsArray).map(transaction -> {
       TransactionDetail transactionDetail = TransactionDetail.fromStoredValue(transaction);
       TransactionDetail cachedTransactionDetail = getTransactionDetailFromCache(transactionDetail.getHash());
       if (cachedTransactionDetail != null) {
         transactionDetail = cachedTransactionDetail;
       }
-      // If user is admin and no user is associated to sender account, then
-      // display label
-      if (!StringUtils.isBlank(transactionDetail.getFrom()) && !StringUtils.equalsIgnoreCase(transactionDetail.getFrom(), address)
-          && !displayLabelFinal) {
-        AccountDetail txAccountDetails = getAccountDetailsByAddress(transactionDetail.getFrom());
-        if (txAccountDetails != null && !StringUtils.equalsIgnoreCase(txAccountDetails.getAddress(), address)) {
-          transactionDetail.setLabel(null);
-        }
+      String senderAddress = transactionDetail.getFrom();
+      if (!displayLabel && !(isUserAdmin && senderAddress != null
+          && StringUtils.equalsIgnoreCase(senderAddress, principalContractAddress))) {
+        transactionDetail.setLabel(null);
       }
       return transactionDetail.toJSONObject();
     }).collect(Collectors.toList());
@@ -1542,15 +1531,36 @@ public class EthereumWalletService implements Startable {
     }
   }
 
-  public interface ServiceContext<V> {
-    V execute();
+  private boolean displayTransactionsLabel(AccountDetail senderAccountDetails, String currentUserId) {
+    if (senderAccountDetails == null) {
+      return isUserAdmin();
+    }
+    String accountId = senderAccountDetails.getId();
+    String accountType = senderAccountDetails.getType();
+    if (StringUtils.isBlank(accountId) || StringUtils.isBlank(accountType)) {
+      return isUserAdmin();
+    }
+
+    if (SPACE_ACCOUNT_TYPE.equals(accountType)) {
+      if (spaceService.isSuperManager(currentUserId)) {
+        return true;
+      }
+      Space space = getSpace(accountId);
+      return space != null && spaceService.isManager(space, currentUserId);
+    } else {
+      return StringUtils.equalsIgnoreCase(accountId, currentUserId);
+    }
   }
 
-  public EthereumClientConnector getEthereumClientConnector() {
+  private EthereumClientConnector getEthereumClientConnector() {
     if (ethereumClientConnector == null) {
       ethereumClientConnector = CommonsUtils.getService(EthereumClientConnector.class);
     }
     return ethereumClientConnector;
+  }
+
+  public interface ServiceContext<V> {
+    V execute();
   }
 
 }

@@ -22,16 +22,26 @@
 
     <v-card-title primary-title class="pt-2 pb-0">
       <v-flex class="flex-center">
-        <h4 v-if="principalAccount === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</h4>
-        <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</h4>
-        <h4 v-else class="headline">{{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
+        <h4 v-if="loading" class="headline">
+          -
+        </h4>
+        <template v-else>
+          <h4 v-if="principalAccount === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</h4>
+          <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</h4>
+          <h4 v-else class="headline">{{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
+        </template>
       </v-flex>
     </v-card-title>
 
     <v-card-title primary-title class="pt-0 flex-center">
       <v-flex v-for="(accountDetails, index) in overviewAccountsArray" :key="index">
         <template
-          v-if="accountDetails.key === 'fiat'"
+          v-if="loading"
+          class="headline">
+          -
+        </template>
+        <template
+          v-else-if="accountDetails.key === 'fiat'"
           class="headline">
           {{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}
         </template>
@@ -196,6 +206,12 @@ export default {
       },
     },
     isReadOnly: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
+    loading: {
       type: Boolean,
       default: function() {
         return false;
