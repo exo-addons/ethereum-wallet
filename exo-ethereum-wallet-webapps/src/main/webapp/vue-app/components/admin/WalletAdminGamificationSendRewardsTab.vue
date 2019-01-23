@@ -43,6 +43,7 @@
               v-if="props.item.address"
               :profile-id="props.item.id"
               :display-name="props.item.name"
+              :enabled="props.item.enabled"
               tiptip-position="top_left" />
             <div v-else>
               <del>
@@ -50,6 +51,7 @@
                   :href="props.item.url"
                   rel="nofollow"
                   target="_blank"
+                  title="No associated address"
                   class="red--text">
                   {{ props.item.name }}
                 </a>
@@ -402,7 +404,7 @@ export default {
                     this.$emit('success', resultTransaction, receipt);
                   });
                 } else {
-                  console.error("Can't find wallet of a sent result token transaction, resultTransaction=", resultTransaction);
+                  console.warn("Can't find wallet of a sent result token transaction, resultTransaction=", resultTransaction);
                 }
               }
             });

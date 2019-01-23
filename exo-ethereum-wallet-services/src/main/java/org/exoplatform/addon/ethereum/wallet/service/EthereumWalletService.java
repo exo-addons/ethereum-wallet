@@ -1007,6 +1007,20 @@ public class EthereumWalletService implements Startable {
     int cacheSize = this.accountDetailCache.getCacheSize();
     if (cacheSize > 0 && cacheSize >= this.walletsCount) {
       List<? extends AccountDetail> cachedObjects = this.accountDetailCache.getCachedObjects();
+      // Refresh enable state
+      Iterator<? extends AccountDetail> iterator = cachedObjects.iterator();
+      while (iterator.hasNext()) {
+        AccountDetail accountDetail = iterator.next();
+        Identity identity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, accountDetail.getId(), true);
+        if (identity == null || identity.getProfile() == null) {
+          iterator.remove();
+        } else {
+          if (identity.getProfile().getFullName() != null) {
+            accountDetail.setName(identity.getProfile().getFullName());
+          }
+          accountDetail.setEnabled(identity.isEnable() && !identity.isDeleted());
+        }
+      }
       // Using HashSet to remove duplicated objects
       return new HashSet<>(cachedObjects);
     }
@@ -1033,6 +1047,11 @@ public class EthereumWalletService implements Startable {
       AccountDetail details = getSpaceDetails(space.getKey());
       if (details != null) {
         details.setAddress(space.getValue());
+        Identity identity = identityManager.getOrCreateIdentity(OrganizationIdentityProvider.NAME, space.getKey(), true);
+        if (identity == null || identity.getProfile() == null) {
+          continue;
+        }
+        details.setEnabled(identity.isEnable() && !identity.isDeleted());
         wallets.add(details);
       }
     }

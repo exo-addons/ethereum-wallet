@@ -39,7 +39,7 @@
         <v-chip
           v-if="item.avatar"
           :selected="selected"
-          :title="addressLoad === 'error' ? 'the recipient doesn\'t have a valid wallet account yet' : ''"
+          :title="addressLoad === 'error' ? `the recipient is disabled or has't a valid wallet yet` : ''"
           class="autocompleteSelectedItem"
           @input="selectItem(item)">
           <v-progress-circular
@@ -207,7 +207,7 @@ export default {
                 this.$emit('item-selected', {
                   id: details.id,
                   type: details.type,
-                  address: details.address,
+                  address: details.enabled ? details.address : null,
                   id_type: `${details.type}_${details.id}`,
                 });
               } else {
@@ -288,6 +288,9 @@ export default {
           item.id_type = item.type && item.id ? `${item.type}_${item.id}` : null;
           this.items.push(item);
           if (this.$refs.selectAutoComplete) {
+            if(!item.enabled) {
+              item.address = null;
+            }
             this.$refs.selectAutoComplete.selectItem(item);
           }
         });

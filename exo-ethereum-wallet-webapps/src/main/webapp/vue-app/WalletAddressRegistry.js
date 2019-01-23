@@ -60,7 +60,7 @@ export function searchAddress(id, type) {
     return Promise.resolve(address);
   }
   return searchUserOrSpaceObject(id, type).then((data) => {
-    if (data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
+    if (data && data.enabled && data.address && data.address.length && data.address.indexOf('0x') === 0) {
       if (sessionStorage) {
         sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
       }

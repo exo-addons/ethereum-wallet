@@ -214,7 +214,12 @@
                 </v-avatar>
               </td>
               <td>
-                {{ props.item.name }}
+                <template v-if="props.item.enabled">
+                  {{ props.item.name }}
+                </template>
+                <span v-else>
+                  <del class="red--text">{{ props.item.name }}</del> (Disabled)
+                </span>
               </td>
               <td v-if="$refs.disapproveAccountModal">
                 <span v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
@@ -253,8 +258,14 @@
                 </v-avatar>
               </td>
               <td>
-                {{ props.item.name }}
-              </td> <td>
+                <template v-if="props.item.enabled">
+                  {{ props.item.name }}
+                </template>
+                <span v-else>
+                  <del class="red--text">{{ props.item.name }}</del> (Disabled)
+                </span>
+              </td>
+              <td>
                 {{ props.item.accountAdminLevel[contractDetails.address] }} level
               </td>
               <td v-if="$refs.removeAdminModal">

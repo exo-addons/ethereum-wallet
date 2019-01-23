@@ -6,9 +6,21 @@
     :href="url"
     rel="nofollow"
     target="_blank">
-    {{ displayName }}
+    <template v-if="enabled">
+      {{ displayName }}
+    </template>
+    <span v-else>
+      <del class="red--text">{{ displayName }}</del> (Disabled)
+    </span>
   </a>
-  <code v-else-if="displayName">{{ displayName }}</code>
+  <code v-else-if="displayName">
+    <template v-if="enabled">
+      {{ displayName }}
+    </template>
+    <span v-else>
+      <del class="red--text">{{ displayName }}</del> (Disabled)
+    </span>
+  </code>
   <wallet-address v-else :value="address" />
 </template>
 
@@ -60,6 +72,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      },
+    },
+    enabled: {
+      type: Boolean,
+      default: function() {
+        return true;
       },
     },
   },

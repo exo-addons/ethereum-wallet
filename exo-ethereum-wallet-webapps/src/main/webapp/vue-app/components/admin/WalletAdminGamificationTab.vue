@@ -450,7 +450,7 @@ export default {
       if (this.wallets && this.wallets.length) {
         const retrievedIdentities = [];
         this.wallets.forEach((wallet) => {
-          if (!wallet || wallet.type !== 'user' || retrievedIdentities.indexOf(wallet.id) >= 0) {
+          if (!wallet || !wallet.enabled || wallet.type !== 'user' || retrievedIdentities.indexOf(wallet.id) >= 0) {
             return;
           }
           retrievedIdentities.push(wallet.id);
