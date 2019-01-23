@@ -9,6 +9,8 @@
       ref="sendEtherForm"
       :account="walletAddress"
       :balance="selectedAccount && selectedAccount.balance"
+      :default-label="defaultLabel"
+      :default-message="defaultMessage"
       @receiver-selected="
         receiver = $event.id;
         receiverType = $event.type;
@@ -23,6 +25,8 @@
       ref="sendTokensForm"
       :account="walletAddress"
       :contract-details="selectedAccount"
+      :default-label="defaultLabel"
+      :default-message="defaultMessage"
       @receiver-selected="
         receiver = $event.id;
         receiverType = $event.type;
@@ -70,6 +74,18 @@ export default {
       type: Object,
       default: function() {
         return {};
+      },
+    },
+    defaultLabel: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
+    defaultMessage: {
+      type: String,
+      default: function() {
+        return null;
       },
     },
   },

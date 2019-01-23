@@ -124,6 +124,18 @@ export default {
         return 0;
       },
     },
+    defaultLabel: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
+    defaultMessage: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
   },
   data() {
     return {
@@ -158,9 +170,9 @@ export default {
       this.recipient = null;
       this.amount = null;
       this.error = null;
-      this.transactionMessage = null;
+      this.transactionLabel = this.defaultLabel;
+      this.transactionMessage = this.defaultMessage;
       this.transactionHash = null;
-      this.transactionLabel = null;
       if (!this.gasPrice) {
         this.gasPrice = window.walletSettings.minGasPrice;
       }

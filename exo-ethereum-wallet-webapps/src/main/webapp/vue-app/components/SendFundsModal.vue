@@ -51,6 +51,8 @@
         :network-id="networkId"
         :selected-account="selectedOption && selectedOption.value"
         :add-pending-to-receiver="addPendingToReceiver"
+        :default-label="defaultLabel"
+        :default-message="defaultMessage"
         @success="success"
         @error="$emit('error', $event)"
         @dialog-error="error = $event"
@@ -146,6 +148,18 @@ export default {
       type: Boolean,
       default: function() {
         return false;
+      },
+    },
+    defaultLabel: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
+    defaultMessage: {
+      type: String,
+      default: function() {
+        return null;
       },
     },
   },

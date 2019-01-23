@@ -119,6 +119,7 @@
       :refresh-index="refreshIndex"
       :network-id="networkId"
       :wallet-address="walletAddress"
+      :default-message="initialFundsMessage"
       no-button
       display-all-accounts
       add-pending-to-receiver
@@ -217,6 +218,7 @@ export default {
       selectedWalletAddress: null,
       selectedWallet: null,
       selectedWalletDetails: null,
+      initialFundsMessage: null,
       error: null,
       wallets: [],
       walletHeaders: [
@@ -270,6 +272,7 @@ export default {
   },
   methods: {
     init(appInitialized) {
+      this.initialFundsMessage = window.walletSettings.initialFundsRequestMessage;
       if(!appInitialized || this.appInitialized) {
         return;
       }

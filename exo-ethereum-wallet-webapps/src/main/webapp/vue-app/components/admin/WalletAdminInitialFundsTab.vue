@@ -60,8 +60,8 @@
         id="initialFundsRequestMessage"
         v-model="initialFundsRequestMessage"
         name="initialFundsRequestMessage"
-        label="Initial funds request message"
-        placeholder="You can enter a custom message to send with initial funds request"
+        label="Initial funds default message"
+        placeholder="You can enter a default message to send with initial funds"
         class="mt-4"
         rows="7"
         flat
