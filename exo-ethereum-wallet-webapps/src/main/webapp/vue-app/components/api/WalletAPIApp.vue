@@ -15,6 +15,7 @@ export default {
   data() {
     return {
       isWalletEnabled: false,
+      isWalletInitialized: false,
       loading: true,
       networkId: false,
       useMetamask: false,
@@ -36,7 +37,7 @@ export default {
     }
 
     document.addEventListener('exo-wallet-init', this.init);
-    document.addEventListener('exo-wallet-metamask-changed', this.init);
+    document.addEventListener('exo-wallet-metamask-changed', this.metamaskAccountChanged);
     document.addEventListener('exo-wallet-send-tokens', this.sendTokens);
 
     window.walletAddonInstalled = true;
@@ -44,7 +45,13 @@ export default {
     document.dispatchEvent(new CustomEvent('exo-wallet-installed'));
   },
   methods: {
+    metamaskAccountChanged(event) {
+      if(this.isWalletInitialized) {
+        this.init(event);
+      }
+    },
     init(event) {
+      this.isWalletInitialized = true;
       document.dispatchEvent(new CustomEvent('exo-wallet-init-loading'));
       try {
         this.loading = true;

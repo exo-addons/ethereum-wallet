@@ -270,10 +270,10 @@ export default {
   },
   methods: {
     init(appInitialized) {
-      this.appInitialized = this.appInitialized || appInitialized;
-      if(!this.appInitialized) {
+      if(!appInitialized || this.appInitialized) {
         return;
       }
+      this.appInitialized = this.appInitialized || appInitialized;
       if(this.loadingWallets) {
         return;
       }
