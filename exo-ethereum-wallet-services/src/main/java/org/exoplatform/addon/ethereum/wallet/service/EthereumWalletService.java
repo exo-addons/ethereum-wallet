@@ -868,29 +868,29 @@ public class EthereumWalletService implements Startable {
    * 
    * @param networkId
    * @param address
+   * @param isAdministration
    * @return
    */
-  public List<JSONObject> getAccountTransactions(Long networkId, String address) {
+  public List<JSONObject> getAccountTransactions(Long networkId, String address, boolean isAdministration) {
     String addressTransactionsParamName = WALLET_USER_TRANSACTION_NAME + address + networkId;
     SettingValue<?> addressTransactionsValue = settingService.get(WALLET_CONTEXT, WALLET_SCOPE, addressTransactionsParamName);
     String addressTransactions = addressTransactionsValue == null ? "" : addressTransactionsValue.getValue().toString();
     String[] addressTransactionsArray = addressTransactions.isEmpty() ? new String[0] : addressTransactions.split(",");
-
     String currentUserId = getCurrentUserId();
 
     AccountDetail accountToDisplayDetails = getAccountDetailsByAddress(address);
-    final boolean displayLabel = displayTransactionsLabel(accountToDisplayDetails, currentUserId);
-    final boolean isUserAdmin = isUserAdmin();
-    final String principalContractAddress = getSettings().getPrincipalContractAdminAddress();
+    // Avoid displaying labels in administration and when user is not admin of
+    // space
+    final boolean displayLabel = !isAdministration && displayTransactionsLabel(accountToDisplayDetails, currentUserId);
+
     return Arrays.stream(addressTransactionsArray).map(transaction -> {
       TransactionDetail transactionDetail = TransactionDetail.fromStoredValue(transaction);
       TransactionDetail cachedTransactionDetail = getTransactionDetailFromCache(transactionDetail.getHash());
       if (cachedTransactionDetail != null) {
         transactionDetail = cachedTransactionDetail;
       }
-      String senderAddress = transactionDetail.getFrom();
-      if (!displayLabel && !(isUserAdmin && senderAddress != null
-          && StringUtils.equalsIgnoreCase(senderAddress, principalContractAddress))) {
+
+      if (!displayLabel) {
         transactionDetail.setLabel(null);
       }
       return transactionDetail.toJSONObject();

@@ -2,7 +2,7 @@ import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, convertTokenAmountReceived} from './WalletUtils.js';
 import {getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
 
-export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, transactionsLimit, transactionHashToSearch, refreshCallback) {
+export function loadTransactions(networkId, account, contractDetails, transactions, excludeFinished, transactionsLimit, transactionHashToSearch, isAdministration, refreshCallback) {
   if (!transactionsLimit) {
     transactionsLimit = 50;
   }
@@ -24,7 +24,7 @@ export function loadTransactions(networkId, account, contractDetails, transactio
     loadingPromises.push(loadPendingTransaction(networkId, account, contractDetails, transactions, pendingTransactions[transactionHash], excludeFinished, refreshCallback));
   });
 
-  return getStoredTransactionsHashes(networkId, account).then((storedTransactions) => {
+  return getStoredTransactionsHashes(networkId, account, isAdministration).then((storedTransactions) => {
     if (storedTransactions && storedTransactions.length) {
       storedTransactions.forEach((storedTransaction) => {
         loadedTransactionsCount++;
@@ -693,9 +693,8 @@ function loadCompletedTransaction(networkId, account, contractDetails, transacti
   }
 }
 
-function getStoredTransactionsHashes(networkId, account, noPending) {
-  noPending = Boolean(noPending);
-  return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}`, {credentials: 'include'})
+function getStoredTransactionsHashes(networkId, account, isAdministration) {
+  return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}&administration=${isAdministration || false}`, {credentials: 'include'})
     .then((resp) => {
       if (resp && resp.ok) {
         return resp.json();
@@ -704,8 +703,7 @@ function getStoredTransactionsHashes(networkId, account, noPending) {
       }
     })
     .then((transactions) => {
-      /* eslint-disable no-extra-boolean-cast */
-      return transactions && transactions.length ? transactions.filter((transaction) => !noPending || !Boolean(transaction.pending)) : [];
+      return transactions && transactions.length ? transactions : [];
     })
     .catch((error) => {
       throw new Error('Error fetching stored transactions', error);

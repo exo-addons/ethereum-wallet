@@ -731,6 +731,12 @@ export default {
         return null;
       },
     },
+    administration: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
   },
   data() {
     return {
@@ -844,7 +850,7 @@ export default {
     },
     loadRecentTransaction(limit) {
       const thiss = this;
-      return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, limit, this.selectedTransactionHash, () => {
+      return loadTransactions(this.networkId, this.account, this.contractDetails, this.transactions, false, limit, this.selectedTransactionHash, this.administration, () => {
         thiss.$emit('refresh-balance');
         thiss.forceUpdateList();
       })

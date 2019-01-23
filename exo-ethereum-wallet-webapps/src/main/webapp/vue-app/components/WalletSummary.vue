@@ -306,6 +306,7 @@ export default {
         true,
         10,
         null,
+        true,
         (transaction) => {
           const contractDetails = transaction.to && this.accountsDetails[transaction.to.toLowerCase()];
           this.refreshBalance(contractDetails);

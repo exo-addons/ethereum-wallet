@@ -191,6 +191,7 @@
           :fiat-symbol="fiatSymbol"
           :error="error"
           display-full-transaction
+          administration
           @loaded="computeTransactionsCount"
           @error="error = $event" />
       </v-tab-item>

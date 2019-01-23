@@ -338,7 +338,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("getTransactions")
   @RolesAllowed("users")
-  public Response getTransactions(@QueryParam("networkId") long networkId, @QueryParam("address") String address) {
+  public Response getTransactions(@QueryParam("networkId") long networkId, @QueryParam("address") String address, @QueryParam("administration") String administration) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Bad request sent to server with empty address {}", address);
       return Response.status(400).build();
@@ -365,7 +365,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       }
     }
 
-    List<JSONObject> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address);
+    List<JSONObject> userTransactions = ethereumWalletService.getAccountTransactions(networkId, address, StringUtils.equals(administration, "true"));
     JSONArray array = new JSONArray(userTransactions);
 
     return Response.ok(array.toString()).build();
