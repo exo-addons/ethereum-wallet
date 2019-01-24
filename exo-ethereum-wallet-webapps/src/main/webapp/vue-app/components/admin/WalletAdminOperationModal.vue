@@ -291,15 +291,15 @@ export default {
       this.storedPassword = this.useMetamask || (window.walletSettings.storedPassword && window.walletSettings.browserWalletExists);
       this.$nextTick(this.estimateTransactionFee);
     },
-    preselectAutocomplete(id, type) {
-      if (!id || !type) {
-        console.debug('preselectAutocomplete - empty parameters', id, type);
+    preselectAutocomplete(id, type, address) {
+      if ((!id || !type) && !address) {
+        console.debug('preselectAutocomplete - empty parameters', id, type, address);
         return;
       }
       this.dialog = true;
       this.$nextTick(() => {
         if (this.$refs.autocompleteInput) {
-          this.$refs.autocompleteInput.selectItem(id, type);
+          this.$refs.autocompleteInput.selectItem(id ? id : address, type);
         }
       });
     },

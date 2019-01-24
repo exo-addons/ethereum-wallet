@@ -47,7 +47,6 @@
             autocomplete-placeholder="Choose an administrator account to add"
             input-label="Habilitation level"
             input-placeholder="Choose a value between 1 and 5"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError">
             <div class="alert alert-info">
@@ -75,7 +74,6 @@
             title="Remove administrator"
             autocomplete-label="Administrator account"
             autocomplete-placeholder="Choose an administrator account to remove"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
 
@@ -89,7 +87,6 @@
             title="Approve account"
             autocomplete-label="Account"
             autocomplete-placeholder="Choose a user or space to approve"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
           <contract-admin-modal
@@ -101,7 +98,6 @@
             title="Disapprove account"
             autocomplete-label="Account"
             autocomplete-placeholder="Choose a user or space to disapprove"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
 
@@ -113,7 +109,6 @@
             :wallet-address="walletAddress"
             method-name="pause"
             title="Pause contract"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
           <contract-admin-modal
@@ -123,7 +118,6 @@
             :wallet-address="walletAddress"
             method-name="unPause"
             title="Unpause contract"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
 
@@ -150,7 +144,6 @@
             title="Transfer ownership"
             autocomplete-label="New owner"
             autocomplete-placeholder="Choose a new owner of the contract"
-            @success="successTransaction"
             @sent="newTransactionPending"
             @error="transactionError" />
         </v-flex>
@@ -201,16 +194,25 @@
           indeterminate
           color="primary"
           class="mb-0 mt-0" />
+        <v-flex v-if="!loading && !approvedWalletsLoadedFromContract" justify-center>
+          <v-btn
+            :loading="loadingApprovedWalletsFromContract"
+            color="primary"
+            flat
+            @click="loadApprovedWalletsFromContract">
+            Load all from contract
+          </v-btn>
+        </v-flex>
         <v-data-table
           v-if="contractDetails"
-          :items="wallets"
+          :items="approvedWallets"
           hide-actions
           hide-headers>
           <template slot="items" slot-scope="props">
             <tr v-if="(props.item.approved && props.item.approved[contractDetails.address] === 'approved') || (props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1)">
               <td>
                 <v-avatar size="36px">
-                  <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                  <img :src="props.item.avatar ? props.item.avatar : '/eXoSkin/skin/images/system/UserAvtDefault.png'" onerror="this.src = '/eXoSkin/skin/images/system/UserAvtDefault.png'">
                 </v-avatar>
               </td>
               <td>
@@ -229,7 +231,7 @@
                   v-else
                   icon
                   right
-                  @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type)">
+                  @click="$refs.disapproveAccountModal.preselectAutocomplete(props.item.id, props.item.type, props.item.address)">
                   <v-icon>
                     close
                   </v-icon>
@@ -245,16 +247,25 @@
           indeterminate
           color="primary"
           class="mb-0 mt-0" />
+        <v-flex v-if="!loading && !adminWalletsLoadedFromContract" justify-center>
+          <v-btn
+            :loading="loadingAdminWalletsFromContract"
+            color="primary"
+            flat
+            @click="loadAdminWalletsFromContract">
+            Load all from contract
+          </v-btn>
+        </v-flex>
         <v-data-table
           v-if="contractDetails"
-          :items="wallets"
+          :items="adminWallets"
           hide-actions
           hide-headers>
           <template slot="items" slot-scope="props">
             <tr v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
               <td>
                 <v-avatar size="36px">
-                  <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                  <img :src="props.item.avatar ? props.item.avatar : '/eXoSkin/skin/images/system/UserAvtDefault.png'" onerror="this.src = '/eXoSkin/skin/images/system/UserAvtDefault.png'">
                 </v-avatar>
               </td>
               <td>
@@ -272,7 +283,7 @@
                 <v-btn
                   icon
                   right
-                  @click="$refs.removeAdminModal.preselectAutocomplete(props.item.id, props.item.type)">
+                  @click="$refs.removeAdminModal.preselectAutocomplete(props.item.id, props.item.type, props.item.address)">
                   <v-icon>
                     close
                   </v-icon>
@@ -368,6 +379,12 @@ export default {
     return {
       selectedTab: 0,
       totalTransactionsCount: 0,
+      approvedWallets: [],
+      adminWallets: [],
+      approvedWalletsLoadedFromContract: false,
+      loadingApprovedWalletsFromContract: false,
+      adminWalletsLoadedFromContract: false,
+      loadingAdminWalletsFromContract: false,
       error: null,
     };
   },
@@ -396,42 +413,55 @@ export default {
         this.$forceUpdate();
       });
     },
-    retrieveAccountDetails(wallet) {
+    retrieveAccountDetails(wallet, ignoreApproved, ignoreAdmin) {
       if (!wallet.approved) {
         wallet.approved = {};
       }
       if (!wallet.accountAdminLevel) {
         wallet.accountAdminLevel = {};
       }
-      if (!wallet.approved[this.contractDetails.address]) {
-        this.contractDetails.contract.methods
-          .isApprovedAccount(wallet.address)
-          .call()
-          .then((approved) => {
-            this.$set(wallet.approved, this.contractDetails.address, approved ? 'approved' : 'disapproved');
-          })
-          .catch((e) => {
-            console.debug('Error getting approval of account', wallet.address, e);
-            this.$set(wallet.approved, this.contractDetails.address, 'disapproved');
-          });
+
+      const promises = [];
+      if (!ignoreApproved && !wallet.approved.hasOwnProperty(this.contractDetails.address)) {
+        wallet.approved[this.contractDetails.address] = false;
+        promises.push(
+          this.contractDetails.contract.methods
+            .isApprovedAccount(wallet.address)
+            .call()
+            .then((approved) => {
+              this.$set(wallet.approved, this.contractDetails.address, approved ? 'approved' : 'disapproved');
+            })
+            .catch((e) => {
+              console.debug('Error getting approval of account', wallet.address, e);
+              this.$set(wallet.approved, this.contractDetails.address, 'disapproved');
+            })
+        );
       }
-      if (!wallet.accountAdminLevel[this.contractDetails.address]) {
-        this.contractDetails.contract.methods
-          .getAdminLevel(wallet.address)
-          .call()
-          .then((level) => {
-            level = Number(level);
-            this.$set(wallet.accountAdminLevel, this.contractDetails.address, level ? level : 'not admin');
-          })
-          .catch((e) => {
-            console.debug('Error getting admin level of account', wallet.address, e);
-            this.$set(wallet.accountAdminLevel, this.contractDetails.address, 'not admin');
-          });
+      if (!ignoreAdmin && !wallet.accountAdminLevel.hasOwnProperty(this.contractDetails.address)) {
+        wallet.accountAdminLevel[this.contractDetails.address] = 0;
+        promises.push(
+          this.contractDetails.contract.methods
+            .getAdminLevel(wallet.address)
+            .call()
+            .then((level) => {
+              level = Number(level);
+              this.$set(wallet.accountAdminLevel, this.contractDetails.address, level ? level : 'not admin');
+            })
+            .catch((e) => {
+              console.debug('Error getting admin level of account', wallet.address, e);
+              this.$set(wallet.accountAdminLevel, this.contractDetails.address, 'not admin');
+            })
+        );
       }
+      return Promise.all(promises);
     },
     retrieveAccountsDetails() {
       if (this.wallets && this.contractDetails && this.contractDetails.contractType > 0) {
-        this.wallets.filter((wallet) => wallet.address).forEach(this.retrieveAccountDetails);
+        this.approvedWallets = this.wallets.slice();
+        this.adminWallets = this.wallets.slice();
+        this.approvedWalletsLoadedFromContract = false;
+        this.adminWalletsLoadedFromContract = false;
+        this.wallets.filter((wallet) => wallet.address).forEach(wallet => this.retrieveAccountDetails(wallet));
       }
     },
     newTransactionPending(transaction, contractDetails) {
@@ -464,6 +494,70 @@ export default {
           this.$set(this.contractDetails, 'contractBalanceFiat', contractBalance.balanceFiat);
         }
       });
+    },
+    loadApprovedWalletsFromContract() {
+      this.loadWalletsFromContract('ApprovedAccount', 'target', this.approvedWallets)
+      .then((result, error) => {
+        this.approvedWalletsLoadedFromContract = !error;
+      });
+    },
+    loadAdminWalletsFromContract() {
+      this.loadWalletsFromContract('AddedAdmin', 'target', this.adminWallets)
+        .then((result, error) => {
+          this.adminWalletsLoadedFromContract = !error;
+        });
+    },
+    loadWalletsFromContract(eventName, paramName, walletsArray) {
+      this.loadingApprovedWalletsFromContract = true;
+      this.loadingAdminWalletsFromContract = true;
+      try {
+        return this.contractDetails.contract.getPastEvents(eventName, {
+          fromBlock: 0,
+          toBlock: 'latest',
+          filter: {
+            isError: 0,
+            txreceipt_status: 1,
+          },
+        })
+          .then((events) => {
+            if(events && events.length) {
+              const promises = [];
+              events.forEach((event) => {
+                if (event.returnValues && event.returnValues[paramName]) {
+                  const address = event.returnValues[paramName];
+                  let wallet = this.wallets.find(associatedWallet => associatedWallet.address && associatedWallet.address.toLowerCase() === address.toLowerCase());
+                  if(!wallet) {
+                    wallet = {
+                      address: address,
+                      enabled: true,
+                      name: address,
+                    };
+                    if(this.contractDetails.owner && address.toLowerCase() === this.contractDetails.owner.toLowerCase()) {
+                      wallet.name = "TOKEN OWNER";
+                    }
+                    walletsArray.unshift(wallet);
+                    promises.push(
+                        Promise.resolve(this.retrieveAccountDetails(wallet))
+                    );
+                  }
+                }
+              });
+              return Promise.all(promises);
+            }
+          })
+          .catch((e) => {
+            console.debug('Error loading wallets from Contract', e);
+          })
+          .finally(() => {
+            this.loadingApprovedWalletsFromContract = false;
+            this.loadingAdminWalletsFromContract = false;
+          });
+      } catch(e) {
+        this.loadingApprovedWalletsFromContract = false;
+        this.loadingAdminWalletsFromContract = false;
+        console.debug('Error loading wallets from Contract', e);
+        return Promise.reject(e);
+      }
     },
   },
 };

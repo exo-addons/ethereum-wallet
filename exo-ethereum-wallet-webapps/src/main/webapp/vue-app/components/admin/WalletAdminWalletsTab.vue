@@ -128,7 +128,7 @@
         </td>
       </template>
     </v-data-table>
-    <v-layout v-if="showLoadMore" justify-center>
+    <v-flex v-if="showLoadMore" justify-center>
       <v-btn
         :loading="loading"
         color="primary"
@@ -136,7 +136,7 @@
         @click="limit += pageSize">
         Load More
       </v-btn>
-    </v-layout>
+    </v-flex>
 
     <!-- The selected account detail -->
     <v-navigation-drawer
@@ -326,7 +326,7 @@ export default {
       if (this.displayUsers && this.displayDisabledUsers && this.displaySpaces && !this.search) {
         return this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
       } else {
-        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search) >= 0 || wallet.address.toLowerCase().indexOf(this.search) >= 0)).slice(0, this.limit);
+        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
       }
     }
   },
@@ -382,7 +382,7 @@ export default {
       // To use same Vuetify datable sort algorithm
       const sortA = a.name.toLocaleLowerCase();
       const sortB = b.name.toLocaleLowerCase();
-      return (sortA > sortB && 1) || (sortA < sortB && (-1)) || 0;
+      return (sortA > sortB && 1) || (sortA < sortB && (-1)) || 0; // NOSONAR
     },
     loadWalletsBalances(accountDetails, wallets, i) {
       if(!wallets || !wallets.length) {
