@@ -32,7 +32,7 @@ public class GamificationTeamEntity implements Serializable {
   private String                            description;
 
   @Column(name = "TEAM_REWARD_TYPE")
-  private GamificationRewardType        rewardType;
+  private GamificationRewardType            rewardType;
 
   @Column(name = "TEAM_BUDGET")
   private Double                            budget;
@@ -45,6 +45,9 @@ public class GamificationTeamEntity implements Serializable {
 
   @Column(name = "TEAM_MANAGER_ID")
   private Long                              manager;
+
+  @Column(name = "TEAM_DISABLED")
+  private Boolean                           disabled;
 
   @OneToMany(mappedBy = "team", fetch = FetchType.EAGER, cascade = { CascadeType.ALL }, orphanRemoval = true)
   private Set<GamificationTeamMemberEntity> members          = new HashSet<>();
@@ -111,6 +114,14 @@ public class GamificationTeamEntity implements Serializable {
 
   public void setRewardType(GamificationRewardType rewardType) {
     this.rewardType = rewardType;
+  }
+
+  public Boolean getDisabled() {
+    return disabled;
+  }
+
+  public void setDisabled(Boolean disabled) {
+    this.disabled = disabled;
   }
 
   public Set<GamificationTeamMemberEntity> getMembers() {

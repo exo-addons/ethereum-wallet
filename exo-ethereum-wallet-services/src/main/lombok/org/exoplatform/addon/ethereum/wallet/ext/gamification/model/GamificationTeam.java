@@ -28,6 +28,8 @@ public class GamificationTeam implements Serializable {
 
   private String                            spacePrettyName;
 
+  private boolean                           disabled;
+
   private GamificationTeamMember            manager;
 
   private ArrayList<GamificationTeamMember> members          = null;

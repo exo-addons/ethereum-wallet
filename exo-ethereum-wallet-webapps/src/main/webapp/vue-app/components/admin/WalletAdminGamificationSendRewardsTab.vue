@@ -5,14 +5,38 @@
         <i class="uiIconError"></i> {{ error }}
       </div>
     </v-card-title>
-    <v-card-title class="ml-5 mr-5">
-      <v-text-field
-        v-model="search"
-        append-icon="search"
-        label="Search in name, pools, wallet address"
-        single-line
-        hide-details />
-    </v-card-title>
+    <div class="ml-5 mr-5">
+      <h4 v-show="!selectedTeam">
+        <span>Total budget: <strong>{{ computedTotalBudget }} {{ symbol }}</strong></span>
+        <template v-if="rewardType === 'FIXED'">
+          ({{ eligibleUsersCount }} eligible users)
+        </template>
+      </h4>
+      <h4 v-show="!selectedTeam">
+        <span>Configured budget: <strong>{{ configuredBudget }} {{ symbol }}</strong></span>
+        <template v-if="rewardType === 'FIXED_PER_MEMBER'">
+          ({{ budgetPerMember }} {{ symbol }} per eligible user with {{ eligibleUsersCount }} eligible users)
+        </template>
+      </h4>
+      <h4 v-show="!selectedTeam">
+        Sent tokens: <strong>{{ sentTotalBudget }} {{ symbol }}</strong>
+      </h4>
+    </div>
+    <v-container>
+      <v-layout>
+        <v-flex md4 xs12>
+          <v-switch v-model="displayDisabledUsers" label="Display disabled users" />
+        </v-flex>
+      </v-layout>
+      <v-flex>
+        <v-text-field
+          v-model="search"
+          append-icon="search"
+          label="Search in name, pools, wallet address"
+          single-line
+          hide-details />
+      </v-flex>
+    </v-container>
     <v-data-table
       v-model="selectedIdentitiesList"
       :headers="identitiesHeaders"
@@ -43,7 +67,7 @@
               v-if="props.item.address"
               :profile-id="props.item.id"
               :display-name="props.item.name"
-              :enabled="props.item.enabled"
+              :enabled="props.item.enabled && !props.item.disabled"
               tiptip-position="top_left" />
             <div v-else>
               <del>
@@ -179,6 +203,12 @@ export default {
     ProfileChip,
   },
   props: {
+    wallets: {
+      type: Array,
+      default: function() {
+        return [];
+      },
+    },
     walletRewardType: {
       type: String,
       default: function() {
@@ -233,10 +263,41 @@ export default {
         return 0;
       },
     },
+    rewardType: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
+    totalBudget: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
+    budgetPerMember: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
+    sentTotalBudget: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
+    computedTotalBudget: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
   },
   data() {
     return {
       search: '',
+      displayDisabledUsers: true,
       defaultRewardLabelTemplate: '{rewardCount} gamification points earned for period: {startDate} to {endDate}',
       defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} gamification points {earned in pool_label} for period: {startDate} to {endDate}',
       refreshIndex: 1,
@@ -293,6 +354,17 @@ export default {
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
+    eligibleUsersCount() {
+      return this.wallets ? this.wallets.filter(wallet => wallet.enabled && !wallet.disabled).length : 0;
+    },
+    configuredBudget() {
+      if (this.rewardType === 'FIXED') {
+        return this.totalBudget;
+      } else if (this.rewardType === 'FIXED_PER_MEMBER') {
+        return this.budgetPerMember * this.eligibleUsersCount;
+      }
+      return 0;
+    },
     recipients() {
       return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.points && item.points >= this.threshold && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
@@ -300,7 +372,7 @@ export default {
       return this.identitiesList ? this.identitiesList.filter((item) => item.address && item.points >= this.threshold) : [];
     },
     filteredIdentitiesList() {
-      return this.refreshIndex && this.identitiesList ? this.identitiesList.filter((wallet) => this.filterItemFromList(wallet, this.search)) : [];
+      return this.refreshIndex && this.identitiesList ? this.identitiesList.filter((wallet) => (this.displayDisabledUsers || !wallet.disabled) && this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
       return this.validRecipients.filter((item) => !item.status || item.status === 'error');

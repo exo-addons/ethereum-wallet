@@ -68,10 +68,16 @@
           </v-card-text>
           <send-rewards-tab
             ref="sendRewards"
+            :wallets="validRecipients"
             :wallet-address="walletAddress"
             :loading="loading"
             :identities-list="identitiesList"
             :contract-details="contractDetails"
+            :computed-total-budget="computedTeamsBudget"
+            :sent-total-budget="sentTotalBudget"
+            :reward-type="rewardType"
+            :budget-per-member="budgetPerMember"
+            :total-budget="totalBudget"
             :threshold="threshold"
             :wallet-reward-type="walletRewardType"
             :period-type="periodType"
@@ -296,6 +302,7 @@ export default {
                 } else {
                   this.$set(wallet, 'gamificationTeams', [team]);
                 }
+                wallet.disabled = team.disabled;
               }
             });
           }
@@ -350,7 +357,7 @@ export default {
         this.$set(team, 'notEnoughRemainingBudget', false);
         this.$set(team, 'exceedingBudget', false);
 
-        if (!team.members || !team.members.length) {
+        if (!team.members || !team.members.length || team.disabled) {
           return;
         }
 

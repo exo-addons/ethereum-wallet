@@ -91,10 +91,11 @@
         <v-flex
           slot="item"
           slot-scope="props"
+          class="gamificationTeamCard"
           xs12
-          sm6
-          md4
-          lg3>
+          sm12
+          md6
+          lg4>
           <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto no-repeat`" class="elevation-3">
             <v-card flat class="transparent">
               <v-card-title :class="props.item.description && 'pb-0'">
@@ -102,7 +103,10 @@
                   <v-avatar v-if="props.item.spacePrettyName">
                     <img :src="`/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/avatar`">
                   </v-avatar>
-                  <h3 class="headline">
+                  <h3 v-if="props.item.disabled" class="headline">
+                    <del class="red--text">{{ props.item.name }}</del>
+                  </h3>
+                  <h3 v-else class="headline">
                     {{ props.item.name }}
                   </h3>
                 </v-chip>
@@ -245,6 +249,20 @@
                 Edit
               </v-btn>
               <v-btn
+                v-if="props.item.id && props.item.disabled"
+                flat
+                color="primary"
+                @click="disableTeam(props.item, false)">
+                Enable
+              </v-btn>
+              <v-btn
+                v-else-if="props.item.id"
+                flat
+                color="primary"
+                @click="disableTeam(props.item, true)">
+                Disable
+              </v-btn>
+              <v-btn
                 v-if="props.item.id"
                 flat
                 color="primary"
@@ -266,7 +284,7 @@
 <script>
 import AddTeamForm from './WalletAdminGamificationAddTeamForm.vue';
 
-import {getTeams, removeTeam} from '../../WalletGamificationServices.js';
+import {getTeams, saveTeam, removeTeam} from '../../WalletGamificationServices.js';
 
 export default {
   components: {
@@ -334,7 +352,7 @@ export default {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
     eligibleUsersCount() {
-      return this.wallets ? this.wallets.length : 0;
+      return this.wallets ? this.wallets.filter(wallet => wallet.enabled && !wallet.disabled).length : 0;
     },
     configuredBudget() {
       if (this.rewardType === 'FIXED') {
@@ -371,10 +389,49 @@ export default {
           this.error = 'Error getting teams list, please contact your administrator';
         });
     },
+    disableTeamWithMembers(team, disable) {
+      this.$set(team, "disabled", disable);
+      if(team.members && team.members.length) {
+        team.members.forEach(member => {
+          if(member.address) {
+            this.$set(member, "disabled", disable);
+          } else {
+            const wallet = this.wallets.find(wallet => wallet.type === 'user' && wallet.id === member.id);
+            if(wallet) {
+              this.$set(wallet, "disabled", disable);
+            } else {
+              console.debug("can't find wallet for member", member);
+            }
+          }
+        });
+        this.$emit('teams-retrieved');
+      }
+    },
+    disableTeam(team, disable) {
+      if(team.id === 0) {
+        this.disableTeamWithMembers(team, disable);
+        return;
+      }
+      const teamToSave = Object.assign({}, team);
+      teamToSave.disabled = disable;
+
+      this.loading = true;
+      delete teamToSave.validMembersWallets;
+      return saveTeam(teamToSave)
+        .then(() => this.disableTeamWithMembers(team, disable))
+        .catch((e) => {
+          console.debug('Error saving pool', e);
+          this.error = 'Error saving pool, please contact your administrator.';
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
     removeTeam(id) {
       removeTeam(id)
         .then((status) => {
           if (status) {
+            this.disableTeamWithMembers(this.teamToDelete, false);
             this.removeTeamConfirm = false;
             this.teamToDelete = null;
             return this.refresh();

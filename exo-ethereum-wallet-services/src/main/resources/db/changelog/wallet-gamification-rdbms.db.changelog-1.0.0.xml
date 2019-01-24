@@ -50,4 +50,10 @@
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_MEMBER_ID" startValue="1"/>
   </changeSet>
 
+  <changeSet author="wallet" id="1.0.0-4">
+    <addColumn tableName="ADDONS_WALLET_GAM_TEAM">
+      <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false" />
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

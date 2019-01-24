@@ -193,7 +193,7 @@ export default {
       }
     },
     selectedValue() {
-      this.$refs.selectAutoComplete.isFocused = false;
+      // this.$refs.selectAutoComplete.isFocused = false;
       this.addressLoad = 'loading';
       if (this.selectedValue) {
         const isAddress = this.selectedValue.indexOf('_') < 0;
