@@ -16,8 +16,9 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.exoplatform.addon.ethereum.wallet.service;
+package org.exoplatform.addon.ethereum.wallet.service.managed;
 
+import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
 import org.exoplatform.management.annotations.Managed;
 import org.exoplatform.management.annotations.ManagedDescription;
 import org.exoplatform.management.jmx.annotations.NameTemplate;

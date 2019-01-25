@@ -1,10 +1,11 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.USER_ACCOUNT_TYPE;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
 
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
@@ -19,23 +20,24 @@ import org.exoplatform.services.log.Log;
  * a space. Thus an initial funds request should be sent to funds holder when a
  * new address is added.
  */
-public class WalletAddressModifiedListener extends Listener<Object, AccountDetail> {
+public class WalletAddressModifiedListener extends Listener<Wallet, Wallet> {
 
   private static final Log      LOG = ExoLogger.getLogger(WalletAddressModifiedListener.class);
 
   private EthereumWalletService ethereumWalletService;
 
   @Override
-  public void onEvent(Event<Object, AccountDetail> event) throws Exception {
-    AccountDetail accountDetail = event.getData();
-    if (accountDetail == null || !USER_ACCOUNT_TYPE.equals(accountDetail.getType())) {
+  public void onEvent(Event<Wallet, Wallet> event) throws Exception {
+    Wallet wallet = event.getData();
+    Wallet oldWallet = event.getSource();
+    if (StringUtils.equalsIgnoreCase(wallet.getAddress(), oldWallet.getAddress())) {
       return;
     }
 
     GlobalSettings settings = getEthereumWalletService().getSettings();
     Map<String, Double> initialFunds = settings.getInitialFunds();
     if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null || settings.getFundsHolder().isEmpty()
-        || accountDetail.getId() == null || settings.getFundsHolder().equals(accountDetail.getId())) {
+        || wallet.getId() == null || settings.getFundsHolder().equals(wallet.getId())) {
       return;
     }
 
@@ -58,16 +60,17 @@ public class WalletAddressModifiedListener extends Listener<Object, AccountDetai
         request.setContract(address);
       }
       request.setAmount(amount);
-      request.setAddress(accountDetail.getAddress());
+      request.setAddress(wallet.getAddress());
       request.setReceipient(settings.getFundsHolder());
       request.setReceipientType(settings.getFundsHolderType());
-      request.setMessage("Wallet address has been modified. Would you like to send to user the initial funds ?");
+      request.setMessage("Wallet address has been modified from " + oldWallet.getAddress() + " to " + wallet.getAddress()
+          + " . Would you like to send to wallet the initial funds ?");
 
       try {
         getEthereumWalletService().requestFunds(request);
       } catch (Exception e) {
         LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
-            + accountDetail.getType() + "' with id '" + accountDetail.getId() + "'", e);
+            + wallet.getType() + "' with id '" + wallet.getId() + "'", e);
         throw e;
       }
     }

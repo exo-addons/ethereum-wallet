@@ -20,7 +20,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.List;
 
-import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
+import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
@@ -46,8 +46,8 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
 
   @Override
   protected NotificationInfo makeNotification(NotificationContext ctx) {
-    AccountDetail senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
-    AccountDetail receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
+    Wallet senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
+    Wallet receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
     String symbol = ctx.value(SYMBOL_PARAMETER);
     String contractAddress = ctx.value(CONTRACT_ADDRESS_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
@@ -59,6 +59,8 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
       return null;
     }
 
+    String avatar = CommonsUtils.getCurrentDomain() + receiverAccountDetail.getAvatar();
+
     return NotificationInfo.instance()
                            .to(toList)
                            .with(CONTRACT_ADDRESS, contractAddress)
@@ -68,7 +70,7 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
                            .with(SYMBOL, symbol)
                            .with(MESSAGE, message)
                            .with(HASH, hash)
-                           .with(AVATAR, CommonsUtils.getCurrentDomain() + receiverAccountDetail.getAvatar())
+                           .with(AVATAR, avatar)
                            .with(SENDER_URL, getPermanentLink(senderAccountDetail))
                            .with(RECEIVER_URL, getPermanentLink(receiverAccountDetail))
                            .with(SENDER, senderAccountDetail.getName())

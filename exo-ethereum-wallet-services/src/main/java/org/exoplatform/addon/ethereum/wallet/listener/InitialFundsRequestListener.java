@@ -1,6 +1,5 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.USER_ACCOUNT_TYPE;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
 
 import java.util.Map;
@@ -19,23 +18,20 @@ import org.exoplatform.services.log.Log;
  * a space. Thus an initial funds request should be sent to funds holder when a
  * new address is added.
  */
-public class InitialFundsRequestListener extends Listener<Object, AccountDetail> {
+public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
 
   private static final Log      LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
 
   private EthereumWalletService ethereumWalletService;
 
   @Override
-  public void onEvent(Event<Object, AccountDetail> event) throws Exception {
-    AccountDetail accountDetail = event.getData();
-    if (accountDetail == null || !USER_ACCOUNT_TYPE.equals(accountDetail.getType())) {
-      return;
-    }
+  public void onEvent(Event<Wallet, Wallet> event) throws Exception {
+    Wallet wallet = event.getData();
 
     GlobalSettings settings = getEthereumWalletService().getSettings();
     Map<String, Double> initialFunds = settings.getInitialFunds();
     if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null || settings.getFundsHolder().isEmpty()
-        || accountDetail.getId() == null || settings.getFundsHolder().equals(accountDetail.getId())) {
+        || wallet.getId() == null || settings.getFundsHolder().equals(wallet.getId())) {
       return;
     }
 
@@ -58,7 +54,7 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
         request.setContract(address);
       }
       request.setAmount(amount);
-      request.setAddress(accountDetail.getAddress());
+      request.setAddress(wallet.getAddress());
       request.setReceipient(settings.getFundsHolder());
       request.setReceipientType(settings.getFundsHolderType());
       request.setMessage("A new wallet has been created");
@@ -67,7 +63,7 @@ public class InitialFundsRequestListener extends Listener<Object, AccountDetail>
         getEthereumWalletService().requestFunds(request);
       } catch (Exception e) {
         LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
-            + accountDetail.getType() + "' with id '" + accountDetail.getId() + "'", e);
+            + wallet.getType() + "' with id '" + wallet.getId() + "'", e);
         throw e;
       }
     }

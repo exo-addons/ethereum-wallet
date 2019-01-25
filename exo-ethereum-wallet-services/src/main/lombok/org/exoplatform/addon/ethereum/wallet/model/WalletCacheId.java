@@ -5,7 +5,7 @@ import java.io.Serializable;
 import lombok.Data;
 
 @Data
-public class AccountDetailCacheId implements Serializable {
+public class WalletCacheId implements Serializable {
 
   private static final long serialVersionUID = -1118998607926773632L;
 
@@ -15,12 +15,12 @@ public class AccountDetailCacheId implements Serializable {
 
   String                    address;
 
-  public AccountDetailCacheId(String type, String id) {
+  public WalletCacheId(String type, String id) {
     this.type = type;
     this.id = id;
   }
 
-  public AccountDetailCacheId(String address) {
+  public WalletCacheId(String address) {
     this.address = address;
   }
 }

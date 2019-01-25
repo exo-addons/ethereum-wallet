@@ -563,7 +563,7 @@ export function saveTransactionDetails(transaction, contractDetails) {
       isAdminOperation: transaction.isAdminOperation ? Boolean(transaction.isAdminOperation) : false,
       timestamp: transaction.timestamp ? Number(transaction.timestamp) : 0,
     };
-    fetch('/portal/rest/wallet/api/account/saveTransactionDetails', {
+    fetch('/portal/rest/wallet/api/transaction/saveTransactionDetails', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -694,7 +694,7 @@ function loadCompletedTransaction(networkId, account, contractDetails, transacti
 }
 
 function getStoredTransactionsHashes(networkId, account, isAdministration) {
-  return fetch(`/portal/rest/wallet/api/account/getTransactions?networkId=${networkId}&address=${account}&administration=${isAdministration || false}`, {credentials: 'include'})
+  return fetch(`/portal/rest/wallet/api/transaction/getTransactions?networkId=${networkId}&address=${account}&administration=${isAdministration || false}`, {credentials: 'include'})
     .then((resp) => {
       if (resp && resp.ok) {
         return resp.json();

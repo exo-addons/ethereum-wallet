@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.util.Calendar;
 import java.util.Locale;
 
+import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.NotificationMessageUtils;
 import org.exoplatform.commons.api.notification.channel.template.AbstractTemplateBuilder;
@@ -123,7 +124,7 @@ public class RequestFundsTemplateBuilder extends AbstractTemplateBuilder {
   private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext, String type) {
     String pluginId = templateContext.getPluginId();
     PluginConfig templateConfig = getPluginConfig(pluginId);
-    pluginId = SPACE_ACCOUNT_TYPE.equals(type) ? "Space" + pluginId : pluginId;
+    pluginId = WalletType.isSpace(type) ? "Space" + pluginId : pluginId;
     Element subjectElement = NotificationUtils.getSubject(templateConfig, pluginId, templateContext.getLanguage());
     if (subjectElement != null && subjectElement.getTemplate() != null) {
       messageInfo.subject(subjectElement.getTemplate());

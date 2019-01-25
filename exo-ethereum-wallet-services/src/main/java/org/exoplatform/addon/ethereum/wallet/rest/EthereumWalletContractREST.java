@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.ContractDetail;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletContractService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -39,12 +39,40 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("users")
 public class EthereumWalletContractREST implements ResourceContainer {
 
-  private static final Log      LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
+  private static final Log              LOG = ExoLogger.getLogger(EthereumWalletContractREST.class);
 
-  private EthereumWalletService ethereumWalletService;
+  private EthereumWalletContractService contractService;
 
-  public EthereumWalletContractREST(EthereumWalletService ethereumWalletService) {
-    this.ethereumWalletService = ethereumWalletService;
+  public EthereumWalletContractREST(EthereumWalletContractService contractService) {
+    this.contractService = contractService;
+  }
+
+  /**
+   * Return saved contract details by address
+   * 
+   * @param address
+   * @param networkId
+   * @return
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("getContract")
+  @RolesAllowed("users")
+  public Response getContract(@QueryParam("address") String address, @QueryParam("networkId") Long networkId) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn("Empty contract address");
+      return Response.status(400).build();
+    }
+    try {
+      ContractDetail contractDetail = contractService.getContractDetail(address, networkId);
+      if (contractDetail == null) {
+        contractDetail = new ContractDetail();
+      }
+      return Response.ok(contractDetail).build();
+    } catch (Exception e) {
+      LOG.warn("Error getting contract details: " + address + " on network with id " + networkId, e);
+      return Response.serverError().build();
+    }
   }
 
   @GET
@@ -55,12 +83,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Empty resource name");
       return Response.status(400).build();
     }
-    if (name.contains("..")) {
-      LOG.error("Forbidden path character is used: '..'");
+    if (name.contains("..") || name.contains("/") || name.contains("\\")) {
+      LOG.error(getCurrentUserId() + " has used a forbidden path character is used: '..' or '/' or '\\'");
       return Response.status(403).build();
     }
     try {
-      String contractAbi = ethereumWalletService.getContract(name, "bin");
+      String contractAbi = contractService.getContract(name, "bin");
       return Response.ok(contractAbi).build();
     } catch (Exception e) {
       LOG.warn("Error retrieving contract BIN: " + name, e);
@@ -77,12 +105,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
       LOG.warn("Empty resource name");
       return Response.status(400).build();
     }
-    if (name.contains("..")) {
-      LOG.error("Forbidden path character is used: '..'");
+    if (name.contains("..") || name.contains("/") || name.contains("\\")) {
+      LOG.error(getCurrentUserId() + " has used a forbidden path character is used: '..' or '/' or '\\'");
       return Response.status(403).build();
     }
     try {
-      String contractAbi = ethereumWalletService.getContract(name, "json");
+      String contractAbi = contractService.getContract(name, "json");
       return Response.ok(contractAbi).build();
     } catch (Exception e) {
       LOG.warn("Error retrieving contract ABI: " + name, e);
@@ -116,41 +144,13 @@ public class EthereumWalletContractREST implements ResourceContainer {
     }
     contractDetail.setAddress(contractDetail.getAddress().toLowerCase());
     try {
-      ethereumWalletService.saveContract(contractDetail);
+      contractService.saveContract(contractDetail);
       LOG.info("{} saved contract details '{}'", getCurrentUserId(), contractDetail.toJSONString());
     } catch (Exception e) {
       LOG.warn("Error saving contract as default: " + contractDetail.getAddress(), e);
       return Response.serverError().build();
     }
     return Response.ok().build();
-  }
-
-  /**
-   * Return saved contract details by address
-   * 
-   * @param address
-   * @param networkId
-   * @return
-   */
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @Path("getContract")
-  @RolesAllowed("users")
-  public Response getContract(@QueryParam("address") String address, @QueryParam("networkId") Long networkId) {
-    if (StringUtils.isBlank(address)) {
-      LOG.warn("Empty contract address");
-      return Response.status(400).build();
-    }
-    try {
-      ContractDetail contractDetail = ethereumWalletService.getContractDetail(address, networkId);
-      if (contractDetail == null) {
-        contractDetail = new ContractDetail();
-      }
-      return Response.ok(contractDetail).build();
-    } catch (Exception e) {
-      LOG.warn("Error getting contract details: " + address + " on network with id " + networkId, e);
-      return Response.serverError().build();
-    }
   }
 
   /**
@@ -174,7 +174,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
       return Response.status(400).build();
     }
     try {
-      ethereumWalletService.removeDefaultContract(address.toLowerCase(), networkId);
+      contractService.removeDefaultContract(address.toLowerCase(), networkId);
       LOG.info("{} removed contract details '{}'", getCurrentUserId(), address);
     } catch (Exception e) {
       LOG.warn("Error removing default contract: " + address, e);

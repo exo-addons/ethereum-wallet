@@ -2,20 +2,22 @@ package org.exoplatform.addon.ethereum.wallet.model;
 
 import java.io.Serializable;
 
-import lombok.*;
+import lombok.Data;
 import lombok.EqualsAndHashCode.Exclude;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class AccountDetail implements Serializable {
+public class Wallet implements Serializable, Cloneable {
 
   private static final long serialVersionUID = 8011288624609310945L;
 
+  // wallet user/space Remote ID
   private String            id;
 
   @Exclude
-  private String            technicalId;
+  private long              technicalId;
+
+  @Exclude
+  private long              spaceId;
 
   // A string is used instead of enum, because of cache clustering
   // problems with enums
@@ -36,4 +38,15 @@ public class AccountDetail implements Serializable {
   @Exclude
   private String            avatar;
 
+  @Exclude
+  private String            passPhrase;
+
+  @Override
+  public Wallet clone() { // NOSONAR
+    try {
+      return (Wallet) super.clone();
+    } catch (CloneNotSupportedException e) {
+      return null;
+    }
+  }
 }

@@ -40,7 +40,12 @@ import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.UserPortalConfigService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.services.security.IdentityRegistry;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -130,10 +135,6 @@ public class Utils {
 
   public static final String                             ADMINISTRATORS_GROUP                  = "/platform/administrators";
 
-  public static final String                             SPACE_ACCOUNT_TYPE                    = "space";
-
-  public static final String                             USER_ACCOUNT_TYPE                     = "user";
-
   public static final String                             GLOAL_SETTINGS_CHANGED_EVENT          =
                                                                                       "exo.addon.wallet.settings.changed";
 
@@ -193,16 +194,16 @@ public class Utils {
 
   public static final String                             FUNDS_ACCEPT_URL                      = "fundsAcceptUrl";
 
-  public static final ArgumentLiteral<AccountDetail>     FUNDS_REQUEST_SENDER_DETAIL_PARAMETER =
-                                                                                               new ArgumentLiteral<>(AccountDetail.class,
+  public static final ArgumentLiteral<Wallet>            FUNDS_REQUEST_SENDER_DETAIL_PARAMETER =
+                                                                                               new ArgumentLiteral<>(Wallet.class,
                                                                                                                      "senderFullName");
 
-  public static final ArgumentLiteral<AccountDetail>     SENDER_ACCOUNT_DETAIL_PARAMETER       =
-                                                                                         new ArgumentLiteral<>(AccountDetail.class,
+  public static final ArgumentLiteral<Wallet>            SENDER_ACCOUNT_DETAIL_PARAMETER       =
+                                                                                         new ArgumentLiteral<>(Wallet.class,
                                                                                                                "senderAccountDetail");
 
-  public static final ArgumentLiteral<AccountDetail>     RECEIVER_ACCOUNT_DETAIL_PARAMETER     =
-                                                                                           new ArgumentLiteral<>(AccountDetail.class,
+  public static final ArgumentLiteral<Wallet>            RECEIVER_ACCOUNT_DETAIL_PARAMETER     =
+                                                                                           new ArgumentLiteral<>(Wallet.class,
                                                                                                                  "receiverAccountDetail");
 
   public static final ArgumentLiteral<FundsRequest>      FUNDS_REQUEST_PARAMETER               =
@@ -265,8 +266,8 @@ public class Utils {
     }));
   }
 
-  public static List<String> getNotificationReceiversUsers(AccountDetail toAccount, String excludedId) {
-    if (SPACE_ACCOUNT_TYPE.equals(toAccount.getType())) {
+  public static List<String> getNotificationReceiversUsers(Wallet toAccount, String excludedId) {
+    if (WalletType.isSpace(toAccount.getType())) {
       Space space = getSpace(toAccount.getId());
       if (space == null) {
         return Collections.singletonList(toAccount.getId());
@@ -286,18 +287,32 @@ public class Utils {
   }
 
   @SuppressWarnings("all")
-  public static String getPermanentLink(AccountDetail account) {
+  public static String getPermanentLink(Wallet account) {
     String profileLink = null;
     try {
       profileLink = account.getId() == null
           || account.getType() == null ? account.getName()
-                                       : USER_ACCOUNT_TYPE.equals(account.getType()) ? LinkProvider.getProfileLink(account.getId())
-                                                                                     : getPermanentLink(getSpacePrettyName(account.getId()),
-                                                                                                        account.getName());
+                                       : WalletType.isUser(account.getType()) ? LinkProvider.getProfileLink(account.getId())
+                                                                              : getPermanentLink(getSpacePrettyName(account.getId()),
+                                                                                                 account.getName());
     } catch (Exception e) {
       LOG.error("Error getting profile link of space", e);
     }
     return profileLink;
+  }
+
+  public static Identity getIdentityById(long identityId) {
+    return getIdentityById(String.valueOf(identityId));
+  }
+
+  public static Identity getIdentityById(String identityId) {
+    IdentityManager identityManager = CommonsUtils.getService(IdentityManager.class);
+    return identityManager.getIdentity(identityId, true);
+  }
+
+  public static Identity getIdentityByTypeAndId(WalletType type, String remoteId) {
+    IdentityManager identityManager = CommonsUtils.getService(IdentityManager.class);
+    return identityManager.getOrCreateIdentity(type.getProviderId(), remoteId, true);
   }
 
   public static String getSpacePrettyName(String id) {
@@ -326,12 +341,84 @@ public class Utils {
     return space;
   }
 
-  public static String getSpaceId(Space space) {
-    return space.getGroupId().split("/")[2];
+  public static void computeWalletIdentity(Wallet wallet) {
+    if (wallet.getTechnicalId() == 0) {
+      // Compute technicalId from type and remoteId
+
+      String remoteId = wallet.getId();
+      if (StringUtils.isBlank(remoteId)) {
+        throw new IllegalStateException("Wallet identityId and remoteId are empty, thus it can't be saved");
+      }
+
+      // If wallet.getType(), we will assume that it will be of user type
+      WalletType type = WalletType.getType(wallet.getType());
+      if (type.isSpace()) {
+        // Ensure to have a fresh prettyName
+        remoteId = getSpacePrettyName(remoteId);
+        wallet.setId(remoteId);
+      }
+      Identity identity = getIdentityByTypeAndId(type, remoteId);
+      if (identity == null) {
+        throw new IllegalStateException("Can't find identity with id " + remoteId + " and type " + type);
+      }
+      wallet.setType(type.getId());
+      wallet.setId(identity.getRemoteId());
+      wallet.setTechnicalId(Long.parseLong(identity.getId()));
+    } else {
+      // Compute type and remoteId from technicalId
+      Identity identity = getIdentityById(wallet.getTechnicalId());
+      if (identity == null) {
+        throw new IllegalStateException("Can't find identity with identity id " + wallet.getTechnicalId());
+      }
+      WalletType type = WalletType.getType(identity.getProviderId());
+      wallet.setType(type.getId());
+      wallet.setId(identity.getRemoteId());
+    }
+  }
+
+  public static final boolean isUserAdmin(String username) {
+    return isUserMemberOf(username, ADMINISTRATORS_GROUP);
+  }
+
+  public static final boolean isUserMemberOf(String username, String permissionExpression) {
+    if (StringUtils.isBlank(permissionExpression)) {
+      throw new IllegalArgumentException("Permission expression is mandatory");
+    }
+    if (StringUtils.isBlank(username)) {
+      throw new IllegalArgumentException("Username is mandatory");
+    }
+
+    if (permissionExpression.contains(":")) {
+      throw new UnsupportedOperationException("Permission check with role/membershipType isn't implemented ");
+    } else if (permissionExpression.contains("/")) {
+      org.exoplatform.services.security.Identity identity = CommonsUtils.getService(IdentityRegistry.class).getIdentity(username);
+      if (identity != null) {
+        return identity.isMemberOf(permissionExpression);
+      }
+
+      Collection<Group> groupsOfUser;
+      try {
+        groupsOfUser = CommonsUtils.getService(OrganizationService.class).getGroupHandler().findGroupsOfUser(username);
+      } catch (Exception e) {
+        LOG.warn("Error getting groups of user " + username);
+        return false;
+      }
+      if (groupsOfUser == null || groupsOfUser.isEmpty()) {
+        return false;
+      }
+      for (Group group : groupsOfUser) {
+        if (permissionExpression.equals(group.getId())) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return StringUtils.equals(username, permissionExpression);
+    }
   }
 
   public static String getWalletLink(String receiverType, String receiverId) {
-    if (receiverType == null || receiverId == null || USER_ACCOUNT_TYPE.equals(receiverType)) {
+    if (receiverType == null || receiverId == null || WalletType.isUser(receiverType)) {
       return CommonsUtils.getCurrentDomain() + getMyWalletLink();
     } else {
       Space space = getSpace(receiverId);
@@ -407,4 +494,45 @@ public class Utils {
       return content;
     }
   }
+
+  public static boolean isUserSpaceManager(String id, String modifier) {
+    try {
+      return checkUserIsSpaceManager(id, modifier, false);
+    } catch (IllegalAccessException e) {
+      return false;
+    }
+  }
+
+  public static boolean isUserSpaceMember(String spaceId, String accesssor) {
+    Space space = getSpace(spaceId);
+    if (space == null) {
+      LOG.warn("Space not found with id '{}'", spaceId);
+      throw new IllegalStateException("Space not found with id '" + spaceId + "'");
+    }
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+    return !spaceService.isSuperManager(accesssor)
+        && !spaceService.isMember(space, accesssor)
+        && !spaceService.isManager(space, accesssor);
+  }
+
+  public static boolean checkUserIsSpaceManager(String spaceId,
+                                                String modifier,
+                                                boolean throwException) throws IllegalAccessException {
+    Space space = getSpace(spaceId);
+    if (space == null) {
+      LOG.warn("Space not found with id '{}'", spaceId);
+      throw new IllegalStateException();
+    }
+    SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
+    if (!spaceService.isManager(space, modifier) && !spaceService.isSuperManager(modifier)) {
+      if (throwException) {
+        LOG.error("User '{}' attempts to modify wallet address of space '{}'", modifier, space.getDisplayName());
+        throw new IllegalAccessException();
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
 }

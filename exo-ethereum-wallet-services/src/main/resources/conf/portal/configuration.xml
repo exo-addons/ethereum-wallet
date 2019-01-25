@@ -4,7 +4,49 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd" xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.dao.WalletAccountDAO</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.dao.WalletTransactionDAO</type>
+  </component>
+
+  <component>
     <type>org.exoplatform.addon.ethereum.wallet.dao.GamificationTeamDAO</type>
+  </component>
+
+  <component>
+    <key>org.exoplatform.addon.ethereum.wallet.storage.AccountStorage</key>
+    <type>org.exoplatform.addon.ethereum.wallet.storage.CachedAccountStorage</type>
+  </component>
+
+  <component>
+    <key>org.exoplatform.addon.ethereum.wallet.storage.TransactionStorage</key>
+    <type>org.exoplatform.addon.ethereum.wallet.storage.CachedTransactionStorage</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletAccountService</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletContractService</type>
+    <init-params>
+      <value-param>
+        <name>contract.abi.path</name>
+        <description>Token Contract ABI path</description>
+        <value>${exo.addon.wallet.contract.abi.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.json}</value>
+      </value-param>
+      <value-param>
+        <name>contract.bin.path</name>
+        <description>Token Contract BIN path</description>
+        <value>${exo.addon.wallet.contract.bin.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.bin}</value>
+      </value-param>
+    </init-params>
   </component>
 
   <component>
@@ -52,16 +94,6 @@
         <description>Default used gas for transactions</description>
         <value>${exo.addon.wallet.defaultGasPrice:4000000000}</value>
       </value-param>
-      <value-param>
-        <name>contract.abi.path</name>
-        <description>Token Contract ABI path</description>
-        <value>${exo.addon.wallet.contract.abi.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.json}</value>
-      </value-param>
-      <value-param>
-        <name>contract.bin.path</name>
-        <description>Token Contract BIN path</description>
-        <value>${exo.addon.wallet.contract.bin.path:jar:/org/exoplatform/addon/ethereum/wallet/contract/ERTTokenV1.bin}</value>
-      </value-param>
     </init-params>
   </component>
 
@@ -79,6 +111,10 @@
 
   <component>
     <type>org.exoplatform.addon.ethereum.wallet.rest.EthereumWalletContractREST</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.rest.EthereumWalletTransactionREST</type>
   </component>
 
   <component>
@@ -124,6 +160,12 @@
       <set-method>addListener</set-method>
       <type>org.exoplatform.addon.ethereum.wallet.listener.WalletAddressModifiedListener</type>
       <description>Send initial funds request when a user changes his wallet address</description>
+    </component-plugin>
+    <component-plugin>
+      <name>exo.addon.wallet.transaction.mined</name>
+      <set-method>addListener</set-method>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.TransactionMinedListener</type>
+      <description>Send transaction mined notification to sender and receiver</description>
     </component-plugin>
   </external-component-plugins>
 
@@ -314,17 +356,17 @@
       <description>Configures the cache for Wallet Transaction Messages Cache</description>
       <init-params>
         <object-param>
-          <name>wallet.transactionsMessages</name>
+          <name>wallet.transactions</name>
           <description></description>
           <object type="org.exoplatform.services.cache.impl.infinispan.generic.GenericExoCacheConfig">
             <field name="name">
-              <string>wallet.transactionsMessages</string>
+              <string>wallet.transactions</string>
             </field>
             <field name="maxSize">
-              <int>${exo.cache.wallet.transactionsMessages.MaxNodes:1000}</int>
+              <int>${exo.cache.wallet.transactions.MaxNodes:2000}</int>
             </field>
             <field name="liveTime">
-              <long>${exo.cache.wallet.transactionsMessages.TimeToLive:-1}</long>
+              <long>${exo.cache.wallet.transactions.TimeToLive:-1}</long>
             </field>
           </object>
         </object-param>
@@ -333,13 +375,13 @@
           <description></description>
           <object type="org.exoplatform.services.cache.impl.infinispan.generic.GenericExoCacheConfig">
             <field name="name">
-              <string>wallet.accountDetailCache</string>
+              <string>wallet.account</string>
             </field>
             <field name="maxSize">
-              <int>${exo.cache.wallet.accountDetailCache.MaxNodes:2000}</int>
+              <int>${exo.cache.wallet.account.MaxNodes:2000}</int>
             </field>
             <field name="liveTime">
-              <long>${exo.cache.wallet.accountDetailCache.TimeToLive:-1}</long>
+              <long>${exo.cache.wallet.account.TimeToLive:-1}</long>
             </field>
           </object>
         </object-param>
@@ -363,12 +405,4 @@
     </component-plugin>
   </external-component-plugins>
 
-  <external-component-plugins>
-    <target-component>org.exoplatform.social.core.space.spi.SpaceService</target-component>
-    <component-plugin>
-      <name>WalletSpaceListener</name>
-      <set-method>addSpaceListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.SpaceListener</type>
-    </component-plugin>
-  </external-component-plugins>
 </configuration>

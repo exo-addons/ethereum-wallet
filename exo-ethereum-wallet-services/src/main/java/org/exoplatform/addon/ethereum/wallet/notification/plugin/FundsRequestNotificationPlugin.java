@@ -47,9 +47,9 @@ public class FundsRequestNotificationPlugin extends BaseNotificationPlugin {
 
   @Override
   protected NotificationInfo makeNotification(NotificationContext ctx) {
-    AccountDetail requestSenderDetail = ctx.value(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER);
-    AccountDetail requestSenderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
-    AccountDetail requestReceiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
+    Wallet requestSenderDetail = ctx.value(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER);
+    Wallet requestSenderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
+    Wallet requestReceiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
     ContractDetail contractDetail = ctx.value(CONTRACT_DETAILS_PARAMETER);
     FundsRequest fundsRequest = ctx.value(FUNDS_REQUEST_PARAMETER);
 

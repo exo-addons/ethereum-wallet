@@ -44,7 +44,7 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
 /*
  * Retrieve an ERC20 contract instance at specified address
  */
-export function retrieveContractDetails(account, contractDetails, isAdministration, ignoreSavedDetails) {
+export function retrieveContractDetails(account, contractDetails, isAdministration, ignoreSavedDetails, avoidSaving) {
   contractDetails.retrievedAttributes = 0;
   let contractToSave = false;
   try {
@@ -241,7 +241,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .then(() => {
       if (contractDetails.contractType < 0 || contractDetails.retrievedAttributes === 0) {
         transformContracDetailsToFailed(contractDetails);
-      } else if (contractToSave && window.walletSettings.isAdmin) {
+      } else if (!avoidSaving && contractToSave && window.walletSettings.isAdmin) {
         saveContractAddressOnServer(contractDetails);
       }
 
@@ -502,7 +502,7 @@ export function saveContractAddress(account, address, netId, isDefaultContract) 
       let overviewAccounts = window.walletSettings.userPreferences.overviewAccounts || [];
       overviewAccounts = overviewAccounts.filter((contractAddress) => contractAddress && contractAddress.indexOf('0x') === 0);
       if (isDefaultContract || overviewAccounts.indexOf(address) < 0) {
-        return retrieveContractDetails(account, {address: address, networkId: netId}, true).then((contractDetails, error) => {
+        return retrieveContractDetails(account, {address: address, networkId: netId}, true, true, true).then((contractDetails, error) => {
           if (error) {
             throw error;
           }

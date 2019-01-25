@@ -26,6 +26,7 @@
           ">
           <v-text-field
             v-model="address"
+            :disabled="loading"
             name="address"
             label="Address"
             placeholder="Select ERC20 Token address"
@@ -103,13 +104,13 @@ export default {
   methods: {
     addToken() {
       this.error = null;
-      if (!this.address || !window.localWeb3.utils.isAddress(this.address)) {
+      if (!this.address || !window.localWeb3.utils.isAddress(this.address.trim())) {
         this.error = 'Invalid address';
         return;
       }
       this.loading = true;
       try {
-        return saveContractAddress(this.account, this.address.toLowerCase(), this.netId, this.isDefaultContract)
+        return saveContractAddress(this.account, this.address.trim().toLowerCase(), this.netId, this.isDefaultContract)
           .then((added, error) => {
             if (error) {
               throw error;

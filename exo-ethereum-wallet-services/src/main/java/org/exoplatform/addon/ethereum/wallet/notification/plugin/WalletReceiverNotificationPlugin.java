@@ -20,8 +20,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.List;
 
-import org.exoplatform.addon.ethereum.wallet.model.AccountDetail;
-import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
+import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
 import org.exoplatform.commons.api.notification.plugin.BaseNotificationPlugin;
@@ -46,8 +45,8 @@ public class WalletReceiverNotificationPlugin extends BaseNotificationPlugin {
 
   @Override
   protected NotificationInfo makeNotification(NotificationContext ctx) {
-    AccountDetail senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
-    AccountDetail receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
+    Wallet senderAccountDetail = ctx.value(SENDER_ACCOUNT_DETAIL_PARAMETER);
+    Wallet receiverAccountDetail = ctx.value(RECEIVER_ACCOUNT_DETAIL_PARAMETER);
     String symbol = ctx.value(SYMBOL_PARAMETER);
     String contractAddress = ctx.value(CONTRACT_ADDRESS_PARAMETER);
     double amount = ctx.value(AMOUNT_PARAMETER);
@@ -59,8 +58,7 @@ public class WalletReceiverNotificationPlugin extends BaseNotificationPlugin {
       return null;
     }
 
-    String avatar = SPACE_ACCOUNT_TYPE.equals(receiverAccountDetail.getType()) ? CommonsUtils.getCurrentDomain()
-        + receiverAccountDetail.getAvatar() : CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar();
+    String avatar = CommonsUtils.getCurrentDomain() + senderAccountDetail.getAvatar();
 
     return NotificationInfo.instance()
                            .to(toList)

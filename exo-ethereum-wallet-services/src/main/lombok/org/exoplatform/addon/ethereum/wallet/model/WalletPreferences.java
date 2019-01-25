@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class UserPreferences implements Serializable {
+public class WalletPreferences implements Serializable {
 
   private static final String OVERVIEW_ACCOUNTS_PARAM = "overviewAccounts";
 
@@ -76,13 +76,13 @@ public class UserPreferences implements Serializable {
     return jsonObject;
   }
 
-  public static final UserPreferences parseStringToObject(String jsonString) {
+  public static final WalletPreferences parseStringToObject(String jsonString) {
     if (StringUtils.isBlank(jsonString)) {
       return null;
     }
     try {
       JSONObject jsonObject = new JSONObject(jsonString);
-      UserPreferences userPreferences = new UserPreferences();
+      WalletPreferences userPreferences = new WalletPreferences();
       if (jsonObject.has(CURRENCY_PARAM)) {
         userPreferences.setCurrency(jsonObject.getString(CURRENCY_PARAM));
       }

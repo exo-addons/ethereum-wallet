@@ -1,6 +1,5 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.USER_ACCOUNT_TYPE;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.jsonArrayToList;
 
 import java.io.Serializable;
@@ -76,7 +75,7 @@ public class GlobalSettings implements Serializable, Cloneable {
 
   private String              initialFundsRequestMessage             = null;
 
-  private String              fundsHolderType                        = USER_ACCOUNT_TYPE;
+  private String              fundsHolderType                        = WalletType.USER.getId();
 
   private String              providerURL                            = null;
 
@@ -108,7 +107,7 @@ public class GlobalSettings implements Serializable, Cloneable {
   // Computed
   private boolean             isAdmin                                = false;
 
-  private UserPreferences     userPreferences;
+  private WalletPreferences   userPreferences;
 
   /**
    * Managed in other storage location

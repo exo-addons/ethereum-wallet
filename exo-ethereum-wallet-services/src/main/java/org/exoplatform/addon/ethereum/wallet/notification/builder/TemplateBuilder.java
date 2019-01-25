@@ -8,6 +8,7 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.NotificationMessageUtils;
 import org.exoplatform.commons.api.notification.channel.template.AbstractTemplateBuilder;
@@ -122,7 +123,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
   private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext, String type) {
     String pluginId = templateContext.getPluginId();
     PluginConfig templateConfig = getPluginConfig(pluginId);
-    pluginId = SPACE_ACCOUNT_TYPE.equals(type) ? "Space" + pluginId : pluginId;
+    pluginId = WalletType.isUser(type) ? "Space" + pluginId : pluginId;
     Element subjectElement = NotificationUtils.getSubject(templateConfig, pluginId, templateContext.getLanguage());
     if (subjectElement != null && subjectElement.getTemplate() != null) {
       messageInfo.subject(subjectElement.getTemplate());

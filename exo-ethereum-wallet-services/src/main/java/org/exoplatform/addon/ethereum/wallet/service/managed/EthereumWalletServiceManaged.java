@@ -16,8 +16,10 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.exoplatform.addon.ethereum.wallet.service;
+package org.exoplatform.addon.ethereum.wallet.service.managed;
 
+import org.exoplatform.addon.ethereum.wallet.service.*;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.management.annotations.Managed;
 import org.exoplatform.management.annotations.ManagedDescription;
 import org.exoplatform.management.jmx.annotations.NameTemplate;
@@ -28,22 +30,36 @@ import org.exoplatform.management.jmx.annotations.Property;
 @ManagedDescription("Ethereum blockchain wallet service")
 public class EthereumWalletServiceManaged {
 
-  private EthereumWalletService ethereumWalletService;
+  private EthereumWalletAccountService     accountService;
+
+  private EthereumWalletTransactionService transactionService;
 
   public EthereumWalletServiceManaged(EthereumWalletService ethereumWalletService) {
-    this.ethereumWalletService = ethereumWalletService;
   }
 
   @Managed
   @ManagedDescription("Get ethereum blockchain known treated transactions")
-  public int getKnownTreatedTransactionsCount() {
-    return ethereumWalletService.getKnownTreatedTransactionsCount();
+  public long getKnownTreatedTransactionsCount() {
+    return getTransactionService().getKnownTreatedTransactionsCount();
   }
 
   @Managed
   @ManagedDescription("Get ethereum wallets count")
   public long getWalletsCount() {
-    return ethereumWalletService.getWalletsCount();
+    return getAccountService().getWalletsCount();
   }
 
+  public EthereumWalletTransactionService getTransactionService() {
+    if (transactionService == null) {
+      transactionService = CommonsUtils.getService(EthereumWalletTransactionService.class);
+    }
+    return transactionService;
+  }
+
+  public EthereumWalletAccountService getAccountService() {
+    if (accountService == null) {
+      accountService = CommonsUtils.getService(EthereumWalletAccountService.class);
+    }
+    return accountService;
+  }
 }

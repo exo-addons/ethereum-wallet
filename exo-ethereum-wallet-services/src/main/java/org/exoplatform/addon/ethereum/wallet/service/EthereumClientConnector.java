@@ -36,6 +36,7 @@ import org.web3j.protocol.websocket.*;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
+import org.exoplatform.addon.ethereum.wallet.service.managed.EthereumClientConnectorManaged;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
