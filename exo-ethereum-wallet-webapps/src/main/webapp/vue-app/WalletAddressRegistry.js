@@ -33,6 +33,7 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
       type: type,
       id: id,
       address: address,
+      enabled: true
     }),
   }).then((resp) => {
     if (resp && resp.ok) {

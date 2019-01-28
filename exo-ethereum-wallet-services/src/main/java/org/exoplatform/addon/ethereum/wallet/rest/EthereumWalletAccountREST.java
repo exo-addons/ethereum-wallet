@@ -166,7 +166,15 @@ public class EthereumWalletAccountREST implements ResourceContainer {
              wallet.getId(),
              wallet.getAddress());
     try {
-      accountService.saveWallet(wallet, currentUserId, true);
+      Wallet storedWallet = accountService.getWallet(wallet.getType(), wallet.getId());
+      if (storedWallet == null) {
+        wallet.setEnabled(true);
+        accountService.saveWallet(wallet, currentUserId, true);
+      } else {
+        storedWallet.setAddress(wallet.getAddress());
+        storedWallet.setEnabled(wallet.isEnabled());
+        accountService.saveWallet(storedWallet, currentUserId, true);
+      }
       return Response.ok(wallet.getPassPhrase()).build();
     } catch (IllegalAccessException | IllegalStateException e) {
       return Response.status(403).build();

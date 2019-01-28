@@ -46,7 +46,7 @@ public class Wallet implements Serializable, Cloneable {
     try {
       return (Wallet) super.clone();
     } catch (CloneNotSupportedException e) {
-      return null;
+      return null; // NOSONAR
     }
   }
 }

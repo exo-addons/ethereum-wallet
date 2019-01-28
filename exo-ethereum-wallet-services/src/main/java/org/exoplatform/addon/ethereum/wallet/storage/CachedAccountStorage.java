@@ -52,7 +52,14 @@ public class CachedAccountStorage extends AccountStorage implements Startable {
 
   @Override
   public void saveWallet(Wallet wallet, boolean isNew) {
+    Wallet oldWallet = null;
+    if (!isNew) {
+      oldWallet = getWalletByIdentityId(wallet.getTechnicalId());
+    }
     super.saveWallet(wallet, isNew);
+    if (oldWallet != null) {
+      this.walletFutureCache.remove(new WalletCacheKey(oldWallet.getAddress()));
+    }
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getAddress()));
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getTechnicalId()));
   }
