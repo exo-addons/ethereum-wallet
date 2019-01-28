@@ -156,9 +156,17 @@ public class EthereumWalletService implements Startable {
     }
 
     GlobalSettings oldGlobalSettings = getSettings();
+    saveSettings(newGlobalSettings, oldGlobalSettings.getDataVersion());
+  }
 
-    // Set not updatable data from UI
-    newGlobalSettings.setDataVersion(oldGlobalSettings.getDataVersion());
+  public void saveSettings(GlobalSettings newGlobalSettings, Integer dataVersion) {
+    if (newGlobalSettings == null) {
+      throw new IllegalArgumentException("globalSettings parameter is mandatory");
+    }
+
+    GlobalSettings oldGlobalSettings = getSettings();
+
+    newGlobalSettings.setDataVersion(dataVersion);
 
     // Delete computed data
     newGlobalSettings.setUserPreferences(null);
@@ -501,8 +509,7 @@ public class EthereumWalletService implements Startable {
           globalSettings.setMaxGasPrice(defaultSettings.getMaxGasPrice());
         }
 
-        globalSettings.setDataVersion(GLOBAL_DATA_VERSION);
-        saveSettings(globalSettings);
+        saveSettings(globalSettings, GLOBAL_DATA_VERSION);
         LOG.info("Global preferences has been upgraded to version {}", GLOBAL_DATA_VERSION);
       }
     } catch (Exception e) {
