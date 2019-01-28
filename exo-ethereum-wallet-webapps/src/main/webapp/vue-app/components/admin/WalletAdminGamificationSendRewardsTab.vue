@@ -143,7 +143,6 @@
               @change="refreshIndex++" />
             <template v-else-if="props.item.status === 'success' || props.item.status === 'pending'">
               <span>{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
-              <span v-if="Number(props.item.tokensSent) !== Number(props.item.tokensToSend)"> (instead of {{ toFixed(props.item.tokensToSend) }} {{ symbol }})</span>
             </template>
             <template
               v-else>
