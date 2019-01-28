@@ -43,11 +43,11 @@
       <column name="PENDING" type="BOOLEAN"/>
       <column name="SUCCESS" type="BOOLEAN"/>
       <column name="ADMIN_OP" type="BOOLEAN"/>
-      <column name="FROM" type="VARCHAR(100)">
+      <column name="FROM_ADDRESS" type="VARCHAR(100)">
         <constraints nullable="false" />
       </column>
-      <column name="TO" type="VARCHAR(100)" />
-      <column name="BY" type="VARCHAR(100)" />
+      <column name="TO_ADDRESS" type="VARCHAR(100)" />
+      <column name="BY_ADDRESS" type="VARCHAR(100)" />
       <column name="LABEL" type="TEXT" />
       <column name="MESSAGE" type="TEXT" />
       <column name="VALUE" type="DOUBLE" />
@@ -77,20 +77,14 @@
     <createIndex tableName="ADDONS_WALLET_TRANSACTION" indexName="IDX_ADDONS_WALLET_03">
       <column name="NETWORK_ID" type="BIGINT" />
       <column name="ADMIN_OP" type="BOOLEAN" />
-      <column name="FROM" type="VARCHAR(100)" />
-      <column name="TO" type="VARCHAR(100)" />
-      <column name="BY" type="VARCHAR(100)" />
+      <column name="FROM_ADDRESS" type="VARCHAR(100)" />
+      <column name="TO_ADDRESS" type="VARCHAR(100)" />
+      <column name="BY_ADDRESS" type="VARCHAR(100)" />
       <column name="CREATED_DATE" type="BIGINT" descending="true"/>
     </createIndex>
     <createIndex tableName="ADDONS_WALLET_TRANSACTION" indexName="IDX_ADDONS_WALLET_04">
       <column name="HASH" type="VARCHAR(100)" />
     </createIndex>
-  </changeSet>
-
-  <changeSet author="wallet" id="1.3.0-5">
-      <renameColumn tableName="ADDONS_WALLET_TRANSACTION" oldColumnName="FROM" newColumnName="FROM_ADDRESS" columnDataType="VARCHAR(100)" />
-      <renameColumn tableName="ADDONS_WALLET_TRANSACTION" oldColumnName="TO" newColumnName="TO_ADDRESS" columnDataType="VARCHAR(100)" />
-      <renameColumn tableName="ADDONS_WALLET_TRANSACTION" oldColumnName="BY" newColumnName="BY_ADDRESS" columnDataType="VARCHAR(100)" />
   </changeSet>
 
 </databaseChangeLog>

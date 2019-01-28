@@ -98,7 +98,9 @@ public class EthereumWalletTransactionService {
       throw new IllegalAccessException("Can't access wallet with address " + address);
     }
 
-    List<TransactionDetail> transactionDetails = walletTransactionStorage.getWalletTransactions(networkId, address);
+    List<TransactionDetail> transactionDetails = walletTransactionStorage.getWalletTransactions(networkId,
+                                                                                                address,
+                                                                                                isAdministration);
 
     transactionDetails.stream().forEach(transactionDetail -> {
       Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());

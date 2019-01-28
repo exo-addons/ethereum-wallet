@@ -30,8 +30,13 @@ public class TransactionStorage {
                                 : transactions.stream().map(this::fromEntity).collect(Collectors.toList());
   }
 
-  public List<TransactionDetail> getWalletTransactions(Long networkId, String address) {
-    List<TransactionEntity> transactions = walletTransactionDAO.getWalletTransactions(networkId, address);
+  public List<TransactionDetail> getWalletTransactions(Long networkId, String address, boolean isAdministration) {
+    List<TransactionEntity> transactions = null;
+    if (isAdministration) {
+      transactions = walletTransactionDAO.getWalletTransactions(networkId, address);
+    } else {
+      transactions = walletTransactionDAO.getAllWalletTransactions(networkId, address);
+    }
     return transactions == null ? Collections.emptyList()
                                 : transactions.stream().map(this::fromEntity).collect(Collectors.toList());
   }

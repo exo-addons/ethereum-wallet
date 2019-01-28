@@ -9,10 +9,12 @@ import org.exoplatform.commons.persistence.impl.GenericDAOJPAImpl;
 
 public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, Long> {
 
+  private static final String NETWORK_ID_PARAM = "networkId";
+
   public List<TransactionEntity> getContractTransactions(long networkId, String contractAddress) {
     TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getContractTransactions",
                                                                               TransactionEntity.class);
-    query.setParameter("networkId", networkId);
+    query.setParameter(NETWORK_ID_PARAM, networkId);
     query.setParameter("contractAddress", contractAddress.toLowerCase());
     return query.getResultList();
   }
@@ -20,7 +22,15 @@ public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, L
   public List<TransactionEntity> getWalletTransactions(Long networkId, String address) {
     TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getWalletTransactions",
                                                                               TransactionEntity.class);
-    query.setParameter("networkId", networkId);
+    query.setParameter(NETWORK_ID_PARAM, networkId);
+    query.setParameter("address", address.toLowerCase());
+    return query.getResultList();
+  }
+
+  public List<TransactionEntity> getAllWalletTransactions(Long networkId, String address) {
+    TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getAllWalletTransactions",
+                                                                              TransactionEntity.class);
+    query.setParameter(NETWORK_ID_PARAM, networkId);
     query.setParameter("address", address.toLowerCase());
     return query.getResultList();
   }

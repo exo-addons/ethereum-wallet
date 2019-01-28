@@ -15,6 +15,7 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
 @NamedQueries({
     @NamedQuery(name = "WalletTransaction.getContractTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.networkId = :networkId AND tx.contractAddress = :contractAddress ORDER BY tx.createdDate DESC"),
     @NamedQuery(name = "WalletTransaction.getWalletTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.networkId = :networkId AND ADMIN_OP = FALSE AND (tx.fromAddress = :address OR tx.toAddress = :address OR tx.byAddress = :address) ORDER BY tx.createdDate DESC"),
+    @NamedQuery(name = "WalletTransaction.getAllWalletTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.networkId = :networkId AND (tx.fromAddress = :address OR tx.toAddress = :address OR tx.byAddress = :address) ORDER BY tx.createdDate DESC"),
     @NamedQuery(name = "WalletTransaction.getPendingTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.isPending = TRUE"),
     @NamedQuery(name = "WalletTransaction.getTransactionByHash", query = "SELECT tx FROM WalletTransaction tx WHERE tx.hash = :hash"),
 })
