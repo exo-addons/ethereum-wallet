@@ -65,10 +65,12 @@ public class TransactionStorage {
     detail.setHash(entity.getHash());
     detail.setFrom(entity.getFromAddress());
     detail.setTo(entity.getToAddress());
+    detail.setBy(entity.getByAddress());
     detail.setLabel(entity.getLabel());
     detail.setMessage(entity.getMessage());
     detail.setNetworkId(entity.getNetworkId());
     detail.setPending(entity.isPending());
+    detail.setSucceeded(entity.isSuccess());
     detail.setValue(entity.getValue());
     return detail;
   }
@@ -78,19 +80,21 @@ public class TransactionStorage {
     if (transactionDetail.getId() > 0) {
       transactionEntity.setId(transactionDetail.getId());
     }
-    transactionEntity.setAdminOperation(transactionDetail.isAdminOperation());
+    transactionEntity.setNetworkId(transactionDetail.getNetworkId());
+    transactionEntity.setHash(StringUtils.lowerCase(transactionDetail.getHash()));
+    transactionEntity.setFromAddress(StringUtils.lowerCase(transactionDetail.getFrom()));
+    transactionEntity.setToAddress(StringUtils.lowerCase(transactionDetail.getTo()));
+    transactionEntity.setByAddress(StringUtils.lowerCase(transactionDetail.getBy()));
     transactionEntity.setContractAddress(StringUtils.lowerCase(transactionDetail.getContractAddress()));
     transactionEntity.setContractAmount(transactionDetail.getContractAmount());
     transactionEntity.setContractMethodName(transactionDetail.getContractMethodName());
-    transactionEntity.setCreatedDate(transactionDetail.getTimestamp());
-    transactionEntity.setFromAddress(StringUtils.lowerCase(transactionDetail.getFrom()));
-    transactionEntity.setToAddress(StringUtils.lowerCase(transactionDetail.getTo()));
-    transactionEntity.setHash(StringUtils.lowerCase(transactionDetail.getHash()));
+    transactionEntity.setAdminOperation(transactionDetail.isAdminOperation());
     transactionEntity.setLabel(transactionDetail.getLabel());
     transactionEntity.setMessage(transactionDetail.getMessage());
-    transactionEntity.setNetworkId(transactionDetail.getNetworkId());
     transactionEntity.setPending(transactionDetail.isPending());
+    transactionEntity.setSuccess(transactionDetail.isSucceeded());
     transactionEntity.setValue(transactionDetail.getValue());
+    transactionEntity.setCreatedDate(transactionDetail.getTimestamp());
     return transactionEntity;
   }
 

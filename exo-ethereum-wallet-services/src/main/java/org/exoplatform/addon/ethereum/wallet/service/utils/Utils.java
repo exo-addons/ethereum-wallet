@@ -234,24 +234,6 @@ public class Utils {
                                                                                     new ArgumentLiteral<>(String.class,
                                                                                                           CONTRACT_ADDRESS);
 
-  public static final Event                              CONTRACT_TRANSFER_EVENT               =
-                                                                                 new Event("Transfer",
-                                                                                           Arrays.asList(new TypeReference<Address>(true) {
-                                                                                                                                                                                        },
-                                                                                                         new TypeReference<Address>(true) {
-                                                                                                         },
-                                                                                                         new TypeReference<Uint256>() {
-                                                                                                         }));
-
-  public static final Event                              CONTRACT_APPROVE_EVENT                =
-                                                                                new Event("Approval",
-                                                                                          Arrays.asList(new TypeReference<Address>(true) {
-                                                                                                                                                                                       },
-                                                                                                        new TypeReference<Address>(true) {
-                                                                                                        },
-                                                                                                        new TypeReference<Uint256>() {
-                                                                                                        }));
-
   public static final String getCurrentUserId() {
     if (ConversationState.getCurrent() != null && ConversationState.getCurrent().getIdentity() != null) {
       return ConversationState.getCurrent().getIdentity().getUserId();

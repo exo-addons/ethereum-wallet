@@ -13,8 +13,8 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
 @DynamicUpdate
 @Table(name = "ADDONS_WALLET_TRANSACTION")
 @NamedQueries({
-    @NamedQuery(name = "WalletTransaction.getContractTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.contractAddress = :contractAddress ORDER BY tx.createdDate DESC"),
-    @NamedQuery(name = "WalletTransaction.getWalletTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.networkId = :networkId AND (tx.fromAddress = :address OR tx.toAddress = :address) ORDER BY tx.createdDate DESC"),
+    @NamedQuery(name = "WalletTransaction.getContractTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.networkId = :networkId AND tx.contractAddress = :contractAddress ORDER BY tx.createdDate DESC"),
+    @NamedQuery(name = "WalletTransaction.getWalletTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.networkId = :networkId AND ADMIN_OP = FALSE AND (tx.fromAddress = :address OR tx.toAddress = :address OR tx.byAddress = :address) ORDER BY tx.createdDate DESC"),
     @NamedQuery(name = "WalletTransaction.getPendingTransactions", query = "SELECT tx FROM WalletTransaction tx WHERE tx.isPending = TRUE"),
     @NamedQuery(name = "WalletTransaction.getTransactionByHash", query = "SELECT tx FROM WalletTransaction tx WHERE tx.hash = :hash"),
 })
@@ -37,6 +37,9 @@ public class TransactionEntity implements Serializable {
   @Column(name = "PENDING")
   private boolean           isPending;
 
+  @Column(name = "SUCCESS")
+  private boolean           isSuccess;
+
   @Column(name = "ADMIN_OP")
   private boolean           isAdminOperation;
 
@@ -45,6 +48,9 @@ public class TransactionEntity implements Serializable {
 
   @Column(name = "TO")
   private String            toAddress;
+
+  @Column(name = "BY")
+  private String            byAddress;
 
   @Column(name = "LABEL")
   private String            label;
@@ -99,6 +105,14 @@ public class TransactionEntity implements Serializable {
     this.isPending = isPending;
   }
 
+  public boolean isSuccess() {
+    return isSuccess;
+  }
+
+  public void setSuccess(boolean isSuccess) {
+    this.isSuccess = isSuccess;
+  }
+
   public boolean isAdminOperation() {
     return isAdminOperation;
   }
@@ -117,6 +131,14 @@ public class TransactionEntity implements Serializable {
 
   public String getToAddress() {
     return toAddress;
+  }
+
+  public String getByAddress() {
+    return byAddress;
+  }
+
+  public void setByAddress(String byAddress) {
+    this.byAddress = byAddress;
   }
 
   public void setToAddress(String toAddress) {

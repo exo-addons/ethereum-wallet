@@ -31,6 +31,8 @@ public class TransactionDetail implements Serializable, Cloneable {
 
   private String            to;
 
+  private String            by;
+
   private String            label;
 
   private String            message;
@@ -46,7 +48,7 @@ public class TransactionDetail implements Serializable, Cloneable {
     try {
       return (TransactionDetail) super.clone();
     } catch (CloneNotSupportedException e) {
-      return null;
+      throw new IllegalStateException("Error while cloning object", e);
     }
   }
 }

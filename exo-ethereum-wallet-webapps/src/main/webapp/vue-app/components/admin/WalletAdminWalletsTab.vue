@@ -369,7 +369,7 @@ export default {
       }
       this.loadingWallets = true;
       getWallets()
-        .then((wallets) => (this.wallets = wallets))
+        .then((wallets) => (this.wallets = wallets.sort(this.sortByName)))
         .then(() => {
           this.$emit('wallets-loaded', this.wallets);
           return this.loadWalletsBalances(this.principalContract, this.loadingWallets);

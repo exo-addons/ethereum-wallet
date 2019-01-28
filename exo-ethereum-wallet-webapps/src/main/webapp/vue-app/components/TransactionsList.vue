@@ -76,6 +76,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -84,6 +85,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -99,6 +101,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -107,6 +110,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -120,6 +124,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -130,6 +135,7 @@
                     :address="item.byAddress"
                     :profile-id="item.byUsername"
                     :profile-technical-id="item.byTechnicalId"
+                    :space-id="item.bySpaceId"
                     :profile-type="item.byType"
                     :display-name="item.byDisplayName"
                     :avatar="item.byAvatar" />
@@ -140,6 +146,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -151,6 +158,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -159,6 +167,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -178,6 +187,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -186,6 +196,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -197,6 +208,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -207,6 +219,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -229,6 +242,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -239,6 +253,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -260,6 +275,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -270,6 +286,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -292,6 +309,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -302,6 +320,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -324,6 +343,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -334,6 +354,7 @@
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
                     :profile-type="item.toType"
                     :display-name="item.toDisplayName"
                     :avatar="item.toAvatar" />
@@ -356,6 +377,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -378,6 +400,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -400,6 +423,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
@@ -422,6 +446,7 @@
                     :address="item.fromAddress"
                     :profile-id="item.fromUsername"
                     :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />

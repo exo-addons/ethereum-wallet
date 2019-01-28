@@ -57,7 +57,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Retrieves the user or space details by username or spacePrettyName
    * 
-   * @param id
+   * @param remoteId
    * @param type
    * @return
    */
@@ -166,7 +166,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
              wallet.getId(),
              wallet.getAddress());
     try {
-      accountService.saveWallet(wallet, currentUserId);
+      accountService.saveWallet(wallet, currentUserId, true);
       return Response.ok(wallet.getPassPhrase()).build();
     } catch (IllegalAccessException | IllegalStateException e) {
       return Response.status(403).build();

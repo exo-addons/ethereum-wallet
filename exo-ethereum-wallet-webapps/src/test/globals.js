@@ -118,11 +118,11 @@ global.fetch.mockImplementation((url, options) => {
         last_updated: '1545137119',
       },
     ];
-  } else if (url.indexOf('/portal/rest/wallet/api/account/getTransactions') >= 0) {
+  } else if (url.indexOf('/portal/rest/wallet/api/transaction/getTransactions') >= 0) {
     const address = getParameter(url, 'address');
     const transactions = getTransactions(address);
     resultJson = transactions ? transactions : [];
-  } else if (url.indexOf('/portal/rest/wallet/api/account/saveTransactionDetails') >= 0) {
+  } else if (url.indexOf('/portal/rest/wallet/api/transaction/saveTransactionDetails') >= 0) {
     if (!options || !options.body) {
       throw new Error(`URL ${url} has empty parameters`, options);
     }

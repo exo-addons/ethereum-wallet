@@ -56,8 +56,8 @@ public class EthereumWalletTransactionService {
    * Get list of transactions for a contract
    * 
    * @param networkId
-   * @param address
-   * @param isAdministration
+   * @param contractAddress
+   * @param accessor
    * @return
    */
   public List<TransactionDetail> getContractTransactions(Long networkId,

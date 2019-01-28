@@ -388,6 +388,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.fromUsername = item.id;
         transactionDetails.fromType = item.type;
         transactionDetails.fromTechnicalId = item.technicalId;
+        transactionDetails.fromSpaceId = item.spaceId;
       } else if (transactionDetails.fromAddress && window.walletSettings.principalContractAdminAddress && transactionDetails.fromAddress.toLowerCase() === window.walletSettings.principalContractAdminAddress.toLowerCase()) {
         transactionDetails.fromDisplayName = window.walletSettings.principalContractAdminName;
       }
@@ -404,6 +405,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.toUsername = item.id;
         transactionDetails.toType = item.type;
         transactionDetails.toTechnicalId = item.technicalId;
+        transactionDetails.toSpaceId = item.spaceId;
       } else if (transactionDetails.toAddress && window.walletSettings.principalContractAdminAddress && transactionDetails.toAddress.toLowerCase() === window.walletSettings.principalContractAdminAddress.toLowerCase()) {
         transactionDetails.toDisplayName = window.walletSettings.principalContractAdminName;
       }
@@ -420,6 +422,7 @@ export function addTransaction(networkId, account, accountDetails, transactions,
         transactionDetails.byUsername = item.id;
         transactionDetails.byType = item.type;
         transactionDetails.byTechnicalId = item.technicalId;
+        transactionDetails.bySpaceId = item.spaceId;
       } else if (transactionDetails.byAddress && window.walletSettings.principalContractAdminAddress && transactionDetails.byAddress.toLowerCase() === window.walletSettings.principalContractAdminAddress.toLowerCase()) {
         transactionDetails.byDisplayName = window.walletSettings.principalContractAdminName;
       }

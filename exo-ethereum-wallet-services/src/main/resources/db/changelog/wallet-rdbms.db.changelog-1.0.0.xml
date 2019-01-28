@@ -41,11 +41,13 @@
         <constraints nullable="false" unique="true" uniqueConstraintName="UK_WALLET_TRANSACTION_HASH" />
       </column>
       <column name="PENDING" type="BOOLEAN"/>
+      <column name="SUCCESS" type="BOOLEAN"/>
       <column name="ADMIN_OP" type="BOOLEAN"/>
       <column name="FROM" type="VARCHAR(100)">
         <constraints nullable="false" />
       </column>
       <column name="TO" type="VARCHAR(100)" />
+      <column name="BY" type="VARCHAR(100)" />
       <column name="LABEL" type="TEXT" />
       <column name="MESSAGE" type="TEXT" />
       <column name="VALUE" type="DOUBLE" />
@@ -68,13 +70,16 @@
       <column name="ADDRESS" type="VARCHAR(100)" />
     </createIndex>
     <createIndex tableName="ADDONS_WALLET_TRANSACTION" indexName="IDX_ADDONS_WALLET_02">
+      <column name="NETWORK_ID" type="BIGINT" />
       <column name="CONTRACT_ADDRESS" type="VARCHAR(100)" />
       <column name="CREATED_DATE" type="BIGINT" descending="true"/>
     </createIndex>
     <createIndex tableName="ADDONS_WALLET_TRANSACTION" indexName="IDX_ADDONS_WALLET_03">
       <column name="NETWORK_ID" type="BIGINT" />
+      <column name="ADMIN_OP" type="BOOLEAN" />
       <column name="FROM" type="VARCHAR(100)" />
       <column name="TO" type="VARCHAR(100)" />
+      <column name="BY" type="VARCHAR(100)" />
       <column name="CREATED_DATE" type="BIGINT" descending="true"/>
     </createIndex>
     <createIndex tableName="ADDONS_WALLET_TRANSACTION" indexName="IDX_ADDONS_WALLET_04">

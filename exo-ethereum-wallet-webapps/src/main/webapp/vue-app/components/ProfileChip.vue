@@ -38,6 +38,12 @@ export default {
         return null;
       },
     },
+    spaceId: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
     profileTechnicalId: {
       type: String,
       default: function() {
@@ -129,7 +135,7 @@ export default {
         this.$nextTick(() => {
           $(`#${this.id}`).spacePopup({
             userName: eXo.env.portal.userName,
-            spaceID: this.profileTechnicalId,
+            spaceID: this.spaceId,
             restURL: '/portal/rest/v1/social/spaces/{0}',
             membersRestURL: '/portal/rest/v1/social/spaces/{0}/users?returnSize=true',
             managerRestUrl: '/portal/rest/v1/social/spaces/{0}/users?role=manager&returnSize=true',

@@ -315,7 +315,7 @@ export default {
                   pending: true,
                   timestamp: Date.now(),
                 };
-                
+
                 saveTransactionDetails(pendingTransaction);
                 
                 // The transaction has been hashed and will be sent

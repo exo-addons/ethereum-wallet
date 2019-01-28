@@ -16,6 +16,7 @@
                 :profile-technical-id="wallet.technicalId"
                 :profile-id="wallet.id"
                 :profile-type="wallet.type"
+                :space-id="wallet.spaceId"
                 :avatar="wallet.avatar"
                 :display-name="wallet.name"
                 :address="wallet.address" />

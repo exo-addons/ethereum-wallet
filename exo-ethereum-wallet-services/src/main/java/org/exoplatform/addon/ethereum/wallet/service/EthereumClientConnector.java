@@ -93,6 +93,8 @@ public class EthereumClientConnector implements Startable {
 
   private int                      transactionQueueMaxSize          = 0;
 
+  private boolean                  stopping                         = false;
+
   public EthereumClientConnector(EthereumWalletService ethereumWalletService,
                                  ExoContainer container) {
     this.ethereumWalletService = ethereumWalletService;
@@ -114,6 +116,12 @@ public class EthereumClientConnector implements Startable {
       RequestLifeCycle.end();
     }
 
+    try {
+      initWeb3Connection();
+    } catch (Throwable e) {
+      LOG.error("Error starting WS connection", e);
+    }
+
     ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-websocket-connector-%d").build();
     scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
 
@@ -122,6 +130,10 @@ public class EthereumClientConnector implements Startable {
       try {
         if (StringUtils.isBlank(getWebsocketProviderURL())) {
           closeConnection();
+          return;
+        }
+        if (this.stopping) {
+          LOG.info("Stopping server, thus no new connection is attempted again");
           return;
         }
         if (!initWeb3Connection()) {
@@ -157,6 +169,7 @@ public class EthereumClientConnector implements Startable {
 
   @Override
   public void stop() {
+    this.stopping = true;
     scheduledExecutorService.shutdown();
     closeConnection();
   }
@@ -205,6 +218,40 @@ public class EthereumClientConnector implements Startable {
   }
 
   /**
+   * Get transaction
+   * 
+   * @param transactionHash
+   * @return
+   * @throws ExecutionException
+   * @throws InterruptedException
+   */
+  public Transaction getTransaction(String transactionHash) throws InterruptedException, ExecutionException {
+    waitConnection();
+    EthTransaction ethTransaction = web3j.ethGetTransactionByHash(transactionHash).sendAsync().get();
+    if (ethTransaction != null && ethTransaction.getResult() != null) {
+      return ethTransaction.getResult();
+    }
+    return null;
+  }
+
+  /**
+   * Get block
+   * 
+   * @param blockHash
+   * @return
+   * @throws ExecutionException
+   * @throws InterruptedException
+   */
+  public Block getBlock(String blockHash) throws InterruptedException, ExecutionException {
+    waitConnection();
+    EthBlock ethBlock = web3j.ethGetBlockByHash(blockHash, false).sendAsync().get();
+    if (ethBlock != null && ethBlock.getResult() != null) {
+      return ethBlock.getResult();
+    }
+    return null;
+  }
+
+  /**
    * Get transaction receipt
    * 
    * @param transactionHash
@@ -213,6 +260,7 @@ public class EthereumClientConnector implements Startable {
    * @throws InterruptedException
    */
   public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
+    waitConnection();
     EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
     if (ethGetTransactionReceipt != null && ethGetTransactionReceipt.getResult() != null) {
       return ethGetTransactionReceipt.getResult();
@@ -259,6 +307,10 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
+  public boolean isConnected() {
+    return web3j != null && web3jService != null && webSocketClient != null && webSocketClient.isOpen();
+  }
+
   public long getLastWatchedBlockNumber() {
     return lastWatchedBlockNumber;
   }
@@ -295,6 +347,16 @@ public class EthereumClientConnector implements Startable {
     return transactionsCountPerBlock;
   }
 
+  private void waitConnection() throws InterruptedException {
+    if (this.stopping) {
+      throw new IllegalStateException("Server is stopping, thus not Web3 request should be emitted");
+    }
+    while (!isConnected()) {
+      LOG.warn("Wait until Websocket connection is established to continue migration");
+      Thread.sleep(1000);
+    }
+  }
+
   private boolean addTransactionToQueue(Transaction tx) {
     watchedTransactionCount++;
     transactionQueueMaxSize = Math.max(transactionQueue.size() + 1, transactionQueueMaxSize);
@@ -329,7 +391,7 @@ public class EthereumClientConnector implements Startable {
   }
 
   private boolean initWeb3Connection() {
-    if (initializing) {
+    if (initializing || this.stopping) {
       return false;
     }
     initializing = true;

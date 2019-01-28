@@ -96,7 +96,7 @@ public class EthereumWalletAccountService {
    * @param modifierUsername
    * @throws Exception
    */
-  public void saveWallet(Wallet wallet, String modifierUsername) throws Exception {
+  public void saveWallet(Wallet wallet, String modifierUsername, boolean broadcast) throws Exception {
     if (wallet == null) {
       throw new IllegalArgumentException("Wallet is mandatory");
     }
@@ -117,7 +117,9 @@ public class EthereumWalletAccountService {
 
     accountStorage.saveWallet(wallet, isNew);
 
-    getListenerService().broadcast(isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT, oldWallet, wallet);
+    if (broadcast) {
+      getListenerService().broadcast(isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT, oldWallet, wallet);
+    }
   }
 
   /**
