@@ -24,7 +24,7 @@ public class MigrationService implements Startable {
 
   private static final Log                LOG                 = ExoLogger.getLogger(MigrationService.class);
 
-  private static final int                GLOBAL_DATA_VERSION = 4;
+  private static final int                GLOBAL_DATA_VERSION = 5;
 
   private DeprecatedEthereumWalletService deprecatedEthereumWalletService;
 
@@ -105,14 +105,14 @@ public class MigrationService implements Startable {
         Long networkId = settings.getDefaultNetworkId();
 
         LOG.info("Migrate user wallet transactions");
-        hasWalletMigrationErrors |= !migrateTransactions(listUserWallets, networkId);
+        hasWalletMigrationErrors |= migrateTransactions(listUserWallets, networkId);
 
         LOG.info("Migrate space wallets transactions");
-        hasWalletMigrationErrors |= !migrateTransactions(listSpaceWallets, networkId);
+        hasWalletMigrationErrors |= migrateTransactions(listSpaceWallets, networkId);
 
         String principalContractAddress = settings.getDefaultPrincipalAccount();
         if (StringUtils.isNotBlank(principalContractAddress)) {
-          hasWalletMigrationErrors |= !migrateContractTransactions(principalContractAddress, networkId);
+          hasWalletMigrationErrors |= migrateContractTransactions(principalContractAddress, networkId);
         }
 
         hasWalletMigrationErrors |= !retrieveTransactionDetailsFromBlockchain();
@@ -156,7 +156,7 @@ public class MigrationService implements Startable {
     LOG.info("{} transactions has been computed from blockchain with treatment errors = {}",
              computedTransactions,
              errorComputedTransactions);
-    return errorComputedTransactions == 0;
+    return errorComputedTransactions > 0;
   }
 
   private boolean migrateContractTransactions(String principalContractAddress, Long networkId) {
@@ -227,7 +227,7 @@ public class MigrationService implements Startable {
     int migratedWallets = 0;
     for (Wallet wallet : listWallets) {
       if (StringUtils.isBlank(wallet.getAddress())) {
-        LOG.warn("Wallet address of {} / {} wasn't found, skip");
+        LOG.warn("Wallet address of {} / {} wasn't found, skip", wallet.getType(), wallet.getId());
         continue;
       }
       try {

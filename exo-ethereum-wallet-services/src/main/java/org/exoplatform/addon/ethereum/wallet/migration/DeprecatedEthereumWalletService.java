@@ -152,7 +152,10 @@ public class DeprecatedEthereumWalletService {
         spaces = spacesListAccress.load(current, pageSize);
         if (spaces != null && spaces.length > 0) {
           for (Space space : spaces) {
-            names.add(space.getPrettyName());
+            String spaceAddress = getSpaceAddress(space.getPrettyName());
+            if (StringUtils.isNotBlank(spaceAddress)) {
+              names.add(space.getPrettyName());
+            }
           }
         }
         current += pageSize;
@@ -288,17 +291,15 @@ public class DeprecatedEthereumWalletService {
   }
 
   private String getSpaceAddress(String id) {
-    SettingValue<?> spaceWalletAddressValue = getSettingService().get(WALLET_CONTEXT, WALLET_SCOPE, id);
+    Space space = getSpace(id);
+    if (space == null) {
+      throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + id + IS_NOT_FOUND_MESSAGE);
+    }
+
+    SettingValue<?> spaceWalletAddressValue = getSettingService().get(WALLET_CONTEXT, WALLET_SCOPE, space.getPrettyName());
     if (spaceWalletAddressValue == null || spaceWalletAddressValue.getValue() == null) {
-      Space space = getSpace(id);
-      if (space == null) {
-        throw new IllegalArgumentException(SPACE_WITH_ID_MESSAGE + id + IS_NOT_FOUND_MESSAGE);
-      }
       id = getSpaceId(space);
       spaceWalletAddressValue = getSettingService().get(WALLET_CONTEXT, WALLET_SCOPE, id);
-      if (spaceWalletAddressValue == null || spaceWalletAddressValue.getValue() == null) {
-        spaceWalletAddressValue = getSettingService().get(WALLET_CONTEXT, WALLET_SCOPE, space.getPrettyName());
-      }
     }
     if (spaceWalletAddressValue != null && spaceWalletAddressValue.getValue() != null) {
       return spaceWalletAddressValue.getValue().toString().toLowerCase();

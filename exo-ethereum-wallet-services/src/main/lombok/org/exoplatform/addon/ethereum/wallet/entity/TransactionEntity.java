@@ -43,13 +43,13 @@ public class TransactionEntity implements Serializable {
   @Column(name = "ADMIN_OP")
   private boolean           isAdminOperation;
 
-  @Column(name = "FROM", nullable = false)
+  @Column(name = "FROM_ADDRESS", nullable = false)
   private String            fromAddress;
 
-  @Column(name = "TO")
+  @Column(name = "TO_ADDRESS")
   private String            toAddress;
 
-  @Column(name = "BY")
+  @Column(name = "BY_ADDRESS")
   private String            byAddress;
 
   @Column(name = "LABEL")

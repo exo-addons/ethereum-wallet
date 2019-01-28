@@ -116,12 +116,6 @@ public class EthereumClientConnector implements Startable {
       RequestLifeCycle.end();
     }
 
-    try {
-      initWeb3Connection();
-    } catch (Throwable e) {
-      LOG.error("Error starting WS connection", e);
-    }
-
     ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-websocket-connector-%d").build();
     scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
 
