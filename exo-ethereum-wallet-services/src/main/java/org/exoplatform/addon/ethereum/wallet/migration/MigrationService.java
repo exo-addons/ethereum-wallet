@@ -118,14 +118,16 @@ public class MigrationService implements Startable {
         hasWalletMigrationErrors |= !retrieveTransactionDetailsFromBlockchain();
 
         if (!hasWalletMigrationErrors) {
+          LOG.info("Wallet and Transactions migration finished susccessfully");
           settings.setDataVersion(GLOBAL_DATA_VERSION);
           ethereumWalletService.saveSettings(settings);
+        } else {
+          LOG.info("Wallet and Transactions migration seems to have some errors, it will be reattempted again next startup");
         }
 
         Set<Wallet> allWallets = listUserWallets;
         allWallets.addAll(listSpaceWallets);
 
-        LOG.info("Wallet and Transactions migration finished susccessfull");
       } finally {
         RequestLifeCycle.end();
       }
