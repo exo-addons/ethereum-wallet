@@ -346,7 +346,7 @@ public class EthereumClientConnector implements Startable {
       throw new IllegalStateException("Server is stopping, thus not Web3 request should be emitted");
     }
     while (!isConnected()) {
-      LOG.warn("Wait until Websocket connection is established to continue migration");
+      LOG.info("Wait until Websocket connection to blockchain is established to retrieve information");
       Thread.sleep(1000);
     }
   }
