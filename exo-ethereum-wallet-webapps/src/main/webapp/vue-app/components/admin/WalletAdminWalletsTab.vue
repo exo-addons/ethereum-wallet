@@ -264,7 +264,7 @@ export default {
       appInitialized: false,
       displayUsers: true,
       displaySpaces: true,
-      displayDisabledUsers: true,
+      displayDisabledUsers: false,
       sameConfiguredNetwork: true,
       selectedTransactionHash: null,
       seeAccountDetails: false,

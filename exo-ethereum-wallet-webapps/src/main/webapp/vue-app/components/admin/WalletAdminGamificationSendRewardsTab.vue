@@ -296,7 +296,7 @@ export default {
   data() {
     return {
       search: '',
-      displayDisabledUsers: true,
+      displayDisabledUsers: false,
       defaultRewardLabelTemplate: '{rewardCount} gamification points earned for period: {startDate} to {endDate}',
       defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} gamification points {earned in pool_label} for period: {startDate} to {endDate}',
       refreshIndex: 1,
