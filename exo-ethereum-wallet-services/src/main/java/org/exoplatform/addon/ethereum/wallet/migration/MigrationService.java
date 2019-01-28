@@ -115,7 +115,7 @@ public class MigrationService implements Startable {
           hasWalletMigrationErrors |= migrateContractTransactions(principalContractAddress, networkId);
         }
 
-        hasWalletMigrationErrors |= !retrieveTransactionDetailsFromBlockchain();
+        hasWalletMigrationErrors |= retrieveTransactionDetailsFromBlockchain();
 
         if (hasWalletMigrationErrors) {
           LOG.info("Wallet and Transactions migration seems to have some errors, it will be reattempted again next startup");
