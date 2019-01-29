@@ -31,6 +31,7 @@
 
   <changeSet author="wallet" id="1.3.0-2">
     <validCheckSum>7:1b92fcacd4904402b5fc850db10ea561</validCheckSum>
+    <validCheckSum>7:f4f8b6ffb1575004cfcb4ac607382fa9</validCheckSum>
     <createTable tableName="ADDONS_WALLET_TRANSACTION">
       <column name="TRANSACTION_ID" type="BIGINT" autoIncrement="${autoIncrement}" startWith="1">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_TRANSACTION_ID"/>
