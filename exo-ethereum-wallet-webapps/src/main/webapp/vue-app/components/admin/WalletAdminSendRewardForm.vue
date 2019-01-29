@@ -315,10 +315,12 @@ export default {
           rewardTransactionsPromises.push(this.sendTokens(recipientWallet, rewardTransactions));
         }
       });
+      this.$emit("sending");
       Promise.all(rewardTransactionsPromises).then(() => {
         if (rewardTransactions.length) {
           // save all reward transactions again for current period (for consistency check)
           savePeriodRewardTransactions(rewardTransactions);
+          this.$emit("all-sent");
         }
       });
     },

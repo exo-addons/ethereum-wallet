@@ -239,7 +239,9 @@
         default-transaction-label="kudos reward"
         default-transaction-message="kudos reward"
         reward-count-field="received"
+        @sending="sendingRewardsInProgress = true"
         @sent="newPendingTransaction"
+        @all-sent="sendingRewardsInProgress = false; refreshList()"
         @error="error = $event" />
     </v-card-text>
   </v-card>
@@ -301,6 +303,7 @@ export default {
       selectedKudosIdentitiesList: [],
       selectedStartDate: null,
       selectedEndDate: null,
+      sendingRewardsInProgress: false,
       walletRewardType: 'KUDOS_PERIOD_TRANSACTIONS',
       pagination: {
         descending: true,
@@ -406,31 +409,28 @@ export default {
     totalKudosReceived() {
       return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.filter(item => item.received && Number(item.received)).reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
     },
-    totalTokens() {
-      return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.filter(item => (item.tokensToSend && Number(item.tokensToSend)) || (item.tokensSent && Number(item.tokensSent))).reduce((accumulator, item) => accumulator + (item.tokensToSend && Number(item.tokensToSend)) || (item.tokensSent && Number(item.tokensSent)) || 0, 0) : 0;
-    },
     totalKudosToSend() {
-      return this.validSelectedKudosIdentitiesList && this.validSelectedKudosIdentitiesList.length ? this.validSelectedKudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
+      return this.selectableRecipients && this.selectableRecipients.length ? this.selectableRecipients.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
+    },
+    totalTokensSent() {
+      return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.reduce((accumulator, item) => accumulator + ((item.tokensSent && Number(item.tokensSent)) || 0), 0) : 0;
+    },
+    totalTokens() {
+      return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.reduce((accumulator, item) => accumulator + ((item.tokensSent && Number(item.tokensSent)) || (item.tokensToSend && Number(item.tokensToSend)) || 0), 0) : 0;
     },
     totalTokensToSend() {
-      return this.validSelectedKudosIdentitiesList && this.validSelectedKudosIdentitiesList.length ? this.validSelectedKudosIdentitiesList.reduce((accumulator, item) => accumulator + (item.tokensToSend && Number(item.tokensToSend)) || 0, 0) : 0;
+      return this.defaultKudosBudget - this.totalTokensSent;
     },
     totalKudos() {
       return this.kudosIdentitiesList && this.kudosIdentitiesList.length ? this.kudosIdentitiesList.reduce((accumulator, item) => accumulator + Number(item.received), 0) : 0;
     },
-    validSelectedKudosIdentitiesList() {
-      return this.selectedKudosIdentitiesList ? this.selectedKudosIdentitiesList.filter(this.isValidItem) : [];
-    },
     selectableRecipients() {
-      return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(this.isValidItem) : [];
+      return this.kudosIdentitiesList ? this.kudosIdentitiesList.filter(this.isSelectableItem) : [];
     },
   },
   watch: {
     selectedDate() {
       this.loadAll();
-    },
-    selectedKudosIdentitiesList() {
-      this.refreshList();
     },
     defaultKudosBudget() {
       this.refreshList();
@@ -457,7 +457,7 @@ export default {
     this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
   },
   methods: {
-    isValidItem(userKudosItem) {
+    isSelectableItem(userKudosItem) {
       return userKudosItem.address && userKudosItem.received && (!userKudosItem.status || userKudosItem.status === 'error');
     },
     newPendingTransaction(transaction) {
@@ -479,11 +479,14 @@ export default {
           if (this.principalAccount) {
             this.$set(kudosWallet, 'status', 'pending');
           }
-          this.selectedKudosIdentitiesList.splice(kudosWalletIndex, 1);
 
           const thiss = this;
           watchTransactionStatus(transaction.hash, (receipt) => {
             thiss.$set(kudosWallet, 'status', receipt && receipt.status ? 'success' : 'error');
+            if(!receipt || !receipt.status) {
+              thiss.$set(kudosWallet, 'tokensSent', 0);
+            }
+            this.refreshList();
           });
         }
       } else {
@@ -510,13 +513,17 @@ export default {
                   const thiss = this;
                   watchTransactionStatus(kudosTransaction.hash, (receipt) => {
                     thiss.$set(kudosWallet, 'status', receipt && receipt.status ? 'success' : 'error');
+                    if(!receipt || !receipt.status) {
+                      thiss.$set(kudosWallet, 'tokensSent', 0);
+                    }
+                    this.refreshList();
                   });
                 } else {
                   console.error("Can't find wallet of a sent Kudos token transaction, kudosTransaction=", kudosTransaction);
                 }
               }
             });
-            this.$forceUpdate();
+            this.refreshList();
           }
         });
       }
@@ -581,16 +588,16 @@ export default {
       this.loading = false;
     },
     refreshList() {
-      const tokenPerPerson = this.totalKudosToSend && this.defaultKudosBudget / this.totalKudosToSend;
+      const tokensPerKudos = this.totalTokensToSend && this.totalKudosToSend && (this.totalTokensToSend > 0 || 0) && this.totalTokensToSend / this.totalKudosToSend; // NOSONAR
       this.kudosIdentitiesList.forEach((walletKudos) => {
         const wallet = this.wallets && this.wallets.find((wallet) => wallet && wallet.id && wallet.technicalId && wallet.type === walletKudos.type && (wallet.id === walletKudos.id || wallet.technicalId === walletKudos.identityId));
         if (wallet && wallet.address) {
           this.$set(walletKudos, 'address', wallet.address);
           if (this.defaultKudosBudget) {
-            const tokensToSend = Number(walletKudos.received) * Number(tokenPerPerson);
-            if (this.selectedKudosIdentitiesList.find((identity) => identity.id === walletKudos.id)) {
+            const tokensToSend = Number(walletKudos.received) * Number(tokensPerKudos);
+            if (this.isSelectableItem(walletKudos)) {
               this.$set(walletKudos, 'tokensToSend', this.toFixed(tokensToSend));
-            } else {
+            } else if(!this.sendingRewardsInProgress) {
               this.$set(walletKudos, 'tokensToSend', 0);
             }
           }
