@@ -253,7 +253,7 @@
         :disabled="loading"
         class="btn btn-primary"
         @click="init">
-        Load kudos management
+        Load kudos reward
       </v-btn>
       <v-spacer />
     </v-card-title>

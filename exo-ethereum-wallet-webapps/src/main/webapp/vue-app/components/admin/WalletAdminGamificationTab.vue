@@ -1,5 +1,5 @@
 <template>
-  <v-card flat>
+  <v-card v-if="uiLoaded" flat>
     <v-flex v-if="error && String(error).trim() != '{}'" class="text-xs-center">
       <div class="alert alert-error v-content">
         <i class="uiIconError"></i> {{ error }}
@@ -145,6 +145,19 @@
       </v-tab-item>
     </v-tabs-items>
   </v-card>
+  <v-card v-else flat>
+    <v-card-title class="text-xs-center">
+      <v-spacer />
+      <v-btn
+        :loading="loading"
+        :disabled="loading"
+        class="btn btn-primary"
+        @click="init">
+        Load gamification reward
+      </v-btn>
+      <v-spacer />
+    </v-card-title>
+  </v-card>
 </template>
 
 <script>
@@ -190,6 +203,8 @@ export default {
   data() {
     return {
       loading: false,
+      uiLoaded: false,
+      settings: null,
       error: null,
       walletRewardType: 'GAMIFICATION_PERIOD_TRANSACTIONS',
       selectedDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
@@ -249,27 +264,45 @@ export default {
   },
   watch: {
     selectedDate() {
-      this.loadAll();
+      if(!this.loading && this.uiLoaded) {
+        this.loadAll();
+      }
     },
     periodType() {
-      this.loadAll();
+      if(!this.loading && this.uiLoaded) {
+        this.loadAll();
+      }
+    },
+    uiLoaded() {
+      if(this.uiLoaded) {
+        this.$nextTick(() => {
+          this.$refs.configurationTab.init(this.settings);
+        });
+      }
     },
   },
   created() {
     getSettings()
-      .then((settings) => {
-        if (settings) {
-          this.contractAddress = settings.contractAddress;
-          this.rewardType = settings.rewardType;
-          this.budgetPerMember = settings.budgetPerMember;
-          this.totalBudget = settings.totalBudget;
-          this.threshold = settings.threshold;
-          this.periodType = settings.periodType;
-          this.$refs.configurationTab.init(settings);
-        }
-      });
+    .then((settings) => {
+      if (settings) {
+        this.settings = settings;
+        this.contractAddress = settings.contractAddress;
+        this.rewardType = settings.rewardType;
+        this.budgetPerMember = settings.budgetPerMember;
+        this.totalBudget = settings.totalBudget;
+        this.threshold = settings.threshold;
+        this.periodType = settings.periodType;
+        return getPeriodRewardDates(new Date(this.selectedDate), this.periodType);
+      }
+    })
+    .then(() => this.$emit('list-retrieved'));
+
   },
   methods: {
+    init() {
+      this.loading = true;
+      return this.loadAll();
+    },
     changeSettings(settings) {
       if (settings) {
         this.contractAddress = settings.contractAddress;
@@ -485,6 +518,7 @@ export default {
         .then(() => this.$refs.sendRewards && this.$refs.sendRewards.refreshWalletTransactionStatus())
         .then(() => {
           this.loading = false;
+          this.uiLoaded = true;
         });
     },
     formatDate(date) {
