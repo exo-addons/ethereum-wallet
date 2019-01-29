@@ -1,5 +1,5 @@
 <template>
-  <v-card flat>
+  <v-card v-if="uiLoaded" flat>
     <v-card-title class="text-xs-center">
       <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
         <i class="uiIconError"></i> {{ error }}
@@ -245,6 +245,19 @@
         @error="error = $event" />
     </v-card-text>
   </v-card>
+  <v-card v-else flat>
+    <v-card-title class="text-xs-center">
+      <v-spacer />
+      <v-btn
+        :loading="loading"
+        :disabled="loading"
+        class="btn btn-primary"
+        @click="init">
+        Load kudos management
+      </v-btn>
+      <v-spacer />
+    </v-card-title>
+  </v-card>
 </template>
 
 <script>
@@ -287,6 +300,7 @@ export default {
   data() {
     return {
       loading: false,
+      uiLoaded: false,
       error: null,
       kudosBudget: null,
       defaultKudosBudget: null,
@@ -442,21 +456,26 @@ export default {
   created() {
     document.addEventListener('exo-kudos-get-kudos-list-loading', () => (this.loading = true));
     document.addEventListener('exo-kudos-get-kudos-list-result', this.loadKudosList);
-    this.$nextTick(() => {
-      if (window.kudosSettings) {
-        this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
-      }
-      const now = new Date();
-      this.selectedDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-      document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
-    });
-    getKudosBudget().then((value) => (this.defaultKudosBudget = this.kudosBudget = value));
-    getKudosContract().then((kudosContract) => (this.kudosContractAddress = this.selectedKudosContractAddress = kudosContract || this.principalAccount));
+    document.addEventListener('exo-kudos-get-period-result', this.loadPeriodDates);
+    const now = new Date();
+    this.selectedDate = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
     this.tokenEtherscanLink = getTokenEtherscanlink(window.walletSettings.defaultNetworkId);
     this.transactionEtherscanLink = getTransactionEtherscanlink(window.walletSettings.defaultNetworkId);
     this.addressEtherscanLink = getAddressEtherscanlink(window.walletSettings.defaultNetworkId);
+    this.$nextTick(() => {
+      if(window.kudosSettings) {
+        this.$emit('list-retrieved');
+      }
+    });
   },
   methods: {
+    init() {
+      this.loading = true;
+      this.kudosPeriodType = window.kudosSettings.kudosPeriodType;
+      getKudosBudget().then((value) => (this.defaultKudosBudget = this.kudosBudget = value));
+      getKudosContract().then((kudosContract) => (this.kudosContractAddress = this.selectedKudosContractAddress = kudosContract || this.principalAccount));
+      this.loadAll();
+    },
     isSelectableItem(userKudosItem) {
       return userKudosItem.address && userKudosItem.received && (!userKudosItem.status || userKudosItem.status === 'error');
     },
@@ -586,6 +605,7 @@ export default {
         this.error = 'Empty kudos list is retrieved';
       }
       this.loading = false;
+      this.uiLoaded = true;
     },
     refreshList() {
       const tokensPerKudos = this.totalTokensToSend && this.totalKudosToSend && (this.totalTokensToSend > 0 || 0) && this.totalTokensToSend / this.totalKudosToSend; // NOSONAR
