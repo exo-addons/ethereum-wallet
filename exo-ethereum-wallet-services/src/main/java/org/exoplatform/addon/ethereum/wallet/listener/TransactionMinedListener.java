@@ -43,6 +43,10 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
         return;
       }
       TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash, false);
+      if (transactionDetail == null || transactionDetail.isAdminOperation()) {
+        // No notification for admin operation or not watched transaction
+        return;
+      }
       Wallet senderWallet = null;
       String senderAddress = transactionDetail.getFrom();
       String principalContractAdminAddress = getWalletService().getSettings().getPrincipalContractAdminAddress();
