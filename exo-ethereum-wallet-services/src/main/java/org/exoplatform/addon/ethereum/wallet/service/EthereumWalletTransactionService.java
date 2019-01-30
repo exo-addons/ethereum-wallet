@@ -43,72 +43,17 @@ public class EthereumWalletTransactionService {
 
   public List<TransactionDetail> getTransactions(long networkId,
                                                  String address,
-                                                 String accessor,
-                                                 boolean isAdministration) throws IllegalAccessException {
+                                                 String contractAddress,
+                                                 String hash,
+                                                 int limit,
+                                                 boolean pending,
+                                                 boolean administration,
+                                                 String accessor) throws IllegalAccessException {
     if (contractService.isContract(address, networkId)) {
-      return getContractTransactions(networkId, address, accessor);
+      return getContractTransactions(networkId, address, limit, accessor);
     } else {
-      return getWalletTransactions(networkId, address, accessor, isAdministration);
+      return getWalletTransactions(networkId, address, contractAddress, hash, limit, pending, administration, accessor);
     }
-  }
-
-  /**
-   * Get list of transactions for a contract
-   * 
-   * @param networkId
-   * @param contractAddress
-   * @param accessor
-   * @return
-   */
-  public List<TransactionDetail> getContractTransactions(Long networkId,
-                                                         String contractAddress,
-                                                         String accessor) throws IllegalAccessException {
-    ContractDetail contractDetail = contractService.getContractDetail(contractAddress, networkId);
-    if (contractDetail == null) {
-      throw new IllegalStateException("Can't find contract with address " + contractAddress);
-    }
-
-    if (!isUserAdmin(accessor)) {
-      throw new IllegalAccessException("Can't access wallet with address " + contractAddress);
-    }
-
-    List<TransactionDetail> transactionDetails = walletTransactionStorage.getContractTransactions(networkId, contractAddress);
-    transactionDetails.stream().forEach(transactionDetail -> transactionDetail.setLabel(null));
-    return transactionDetails;
-  }
-
-  /**
-   * Get list of transactions for a wallet designated by an address
-   * 
-   * @param networkId
-   * @param address
-   * @param accessor
-   * @param isAdministration
-   * @return
-   */
-  public List<TransactionDetail> getWalletTransactions(Long networkId,
-                                                       String address,
-                                                       String accessor,
-                                                       boolean isAdministration) throws IllegalAccessException {
-    Wallet wallet = walletAccountService.getWalletByAddress(address);
-    if (wallet == null) {
-      return Collections.emptyList();
-    }
-    if (!walletAccountService.canAccessWallet(wallet, accessor)) {
-      throw new IllegalAccessException("Can't access wallet with address " + address);
-    }
-
-    List<TransactionDetail> transactionDetails = walletTransactionStorage.getWalletTransactions(networkId,
-                                                                                                address,
-                                                                                                isAdministration);
-
-    transactionDetails.stream().forEach(transactionDetail -> {
-      Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());
-      if (!displayTransactionsLabel(senderWallet, accessor)) {
-        transactionDetail.setLabel(null);
-      }
-    });
-    return transactionDetails;
   }
 
   public TransactionDetail getTransactionByHash(String hash, boolean onlyPending) {
@@ -145,6 +90,103 @@ public class EthereumWalletTransactionService {
 
   public long getKnownTreatedTransactionsCount() {
     return knownTreatedTransactionsCount;
+  }
+
+  /**
+   * Get list of transactions for a contract
+   * 
+   * @param networkId
+   * @param contractAddress
+   * @param limit
+   * @param accessor
+   * @return
+   */
+  private List<TransactionDetail> getContractTransactions(Long networkId,
+                                                          String contractAddress,
+                                                          int limit,
+                                                          String accessor) throws IllegalAccessException {
+    ContractDetail contractDetail = contractService.getContractDetail(contractAddress, networkId);
+    if (contractDetail == null) {
+      throw new IllegalStateException("Can't find contract with address " + contractAddress);
+    }
+
+    if (!isUserAdmin(accessor)) {
+      throw new IllegalAccessException("Can't access wallet with address " + contractAddress);
+    }
+
+    List<TransactionDetail> transactionDetails = walletTransactionStorage.getContractTransactions(networkId,
+                                                                                                  contractAddress,
+                                                                                                  limit);
+    transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, accessor));
+    return transactionDetails;
+  }
+
+  /**
+   * Get list of transactions for a wallet designated by an address
+   * 
+   * @param networkId
+   * @param address
+   * @param accessor
+   * @param limit
+   * @param hash
+   * @param isAdministration
+   * @param accessor2
+   * @param administration
+   * @return
+   */
+  private List<TransactionDetail> getWalletTransactions(long networkId,
+                                                        String address,
+                                                        String contractAddress,
+                                                        String hash,
+                                                        int limit,
+                                                        boolean pending,
+                                                        boolean administration,
+                                                        String accessor) throws IllegalAccessException {
+    Wallet wallet = walletAccountService.getWalletByAddress(address);
+    if (wallet == null) {
+      return Collections.emptyList();
+    }
+    if (!walletAccountService.canAccessWallet(wallet, accessor)) {
+      throw new IllegalAccessException("Can't access wallet with address " + address);
+    }
+
+    List<TransactionDetail> transactionDetails = walletTransactionStorage.getWalletTransactions(networkId,
+                                                                                                address,
+                                                                                                contractAddress,
+                                                                                                hash,
+                                                                                                limit,
+                                                                                                pending,
+                                                                                                administration);
+
+    transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, accessor));
+    return transactionDetails;
+  }
+
+  private void retrieveWalletsDetails(TransactionDetail transactionDetail, String accessor) {
+    Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());
+    transactionDetail.setFromWallet(senderWallet);
+    if (senderWallet != null) {
+      senderWallet.setPassPhrase(null);
+    }
+    if (StringUtils.isNotBlank(transactionDetail.getTo())) {
+      Wallet receiverWallet = walletAccountService.getWalletByAddress(transactionDetail.getTo());
+      if (receiverWallet != null) {
+        receiverWallet.setPassPhrase(null);
+      }
+      transactionDetail.setToWallet(receiverWallet);
+    }
+    if (StringUtils.isNotBlank(transactionDetail.getBy())) {
+      Wallet senderWalletBy = walletAccountService.getWalletByAddress(transactionDetail.getBy());
+      if (senderWalletBy != null) {
+        senderWalletBy.setPassPhrase(null);
+      }
+      transactionDetail.setToWallet(senderWalletBy);
+      if (!displayTransactionsLabel(senderWalletBy, accessor)) {
+        transactionDetail.setLabel(null);
+      }
+    } else if (!displayTransactionsLabel(senderWallet, accessor)) {
+      transactionDetail.setLabel(null);
+    }
   }
 
   private boolean displayTransactionsLabel(Wallet senderWallet, String currentUserId) {

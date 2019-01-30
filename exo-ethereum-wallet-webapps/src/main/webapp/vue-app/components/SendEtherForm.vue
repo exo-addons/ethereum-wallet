@@ -242,11 +242,15 @@ export default {
             };
 
             // *async* save transaction message for contract, sender and receiver
-            saveTransactionDetails(pendingTransaction);
-
-            // The transaction has been hashed and will be sent
-            this.$emit('sent', pendingTransaction);
-            this.$emit('close');
+            saveTransactionDetails(pendingTransaction)
+              .then(() => {
+                // The transaction has been hashed and will be sent
+                this.$emit(
+                  'sent',
+                  pendingTransaction
+                );
+                this.$emit('close');
+              });
           })
           .on('error', (error, receipt) => {
             // The transaction has failed

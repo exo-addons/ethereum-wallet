@@ -288,12 +288,14 @@ public class EthereumWalletService implements Startable {
           }
           userSettings.setPhrase(wallet.getPassPhrase());
           userSettings.setWalletAddress(wallet.getAddress());
+          userSettings.setWallet(wallet);
         }
       } else {
         Wallet wallet = accountService.getWalletByTypeAndID(WalletType.USER.getId(), username);
         if (wallet != null) {
           userSettings.setPhrase(wallet.getPassPhrase());
           userSettings.setWalletAddress(wallet.getAddress());
+          userSettings.setWallet(wallet);
         }
       }
 
@@ -408,13 +410,15 @@ public class EthereumWalletService implements Startable {
     String requestReceipientId = fundsRequest.getReceipient();
     String requestReceipientType = fundsRequest.getReceipientType();
 
-    Wallet requestReceipient = accountService.getWalletByTypeAndID(WalletType.getType(requestReceipientType).getId(), requestReceipientId);
+    Wallet requestReceipient = accountService.getWalletByTypeAndID(WalletType.getType(requestReceipientType).getId(),
+                                                                   requestReceipientId);
 
     if (requestReceipient == null || requestReceipient.getTechnicalId() == 0) {
       LOG.warn("Can't find fund request recipient with id {} and type {}", requestReceipientId, requestReceipientType);
     }
 
-    ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER, accountService.getWalletByTypeAndID(WalletType.USER.getId(), getCurrentUserId()));
+    ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER,
+               accountService.getWalletByTypeAndID(WalletType.USER.getId(), getCurrentUserId()));
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, requestSender);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, requestReceipient);
     ctx.append(FUNDS_REQUEST_PARAMETER, fundsRequest);

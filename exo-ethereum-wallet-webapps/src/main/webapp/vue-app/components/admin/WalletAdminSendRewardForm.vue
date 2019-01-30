@@ -427,14 +427,15 @@ export default {
                   walletRewardType: this.walletRewardType,
                 };
                 rewardTransactions.push(rewardTransaction);
-                savePeriodRewardTransaction(rewardTransaction);
 
-                // The transaction has been hashed and will be sent
-                this.$emit('sent', pendingTransaction, contractDetails);
-
-                if (!this.errors && this.transactionsSent === this.recipientsHavingAddress.length) {
-                  this.$emit('close');
-                }
+                savePeriodRewardTransaction(rewardTransaction)
+                  .then(() => {
+                    // The transaction has been hashed and will be sent
+                    this.$emit('sent', pendingTransaction, contractDetails);
+                    if (!this.errors && this.transactionsSent === this.recipientsHavingAddress.length) {
+                      this.$emit('close');
+                    }
+                  });
               })
               .on('error', (error, receipt) => {
                 console.debug('Web3 contract.transfer method - error', error);

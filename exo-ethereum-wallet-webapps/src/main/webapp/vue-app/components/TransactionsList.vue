@@ -479,7 +479,7 @@
 
                 <v-list-tile-sub-title>
                   <v-icon
-                    v-if="!item.status"
+                    v-if="!item.pending && !item.status"
                     color="orange"
                     title="Transaction failed">
                     warning
@@ -612,24 +612,6 @@
               </v-list-tile-content>
             </v-list-tile>
 
-            <v-list-tile v-if="!contractDetails.isContract">
-              <v-list-tile-content>
-                Balance now
-              </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ toFixed(contractDetails.balanceFiat) }} {{ fiatSymbol }}
-              </v-list-tile-content>
-            </v-list-tile>
-
-            <v-list-tile v-if="!contractDetails.isContract && item.balanceAtDateFiat">
-              <v-list-tile-content>
-                Balance at date
-              </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ toFixed(item.balanceAtDateFiat) }} {{ fiatSymbol }}
-              </v-list-tile-content>
-            </v-list-tile>
-
             <v-list-tile v-if="item.contractName">
               <v-list-tile-content>
                 Contract name
@@ -706,7 +688,7 @@ import WalletAddress from './WalletAddress.vue';
 import ProfileChip from './ProfileChip.vue';
 
 import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
-import {loadTransactions, addTransaction} from '../WalletTransactions.js';
+import {loadTransactions} from '../WalletTransactions.js';
 
 export default {
   components: {
@@ -785,8 +767,8 @@ export default {
       const transactions = this.transactions;
       const sortedTransactions = {};
       Object.values(transactions)
-        .filter((transaction) => transaction && transaction.date && !transaction.notLoaded && !transaction.ignore)
-        .sort((transaction1, transaction2) => transaction2.date - transaction1.date)
+        .filter((transaction) => transaction && !transaction.ignore)
+        .sort((transaction1, transaction2) => (transaction2.date || 0) - (transaction1.date || 0))
         .forEach((transaction) => {
           sortedTransactions[transaction.hash] = transaction;
         });
@@ -796,7 +778,7 @@ export default {
   watch: {
     transactionsLimit() {
       if (this.transactionsLimit !== this.transactionsPerPage && this.account && !this.loading) {
-        this.init().catch((error) => {
+        this.init(true).catch((error) => {
           console.debug('account field change event - error', error);
           this.loading = false;
           this.$emit('error', `Account loading error: ${error}`);
@@ -839,14 +821,14 @@ export default {
     }
   },
   methods: {
-    init() {
+    init(ignoreSelected) {
       this.loading = true;
       this.error = null;
 
       // Get transactions to latest block with maxBlocks to load
       return this.loadRecentTransaction(this.transactionsLimit)
         .then(() => {
-          if (this.selectedTransactionHash) {
+          if (!ignoreSelected && this.selectedTransactionHash) {
             const selectedTransaction = this.transactions[this.selectedTransactionHash] || this.transactions[this.selectedTransactionHash.toLowerCase()];
             if (selectedTransaction) {
               this.$set(selectedTransaction, 'selected', true);
@@ -881,42 +863,12 @@ export default {
       })
         .then(() => {
           const totalTransactionsCount = Object.keys(this.transactions).length;
-          const notLoadedTransactionsCount = Object.values(this.transactions).filter((transaction) => transaction.notLoaded).length;
-          const ignoredTransactionsCount = Object.values(this.transactions).filter((transaction) => transaction.ignore).length;
-          const loadedTransactionsCount = totalTransactionsCount - notLoadedTransactionsCount - ignoredTransactionsCount;
-          this.limitReached = notLoadedTransactionsCount === 0;
-          if (loadedTransactionsCount > this.transactionsLimit) {
-            this.transactionsLimit = loadedTransactionsCount;
-          }
-          if (loadedTransactionsCount < this.transactionsLimit && notLoadedTransactionsCount > 0) {
-            return this.loadRecentTransaction(limit + this.transactionsPerPage);
-          }
+          this.limitReached = (totalTransactionsCount <= this.transactionsLimit && (totalTransactionsCount % this.transactionsPerPage) > 0) || (totalTransactionsCount < this.transactionsLimit);
         })
         .catch((e) => {
           console.debug('loadTransactions - method error', e);
           this.$emit('error', `${e}`);
         });
-    },
-    addTransaction(transaction, contactDetails) {
-      addTransaction(
-        this.networkId,
-        this.account,
-        contactDetails ? contactDetails : this.contactDetails,
-        this.transactions,
-        transaction,
-        null,
-        null,
-        () => {
-          this.$emit('loaded', this.sortedTransactions);
-          this.$emit('refresh-balance');
-          this.forceUpdateList();
-        },
-        (error) => {
-          transaction.icon = 'warning';
-          transaction.error = `Error loading transaction ${error}`;
-          this.forceUpdateList();
-        }
-      ).then(() => this.forceUpdateList());
     },
     forceUpdateList() {
       try {

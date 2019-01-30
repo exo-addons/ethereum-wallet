@@ -2,7 +2,7 @@
 <li class="$READ clearfix" data-id="$NOTIFICATION_ID">
   <div class="media">
     <div class="avatarXSmall pull-left">
-      <img src="$AVATAR" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" alt="$SENDER" />
+      <img src="$AVATAR" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'" />
     </div>
     <div class="media-body">
       <div class="contentSmall" data-link="$openURL">

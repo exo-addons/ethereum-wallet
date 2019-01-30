@@ -122,16 +122,14 @@ public class EthereumTransactionDecoder {
     transactionDetail.setTo(receiverAddress);
     Wallet receiver = null;
 
-    if (StringUtils.isNoneBlank(receiverAddress)) {
+    if (StringUtils.isNotBlank(receiverAddress)) {
       receiver = accountService.getWalletByAddress(receiverAddress);
     }
 
     ContractDetail contractDetail = null;
     if (receiver == null) {
       contractDetail = contractService.getContractDetail(receiverAddress, networkId);
-      if (contractDetail == null) {
-        LOG.warn("Can't find contract with address {}", receiverAddress);
-      } else {
+      if (contractDetail != null) {
         transactionDetail.setContractAddress(contractDetail.getAddress());
         computeTransactionDetail(transactionDetail, transactionReceipt);
       }

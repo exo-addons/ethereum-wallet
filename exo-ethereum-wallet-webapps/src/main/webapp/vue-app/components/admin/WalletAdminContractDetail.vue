@@ -315,7 +315,6 @@ import ContractAdminModal from './WalletAdminOperationModal.vue';
 import TransactionsList from '../TransactionsList.vue';
 import WalletAddress from '../WalletAddress.vue';
 
-import {addTransaction} from '../../WalletTransactions.js';
 import {computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
 export default {
@@ -469,9 +468,7 @@ export default {
         contractDetails = this.contractDetails;
       }
       if (this.$refs.transactionsList) {
-        this.$refs.transactionsList.addTransaction(transaction, contractDetails);
-      } else {
-        addTransaction(this.networkId, contractDetails.address, contractDetails, [], transaction);
+        this.$refs.transactionsList.init(true);
       }
       if (this.contractDetails && transaction.value > 0) {
         this.$set(this.contractDetails, 'loadingBalance', true);

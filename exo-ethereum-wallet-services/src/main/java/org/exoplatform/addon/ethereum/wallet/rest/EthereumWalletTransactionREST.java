@@ -86,6 +86,11 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
    * 
    * @param networkId
    * @param address
+   * @param contractAddress
+   * @param hash
+   * @param limit
+   * @param pending
+   * @param administration
    * @return
    */
   @GET
@@ -94,7 +99,11 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
   @RolesAllowed("users")
   public Response getTransactions(@QueryParam("networkId") long networkId,
                                   @QueryParam("address") String address,
-                                  @QueryParam("administration") String administration) {
+                                  @QueryParam("contractAddress") String contractAddress,
+                                  @QueryParam("hash") String hash,
+                                  @QueryParam("limit") int limit,
+                                  @QueryParam("pending") boolean pending,
+                                  @QueryParam("administration") boolean administration) {
     if (networkId == 0) {
       LOG.warn("Bad request sent to server with empty networkId {}", networkId);
       return Response.status(400).build();
@@ -106,11 +115,14 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
 
     String currentUserId = getCurrentUserId();
     try {
-      boolean isAdministration = StringUtils.equals(administration, "true");
       List<TransactionDetail> transactionDetails = transactionService.getTransactions(networkId,
                                                                                       address,
-                                                                                      currentUserId,
-                                                                                      isAdministration);
+                                                                                      contractAddress,
+                                                                                      hash,
+                                                                                      limit,
+                                                                                      pending,
+                                                                                      administration,
+                                                                                      currentUserId);
       return Response.ok(transactionDetails).build();
     } catch (IllegalAccessException e) {
       LOG.warn("User {} attempts to display transactions of address {}", currentUserId, address);

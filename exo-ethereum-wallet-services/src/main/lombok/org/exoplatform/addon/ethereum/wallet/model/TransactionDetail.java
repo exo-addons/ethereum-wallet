@@ -29,9 +29,15 @@ public class TransactionDetail implements Serializable, Cloneable {
 
   private String            from;
 
+  private Wallet            fromWallet;
+
   private String            to;
 
+  private Wallet            toWallet;
+
   private String            by;
+
+  private Wallet            byWallet;
 
   private String            label;
 

@@ -222,7 +222,7 @@ export default {
     },
     newTransactionPending(transaction, contractDetails) {
       if (this.$refs.transactionsList) {
-        this.$refs.transactionsList.addTransaction(transaction, contractDetails);
+        this.$refs.transactionsList.init(true);
       }
       this.$emit('transaction-sent');
     },

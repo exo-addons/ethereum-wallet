@@ -49,6 +49,8 @@ public class WalletPreferences implements Serializable {
 
   private Boolean             enableDelegation        = null;
 
+  private Wallet              wallet                  = null;
+
   public String toJSONString() {
     return toJSONObject().toString();
   }

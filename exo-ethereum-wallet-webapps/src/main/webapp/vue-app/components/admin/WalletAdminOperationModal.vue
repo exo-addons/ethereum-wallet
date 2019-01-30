@@ -379,7 +379,7 @@ export default {
                   gas: gas,
                   gasPrice: this.gasPrice,
                   pending: true,
-                  isAdminOperation: true,
+                  adminOperation: true,
                   contractAddress: this.contractDetails.address,
                   contractMethodName: this.methodName,
                   contractAmount: this.inputValue,
@@ -392,10 +392,12 @@ export default {
                 };
 
                 // *async* save transaction message for contract, sender and (avoid alarm receiver for admin operations)
-                saveTransactionDetails(pendingTransaction);
+                saveTransactionDetails(pendingTransaction)
+                  .then(() => {
+                    // The transaction has been hashed and will be sent
+                    this.$emit('sent', pendingTransaction, this.contractDetails);
+                  });
 
-                // The transaction has been hashed and will be sent
-                this.$emit('sent', pendingTransaction, this.contractDetails);
                 const thiss = this;
                 // FIXME workaround when can't execute .then(...) method, especially in pause, unpause.
                 watchTransactionStatus(hash, () => {

@@ -69,11 +69,13 @@
 
   <changeSet author="wallet" id="1.3.0-4">
     <validCheckSum>7:bb95ae8fbc0f09bf25b8796d65ecd566</validCheckSum>
+    <validCheckSum>7:911616801cc4391f56c826ff6b4ebca0</validCheckSum>
     <createIndex tableName="ADDONS_WALLET_ACCOUNT" indexName="IDX_ADDONS_WALLET_01">
       <column name="ADDRESS" type="VARCHAR(100)" />
     </createIndex>
     <createIndex tableName="ADDONS_WALLET_TRANSACTION" indexName="IDX_ADDONS_WALLET_02">
       <column name="NETWORK_ID" type="BIGINT" />
+      <column name="TO_ADDRESS" type="VARCHAR(100)" />
       <column name="CONTRACT_ADDRESS" type="VARCHAR(100)" />
       <column name="CREATED_DATE" type="BIGINT" descending="true"/>
     </createIndex>

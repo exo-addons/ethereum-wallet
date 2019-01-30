@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.exoplatform.addon.ethereum.wallet.entity.TransactionEntity;
 import org.exoplatform.commons.persistence.impl.GenericDAOJPAImpl;
 
@@ -11,27 +13,54 @@ public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, L
 
   private static final String NETWORK_ID_PARAM = "networkId";
 
-  public List<TransactionEntity> getContractTransactions(long networkId, String contractAddress) {
+  public List<TransactionEntity> getContractTransactions(long networkId, String contractAddress, int limit) {
     TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getContractTransactions",
                                                                               TransactionEntity.class);
     query.setParameter(NETWORK_ID_PARAM, networkId);
     query.setParameter("contractAddress", contractAddress.toLowerCase());
+    if (limit > 0) {
+      query.setMaxResults(limit);
+    }
     return query.getResultList();
   }
 
-  public List<TransactionEntity> getWalletTransactions(Long networkId, String address) {
-    TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getWalletTransactions",
-                                                                              TransactionEntity.class);
-    query.setParameter(NETWORK_ID_PARAM, networkId);
-    query.setParameter("address", address.toLowerCase());
-    return query.getResultList();
-  }
+  public List<TransactionEntity> getWalletTransactions(long networkId,
+                                                       String address,
+                                                       String contractAddress,
+                                                       int limit,
+                                                       boolean pending,
+                                                       boolean administration) {
 
-  public List<TransactionEntity> getAllWalletTransactions(Long networkId, String address) {
-    TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getAllWalletTransactions",
-                                                                              TransactionEntity.class);
-    query.setParameter(NETWORK_ID_PARAM, networkId);
-    query.setParameter("address", address.toLowerCase());
+    StringBuilder queryString = new StringBuilder("SELECT tx FROM WalletTransaction tx WHERE tx.networkId = ");
+    queryString.append(networkId);
+
+    if (!administration) {
+      queryString.append(" AND tx.isAdminOperation = FALSE");
+    }
+
+    queryString.append(" AND (tx.fromAddress = '");
+    queryString.append(address);
+    queryString.append("' OR tx.toAddress = '");
+    queryString.append(address);
+    queryString.append("' OR tx.byAddress = '");
+    queryString.append(address);
+    queryString.append("')");
+
+    if (pending) {
+      queryString.append(" AND tx.isPending = TRUE");
+    }
+
+    if (StringUtils.isNotBlank(contractAddress)) {
+      queryString.append(" AND tx.contractAddress = '");
+      queryString.append(contractAddress);
+      queryString.append("' ");
+    }
+
+    queryString.append(" ORDER BY tx.createdDate DESC");
+    TypedQuery<TransactionEntity> query = getEntityManager().createQuery(queryString.toString(), TransactionEntity.class);
+    if (limit > 0) {
+      query.setMaxResults(limit);
+    }
     return query.getResultList();
   }
 

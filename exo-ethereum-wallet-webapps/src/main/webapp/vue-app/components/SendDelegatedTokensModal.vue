@@ -316,16 +316,16 @@ export default {
                   timestamp: Date.now(),
                 };
 
-                saveTransactionDetails(pendingTransaction);
-                
-                // The transaction has been hashed and will be sent
-                this.$emit(
-                  'sent',
-                  pendingTransaction,
-                  this.contractDetails
-                );
-
-                this.dialog = false;
+                saveTransactionDetails(pendingTransaction)
+                  .then(() => {
+                    // The transaction has been hashed and will be sent
+                    this.$emit(
+                      'sent',
+                      pendingTransaction,
+                      this.contractDetails
+                    );
+                    this.dialog = false;
+                  });
               })
               .on('error', (error, receipt) => {
                 console.debug('Web3 contract.transferFrom method - error', error);

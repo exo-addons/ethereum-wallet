@@ -43,7 +43,6 @@
 import SendEtherForm from './SendEtherForm.vue';
 import SendTokensForm from './SendTokensForm.vue';
 
-import {addTransaction} from '../WalletTransactions.js';
 import {markFundRequestAsSent} from '../WalletUtils.js';
 
 export default {
@@ -172,7 +171,6 @@ export default {
       const selectedAccount = this.selectedAccount;
       const recipient = transaction.to.toLowerCase();
       transaction.addLoadingToRecipient = this.addPendingToReceiver;
-      addTransaction(this.networkId, this.walletAddress, selectedAccount, [], transaction, null, null, () => this.$emit('success', selectedAccount, recipient), (error) => this.$emit('error', error));
 
       this.$emit('pending', transaction);
 

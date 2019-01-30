@@ -60,17 +60,18 @@ export function searchAddress(id, type) {
   if (address) {
     return Promise.resolve(address);
   }
-  return searchUserOrSpaceObject(id, type).then((data) => {
-    if (data && data.enabled && data.address && data.address.length && data.address.indexOf('0x') === 0) {
-      if (sessionStorage) {
-        sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
+  return searchUserOrSpaceObject(id, type)
+    .then((data) => {
+      if (data && data.enabled && data.address && data.address.length && data.address.indexOf('0x') === 0) {
+        if (sessionStorage) {
+          sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
+        }
+        return data.address;
+      } else {
+        sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
+        return null;
       }
-      return data.address;
-    } else {
-      sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
-      return null;
-    }
-  });
+    });
 }
 
 /*
@@ -85,6 +86,14 @@ export function searchAddress(id, type) {
  * }
  */
 export function searchUserOrSpaceObject(id, type) {
+  if(window.walletSettings
+      && window.walletSettings.userPreferences
+      && window.walletSettings.userPreferences.wallet
+      && window.walletSettings.userPreferences.wallet.id === id
+      && window.walletSettings.userPreferences.wallet.type === type) {
+    return Promise.resolve(window.walletSettings.userPreferences.wallet);
+  }
+
   return fetch(`/portal/rest/wallet/api/account/detailsById?id=${id}&type=${type}`, {credentials: 'include'}).then((resp) => {
     if (resp && resp.ok) {
       return resp.json();
@@ -110,6 +119,14 @@ export function searchFullName(address) {
   }
 
   address = address.toLowerCase();
+
+  if(window.walletSettings
+      && window.walletSettings.userPreferences
+      && window.walletSettings.userPreferences.wallet
+      && window.walletSettings.userPreferences.wallet.address
+      && window.walletSettings.userPreferences.wallet.address.toLowerCase() === address) {
+    return Promise.resolve(window.walletSettings.userPreferences.wallet);
+  }
 
   try {
     // Get user information from session storage (refreshed when browser closes)

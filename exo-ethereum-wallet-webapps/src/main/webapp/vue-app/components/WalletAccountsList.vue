@@ -173,8 +173,6 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendTokensModal from './SendTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 
-import {addTransaction} from '../WalletTransactions.js';
-
 export default {
   components: {
     DelegateTokensModal,
@@ -274,8 +272,6 @@ export default {
   },
   methods: {
     addSendEtherTransaction(transaction) {
-      addTransaction(this.networkId, this.walletAddress, this.accountsDetails[this.account], [], transaction);
-
       this.$emit('transaction-sent', transaction);
     },
     checkOpenTransaction() {
@@ -301,8 +297,6 @@ export default {
       }
     },
     addSendTokenTransaction(transaction, contract) {
-      addTransaction(this.networkId, this.walletAddress, contract, [], transaction);
-
       this.$emit('transaction-sent', transaction);
     },
   },

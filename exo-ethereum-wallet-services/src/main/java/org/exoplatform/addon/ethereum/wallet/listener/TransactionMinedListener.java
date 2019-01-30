@@ -15,6 +15,7 @@ import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.*;
+import org.exoplatform.social.core.service.LinkProvider;
 
 @Asynchronous
 public class TransactionMinedListener extends Listener<Object, JSONObject> {
@@ -56,6 +57,7 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
         if (senderWallet == null) {
           senderWallet = new Wallet();
           senderWallet.setAddress(senderAddress);
+          senderWallet.setAvatar(LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
           if (StringUtils.isNotBlank(principalContractAdminAddress)
               && StringUtils.equalsIgnoreCase(principalContractAdminAddress, senderAddress)) {
             senderWallet.setName("Admin");
@@ -72,6 +74,7 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
         if (receiverWallet == null) {
           receiverWallet = new Wallet();
           receiverWallet.setAddress(receiverAddress);
+          receiverWallet.setAvatar(LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
           if (StringUtils.isNotBlank(principalContractAdminAddress)
               && StringUtils.equalsIgnoreCase(principalContractAdminAddress, receiverAddress)) {
             receiverWallet.setName("Admin");

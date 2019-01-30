@@ -189,7 +189,11 @@ public class GlobalSettings implements Serializable, Cloneable {
         jsonObject.put(IS_ADMIN_PARAM, isAdmin);
         jsonObject.put(IS_WALLET_ENABLED_PARAM, walletEnabled);
         if (userPreferences != null) {
-          jsonObject.put(USER_PREFERENCES_PARAM, userPreferences.toJSONObject());
+          JSONObject userPrefsObject = userPreferences.toJSONObject();
+          if (userPreferences.getWallet() != null) {
+            userPrefsObject.put("wallet", new JSONObject(userPreferences.getWallet()));
+          }
+          jsonObject.put(USER_PREFERENCES_PARAM, userPrefsObject);
         }
         if (StringUtils.isNotBlank(principalContractAdminName)) {
           jsonObject.put(PRINCIPAL_CONTRACT_ADMIN_NAME_PARAM, principalContractAdminName);

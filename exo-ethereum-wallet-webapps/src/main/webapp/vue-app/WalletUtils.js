@@ -216,6 +216,10 @@ export function getTransactionReceipt(hash) {
   return window.localWeb3.eth.getTransactionReceipt(hash);
 }
 
+export function getTransaction(hash) {
+  return window.localWeb3.eth.getTransaction(hash);
+}
+
 export function computeNetwork() {
   return window.localWeb3.eth.net
     .getId()
@@ -758,7 +762,7 @@ function initSpaceAccount(spaceGroup) {
 function waitAsyncForTransactionStatus(hash, transaction, transactionGetTentativeCount) {
   if (!transaction) {
     if (transactionGetTentativeCount < 100) {
-      window.localWeb3.eth.getTransaction(hash).then((transaction) => {
+      getTransaction(hash).then((transaction) => {
         setTimeout(() => {
           waitAsyncForTransactionStatus(hash, transaction, ++transactionGetTentativeCount);
         }, 3000);
