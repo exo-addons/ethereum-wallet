@@ -281,7 +281,7 @@ public class EthereumWalletService implements Startable {
       globalSettings.setUserPreferences(userSettings);
 
       if (StringUtils.isNotBlank(spaceId)) {
-        Wallet wallet = accountService.getWallet(WalletType.SPACE.getId(), spaceId);
+        Wallet wallet = accountService.getWalletByTypeAndID(WalletType.SPACE.getId(), spaceId);
         if (wallet != null) {
           if (!accountService.canAccessWallet(wallet, username)) {
             throw new IllegalAccessException("User " + username + " is not allowed to display wallet of space " + spaceId);
@@ -290,7 +290,7 @@ public class EthereumWalletService implements Startable {
           userSettings.setWalletAddress(wallet.getAddress());
         }
       } else {
-        Wallet wallet = accountService.getWallet(WalletType.USER.getId(), username);
+        Wallet wallet = accountService.getWalletByTypeAndID(WalletType.USER.getId(), username);
         if (wallet != null) {
           userSettings.setPhrase(wallet.getPassPhrase());
           userSettings.setWalletAddress(wallet.getAddress());
@@ -408,13 +408,13 @@ public class EthereumWalletService implements Startable {
     String requestReceipientId = fundsRequest.getReceipient();
     String requestReceipientType = fundsRequest.getReceipientType();
 
-    Wallet requestReceipient = accountService.getWallet(WalletType.getType(requestReceipientType).getId(), requestReceipientId);
+    Wallet requestReceipient = accountService.getWalletByTypeAndID(WalletType.getType(requestReceipientType).getId(), requestReceipientId);
 
     if (requestReceipient == null || requestReceipient.getTechnicalId() == 0) {
       LOG.warn("Can't find fund request recipient with id {} and type {}", requestReceipientId, requestReceipientType);
     }
 
-    ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER, accountService.getWallet(WalletType.USER.getId(), getCurrentUserId()));
+    ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER, accountService.getWalletByTypeAndID(WalletType.USER.getId(), getCurrentUserId()));
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, requestSender);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, requestReceipient);
     ctx.append(FUNDS_REQUEST_PARAMETER, fundsRequest);

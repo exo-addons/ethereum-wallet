@@ -52,7 +52,7 @@
         <tr :active="props.selected">
           <td>
             <v-checkbox
-              v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.points && props.item.enabled && !props.item.disabled && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
               :input-value="props.selected"
               hide-details
               @click="props.selected = !props.selected" />
@@ -136,7 +136,7 @@
           </td>
           <td>
             <v-text-field
-              v-if="props.item.address && props.item.points && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.points && props.item.enabled && !props.item.disabled && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
               v-model.number="props.item.tokensToSend"
               type="number"
               class="input-text-center"
@@ -365,10 +365,10 @@ export default {
       return 0;
     },
     recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.points && item.points >= this.threshold && item.tokensToSend && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.points && item.enabled && !item.disabled && item.points >= this.threshold && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
     validRecipients() {
-      return this.identitiesList ? this.identitiesList.filter((item) => item.address && item.points >= this.threshold) : [];
+      return this.identitiesList ? this.identitiesList.filter((item) => item.address && item.enabled && !item.disabled && item.points >= this.threshold) : [];
     },
     filteredIdentitiesList() {
       return this.refreshIndex && this.identitiesList ? this.identitiesList.filter((wallet) => (this.displayDisabledUsers || !wallet.disabled) && this.filterItemFromList(wallet, this.search)) : [];

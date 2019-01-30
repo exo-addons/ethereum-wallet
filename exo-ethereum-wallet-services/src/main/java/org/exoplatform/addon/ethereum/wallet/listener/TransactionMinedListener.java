@@ -44,7 +44,8 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
       }
       TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash, false);
       if (transactionDetail == null || !transactionDetail.isSucceeded() || transactionDetail.isAdminOperation()) {
-        // No notification for admin operation or not watched transaction or not succeeded transaction
+        // No notification for admin operation or not watched transaction or not
+        // succeeded transaction
         return;
       }
       Wallet senderWallet = null;
@@ -80,10 +81,10 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
         }
       }
 
-      if (senderWallet != null && senderWallet.getTechnicalId() > 0) {
+      if (senderWallet != null && senderWallet.getTechnicalId() > 0 && senderWallet.isEnabled()) {
         sendNotification(transactionDetail, TransactionStatus.SENDER, senderWallet, receiverWallet);
       }
-      if (receiverWallet != null && receiverWallet.getTechnicalId() > 0) {
+      if (receiverWallet != null && receiverWallet.getTechnicalId() > 0 && receiverWallet.isEnabled()) {
         sendNotification(transactionDetail, TransactionStatus.RECEIVER, senderWallet, receiverWallet);
       }
     } finally {

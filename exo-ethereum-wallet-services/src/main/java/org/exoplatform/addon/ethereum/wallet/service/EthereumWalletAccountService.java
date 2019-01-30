@@ -56,7 +56,7 @@ public class EthereumWalletAccountService {
    * @param remoteId
    * @return {@link Wallet}
    */
-  public Wallet getWallet(String type, String remoteId) {
+  public Wallet getWalletByTypeAndID(String type, String remoteId) {
     if (StringUtils.isBlank(remoteId)) {
       throw new IllegalArgumentException("id parameter is mandatory");
     }
@@ -69,7 +69,15 @@ public class EthereumWalletAccountService {
     if (identity == null) {
       throw new IllegalArgumentException("Can't find identity with id " + remoteId + " and type " + accountType.getId());
     }
-    return accountStorage.getWalletByIdentityId(Long.parseLong(identity.getId()));
+
+    Wallet wallet = accountStorage.getWalletByIdentityId(Long.parseLong(identity.getId()));
+    if (wallet == null) {
+      wallet = new Wallet();
+      computeWalletFromIdentity(wallet, identity);
+    } else {
+      wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
+    }
+    return wallet;
   }
 
   /**
@@ -84,7 +92,8 @@ public class EthereumWalletAccountService {
     }
     Wallet wallet = accountStorage.getWalletByAddress(address);
     if (wallet != null) {
-      wallet.setPassPhrase(null);
+      Identity identity = getIdentityById(wallet.getTechnicalId());
+      wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
     }
     return wallet;
   }

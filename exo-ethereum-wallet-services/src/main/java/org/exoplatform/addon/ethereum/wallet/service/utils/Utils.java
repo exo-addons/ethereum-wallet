@@ -517,4 +517,20 @@ public class Utils {
     return true;
   }
 
+  public static final void computeWalletFromIdentity(Wallet wallet, Identity identity) {
+    WalletType walletType = WalletType.getType(identity.getProviderId());
+    wallet.setId(identity.getRemoteId());
+    wallet.setTechnicalId(Long.parseLong(identity.getId()));
+    wallet.setEnabled(identity.isEnable() && !identity.isDeleted());
+    wallet.setType(walletType.getId());
+    wallet.setAvatar(LinkProvider.buildAvatarURL(identity.getProviderId(), identity.getRemoteId()));
+    if (walletType.isUser()) {
+      wallet.setName(identity.getProfile().getFullName());
+    } else {
+      Space space = getSpace(identity.getRemoteId());
+      wallet.setName(space.getDisplayName());
+      wallet.setSpaceId(Long.parseLong(space.getId()));
+    }
+  }
+
 }

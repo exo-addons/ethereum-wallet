@@ -237,7 +237,7 @@ public class DeprecatedEthereumWalletService {
       accountDetail.setAddress(getUserAddress(remoteId));
       accountDetail.setPassPhrase(getUserPhrase(remoteId));
       accountDetail.setSpaceAdministrator(false);
-      accountDetail.setEnabled(identity.isEnable());
+      accountDetail.setEnabled(identity.isEnable() && !identity.isDeleted());
       accountDetail.setAvatar(avatarUrl);
     } else if (SPACE_ACCOUNT_TYPE.equals(type)) {
       Space space = getSpace(remoteId);

@@ -73,10 +73,11 @@ public class WalletGamificationREST implements ResourceContainer {
     try {
       GamificationTeam team = walletGamificationService.removeTeam(id);
       LOG.info("{} removed Gamification pool {}", getCurrentUserId(), team.toString());
+      return Response.ok().build();
     } catch (Exception e) {
       LOG.warn("Error removing Gamification pool with id: " + id, e);
+      return Response.serverError().build();
     }
-    return Response.ok().build();
   }
 
   /**
@@ -95,9 +96,14 @@ public class WalletGamificationREST implements ResourceContainer {
       LOG.warn("Bad request sent to server with empty settings");
       return Response.status(400).build();
     }
-    gamificationSettings = walletGamificationService.saveSettings(gamificationSettings);
-    LOG.info("{} saved Gamification settings '{}'", getCurrentUserId(), gamificationSettings.toString());
-    return Response.ok(gamificationSettings).build();
+    try {
+      gamificationSettings = walletGamificationService.saveSettings(gamificationSettings);
+      LOG.info("{} saved Gamification settings '{}'", getCurrentUserId(), gamificationSettings.toString());
+      return Response.ok(gamificationSettings).build();
+    } catch (Exception e) {
+      LOG.warn("Error saving Gamification settings", e);
+      return Response.serverError().build();
+    }
   }
 
   /**
@@ -119,9 +125,10 @@ public class WalletGamificationREST implements ResourceContainer {
     try {
       gamificationTeam = walletGamificationService.saveTeam(gamificationTeam);
       LOG.info("{} saved Gamification pool {}", getCurrentUserId(), gamificationTeam.getName());
+      return Response.ok(gamificationTeam).build();
     } catch (Exception e) {
       LOG.warn("Error saving Gamification pool", e);
+      return Response.serverError().build();
     }
-    return Response.ok(gamificationTeam).build();
   }
 }
