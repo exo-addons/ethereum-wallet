@@ -1,9 +1,8 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import SendTokensForm from '../../main/webapp/vue-app/components/SendTokensForm';
 
 import {mount} from '@vue/test-utils';
-import {hashCode} from '../../main/webapp/vue-app/WalletUtils.js';
 
 import flushPromises from 'flush-promises';
 

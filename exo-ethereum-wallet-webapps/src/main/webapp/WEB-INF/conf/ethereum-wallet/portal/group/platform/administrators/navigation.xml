@@ -29,7 +29,7 @@
     <page-nodes>
         <node>
             <name>walletAdministration</name>
-            <label>Wallet administration</label>
+            <label>Wallet</label>
             <page-reference>group::/platform/administrators::walletAdministration</page-reference>
         </node>
     </page-nodes>

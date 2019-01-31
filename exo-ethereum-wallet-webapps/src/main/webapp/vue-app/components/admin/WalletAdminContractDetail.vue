@@ -216,20 +216,16 @@
                 </v-avatar>
               </td>
               <td>
-                <template v-if="props.item.technicalId">
-                  <template v-if="props.item.enabled">
-                    <profile-chip
-                      :address="props.item.address"
-                      :profile-id="props.item.id"
-                      :profile-technical-id="props.item.technicalId"
-                      :space-id="props.item.spaceId"
-                      :profile-type="props.item.type"
-                      :display-name="props.item.name"
-                      :avatar="props.item.avatar" />
-                  </template>
-                  <span v-else>
-                    <del class="red--text">{{ props.item.name }}</del> (Disabled)
-                  </span>
+                <template v-if="props.item.technicalId || props.item.owner">
+                  <profile-chip
+                    :address="props.item.address"
+                    :profile-id="props.item.id"
+                    :profile-technical-id="props.item.technicalId"
+                    :space-id="props.item.spaceId"
+                    :profile-type="props.item.type"
+                    :display-name="props.item.name"
+                    :enabled="props.item.enabled"
+                    :avatar="props.item.avatar" />
                 </template>
                 <template v-else-if="props.item.address">
                   <a
@@ -290,20 +286,16 @@
                 </v-avatar>
               </td>
               <td>
-                <template v-if="props.item.technicalId">
-                  <template v-if="props.item.enabled">
-                    <profile-chip
-                      :address="props.item.address"
-                      :profile-id="props.item.id"
-                      :profile-technical-id="props.item.technicalId"
-                      :space-id="props.item.spaceId"
-                      :profile-type="props.item.type"
-                      :display-name="props.item.name"
-                      :avatar="props.item.avatar" />
-                  </template>
-                  <span v-else>
-                    <del class="red--text">{{ props.item.name }}</del> (Disabled)
-                  </span>
+                <template v-if="props.item.technicalId || props.item.owner">
+                  <profile-chip
+                    :address="props.item.address"
+                    :profile-id="props.item.id"
+                    :profile-technical-id="props.item.technicalId"
+                    :space-id="props.item.spaceId"
+                    :profile-type="props.item.type"
+                    :display-name="props.item.name"
+                    :enabled="props.item.enabled"
+                    :avatar="props.item.avatar" />
                 </template>
                 <template v-else-if="props.item.address">
                   <a
@@ -578,7 +570,8 @@ export default {
                       address: address,
                     };
                     if(this.contractDetails.owner && address.toLowerCase() === this.contractDetails.owner.toLowerCase()) {
-                      wallet.name = "TOKEN OWNER";
+                      wallet.owner = true;
+                      wallet.name = "Admin";
                     }
                     walletsArray.unshift(wallet);
                     promises.push(
