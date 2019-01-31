@@ -492,9 +492,9 @@ public class Utils {
       throw new IllegalStateException("Space not found with id '" + spaceId + "'");
     }
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
-    return !spaceService.isSuperManager(accesssor)
-        && !spaceService.isMember(space, accesssor)
-        && !spaceService.isManager(space, accesssor);
+    return spaceService.isSuperManager(accesssor)
+        || spaceService.isMember(space, accesssor)
+        || spaceService.isManager(space, accesssor);
   }
 
   public static boolean checkUserIsSpaceManager(String spaceId,
