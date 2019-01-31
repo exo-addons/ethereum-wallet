@@ -120,7 +120,31 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
-   * Retrieves the user or space details associated to an address
+   * Disable the user or space details associated to an address
+   * 
+   * @param address
+   * @return
+   */
+  @Path("enable")
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed("administrators")
+  public Response enableAccountByAddress(@QueryParam("address") String address, @QueryParam("address") boolean enable) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
+      return Response.status(400).build();
+    }
+    try {
+      accountService.enableWalletByAddress(address, enable, getCurrentUserId());
+      return Response.ok().build();
+    } catch (Exception e) {
+      LOG.warn("Can't delete address '{}' association", address, e);
+      return Response.serverError().build();
+    }
+  }
+
+  /**
+   * Remove the user or space details associated to an address
    * 
    * @param address
    * @return

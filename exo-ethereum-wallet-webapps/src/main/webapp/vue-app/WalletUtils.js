@@ -534,6 +534,10 @@ export function removeWalletAssociation(address) {
   return fetch(`/portal/rest/wallet/api/account/remove?address=${address}`, {credentials: 'include'}).then((resp) => resp && resp.ok);
 }
 
+export function enableWallet(address, enable) {
+  return fetch(`/portal/rest/wallet/api/account/enable?address=${address}&enable=${enable}`, {credentials: 'include'}).then((resp) => resp && resp.ok);
+}
+
 export function setDraggable() {
   if (!$.draggable) {
     return;

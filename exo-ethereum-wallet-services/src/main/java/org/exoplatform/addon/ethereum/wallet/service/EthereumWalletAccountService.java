@@ -77,6 +77,8 @@ public class EthereumWalletAccountService {
     } else {
       wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
     }
+    wallet.setDisabledUser(!identity.isEnable());
+    wallet.setDeletedUser(identity.isDeleted());
     return wallet;
   }
 
@@ -94,6 +96,8 @@ public class EthereumWalletAccountService {
     if (wallet != null) {
       Identity identity = getIdentityById(wallet.getTechnicalId());
       wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
+      wallet.setDisabledUser(!identity.isEnable());
+      wallet.setDeletedUser(identity.isDeleted());
     }
     return wallet;
   }
@@ -147,10 +151,34 @@ public class EthereumWalletAccountService {
       throw new IllegalStateException("Can't find wallet associated to address " + address);
     }
     if (!isUserAdmin(username)) {
-      throw new IllegalAccessException("User " + username + " attempts to delete wallet with address " + address + " of "
+      throw new IllegalAccessException("Current user " + username + " attempts to delete wallet with address " + address + " of "
           + wallet.getType() + " " + wallet.getId());
     }
     accountStorage.removeWallet(wallet.getTechnicalId());
+  }
+
+  /**
+   * Disable User or Space wallet
+   * 
+   * @param address
+   * @param enable
+   * @param currentUserId
+   * @throws IllegalAccessException 
+   */
+  public void enableWalletByAddress(String address, boolean enable, String username) throws IllegalAccessException {
+    if (address == null) {
+      throw new IllegalArgumentException("address paramter is mandatory");
+    }
+    Wallet wallet = accountStorage.getWalletByAddress(address);
+    if (wallet == null) {
+      throw new IllegalStateException("Can't find wallet associated to address " + address);
+    }
+    if (!isUserAdmin(username)) {
+      throw new IllegalAccessException("User " + username + " attempts to disable wallet with address " + address + " of "
+          + wallet.getType() + " " + wallet.getId());
+    }
+    wallet.setEnabled(enable);
+    accountStorage.saveWallet(wallet, false);
   }
 
   /**
@@ -235,4 +263,5 @@ public class EthereumWalletAccountService {
     }
     return listenerService;
   }
+
 }

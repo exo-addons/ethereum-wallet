@@ -525,6 +525,8 @@ public class Utils {
     wallet.setId(identity.getRemoteId());
     wallet.setTechnicalId(Long.parseLong(identity.getId()));
     wallet.setEnabled(identity.isEnable() && !identity.isDeleted());
+    wallet.setDisabledUser(!identity.isEnable());
+    wallet.setDeletedUser(identity.isDeleted());
     wallet.setType(walletType.getId());
     wallet.setAvatar(LinkProvider.buildAvatarURL(identity.getProviderId(), identity.getRemoteId()));
     if (walletType.isUser()) {

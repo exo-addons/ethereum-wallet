@@ -36,11 +36,20 @@
           </v-avatar>
         </td>
         <td class="clickable" @click="openAccountDetail(props.item)">
-          <template v-if="props.item.enabled">
+          <template v-if="props.item.disapproved">
+            <del class="red--text">{{ props.item.name }}</del> (Disapproved)
+          </template>
+          <template v-else-if="props.item.deletedUser">
+            <del class="red--text">{{ props.item.name }}</del> (Deleted)
+          </template>
+          <template v-else-if="props.item.disabledUser">
+            <del class="red--text">{{ props.item.name }}</del> (Disabled user)
+          </template>
+          <template v-else-if="props.item.enabled">
             {{ props.item.name }}
           </template>
           <span v-else>
-            <del class="red--text">{{ props.item.name }}</del> (Disabled)
+            <del class="red--text">{{ props.item.name }}</del> (Disabled wallet)
           </span>
         </td>
         <td>
@@ -123,6 +132,12 @@
               <v-list-tile @click="removeWalletAssociation(props.item)">
                 <v-list-tile-title>Remove wallet</v-list-tile-title>
               </v-list-tile>
+              <v-list-tile v-if="props.item.enabled" @click="enableWallet(props.item, false)">
+                <v-list-tile-title>Disable wallet</v-list-tile-title>
+              </v-list-tile>
+              <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
+                <v-list-tile-title>Enable wallet</v-list-tile-title>
+              </v-list-tile>
             </v-list>
           </v-menu>
         </td>
@@ -181,7 +196,7 @@
 import SendFundsModal from '../SendFundsModal.vue';
 import AccountDetail from '../AccountDetail.vue';
 
-import {getWallets, removeWalletAssociation, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
+import {getWallets, removeWalletAssociation, enableWallet, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
 export default {
   components: {
@@ -334,7 +349,7 @@ export default {
       if(value.length > 0 && (value.length !== oldValue.length || value[value.length -1].id !== oldValue[oldValue.length -1].id)) {
         // Filter wallets that wasn't loaded before
         const walletsToLoad = this.filteredWallets.filter(wallet => wallet && wallet.address && wallet.loadingBalance !== true && wallet.loadingBalance !== false);
-        return this.loadWalletsBalances(this.principalContract, walletsToLoad);
+        return this.retrieveWalletsProperties(this.principalContract, walletsToLoad);
       }
     },
     loadingWallets(value) {
@@ -353,7 +368,7 @@ export default {
       }
     },
     limit() {
-      this.$nextTick().then(() => this.loadWalletsBalances(this.principalContract, this.loadingWallets));
+      this.$nextTick().then(() => this.retrieveWalletsProperties(this.principalContract, this.loadingWallets));
     },
   },
   methods: {
@@ -368,10 +383,13 @@ export default {
       }
       this.loadingWallets = true;
       getWallets()
-        .then((wallets) => (this.wallets = wallets.sort(this.sortByName)))
+        .then((wallets) => {
+          wallets.forEach(wallet => wallet.approved = {});
+          this.wallets = wallets.sort(this.sortByName);
+        })
         .then(() => {
           this.$emit('wallets-loaded', this.wallets);
-          return this.loadWalletsBalances(this.principalContract, this.loadingWallets);
+          return this.retrieveWalletsProperties(this.principalContract, this.loadingWallets);
         })
         .finally(() => {
           this.loadingWallets = false;
@@ -383,7 +401,7 @@ export default {
       const sortB = b.name.toLocaleLowerCase();
       return (sortA > sortB && 1) || (sortA < sortB && (-1)) || 0; // NOSONAR
     },
-    loadWalletsBalances(accountDetails, wallets, i) {
+    retrieveWalletsProperties(accountDetails, wallets, i) {
       if(!wallets || !wallets.length) {
         return;
       }
@@ -394,8 +412,8 @@ export default {
         return;
       }
       this.loadingWallets = true;
-      return this.computeBalance(accountDetails, wallets[i])
-        .then(() => this.loadWalletsBalances(accountDetails, wallets, ++i))
+      return this.retrieveWalletProperties(accountDetails, wallets[i])
+        .then(() => this.retrieveWalletsProperties(accountDetails, wallets, ++i))
         // Stop loading wallets only when the first call is finished
         .finally(() => this.loadingWallets = !i && true);
     },
@@ -421,6 +439,21 @@ export default {
     },
     refreshBalance(accountDetails, address, error) {
       this.$emit('refresh-balance', accountDetails, address, error);
+    },
+    retrieveWalletProperties(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
+      return this.computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam)
+        .then(() => this.loadWalletApproval(accountDetails, wallet));
+    },
+    loadWalletApproval(accountDetails, wallet) {
+      if(!accountDetails || !accountDetails.isContract || !accountDetails.contract || !wallet || !wallet.address) {
+        return;
+      }
+      return accountDetails.contract.methods.isApprovedAccount(wallet.address).call()
+        .then((approved) => {
+          this.$set(wallet.approved, accountDetails.address, approved ? 'approved' : 'disapproved');
+          this.$set(wallet, 'disapproved', !approved);
+          this.$forceUpdate();
+        });
     },
     computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
       if(!wallet.address) {
@@ -512,6 +545,7 @@ export default {
       this.selectedWalletDetails = null;
     },
     removeWalletAssociation(wallet) {
+      this.error = null;
       return removeWalletAssociation(wallet.address)
         .then((result) => {
           if(result) {
@@ -520,7 +554,19 @@ export default {
               this.wallets.splice(index, 1);
             }
           } else {
-            this.error = 'An error occurred while removing wallet';
+            this.error = `An error occurred while removing wallet of ${wallet.name}`;
+          }
+        })
+        .catch(e => this.error = String(e));
+    },
+    enableWallet(wallet, enable) {
+      this.error = null;
+      return enableWallet(wallet.address, enable)
+        .then((result) => {
+          if(result) {
+            this.$set(wallet, 'enabled', enable);
+          } else {
+            this.error = `An error occurred while ${enable ? 'enabling' : 'disabling'} wallet of ${wallet.name}`;
           }
         })
         .catch(e => this.error = String(e));

@@ -83,6 +83,8 @@ public class AccountStorage {
     if (wallet.isEnabled()) {
       wallet.setEnabled(identity.isEnable() && !identity.isDeleted());
     }
+    wallet.setDisabledUser(!identity.isEnable());
+    wallet.setDeletedUser(identity.isDeleted());
 
     WalletType type = walletEntity.getType();
     wallet.setType(type.getId());
