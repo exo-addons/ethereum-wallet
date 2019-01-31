@@ -71,64 +71,102 @@ public class MigrationService implements Startable {
         return;
       }
 
+      Long networkId = settings.getDefaultNetworkId();
+
       ExoContainerContext.setCurrentContainer(container);
+
+      String superUser = this.userACL.getSuperUser();
+      Set<Wallet> listUserWallets = null;
+      int migratedWallets = 0;
+      boolean hasWalletMigrationErrors = false;
+      LOG.info("Check list of users wallets to migrate");
       RequestLifeCycle.begin(this.container);
       try {
-        String superUser = this.userACL.getSuperUser();
-        Set<Wallet> listUserWallets = null;
-        int migratedWallets = 0;
-        boolean hasWalletMigrationErrors = false;
-        LOG.debug("Check list of user wallets to migrate");
-        try {
-          listUserWallets = getDeprecatedWalletService().listUserWallets();
-          LOG.info("{} user wallets to migrate", listUserWallets.size());
-          migratedWallets = migrateWallets(listUserWallets, superUser);
-          hasWalletMigrationErrors = migratedWallets != listUserWallets.size();
-        } catch (Exception e) {
-          LOG.error("Error while migrating users wallets", e);
-          hasWalletMigrationErrors = true;
-        }
-
-        Set<Wallet> listSpaceWallets = null;
-        LOG.debug("Check list of space wallets to migrate");
-        try {
-          listSpaceWallets = getDeprecatedWalletService().listSpacesWallets();
-          LOG.info("{} space wallets to migrate", listSpaceWallets.size());
-          migratedWallets = migrateWallets(listSpaceWallets, superUser);
-          hasWalletMigrationErrors |= migratedWallets != listUserWallets.size();
-        } catch (Exception e) {
-          LOG.error("Error while migrating spaces wallets", e);
-          hasWalletMigrationErrors = true;
-        }
-        LOG.info("{}/{} space wallets are migrated", migratedWallets, listSpaceWallets.size());
-
-        Long networkId = settings.getDefaultNetworkId();
-
-        LOG.info("Migrate user wallet transactions");
-        hasWalletMigrationErrors |= migrateTransactions(listUserWallets, networkId);
-
-        LOG.info("Migrate space wallets transactions");
-        hasWalletMigrationErrors |= migrateTransactions(listSpaceWallets, networkId);
-
-        String principalContractAddress = settings.getDefaultPrincipalAccount();
-        if (StringUtils.isNotBlank(principalContractAddress)) {
-          hasWalletMigrationErrors |= migrateContractTransactions(principalContractAddress, networkId);
-        }
-
-        hasWalletMigrationErrors |= retrieveTransactionDetailsFromBlockchain();
-
-        if (hasWalletMigrationErrors) {
-          LOG.info("Wallet and Transactions migration seems to have some errors, it will be reattempted again next startup");
-        } else {
-          LOG.info("Wallet and Transactions migration finished susccessfully");
-        }
-        ethereumWalletService.saveSettings(settings, GLOBAL_DATA_VERSION);
-
-        Set<Wallet> allWallets = listUserWallets;
-        allWallets.addAll(listSpaceWallets);
-
+        listUserWallets = getDeprecatedWalletService().listUserWallets();
+        LOG.info("{} users wallets to migrate", listUserWallets.size());
+        migratedWallets = migrateWallets(listUserWallets, superUser);
+        LOG.info("{}/{} users wallets are migrated", migratedWallets, listUserWallets.size());
+        hasWalletMigrationErrors = migratedWallets != listUserWallets.size();
+      } catch (Exception e) {
+        LOG.error("Error while migrating users wallets", e);
+        hasWalletMigrationErrors = true;
       } finally {
         RequestLifeCycle.end();
+      }
+
+      Set<Wallet> listSpaceWallets = null;
+      LOG.info("Check list of space wallets to migrate");
+      RequestLifeCycle.begin(this.container);
+      try {
+        listSpaceWallets = getDeprecatedWalletService().listSpacesWallets();
+        LOG.info("{} spaces wallets to migrate", listSpaceWallets.size());
+        migratedWallets = migrateWallets(listSpaceWallets, superUser);
+        LOG.info("{}/{} spaces wallets are migrated", migratedWallets, listSpaceWallets.size());
+        hasWalletMigrationErrors |= migratedWallets != listSpaceWallets.size();
+      } catch (Exception e) {
+        LOG.error("Error while migrating spaces wallets", e);
+        hasWalletMigrationErrors = true;
+      } finally {
+        RequestLifeCycle.end();
+      }
+
+      LOG.info("Migrate user wallet transactions");
+      RequestLifeCycle.begin(this.container);
+      try {
+        hasWalletMigrationErrors |= migrateTransactions(listUserWallets, networkId);
+        LOG.info("Users wallets transactions migrated successfully");
+      } catch (Exception e) {
+        LOG.error("Error while migrating user wallet transactions", e);
+        hasWalletMigrationErrors = true;
+      } finally {
+        RequestLifeCycle.end();
+      }
+
+      LOG.info("Migrate space wallets transactions");
+      RequestLifeCycle.begin(this.container);
+      try {
+        hasWalletMigrationErrors |= migrateTransactions(listSpaceWallets, networkId);
+        LOG.info("Spaces wallets transactions migrated successfully");
+      } catch (Exception e) {
+        LOG.error("Error while migrating space wallet transactions", e);
+        hasWalletMigrationErrors = true;
+      } finally {
+        RequestLifeCycle.end();
+      }
+
+      String principalContractAddress = settings.getDefaultPrincipalAccount();
+      if (StringUtils.isNotBlank(principalContractAddress)) {
+        RequestLifeCycle.begin(this.container);
+        try {
+          hasWalletMigrationErrors |= migrateContractTransactions(principalContractAddress, networkId);
+        } catch (Exception e) {
+          LOG.error("Error while migrating contract transactions", e);
+          hasWalletMigrationErrors = true;
+        } finally {
+          RequestLifeCycle.end();
+        }
+      }
+
+      RequestLifeCycle.begin(this.container);
+      try {
+        hasWalletMigrationErrors |= retrieveTransactionDetailsFromBlockchain();
+      } catch (Exception e) {
+        LOG.error("Error while migrating contract transactions", e);
+        hasWalletMigrationErrors = true;
+      } finally {
+        RequestLifeCycle.end();
+      }
+
+      if (hasWalletMigrationErrors) {
+        LOG.info("Wallet and Transactions migration seems to have some errors, it will be reattempted again next startup");
+      } else {
+        LOG.info("Wallet and Transactions migration finished susccessfully");
+        RequestLifeCycle.begin(this.container);
+        try {
+          ethereumWalletService.saveSettings(settings, GLOBAL_DATA_VERSION);
+        } finally {
+          RequestLifeCycle.end();
+        }
       }
     });
   }
@@ -136,7 +174,8 @@ public class MigrationService implements Startable {
   private boolean retrieveTransactionDetailsFromBlockchain() {
     int computedTransactions = 0;
     int errorComputedTransactions = 0;
-    LOG.debug("Compute {} saved transactions details from blockchain", transactionHashes.size());
+    int transactionsCount = transactionHashes.size();
+    LOG.info("Compute {} saved transactions details from blockchain", transactionsCount);
     for (String hash : transactionHashes) {
       TransactionDetail transactionDetail = transactionStorage.getTransactionByHash(hash, false);
       try {
@@ -153,6 +192,12 @@ public class MigrationService implements Startable {
         }
       }
       computedTransactions++;
+      if (computedTransactions % 10 == 0) {
+        LOG.info("{}/{} transactions has been computed from blockchain, errors = {}",
+                 computedTransactions,
+                 transactionsCount,
+                 errorComputedTransactions);
+      }
     }
     LOG.info("{} transactions has been computed from blockchain with treatment errors = {}",
              computedTransactions,
@@ -161,17 +206,19 @@ public class MigrationService implements Startable {
   }
 
   private boolean migrateContractTransactions(String principalContractAddress, Long networkId) {
-    LOG.info("Migrate contract {} transactions", principalContractAddress);
     List<TransactionDetail> contractTransactions = getDeprecatedWalletService().getAccountTransactions(networkId,
                                                                                                        principalContractAddress);
 
+    LOG.info("Migrate contract {} transactions, count = {}",
+             principalContractAddress,
+             contractTransactions == null ? 0 : contractTransactions.size());
     boolean migrationHasErrors = false;
     for (TransactionDetail transactionDetail : contractTransactions) {
       String hash = transactionDetail.getHash();
       LOG.debug("Migrate contract transaction {}", hash);
       try {
         transactionDetail.setContractAddress(principalContractAddress);
-        migrateTransaction(principalContractAddress, transactionDetail);
+        migrateTransaction(principalContractAddress, transactionDetail, networkId);
       } catch (Exception e) {
         migrationHasErrors = true;
         LOG.error("Error while migrating principal contract transaction {}", hash, e);
@@ -186,10 +233,10 @@ public class MigrationService implements Startable {
       try {
         List<TransactionDetail> accountTransactions = getDeprecatedWalletService().getAccountTransactions(networkId,
                                                                                                           wallet.getAddress());
-        LOG.debug("    -- migrate wallet {} transactions of {} {}", accountTransactions.size(), wallet.getType(), wallet.getId());
+        LOG.info("    -- migrate wallet {} transactions of {} {}", accountTransactions.size(), wallet.getType(), wallet.getId());
         for (TransactionDetail transaction : accountTransactions) {
           try { // NOSONAR
-            migrateTransaction(wallet.getAddress(), transaction);
+            migrateTransaction(wallet.getAddress(), transaction, networkId);
           } catch (Exception e) {
             LOG.warn("Error while migrating address {} transaction {}", wallet.getAddress(), transaction.getHash(), e);
             migrationHasErrors = true;
@@ -203,14 +250,16 @@ public class MigrationService implements Startable {
     return migrationHasErrors;
   }
 
-  private void migrateTransaction(String address, TransactionDetail transaction) {
+  private void migrateTransaction(String address, TransactionDetail transaction, long networkId) {
     String hash = transaction.getHash();
     transactionHashes.add(transaction.getHash().toLowerCase());
     TransactionDetail migratedTransaction = getTransactionStorage().getTransactionByHash(hash, false);
     if (migratedTransaction == null) {
+      transaction.setNetworkId(networkId);
       transaction.setFrom(address);
       getTransactionStorage().saveTransactionDetail(transaction);
     } else {
+      migratedTransaction.setNetworkId(networkId);
       if (transaction.getTo() == null) {
         transaction.setTo(address);
       }
