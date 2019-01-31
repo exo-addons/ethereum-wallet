@@ -263,7 +263,16 @@ public class EthereumWalletService implements Startable {
       Space space = getSpace(globalSettings.getAccessPermission());
       // Disable wallet for users not member of the permitted space members
       if (space != null && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
-        LOG.info("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
+        LOG.debug("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
+        globalSettings.setWalletEnabled(false);
+      }
+    }
+
+    Wallet spaceWallet = null;
+    if (StringUtils.isNotBlank(spaceId)) {
+      spaceWallet = accountService.getWalletByTypeAndID(WalletType.SPACE.getId(), spaceId);
+      if (spaceWallet != null && !accountService.canAccessWallet(spaceWallet, username)) {
+        LOG.warn("User {} is not allowed to display space wallet {}", username, spaceId);
         globalSettings.setWalletEnabled(false);
       }
     }
@@ -280,16 +289,10 @@ public class EthereumWalletService implements Startable {
       }
       globalSettings.setUserPreferences(userSettings);
 
-      if (StringUtils.isNotBlank(spaceId)) {
-        Wallet wallet = accountService.getWalletByTypeAndID(WalletType.SPACE.getId(), spaceId);
-        if (wallet != null) {
-          if (!accountService.canAccessWallet(wallet, username)) {
-            throw new IllegalAccessException("User " + username + " is not allowed to display wallet of space " + spaceId);
-          }
-          userSettings.setPhrase(wallet.getPassPhrase());
-          userSettings.setWalletAddress(wallet.getAddress());
-          userSettings.setWallet(wallet);
-        }
+      if (spaceWallet != null) {
+        userSettings.setPhrase(spaceWallet.getPassPhrase());
+        userSettings.setWalletAddress(spaceWallet.getAddress());
+        userSettings.setWallet(spaceWallet);
       } else {
         Wallet wallet = accountService.getWalletByTypeAndID(WalletType.USER.getId(), username);
         if (wallet != null) {
