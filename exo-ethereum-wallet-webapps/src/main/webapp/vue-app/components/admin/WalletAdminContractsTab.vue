@@ -105,6 +105,7 @@
         :fiat-symbol="fiatSymbol"
         :wallets="wallets"
         :loading-wallets="loadingWallets"
+        :address-etherscan-link="addressEtherscanLink"
         @back="back()"
         @pending-transaction="watchPendingTransaction" />
     </v-navigation-drawer>
@@ -158,6 +159,12 @@ export default {
       },
     },
     tokenEtherscanLink: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
+    addressEtherscanLink: {
       type: String,
       default: function() {
         return null;

@@ -140,6 +140,7 @@
                 :loading="loading"
                 :loading-wallets="loadingWallets"
                 :fiat-symbol="fiatSymbol"
+                :address-etherscan-link="addressEtherscanLink"
                 :token-etherscan-link="tokenEtherscanLink"
                 :wallets="wallets"
                 @contract-list-modified="$refs.walletsTab && $refs.walletsTab.init()"

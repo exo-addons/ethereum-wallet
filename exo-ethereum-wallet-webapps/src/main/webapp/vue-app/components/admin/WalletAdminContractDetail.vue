@@ -216,12 +216,33 @@
                 </v-avatar>
               </td>
               <td>
-                <template v-if="props.item.enabled">
-                  {{ props.item.name }}
+                <template v-if="props.item.technicalId">
+                  <template v-if="props.item.enabled">
+                    <profile-chip
+                      :address="props.item.address"
+                      :profile-id="props.item.id"
+                      :profile-technical-id="props.item.technicalId"
+                      :space-id="props.item.spaceId"
+                      :profile-type="props.item.type"
+                      :display-name="props.item.name"
+                      :avatar="props.item.avatar" />
+                  </template>
+                  <span v-else>
+                    <del class="red--text">{{ props.item.name }}</del> (Disabled)
+                  </span>
                 </template>
-                <span v-else>
-                  <del class="red--text">{{ props.item.name }}</del> (Disabled)
-                </span>
+                <template v-else-if="props.item.address">
+                  <a
+                    v-if="addressEtherscanLink"
+                    :href="`${addressEtherscanLink}${props.item.address}`"
+                    target="_blank"
+                    title="Open on etherscan">
+                    {{ props.item.address }}
+                  </a>
+                  <template v-else>
+                    {{ props.item.address }}
+                  </template>                  
+                </template>
               </td>
               <td v-if="$refs.disapproveAccountModal">
                 <span v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
@@ -269,12 +290,33 @@
                 </v-avatar>
               </td>
               <td>
-                <template v-if="props.item.enabled">
-                  {{ props.item.name }}
+                <template v-if="props.item.technicalId">
+                  <template v-if="props.item.enabled">
+                    <profile-chip
+                      :address="props.item.address"
+                      :profile-id="props.item.id"
+                      :profile-technical-id="props.item.technicalId"
+                      :space-id="props.item.spaceId"
+                      :profile-type="props.item.type"
+                      :display-name="props.item.name"
+                      :avatar="props.item.avatar" />
+                  </template>
+                  <span v-else>
+                    <del class="red--text">{{ props.item.name }}</del> (Disabled)
+                  </span>
                 </template>
-                <span v-else>
-                  <del class="red--text">{{ props.item.name }}</del> (Disabled)
-                </span>
+                <template v-else-if="props.item.address">
+                  <a
+                    v-if="addressEtherscanLink"
+                    :href="`${addressEtherscanLink}${props.item.address}`"
+                    target="_blank"
+                    title="Open on etherscan">
+                    {{ props.item.address }}
+                  </a>
+                  <template v-else>
+                    {{ props.item.address }}
+                  </template>
+                </template>
               </td>
               <td>
                 {{ props.item.accountAdminLevel[contractDetails.address] }} level
@@ -314,6 +356,7 @@ import SendEtherModal from '../SendEtherModal.vue';
 import ContractAdminModal from './WalletAdminOperationModal.vue';
 import TransactionsList from '../TransactionsList.vue';
 import WalletAddress from '../WalletAddress.vue';
+import ProfileChip from '../ProfileChip.vue';
 
 import {computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
@@ -323,6 +366,7 @@ export default {
     ContractAdminModal,
     TransactionsList,
     WalletAddress,
+    ProfileChip,
   },
   props: {
     isDisplayOnly: {
@@ -371,6 +415,12 @@ export default {
       type: Object,
       default: function() {
         return {};
+      },
+    },
+    addressEtherscanLink: {
+      type: String,
+      default: function() {
+        return null;
       },
     },
   },
@@ -526,8 +576,6 @@ export default {
                   if(!wallet) {
                     wallet = {
                       address: address,
-                      enabled: true,
-                      name: address,
                     };
                     if(this.contractDetails.owner && address.toLowerCase() === this.contractDetails.owner.toLowerCase()) {
                       wallet.name = "TOKEN OWNER";

@@ -777,15 +777,14 @@ function waitAsyncForTransactionStatus(hash, transaction) {
           }, 2000);
           return;
         }
-        return getTransactionReceipt(hash)
-          .then((receipt) => {
-            if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
-              window.watchingTransactions[hash].forEach((callback) => {
-                callback(receipt, block);
-              });
-              window.watchingTransactions[hash] = null;
-            }
-          });
+        return getTransactionReceipt(hash).then((receipt) => {
+          if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
+            window.watchingTransactions[hash].forEach((callback) => {
+              callback(receipt, block);
+            });
+            window.watchingTransactions[hash] = null;
+          }
+        });
       })
       .catch((error) => {
         if (window.watchingTransactions[hash] && window.watchingTransactions[hash].length) {
