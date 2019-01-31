@@ -46,6 +46,10 @@
   </component>
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumTransactionVerifier</type>
+  </component>
+
+  <component>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletContractService</type>
     <init-params>
       <value-param>

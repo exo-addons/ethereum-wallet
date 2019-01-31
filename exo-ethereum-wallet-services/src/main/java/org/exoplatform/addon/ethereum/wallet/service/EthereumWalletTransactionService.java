@@ -41,6 +41,10 @@ public class EthereumWalletTransactionService {
     this.contractService = contractService;
   }
 
+  public List<TransactionDetail> getPendingTransactions() {
+    return walletTransactionStorage.getPendingTransactions();
+  }
+
   public List<TransactionDetail> getTransactions(long networkId,
                                                  String address,
                                                  String contractAddress,

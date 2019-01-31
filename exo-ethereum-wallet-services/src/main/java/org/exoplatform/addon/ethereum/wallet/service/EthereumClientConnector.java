@@ -222,7 +222,7 @@ public class EthereumClientConnector implements Startable {
   public Transaction getTransaction(String transactionHash) throws InterruptedException, ExecutionException {
     waitConnection();
     EthTransaction ethTransaction = web3j.ethGetTransactionByHash(transactionHash).sendAsync().get();
-    if (ethTransaction != null && ethTransaction.getResult() != null) {
+    if (ethTransaction != null) {
       return ethTransaction.getResult();
     }
     return null;
@@ -256,7 +256,7 @@ public class EthereumClientConnector implements Startable {
   public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
     waitConnection();
     EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
-    if (ethGetTransactionReceipt != null && ethGetTransactionReceipt.getResult() != null) {
+    if (ethGetTransactionReceipt != null) {
       return ethGetTransactionReceipt.getResult();
     }
     return null;

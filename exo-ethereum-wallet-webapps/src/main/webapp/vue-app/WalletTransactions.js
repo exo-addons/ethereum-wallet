@@ -387,6 +387,6 @@ function getStoredTransactions(networkId, account, contractAddress, limit, trans
       return transactions && transactions.length ? transactions : [];
     })
     .catch((error) => {
-      throw new Error('Error fetching stored transactions', error);
+      throw new Error('Error retrieving transactions list', error);
     });
 }

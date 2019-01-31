@@ -106,6 +106,10 @@ public class EthereumTransactionDecoder {
     String hash = transactionDetail.getHash();
 
     Transaction transaction = ethereumClientConnector.getTransaction(hash);
+    if (transaction == null) {
+      LOG.info("Can't find transaction with hash {}, it may be pending", hash);
+      return transactionDetail;
+    }
 
     Block block = ethereumClientConnector.getBlock(transaction.getBlockHash());
     transactionDetail.setTimestamp(block.getTimestamp().longValue());

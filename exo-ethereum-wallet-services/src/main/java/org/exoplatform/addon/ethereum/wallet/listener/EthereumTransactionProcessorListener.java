@@ -61,12 +61,14 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
       if (transactionDetail == null) {
         return;
       }
-      TransactionReceipt transactionReceipt = null;
-      try {
-        transactionReceipt = getTransactionStatus(transaction);
-      } catch (Exception e) {
-        // Attempt another time to get receipt
-        transactionReceipt = getTransactionStatus(transaction);
+      TransactionReceipt transactionReceipt = event.getData();
+      if (transactionReceipt == null) {
+        try {
+          transactionReceipt = getTransactionReceipt(transaction);
+        } catch (Exception e) {
+          // Attempt another time to get receipt
+          transactionReceipt = getTransactionReceipt(transaction);
+        }
       }
       transactionDetail.setPending(false);
       transactionDetail.setSucceeded(transactionReceipt != null && transactionReceipt.isStatusOK());
@@ -77,7 +79,7 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
   }
 
-  private TransactionReceipt getTransactionStatus(Transaction transaction) throws InterruptedException, ExecutionException {
+  private TransactionReceipt getTransactionReceipt(Transaction transaction) throws InterruptedException, ExecutionException {
     TransactionReceipt transactionReceipt = getEthereumClientConnector().getTransactionReceipt(transaction.getHash());
     if (transactionReceipt == null || "0x0".equals(transactionReceipt.getStatus())) {
       // Transaction may have failed
