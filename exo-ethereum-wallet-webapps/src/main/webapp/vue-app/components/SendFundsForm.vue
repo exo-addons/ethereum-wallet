@@ -57,12 +57,6 @@ export default {
         return 0;
       },
     },
-    addPendingToReceiver: {
-      type: Boolean,
-      default: function() {
-        return false;
-      },
-    },
     walletAddress: {
       type: String,
       default: function() {
@@ -166,11 +160,6 @@ export default {
       }
 
       this.error = null;
-
-      // This assignement should be kept to avoid conflit in parallet execution
-      const selectedAccount = this.selectedAccount;
-      const recipient = transaction.to.toLowerCase();
-      transaction.addLoadingToRecipient = this.addPendingToReceiver;
 
       this.$emit('pending', transaction);
 

@@ -172,7 +172,6 @@
       :default-message="initialFundsMessage"
       no-button
       display-all-accounts
-      add-pending-to-receiver
       @success="refreshBalance"
       @pending="$emit('pending', $event)"
       @error="refreshBalance(null, null, $event)" />

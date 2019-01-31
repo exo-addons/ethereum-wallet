@@ -25,7 +25,6 @@ describe('SendFundsModal.test.js', () => {
     icon: false,
     displayAllAccounts: false,
     disabled: false,
-    addPendingToReceiver: false,
     noButton: false,
     selectedOption: false,
     error: false,

@@ -206,7 +206,7 @@ export function watchTransactionStatus(hash, transactionFinishedcallback) {
 
   if (!window.watchingTransactions[hash]) {
     window.watchingTransactions[hash] = [transactionFinishedcallback];
-    waitAsyncForTransactionStatus(hash, null, 0);
+    waitAsyncForTransactionStatus(hash, null);
   } else {
     window.watchingTransactions[hash].push(transactionFinishedcallback);
   }

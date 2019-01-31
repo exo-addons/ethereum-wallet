@@ -50,7 +50,6 @@
         :wallet-address="walletAddress"
         :network-id="networkId"
         :selected-account="selectedOption && selectedOption.value"
-        :add-pending-to-receiver="addPendingToReceiver"
         :default-label="defaultLabel"
         :default-message="defaultMessage"
         @success="success"
@@ -133,12 +132,6 @@ export default {
       },
     },
     disabled: {
-      type: Boolean,
-      default: function() {
-        return false;
-      },
-    },
-    addPendingToReceiver: {
       type: Boolean,
       default: function() {
         return false;

@@ -373,7 +373,6 @@ export default {
         if (contract) {
           this.$set(contract, 'loadingBalance', true);
           if (this.$refs.contractDetail) {
-            transaction.addLoadingToRecipient = true;
             this.$refs.contractDetail.newTransactionPending(transaction, contract);
           }
         }
