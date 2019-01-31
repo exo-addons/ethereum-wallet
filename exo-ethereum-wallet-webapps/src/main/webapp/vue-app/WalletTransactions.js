@@ -83,12 +83,12 @@ function loadTransactionReceipt(transactionDetails) {
 
 function loadTransactionContractDetails(networkId, account, transactionDetails, accountDetails) {
   // Is contract creation if contractAddress property is set in receipt
-  transactionDetails.isContractCreation = transactionDetails.transaction && transactionDetails.receipt && !transactionDetails.transaction.to && transactionDetails.receipt.contractAddress;
+  transactionDetails.isContractCreation = transactionDetails.transaction && !transactionDetails.transaction.to && transactionDetails.receipt && transactionDetails.receipt.contractAddress;
 
   transactionDetails.contractAddress =
     transactionDetails.contractAddress || // Passed transaction has a contract address
     (accountDetails && accountDetails.isContract && accountDetails.address) || // Passed transaction is a contract transaction
-    (transactionDetails.status && transactionDetails.receipt.logs && transactionDetails.to) || // Passed transaction receipt has logs
+    (transactionDetails.status && transactionDetails.receipt && transactionDetails.receipt.logs && transactionDetails.to) || // Passed transaction receipt has logs
     (transactionDetails.isContractCreation && transactionDetails.contractAddress); // Passed transaction is a contract creation transaction
 
   // If contract address found

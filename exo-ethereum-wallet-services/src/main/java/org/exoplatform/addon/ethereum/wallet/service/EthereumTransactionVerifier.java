@@ -1,10 +1,12 @@
 package org.exoplatform.addon.ethereum.wallet.service;
 
+import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.EMPTY_HASH;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.NEW_TRANSACTION_EVENT;
 
 import java.util.List;
 import java.util.concurrent.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.picocontainer.Startable;
 import org.web3j.protocol.core.methods.response.Transaction;
 
@@ -55,12 +57,14 @@ public class EthereumTransactionVerifier implements Startable {
         LOG.debug("Checking transactions with not sent notifications");
         List<TransactionDetail> pendingTransactions = transactionService.getPendingTransactions();
         if (pendingTransactions != null && !pendingTransactions.isEmpty()) {
-          LOG.info("Checking {} pending transactions if it has not been notified to users");
+          LOG.info("Checking {} pending transactions if it has not been notified to users", pendingTransactions.size());
           for (TransactionDetail transactionDetail : pendingTransactions) {
             String hash = transactionDetail.getHash();
             try { // NOSONAR
               Transaction transaction = ethereumClientConnector.getTransaction(hash);
               if (transaction != null
+                  && !StringUtils.isBlank(transaction.getBlockHash())
+                  && !StringUtils.equals(EMPTY_HASH, transaction.getBlockHash())
                   && transaction.getBlockNumber() != null
                   && transaction.getBlockNumber().longValue() < ethereumClientConnector.getLastWatchedBlockNumber()
                   && transactionDetail.isPending()) {
@@ -68,7 +72,7 @@ public class EthereumTransactionVerifier implements Startable {
                 getListenerService().broadcast(NEW_TRANSACTION_EVENT, transaction, null);
               }
             } catch (Exception e) {
-              LOG.warn("Error treating pending transaction: {}", hash);
+              LOG.warn("Error treating pending transaction: {}", hash, e);
             }
           }
         }
