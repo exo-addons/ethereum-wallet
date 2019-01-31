@@ -425,17 +425,21 @@ export default {
     checkErrors() {
       this.error = null;
 
+      if(!this.contractDetails) {
+        return;
+      }
+
       if (this.recipient === this.account && this.contractDetails.contractType > 0) {
         this.error = `You can't send '${this.contractDetails.name}' to yourself`;
         this.canSendToken = false;
         return;
       }
 
-      if (this.amount && $.isNumeric(this.amount)) {
-        this.error = this.contractDetails.balance >= this.amount ? null : 'Unsufficient funds';
-        return;
-      } else if (this.amount && (isNaN(parseFloat(this.amount)) || !isFinite(this.amount) || this.amount <= 0)) {
+      if (this.amount && (isNaN(parseFloat(this.amount)) || !isFinite(this.amount) || this.amount <= 0)) {
         this.error = 'Invalid amount';
+        return;
+      } else if (this.amount && $.isNumeric(this.amount)) {
+        this.error = (!this.contractDetails || this.contractDetails.balance >= this.amount) ? null : 'Unsufficient funds';
         return;
       }
     },

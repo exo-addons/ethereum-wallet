@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther, approveTokens, approveAccount, saveTransaction} from '../TestUtils.js';
+import {getWalletApp, initApp, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import TransactionList from '../../main/webapp/vue-app/components/TransactionsList.vue';
 
@@ -93,43 +93,31 @@ describe('TransactionList.test.js', () => {
         expect(contractDetails).toBeTruthy();
         app.vm.openAccountDetail(contractDetails);
 
+        return flushPromises();
+      })
+
+      .then(() => {
         accountDetailCmp = app.vm.$refs.accountDetail;
         expect(accountDetailCmp).toBeTruthy();
-        return flushPromises();
-      })
-
-      .then(() => {
         transactionList = accountDetailCmp.$refs.transactionsList;
         expect(transactionList).toBeTruthy();
-        transactionList.init();
-        return flushPromises();
-      })
-
-      .then(() => {
         expect(transactionList.transactions).toEqual({});
-        return flushPromises();
-      })
-
-      .then(() => {
         sendTokensModal = accountDetailCmp.$refs.sendTokensModal;
         expect(sendTokensModal).toBeTruthy();
         sendTokensModal.open = true;
 
         return flushPromises();
       })
-      .then(() => {
-        sendTokensForm = sendTokensModal.$refs.sendTokensForm;
-        return flushPromises();
-      })
 
       .then(() => {
+        sendTokensForm = sendTokensModal.$refs.sendTokensForm;
         sendTokensForm.recipient = global.walletAddresses[2];
         sendTokensForm.amount = 2;
-        sendTokensForm.storedPassword = true;
-        const initialBalance = contractDetails.balance;
         return sendTokensForm.sendTokens();
       })
 
+      .then(() => flushPromises())
+      .then(() => transactionList.init(true))
       .then(() => {
         expect(transactionList.transactions).not.toEqual({});
         return flushPromises();
@@ -140,8 +128,6 @@ describe('TransactionList.test.js', () => {
   });
 
   it('when sending the second transaction test sorted transaction', (done) => {
-    console.log('sorted transaction');
-
     global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
@@ -183,10 +169,10 @@ describe('TransactionList.test.js', () => {
       .then(() => {
         sendTokensForm.recipient = global.walletAddresses[5];
         sendTokensForm.amount = 5;
-        sendTokensForm.storedPassword = true;
-        const initialBalance = contractDetails.balance;
         return sendTokensForm.sendTokens();
       })
+
+      .then(() => flushPromises())
 
       .then(() => {
         expect(transactionList.transactions).not.toEqual({});
