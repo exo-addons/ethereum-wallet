@@ -363,7 +363,9 @@ export default {
       const wallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address === recipient);
       if (wallet) {
         if (transaction.contractAddress) {
-          this.$set(wallet, 'loadingBalancePrincipal', true);
+          if(!transaction.contractMethodName || transaction.contractMethodName === 'transfer'  || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve') {
+            this.$set(wallet, 'loadingBalancePrincipal', true);
+          }
           this.watchPendingTransaction(transaction, this.principalContract);
         } else {
           this.$set(wallet, 'loadingBalance', true);

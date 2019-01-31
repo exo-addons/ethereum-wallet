@@ -138,6 +138,14 @@
               <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
                 <v-list-tile-title>Enable wallet</v-list-tile-title>
               </v-list-tile>
+              <template v-if="canApprouveAccounts">
+                <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
+                  <v-list-tile-title>Approve wallet</v-list-tile-title>
+                </v-list-tile>
+                <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
+                  <v-list-tile-title>Disapprove wallet</v-list-tile-title>
+                </v-list-tile>
+              </template>
             </v-list>
           </v-menu>
         </td>
@@ -190,11 +198,37 @@
       @success="refreshBalance"
       @pending="$emit('pending', $event)"
       @error="refreshBalance(null, null, $event)" />
+
+      <!-- approve/disapprove account -->
+      <template v-if="canApprouveAccounts">
+        <contract-admin-modal
+          ref="approveAccountModal"
+          :contract-details="principalContract"
+          :wallet-address="walletAddress"
+          method-name="approveAccount"
+          title="Approve account"
+          autocomplete-label="Account"
+          autocomplete-placeholder="Choose a user or space to approve"
+          @sent="$emit('pending', $event)"
+          @success="approvedAccount" />
+        <contract-admin-modal
+          ref="disapproveAccountModal"
+          :contract-details="principalContract"
+          :wallet-address="walletAddress"
+          method-name="disapproveAccount"
+          title="Disapprove account"
+          autocomplete-label="Account"
+          autocomplete-placeholder="Choose a user or space to disapprove"
+          @sent="$emit('pending', $event)"
+          @success="disapprovedAccount" />
+      </template>
+
   </v-flex>
 </template>
 <script>
 import SendFundsModal from '../SendFundsModal.vue';
 import AccountDetail from '../AccountDetail.vue';
+import ContractAdminModal from './WalletAdminOperationModal.vue';
 
 import {getWallets, removeWalletAssociation, enableWallet, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
@@ -202,6 +236,7 @@ export default {
   components: {
     SendFundsModal,
     AccountDetail,
+    ContractAdminModal,
   },
   props: {
     networkId: {
@@ -330,6 +365,9 @@ export default {
     };
   },
   computed: {
+    canApprouveAccounts() {
+      return this.principalContract && this.principalContract.adminLevel >= 1
+    },
     showLoadMore() {
       return this.wallets.length > this.limit && this.filteredWalletsLength >= this.pageSize;
     },
@@ -570,6 +608,28 @@ export default {
           }
         })
         .catch(e => this.error = String(e));
+    },
+    openApproveModal(wallet) {
+      if(this.$refs.approveAccountModal) {
+        this.$refs.approveAccountModal.preselectAutocomplete(wallet.id, wallet.type, wallet.address);
+      }
+    },
+    openDisapproveModal(wallet) {
+      if(this.$refs.disapproveAccountModal) {
+        this.$refs.disapproveAccountModal.preselectAutocomplete(wallet.id, wallet.type, wallet.address);
+      }
+    },
+    approvedAccount(hash, contractDetails, methodName, address) {
+      const wallet = this.wallets.find(wallet => wallet.address === address);
+      if(wallet) {
+        wallet.disapproved = false;
+      }
+    },
+    disapprovedAccount(hash, contractDetails, methodName, address) {
+      const wallet = this.wallets.find(wallet => wallet.address === address);
+      if(wallet) {
+        wallet.disapproved = true;
+      }
     },
   },
 };
