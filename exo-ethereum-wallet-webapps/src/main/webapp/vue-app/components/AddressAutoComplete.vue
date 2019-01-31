@@ -148,26 +148,10 @@ export default {
   watch: {
     searchTerm(value) {
       if (!this.noAddress && window.localWeb3.utils.isAddress(value)) {
-        this.isLoadingSuggestions = true;
-        return searchFullName(value).then((details) => {
-          if(details && details.type) {
-            this.items.push({
-              address: details.address,
-              name: details.name,
-              id: details.id,
-              type: details.type,
-              id_type: `${details.type}_${details.id}`,
-            });
-          } else {
-            this.items.push({
-              address: value,
-              name: value,
-              id: value,
-            });
-          }
-        })
-        .finally(() => {
-          this.isLoadingSuggestions = false;
+        this.items.push({
+          address: value,
+          name: value,
+          id: value,
         });
       } else if (value && value.length) {
         this.isLoadingSuggestions = true;
