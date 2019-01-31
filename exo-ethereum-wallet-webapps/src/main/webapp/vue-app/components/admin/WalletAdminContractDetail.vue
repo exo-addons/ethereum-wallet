@@ -48,6 +48,7 @@
             input-label="Habilitation level"
             input-placeholder="Choose a value between 1 and 5"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError">
             <div class="alert alert-info">
               <i class="uiIconInfo"></i>Habilitation levels:
@@ -75,6 +76,7 @@
             autocomplete-label="Administrator account"
             autocomplete-placeholder="Choose an administrator account to remove"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
 
           <!-- approve/disapprove account -->
@@ -88,6 +90,7 @@
             autocomplete-label="Account"
             autocomplete-placeholder="Choose a user or space to approve"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.adminLevel >= 1"
@@ -99,6 +102,7 @@
             autocomplete-label="Account"
             autocomplete-placeholder="Choose a user or space to disapprove"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
 
           <!-- pause/unpause contract -->
@@ -110,6 +114,7 @@
             method-name="pause"
             title="Pause contract"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
           <contract-admin-modal
             v-if="contractDetails.isPaused && contractDetails.adminLevel >= 5"
@@ -119,6 +124,7 @@
             method-name="unPause"
             title="Unpause contract"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
 
           <!-- set sell price -->
@@ -133,6 +139,7 @@
             input-placeholder="Token sell price in ether"
             convert-wei
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
 
           <contract-admin-modal
@@ -145,6 +152,7 @@
             autocomplete-label="New owner"
             autocomplete-placeholder="Choose a new owner of the contract"
             @sent="newTransactionPending"
+            @success="successTransaction"
             @error="transactionError" />
         </v-flex>
         <v-btn
@@ -595,6 +603,14 @@ export default {
         this.loadingAdminWalletsFromContract = false;
         console.debug('Error loading wallets from Contract', e);
         return Promise.reject(e);
+      }
+    },
+    successTransaction(hash, contractDetails, methodName, autoCompleteValue, inputValue) {
+      if(methodName === 'disapproveAccount') {
+        const index = this.approvedWallets.findIndex(wallet => wallet.address === autoCompleteValue);
+        if(index >= 0) {
+          this.approvedWallets.splice(index, 1);
+        }
       }
     },
   },

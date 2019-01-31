@@ -8,6 +8,7 @@
     persistent
     @keydown.esc="dialog = false">
     <v-bottom-nav
+      v-if="!noButton"
       slot="activator"
       :value="true"
       color="white"
@@ -190,6 +191,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      },
+    },
+    noButton: {
+      type: Boolean,
+      default: function() {
+        return false;
       },
     },
   },

@@ -129,6 +129,9 @@
               <v-icon size="20px">fa-ellipsis-v</v-icon>
             </v-btn>
             <v-list flat class="pt-0 pb-0">
+              <v-list-tile @click="retrieveWalletProperties(principalContract, props.item)">
+                <v-list-tile-title>Refresh</v-list-tile-title>
+              </v-list-tile>
               <v-list-tile @click="removeWalletAssociation(props.item)">
                 <v-list-tile-title>Remove wallet</v-list-tile-title>
               </v-list-tile>
@@ -199,30 +202,31 @@
       @pending="$emit('pending', $event)"
       @error="refreshBalance(null, null, $event)" />
 
-      <!-- approve/disapprove account -->
-      <template v-if="canApprouveAccounts">
-        <contract-admin-modal
-          ref="approveAccountModal"
-          :contract-details="principalContract"
-          :wallet-address="walletAddress"
-          method-name="approveAccount"
-          title="Approve account"
-          autocomplete-label="Account"
-          autocomplete-placeholder="Choose a user or space to approve"
-          @sent="$emit('pending', $event)"
-          @success="approvedAccount" />
-        <contract-admin-modal
-          ref="disapproveAccountModal"
-          :contract-details="principalContract"
-          :wallet-address="walletAddress"
-          method-name="disapproveAccount"
-          title="Disapprove account"
-          autocomplete-label="Account"
-          autocomplete-placeholder="Choose a user or space to disapprove"
-          @sent="$emit('pending', $event)"
-          @success="disapprovedAccount" />
-      </template>
-
+    <!-- approve/disapprove account -->
+    <template v-if="canApprouveAccounts">
+      <contract-admin-modal
+        ref="approveAccountModal"
+        :contract-details="principalContract"
+        :wallet-address="walletAddress"
+        method-name="approveAccount"
+        title="Approve account"
+        autocomplete-label="Account"
+        autocomplete-placeholder="Choose a user or space to approve"
+        no-button
+        @sent="$emit('pending', $event)"
+        @success="approvedAccount" />
+      <contract-admin-modal
+        ref="disapproveAccountModal"
+        :contract-details="principalContract"
+        :wallet-address="walletAddress"
+        method-name="disapproveAccount"
+        title="Disapprove account"
+        autocomplete-label="Account"
+        autocomplete-placeholder="Choose a user or space to disapprove"
+        no-button
+        @sent="$emit('pending', $event)"
+        @success="disapprovedAccount" />
+    </template>
   </v-flex>
 </template>
 <script>

@@ -466,6 +466,7 @@ export default {
                     wallet.approved = {};
                   }
                   thiss.$set(wallet.approved, contractDetails.address, approved ? 'approved' : 'disapproved');
+                  thiss.$set(wallet, 'disapproved', !approved);
                   thiss.$nextTick(() => thiss.forceUpdate());
                 });
             }

@@ -165,11 +165,9 @@ describe('AddressAutoComplete.test.js', () => {
     });
 
     const searchTerm = '0x1111111111111111111111111111111111111111';
-    const selectedType = false;
     const selectedId = searchTerm;
     const selectedName = searchTerm;
     const selectedAddress = searchTerm;
-    const selectedIdType = false;
     const expectedSelectedItem = {
       id: selectedId,
       address: selectedAddress,
@@ -204,17 +202,11 @@ describe('AddressAutoComplete.test.js', () => {
     });
 
     const searchTerm = window.walletAddresses[1];
-    const selectedType = 'user';
-    const selectedId = 'testuser1';
-    const selectedName = 'Test User 1';
     const selectedAddress = window.walletAddresses[1];
-    const selectedIdType = `${selectedType}_${selectedId}`;
     const expectedSelectedItem = {
-      id: selectedId,
-      type: selectedType,
+      id: selectedAddress,
       address: selectedAddress,
-      id_type: selectedIdType,
-      name: selectedName,
+      name: selectedAddress,
     };
 
     // set disabled to not have as workaround to autocomplete status errors (Maximum stack overflow)

@@ -162,7 +162,7 @@ public class EthereumWalletAccountService {
    * 
    * @param address
    * @param enable
-   * @param currentUserId
+   * @param username
    * @throws IllegalAccessException 
    */
   public void enableWalletByAddress(String address, boolean enable, String username) throws IllegalAccessException {

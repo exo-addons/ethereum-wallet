@@ -147,6 +147,9 @@ export default {
   },
   watch: {
     searchTerm(value) {
+      if (!value) {
+        return;
+      }
       if (!this.noAddress && window.localWeb3.utils.isAddress(value)) {
         this.items.push({
           address: value,
