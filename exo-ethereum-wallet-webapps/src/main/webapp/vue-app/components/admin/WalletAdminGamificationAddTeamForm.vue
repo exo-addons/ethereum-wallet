@@ -179,7 +179,19 @@
                   </v-avatar>
                 </td>
                 <td class="text-xs-center">
-                  {{ props.item.name }}
+                  <profile-chip
+                    :address="props.item.address"
+                    :profile-id="props.item.id"
+                    :profile-technical-id="props.item.technicalId"
+                    :space-id="props.item.spaceId"
+                    :profile-type="props.item.type"
+                    :display-name="props.item.name"
+                    :enabled="props.item.enabled"
+                    :disapproved="props.item.disapproved"
+                    :deleted-user="props.item.deletedUser"
+                    :disabled-user="props.item.disabledUser"
+                    :avatar="props.item.avatar"
+                    display-no-address />
                 </td>
                 <td class="text-xs-right">
                   <v-btn
@@ -219,6 +231,7 @@
 
 <script>
 import AddressAutoComplete from '../AddressAutoComplete.vue';
+import ProfileChip from '../ProfileChip.vue';
 
 import {searchSpaces, searchUserOrSpaceObject} from '../../WalletAddressRegistry.js';
 import {saveTeam} from '../../WalletGamificationServices.js';
@@ -226,6 +239,7 @@ import {saveTeam} from '../../WalletGamificationServices.js';
 export default {
   components: {
     AddressAutoComplete,
+    ProfileChip,
   },
   props: {
     team: {
@@ -319,23 +333,11 @@ export default {
       } else {
         const wallet = this.wallets.find((wallet) => wallet.id === this.manager && wallet.type === 'user');
         if (wallet) {
-          this.managerObject = {
-            id: wallet.id,
-            name: wallet.name,
-            identityId: wallet.technicalId,
-            type: wallet.type,
-            avatar: wallet.avatar,
-          };
+          this.managerObject = Object.assign({identityId: wallet.technicalId}, wallet);
         } else {
           searchUserOrSpaceObject(this.manager, 'user').then((userDetails) => {
             if (userDetails) {
-              this.managerObject = {
-                name: userDetails.name,
-                id: userDetails.id,
-                identityId: userDetails.technicalId,
-                type: userDetails.type,
-                avatar: userDetails.avatar,
-              };
+              this.managerObject = Object.assign({identityId: userDetails.technicalId}, userDetails);
             }
           });
         }
@@ -352,23 +354,11 @@ export default {
           } else {
             const wallet = this.wallets.find((wallet) => wallet.id === memberId && wallet.type === 'user');
             if (wallet) {
-              this.membersObjects.push({
-                id: wallet.id,
-                name: wallet.name,
-                identityId: wallet.technicalId,
-                type: wallet.type,
-                avatar: wallet.avatar,
-              });
+              this.membersObjects.push(Object.assign({identityId: wallet.technicalId}, wallet));
             } else {
               searchUserOrSpaceObject(memberId, 'user').then((userDetails) => {
                 if (userDetails) {
-                  this.membersObjects.push({
-                    name: userDetails.name,
-                    id: userDetails.id,
-                    identityId: userDetails.technicalId,
-                    type: userDetails.type,
-                    avatar: userDetails.avatar,
-                  });
+                  this.membersObjects.push(Object.assign({identityId: userDetails.technicalId}, userDetails));
                 }
               });
             }

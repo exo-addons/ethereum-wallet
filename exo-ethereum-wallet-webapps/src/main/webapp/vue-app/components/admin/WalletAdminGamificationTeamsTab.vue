@@ -1,44 +1,13 @@
 <template>
   <div>
-    <v-dialog
-      v-model="removeTeamConfirm"
-      content-class="uiPopup"
-      width="290px"
-      max-width="100vw"
-      @keydown.esc="removeTeamConfirm = false">
-      <v-card class="elevation-12">
-        <div class="popupHeader ClearFix">
-          <a
-            class="uiIconClose pull-right"
-            aria-hidden="true"
-            @click="removeTeamConfirm = false"></a> <span class="PopupTitle popupTitle">
-              Delete pool confirmation
-            </span>
-        </div>
-        <v-card-text>
-          Would you like to delete pool <strong>
-            {{ teamToDelete && teamToDelete.name }}
-          </strong>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <button
-            :disabled="loading"
-            :loading="loading"
-            class="btn btn-primary mr-2"
-            @click="removeTeam(teamToDelete.id)">
-            Delete
-          </button> <button
-            :disabled="loading"
-            :loading="loading"
-            class="btn ml-2"
-            @click="removeTeamConfirm = false">
-            Cancel
-          </button>
-          <v-spacer />
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <confirm-dialog
+      ref="deleteTeamConfirm"
+      :loading="loading"
+      :message="deletePoolMessage"
+      title="Delete pool confirmation"
+      ok-label="Delete"
+      cancel-label="Cancel"
+      @ok="removeTeam(teamToDelete.id)" />
     <add-team-form
       v-show="selectedTeam"
       ref="teamModal"
@@ -268,7 +237,7 @@
                 color="primary"
                 @click="
                   teamToDelete = props.item;
-                  removeTeamConfirm = true;
+                  $refs.deleteTeamConfirm.open();
                 ">
                 Delete
               </v-btn>
@@ -283,12 +252,14 @@
 
 <script>
 import AddTeamForm from './WalletAdminGamificationAddTeamForm.vue';
+import ConfirmDialog from '../ConfirmDialog.vue';
 
 import {getTeams, saveTeam, removeTeam} from '../../WalletGamificationServices.js';
 
 export default {
   components: {
     AddTeamForm,
+    ConfirmDialog,
   },
   props: {
     wallets: {
@@ -343,11 +314,13 @@ export default {
   data: () => ({
     teams: [],
     teamToDelete: null,
-    removeTeamConfirm: false,
     teamsRetrieved: false,
     selectedTeam: null,
   }),
   computed: {
+    deletePoolMessage() {
+      return this.teamToDelete && `Would you like to delete pool <strong>${this.teamToDelete.name}</strong>`;
+    },
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
@@ -399,8 +372,6 @@ export default {
             const wallet = this.wallets.find(wallet => wallet.type === 'user' && wallet.id === member.id);
             if(wallet) {
               this.$set(wallet, "disabled", disable);
-            } else {
-              console.debug("can't find wallet for member", member);
             }
           }
         });
@@ -432,7 +403,6 @@ export default {
         .then((status) => {
           if (status) {
             this.disableTeamWithMembers(this.teamToDelete, false);
-            this.removeTeamConfirm = false;
             this.teamToDelete = null;
             return this.refresh();
           } else {

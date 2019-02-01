@@ -42,8 +42,6 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
         localStorage.setItem(`exo-wallet-${type}-${id}`, address);
       }
 
-      // Save user's or space's associated address in local storage
-      sessionStorage.setItem(`exo-wallet-address-${type}-${id}`, address);
       return resp;
     } else {
       console.error('Error saving wallet address', resp);
@@ -52,22 +50,26 @@ export function saveNewAddress(id, type, address, isBrowserWallet) {
   });
 }
 
+export function refreshWallet(wallet) {
+  if (!wallet && !wallet.address && !(wallet.id && wallet.type)) {
+    console.debug("can't refresh wallet with empty identifiers", wallet);
+    return Promise.resolve(null);
+  }
+  if (wallet.address) {
+    return searchFullName(wallet.address).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
+  } else {
+    return searchUserOrSpaceObject(wallet.id, wallet.type).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
+  }
+}
+
 /*
  * Return the address of a user or space
  */
 export function searchAddress(id, type) {
-  const address = sessionStorage.getItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
-  if (address) {
-    return Promise.resolve(address);
-  }
   return searchUserOrSpaceObject(id, type).then((data) => {
     if (data && data.enabled && data.address && data.address.length && data.address.indexOf('0x') === 0) {
-      if (sessionStorage) {
-        sessionStorage.setItem(`exo-wallet-address-${type}-${id}`.toLowerCase(), data.address);
-      }
       return data.address;
     } else {
-      sessionStorage.removeItem(`exo-wallet-address-${type}-${id}`.toLowerCase());
       return null;
     }
   });
@@ -110,25 +112,13 @@ export function searchUserOrSpaceObject(id, type) {
  */
 export function searchFullName(address) {
   if (!address) {
-    return;
+    return Promise.resolve(null);
   }
 
   address = address.toLowerCase();
 
   if (window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.address && window.walletSettings.userPreferences.wallet.address.toLowerCase() === address) {
     return Promise.resolve(window.walletSettings.userPreferences.wallet);
-  }
-
-  try {
-    // Get user information from session storage (refreshed when browser closes)
-    const item = sessionStorage.getItem(`exo-wallet-address-user-${address}`.toLowerCase()) || sessionStorage.getItem(`exo-wallet-address-space-${address}`.toLowerCase());
-
-    if (item) {
-      return Promise.resolve(JSON.parse(item));
-    }
-  } catch (e) {
-    // This could happen in tests
-    console.debug('Error getting item from session storage');
   }
 
   return fetch(`/portal/rest/wallet/api/account/detailsByAddress?address=${address}`, {credentials: 'include'})
@@ -147,7 +137,6 @@ export function searchFullName(address) {
         if (!item.id_type && item.type && item.id) {
           item.id_type = `${item.type}_${item.id}`;
         }
-        sessionStorage.setItem(`exo-wallet-address-${item.type}-${address}`.toLowerCase(), JSON.stringify(item));
         return item;
       }
     })

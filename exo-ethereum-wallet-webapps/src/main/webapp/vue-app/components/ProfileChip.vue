@@ -6,12 +6,24 @@
     :href="url"
     rel="nofollow"
     target="_blank">
-    <template v-if="enabled">
+    <template v-if="disapproved">
+      <del class="red--text">{{ displayName }}</del> (Disapproved)
+    </template>
+    <template v-else-if="deletedUser">
+      <del class="red--text">{{ displayName }}</del> (Deleted)
+    </template>
+    <template v-else-if="disabledUser">
+      <del class="red--text">{{ displayName }}</del> (Disabled user)
+    </template>
+    <template v-else-if="displayNoAddress && !address">
+      <del class="red--text">{{ displayName }}</del> (No wallet)
+    </template>
+    <template v-else-if="!enabled">
+      <del class="red--text">{{ displayName }}</del> (Disabled wallet)
+    </template>
+    <template v-else>
       {{ displayName }}
     </template>
-    <span v-else>
-      <del class="red--text">{{ displayName }}</del> (Disabled)
-    </span>
   </a>
   <code v-else-if="displayName">
     <template v-if="enabled">
@@ -84,6 +96,30 @@ export default {
       type: Boolean,
       default: function() {
         return true;
+      },
+    },
+    displayNoAddress: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
+    disapproved: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
+    deletedUser: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
+    disabledUser: {
+      type: Boolean,
+      default: function() {
+        return false;
       },
     },
   },

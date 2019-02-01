@@ -1,5 +1,13 @@
 <template>
   <v-flex flat>
+    <confirm-dialog
+      ref="deleteWalletConfirm"
+      :loading="loading"
+      :message="`Would you like to delete wallet of <strong>${walletToDelete && walletToDelete.name}</strong>`"
+      title="Delete wallet confirmation"
+      ok-label="Delete"
+      cancel-label="Cancel"
+      @ok="removeWalletAssociation(walletToDelete)" />
     <div v-if="error" class="alert alert-error v-content">
       <i class="uiIconError"></i>{{ error }}
     </div>
@@ -36,21 +44,19 @@
           </v-avatar>
         </td>
         <td class="clickable" @click="openAccountDetail(props.item)">
-          <template v-if="props.item.disapproved">
-            <del class="red--text">{{ props.item.name }}</del> (Disapproved)
-          </template>
-          <template v-else-if="props.item.deletedUser">
-            <del class="red--text">{{ props.item.name }}</del> (Deleted)
-          </template>
-          <template v-else-if="props.item.disabledUser">
-            <del class="red--text">{{ props.item.name }}</del> (Disabled user)
-          </template>
-          <template v-else-if="props.item.enabled">
-            {{ props.item.name }}
-          </template>
-          <span v-else>
-            <del class="red--text">{{ props.item.name }}</del> (Disabled wallet)
-          </span>
+          <profile-chip
+            :address="props.item.address"
+            :profile-id="props.item.id"
+            :profile-technical-id="props.item.technicalId"
+            :space-id="props.item.spaceId"
+            :profile-type="props.item.type"
+            :display-name="props.item.name"
+            :enabled="props.item.enabled"
+            :disapproved="props.item.disapproved"
+            :deleted-user="props.item.deletedUser"
+            :disabled-user="props.item.disabledUser"
+            :avatar="props.item.avatar"
+            display-no-address />
         </td>
         <td>
           <a
@@ -129,10 +135,10 @@
               <v-icon size="20px">fa-ellipsis-v</v-icon>
             </v-btn>
             <v-list flat class="pt-0 pb-0">
-              <v-list-tile @click="retrieveWalletProperties(principalContract, props.item)">
+              <v-list-tile @click="refreshWallet(props.item)">
                 <v-list-tile-title>Refresh</v-list-tile-title>
               </v-list-tile>
-              <v-list-tile @click="removeWalletAssociation(props.item)">
+              <v-list-tile @click="walletToDelete = props.item; $refs.deleteWalletConfirm.open()">
                 <v-list-tile-title>Remove wallet</v-list-tile-title>
               </v-list-tile>
               <v-list-tile v-if="props.item.enabled" @click="enableWallet(props.item, false)">
@@ -233,7 +239,10 @@
 import SendFundsModal from '../SendFundsModal.vue';
 import AccountDetail from '../AccountDetail.vue';
 import ContractAdminModal from './WalletAdminOperationModal.vue';
+import ProfileChip from '../ProfileChip.vue';
+import ConfirmDialog from '../ConfirmDialog.vue';
 
+import {refreshWallet} from '../../WalletAddressRegistry.js';
 import {getWallets, removeWalletAssociation, enableWallet, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 
 export default {
@@ -241,6 +250,8 @@ export default {
     SendFundsModal,
     AccountDetail,
     ContractAdminModal,
+    ProfileChip,
+    ConfirmDialog,
   },
   props: {
     networkId: {
@@ -328,6 +339,7 @@ export default {
       initialFundsMessage: null,
       error: null,
       wallets: [],
+      walletToDelete: null,
       limit: 10,
       pageSize: 10,
       walletHeaders: [
@@ -482,6 +494,9 @@ export default {
     refreshBalance(accountDetails, address, error) {
       this.$emit('refresh-balance', accountDetails, address, error);
     },
+    refreshWallet(wallet) {
+      refreshWallet(wallet).then(() => this.retrieveWalletProperties(this.principalContract, wallet));
+    },
     retrieveWalletProperties(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
       return this.computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam)
         .then(() => this.loadWalletApproval(accountDetails, wallet));
@@ -606,7 +621,7 @@ export default {
       return enableWallet(wallet.address, enable)
         .then((result) => {
           if(result) {
-            this.$set(wallet, 'enabled', enable);
+            return refreshWallet(wallet);
           } else {
             this.error = `An error occurred while ${enable ? 'enabling' : 'disabling'} wallet of ${wallet.name}`;
           }

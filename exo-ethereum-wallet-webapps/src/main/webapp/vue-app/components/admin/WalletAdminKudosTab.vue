@@ -130,25 +130,19 @@
               </v-avatar>
             </td>
             <td class="text-xs-left">
-              <a
-                v-if="props.item.address"
-                :href="props.item.url"
-                rel="nofollow"
-                target="_blank">
-                {{ props.item.name }}
-              </a>
-              <div v-else>
-                <del>
-                  <a
-                    :href="props.item.url"
-                    rel="nofollow"
-                    target="_blank"
-                    class="red--text">
-                    {{ props.item.name }}
-                  </a>
-                </del>
-                (No address)
-              </div>
+              <profile-chip
+                :address="props.item.address"
+                :profile-id="props.item.id"
+                :profile-technical-id="props.item.technicalId"
+                :space-id="props.item.spaceId"
+                :profile-type="props.item.type"
+                :display-name="props.item.name"
+                :enabled="props.item.enabled"
+                :disapproved="props.item.disapproved"
+                :deleted-user="props.item.deletedUser"
+                :disabled-user="props.item.disabledUser"
+                :avatar="props.item.avatar"
+                display-no-address />
             </td>
             <td>
               <a
@@ -262,6 +256,7 @@
 
 <script>
 import SendRewardModal from './WalletAdminSendRewardModal.vue';
+import ProfileChip from '../ProfileChip.vue';
 
 import {getKudosContract, getKudosBudget, saveKudosContract, saveKudosTotalBudget} from '../../WalletKudosServices.js';
 import {getPeriodRewardTransactions} from '../../WalletRewardServices.js';
@@ -270,6 +265,7 @@ import {watchTransactionStatus, getTokenEtherscanlink, getAddressEtherscanlink, 
 export default {
   components: {
     SendRewardModal,
+    ProfileChip,
   },
   props: {
     walletAddress: {

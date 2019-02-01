@@ -120,16 +120,17 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
-   * Disable the user or space details associated to an address
+   * Enable/Disable wallet
    * 
    * @param address
+   * @param enable
    * @return
    */
   @Path("enable")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("administrators")
-  public Response enableAccountByAddress(@QueryParam("address") String address, @QueryParam("address") boolean enable) {
+  public Response enableWalletByAddress(@QueryParam("address") String address, @QueryParam("enable") boolean enable) {
     if (StringUtils.isBlank(address)) {
       LOG.warn(EMPTY_ADDRESS_ERROR, address);
       return Response.status(400).build();
@@ -153,7 +154,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("administrators")
-  public Response removeAccountByAddress(@QueryParam("address") String address) {
+  public Response removeWalletByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
       LOG.warn(EMPTY_ADDRESS_ERROR, address);
       return Response.status(400).build();

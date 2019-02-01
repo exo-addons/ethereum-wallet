@@ -68,7 +68,8 @@
               :profile-id="props.item.id"
               :display-name="props.item.name"
               :enabled="props.item.enabled && !props.item.disabled"
-              tiptip-position="top_left" />
+              tiptip-position="top_left"
+              display-no-address />
             <div v-else>
               <del>
                 <a

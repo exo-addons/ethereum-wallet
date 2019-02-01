@@ -55,7 +55,6 @@ describe('SendEtherForm.test.js', () => {
     global.walletAddress = global.walletAddresses[0];
 
     let sendEtherModal, sendEtherForm, accountDetails;
-    console.warn('initiateBrowserWallet');
     return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
       .then(() => initApp(app))
       .then(() => flushPromises())
