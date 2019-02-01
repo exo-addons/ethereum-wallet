@@ -20,7 +20,7 @@
           <v-switch v-model="displaySpaces" label="Display spaces" />
         </v-flex>
         <v-flex md3 xs12>
-          <v-switch v-model="displayDisabledUsers" label="Display disabled users" />
+          <v-switch v-model="displayDisabledWallets" label="Display disabled wallets" />
         </v-flex>
         <v-flex md3 xs12>
           <v-switch v-model="displayDisapprovedWallets" label="Display disapproved wallets" />
@@ -41,126 +41,130 @@
       :loading="loadingWallets"
       hide-actions>
       <template slot="items" slot-scope="props">
-        <td class="clickable" @click="openAccountDetail(props.item)">
-          <v-avatar size="36px">
-            <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
-          </v-avatar>
-        </td>
-        <td class="clickable" @click="openAccountDetail(props.item)">
-          <profile-chip
-            :address="props.item.address"
-            :profile-id="props.item.id"
-            :profile-technical-id="props.item.technicalId"
-            :space-id="props.item.spaceId"
-            :profile-type="props.item.type"
-            :display-name="props.item.name"
-            :enabled="props.item.enabled"
-            :disapproved="props.item.disapproved"
-            :deleted-user="props.item.deletedUser"
-            :disabled-user="props.item.disabledUser"
-            :avatar="props.item.avatar"
-            display-no-address />
-        </td>
-        <td>
-          <a
-            v-if="addressEtherscanLink"
-            :href="`${addressEtherscanLink}${props.item.address}`"
-            target="_blank"
-            title="Open on etherscan">
-            {{ props.item.address }}
-          </a> <span v-else>
-            {{ props.item.address }}
-          </span>
-        </td>
-        <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-progress-circular
-            v-if="props.item.loadingBalancePrincipal"
-            :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
-            color="primary"
-            class="mr-4"
-            indeterminate
-            size="20" />
-          <span
-            v-else-if="loadingWallets && props.item.loadingBalancePrincipal !== false"
-            title="Loading balance...">
-            loading...
-          </span>
-          <template v-else-if="props.item.balancePrincipal">
-            {{ toFixed(props.item.balancePrincipal) }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
-            <v-btn
-              class="bottomNavigationItem transparent"
-              title="Send funds"
-              flat
-              icon
-              @click="openSendFundsModal($event, props.item, true)">
-              <v-icon>
-                send
-              </v-icon>
-            </v-btn>
-          </template>
-          <template v-else>
-            -
-          </template>
-        </td>
-        <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
-          <v-progress-circular
-            v-if="props.item.loadingBalance"
-            :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
-            color="primary"
-            class="mr-4"
-            indeterminate
-            size="20" />
-          <span
-            v-else-if="loadingWallets && props.item.loadingBalance !== false"
-            title="Loading balance...">
-            loading...
-          </span>
-          <template v-else>
-            {{ toFixed(props.item.balance) }} eth
-            <v-btn
-              class="bottomNavigationItem transparent"
-              title="Send funds"
-              flat
-              icon
-              @click="openSendFundsModal($event, props.item)">
-              <v-icon>
-                send
-              </v-icon>
-            </v-btn>
-          </template>
-        </td>
-        <td>
-          <v-menu offset-y>
-            <v-btn
-              slot="activator"
-              icon
-              small>
-              <v-icon size="20px">fa-ellipsis-v</v-icon>
-            </v-btn>
-            <v-list flat class="pt-0 pb-0">
-              <v-list-tile @click="refreshWallet(props.item)">
-                <v-list-tile-title>Refresh</v-list-tile-title>
-              </v-list-tile>
-              <v-list-tile @click="walletToDelete = props.item; $refs.deleteWalletConfirm.open()">
-                <v-list-tile-title>Remove wallet</v-list-tile-title>
-              </v-list-tile>
-              <v-list-tile v-if="props.item.enabled" @click="enableWallet(props.item, false)">
-                <v-list-tile-title>Disable wallet</v-list-tile-title>
-              </v-list-tile>
-              <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
-                <v-list-tile-title>Enable wallet</v-list-tile-title>
-              </v-list-tile>
-              <template v-if="canApprouveAccounts">
-                <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
-                  <v-list-tile-title>Approve wallet</v-list-tile-title>
-                </v-list-tile>
-                <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
-                  <v-list-tile-title>Disapprove wallet</v-list-tile-title>
-                </v-list-tile>
+        <transition name="fade">
+          <tr v-show="props.item.displayWallet">
+            <td class="clickable" @click="openAccountDetail(props.item)">
+              <v-avatar size="36px">
+                <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+              </v-avatar>
+            </td>
+            <td class="clickable" @click="openAccountDetail(props.item)">
+              <profile-chip
+                :address="props.item.address"
+                :profile-id="props.item.id"
+                :profile-technical-id="props.item.technicalId"
+                :space-id="props.item.spaceId"
+                :profile-type="props.item.type"
+                :display-name="props.item.name"
+                :enabled="props.item.enabled"
+                :disapproved="props.item.disapproved"
+                :deleted-user="props.item.deletedUser"
+                :disabled-user="props.item.disabledUser"
+                :avatar="props.item.avatar"
+                display-no-address />
+            </td>
+            <td>
+              <a
+                v-if="addressEtherscanLink"
+                :href="`${addressEtherscanLink}${props.item.address}`"
+                target="_blank"
+                title="Open on etherscan">
+                {{ props.item.address }}
+              </a> <span v-else>
+                {{ props.item.address }}
+              </span>
+            </td>
+            <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
+              <v-progress-circular
+                v-if="props.item.loadingBalancePrincipal"
+                :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
+                color="primary"
+                class="mr-4"
+                indeterminate
+                size="20" />
+              <span
+                v-else-if="loadingWallets && props.item.loadingBalancePrincipal !== false"
+                title="Loading balance...">
+                loading...
+              </span>
+              <template v-else-if="props.item.balancePrincipal">
+                {{ toFixed(props.item.balancePrincipal) }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
+                <v-btn
+                  class="bottomNavigationItem transparent"
+                  title="Send funds"
+                  flat
+                  icon
+                  @click="openSendFundsModal($event, props.item, true)">
+                  <v-icon>
+                    send
+                  </v-icon>
+                </v-btn>
               </template>
-            </v-list>
-          </v-menu>
-        </td>
+              <template v-else>
+                -
+              </template>
+            </td>
+            <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
+              <v-progress-circular
+                v-if="props.item.loadingBalance"
+                :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
+                color="primary"
+                class="mr-4"
+                indeterminate
+                size="20" />
+              <span
+                v-else-if="loadingWallets && props.item.loadingBalance !== false"
+                title="Loading balance...">
+                loading...
+              </span>
+              <template v-else>
+                {{ toFixed(props.item.balance) }} eth
+                <v-btn
+                  class="bottomNavigationItem transparent"
+                  title="Send funds"
+                  flat
+                  icon
+                  @click="openSendFundsModal($event, props.item)">
+                  <v-icon>
+                    send
+                  </v-icon>
+                </v-btn>
+              </template>
+            </td>
+            <td>
+              <v-menu offset-y>
+                <v-btn
+                  slot="activator"
+                  icon
+                  small>
+                  <v-icon size="20px">fa-ellipsis-v</v-icon>
+                </v-btn>
+                <v-list flat class="pt-0 pb-0">
+                  <v-list-tile @click="refreshWallet(props.item)">
+                    <v-list-tile-title>Refresh</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile @click="walletToDelete = props.item; $refs.deleteWalletConfirm.open()">
+                    <v-list-tile-title>Remove wallet</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile v-if="props.item.enabled" @click="enableWallet(props.item, false)">
+                    <v-list-tile-title>Disable wallet</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
+                    <v-list-tile-title>Enable wallet</v-list-tile-title>
+                  </v-list-tile>
+                  <template v-if="canApprouveAccounts">
+                    <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
+                      <v-list-tile-title>Approve wallet</v-list-tile-title>
+                    </v-list-tile>
+                    <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
+                      <v-list-tile-title>Disapprove wallet</v-list-tile-title>
+                    </v-list-tile>
+                  </template>
+                </v-list>
+              </v-menu>
+            </td>
+          </tr>
+        </transition>
       </template>
     </v-data-table>
     <v-flex v-if="showLoadMore" justify-center>
@@ -332,7 +336,7 @@ export default {
       displayUsers: true,
       displaySpaces: true,
       displayDisapprovedWallets: true,
-      displayDisabledUsers: false,
+      displayDisabledWallets: false,
       sameConfiguredNetwork: true,
       selectedTransactionHash: null,
       seeAccountDetails: false,
@@ -395,10 +399,22 @@ export default {
       return this.filteredWallets.length;
     },
     filteredWallets() {
-      if (this.displayUsers && this.displaySpaces && this.displayDisapprovedWallets && this.displayDisabledUsers && !this.search) {
-        return this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
+      let filteredWallets = null;
+      if (this.displayUsers && this.displayDisapprovedWallets && this.displaySpaces && this.displayDisabledWallets && !this.search) {
+        filteredWallets = this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
       } else {
-        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
+        filteredWallets = this.wallets.filter(wallet => wallet && wallet.address && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledWallets || wallet.enabled) && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
+      }
+      if(filteredWallets && filteredWallets.length) {
+        const lastElement = filteredWallets[filteredWallets.length - 1];
+        const limit = this.wallets.findIndex(wallet => wallet.technicalId === lastElement.technicalId) + 1;
+        filteredWallets = this.wallets.slice(0, limit);
+        this.wallets.forEach((wallet, index) => {
+          wallet.displayWallet = index < limit && wallet.address && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledWallets || wallet.enabled) && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0);
+        });
+        return filteredWallets;
+      } else {
+        return [];
       }
     }
   },

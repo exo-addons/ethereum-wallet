@@ -268,13 +268,19 @@ public class EthereumWalletService implements Startable {
       }
     }
 
-    Wallet spaceWallet = null;
+    Wallet wallet = null;
     if (StringUtils.isNotBlank(spaceId)) {
-      spaceWallet = accountService.getWalletByTypeAndID(WalletType.SPACE.getId(), spaceId);
-      if (spaceWallet != null && !accountService.canAccessWallet(spaceWallet, username)) {
+      wallet = accountService.getWalletByTypeAndID(WalletType.SPACE.getId(), spaceId);
+      if (wallet != null && !accountService.canAccessWallet(wallet, username)) {
         LOG.warn("User {} is not allowed to display space wallet {}", username, spaceId);
         globalSettings.setWalletEnabled(false);
       }
+    } else {
+      wallet = accountService.getWalletByTypeAndID(WalletType.USER.getId(), username);
+    }
+
+    if (wallet != null) {
+      globalSettings.setWalletEnabled(globalSettings.isWalletEnabled() && wallet.isEnabled());
     }
 
     if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
@@ -289,17 +295,10 @@ public class EthereumWalletService implements Startable {
       }
       globalSettings.setUserPreferences(userSettings);
 
-      if (spaceWallet != null) {
-        userSettings.setPhrase(spaceWallet.getPassPhrase());
-        userSettings.setWalletAddress(spaceWallet.getAddress());
-        userSettings.setWallet(spaceWallet);
-      } else {
-        Wallet wallet = accountService.getWalletByTypeAndID(WalletType.USER.getId(), username);
-        if (wallet != null) {
-          userSettings.setPhrase(wallet.getPassPhrase());
-          userSettings.setWalletAddress(wallet.getAddress());
-          userSettings.setWallet(wallet);
-        }
+      if (wallet != null) {
+        userSettings.setPhrase(wallet.getPassPhrase());
+        userSettings.setWalletAddress(wallet.getAddress());
+        userSettings.setWallet(wallet);
       }
 
       globalSettings.setContractAbi(contractService.getContractAbi());
