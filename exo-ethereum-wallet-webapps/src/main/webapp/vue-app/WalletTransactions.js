@@ -159,7 +159,7 @@ function loadTransactionDetailsFromContractAndWatchPending(networkId, walletAddr
     watchTransactionStatus(transactionDetails.hash, (receipt, block) => {
       transactionDetails.pending = false;
       transactionDetails.receipt = receipt;
-      transactionDetails.timestamp = block.timestamp;
+      transactionDetails.timestamp = (block && block.timestamp) || transactionDetails.timestamp;
       loadTransactionDetailsFromContractAndWatchPending(networkId, walletAddress, accountDetails, transactions, transactionDetails).then(() => {
         watchLoadSuccess(transactionDetails);
       });

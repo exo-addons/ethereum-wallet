@@ -56,7 +56,6 @@
             :loading="loading"
             is-maximized
             hide-actions
-            @refresh-balance="refreshBalance"
             @error="error = $event" />
 
           <v-tabs v-model="selectedTab" grow>
@@ -165,7 +164,7 @@
                 @pending="pendingTransaction"
                 @wallets-loaded="wallets = $event"
                 @loading-wallets-changed="loadingWallets = $event"
-                @refresh-balance="refreshBalance" />
+                @refresh-balance="refreshCurrentWalletBalances" />
             </v-tab-item>
 
             <v-tab-item v-if="sameConfiguredNetwork" id="kudosList">
@@ -384,60 +383,6 @@ export default {
         this.$refs.walletSummary.loadPendingTransactions();
       }
     },
-    refreshBalance(accountDetails, address, error) {
-      if (this.walletAddress) {
-        computeBalance(this.walletAddress).then((balanceDetails) => {
-          if (balanceDetails) {
-            this.walletAddressEtherBalance = balanceDetails.balance;
-            this.walletAddressFiatBalance = balanceDetails.balanceFiat;
-          }
-        });
-      }
-      if (error) {
-        console.debug('Error while proceeding transaction', error);
-        this.contracts.forEach((contract) => {
-          if (contract.loadingBalance) {
-            this.$set(contract, 'loadingBalance', false);
-          }
-        });
-        this.wallets.forEach((wallet) => {
-          if (wallet.loadingBalance || wallet.loadingBalancePrincipal) {
-            this.$set(wallet, 'icon', 'warning');
-            this.$set(wallet, 'error', `Error proceeding transaction: ${error}`);
-            // Update wallet stateus: admin, approved ...
-            if (this.$refs.contractDetail) {
-              this.$refs.contractDetail.retrieveAccountDetails(wallet);
-            }
-          }
-        });
-        return;
-      }
-      const contract = this.contracts.find((contract) => contract && address && contract.address && contract.address.toLowerCase() === address.toLowerCase());
-      if (contract) {
-        computeBalance(address)
-          .then((balanceDetails, error) => {
-            if (!error) {
-              this.$set(contract, 'contractBalance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
-            }
-            this.forceUpdate();
-          })
-          .catch((error) => {
-            this.error = String(error);
-          })
-          .finally(() => {
-            this.$set(contract, 'loadingBalance', false);
-          });
-      } else if (this.$refs.walletsTab) {
-        const wallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address === address);
-        const currentUserWallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address === this.walletAddress);
-        if (currentUserWallet) {
-          this.$refs.walletsTab.computeBalance(accountDetails, currentUserWallet);
-        }
-        if (wallet) {
-          this.$refs.walletsTab.computeBalance(accountDetails, wallet);
-        }
-      }
-    },
     openWalletTransaction(transactionDetails) {
       if (!this.$refs.walletsTab) {
         return;
@@ -455,22 +400,9 @@ export default {
       const thiss = this;
       watchTransactionStatus(transaction.hash, (receipt) => {
         if (receipt && receipt.status) {
+          this.refreshCurrentWalletBalances(contractDetails);
           const wallet = thiss.wallets && thiss.wallets.find((wallet) => wallet && wallet.address && transaction.to && wallet.address.toLowerCase() === transaction.to.toLowerCase());
-          if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {
-            if (wallet) {
-              contractDetails.contract.methods
-                .isApprovedAccount(wallet.address)
-                .call()
-                .then((approved) => {
-                  if (!wallet.approved) {
-                    wallet.approved = {};
-                  }
-                  thiss.$set(wallet.approved, contractDetails.address, approved ? 'approved' : 'disapproved');
-                  thiss.$set(wallet, 'disapproved', !approved);
-                  thiss.$nextTick(() => thiss.forceUpdate());
-                });
-            }
-          } else if (transaction.contractMethodName === 'transferOwnership') {
+          if (transaction.contractMethodName === 'transferOwnership') {
             if (contractDetails && contractDetails.isContract && contractDetails.address && transaction.contractAddress && contractDetails.address.toLowerCase() === transaction.contractAddress.toLowerCase()) {
               this.$set(contractDetails, 'owner', transaction.to);
               contractDetails.networkId = this.networkId;
@@ -493,104 +425,57 @@ export default {
           } else if (transaction.contractMethodName === 'unPause' || transaction.contractMethodName === 'pause') {
             thiss.$set(contractDetails, 'isPaused', transaction.contractMethodName === 'pause' ? true : false);
             thiss.$nextTick(thiss.forceUpdate);
-          } else if ((!transaction.contractMethodName || transaction.contractMethodName === 'transfer' || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve') && transaction.to) {
-            if (wallet) {
-              const thiss = this;
-              // Wait for Block synchronization with Metamask
-              setTimeout(() => {
-                thiss.refreshWalletBalance(wallet, transaction.contractMethodName ? thiss.principalContract : null, true);
-              }, 2000);
-            }
-          } else if (contractDetails && transaction.to && transaction.to === contractDetails.address) {
-            this.$set(contractDetails, 'loadingBalance', false);
           }
+          // Wait for Block synchronization with Metamask
+          setTimeout(() => {
+            if(wallet && thiss.$refs.walletsTab) {
+              thiss.$refs.walletsTab.refreshWallet(wallet);
+            }
+          }, 2000);
         }
       });
-    },
-    refreshWalletBalance(wallet, contractDetails, disableRefreshInProgress) {
-      if (contractDetails && contractDetails.contract) {
-        return contractDetails.contract.methods
-          .balanceOf(wallet.address)
-          .call()
-          .then((balance, error) => {
-            if (error) {
-              throw new Error('Invalid contract address');
-            }
-            balance = String(balance);
-            balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-            this.$set(wallet, 'balancePrincipal', balance);
-            this.forceUpdate();
-            return this.refreshCurrentWalletBalances(contractDetails);
-          })
-          .catch((error) => {
-            this.error = String(error);
-          })
-          .finally(() => {
-            this.$set(wallet, 'loadingBalancePrincipal', false);
-          });
-      } else {
-        return computeBalance(wallet.address)
-          .then((balanceDetails, error) => {
-            if (error) {
-              this.$set(wallet, 'icon', 'warning');
-              this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
-            } else {
-              this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
-              this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
-            }
-            this.forceUpdate();
-            return this.refreshCurrentWalletBalances();
-          })
-          .catch((error) => {
-            this.error = String(error);
-          })
-          .finally(() => {
-            this.$set(wallet, 'loadingBalance', false);
-          });
-      }
     },
     refreshCurrentWalletBalances(contractDetails) {
       if (!this.walletAddress) {
         return Promise.resolve(null);
       }
       const wallet = this.wallets.find((wallet) => wallet.address && wallet.address.toLowerCase() === this.walletAddress.toLowerCase());
-      return computeBalance(this.walletAddress).then((balanceDetails) => {
-        if (balanceDetails) {
-          this.walletAddressEtherBalance = balanceDetails.balance;
-          this.walletAddressFiatBalance = balanceDetails.balanceFiat;
-          if (wallet) {
-            this.$set(wallet, 'balance', balanceDetails.balance);
-            this.$set(wallet, 'balanceFiat', balanceDetails.balanceFiat);
-          }
+      return this.$refs.walletsTab.refreshWallet(wallet)
+        .then(() => {
+          this.walletAddressEtherBalance = wallet.balance;
+          this.walletAddressFiatBalance = wallet.balanceFiat;
           this.forceUpdate();
           if (this.$refs.walletSummary) {
             this.$refs.walletSummary.$forceUpdate();
           }
-        }
-        if (contractDetails) {
-          contractDetails.contract.methods
-            .balanceOf(this.walletAddress)
-            .call()
-            .then((balance, error) => {
-              if (error) {
-                throw new Error('Invalid contract address');
-              }
-              balance = String(balance);
-              balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-              this.$set(contractDetails, 'balance', balance);
-              if (wallet) {
-                this.$set(wallet, 'balancePrincipal', balance);
-              }
-              this.forceUpdate();
-              if (this.$refs.walletSummary) {
-                this.$refs.walletSummary.$forceUpdate();
-              }
-            })
-            .catch((error) => {
-              this.error = String(error);
-            });
-        }
-      });
+          if (contractDetails && contractDetails.address && contractDetails.isContract) {
+            if (this.principalContract && this.principalContract.address && this.principalContract.address.toLowerCase() === contractDetails.address.toLowerCase()) {
+              this.$set(contractDetails, 'balance', wallet.balancePrincipal);
+            } else {
+              return contractDetails.contract.methods
+                .balanceOf(this.walletAddress)
+                .call()
+                .then((balance, error) => {
+                  if (error) {
+                    throw new Error('Invalid contract address');
+                  }
+                  balance = String(balance);
+                  balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+                  this.$set(contractDetails, 'balance', balance);
+                  if (wallet) {
+                    this.$set(wallet, 'balancePrincipal', balance);
+                  }
+                  this.forceUpdate();
+                  if (this.$refs.walletSummary) {
+                    this.$refs.walletSummary.$forceUpdate();
+                  }
+                })
+            }
+          }
+        })
+        .catch((error) => {
+          this.error = String(error);
+        });
     },
     saveGlobalSettings(globalSettings) {
       this.loading = true;

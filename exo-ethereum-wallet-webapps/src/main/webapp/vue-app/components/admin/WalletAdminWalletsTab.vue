@@ -42,7 +42,7 @@
       hide-actions>
       <template slot="items" slot-scope="props">
         <transition name="fade">
-          <tr v-show="props.item.displayWallet">
+          <tr v-show="props.item.displayedWallet">
             <td class="clickable" @click="openAccountDetail(props.item)">
               <v-avatar size="36px">
                 <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
@@ -393,26 +393,23 @@ export default {
       return this.principalContract && this.principalContract.adminLevel >= 1
     },
     showLoadMore() {
-      return this.wallets.length > this.limit && this.filteredWalletsLength >= this.pageSize;
+      return this.displayedWallets.length === this.limit;
     },
-    filteredWalletsLength() {
-      return this.filteredWallets.length;
+    displayedWallets() {
+      if (this.displayUsers && this.displayDisapprovedWallets && this.displaySpaces && this.displayDisabledWallets && !this.search) {
+        return this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
+      } else {
+        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledWallets || wallet.enabled) && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
+      }
     },
     filteredWallets() {
-      let filteredWallets = null;
-      if (this.displayUsers && this.displayDisapprovedWallets && this.displaySpaces && this.displayDisabledWallets && !this.search) {
-        filteredWallets = this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
-      } else {
-        filteredWallets = this.wallets.filter(wallet => wallet && wallet.address && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledWallets || wallet.enabled) && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
-      }
-      if(filteredWallets && filteredWallets.length) {
-        const lastElement = filteredWallets[filteredWallets.length - 1];
+      if(this.displayedWallets && this.displayedWallets.length) {
+        const lastElement = this.displayedWallets[this.displayedWallets.length - 1];
         const limit = this.wallets.findIndex(wallet => wallet.technicalId === lastElement.technicalId) + 1;
-        filteredWallets = this.wallets.slice(0, limit);
         this.wallets.forEach((wallet, index) => {
-          wallet.displayWallet = index < limit && wallet.address && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledWallets || wallet.enabled) && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0);
+          wallet.displayedWallet = index < limit && wallet.address && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledWallets || wallet.enabled) && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0);
         });
-        return filteredWallets;
+        return this.wallets.slice(0, limit);
       } else {
         return [];
       }
@@ -421,9 +418,7 @@ export default {
   watch: {
     filteredWallets(value, oldValue) {
       if(value.length > 0 && (value.length !== oldValue.length || value[value.length -1].id !== oldValue[oldValue.length -1].id)) {
-        // Filter wallets that wasn't loaded before
-        const walletsToLoad = this.filteredWallets.filter(wallet => wallet && wallet.address && wallet.loadingBalance !== true && wallet.loadingBalance !== false);
-        return this.retrieveWalletsProperties(this.principalContract, walletsToLoad);
+        return this.retrieveWalletsBalances(this.principalContract, this.wallets);
       }
     },
     loadingWallets(value) {
@@ -441,9 +436,6 @@ export default {
         this.seeAccountDetailsPermanent = false;
       }
     },
-    limit() {
-      this.$nextTick().then(() => this.retrieveWalletsProperties(this.principalContract, this.loadingWallets));
-    },
   },
   methods: {
     init(appInitialized) {
@@ -455,15 +447,15 @@ export default {
       if(this.loadingWallets) {
         return;
       }
-      this.loadingWallets = true;
       getWallets()
         .then((wallets) => {
           wallets.forEach(wallet => wallet.approved = {});
           this.wallets = wallets.sort(this.sortByName);
+          // *async* approval retrieval
+          this.retrieveWalletsApproval(this.principalContract, this.wallets);
         })
         .then(() => {
           this.$emit('wallets-loaded', this.wallets);
-          return this.retrieveWalletsProperties(this.principalContract, this.loadingWallets);
         })
         .finally(() => {
           this.loadingWallets = false;
@@ -475,7 +467,7 @@ export default {
       const sortB = b.name.toLocaleLowerCase();
       return (sortA > sortB && 1) || (sortA < sortB && (-1)) || 0; // NOSONAR
     },
-    retrieveWalletsProperties(accountDetails, wallets, i) {
+    retrieveWalletsApproval(accountDetails, wallets, i) {
       if(!wallets || !wallets.length) {
         return;
       }
@@ -485,9 +477,34 @@ export default {
       if(i >= wallets.length) {
         return;
       }
+      return this.loadWalletApproval(accountDetails, wallets[i])
+        .then(() => this.retrieveWalletsApproval(accountDetails, wallets, ++i))
+        // Stop loading wallets only when the first call is finished
+        .finally(() => this.loadingWallets = !i && true);
+    },
+    retrieveWalletsBalances(accountDetails, wallets, i) {
+      if(!wallets || !wallets.length) {
+        return;
+      }
+      if(!i) {
+        i = 0;
+      }
+      if(i >= wallets.length) {
+        return;
+      }
+      if(i === 0 && this.loadingWallets) {
+        return;
+      }
       this.loadingWallets = true;
-      return this.retrieveWalletProperties(accountDetails, wallets[i])
-        .then(() => this.retrieveWalletsProperties(accountDetails, wallets, ++i))
+      const wallet = wallets[i];
+      let promise = null;
+      if (wallet.loadingBalance !== true && wallet.loadingBalance !== false) {
+        // Compute only not already computed balances
+        promise = this.computeBalance(accountDetails, wallet);
+      } else {
+        promise = Promise.resolve(null);
+      }
+      return promise.then(() => this.retrieveWalletsBalances(accountDetails, wallets, ++i))
         // Stop loading wallets only when the first call is finished
         .finally(() => this.loadingWallets = !i && true);
     },
@@ -515,15 +532,13 @@ export default {
       this.$emit('refresh-balance', accountDetails, address, error);
     },
     refreshWallet(wallet) {
-      refreshWallet(wallet).then(() => this.retrieveWalletProperties(this.principalContract, wallet));
-    },
-    retrieveWalletProperties(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
-      return this.computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam)
-        .then(() => this.loadWalletApproval(accountDetails, wallet));
+      return refreshWallet(wallet)
+        .then(() => this.loadWalletApproval(this.principalContract, wallet))
+        .then(() => this.computeBalance(this.principalContract, wallet));
     },
     loadWalletApproval(accountDetails, wallet) {
       if(!accountDetails || !accountDetails.isContract || !accountDetails.contract || !wallet || !wallet.address) {
-        return;
+        return Promise.resolve(null);
       }
       return accountDetails.contract.methods.isApprovedAccount(wallet.address).call()
         .then((approved) => {
@@ -533,7 +548,7 @@ export default {
         });
     },
     computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
-      if(!wallet.address) {
+      if(!wallet.address || !wallet.displayedWallet) {
         return Promise.resolve(null);
       }
       this.$set(wallet, 'loadingBalance', true);
