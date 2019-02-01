@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import SendEtherModal from '../../main/webapp/vue-app/components/SendEtherModal';
 

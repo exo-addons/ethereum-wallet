@@ -4,8 +4,6 @@ import InformationBubble from '../../main/webapp/vue-app/components/InformationB
 
 import {mount} from '@vue/test-utils';
 
-import flushPromises from 'flush-promises';
-
 jest.setTimeout(30000);
 
 describe('informationBubble.test.js', () => {

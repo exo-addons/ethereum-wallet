@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther, approveTokens, approveAccount} from '../TestUtils.js';
+import {getWalletApp, initApp, getTransactions, expectObjectValueEqual, initiateBrowserWallet, sendTokens, approveTokens, approveAccount} from '../TestUtils.js';
 
 import SendDelegatedTokensModal from '../../main/webapp/vue-app/components/SendDelegatedTokensModal.vue';
 
@@ -210,7 +210,7 @@ describe('SendDelegatedTokensModal.test.js', () => {
     global.defaultWalletSettings.enableDelegation = true;
 
     const app = getWalletApp();
-    let accountDetailCmp, contractDetails, senddelegatedTokensModal, delegateTokensModal, initialBalance;
+    let accountDetailCmp, contractDetails, senddelegatedTokensModal, initialBalance;
     return (
       initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
         .then(() => initApp(app))

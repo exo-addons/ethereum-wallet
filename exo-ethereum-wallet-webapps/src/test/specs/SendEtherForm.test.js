@@ -1,9 +1,8 @@
-import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import SendEtherForm from '../../main/webapp/vue-app/components/SendEtherForm';
 
 import {mount} from '@vue/test-utils';
-import {hashCode} from '../../main/webapp/vue-app/WalletUtils.js';
 import flushPromises from 'flush-promises';
 
 jest.setTimeout(30000);

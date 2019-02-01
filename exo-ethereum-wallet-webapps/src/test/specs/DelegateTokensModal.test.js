@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, getTransactions, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import DelegateTokensModal from '../../main/webapp/vue-app/components/DelegateTokensModal.vue';
 

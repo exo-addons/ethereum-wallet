@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual} from '../TestUtils.js';
 
 import AddressAutoComplete from '../../main/webapp/vue-app/components/AddressAutoComplete';
 
@@ -287,7 +287,6 @@ describe('AddressAutoComplete.test.js', () => {
 
     const selectedType = 'user';
     const selectedId = 'testuser3';
-    const selectedName = 'Test User 3';
     const selectedAddress = window.walletAddresses[3];
     const selectedIdType = `${selectedType}_${selectedId}`;
     addressAutoComplete.vm.selectedValue = selectedIdType;
@@ -323,7 +322,6 @@ describe('AddressAutoComplete.test.js', () => {
 
     const selectedType = 'user';
     const selectedId = 'testuser25';
-    const selectedName = null;
     const selectedAddress = null;
     const selectedIdType = `${selectedType}_${selectedId}`;
     addressAutoComplete.vm.selectedValue = selectedIdType;
@@ -402,9 +400,6 @@ describe('AddressAutoComplete.test.js', () => {
 
     const selectedType = 'user';
     const selectedId = 'testuser25';
-    const selectedName = selectedId;
-    const selectedAddress = null;
-    const selectedIdType = `${selectedType}_${selectedId}`;
     addressAutoComplete.vm.selectItem(selectedId, selectedType);
 
     return flushPromises()
@@ -436,7 +431,6 @@ describe('AddressAutoComplete.test.js', () => {
     const selectedType = null;
     const selectedId = 'testuser25';
     const selectedName = selectedId;
-    const selectedAddress = null;
     const selectedIdType = selectedId;
     addressAutoComplete.vm.selectItem(selectedId, selectedType);
 
