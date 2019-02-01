@@ -64,25 +64,18 @@
           </td>
           <td class="text-xs-left">
             <profile-chip
-              v-if="props.item.address"
+              :address="props.item.address"
               :profile-id="props.item.id"
+              :profile-technical-id="props.item.technicalId"
+              :space-id="props.item.spaceId"
+              :profile-type="props.item.type"
               :display-name="props.item.name"
               :enabled="props.item.enabled && !props.item.disabled"
-              tiptip-position="top_left"
+              :disapproved="props.item.disapproved"
+              :deleted-user="props.item.deletedUser"
+              :disabled-user="props.item.disabledUser"
+              :avatar="props.item.avatar"
               display-no-address />
-            <div v-else>
-              <del>
-                <a
-                  :href="props.item.url"
-                  rel="nofollow"
-                  target="_blank"
-                  title="No associated address"
-                  class="red--text">
-                  {{ props.item.name }}
-                </a>
-              </del>
-              (No address)
-            </div>
           </td>
           <td class="text-xs-left">
             <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">

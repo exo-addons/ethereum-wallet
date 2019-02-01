@@ -13,14 +13,17 @@
     </div>
     <v-container>
       <v-layout>
-        <v-flex md4 xs12>
+        <v-flex md3 xs12>
           <v-switch v-model="displayUsers" label="Display users" />
         </v-flex>
-        <v-flex md4 xs12>
+        <v-flex md3 xs12>
+          <v-switch v-model="displaySpaces" label="Display spaces" />
+        </v-flex>
+        <v-flex md3 xs12>
           <v-switch v-model="displayDisabledUsers" label="Display disabled users" />
         </v-flex>
-        <v-flex md4 xs12>
-          <v-switch v-model="displaySpaces" label="Display spaces" />
+        <v-flex md3 xs12>
+          <v-switch v-model="displayDisapprovedWallets" label="Display disapproved wallets" />
         </v-flex>
       </v-layout>
       <v-flex>
@@ -328,6 +331,7 @@ export default {
       appInitialized: false,
       displayUsers: true,
       displaySpaces: true,
+      displayDisapprovedWallets: true,
       displayDisabledUsers: false,
       sameConfiguredNetwork: true,
       selectedTransactionHash: null,
@@ -391,10 +395,10 @@ export default {
       return this.filteredWallets.length;
     },
     filteredWallets() {
-      if (this.displayUsers && this.displayDisabledUsers && this.displaySpaces && !this.search) {
+      if (this.displayUsers && this.displaySpaces && this.displayDisapprovedWallets && this.displayDisabledUsers && !this.search) {
         return this.wallets.filter(wallet => wallet && wallet.address).slice(0, this.limit);
       } else {
-        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
+        return this.wallets.filter(wallet => wallet && wallet.address && (this.displayUsers || wallet.type !== 'user') && (this.displaySpaces || wallet.type !== 'space') && (this.displayDisapprovedWallets || !wallet.disapproved) && (this.displayDisabledUsers || wallet.enabled || wallet.type !== 'user') && (!this.search || wallet.name.toLowerCase().indexOf(this.search.toLowerCase()) >= 0 || wallet.address.toLowerCase().indexOf(this.search.toLowerCase()) >= 0)).slice(0, this.limit);
       }
     }
   },
