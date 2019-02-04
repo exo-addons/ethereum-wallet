@@ -24,10 +24,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.*;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Event;
-import org.web3j.abi.datatypes.generated.Uint256;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.commons.api.notification.model.ArgumentLiteral;
@@ -91,15 +87,7 @@ public class Utils {
 
   public static final String                             SCOPE_NAME                            = "ADDONS_ETHEREUM_WALLET";
 
-  public static final String                             EXT_SCOPE_NAME                        = "ADDONS_ETHEREUM_WALLET_EXT";
-
   public static final String                             GLOBAL_SETTINGS_KEY_NAME              = "GLOBAL_SETTINGS";
-
-  public static final String                             EXT_GAMIFICATION_SETTINGS_KEY_NAME    = "GAMIFICATION_SETTINGS";
-
-  public static final String                             EXT_TOKENS_KUDOS_BUDGET               = "KUDOS_BUDGET";
-
-  public static final String                             EXT_KUDOS_CONTRACT_ADDRESS_KEY_NAME   = "KUDOS_CONTRACT_ADDRESS";
 
   public static final String                             ADDRESS_KEY_NAME                      = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
@@ -111,12 +99,7 @@ public class Utils {
 
   public static final Context                            WALLET_CONTEXT                        = Context.GLOBAL;
 
-  public static final Context                            EXT_WALLET_CONTEXT                    = Context.GLOBAL;
-
   public static final Scope                              WALLET_SCOPE                          = Scope.APPLICATION.id(SCOPE_NAME);
-
-  public static final Scope                              EXT_WALLET_SCOPE                      =
-                                                                          Scope.APPLICATION.id(EXT_SCOPE_NAME);
 
   public static final String                             WALLET_DEFAULT_CONTRACTS_NAME         = "WALLET_DEFAULT_CONTRACTS";
 
@@ -149,9 +132,6 @@ public class Utils {
 
   public static final String                             KNOWN_TRANSACTION_MINED_EVENT         =
                                                                                        "exo.addon.wallet.transaction.mined";
-
-  public static final String                             UPGRADE_NOTIFICATION_SETTINGS         =
-                                                                                       "exo.addon.wallet.notification.upgrade";
 
   public static final String                             NEW_TRANSACTION_EVENT                 =
                                                                                "exo.addon.wallet.transaction.loaded";
@@ -213,10 +193,6 @@ public class Utils {
                                                                                  new ArgumentLiteral<>(FundsRequest.class,
                                                                                                        "fundsRequest");
 
-  public static final ArgumentLiteral<TransactionStatus> TRANSACTION_STATUS_PARAMETER          =
-                                                                                      new ArgumentLiteral<>(TransactionStatus.class,
-                                                                                                            "transactionStatus");
-
   public static final ArgumentLiteral<ContractDetail>    CONTRACT_DETAILS_PARAMETER            =
                                                                                     new ArgumentLiteral<>(ContractDetail.class,
                                                                                                           "contractDetails");
@@ -242,13 +218,6 @@ public class Utils {
       return ConversationState.getCurrent().getIdentity().getUserId();
     }
     return null;
-  }
-
-  public static Event approvalEvent() {
-    return new Event("Approval", Arrays.asList(new TypeReference<Address>(true) {
-    }, new TypeReference<Address>(true) {
-    }, new TypeReference<Uint256>() {
-    }));
   }
 
   public static List<String> getNotificationReceiversUsers(Wallet toAccount, String excludedId) {
