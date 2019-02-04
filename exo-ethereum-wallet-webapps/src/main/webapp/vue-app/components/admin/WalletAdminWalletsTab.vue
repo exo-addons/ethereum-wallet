@@ -63,7 +63,7 @@
                 :avatar="props.item.avatar"
                 display-no-address />
             </td>
-            <td>
+            <td class="clickable" @click="openAccountDetail(props.item)">
               <a
                 v-if="addressEtherscanLink"
                 :href="`${addressEtherscanLink}${props.item.address}`"
