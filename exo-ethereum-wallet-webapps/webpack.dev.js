@@ -24,7 +24,8 @@ module.exports = merge(webpackCommonConfig, {
     wallet: './src/main/webapp/vue-app/wallet-dev.js',
     walletAPI: './src/main/webapp/vue-app/walletAPI.js',
     spaceWallet: './src/main/webapp/vue-app/spaceWallet-dev.js',
-    walletAdmin: './src/main/webapp/vue-app/walletAdmin-dev.js'
+    walletAdmin: './src/main/webapp/vue-app/walletAdmin-dev.js',
+    rewardApp: './src/main/webapp/vue-app/rewardApp.js'
   },
   output: {
     path: '/exo-server/webapps/exo-ethereum-wallet/',

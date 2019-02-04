@@ -136,7 +136,7 @@ public class Utils {
 
   public static final int                                DEFAULT_GAS_PRICE_UPGRADE_VERSION     = 1;
 
-  public static final String                             ADMINISTRATORS_GROUP                  = "/platform/administrators";
+  public static final String                             ADMINISTRATORS_GROUP                  = "/platform/reward";
 
   public static final String                             GLOAL_SETTINGS_CHANGED_EVENT          =
                                                                                       "exo.addon.wallet.settings.changed";

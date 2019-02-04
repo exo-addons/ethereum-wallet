@@ -51,7 +51,7 @@ public class WalletGamificationREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("teams")
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response getTeams() {
     return Response.ok(walletGamificationService.getTeams()).build();
   }
@@ -65,7 +65,7 @@ public class WalletGamificationREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("removeTeam")
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response removeTeam(@QueryParam("id") Long id) {
     if (id == null || id == 0) {
       return Response.status(400).build();
@@ -90,7 +90,7 @@ public class WalletGamificationREST implements ResourceContainer {
   @Path("saveSettings")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response saveSettings(GamificationSettings gamificationSettings) {
     if (gamificationSettings == null) {
       LOG.warn("Bad request sent to server with empty settings");
@@ -116,7 +116,7 @@ public class WalletGamificationREST implements ResourceContainer {
   @Path("saveTeam")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response saveTeam(GamificationTeam gamificationTeam) {
     if (gamificationTeam == null) {
       LOG.warn("Bad request sent to server with empty team");

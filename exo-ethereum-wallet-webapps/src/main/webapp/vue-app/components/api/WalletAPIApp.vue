@@ -1,7 +1,5 @@
 <template>
-  <v-app id="WalletAPIApp" class="hidden">
-    <main>Wallet API Application</main>
-  </v-app>
+  <v-app id="WalletAPIApp" class="hidden" />
 </template>
 
 <script>
