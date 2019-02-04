@@ -19,23 +19,23 @@
     02110-1301 USA, or see the FSF site: http://www.fsf.org.
 
 -->
-<page-set
+<node-navigation
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.gatein.org/xml/ns/gatein_objects_1_6 http://www.gatein.org/xml/ns/gatein_objects_1_6"
         xmlns="http://www.gatein.org/xml/ns/gatein_objects_1_6">
-    <page>
-        <name>walletAdministration</name>
-        <title>Wallet administration</title>
-        <access-permissions>manager:/platform/administrators</access-permissions>
-        <edit-permission>manager:/platform/administrators</edit-permission>
-        <portlet-application>
-            <portlet>
-                <application-ref>exo-ethereum-wallet</application-ref>
-                <portlet-ref>EthereumWalletAdmin</portlet-ref>
-            </portlet>
-            <title>Wallet administration</title>
-            <access-permissions>manager:/platform/administrators</access-permissions>
-            <show-info-bar>false</show-info-bar>
-        </portlet-application>
-    </page>
-</page-set>
+    <priority>3</priority>
+    <page-nodes>
+        <node>
+            <name>rewardAdministration</name>
+            <label>Reward</label>
+            <page-reference>group::/platform/reward::rewardAdministration</page-reference>
+        </node>
+    </page-nodes>
+    <page-nodes>
+        <node>
+            <name>walletAdministration</name>
+            <label>Wallet</label>
+            <page-reference>group::/platform/reward::walletAdministration</page-reference>
+        </node>
+    </page-nodes>
+</node-navigation>

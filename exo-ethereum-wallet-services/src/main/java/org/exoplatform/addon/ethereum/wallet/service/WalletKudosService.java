@@ -80,4 +80,5 @@ public class WalletKudosService {
                        SettingValue.create(kudosContractAddress));
     this.kudosContractAddress = null;
   }
+
 }

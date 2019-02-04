@@ -35,10 +35,10 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 public class WalletKudosREST implements ResourceContainer {
   private static final Log   LOG = ExoLogger.getLogger(WalletKudosREST.class);
 
-  private WalletKudosService extendedWalletService;
+  private WalletKudosService walletKudosService;
 
-  public WalletKudosREST(WalletKudosService extendedWalletService) {
-    this.extendedWalletService = extendedWalletService;
+  public WalletKudosREST(WalletKudosService walletKudosService) {
+    this.walletKudosService = walletKudosService;
   }
 
   /**
@@ -48,9 +48,9 @@ public class WalletKudosREST implements ResourceContainer {
    */
   @Path("getKudosBudget")
   @GET
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response getKudosBudget() {
-    return Response.ok(String.valueOf(extendedWalletService.getKudosBudget())).build();
+    return Response.ok(String.valueOf(walletKudosService.getKudosBudget())).build();
   }
 
   /**
@@ -60,9 +60,9 @@ public class WalletKudosREST implements ResourceContainer {
    */
   @Path("getKudosContract")
   @GET
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response getKudosContract() {
-    return Response.ok(String.valueOf(extendedWalletService.getKudosContract())).build();
+    return Response.ok(String.valueOf(walletKudosService.getKudosContract())).build();
   }
 
   /**
@@ -72,9 +72,9 @@ public class WalletKudosREST implements ResourceContainer {
    */
   @POST
   @Path("saveKudosTotalBudget")
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response saveKudosTotalBudget(@FormParam("budget") double budget) {
-    extendedWalletService.saveKudosTotalBudget(budget);
+    walletKudosService.saveKudosTotalBudget(budget);
     LOG.info("{} saved kudos total budget '{}'", getCurrentUserId(), budget);
     return Response.ok().build();
   }
@@ -86,10 +86,11 @@ public class WalletKudosREST implements ResourceContainer {
    */
   @POST
   @Path("saveKudosContract")
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response saveKudosContract(@FormParam("kudosContract") String kudosContractAddress) {
-    extendedWalletService.saveKudosContract(kudosContractAddress);
+    walletKudosService.saveKudosContract(kudosContractAddress);
     LOG.info("{} saved kudos contract '{}'", getCurrentUserId(), kudosContractAddress);
     return Response.ok().build();
   }
+
 }

@@ -129,7 +129,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Path("enable")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response enableWalletByAddress(@QueryParam("address") String address, @QueryParam("enable") boolean enable) {
     if (StringUtils.isBlank(address)) {
       LOG.warn(EMPTY_ADDRESS_ERROR, address);
@@ -153,7 +153,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @Path("remove")
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response removeWalletByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
       LOG.warn(EMPTY_ADDRESS_ERROR, address);
@@ -352,7 +352,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("list")
-  @RolesAllowed("administrators")
+  @RolesAllowed("reward")
   public Response getWallets() {
     try {
       return Response.ok(accountService.listWallets()).build();
