@@ -191,8 +191,8 @@
       :contract-details="contractDetails"
       :recipients="recipients"
       :period-type="periodType"
-      :start-date-in-seconds="startDateInSeconds"
-      :end-date-in-seconds="endDateInSeconds"
+      :start-date-in-seconds="selectedStartDateInSeconds"
+      :end-date-in-seconds="selectedEndDateInSeconds"
       :default-transaction-label="defaultRewardLabelTemplate"
       :default-transaction-message="defaultRewardMessageTemplate"
       reward-count-field="points"
@@ -257,6 +257,18 @@ export default {
       },
     },
     sentBudget: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
+    startDateInSeconds: {
+      type: Number,
+      default: function() {
+        return 0;
+      },
+    },
+    endDateInSeconds: {
       type: Number,
       default: function() {
         return 0;
@@ -335,6 +347,12 @@ export default {
     },
     selectedDateInSeconds() {
       return this.selectedDate ? new Date(this.selectedDate).getTime() / 1000 : 0;
+    },
+    selectedStartDateInSeconds() {
+      return this.selectedStartDate ? new Date(this.selectedStartDate).getTime() / 1000 : 0;
+    },
+    selectedEndDateInSeconds() {
+      return this.selectedEndDate ? new Date(this.selectedEndDate).getTime() / 1000 : 0;
     },
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
