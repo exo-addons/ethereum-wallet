@@ -130,8 +130,6 @@ export default {
       transactionEtherscanLink: null,
       addressEtherscanLink: null,
       contractDetails: null,
-      selectedStartDate: null,
-      selectedEndDate: null,
       periodType: null,
       networkId: null,
       walletAddress: null,
