@@ -42,11 +42,11 @@ public class RewardTeamService {
     return teamEntities.stream().map(teamEntity -> toDTO(teamEntity)).collect(Collectors.toList());
   }
 
-  public RewardTeam saveTeam(RewardTeam gamificationTeam) {
-    if (gamificationTeam == null) {
+  public RewardTeam saveTeam(RewardTeam rewardTeam) {
+    if (rewardTeam == null) {
       throw new IllegalArgumentException("Empty team to save");
     }
-    RewardTeamEntity teamEntity = fromDTO(gamificationTeam);
+    RewardTeamEntity teamEntity = fromDTO(rewardTeam);
     if (teamEntity.getId() == null || teamEntity.getId() == 0) {
       teamEntity = rewardTeamDAO.create(teamEntity);
     } else {
@@ -56,7 +56,7 @@ public class RewardTeamService {
   }
 
   /**
-   * Remove a Gamification Team/Pool by id
+   * Remove a reward Team/Pool by id
    * 
    * @param id
    * @return

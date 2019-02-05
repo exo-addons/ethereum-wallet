@@ -1,5 +1,15 @@
 <template>
-  <div>
+  <v-flex flat transparent>
+    <v-flex v-if="duplicatedWallets && duplicatedWallets.length" class="text-xs-center">
+      <div class="alert alert-warning">
+        <i class="uiIconWarning"></i> Some users are members of multiple pools, the budget computing could be wrong:
+        <ul>
+          <li v-for="duplicatedWallet in duplicatedWallets" :key="duplicatedWallet.id">
+            <code>{{ duplicatedWallet.name }}</code>
+          </li>
+        </ul>
+      </div>
+    </v-flex>
     <confirm-dialog
       ref="deleteTeamConfirm"
       :loading="loading"
@@ -13,7 +23,7 @@
       ref="teamModal"
       :team="selectedTeam"
       :wallets="wallets"
-      @saved="refresh"
+      @saved="refreshTeams(true)"
       @close="selectedTeam = null" />
     <h3
       v-show="!selectedTeam"
@@ -32,19 +42,13 @@
       </v-btn>
     </h3>
     <h4 v-show="!selectedTeam">
-      <span>Total budget: <strong>{{ computedTotalBudget }} {{ symbol }}</strong></span>
-      <template v-if="rewardType === 'FIXED'">
-        ({{ eligibleUsersCount }} eligible users)
-      </template>
+      <span>Eligible users: <strong>{{ eligibleUsersCount }}</strong></span>
     </h4>
     <h4 v-show="!selectedTeam">
-      <span>Configured budget: <strong>{{ configuredBudget }} {{ symbol }}</strong></span>
-      <template v-if="rewardType === 'FIXED_PER_MEMBER'">
-        ({{ budgetPerMember }} {{ symbol }} per eligible user with {{ eligibleUsersCount }} eligible users)
-      </template>
+      <span>Total budget: <strong>{{ totalBudget }} {{ symbol }}</strong></span>
     </h4>
     <h4 v-show="!selectedTeam">
-      Sent tokens: <strong>{{ sentTotalBudget }} {{ symbol }}</strong>
+      <span>Sent tokens: <strong>{{ sentBudget }} {{ symbol }}</strong></span>
     </h4>
     <v-container
       v-show="!selectedTeam"
@@ -60,7 +64,7 @@
         <v-flex
           slot="item"
           slot-scope="props"
-          class="gamificationTeamCard"
+          class="rewardTeamCard"
           xs12
           sm12
           md6
@@ -145,14 +149,6 @@
                 </v-list-tile>
                 <v-list-tile>
                   <v-list-tile-content>
-                    Eligible/Total earnings:
-                  </v-list-tile-content>
-                  <v-list-tile-content class="align-end">
-                    {{ props.item.totalValidPoints ? props.item.totalValidPoints : 0 }} / {{ props.item.totalPoints ? props.item.totalPoints : 0 }} points
-                  </v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile>
-                  <v-list-tile-content>
                     Budget:
                   </v-list-tile-content>
                   <v-list-tile-content
@@ -179,31 +175,6 @@
                   </v-list-tile-content>
                   <v-list-tile-content v-else class="align-end">
                     {{ toFixed(Number(props.item.computedBudget) / props.item.validMembersWallets.length) }} {{ symbol }}
-                  </v-list-tile-content>
-                </v-list-tile>
-
-                <v-list-tile v-if="props.item.notEnoughRemainingBudget" class="teamCardWarning">
-                  <v-list-tile-content>
-                    <div class="alert alert-warning">
-                      <i class="uiIconWarning"></i> No remaining budget for this pool, please review :
-                      <ul>
-                        <li>
-                          - Total budget allowed in global configuration
-                        </li>
-                        <li>
-                          - <strong>
-                            Fixed
-                          </strong> budget allowed for other pools.
-                        </li>
-                      </ul>
-                    </div>
-                  </v-list-tile-content>
-                </v-list-tile>
-                <v-list-tile v-else-if="props.item.exceedingBudget" class="teamCardWarning">
-                  <v-list-tile-content>
-                    <div class="alert alert-warning">
-                      <i class="uiIconWarning"></i> The pool total budget exceeds the global total budget.
-                    </div>
                   </v-list-tile-content>
                 </v-list-tile>
               </v-list>
@@ -247,14 +218,14 @@
         </v-flex>
       </v-data-iterator>
     </v-container>
-  </div>
+  </v-flex>
 </template>
 
 <script>
-import AddTeamForm from './WalletAdminGamificationAddTeamForm.vue';
+import AddTeamForm from './TeamForm.vue';
 import ConfirmDialog from '../ConfirmDialog.vue';
 
-import {getTeams, saveTeam, removeTeam} from '../../WalletGamificationServices.js';
+import {getRewardTeams, saveRewardTeam, removeRewardTeam} from '../../WalletRewardServices.js';
 
 export default {
   components: {
@@ -268,14 +239,14 @@ export default {
         return [];
       },
     },
-    contractDetails: {
-      type: Object,
+    duplicatedWallets: {
+      type: Array,
       default: function() {
-        return null;
+        return [];
       },
     },
-    rewardType: {
-      type: String,
+    contractDetails: {
+      type: Object,
       default: function() {
         return null;
       },
@@ -286,7 +257,7 @@ export default {
         return null;
       },
     },
-    budgetPerMember: {
+    eligibleUsersCount: {
       type: Number,
       default: function() {
         return 0;
@@ -298,13 +269,7 @@ export default {
         return 0;
       },
     },
-    sentTotalBudget: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    computedTotalBudget: {
+    sentBudget: {
       type: Number,
       default: function() {
         return 0;
@@ -314,7 +279,6 @@ export default {
   data: () => ({
     teams: [],
     teamToDelete: null,
-    teamsRetrieved: false,
     selectedTeam: null,
   }),
   computed: {
@@ -323,17 +287,6 @@ export default {
     },
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
-    },
-    eligibleUsersCount() {
-      return this.wallets ? this.wallets.filter(wallet => wallet.enabled && !wallet.disabled).length : 0;
-    },
-    configuredBudget() {
-      if (this.rewardType === 'FIXED') {
-        return this.totalBudget;
-      } else if (this.rewardType === 'FIXED_PER_MEMBER') {
-        return this.budgetPerMember * this.eligibleUsersCount;
-      }
-      return 0;
     },
   },
   watch: {
@@ -345,42 +298,26 @@ export default {
       }
     },
   },
-  created() {
-    this.refresh();
-  },
   methods: {
     refresh() {
       this.selectedTeam = null;
-      getTeams()
+      this.$emit('refresh');
+    },
+    refreshTeams(refreshAll) {
+      return getRewardTeams()
         .then((teams) => {
           this.teams = teams;
-          this.teamsRetrieved = true;
-          this.$emit('teams-retrieved');
+          if(refreshAll) {
+            this.refresh();
+          }
         })
         .catch((e) => {
           console.debug('Error getting teams list', e);
           this.error = 'Error getting teams list, please contact your administrator';
         });
     },
-    disableTeamWithMembers(team, disable) {
-      this.$set(team, "disabled", disable);
-      if(team.members && team.members.length) {
-        team.members.forEach(member => {
-          if(member.address) {
-            this.$set(member, "disabled", disable);
-          } else {
-            const wallet = this.wallets.find(wallet => wallet.type === 'user' && wallet.id === member.id);
-            if(wallet) {
-              this.$set(wallet, "disabled", disable);
-            }
-          }
-        });
-        this.$emit('teams-retrieved');
-      }
-    },
     disableTeam(team, disable) {
       if(team.id === 0) {
-        this.disableTeamWithMembers(team, disable);
         return;
       }
       const teamToSave = Object.assign({}, team);
@@ -388,8 +325,10 @@ export default {
 
       this.loading = true;
       delete teamToSave.validMembersWallets;
-      return saveTeam(teamToSave)
-        .then(() => this.disableTeamWithMembers(team, disable))
+      return saveRewardTeam(teamToSave)
+        .then(() => {
+          this.refreshTeams(true);
+        })
         .catch((e) => {
           console.debug('Error saving pool', e);
           this.error = 'Error saving pool, please contact your administrator.';
@@ -399,12 +338,11 @@ export default {
         });
     },
     removeTeam(id) {
-      removeTeam(id)
+      removeRewardTeam(id)
         .then((status) => {
           if (status) {
-            this.disableTeamWithMembers(this.teamToDelete, false);
             this.teamToDelete = null;
-            return this.refresh();
+            return this.refreshTeams(true);
           } else {
             this.error = 'Error removing team';
           }

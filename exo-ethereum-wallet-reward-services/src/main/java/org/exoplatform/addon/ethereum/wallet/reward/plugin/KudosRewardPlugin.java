@@ -22,20 +22,18 @@ import java.util.*;
 import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
 import org.exoplatform.addon.ethereum.wallet.reward.service.utils.RewardUtils;
 import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.configuration.ConfigurationManager;
 import org.exoplatform.container.xml.Component;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
-public class GamificationRewardPlugin extends RewardPlugin {
+public class KudosRewardPlugin extends RewardPlugin {
 
-  private static final Log     LOG                          = ExoLogger.getLogger(GamificationRewardPlugin.class);
+  private static final Log     LOG                           = ExoLogger.getLogger(KudosRewardPlugin.class);
 
-  private static final String  GAMIFICATION_SERVICE_FQN     =
-                                                        "org.exoplatform.addons.gamification.service.effective.GamificationService";
+  private static final String  KUDOS_SERVICE_FQN             = "org.exoplatform.addon.kudos.service.KudosService";
 
-  private static final String  FIND_USER_POINTS_METHOD_NAME = "findUserReputationScoreBetweenDate";
+  private static final String  COUNT_USERS_KUDOS_METHOD_NAME = "countKudosByPeriodAndReceiver";
 
   private ConfigurationManager configurationManager;
 
@@ -47,11 +45,11 @@ public class GamificationRewardPlugin extends RewardPlugin {
 
   private boolean              enabled;
 
-  public GamificationRewardPlugin(PortalContainer container, ConfigurationManager configurationManager) {
+  public KudosRewardPlugin(ExoContainer container, ConfigurationManager configurationManager) {
     this.container = container;
     this.configurationManager = configurationManager;
 
-    Component component = this.configurationManager.getComponent(GAMIFICATION_SERVICE_FQN);
+    Component component = this.configurationManager.getComponent(KUDOS_SERVICE_FQN);
     enabled = component != null;
   }
 
@@ -66,18 +64,16 @@ public class GamificationRewardPlugin extends RewardPlugin {
     if (identityIds == null || identityIds.isEmpty()) {
       return earnedPoints;
     }
-    Date startDate = new Date(startDateInSeconds * 1000);
-    Date endDate = new Date(endDateInSeconds * 1000);
     Method method = getMethod();
     if (method == null) {
-      throw new IllegalStateException("Can't find gamification service method to retrieve user points");
+      throw new IllegalStateException("Can't find kudos service method to retrieve user points");
     }
     for (Long identityId : identityIds) {
       long points = 0;
       try {
-        points = (Long) method.invoke(getService(), String.valueOf(identityId), startDate, endDate);
+        points = (Long) method.invoke(getService(), identityId, startDateInSeconds, endDateInSeconds);
       } catch (Exception e) {
-        LOG.warn("Error getting gamification points for user with id {}", identityId, e);
+        LOG.warn("Error getting kudos count for user with id {}", identityId, e);
       }
       earnedPoints.put(identityId, (double) points);
     }
@@ -88,7 +84,7 @@ public class GamificationRewardPlugin extends RewardPlugin {
     if (this.retrievePointsMethod != null) {
       return retrievePointsMethod;
     }
-    retrievePointsMethod = RewardUtils.getMethod(container, GAMIFICATION_SERVICE_FQN, FIND_USER_POINTS_METHOD_NAME);
+    retrievePointsMethod = RewardUtils.getMethod(container, KUDOS_SERVICE_FQN, COUNT_USERS_KUDOS_METHOD_NAME);
     return retrievePointsMethod;
   }
 
@@ -96,7 +92,7 @@ public class GamificationRewardPlugin extends RewardPlugin {
     if (this.serviceInstance != null) {
       return serviceInstance;
     }
-    serviceInstance = RewardUtils.getService(container, GAMIFICATION_SERVICE_FQN);
+    serviceInstance = RewardUtils.getService(container, KUDOS_SERVICE_FQN);
     return serviceInstance;
   }
 

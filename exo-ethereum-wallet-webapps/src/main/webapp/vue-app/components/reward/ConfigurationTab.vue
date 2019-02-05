@@ -1,120 +1,126 @@
 <template>
   <v-card flat>
     <v-card-text>
-      <div class="text-xs-left gamificationWalletConfiguration">
+      <div class="text-xs-left rewardWalletConfiguration">
         <span>
-          Minimal gamification points threshold to reward users:
-        </span>
-        <v-text-field
-          v-model.number="selectedThreshold"
-          :disabled="!configurationEditable"
-          name="threshold"
-          class="input-text-center" />
-      </div>
-      <div class="text-xs-left gamificationWalletConfiguration">
-        <span>
-          Reward periodicity:
+          Periodicity:
         </span>
         <div id="selectedPeriodType" class="selectBoxVuetifyParent v-input">
           <v-combobox
-            v-model="selectedPeriodType"
+            v-model="settingsToSave.periodType"
             :disabled="!configurationEditable"
             :items="periods"
-            :return-object="false"
             attach="#selectedPeriodType"
             class="selectBoxVuetify"
             hide-no-data
             hide-selected
-            small-chips>
-            <!-- Without slot-scope, the template isn't displayed -->
-            <!-- eslint-disable-next-line vue/no-unused-vars -->
-            <template slot="selection" slot-scope="data">
-              {{ selectedPeriodName }}
-            </template>
-          </v-combobox>
+            return-masked-value
+            small-chips />
         </div>
       </div>
-      <div class="text-xs-left mt-4">
-        <div>
-          The total gamification reward buget is set:
+
+      <div class="text-xs-left rewardWalletConfiguration">
+        <span>
+          Token
+        </span>
+        <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
+          <v-combobox
+            v-model="settingsToSave.contractAddress"
+            :disabled="!configurationEditable"
+            :items="contracts"
+            attach="#selectedContractAddress"
+            item-value="address"
+            item-text="name"
+            class="selectBoxVuetify"
+            hide-no-data
+            hide-selected
+            return-masked-value
+            small-chips />
         </div>
-        <v-flex class="ml-4">
-          <v-radio-group v-model="selectedRewardType">
-            <v-radio
-              :disabled="!configurationEditable"
-              value="FIXED"
-              label="By a fixed budget of" />
-            <v-flex v-if="selectedRewardType === 'FIXED'" class="gamificationWalletConfiguration mb-2">
-              <v-text-field
-                v-model.number="selectedTotalBudget"
-                :disabled="!configurationEditable"
-                placeholder="Enter the fixed total budget"
-                type="number"
-                class="pt-0 pb-0"
-                name="totalBudget" />
-              <span>
-                using token
-              </span>
-              <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedContractAddress"
-                  :disabled="!configurationEditable"
-                  :items="contracts"
-                  :return-object="false"
-                  attach="#selectedContractAddress"
-                  item-value="address"
-                  item-text="name"
-                  class="selectBoxVuetify"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
-                  <!-- Without slot-scope, the template isn't displayed -->
-                  <!-- eslint-disable-next-line vue/no-unused-vars -->
-                  <template slot="selection" slot-scope="data">
-                    {{ selectedContractName }}
-                  </template>
-                </v-combobox>
-              </div>
-            </v-flex>
-            <v-radio
-              :disabled="!configurationEditable"
-              value="FIXED_PER_MEMBER"
-              label="By a fixed budget per eligible member on period of" />
-            <v-flex v-if="selectedRewardType === 'FIXED_PER_MEMBER'" class="gamificationWalletConfiguration mb-2">
-              <v-text-field
-                v-model="selectedBudgetPerMember"
-                :disabled="!configurationEditable"
-                placeholder="Enter the fixed budget per eligible member on period"
-                type="number"
-                class="pt-0 pb-0"
-                name="budgetPerMember" />
-              <span>
-                using token
-              </span>
-              <div id="selectedContractAddress" class="selectBoxVuetifyParent v-input">
-                <v-combobox
-                  v-model="selectedContractAddress"
-                  :disabled="!configurationEditable"
-                  :items="contracts"
-                  :return-object="false"
-                  attach="#selectedContractAddress"
-                  item-value="address"
-                  item-text="name"
-                  class="selectBoxVuetify"
-                  hide-no-data
-                  hide-selected
-                  small-chips>
-                  <!-- Without slot-scope, the template isn't displayed -->
-                  <!-- eslint-disable-next-line vue/no-unused-vars -->
-                  <template slot="selection" slot-scope="data">
-                    {{ selectedContractName }}
-                  </template>
-                </v-combobox>
-              </div>
-            </v-flex>
-          </v-radio-group>
-        </v-flex>
       </div>
+      <v-card v-if="settingsToSave && settingsToSave.pluginSettings" flat>
+        <v-container fluid grid-list-lg>
+          <v-layout row wrap>
+            <v-flex
+              v-for="pluginSetting in settingsToSave.pluginSettings"
+              :key="pluginSetting.pluginId"
+              md4
+              xs12>
+              <v-card flat>
+                <v-card-title primary-title>
+                  {{ pluginSetting.pluginId.toUpperCase() }}
+                </v-card-title>
+                <v-card-text>
+                  <div class="text-xs-left rewardWalletConfiguration">
+                    <span>
+                      Minimal threshold to reward users:
+                    </span>
+                    <v-text-field
+                      v-model.number="pluginSetting.threshold"
+                      :disabled="!configurationEditable"
+                      name="threshold"
+                      class="input-text-center" />
+                  </div>
+                  <div class="text-xs-left rewardWalletConfiguration">
+                    <v-checkbox
+                      v-model="pluginSetting.usePools"
+                      :disabled="!configurationEditable"
+                      label="Use pools" />
+                  </div>
+                  <div class="text-xs-left mt-4">
+                    <div>
+                      The reward budget is set:
+                    </div>
+                    <v-flex class="ml-4">
+                      <v-radio-group v-model="pluginSetting.budgetType">
+                        <v-radio
+                          :disabled="!configurationEditable"
+                          value="FIXED"
+                          label="By a fixed budget of" />
+                        <v-flex v-if="pluginSetting.budgetType === 'FIXED'" class="rewardWalletConfiguration mb-2">
+                          <v-text-field
+                            v-model.number="pluginSetting.amount"
+                            :disabled="!configurationEditable"
+                            placeholder="Enter the fixed total budget"
+                            type="number"
+                            class="pt-0 pb-0"
+                            name="totalBudget" />
+                        </v-flex>
+                        <v-radio
+                          :disabled="!configurationEditable"
+                          value="FIXED_PER_MEMBER"
+                          label="By a fixed budget per eligible member" />
+                        <v-flex v-if="pluginSetting.budgetType === 'FIXED_PER_MEMBER'" class="rewardWalletConfiguration mb-2">
+                          <v-text-field
+                            v-model.number="pluginSetting.amount"
+                            :disabled="!configurationEditable"
+                            placeholder="Enter the fixed budget per eligible member on period"
+                            type="number"
+                            class="pt-0 pb-0"
+                            name="budgetPerMember" />
+                        </v-flex>
+                        <v-radio
+                          :disabled="!configurationEditable"
+                          value="FIXED_PER_POINT"
+                          label="By a fixed budget per point" />
+                        <v-flex v-if="pluginSetting.budgetType === 'FIXED_PER_POINT'" class="rewardWalletConfiguration mb-2">
+                          <v-text-field
+                            v-model.number="pluginSetting.amount"
+                            :disabled="!configurationEditable"
+                            placeholder="Enter the fixed budget per aquired point"
+                            type="number"
+                            class="pt-0 pb-0"
+                            name="budgetPerPoint" />
+                        </v-flex>
+                      </v-radio-group>
+                    </v-flex>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-flex>
+          </v-layout>
+        </v-container>
+      </v-card>
     </v-card-text>
     <v-card-actions>
       <v-spacer />
@@ -139,7 +145,7 @@
 </template>
 
 <script>
-import {saveSettings} from '../../WalletGamificationServices.js';
+import {saveRewardSettings} from '../../WalletRewardServices.js';
 
 export default {
   props: {
@@ -154,12 +160,7 @@ export default {
     return {
       loadingSettings: false,
       configurationEditable: false,
-      selectedContractAddress: null,
-      selectedThreshold: null,
-      selectedBudgetPerMember: null,
-      selectedRewardType: 'FIXED',
-      selectedTotalBudget: null,
-      selectedPeriodType: null,
+      settingsToSave: {},
       periods: [
         {
           text: 'Week',
@@ -185,61 +186,55 @@ export default {
     };
   },
   computed: {
-    selectedPeriodName() {
-      const selectedPeriodName = this.periods.find((period) => period.value === this.selectedPeriodType);
-      return selectedPeriodName && selectedPeriodName.text ? selectedPeriodName.text : this.selectedPeriodType && (this.selectedPeriodType.text || this.selectedPeriodType);
-    },
     selectedContractDetails() {
-      return this.selectedContractAddress && this.contracts && this.contracts.find((contract) => contract.address === this.selectedContractAddress);
+      if(!this.settingsToSave || !this.settingsToSave.contractAddress) {
+        return null;
+      }
+      const contractAddress = this.settingsToSave.contractAddress.toLowerCase();
+      return this.contracts && this.contracts.find(contract => contract.address &&  contract.address.toLowerCase() === contractAddress);
     },
-    selectedContractName() {
-      return this.selectedContractDetails && this.selectedContractDetails.name;
+    selectedPeriodType() {
+      if(!this.settingsToSave || !this.settingsToSave.periodType) {
+        return this.periods[0];
+      }
+      return this.periods.find(period => period.value === this.settingsToSave.periodType);
     },
   },
   methods: {
-    init(settings) {
-      if (settings) {
-        this.selectedContractAddress = settings.contractAddress;
-        this.selectedRewardType = settings.rewardType;
-        this.selectedBudgetPerMember = this.budgetPerMember = settings.budgetPerMember;
-        this.selectedTotalBudget = this.totalBudget = settings.totalBudget;
-        this.selectedThreshold = this.threshold = settings.threshold;
-        this.selectedPeriodType = this.periodType = settings.periodType;
+    init() {
+      if (window.walletRewardSettings) {
+        this.settingsToSave = Object.assign({}, window.walletRewardSettings);
+        this.$nextTick().then(() =>{
+          this.settingsToSave.contractAddress = this.selectedContractDetails;
+          this.settingsToSave.periodType = this.selectedPeriodType;
+        });
+      } else {
+        this.settingsToSave = {};
       }
     },
     save() {
       const thiss = this;
+      if(this.settingsToSave.contractAddress) {
+        this.settingsToSave.contractAddress = this.settingsToSave.contractAddress.address;
+      }
+      if(this.settingsToSave.periodType) {
+        this.settingsToSave.periodType = this.settingsToSave.periodType.value;
+      }
       this.loadingSettings = true;
-      this.selectedTotalBudget = this.selectedRewardType === 'FIXED' ? this.selectedTotalBudget : 0;
-      this.selectedBudgetPerMember = this.selectedRewardType === 'FIXED_PER_MEMBER' ? this.selectedBudgetPerMember : 0;
+      // Wait to refresh UI for visual loading icon
       window.setTimeout(() => {
-        saveSettings({
-          totalBudget: thiss.selectedTotalBudget,
-          budgetPerMember: thiss.selectedBudgetPerMember,
-          rewardType: thiss.selectedRewardType,
-          threshold: thiss.selectedThreshold,
-          contractAddress: thiss.selectedContractAddress,
-          periodType: thiss.selectedPeriodType && (thiss.selectedPeriodType.value || thiss.selectedPeriodType),
-        })
-          .then((settings) => {
-            if (settings) {
-              this.init(settings);
-              thiss.configurationEditable = false;
-              return this.$emit('saved', {
-                contractAddress: settings.contractAddress,
-                periodType: settings.periodType,
-                threshold: settings.threshold,
-                rewardType: settings.rewardType,
-                totalBudget: settings.totalBudget,
-                budgetPerMember: settings.budgetPerMember,
-              });
+        saveRewardSettings(this.settingsToSave)
+          .then((saved) => {
+            if (saved) {
+              this.configurationEditable = false;
+              return this.$emit('saved');
             } else {
-              throw new Error("Settings aren't loaded from REST call", settings);
+              throw new Error("Error saving settings");
             }
           })
           .catch((error) => {
-            console.debug("Error while saving 'Gamification settings'", error);
-            thiss.$emit('error', "Error while saving 'Gamification settings'");
+            console.debug("Error while saving 'reward settings'", error);
+            thiss.$emit('error', "Error while saving 'reward settings'");
           })
           .finally(() => {
             thiss.loadingSettings = false;

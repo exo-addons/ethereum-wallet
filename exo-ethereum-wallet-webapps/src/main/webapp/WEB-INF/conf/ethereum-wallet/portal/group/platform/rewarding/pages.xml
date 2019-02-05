@@ -26,30 +26,30 @@
     <page>
         <name>walletAdministration</name>
         <title>Wallet administration</title>
-        <access-permissions>manager:/platform/reward</access-permissions>
-        <edit-permission>manager:/platform/reward</edit-permission>
+        <access-permissions>manager:/platform/rewarding</access-permissions>
+        <edit-permission>manager:/platform/rewarding</edit-permission>
         <portlet-application>
             <portlet>
                 <application-ref>exo-ethereum-wallet</application-ref>
                 <portlet-ref>EthereumWalletAdmin</portlet-ref>
             </portlet>
             <title>Wallet administration</title>
-            <access-permissions>manager:/platform/reward</access-permissions>
+            <access-permissions>manager:/platform/rewarding</access-permissions>
             <show-info-bar>false</show-info-bar>
         </portlet-application>
     </page>
     <page>
         <name>rewardAdministration</name>
         <title>Reward administration</title>
-        <access-permissions>manager:/platform/reward</access-permissions>
-        <edit-permission>manager:/platform/reward</edit-permission>
+        <access-permissions>manager:/platform/rewarding</access-permissions>
+        <edit-permission>manager:/platform/rewarding</edit-permission>
         <portlet-application>
             <portlet>
                 <application-ref>exo-ethereum-wallet</application-ref>
                 <portlet-ref>RewardAdmin</portlet-ref>
             </portlet>
             <title>Reward administration</title>
-            <access-permissions>manager:/platform/reward</access-permissions>
+            <access-permissions>manager:/platform/rewarding</access-permissions>
             <show-info-bar>false</show-info-bar>
         </portlet-application>
     </page>

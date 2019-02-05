@@ -234,7 +234,7 @@ import AddressAutoComplete from '../AddressAutoComplete.vue';
 import ProfileChip from '../ProfileChip.vue';
 
 import {searchSpaces, searchUserOrSpaceObject} from '../../WalletAddressRegistry.js';
-import {saveTeam} from '../../WalletGamificationServices.js';
+import {saveRewardTeam} from '../../WalletRewardServices.js';
 
 export default {
   components: {
@@ -487,7 +487,7 @@ export default {
           },
         };
 
-        return saveTeam(team)
+        return saveRewardTeam(team)
           .then((addedTeam) => {
             if (addedTeam) {
               this.$emit('saved', addedTeam);

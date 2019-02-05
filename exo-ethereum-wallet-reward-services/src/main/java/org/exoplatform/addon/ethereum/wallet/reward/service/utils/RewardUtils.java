@@ -1,6 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.reward.service.utils;
 
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.time.*;
@@ -16,6 +17,8 @@ import org.exoplatform.addon.ethereum.wallet.reward.model.RewardTeamMember;
 import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.api.settings.data.Scope;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.model.Space;
@@ -179,6 +182,42 @@ public class RewardUtils {
 
   public static final String toJsonString(Object object) throws JsonException {
     return JSON_GENERATOR.createJsonObject(object).toString();
+  }
+
+  public static final String getCurrentUserId() {
+    if (ConversationState.getCurrent() != null && ConversationState.getCurrent().getIdentity() != null) {
+      return ConversationState.getCurrent().getIdentity().getUserId();
+    }
+    return null;
+  }
+
+  public static final Method getMethod(ExoContainer container, String serviceName, String methodName) {
+    Object serviceInstance = getService(container, serviceName);
+    if (serviceInstance == null) {
+      return null;
+    }
+
+    Method methodResult = null;
+
+    int i = 0;
+    Method[] declaredMethods = serviceInstance.getClass().getDeclaredMethods();
+    while (methodResult == null && i < declaredMethods.length) {
+      Method method = declaredMethods[i++];
+      if (method.getName().equals(methodName)) {
+        methodResult = method;
+      }
+    }
+    return methodResult;
+  }
+
+  public static final Object getService(ExoContainer container, String serviceName) {
+    Object serviceInstance = null;
+    try {
+      serviceInstance = container.getComponentInstanceOfType(Class.forName(serviceName));
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
+    return serviceInstance;
   }
 
 }

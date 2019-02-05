@@ -70,11 +70,11 @@
 </template>
 
 <script>
-import GasPriceChoice from '../GasPriceChoice.vue';
+import GasPriceChoice from '../../GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../../WalletUtils.js';
-import {saveTransactionDetails} from '../../WalletTransactions.js';
-import {savePeriodRewardTransactions, savePeriodRewardTransaction} from '../../WalletRewardServices.js';
+import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../../../WalletUtils.js';
+import {saveTransactionDetails} from '../../../WalletTransactions.js';
+import {saveRewardTransactions, saveRewardTransaction} from '../../../WalletRewardServices.js';
 
 export default {
   components: {
@@ -124,12 +124,6 @@ export default {
       },
     },
     rewardCountField: {
-      type: String,
-      default: function() {
-        return null;
-      },
-    },
-    walletRewardType: {
       type: String,
       default: function() {
         return null;
@@ -319,7 +313,7 @@ export default {
       Promise.all(rewardTransactionsPromises).then(() => {
         if (rewardTransactions.length) {
           // save all reward transactions again for current period (for consistency check)
-          savePeriodRewardTransactions(rewardTransactions);
+          saveRewardTransactions(rewardTransactions);
           this.$emit("all-sent");
         }
       });
@@ -424,11 +418,10 @@ export default {
                   receiverId: receiverId,
                   receiverIdentityId: receiverIdentityId,
                   tokensAmountSent: String(Number(amountToSendForReceiver)),
-                  walletRewardType: this.walletRewardType,
                 };
                 rewardTransactions.push(rewardTransaction);
 
-                savePeriodRewardTransaction(rewardTransaction)
+                saveRewardTransaction(rewardTransaction)
                   .then(() => {
                     // The transaction has been hashed and will be sent
                     this.$emit('sent', pendingTransaction, contractDetails);

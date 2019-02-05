@@ -48,11 +48,10 @@ public class RewardTransactionService {
    * @param walletRewardType
    * @return
    */
-  public List<JSONObject> getPeriodRewardTransactions(Long networkId,
+  public List<JSONObject> getRewardTransactions(Long networkId,
                                                       String periodType,
-                                                      long startDateInSeconds,
-                                                      String walletRewardType) {
-    String periodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds, walletRewardType);
+                                                      long startDateInSeconds) {
+    String periodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds);
     SettingValue<?> periodTransactionsValue =
                                             settingService.get(REWARD_CONTEXT, REWARD_SCOPE, periodTransactionsParamName);
 
@@ -71,7 +70,7 @@ public class RewardTransactionService {
    * 
    * @param rewardTransaction
    */
-  public void savePeriodRewardTransaction(RewardTransaction rewardTransaction) {
+  public void saveRewardTransaction(RewardTransaction rewardTransaction) {
     if (rewardTransaction == null) {
       throw new IllegalArgumentException("rewardTransaction parameter is mandatory");
     }
@@ -95,8 +94,7 @@ public class RewardTransactionService {
     }
 
     String rewardPeriodTransactionsParamName = getPeriodTransactionsParamName(rewardTransaction.getPeriodType(),
-                                                                              rewardTransaction.getStartDateInSeconds(),
-                                                                              rewardTransaction.getWalletRewardType());
+                                                                              rewardTransaction.getStartDateInSeconds());
     SettingValue<?> periodTransactionsValue = settingService.get(REWARD_CONTEXT,
                                                                  REWARD_SCOPE,
                                                                  rewardPeriodTransactionsParamName);
@@ -114,7 +112,7 @@ public class RewardTransactionService {
     }
   }
 
-  private String getPeriodTransactionsParamName(String periodType, long startDateInSeconds, String walletRewardType) {
-    return walletRewardType + periodType + startDateInSeconds;
+  private String getPeriodTransactionsParamName(String periodType, long startDateInSeconds) {
+    return periodType + startDateInSeconds;
   }
 }

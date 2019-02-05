@@ -73,7 +73,7 @@
             <field name="predefinedOwner">
               <collection type="java.util.HashSet">
                 <value>
-                  <string>/platform/reward</string>
+                  <string>/platform/rewarding</string>
                 </value>
               </collection>
             </field>

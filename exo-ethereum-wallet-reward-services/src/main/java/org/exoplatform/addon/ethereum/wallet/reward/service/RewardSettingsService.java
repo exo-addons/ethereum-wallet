@@ -20,9 +20,11 @@ import static org.exoplatform.addon.ethereum.wallet.reward.service.utils.RewardU
 
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
+
+import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
 import org.exoplatform.addon.ethereum.wallet.reward.model.RewardPluginSettings;
 import org.exoplatform.addon.ethereum.wallet.reward.model.RewardSettings;
-import org.exoplatform.addon.ethereum.wallet.reward.plugin.RewardPlugin;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
@@ -43,9 +45,11 @@ public class RewardSettingsService {
   }
 
   public RewardSettings getSettings() throws JsonException {
+    // Retrieve cached reward settings
     if (this.rewardSettings != null) {
-      return this.rewardSettings;
+      return this.rewardSettings.clone();
     }
+
     SettingValue<?> settingsValue =
                                   settingService.get(REWARD_CONTEXT, REWARD_SCOPE, REWARD_SETTINGS_KEY_NAME);
 
@@ -53,9 +57,29 @@ public class RewardSettingsService {
                                                                                            : settingsValue.getValue().toString();
 
     RewardSettings storedRewardSettings = fromJsonString(settingsValueString, RewardSettings.class);
+    if (storedRewardSettings == null) {
+      storedRewardSettings = new RewardSettings();
+    }
+
+    Set<RewardPluginSettings> pluginSettings = storedRewardSettings.getPluginSettings();
+    if (pluginSettings == null) {
+      pluginSettings = new HashSet<>();
+      storedRewardSettings.setPluginSettings(pluginSettings);
+    }
+
+    // Add configured plugin settings if not already stored
+    Set<String> configuredPluginIds = rewardPlugins.keySet();
+    if (!configuredPluginIds.isEmpty()) {
+      for (String configuredPluginId : configuredPluginIds) {
+        if (pluginSettings.stream().noneMatch(plugin -> StringUtils.equals(plugin.getPluginId(), configuredPluginId))) {
+          RewardPluginSettings emptyRewardSettings = new RewardPluginSettings();
+          emptyRewardSettings.setPluginId(configuredPluginId);
+          pluginSettings.add(emptyRewardSettings);
+        }
+      }
+    }
 
     // Check enabled plugins
-    Set<RewardPluginSettings> pluginSettings = storedRewardSettings.getPluginSettings();
     for (RewardPluginSettings rewardPluginSettings : pluginSettings) {
       if (rewardPluginSettings != null) {
         String pluginId = rewardPluginSettings.getPluginId();
@@ -67,6 +91,8 @@ public class RewardSettingsService {
         rewardPluginSettings.setEnabled(enabled);
       }
     }
+
+    // Cache reward settings
     this.rewardSettings = storedRewardSettings;
     return this.rewardSettings;
   }
@@ -74,6 +100,8 @@ public class RewardSettingsService {
   public void saveSettings(RewardSettings rewardSettingsToStore) throws JsonException {
     String settingsString = toJsonString(rewardSettingsToStore);
     settingService.set(REWARD_CONTEXT, REWARD_SCOPE, REWARD_SETTINGS_KEY_NAME, SettingValue.create(settingsString));
+
+    // Purge cached settings
     this.rewardSettings = null;
   }
 

@@ -76,7 +76,7 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("save")
-  @RolesAllowed("reward")
+  @RolesAllowed("administrators")
   public Response saveSettings(GlobalSettings globalSettings) {
     if (globalSettings == null) {
       LOG.warn("Bad request sent to server with empty settings");

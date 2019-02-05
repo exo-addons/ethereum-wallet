@@ -65,6 +65,11 @@
     max-width: 100%;
   }
 
+  .applicationToolbar {
+    border: 1px solid #ccc;
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.17);
+  }
   .v-input input {
     margin-bottom: 0;
     border: 0;
@@ -620,7 +625,44 @@
     padding-bottom: 100px;
   }
 
-  .kudosWalletConfiguration, .gamificationWalletConfiguration {
+  .selectBoxVuetify .v-select__selections {
+    line-height: 17px;
+  }
+
+  .input-text-center {
+    &, & input {
+      text-align: center;
+    }
+  }
+
+  .dateSelector {
+    width: 288px;
+
+    input {
+      text-align: center;
+    }
+  }
+}
+
+#RewardApp {
+
+  #addTeamButton {
+    position: absolute;
+    top: 17px;
+  }
+
+  .teamCardWarning {
+    .v-list__tile {
+      height: auto;
+    }
+    .alert-warning {
+      line-height: 19px;
+      margin: 0;
+      padding: 5px 10px;
+    }
+  }
+
+  .rewardWalletConfiguration {
     &  > * {
       display: inline-block;
     }
@@ -634,58 +676,10 @@
     }
   }
 
-  .selectBoxVuetify .v-select__selections {
-    line-height: 17px;
-  }
-
-  .input-text-center {
-    &, & input {
-      text-align: center;
-    }
-  }
-
   .rewardPoolForm > * {
     box-sizing: border-box;
   }
 
-  #gamificationTab {
-    .v-tabs__bar {
-      background-color: #f9f9f9;
-      border-radius: 0 0 3px 3px;
-      box-shadow: 0 0 1px rgba(0,0,0,0.17);
-      border: 1px solid #ccc;
-      border-left: 0;
-      border-right: 0;
-    }
-
-    #addTeamButton {
-      position: absolute;
-      top: 17px;
-    }
-
-    .v-tabs__item--active {
-      background: #d8d6d6;
-    }
-
-    .teamCardWarning {
-      .v-list__tile {
-        height: auto;
-      }
-      .alert-warning {
-        line-height: 19px;
-        margin: 0;
-        padding: 5px 10px;
-      }
-    }
-  }
-
-  .dateSelector {
-    width: 288px;
-
-    input {
-      text-align: center;
-    }
-  }
 }
 
 /* Override uiPopup !important attributes */

@@ -4,7 +4,14 @@
     color="transaprent"
     flat>
     <main>
-      <v-layout>
+      <v-layout column>
+        <v-flex>
+          <v-card class="applicationToolbar mb-3" flat>
+            <v-card-text class="pt-2 pb-2">
+              <strong>Reward administration</strong>
+            </v-card-text>
+          </v-card>
+        </v-flex>
         <v-flex class="white text-xs-center" flat>
           <div v-if="error && !loading" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ error }}
@@ -13,17 +20,10 @@
           <wallet-setup
             ref="walletSetup"
             :wallet-address="originalWalletAddress"
-            :refresh-index="refreshIndex"
             :loading="loading"
-            class="mb-3"
             is-administration
-            @loading="loadingContracts = true"
-            @end-loading="loadingContracts = false"
             @refresh="init()"
-            @error="
-              loadingContracts = false;
-              error = $event;
-            " />
+            @error="error = $event" />
 
           <v-dialog
             v-model="loading"
@@ -40,65 +40,61 @@
             </v-card>
           </v-dialog>
 
-          <wallet-summary
-            v-if="walletAddress && accountsDetails"
-            ref="walletSummary"
-            :accounts-details="accountsDetails"
-            :overview-accounts="overviewAccounts"
-            :principal-account="principalAccountAddress"
-            :refresh-index="refreshIndex"
-            :network-id="networkId"
-            :wallet-address="walletAddress"
-            :ether-balance="walletAddressEtherBalance"
-            :total-balance="walletAddressEtherBalance"
-            :total-fiat-balance="walletAddressFiatBalance"
-            :fiat-symbol="fiatSymbol"
-            :loading="loading"
-            is-maximized
-            hide-actions
-            @refresh-balance="refreshBalance"
-            @error="error = $event" />
+          <v-flex v-if="isContractDifferentFromPrincipal" class="text-xs-center">
+            <div class="alert alert-warning">
+              <i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token
+            </div>
+          </v-flex>
 
           <v-tabs v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
-            <v-tab
-              v-if="sameConfiguredNetwork"
-              key="kudosList"
-              :class="kudosListRetrieved || 'hidden'">
-              Kudos
+            <v-tab key="SendRewards">
+              Send Rewards
             </v-tab>
-            <v-tab
-              v-if="sameConfiguredNetwork"
-              key="gamificationTab"
-              :class="gamificationRetrieved || 'hidden'">
-              Gamification
+            <v-tab key="RewardPools">
+              Reward pools
+            </v-tab>
+            <v-tab key="Configuration">
+              Configuration
             </v-tab>
           </v-tabs>
-
+      
           <v-tabs-items v-model="selectedTab">
-            <v-tab-item v-if="sameConfiguredNetwork" id="kudosList">
-              <kudos-tab
-                v-if="!loading"
-                ref="kudosList"
+            <v-tab-item id="SendRewards">
+              <send-rewards-tab
+                ref="sendRewards"
                 :wallets="wallets"
                 :wallet-address="walletAddress"
-                :contracts="contracts"
-                :principal-account="principalAccountAddress"
+                :contract-details="contractDetails"
+                :period-type="rewardSettings.periodType"
+                :transaction-etherscan-link="transactionEtherscanLink"
+                :total-budget="totalBudget"
+                :sent-budget="sentBudget"
+                :eligible-users-count="eligibleUsersCount"
+                @dates-changed="refreshRewards"
                 @pending="pendingTransaction"
-                @open-wallet-transaction="openWalletTransaction"
-                @list-retrieved="kudosListRetrieved = true" />
+                @success="successTransaction"
+                @error="error = $event" />
             </v-tab-item>
-            <v-tab-item v-if="sameConfiguredNetwork" id="gamificationTab">
-              <gamification-tab
-                v-if="!loading"
-                ref="kudosList"
+            <v-tab-item id="RewardPools">
+              <teams-list-tab
+                ref="rewardTeams"
                 :wallets="wallets"
-                :wallet-address="walletAddress"
+                :contract-details="contractDetails"
+                :period="periodDatesDisplay"
+                :total-budget="totalBudget"
+                :sent-budget="sentBudget"
+                :eligible-users-count="eligibleUsersCount"
+                @teams-refreshed="refreshRewardSettings"
+                @refresh="refreshRewards"
+                @error="error = $event" />
+            </v-tab-item>
+            <v-tab-item id="Configuration">
+              <configuration-tab
+                ref="configurationTab"
                 :contracts="contracts"
-                :principal-account="principalAccountAddress"
-                @pending="pendingTransaction"
-                @open-wallet-transaction="openWalletTransaction"
-                @list-retrieved="gamificationRetrieved = true" />
+                @saved="refreshRewardSettings"
+                @error="error = $event" />
             </v-tab-item>
           </v-tabs-items>
         </v-flex>
@@ -108,100 +104,90 @@
 </template>
 
 <script>
-import KudosTab from './WalletAdminKudosTab.vue';
-import GamificationTab from './WalletAdminGamificationTab.vue';
+import SendRewardsTab from './SendRewardsTab.vue';
+import TeamsListTab from './TeamsListTab.vue';
+import ConfigurationTab from './ConfigurationTab.vue';
 
 import WalletSetup from '../WalletSetup.vue';
-import WalletSummary from '../WalletSummary.vue';
 
 import * as constants from '../../WalletConstants.js';
-import {saveContractAddressOnServer} from '../../WalletToken.js';
-import {initWeb3, initSettings, watchTransactionStatus, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../../WalletUtils.js';
+
+import {getRewardSettings, computeRewards} from '../../WalletRewardServices.js';
+import {getContractsDetails} from '../../WalletToken.js';
+import {initWeb3, initSettings, getWallets, getTransactionEtherscanlink, getAddressEtherscanlink} from '../../WalletUtils.js';
 
 export default {
   components: {
-    KudosTab,
-    GamificationTab,
-    WalletSummary,
+    SendRewardsTab,
+    TeamsListTab,
+    ConfigurationTab,
     WalletSetup,
   },
   data() {
     return {
       loading: false,
-      loadingSettings: false,
-      loadingContracts: false,
-      selectedTab: true,
-      sameConfiguredNetwork: true,
-      fiatSymbol: '$',
-      refreshIndex: 1,
-      originalWalletAddress: null,
-      walletAddress: null,
-      walletAddressEtherBalance: null,
-      walletAddressFiatBalance: null,
-      principalContract: null,
-      principalAccount: null,
-      principalAccountAddress: null,
-      accountsDetails: null,
-      overviewAccounts: null,
-      loadingWallets: false,
-      networkId: null,
-      tokenEtherscanLink: null,
+      selectedTab: null,
+      transactionEtherscanLink: null,
       addressEtherscanLink: null,
-      selectedTransactionHash: null,
-      kudosListRetrieved: false,
-      gamificationRetrieved: false,
-      initialFunds: [],
-      contracts: [],
+      contractDetails: null,
+      selectedStartDate: null,
+      selectedEndDate: null,
+      periodType: null,
+      networkId: null,
+      walletAddress: null,
+      originalWalletAddress: null,
+      duplicatedWallets: [],
+      rewardSettings: {},
+      teams: [],
       wallets: [],
+      contracts: [],
     };
   },
-  watch: {
-    kudosListRetrieved() {
-      if (this.kudosListRetrieved) {
-        window.dispatchEvent(new Event('resize'));
-      }
+  computed: {
+    validUsers() {
+      return this.wallets.filter(wallet => wallet.enabled && !wallet.disabled);
     },
-    gamificationRetrieved() {
-      if (this.gamificationRetrieved) {
-        window.dispatchEvent(new Event('resize'));
-      }
+    eligibleUsersCount() {
+      return this.validUsers.filter(wallet =>  wallet.tokensToSend || wallet.tokensSent).length;
     },
-    selectedTab() {
-      this.$nextTick(() => {
-        window.dispatchEvent(new Event('resize'));
-      });
-    },
-    loading() {
-      if (!this.loading) {
-        this.$nextTick(() => {
-          window.dispatchEvent(new Event('resize'));
+    sentBudget() {
+      if (this.wallets && this.wallets.length) {
+        let sentTokens = 0;
+        this.wallets.forEach((wallet) => {
+          sentTokens += (Number(wallet.tokensSent) || 0);
         });
+        return sentTokens;
+      } else {
+        return 0;
+      }
+    },
+    totalBudget() {
+      if (this.wallets && this.wallets.length) {
+        let totalBudget = 0;
+        this.wallets.forEach((wallet) => {
+          totalBudget += (Number(wallet.tokensSent) || Number(wallet.tokensToSend) || 0);
+        });
+        return totalBudget;
+      } else {
+        return 0;
       }
     },
   },
   created() {
     this.init()
-      .then(() => (this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId)))
+      .then(() => (this.transactionEtherscanLink = getTransactionEtherscanlink(this.networkId)))
       .then(() => (this.addressEtherscanLink = getAddressEtherscanlink(this.networkId)));
   },
   methods: {
-    init(ignoreContracts) {
+    init() {
       this.loading = true;
-      this.loadingSettings = true;
-      this.loadingContracts = true;
-      this.showAddContractModal = false;
-      this.forceUpdate();
-      this.selectedOverviewAccounts = [];
-      this.error = null;
-
       return initSettings()
         .then(() => {
           if (!window.walletSettings) {
-            this.forceUpdate();
             throw new Error('Wallet settings are empty for current user');
           }
         })
-        .then(() => ignoreContracts || initWeb3(false, true))
+        .then(() => initWeb3(false, true))
         .catch((error) => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
             console.debug('Error connecting to network', error);
@@ -215,342 +201,149 @@ export default {
           this.walletAddress = window.localWeb3 && window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
           this.originalWalletAddress = window.walletSettings.userPreferences.walletAddress;
           this.networkId = window.walletSettings.currentNetworkId;
-          if (this.walletAddress) {
-            return computeBalance(this.walletAddress);
-          }
+
+          return getContractsDetails(this.walletAddress, this.networkId, true, true);
         })
-        .then((balanceDetails) => {
-          if (balanceDetails) {
-            this.walletAddressEtherBalance = balanceDetails.balance;
-            this.walletAddressFiatBalance = balanceDetails.balanceFiat;
-          }
+        .then((contracts) => (this.contracts = contracts ? contracts.filter((contract) => contract.isDefault) : []))
+        .then(() => getWallets())
+        .then((wallets) => {
+          this.wallets = wallets ? wallets.filter(wallet => wallet && wallet.address && wallet.enabled && wallet.type === 'user') : [];
         })
-        .then(() => this.$refs.walletSetup && this.$refs.walletSetup.init())
-        .then(() => this.$refs.generalTab && this.$refs.generalTab.init())
-        .then(() => this.$refs.fundsTab && this.$refs.fundsTab.init())
-        .then(() => this.$refs.advancedTab && this.$refs.advancedTab.init())
-        .then(() => {
-          this.sameConfiguredNetwork = String(this.networkId) === String(window.walletSettings.defaultNetworkId);
-          this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
-          this.loadingSettings = false;
-        })
-        .then(() => this.$refs.contractsTab && this.$refs.contractsTab.init())
-        .then(() => this.$refs && this.$refs.generalTab && this.$refs.generalTab.setSelectedValues())
-        .then(() => this.$refs && this.$refs.walletsTab && this.$refs.walletsTab.init(true))
-        .catch((error) => {
-          if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
-            console.debug('Error retrieving contracts', error);
-            if (!this.error) {
-              this.error = 'Error retrieving contracts';
-            }
-          } else {
-            this.error = 'Please configure your wallet';
-          }
-        })
+        .then(() => this.refreshRewardSettings())
         .catch((e) => {
           console.debug('init method - error', e);
           this.error = `Error encountered: ${e}`;
         })
         .finally(() => {
-          this.loadingContracts = this.loadingSettings = this.loadingWallets = this.loading = false;
-          this.forceUpdate();
-        });
-    },
-    pendingTransaction(transaction) {
-      const recipient = transaction.to.toLowerCase();
-      const wallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address === recipient);
-      if (wallet) {
-        if (transaction.contractAddress) {
-          if(!transaction.contractMethodName || transaction.contractMethodName === 'transfer'  || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve') {
-            this.$set(wallet, 'loadingBalancePrincipal', true);
-          }
-          this.watchPendingTransaction(transaction, this.principalContract);
-        } else {
-          this.$set(wallet, 'loadingBalance', true);
-          this.watchPendingTransaction(transaction);
-        }
-      } else {
-        const contract = this.contracts.find((contract) => contract && contract.address && contract.address.toLowerCase() === recipient.toLowerCase());
-        if (contract) {
-          this.$set(contract, 'loadingBalance', true);
-          if (this.$refs.contractDetail) {
-            this.$refs.contractDetail.newTransactionPending(transaction, contract);
-          }
-        }
-      }
-      if (this.$refs.walletSummary) {
-        this.$refs.walletSummary.loadPendingTransactions();
-      }
-    },
-    refreshBalance(accountDetails, address, error) {
-      if (this.walletAddress) {
-        computeBalance(this.walletAddress).then((balanceDetails) => {
-          if (balanceDetails) {
-            this.walletAddressEtherBalance = balanceDetails.balance;
-            this.walletAddressFiatBalance = balanceDetails.balanceFiat;
-          }
-        });
-      }
-      if (error) {
-        console.debug('Error while proceeding transaction', error);
-        this.contracts.forEach((contract) => {
-          if (contract.loadingBalance) {
-            this.$set(contract, 'loadingBalance', false);
-          }
-        });
-        this.wallets.forEach((wallet) => {
-          if (wallet.loadingBalance || wallet.loadingBalancePrincipal) {
-            this.$set(wallet, 'icon', 'warning');
-            this.$set(wallet, 'error', `Error proceeding transaction: ${error}`);
-            // Update wallet stateus: admin, approved ...
-            if (this.$refs.contractDetail) {
-              this.$refs.contractDetail.retrieveAccountDetails(wallet);
-            }
-          }
-        });
-        return;
-      }
-      const contract = this.contracts.find((contract) => contract && address && contract.address && contract.address.toLowerCase() === address.toLowerCase());
-      if (contract) {
-        computeBalance(address)
-          .then((balanceDetails, error) => {
-            if (!error) {
-              this.$set(contract, 'contractBalance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
-            }
-            this.forceUpdate();
-          })
-          .catch((error) => {
-            this.error = String(error);
-          })
-          .finally(() => {
-            this.$set(contract, 'loadingBalance', false);
-          });
-      } else if (this.$refs.walletsTab) {
-        const wallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address === address);
-        const currentUserWallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address === this.walletAddress);
-        if (currentUserWallet) {
-          this.$refs.walletsTab.computeBalance(accountDetails, currentUserWallet);
-        }
-        if (wallet) {
-          this.$refs.walletsTab.computeBalance(accountDetails, wallet);
-        }
-      }
-    },
-    openWalletTransaction(transactionDetails) {
-      if (!this.$refs.walletsTab) {
-        return;
-      }
-      const wallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address.toLowerCase() === transactionDetails.address.toLowerCase());
-      if (wallet && this.$refs.walletsTab) {
-        this.selectedTab = 4;
-        this.$refs.walletsTab.openAccountDetail(wallet, transactionDetails.hash);
-      }
-    },
-    watchPendingTransaction(transaction, contractDetails) {
-      if (this.$refs.walletSummary) {
-        this.$refs.walletSummary.loadPendingTransactions();
-      }
-      const thiss = this;
-      watchTransactionStatus(transaction.hash, (receipt) => {
-        if (receipt && receipt.status) {
-          const wallet = thiss.wallets && thiss.wallets.find((wallet) => wallet && wallet.address && transaction.to && wallet.address.toLowerCase() === transaction.to.toLowerCase());
-          if (transaction.contractMethodName === 'approveAccount' || transaction.contractMethodName === 'disapproveAccount') {
-            if (wallet) {
-              contractDetails.contract.methods
-                .isApprovedAccount(wallet.address)
-                .call()
-                .then((approved) => {
-                  if (!wallet.approved) {
-                    wallet.approved = {};
-                  }
-                  thiss.$set(wallet.approved, contractDetails.address, approved ? 'approved' : 'disapproved');
-                  thiss.$set(wallet, 'disapproved', !approved);
-                  thiss.$nextTick(() => thiss.forceUpdate());
-                });
-            }
-          } else if (transaction.contractMethodName === 'transferOwnership') {
-            if (contractDetails && contractDetails.isContract && contractDetails.address && transaction.contractAddress && contractDetails.address.toLowerCase() === transaction.contractAddress.toLowerCase()) {
-              this.$set(contractDetails, 'owner', transaction.to);
-              contractDetails.networkId = this.networkId;
-              return saveContractAddressOnServer(contractDetails).then(() => this.init());
-            }
-          } else if (transaction.contractMethodName === 'addAdmin' || transaction.contractMethodName === 'removeAdmin') {
-            if (wallet) {
-              contractDetails.contract.methods
-                .getAdminLevel(wallet.address)
-                .call()
-                .then((level) => {
-                  if (!wallet.accountAdminLevel) {
-                    wallet.accountAdminLevel = {};
-                  }
-                  level = Number(level);
-                  thiss.$set(wallet.accountAdminLevel, contractDetails.address, level ? level : 'not admin');
-                  thiss.$nextTick(() => thiss.forceUpdate());
-                });
-            }
-          } else if (transaction.contractMethodName === 'unPause' || transaction.contractMethodName === 'pause') {
-            thiss.$set(contractDetails, 'isPaused', transaction.contractMethodName === 'pause' ? true : false);
-            thiss.$nextTick(thiss.forceUpdate);
-          } else if ((!transaction.contractMethodName || transaction.contractMethodName === 'transfer' || transaction.contractMethodName === 'transferFrom' || transaction.contractMethodName === 'approve') && transaction.to) {
-            if (wallet) {
-              const thiss = this;
-              // Wait for Block synchronization with Metamask
-              setTimeout(() => {
-                thiss.refreshWalletBalance(wallet, transaction.contractMethodName ? thiss.principalContract : null, true);
-              }, 2000);
-            }
-          } else if (contractDetails && transaction.to && transaction.to === contractDetails.address) {
-            this.$set(contractDetails, 'loadingBalance', false);
-          }
-        }
-      });
-    },
-    refreshWalletBalance(wallet, contractDetails, disableRefreshInProgress) {
-      if (contractDetails && contractDetails.contract) {
-        return contractDetails.contract.methods
-          .balanceOf(wallet.address)
-          .call()
-          .then((balance, error) => {
-            if (error) {
-              throw new Error('Invalid contract address');
-            }
-            balance = String(balance);
-            balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-            this.$set(wallet, 'balancePrincipal', balance);
-            this.forceUpdate();
-            return this.refreshCurrentWalletBalances(contractDetails);
-          })
-          .catch((error) => {
-            this.error = String(error);
-          })
-          .finally(() => {
-            this.$set(wallet, 'loadingBalancePrincipal', false);
-          });
-      } else {
-        return computeBalance(wallet.address)
-          .then((balanceDetails, error) => {
-            if (error) {
-              this.$set(wallet, 'icon', 'warning');
-              this.$set(wallet, 'error', `Error retrieving balance of wallet: ${error}`);
-            } else {
-              this.$set(wallet, 'balance', balanceDetails && balanceDetails.balance ? balanceDetails.balance : 0);
-              this.$set(wallet, 'balanceFiat', balanceDetails && balanceDetails.balanceFiat ? balanceDetails.balanceFiat : 0);
-            }
-            this.forceUpdate();
-            return this.refreshCurrentWalletBalances();
-          })
-          .catch((error) => {
-            this.error = String(error);
-          })
-          .finally(() => {
-            this.$set(wallet, 'loadingBalance', false);
-          });
-      }
-    },
-    refreshCurrentWalletBalances(contractDetails) {
-      if (!this.walletAddress) {
-        return Promise.resolve(null);
-      }
-      const wallet = this.wallets.find((wallet) => wallet.address && wallet.address.toLowerCase() === this.walletAddress.toLowerCase());
-      return computeBalance(this.walletAddress).then((balanceDetails) => {
-        if (balanceDetails) {
-          this.walletAddressEtherBalance = balanceDetails.balance;
-          this.walletAddressFiatBalance = balanceDetails.balanceFiat;
-          if (wallet) {
-            this.$set(wallet, 'balance', balanceDetails.balance);
-            this.$set(wallet, 'balanceFiat', balanceDetails.balanceFiat);
-          }
-          this.forceUpdate();
-          if (this.$refs.walletSummary) {
-            this.$refs.walletSummary.$forceUpdate();
-          }
-        }
-        if (contractDetails) {
-          contractDetails.contract.methods
-            .balanceOf(this.walletAddress)
-            .call()
-            .then((balance, error) => {
-              if (error) {
-                throw new Error('Invalid contract address');
-              }
-              balance = String(balance);
-              balance = convertTokenAmountReceived(balance, contractDetails.decimals);
-              this.$set(contractDetails, 'balance', balance);
-              if (wallet) {
-                this.$set(wallet, 'balancePrincipal', balance);
-              }
-              this.forceUpdate();
-              if (this.$refs.walletSummary) {
-                this.$refs.walletSummary.$forceUpdate();
-              }
-            })
-            .catch((error) => {
-              this.error = String(error);
-            });
-        }
-      });
-    },
-    saveGlobalSettings(globalSettings) {
-      this.loading = true;
-      this.loadingSettings = true;
-      const defaultInitialFundsMap = {};
-      if (!globalSettings.initialFunds) {
-        if (window.walletSettings.initialFunds && window.walletSettings.initialFunds.length) {
-          window.walletSettings.initialFunds.forEach((initialFund) => {
-            defaultInitialFundsMap[initialFund.address] = initialFund.amount;
-          });
-        }
-      }
-      let reloadContract = false;
-      if (globalSettings.defaultNetworkId) {
-        reloadContract = String(window.walletSettings.defaultNetworkId) !== String(globalSettings.defaultNetworkId);
-      }
-      const currentGlobalSettings = Object.assign({}, window.walletSettings, {initialFunds: defaultInitialFundsMap});
-      const globalSettingsToSave = Object.assign(currentGlobalSettings, globalSettings);
-      if(globalSettingsToSave.contractAbi) {
-        delete globalSettingsToSave.contractAbi;
-      }
-      if(globalSettingsToSave.contractBin) {
-        delete globalSettingsToSave.contractBin;
-      }
-      if(globalSettingsToSave.contractBin) {
-        delete globalSettingsToSave.contractBin;
-      }
-      if(globalSettingsToSave.userPreferences) {
-        delete globalSettingsToSave.userPreferences;
-      }
-      delete globalSettingsToSave.walletEnabled;
-      delete globalSettingsToSave.admin;
-      return fetch('/portal/rest/wallet/api/global-settings/save', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(globalSettingsToSave),
-      })
-        .then((resp) => {
-          if (resp && resp.ok) {
-            return resp.text();
-          } else {
-            throw new Error('Error saving global settings');
-          }
-        })
-        .then(() => {
-          window.setTimeout(() => {
-            this.init(!reloadContract);
-          }, 200);
-        })
-        .catch((e) => {
           this.loading = false;
-          console.debug('fetch global-settings - error', e);
-          this.error = 'Error saving global settings';
         });
     },
-    forceUpdate() {
-      this.refreshIndex++;
-      this.$forceUpdate();
+    refreshRewardSettings() {
+      this.loading = true;
+      return getRewardSettings()
+        .then(settings => {
+          this.rewardSettings = settings;
+          if(this.rewardSettings) {
+            if (this.contracts && this.contracts.length && this.rewardSettings.contractAddress) {
+              const contractAddress = this.rewardSettings.contractAddress.toLowerCase();
+              this.contractDetails = this.contracts.find(contract  => contract && contract.address && contract.address.toLowerCase() === contractAddress);
+            }
+            this.periodType = this.rewardSettings.periodType;
+          }
+          this.$refs.configurationTab.init();
+          return this.$nextTick();
+        })
+        .then(() => this.$refs.rewardTeams.refreshTeams())
+        .then(() => this.$refs.sendRewards.refreshDates())
+        .then(() => this.$nextTick())
+        .then(() => this.refreshRewards())
+        .finally(() => this.loading = false);
+    },
+    refreshRewards() {
+      this.loading = true;
+      const teams = this.$refs.rewardTeams.teams;
+
+      this.duplicatedWallets = [];
+
+      // Check enabled/disabled wallets
+      this.wallets.forEach((wallet) => wallet.disabled = false);
+      teams.forEach((team) => {
+        if (team.id && team.members) {
+          team.members.forEach((memberObject) => {
+            const wallet = this.wallets.find((wallet) => wallet && wallet.id && wallet.technicalId === memberObject.identityId);
+            if (wallet) {
+              wallet.disabled = team.disabled;
+            }
+          });
+        }
+      });
+
+      const validWallets = this.wallets.filter(wallet => wallet.enabled && !wallet.disabled);
+      return this.$nextTick()
+        .then(() => {
+          const identityIds = validWallets.map(wallet => wallet.technicalId);
+          return computeRewards(identityIds, this.$refs.sendRewards.selectedDateInSeconds)
+        })
+        .then(rewardDetails => {
+          if(rewardDetails.error) {
+            this.error = rewardDetails.error;
+            return;
+          }
+          this.wallets.forEach(wallet => {
+            wallet.rewards = [];
+            wallet.tokensToSend = 0;
+            delete wallet.rewardTeams;
+          });
+
+          validWallets.forEach(wallet => {
+            wallet.rewards = rewardDetails.filter(rewardDetail => rewardDetail.identityId === wallet.technicalId);
+            wallet.tokensToSend = wallet.rewards.reduce((sum, reward) => sum + reward.amount, 0);
+            delete wallet.rewardTeams;
+          });
+
+          teams.forEach((team) => {
+            team.validMembersWallets = [];
+            team.computedBudget = 0;
+
+            if (team.id && team.members) {
+              team.members.forEach((memberObject) => {
+                const wallet = this.wallets.find((wallet) => wallet && wallet.id && wallet.technicalId === memberObject.identityId);
+                if (wallet) {
+                  if (wallet.rewardTeams && wallet.rewardTeams.length) {
+                    wallet.rewardTeams.push(team);
+                    this.duplicatedWallets.push(wallet);
+                  } else {
+                    this.$set(wallet, 'rewardTeams', [team]);
+                  }
+                  if(wallet.tokensSent || wallet.tokensToSend) {
+                    team.validMembersWallets.push(wallet);
+                  }
+                  wallet.disabled = team.disabled;
+                  if(wallet.disabled) {
+                    wallet.rewards = [];
+                    wallet.tokensToSend = 0;
+                  }
+                }
+              });
+            }
+          });
+
+          const membersWithEmptyTeam = this.wallets.filter((wallet) => !wallet.rewardTeams || !wallet.rewardTeams.length);
+          if (membersWithEmptyTeam && membersWithEmptyTeam.length) {
+            const validMembersWallets = [];
+            membersWithEmptyTeam.forEach(wallet => {
+              if(wallet.tokensSent || wallet.tokensToSend) {
+                validMembersWallets.push(wallet);
+              }
+            });
+
+            // Members with no Team
+            let noTeamMembers = teams.find(team => !team.id);
+            if(!noTeamMembers) {
+              noTeamMembers = {
+                id: 0,
+                name: 'No pool users',
+                description: 'Users with no associated pool',
+                rewardType: 'COMPUTED',
+                computedBudget: 0,
+              };
+              teams.push(noTeamMembers);
+            }
+            noTeamMembers.members = membersWithEmptyTeam;
+            noTeamMembers.validMembersWallets = validMembersWallets;
+          }
+
+          if (teams && teams.length) {
+            teams.sort((team1, team2) => Number(team1.id) - Number(team2.id));
+          }
+
+          teams.forEach((team) => {
+            if (team.validMembersWallets && team.validMembersWallets.length) {
+              team.computedBudget = team.validMembersWallets.reduce((total, wallet) => total += wallet.tokensSent || wallet.tokensToSend || 0, 0);
+            }
+          });
+        })
+        .finally(() => this.loading = false);
     },
   },
 };

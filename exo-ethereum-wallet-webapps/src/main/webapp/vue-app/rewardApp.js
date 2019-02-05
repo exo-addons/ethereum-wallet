@@ -1,6 +1,5 @@
 import WalletAPIApp from './components/reward/RewardApp.vue';
 import {toFixed} from './WalletUtils.js';
-
 import './../css/main.less';
 
 Vue.prototype.toFixed = toFixed;
