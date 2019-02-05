@@ -213,20 +213,6 @@ export default {
       wallets: [],
     };
   },
-  watch: {
-    selectedTab() {
-      this.$nextTick(() => {
-        window.dispatchEvent(new Event('resize'));
-      });
-    },
-    loading() {
-      if (!this.loading) {
-        this.$nextTick(() => {
-          window.dispatchEvent(new Event('resize'));
-        });
-      }
-    },
-  },
   created() {
     this.init()
       .then(() => (this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId)))
@@ -297,7 +283,7 @@ export default {
         })
         .catch((e) => {
           console.debug('init method - error', e);
-          this.error = `Error encountered: ${e}`;
+          this.error = String(e);
         })
         .finally(() => {
           this.loadingContracts = this.loadingSettings = this.loadingWallets = this.loading = false;

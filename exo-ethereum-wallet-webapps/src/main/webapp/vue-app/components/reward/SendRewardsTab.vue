@@ -1,25 +1,46 @@
 <template>
-  <v-flex>
-    <v-card-title class="text-xs-center">
-      <div v-if="error && String(error).trim() != '{}'" class="alert alert-error v-content">
+  <v-card flat>
+    <v-card-text v-if="error && String(error).trim() != '{}'" class="text-xs-center">
+      <div class="alert alert-error">
         <i class="uiIconError"></i> {{ error }}
       </div>
-    </v-card-title>
+    </v-card-text>
+    <v-card-text v-if="!contractDetails" class="text-xs-center">
+      <div class="alert alert-warning">
+        <i class="uiIconWarning"></i> No token currency is configured, please review <a href="javascript:void(0);" @click="selectedTab = 2">settings</a>
+      </div>
+    </v-card-text>
+    <v-card-text
+      class="text-xs-center"
+      data-app>
+      <v-menu
+        ref="selectedDateMenu"
+        v-model="selectedDateMenu"
+        transition="scale-transition"
+        lazy
+        offset-y
+        class="dateSelector">
+        <v-text-field
+          slot="activator"
+          v-model="periodDatesDisplay"
+          label="Select the period date"
+          prepend-icon="event" />
+        <v-date-picker
+          v-model="selectedDate"
+          :first-day-of-week="1"
+          :type="!periodType || periodType === 'WEEK' ? 'date' : 'month'"
+          @input="selectedDateMenu = false" />
+      </v-menu>
+    </v-card-text>
     <div class="ml-5 mr-5">
-      <h4 v-show="!selectedTeam">
-        <span>Total budget: <strong>{{ computedTotalBudget }} {{ symbol }}</strong></span>
-        <template v-if="rewardType === 'FIXED'">
-          ({{ eligibleUsersCount }} eligible users)
-        </template>
+      <h4>
+        <span>Eligible users: <strong>{{ eligibleUsersCount }}</strong></span>
       </h4>
-      <h4 v-show="!selectedTeam">
-        <span>Configured budget: <strong>{{ configuredBudget }} {{ symbol }}</strong></span>
-        <template v-if="rewardType === 'FIXED_PER_MEMBER'">
-          ({{ budgetPerMember }} {{ symbol }} per eligible user with {{ eligibleUsersCount }} eligible users)
-        </template>
+      <h4>
+        <span>Total budget: <strong>{{ totalBudget }} {{ symbol }}</strong></span>
       </h4>
-      <h4 v-show="!selectedTeam">
-        Sent tokens: <strong>{{ sentTotalBudget }} {{ symbol }}</strong>
+      <h4>
+        <span>Sent tokens: <strong>{{ sentBudget }} {{ symbol }}</strong></span>
       </h4>
     </div>
     <v-container>
@@ -37,6 +58,7 @@
           hide-details />
       </v-flex>
     </v-container>
+
     <v-data-table
       v-model="selectedIdentitiesList"
       :headers="identitiesHeaders"
@@ -52,7 +74,7 @@
         <tr :active="props.selected">
           <td>
             <v-checkbox
-              v-if="props.item.address && props.item.points && props.item.enabled && !props.item.disabled && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.enabled && !props.item.disabled && props.item.tokensToSend && (!props.item.status || props.item.status === 'error')"
               :input-value="props.selected"
               hide-details
               @click="props.selected = !props.selected" />
@@ -78,8 +100,8 @@
               display-no-address />
           </td>
           <td class="text-xs-left">
-            <ul v-if="props.item.gamificationTeams && props.item.gamificationTeams.length">
-              <li v-for="team in props.item.gamificationTeams" :key="team.id">
+            <ul v-if="props.item.rewardTeams && props.item.rewardTeams.length">
+              <li v-for="team in props.item.rewardTeams" :key="team.id">
                 {{ team.name }}
               </li>
             </ul>
@@ -90,10 +112,9 @@
           <td>
             <a
               v-if="props.item.hash"
-              href="javascript:void(0);"
+              :href="`${transactionEtherscanLink}${props.item.hash}`"
               target="_blank"
-              title="Open transaction in wallet"
-              @click="$emit('open-wallet-transaction', props.item)">
+              title="Open in etherscan">
               Open in wallet
             </a> <span v-else>
               -
@@ -108,8 +129,8 @@
                 warning
               </v-icon>
               <v-icon
-                v-else-if="!props.item.points || props.item.points < threshold"
-                :title="`No enough points, minimum: ${threshold} points`"
+                v-else-if="!props.item.tokensToSend"
+                :title="`No enough earned points`"
                 color="warning">
                 warning
               </v-icon>
@@ -130,11 +151,10 @@
           </td>
           <td>
             <v-text-field
-              v-if="props.item.address && props.item.points && props.item.enabled && !props.item.disabled && props.item.points >= threshold && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address&& props.item.enabled && !props.item.disabled && (!props.item.status || props.item.status === 'error')"
               v-model.number="props.item.tokensToSend"
               type="number"
-              class="input-text-center"
-              @change="refreshIndex++" />
+              class="input-text-center" />
             <template v-else-if="props.item.status === 'success' || props.item.status === 'pending'">
               <span>{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
             </template>
@@ -144,7 +164,9 @@
             </template>
           </td>
           <td>
-            {{ props.item.points }}
+            <v-btn icon small>
+              <v-icon size="16">fa-plus</v-icon>
+            </v-btn>
           </td>
         </tr>
       </template>
@@ -160,9 +182,6 @@
           </strong>
         </td>
         <td>
-          <strong>
-            {{ totalPoints }}
-          </strong>
         </td>
       </template>
     </v-data-table>
@@ -174,20 +193,19 @@
       :period-type="periodType"
       :start-date-in-seconds="startDateInSeconds"
       :end-date-in-seconds="endDateInSeconds"
-      :wallet-reward-type="walletRewardType"
       :default-transaction-label="defaultRewardLabelTemplate"
       :default-transaction-message="defaultRewardMessageTemplate"
       reward-count-field="points"
       @sent="newPendingTransaction"
       @error="error = $event" />
-  </v-flex>
+  </v-card>
 </template>
 
 <script>
-import SendRewardModal from './WalletAdminSendRewardModal.vue';
+import SendRewardModal from './modal/SendModal.vue';
 import ProfileChip from '../ProfileChip.vue';
 
-import {getPeriodRewardTransactions} from '../../WalletRewardServices.js';
+import {getRewardTransactions, getRewardDates} from '../../WalletRewardServices.js';
 import {watchTransactionStatus} from '../../WalletUtils.js';
 
 export default {
@@ -202,40 +220,10 @@ export default {
         return [];
       },
     },
-    walletRewardType: {
-      type: String,
-      default: function() {
-        return null;
-      },
-    },
     walletAddress: {
       type: String,
       default: function() {
         return null;
-      },
-    },
-    loading: {
-      type: Boolean,
-      default: function() {
-        return false;
-      },
-    },
-    identitiesList: {
-      type: Array,
-      default: function() {
-        return [];
-      },
-    },
-    contractDetails: {
-      type: Object,
-      default: function() {
-        return null;
-      },
-    },
-    threshold: {
-      type: Number,
-      default: function() {
-        return 0;
       },
     },
     periodType: {
@@ -244,22 +232,22 @@ export default {
         return null;
       },
     },
-    startDateInSeconds: {
-      type: Number,
+    contractDetails: {
+      type: Object,
       default: function() {
-        return 0;
+        return null;
       },
     },
-    endDateInSeconds: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    rewardType: {
+    transactionEtherscanLink: {
       type: String,
       default: function() {
         return null;
+      },
+    },
+    eligibleUsersCount: {
+      type: Number,
+      default: function() {
+        return 0;
       },
     },
     totalBudget: {
@@ -268,19 +256,7 @@ export default {
         return 0;
       },
     },
-    budgetPerMember: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    sentTotalBudget: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    computedTotalBudget: {
+    sentBudget: {
       type: Number,
       default: function() {
         return 0;
@@ -291,10 +267,13 @@ export default {
     return {
       search: '',
       displayDisabledUsers: false,
-      defaultRewardLabelTemplate: '{rewardCount} gamification points earned for period: {startDate} to {endDate}',
-      defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} gamification points {earned in pool_label} for period: {startDate} to {endDate}',
-      refreshIndex: 1,
+      defaultRewardLabelTemplate: '{rewardCount} reward points earned for period: {startDate} to {endDate}',
+      defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} reward points {earned in pool_label} for period: {startDate} to {endDate}',
       selectedIdentitiesList: [],
+      selectedDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
+      selectedDateMenu: false,
+      selectedStartDate: null,
+      selectedEndDate: null,
       identitiesHeaders: [
         {
           text: '',
@@ -313,7 +292,7 @@ export default {
           text: 'Pools',
           align: 'center',
           sortable: false,
-          value: 'gamificationTeams',
+          value: 'rewardTeams',
         },
         {
           text: 'Transaction',
@@ -335,51 +314,42 @@ export default {
           width: '80px',
         },
         {
-          text: 'Points',
+          text: '',
           align: 'center',
-          sortable: true,
-          value: 'points',
+          sortable: false,
+          value: 'actions',
+          width: '80px',
         },
       ],
     };
   },
   computed: {
+    periodDatesDisplay() {
+      if (this.selectedStartDate && this.selectedEndDate) {
+        return `${this.selectedStartDate} to ${this.selectedEndDate}`;
+      } else if (this.selectedStartDate) {
+        return this.selectedStartDate;
+      } else {
+        return '';
+      }
+    },
+    selectedDateInSeconds() {
+      return this.selectedDate ? new Date(this.selectedDate).getTime() / 1000 : 0;
+    },
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
-    eligibleUsersCount() {
-      return this.wallets ? this.wallets.filter(wallet => wallet.enabled && !wallet.disabled).length : 0;
-    },
-    configuredBudget() {
-      if (this.rewardType === 'FIXED') {
-        return this.totalBudget;
-      } else if (this.rewardType === 'FIXED_PER_MEMBER') {
-        return this.budgetPerMember * this.eligibleUsersCount;
-      }
-      return 0;
-    },
     recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.points && item.enabled && !item.disabled && item.points >= this.threshold && item.tokensToSend && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.enabled && !item.disabled && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
     validRecipients() {
-      return this.identitiesList ? this.identitiesList.filter((item) => item.address && item.enabled && !item.disabled && item.points >= this.threshold) : [];
+      return this.wallets ? this.wallets.filter((item) => item.address && item.tokensToSend && item.enabled && !item.disabled) : [];
     },
     filteredIdentitiesList() {
-      return this.refreshIndex && this.identitiesList ? this.identitiesList.filter((wallet) => (this.displayDisabledUsers || !wallet.disabled) && this.filterItemFromList(wallet, this.search)) : [];
+      return this.wallets ? this.wallets.filter((wallet) => (this.displayDisabledUsers || !wallet.disabled) && this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
       return this.validRecipients.filter((item) => !item.status || item.status === 'error');
-    },
-    totalPoints() {
-      if (this.filteredIdentitiesList) {
-        let result = 0;
-        this.filteredIdentitiesList.forEach((wallet) => {
-          result += Number(wallet.points);
-        });
-        return result;
-      } else {
-        return 0;
-      }
     },
     totalTokens() {
       if (this.filteredIdentitiesList) {
@@ -394,11 +364,23 @@ export default {
     },
   },
   watch: {
-    refreshIndex() {
-      this.$forceUpdate();
-    },
+    selectedDate() {
+      this.refreshDates()
+        .then(() => this.$nextTick())
+        .then(() => this.$emit('dates-changed'));
+    }
   },
   methods: {
+    refreshDates() {
+      return getRewardDates(new Date(this.selectedDate), this.periodType)
+        .then((period) => {
+          this.selectedStartDate = this.formatDate(new Date(period.startDateInSeconds * 1000));
+          this.selectedEndDate = this.formatDate(new Date(period.endDateInSeconds * 1000));
+        });
+    },
+    computeTokensToSend() {
+      this.$forceUpdate();
+    },
     filterItemFromList(wallet, searchText) {
       if (!searchText || !searchText.length) {
         return true;
@@ -412,12 +394,12 @@ export default {
       if (address.indexOf(searchText) > -1) {
         return true;
       }
-      if (searchText === '-' && (!wallet.gamificationTeams || !wallet.gamificationTeams.length)) {
+      if (searchText === '-' && (!wallet.rewardTeams || !wallet.rewardTeams.length)) {
         return true;
       }
       const teams =
-        wallet.gamificationTeams && wallet.gamificationTeams.length
-          ? wallet.gamificationTeams
+        wallet.rewardTeams && wallet.rewardTeams.length
+          ? wallet.rewardTeams
               .map((team) => team.name)
               .join(',')
               .toLowerCase()
@@ -452,11 +434,11 @@ export default {
           });
         }
       } else {
-        getPeriodRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.startDateInSeconds, this.walletRewardType).then((resultTransactions) => {
+        getRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.startDateInSeconds).then((resultTransactions) => {
           if (resultTransactions) {
             resultTransactions.forEach((resultTransaction) => {
               if (resultTransaction) {
-                const resultWallet = this.identitiesList.find((resultWallet) => resultWallet.type === resultTransaction.receiverType && (resultWallet.id === resultTransaction.receiverId || resultWallet.identityId === resultTransaction.receiverIdentityId));
+                const resultWallet = this.wallets.find((resultWallet) => resultWallet.type === resultTransaction.receiverType && (resultWallet.id === resultTransaction.receiverId || resultWallet.identityId === resultTransaction.receiverIdentityId));
                 if (resultWallet) {
                   this.$set(resultWallet, 'tokensSent', resultTransaction.tokensAmountSent ? Number(resultTransaction.tokensAmountSent) : 0);
                   this.$set(resultWallet, 'hash', resultTransaction.hash);
@@ -473,10 +455,17 @@ export default {
                 }
               }
             });
-            this.$forceUpdate();
           }
         });
       }
+    },
+    formatDate(date) {
+      if (!date) {
+        return null;
+      }
+      const dateString = date.toString();
+      // Example: 'Feb 01 2018'
+      return dateString.substring(dateString.indexOf(' ') + 1, dateString.indexOf(':') - 3);
     },
   },
 };

@@ -3,8 +3,55 @@
   for more details. You should have received a copy of the GNU Lesser General Public License along with this software; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA, or see the FSF site: http://www.fsf.org. -->
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd" xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
 
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.dao.RewardTeamDAO</type>
+  </component>
 
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardTransactionService</type>
+  </component>
 
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardTeamService</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardSettingsService</type>
+    <component-plugins>
+      <component-plugin>
+        <name>gamification</name>
+        <set-method>registerPlugin</set-method>
+        <type>org.exoplatform.addon.ethereum.wallet.reward.plugin.GamificationRewardPlugin</type>
+        <description>Gamification points reward plugin</description>
+      </component-plugin>
+      <component-plugin>
+        <name>kudos</name>
+        <set-method>registerPlugin</set-method>
+        <type>org.exoplatform.addon.ethereum.wallet.reward.plugin.KudosRewardPlugin</type>
+        <description>Kudos reward plugin</description>
+      </component-plugin>
+    </component-plugins>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardService</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.rest.RewardTransactionREST</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.rest.RewardTeamREST</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.rest.RewardSettingsREST</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.rest.RewardBudgetREST</type>
+  </component>
 
   <external-component-plugins>
     <target-component>org.exoplatform.commons.api.persistence.DataInitializer</target-component>

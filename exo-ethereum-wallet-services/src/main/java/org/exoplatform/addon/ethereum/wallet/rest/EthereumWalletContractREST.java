@@ -77,7 +77,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
 
   @GET
   @Path("bin/{name}")
-  @RolesAllowed("reward")
+  @RolesAllowed({ "rewarding", "administrators" })
   public Response getBin(@PathParam("name") String name) {
     if (StringUtils.isBlank(name)) {
       LOG.warn("Empty resource name");
@@ -99,7 +99,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("abi/{name}")
-  @RolesAllowed("reward")
+  @RolesAllowed({ "rewarding", "administrators" })
   public Response getAbi(@PathParam("name") String name) {
     if (StringUtils.isBlank(name)) {
       LOG.warn("Empty resource name");
@@ -128,7 +128,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("save")
-  @RolesAllowed("reward")
+  @RolesAllowed("administrators")
   public Response saveContract(ContractDetail contractDetail) {
     if (contractDetail == null) {
       LOG.warn("Can't save empty contract");
@@ -163,7 +163,7 @@ public class EthereumWalletContractREST implements ResourceContainer {
    */
   @POST
   @Path("remove")
-  @RolesAllowed("reward")
+  @RolesAllowed("administrators")
   public Response removeContract(@FormParam("address") String address, @FormParam("networkId") Long networkId) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Can't remove empty address for contract");

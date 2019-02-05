@@ -34,7 +34,6 @@
         :default-transaction-label="defaultTransactionLabel"
         :default-transaction-message="defaultTransactionMessage"
         :reward-count-field="rewardCountField"
-        :wallet-reward-type="walletRewardType"
         class="pt-4"
         @sent="$emit('sent', $event, contractDetails)"
         @close="dialog = false"
@@ -44,7 +43,7 @@
 </template>
 
 <script>
-import SendRewardForm from './WalletAdminSendRewardForm.vue';
+import SendRewardForm from './SendForm.vue';
 
 export default {
   components: {
@@ -94,12 +93,6 @@ export default {
       },
     },
     rewardCountField: {
-      type: String,
-      default: function() {
-        return null;
-      },
-    },
-    walletRewardType: {
       type: String,
       default: function() {
         return null;

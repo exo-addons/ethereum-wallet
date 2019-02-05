@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2018 eXo Platform SAS.
+ * Copyright (C) 2003-2019 eXo Platform SAS.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,16 +16,16 @@
  */
 package org.exoplatform.addon.ethereum.wallet.reward.service;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import static org.exoplatform.addon.ethereum.wallet.reward.service.utils.RewardUtils.timeFromSeconds;
+
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
 import org.exoplatform.addon.ethereum.wallet.reward.model.*;
-import org.exoplatform.addon.ethereum.wallet.reward.plugin.RewardPlugin;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 /**
@@ -42,7 +42,7 @@ public class RewardService {
     this.rewardTeamService = rewardTeamService;
   }
 
-  public void computeReward(Set<Long> identityIds, Date periodDate) {
+  public Set<RewardMemberDetail> computeReward(Set<Long> identityIds, long periodDateInSeconds) {
     Collection<RewardPlugin> rewardPlugins = rewardSettingsService.getRewardPlugins();
     RewardSettings rewardSettings;
     try {
@@ -62,9 +62,7 @@ public class RewardService {
     }
 
     RewardPeriodType periodType = rewardSettings.getPeriodType();
-    RewardPeriod periodOfTime = periodType.getPeriodOfTime(LocalDateTime.ofEpochSecond(periodDate.getTime() / 1000,
-                                                                                       0,
-                                                                                       ZoneOffset.UTC));
+    RewardPeriod periodOfTime = periodType.getPeriodOfTime(timeFromSeconds(periodDateInSeconds));
 
     Set<RewardMemberDetail> rewardMemberDetails = new HashSet<>();
     for (RewardPlugin rewardPlugin : rewardPlugins) {
@@ -75,8 +73,11 @@ public class RewardService {
                                                                    periodOfTime.getStartDateInSeconds(),
                                                                    periodOfTime.getEndDateInSeconds());
       RewardPluginSettings rewardPluginSettings = getPluginSetting(pluginSettings, rewardPlugin.getPluginId());
-      computeBudget(rewardPluginSettings, earnedPoints, rewardMemberDetails);
+      if (rewardPluginSettings != null) {
+        computeReward(rewardPluginSettings, earnedPoints, rewardMemberDetails);
+      }
     }
+    return rewardMemberDetails;
   }
 
   private RewardPluginSettings getPluginSetting(Set<RewardPluginSettings> pluginSettings, String pluginId) {
@@ -88,7 +89,7 @@ public class RewardService {
     return null;
   }
 
-  private void computeBudget(RewardPluginSettings rewardPluginSettings,
+  private void computeReward(RewardPluginSettings rewardPluginSettings,
                              Map<Long, Double> earnedPoints,
                              Set<RewardMemberDetail> rewardMemberDetails) {
     RewardBudgetType budgetType = rewardPluginSettings.getBudgetType();
@@ -96,21 +97,90 @@ public class RewardService {
     double threshold = rewardPluginSettings.getThreshold();
     double configuredPluginAmount = rewardPluginSettings.getAmount();
     if (configuredPluginAmount < 0) {
-      throw new IllegalStateException("Plugin with id " + pluginId + " has a configured negative reward amount ("
+      throw new IllegalStateException("Plugin " + pluginId + " has a configured negative reward amount ("
           + configuredPluginAmount + ")");
     }
 
-    Set<Entry<Long, Double>> identitiesPointsEntries = earnedPoints.entrySet();
+    // Filter non elligible users switch threshold
+    filterElligibleMembers(earnedPoints.entrySet(), pluginId, threshold);
+
+    double amountPerPoint = 0;
+    double totalFixedBudget = 0;
+    switch (budgetType) {
+    case FIXED_PER_POINT:
+      amountPerPoint = configuredPluginAmount;
+      addRewardsSwitchPointAmount(rewardMemberDetails, earnedPoints.entrySet(), pluginId, amountPerPoint);
+      break;
+    case FIXED:
+      totalFixedBudget = configuredPluginAmount;
+      addTeamMembersReward(rewardPluginSettings, earnedPoints, totalFixedBudget, rewardMemberDetails);
+      break;
+    case FIXED_PER_MEMBER:
+      double budgetPerMember = configuredPluginAmount;
+      int totalElligibleMembersCount = earnedPoints.size();
+      totalFixedBudget = budgetPerMember * totalElligibleMembersCount;
+      addTeamMembersReward(rewardPluginSettings, earnedPoints, totalFixedBudget, rewardMemberDetails);
+      break;
+    default:
+      throw new IllegalStateException("Budget type is not recognized in plugin settings: " + pluginId
+          + ", budget type = " + budgetType);
+    }
+  }
+
+  private void addTeamMembersReward(RewardPluginSettings rewardPluginSettings,
+                                    Map<Long, Double> earnedPoints,
+                                    double totalFixedBudget,
+                                    Set<RewardMemberDetail> rewardMemberDetails) {
+    if (totalFixedBudget <= 0) {
+      return;
+    }
+    double amountPerPoint;
+    if (rewardPluginSettings.isUsePools()) {
+      List<RewardTeam> teams = rewardTeamService.getTeams();
+      Set<Long> identityIds = filterEligibleMembersAndTeams(teams, earnedPoints);
+      buildNoPoolUsers(earnedPoints, teams, identityIds);
+      computeTeamsMembersBudget(rewardPluginSettings.getPluginId(), teams, totalFixedBudget, rewardMemberDetails, earnedPoints);
+    } else {
+      double totalPoints = earnedPoints.entrySet().stream().collect(Collectors.summingDouble(entry -> entry.getValue()));
+      if (totalPoints <= 0 || totalFixedBudget <= 0) {
+        return;
+      }
+      amountPerPoint = totalFixedBudget / totalPoints;
+      addRewardsSwitchPointAmount(rewardMemberDetails,
+                                  earnedPoints.entrySet(),
+                                  rewardPluginSettings.getPluginId(),
+                                  amountPerPoint);
+    }
+  }
+
+  private void addRewardsSwitchPointAmount(Set<RewardMemberDetail> rewardMemberDetails,
+                                           Set<Entry<Long, Double>> identitiesPointsEntries,
+                                           String pluginId,
+                                           double amountPerPoint) {
+    for (Entry<Long, Double> identitiyPointsEntry : identitiesPointsEntries) {
+      Long identityId = identitiyPointsEntry.getKey();
+      Double points = identitiyPointsEntry.getValue();
+      double amount = points * amountPerPoint;
+      addTeamMemberReward(rewardMemberDetails, pluginId, identityId, points, amount);
+    }
+  }
+
+  private void filterElligibleMembers(Set<Entry<Long, Double>> identitiesPointsEntries, String pluginId, double threshold) {
     Iterator<Entry<Long, Double>> identitiesPointsIterator = identitiesPointsEntries.iterator();
     while (identitiesPointsIterator.hasNext()) {
       Map.Entry<java.lang.Long, java.lang.Double> entry = identitiesPointsIterator.next();
-      if (entry.getValue() < threshold) {
+      Long identityId = entry.getKey();
+      Double points = entry.getValue();
+      points = points == null ? 0 : points;
+      if (points < 0) {
+        throw new IllegalStateException("Plugin with id " + pluginId + " has assigned a negative points (" + points
+            + ") to user with id " + identityId);
+      }
+      if (points < threshold || points == 0) {
         // Member doesn't have enough points, so he's not eligible
         identitiesPointsIterator.remove();
-        if (entry.getValue() > 0) {
-          Long identityId = entry.getKey();
-          Double points = entry.getValue();
 
+        if (points > 0) {
           // Add member with earned points for information on UI
           RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
           rewardMemberDetail.setIdentityId(identityId);
@@ -120,85 +190,19 @@ public class RewardService {
         }
       }
     }
+  }
 
-    switch (budgetType) {
-    case FIXED_PER_POINT:
-      for (Entry<Long, Double> identitiyPointsEntry : identitiesPointsEntries) {
-        Long identityId = identitiyPointsEntry.getKey();
-        Double points = identitiyPointsEntry.getValue();
-
-        RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
-        rewardMemberDetail.setIdentityId(identityId);
-        rewardMemberDetail.setPluginId(pluginId);
-        rewardMemberDetail.setPoints(points);
-        rewardMemberDetail.setAmount(points * configuredPluginAmount);
-        rewardMemberDetails.add(rewardMemberDetail);
-      }
-      break;
-    case FIXED:
-      if (rewardPluginSettings.isUsePools()) {
-        double totalTeamsBudget = configuredPluginAmount;
-        List<RewardTeam> teams = rewardTeamService.getTeams();
-        Set<Long> identityIds = filterEligibleMembersAndTeams(teams, earnedPoints);
-        buildNoPoolUsers(earnedPoints, teams, identityIds);
-        computeTeamsMembersBudget(pluginId, teams, totalTeamsBudget, rewardMemberDetails, earnedPoints);
-      } else {
-        double totalPoints = identitiesPointsEntries.stream().collect(Collectors.summingDouble(entry -> entry.getValue()));
-        if (totalPoints <= 0 || configuredPluginAmount == 0) {
-          return;
-        }
-        double amountPerPoint = configuredPluginAmount / totalPoints;
-        for (Entry<Long, Double> identitiyPointsEntry : identitiesPointsEntries) {
-          Long identityId = identitiyPointsEntry.getKey();
-          Double points = identitiyPointsEntry.getValue();
-          if (points < 0) {
-            throw new IllegalStateException("Plugin with id " + pluginId + " has assigned a negative points (" + points
-                + ") to user with id " + identityId);
-          }
-          RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
-          rewardMemberDetail.setIdentityId(identityId);
-          rewardMemberDetail.setPluginId(pluginId);
-          rewardMemberDetail.setPoints(points);
-          rewardMemberDetail.setAmount(points * amountPerPoint);
-          rewardMemberDetails.add(rewardMemberDetail);
-        }
-      }
-      break;
-    case FIXED_PER_MEMBER:
-      if (rewardPluginSettings.isUsePools()) {
-        List<RewardTeam> teams = rewardTeamService.getTeams();
-        Set<Long> identityIds = filterEligibleMembersAndTeams(teams, earnedPoints);
-        buildNoPoolUsers(earnedPoints, teams, identityIds);
-
-        int totalElligibleMembersCount = teams.stream().collect(Collectors.summingInt(team -> team.getMembers().size()));
-        double totalTeamsBudget = configuredPluginAmount * totalElligibleMembersCount;
-        computeTeamsMembersBudget(pluginId, teams, totalTeamsBudget, rewardMemberDetails, earnedPoints);
-      } else {
-        double totalPoints = identitiesPointsEntries.stream().collect(Collectors.summingDouble(entry -> entry.getValue()));
-        if (totalPoints <= 0 || configuredPluginAmount == 0) {
-          return;
-        }
-        double amountPerPoint = configuredPluginAmount / totalPoints;
-        for (Entry<Long, Double> identitiyPointsEntry : identitiesPointsEntries) {
-          Long identityId = identitiyPointsEntry.getKey();
-          Double points = identitiyPointsEntry.getValue();
-          if (points < 0) {
-            throw new IllegalStateException("Plugin with id " + pluginId + " has assigned a negative points (" + points
-                + ") to user with id " + identityId);
-          }
-          RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
-          rewardMemberDetail.setIdentityId(identityId);
-          rewardMemberDetail.setPluginId(pluginId);
-          rewardMemberDetail.setPoints(points);
-          rewardMemberDetail.setAmount(points * amountPerPoint);
-          rewardMemberDetails.add(rewardMemberDetail);
-        }
-      }
-      break;
-    default:
-      throw new IllegalStateException("Budget type is not recognized in plugin settings: " + pluginId
-          + ", budget type = " + budgetType);
-    }
+  private void addTeamMemberReward(Set<RewardMemberDetail> rewardMemberDetails,
+                                   String pluginId,
+                                   Long identityId,
+                                   Double points,
+                                   double amount) {
+    RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
+    rewardMemberDetail.setIdentityId(identityId);
+    rewardMemberDetail.setPluginId(pluginId);
+    rewardMemberDetail.setPoints(points);
+    rewardMemberDetail.setAmount(amount);
+    rewardMemberDetails.add(rewardMemberDetail);
   }
 
   private void computeTeamsMembersBudget(String pluginId,
@@ -211,7 +215,7 @@ public class RewardService {
     List<RewardTeam> computedBudgetTeams = new ArrayList<>();
     Map<Long, Double> totalPointsPerTeam = new HashMap<>();
 
-    // Compute fixed budget teams
+    // Compute teams budget with fixed amount
     for (RewardTeam rewardTeam : teams) {
       RewardBudgetType teamBudgetType = rewardTeam.getRewardType();
       double totalTeamPoints = rewardTeam.getMembers()
@@ -222,17 +226,18 @@ public class RewardService {
         computedBudgetTeams.add(rewardTeam);
         totalPointsPerTeam.put(rewardTeam.getId(), totalTeamPoints);
       } else if (teamBudgetType == RewardBudgetType.FIXED_PER_MEMBER) {
-        double totalFixedBudgetForTeam = rewardTeam.getBudget() * rewardTeam.getMembers().size();
+        double totalTeamBudget = rewardTeam.getBudget() * rewardTeam.getMembers().size();
         addTeamRewardRepartition(rewardTeam,
-                                 totalFixedBudgetForTeam,
+                                 totalTeamBudget,
                                  totalTeamPoints,
                                  pluginId,
                                  earnedPoints,
                                  rewardMemberDetails);
-        totalFixedTeamsBudget += totalFixedBudgetForTeam;
+        totalFixedTeamsBudget += totalTeamBudget;
       } else if (teamBudgetType == RewardBudgetType.FIXED) {
+        double totalTeamBudget = rewardTeam.getBudget();
         addTeamRewardRepartition(rewardTeam,
-                                 rewardTeam.getBudget(),
+                                 totalTeamBudget,
                                  totalTeamPoints,
                                  pluginId,
                                  earnedPoints,
@@ -245,14 +250,16 @@ public class RewardService {
       throw new IllegalStateException("Total fixed teams budget is higher than fixed budget for all users");
     }
 
+    // Compute teams budget with computed amount
     if (computedRecipientsCount > 0 && !computedBudgetTeams.isEmpty()) {
       double remaingBudgetForComputedTeams = totalTeamsBudget - totalFixedTeamsBudget;
       double budgetPerTeamMember = remaingBudgetForComputedTeams / computedRecipientsCount;
       computedBudgetTeams.forEach(rewardTeam -> {
-        double teamBudget = budgetPerTeamMember * rewardTeam.getMembers().size();
+        double totalTeamBudget = budgetPerTeamMember * rewardTeam.getMembers().size();
+        Double totalTeamPoints = totalPointsPerTeam.get(rewardTeam.getId());
         addTeamRewardRepartition(rewardTeam,
-                                 teamBudget,
-                                 totalPointsPerTeam.get(rewardTeam.getId()),
+                                 totalTeamBudget,
+                                 totalTeamPoints,
                                  pluginId,
                                  earnedPoints,
                                  rewardMemberDetails);
@@ -314,16 +321,16 @@ public class RewardService {
   }
 
   private void addTeamRewardRepartition(RewardTeam rewardTeam,
-                                        double totalFixedBudgetForTeam,
+                                        double totalTeamBudget,
                                         double totalTeamPoints,
                                         String pluginId,
                                         Map<Long, Double> earnedPoints,
                                         Set<RewardMemberDetail> rewardMemberDetails) {
-    if (rewardTeam.getMembers().isEmpty() || totalFixedBudgetForTeam <= 0 || totalTeamPoints <= 0) {
+    if (rewardTeam.getMembers().isEmpty() || totalTeamBudget <= 0 || totalTeamPoints <= 0) {
       return;
     }
 
-    double amountPerPoint = totalFixedBudgetForTeam / totalTeamPoints;
+    double amountPerPoint = totalTeamBudget / totalTeamPoints;
     rewardTeam.getMembers().forEach(member -> {
       Long identityId = member.getIdentityId();
       Double points = earnedPoints.get(identityId);

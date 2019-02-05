@@ -2,11 +2,13 @@ package org.exoplatform.addon.ethereum.wallet.reward.model;
 
 import java.io.Serializable;
 
-import lombok.Data;
+import lombok.*;
 import lombok.EqualsAndHashCode.Exclude;
 
 @Data
-public class RewardPluginSettings implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class RewardPluginSettings implements Serializable, Cloneable {
 
   private static final long serialVersionUID = -843790790474775405L;
 
@@ -27,4 +29,12 @@ public class RewardPluginSettings implements Serializable {
   @Exclude
   private double            amount;
 
+  @Override
+  public RewardPluginSettings clone() { // NOSONAR
+    try {
+      return (RewardPluginSettings) super.clone();
+    } catch (CloneNotSupportedException e) {
+      return new RewardPluginSettings(pluginId, enabled, threshold, usePools, budgetType, amount);
+    }
+  }
 }

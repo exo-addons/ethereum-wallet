@@ -29,13 +29,13 @@
                 <value>
                   <object type="org.exoplatform.services.organization.OrganizationConfig$Group">
                     <field name="name">
-                      <string>reward</string>
+                      <string>rewarding</string>
                     </field>
                     <field name="label">
-                      <string>Reward administrators</string>
+                      <string>Rewarding administrators</string>
                     </field>
                     <field name="description">
-                      <string>Reward administrators group</string>
+                      <string>Rewarding administrators group</string>
                     </field>
                     <field name="parentId">
                       <string>/platform</string>
