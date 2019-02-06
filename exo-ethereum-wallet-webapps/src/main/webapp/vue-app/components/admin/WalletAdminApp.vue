@@ -67,29 +67,42 @@
 
           <v-tabs v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
-            <v-tab key="general">
+            <v-tab
+              v-if="sameConfiguredNetwork"
+              key="general"
+              href="#general">
               Settings
             </v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="funds">
+            <v-tab
+              v-if="sameConfiguredNetwork"
+              key="funds"
+              href="#funds">
               Initial accounts funds
             </v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="overview">
-              Advanced settings
+            <v-tab key="network" href="#network">
+              Network
             </v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="contracts">
+            <v-tab
+              v-if="sameConfiguredNetwork"
+              key="contracts"
+              href="#contracts">
               Contracts
             </v-tab>
-            <v-tab v-if="sameConfiguredNetwork" key="wallets">
+            <v-tab
+              v-if="sameConfiguredNetwork"
+              key="wallets"
+              href="#wallets">
               Wallets
             </v-tab>
           </v-tabs>
 
           <v-tabs-items v-model="selectedTab">
-            <v-tab-item id="general">
+            <v-tab-item
+              v-if="sameConfiguredNetwork"
+              id="general"
+              value="general">
               <general-tab
                 ref="generalTab"
-                :network-id="networkId"
-                :default-network-id="defaultNetworkId"
                 :wallet-address="walletAddress"
                 :loading="loading"
                 :loading-settings="loadingSettings"
@@ -103,7 +116,10 @@
                 @overview-accounts-loaded="overviewAccounts = $event"
                 @save="saveGlobalSettings" />
             </v-tab-item>
-            <v-tab-item v-if="sameConfiguredNetwork" id="funds">
+            <v-tab-item
+              v-if="sameConfiguredNetwork"
+              id="funds"
+              value="funds">
               <initial-funds-tab
                 ref="fundsTab"
                 :default-network-id="defaultNetworkId"
@@ -113,20 +129,22 @@
                 @initial-funds-loaded="initialFunds = $event"
                 @save="saveGlobalSettings" />
             </v-tab-item>
-
-            <v-tab-item v-if="sameConfiguredNetwork" id="overview">
-              <advanced-settings-tab
-                ref="advancedTab"
+            <v-tab-item id="network" value="network">
+              <network-tab
+                ref="networkTab"
+                :network-id="networkId"
                 :default-network-id="defaultNetworkId"
                 :loading="loading"
-                :contracts="contracts"
                 :principal-contract="principalContract"
                 :fiat-symbol="fiatSymbol"
                 :same-configured-network="sameConfiguredNetwork"
                 @save="saveGlobalSettings" />
             </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" id="contracts">
+            <v-tab-item
+              v-if="sameConfiguredNetwork"
+              id="contracts"
+              value="contracts">
               <contracts-tab
                 ref="contractsTab"
                 :network-id="networkId"
@@ -137,12 +155,16 @@
                 :address-etherscan-link="addressEtherscanLink"
                 :token-etherscan-link="tokenEtherscanLink"
                 :wallets="wallets"
+                :same-configured-network="sameConfiguredNetwork"
                 @contract-list-modified="$refs.walletsTab && $refs.walletsTab.init()"
                 @pending-transaction="watchPendingTransaction"
                 @contracts-loaded="contracts = $event" />
             </v-tab-item>
 
-            <v-tab-item v-if="sameConfiguredNetwork" id="wallets">
+            <v-tab-item
+              v-if="sameConfiguredNetwork"
+              id="wallets"
+              value="wallets">
               <wallets-tab
                 ref="walletsTab"
                 :network-id="networkId"
@@ -156,6 +178,7 @@
                 :principal-contract="principalContract"
                 :initial-funds="initialFunds"
                 :accounts-details="accountsDetails"
+                :same-configured-network="sameConfiguredNetwork"
                 @pending="pendingTransaction"
                 @wallets-loaded="wallets = $event"
                 @loading-wallets-changed="loadingWallets = $event"
@@ -171,7 +194,7 @@
 <script>
 import GeneralTab from './WalletAdminSettingsTab.vue';
 import InitialFundsTab from './WalletAdminInitialFundsTab.vue';
-import AdvancedSettingsTab from './WalletAdminSettingsAdvancedTab.vue';
+import NetworkTab from './WalletAdminNetworkTab.vue';
 import ContractsTab from './WalletAdminContractsTab.vue';
 import WalletsTab from './WalletAdminWalletsTab.vue';
 
@@ -186,7 +209,7 @@ export default {
   components: {
     GeneralTab,
     InitialFundsTab,
-    AdvancedSettingsTab,
+    NetworkTab,
     ContractsTab,
     WalletsTab,
     WalletSummary,
@@ -256,6 +279,10 @@ export default {
           this.walletAddress = window.localWeb3 && window.localWeb3.eth.defaultAccount && window.localWeb3.eth.defaultAccount.toLowerCase();
           this.originalWalletAddress = window.walletSettings.userPreferences.walletAddress;
           this.networkId = window.walletSettings.currentNetworkId;
+          this.sameConfiguredNetwork = String(this.networkId) === String(window.walletSettings.defaultNetworkId);
+          if(!this.sameConfiguredNetwork) {
+            this.selectedTab = 'network';
+          }
           if (this.walletAddress) {
             return computeBalance(this.walletAddress);
           }
@@ -269,9 +296,8 @@ export default {
         .then(() => this.$refs.walletSetup && this.$refs.walletSetup.init())
         .then(() => this.$refs.generalTab && this.$refs.generalTab.init())
         .then(() => this.$refs.fundsTab && this.$refs.fundsTab.init())
-        .then(() => this.$refs.advancedTab && this.$refs.advancedTab.init())
+        .then(() => this.$refs.networkTab && this.$refs.networkTab.init())
         .then(() => {
-          this.sameConfiguredNetwork = String(this.networkId) === String(window.walletSettings.defaultNetworkId);
           this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
           this.loadingSettings = false;
         })
@@ -321,16 +347,6 @@ export default {
       }
       if (this.$refs.walletSummary) {
         this.$refs.walletSummary.loadPendingTransactions();
-      }
-    },
-    openWalletTransaction(transactionDetails) {
-      if (!this.$refs.walletsTab) {
-        return;
-      }
-      const wallet = this.wallets.find((wallet) => wallet && wallet.address && wallet.address.toLowerCase() === transactionDetails.address.toLowerCase());
-      if (wallet && this.$refs.walletsTab) {
-        this.selectedTab = 4;
-        this.$refs.walletsTab.openAccountDetail(wallet, transactionDetails.hash);
       }
     },
     watchPendingTransaction(transaction, contractDetails) {

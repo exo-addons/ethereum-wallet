@@ -1,43 +1,11 @@
 <template>
-  <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
+  <v-card
+    v-if="sameConfiguredNetwork"
+    class="text-xs-center pr-3 pl-3 pt-2"
+    flat>
     <v-form ref="form">
-      <v-flex id="selectedNetworkParent" class="selectBoxVuetifyParent">
-        <v-combobox
-          v-model="selectedNetwork"
-          :items="networks"
-          attach="#selectedNetworkParent"
-          label="Select ethereum network" />
-      </v-flex>
-  
-      <v-text-field
-        v-if="showSpecificNetworkFields"
-        v-model="selectedNetwork.value"
-        :rules="mandatoryRule"
-        :label="`Ethereum Network ID (current id: ${networkId})`"
-        type="number"
-        name="defaultNetworkId" />
-  
-      <v-text-field
-        v-if="showSpecificNetworkFields"
-        ref="providerURL"
-        v-model="selectedNetwork.httpLink"
-        :rules="mandatoryRule"
-        type="text"
-        name="providerURL"
-        label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
-        autofocus />
-  
-      <v-text-field
-        v-if="showSpecificNetworkFields"
-        ref="websocketProviderURL"
-        v-model="selectedNetwork.wsLink"
-        type="text"
-        name="websocketProviderURL"
-        label="Ethereum Network Websocket URL used for notifications" />
-  
       <v-flex id="accessPermissionAutoComplete" class="contactAutoComplete mt-4">
         <v-autocomplete
-          v-if="sameConfiguredNetwork"
           ref="accessPermissionAutoComplete"
           v-model="accessPermission"
           :items="accessPermissionOptions"
@@ -102,7 +70,6 @@
   
       <v-flex id="selectedPrincipalAccountParent" class="selectBoxVuetifyParent">
         <v-combobox
-          v-if="sameConfiguredNetwork"
           v-model="selectedPrincipalAccount"
           :items="accountsList"
           attach="#selectedPrincipalAccountParent"
@@ -115,7 +82,6 @@
 
       <v-flex id="selectedOverviewAccountsParent" class="selectBoxVuetifyParent">
         <v-combobox
-          v-if="sameConfiguredNetwork"
           v-model="selectedOverviewAccounts"
           :items="accountsList"
           attach="#selectedOverviewAccountsParent"
@@ -140,18 +106,6 @@ import {searchSpaces} from '../../WalletAddressRegistry.js';
 
 export default {
   props: {
-    networkId: {
-      type: String,
-      default: function() {
-        return null;
-      },
-    },
-    defaultNetworkId: {
-      type: String,
-      default: function() {
-        return null;
-      },
-    },
     walletAddress: {
       type: String,
       default: function() {
@@ -199,37 +153,9 @@ export default {
       selectedPrincipalAccount: null,
       etherAccount: {text: 'Ether', value: 'ether', disabled: false},
       fiatAccount: {text: 'Fiat', value: 'fiat', disabled: false},
-      mandatoryRule: [(v) => !!v || 'Field is required'],
-      selectedNetwork: {
-        text: '',
-        value: '',
-      },
-      networks: [
-        {
-          text: 'Ethereum Main Network',
-          value: 1,
-          wsLink: 'wss://mainnet.infura.io/ws',
-          httpLink: 'https://mainnet.infura.io',
-        },
-        {
-          text: 'Ropsten',
-          value: 3,
-          wsLink: 'wss://ropsten.infura.io/ws',
-          httpLink: 'https://ropsten.infura.io',
-        },
-        {
-          text: 'Other',
-          value: 0,
-          wsLink: 'ws://127.0.0.1:8546',
-          httpLink: 'http://127.0.0.1:8545',
-        },
-      ],
     };
   },
   computed: {
-    showSpecificNetworkFields() {
-      return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
-    },
     accountsList() {
       const accountsList = [];
       accountsList.push(Object.assign({}, this.etherAccount), Object.assign({}, this.fiatAccount));
@@ -361,16 +287,6 @@ export default {
           }
         });
       }
-      if (window.walletSettings.defaultNetworkId === 1) {
-        this.selectedNetwork = this.networks[0];
-      } else if (window.walletSettings.defaultNetworkId === 3) {
-        this.selectedNetwork = this.networks[1];
-      } else {
-        this.networks[2].value = window.walletSettings.defaultNetworkId;
-        this.networks[2].wsLink = window.walletSettings.websocketProviderURL;
-        this.networks[2].httpLink = window.walletSettings.providerURL;
-        this.selectedNetwork = this.networks[2];
-      }
     },
     setSelectedValues() {
       this.selectedOverviewAccounts = [];
@@ -407,9 +323,6 @@ export default {
 
       const globalSettings = {
         accessPermission: this.accessPermission,
-        providerURL: this.selectedNetwork.httpLink,
-        websocketProviderURL: this.selectedNetwork.wsLink,
-        defaultNetworkId: this.selectedNetwork.value,
         defaultPrincipalAccount: this.selectedPrincipalAccount && this.selectedPrincipalAccount.value,
         defaultOverviewAccounts: this.selectedOverviewAccounts && this.selectedOverviewAccounts.map((item) => item.value),
       };

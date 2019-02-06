@@ -1,12 +1,14 @@
 <template>
-  <v-card class="text-xs-center pr-3 pl-3 pt-2" flat>
+  <v-card
+    v-if="sameConfiguredNetwork"
+    class="text-xs-center pr-3 pl-3 pt-2"
+    flat>
     <v-card-title>
       The following settings manages the funds holder and the amount of initial funds to send for a user that has created a new wallet for the first time. You can choose to set initial funds for a token to 0 so that no funds will be send. The funds holder will receive a notification per user per currency (ether and/or token).
     </v-card-title>
     <v-card-text>
       <v-flex id="fundsHolderAutoComplete" class="contactAutoComplete">
         <v-autocomplete
-          v-if="sameConfiguredNetwork"
           ref="fundsHolderAutoComplete"
           v-model="fundsHolder"
           :items="fundsHolderOptions"

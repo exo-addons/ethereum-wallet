@@ -389,7 +389,6 @@ export default {
                   label = this.defaultTransactionLabel;
                 }
 
-                const amount = amountToSendForReceiver;
                 const symbol = this.contractDetails && this.contractDetails.symbol;
                 const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
                 const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);

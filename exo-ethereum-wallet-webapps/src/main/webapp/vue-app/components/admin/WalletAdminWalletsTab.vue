@@ -1,5 +1,5 @@
 <template>
-  <v-flex flat>
+  <v-flex v-if="sameConfiguredNetwork" flat>
     <confirm-dialog
       ref="deleteWalletConfirm"
       :loading="loading"
@@ -330,6 +330,12 @@ export default {
         return null;
       },
     },
+    sameConfiguredNetwork: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
   },
   data() {
     return {
@@ -340,7 +346,6 @@ export default {
       displaySpaces: true,
       displayDisapprovedWallets: true,
       displayDisabledWallets: false,
-      sameConfiguredNetwork: true,
       selectedTransactionHash: null,
       seeAccountDetails: false,
       seeAccountDetailsPermanent: false,
