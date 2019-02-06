@@ -42,13 +42,10 @@
       </v-btn>
     </h3>
     <h4 v-show="!selectedTeam">
-      <span>Eligible users: <strong>{{ eligibleUsersCount }}</strong></span>
+      <span>Eligible pools users: <strong>{{ eligiblePoolsUsersCount }}</strong></span>
     </h4>
     <h4 v-show="!selectedTeam">
-      <span>Total budget: <strong>{{ totalBudget }} {{ symbol }}</strong></span>
-    </h4>
-    <h4 v-show="!selectedTeam">
-      <span>Sent tokens: <strong>{{ sentBudget }} {{ symbol }}</strong></span>
+      <span>Total pools budget: <strong>{{ toFixed(poolsBudget) }} {{ symbol }}</strong></span>
     </h4>
     <v-container
       v-show="!selectedTeam"
@@ -257,19 +254,7 @@ export default {
         return null;
       },
     },
-    eligibleUsersCount: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    totalBudget: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    sentBudget: {
+    eligiblePoolsUsersCount: {
       type: Number,
       default: function() {
         return 0;
@@ -282,6 +267,9 @@ export default {
     selectedTeam: null,
   }),
   computed: {
+    poolsBudget() {
+      return this.wallets.reduce((sum, wallet) => sum + wallet.poolTokensToSend, 0)
+    },
     deletePoolMessage() {
       return this.teamToDelete && `Would you like to delete pool <strong>${this.teamToDelete.name}</strong>`;
     },

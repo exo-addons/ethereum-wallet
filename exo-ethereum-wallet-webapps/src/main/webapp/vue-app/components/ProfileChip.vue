@@ -21,6 +21,9 @@
     <template v-else-if="!enabled">
       <del class="red--text">{{ displayName }}</del> (Disabled wallet)
     </template>
+    <template v-else-if="disabledInRewardPool">
+      {{ displayName }} <span class="red--text">(Disabled pool)</span>
+    </template>
     <template v-else>
       {{ displayName }}
     </template>
@@ -96,6 +99,12 @@ export default {
       type: Boolean,
       default: function() {
         return true;
+      },
+    },
+    disabledInRewardPool: {
+      type: Boolean,
+      default: function() {
+        return false;
       },
     },
     displayNoAddress: {

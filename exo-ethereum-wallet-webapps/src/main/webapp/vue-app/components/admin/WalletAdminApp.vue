@@ -4,7 +4,14 @@
     color="transaprent"
     flat>
     <main>
-      <v-layout>
+      <v-layout column>
+        <v-flex>
+          <v-card class="applicationToolbar mb-3" flat>
+            <v-flex class="pl-3 pr-3 pt-2 pb-2">
+              <strong>Wallet administration</strong>
+            </v-flex>
+          </v-card>
+        </v-flex>
         <v-flex class="white text-xs-center" flat>
           <div v-if="error && !loading" class="alert alert-error v-content">
             <i class="uiIconError"></i>{{ error }}

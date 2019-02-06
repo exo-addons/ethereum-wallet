@@ -71,7 +71,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
     try {
-      Wallet wallet = accountService.getWalletByTypeAndID(type, remoteId);
+      Wallet wallet = accountService.getWalletByTypeAndId(type, remoteId);
       if (wallet != null) {
         if (WalletType.isSpace(wallet.getType())) {
           wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), getCurrentUserId()));
@@ -191,7 +191,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
              wallet.getId(),
              wallet.getAddress());
     try {
-      Wallet storedWallet = accountService.getWalletByTypeAndID(wallet.getType(), wallet.getId());
+      Wallet storedWallet = accountService.getWalletByTypeAndId(wallet.getType(), wallet.getId());
       if (storedWallet == null) {
         wallet.setEnabled(true);
         accountService.saveWallet(wallet, currentUserId, true);
