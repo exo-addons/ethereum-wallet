@@ -221,7 +221,15 @@ public class EthereumClientConnector implements Startable {
    */
   public Transaction getTransaction(String transactionHash) throws InterruptedException, ExecutionException {
     waitConnection();
-    EthTransaction ethTransaction = web3j.ethGetTransactionByHash(transactionHash).sendAsync().get();
+    EthTransaction ethTransaction;
+    try {
+      ethTransaction = web3j.ethGetTransactionByHash(transactionHash).send();
+    } catch (IOException e) {
+      LOG.info("Connection interrupted while getting Transaction '{}' information. Reattempt until getting it. Reason: {}",
+               transactionHash,
+               e.getMessage());
+      return getTransaction(transactionHash);
+    }
     if (ethTransaction != null) {
       return ethTransaction.getResult();
     }
@@ -238,7 +246,15 @@ public class EthereumClientConnector implements Startable {
    */
   public Block getBlock(String blockHash) throws InterruptedException, ExecutionException {
     waitConnection();
-    EthBlock ethBlock = web3j.ethGetBlockByHash(blockHash, false).sendAsync().get();
+    EthBlock ethBlock;
+    try {
+      ethBlock = web3j.ethGetBlockByHash(blockHash, false).send();
+    } catch (IOException e) {
+      LOG.info("Connection interrupted while getting Block '{}' information. Reattempt until getting it. Reason: {}",
+               blockHash,
+               e.getMessage());
+      return getBlock(blockHash);
+    }
     if (ethBlock != null && ethBlock.getResult() != null) {
       return ethBlock.getResult();
     }
@@ -255,7 +271,15 @@ public class EthereumClientConnector implements Startable {
    */
   public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
     waitConnection();
-    EthGetTransactionReceipt ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).sendAsync().get();
+    EthGetTransactionReceipt ethGetTransactionReceipt;
+    try {
+      ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
+    } catch (IOException e) {
+      LOG.info("Connection interrupted while getting Transaction receipt '{}' information. Reattempt until getting it. Reason: {}",
+               transactionHash,
+               e.getMessage());
+      return getTransactionReceipt(transactionHash);
+    }
     if (ethGetTransactionReceipt != null) {
       return ethGetTransactionReceipt.getResult();
     }
@@ -347,7 +371,7 @@ public class EthereumClientConnector implements Startable {
     }
     while (!isConnected()) {
       LOG.info("Wait until Websocket connection to blockchain is established to retrieve information");
-      Thread.sleep(1000);
+      Thread.sleep(5000);
     }
   }
 
