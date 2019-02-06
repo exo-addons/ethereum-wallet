@@ -114,8 +114,9 @@ public class EthereumWalletTransactionService {
       throw new IllegalStateException("Can't find contract with address " + contractAddress);
     }
 
-    if (!isUserAdmin(accessor)) {
-      throw new IllegalAccessException("Can't access wallet with address " + contractAddress);
+    if (!isUserAdmin(accessor) && !isUserRewardingAdmin(accessor)) {
+      throw new IllegalAccessException("User " + accessor + " attempts to access contract transactions with address "
+          + contractAddress);
     }
 
     List<TransactionDetail> transactionDetails = walletTransactionStorage.getContractTransactions(networkId,

@@ -455,7 +455,7 @@ export default {
       if(this.loadingWallets) {
         return;
       }
-      getWallets()
+      return getWallets()
         .then((wallets) => {
           wallets.forEach(wallet => wallet.approved = {});
           this.wallets = wallets.sort(this.sortByName);

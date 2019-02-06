@@ -121,6 +121,8 @@ public class Utils {
 
   public static final String                          ADMINISTRATORS_GROUP                  = "/platform/administrators";
 
+  public static final String                          REWARDINGS_GROUP                      = "/platform/rewarding";
+
   public static final String                          GLOAL_SETTINGS_CHANGED_EVENT          =
                                                                                    "exo.addon.wallet.settings.changed";
 
@@ -332,6 +334,10 @@ public class Utils {
 
   public static final boolean isUserAdmin(String username) {
     return isUserMemberOf(username, ADMINISTRATORS_GROUP);
+  }
+
+  public static final boolean isUserRewardingAdmin(String username) {
+    return isUserMemberOf(username, REWARDINGS_GROUP);
   }
 
   public static final boolean isUserMemberOf(String username, String permissionExpression) {

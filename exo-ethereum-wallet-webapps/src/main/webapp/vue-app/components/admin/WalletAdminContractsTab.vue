@@ -59,7 +59,7 @@
             indeterminate
             color="primary" />
           <v-btn
-            v-else
+            v-else-if="isAdmin"
             icon
             ripple
             @click="deleteContract(props.item, $event)">
@@ -71,14 +71,19 @@
     <v-divider />
     <div class="text-xs-center pt-2 pb-2">
       <deploy-new-contract
+        v-if="isAdmin"
         :account="walletAddress"
         :network-id="networkId"
         :fiat-symbol="fiatSymbol"
         @list-updated="updateList($event)" />
-      <button class="btn mt-3" @click="showAddContractModal = true">
+      <button
+        v-if="isAdmin"
+        class="btn mt-3"
+        @click="showAddContractModal = true">
         Add Existing contract Address
       </button>
       <add-contract-modal
+        v-if="isAdmin"
         :net-id="networkId"
         :account="walletAddress"
         :open="showAddContractModal"
@@ -138,6 +143,12 @@ export default {
       type: String,
       default: function() {
         return null;
+      },
+    },
+    isAdmin: {
+      type: Boolean,
+      default: function() {
+        return false;
       },
     },
     loading: {

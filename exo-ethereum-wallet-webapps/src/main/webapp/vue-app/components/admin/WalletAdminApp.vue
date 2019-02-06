@@ -68,18 +68,21 @@
           <v-tabs v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
             <v-tab
-              v-if="sameConfiguredNetwork"
+              v-if="sameConfiguredNetwork && isAdmin"
               key="general"
               href="#general">
               Settings
             </v-tab>
             <v-tab
-              v-if="sameConfiguredNetwork"
+              v-if="sameConfiguredNetwork && isAdmin"
               key="funds"
               href="#funds">
               Initial accounts funds
             </v-tab>
-            <v-tab key="network" href="#network">
+            <v-tab
+             v-if="isAdmin"
+             key="network"
+             href="#network">
               Network
             </v-tab>
             <v-tab
@@ -89,7 +92,7 @@
               Contracts
             </v-tab>
             <v-tab
-              v-if="sameConfiguredNetwork"
+              v-if="sameConfiguredNetwork && isAdmin"
               key="wallets"
               href="#wallets">
               Wallets
@@ -98,7 +101,7 @@
 
           <v-tabs-items v-model="selectedTab">
             <v-tab-item
-              v-if="sameConfiguredNetwork"
+              v-if="sameConfiguredNetwork && isAdmin"
               id="general"
               value="general">
               <general-tab
@@ -117,7 +120,7 @@
                 @save="saveGlobalSettings" />
             </v-tab-item>
             <v-tab-item
-              v-if="sameConfiguredNetwork"
+              v-if="sameConfiguredNetwork && isAdmin"
               id="funds"
               value="funds">
               <initial-funds-tab
@@ -131,6 +134,7 @@
             </v-tab-item>
             <v-tab-item id="network" value="network">
               <network-tab
+                v-if="isAdmin"
                 ref="networkTab"
                 :network-id="networkId"
                 :default-network-id="defaultNetworkId"
@@ -162,7 +166,7 @@
             </v-tab-item>
 
             <v-tab-item
-              v-if="sameConfiguredNetwork"
+              v-if="sameConfiguredNetwork && isAdmin"
               id="wallets"
               value="wallets">
               <wallets-tab
@@ -203,7 +207,7 @@ import WalletSummary from '../WalletSummary.vue';
 
 import * as constants from '../../WalletConstants.js';
 import {saveContractAddressOnServer} from '../../WalletToken.js';
-import {initWeb3, initSettings, watchTransactionStatus, computeBalance, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../../WalletUtils.js';
+import {initWeb3, initSettings, watchTransactionStatus, computeBalance, getWallets, convertTokenAmountReceived, getTokenEtherscanlink, getAddressEtherscanlink} from '../../WalletUtils.js';
 
 export default {
   components: {
@@ -220,6 +224,7 @@ export default {
       loading: false,
       loadingSettings: false,
       loadingContracts: false,
+      isAdmin: false,
       selectedTab: true,
       sameConfiguredNetwork: true,
       fiatSymbol: '$',
@@ -264,6 +269,7 @@ export default {
             this.forceUpdate();
             throw new Error('Wallet settings are empty for current user');
           }
+          this.isAdmin = window.walletSettings.isAdmin;
         })
         .then(() => ignoreContracts || initWeb3(false, true))
         .catch((error) => {
@@ -304,11 +310,17 @@ export default {
         .then(() => this.$refs.contractsTab && this.$refs.contractsTab.init())
         .then(() => this.$refs && this.$refs.generalTab && this.$refs.generalTab.setSelectedValues())
         .then(() => this.$refs && this.$refs.walletsTab && this.$refs.walletsTab.init(true))
+        .then(() => {
+          if(!this.isAdmin) {
+            // Load wallets for contract manager (rewarding group)
+            return getWallets().then(wallets => this.wallets = wallets);
+          }
+        })
         .catch((error) => {
           if (String(error).indexOf(constants.ERROR_WALLET_NOT_CONFIGURED) < 0) {
-            console.debug('Error retrieving contracts', error);
+            console.debug(error);
             if (!this.error) {
-              this.error = 'Error retrieving contracts';
+              this.error = String(error);
             }
           } else {
             this.error = 'Please configure your wallet';

@@ -67,7 +67,7 @@ public class GlobalSettings implements Serializable, Cloneable {
 
   private Integer             dataVersion                            = 0;
 
-  private boolean             enableDelegation                       = true;
+  private boolean             enableDelegation                       = false;
 
   private String              accessPermission                       = null;
 

@@ -352,7 +352,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("list")
-  @RolesAllowed("administrators")
+  @RolesAllowed({ "administrators", "rewarding" })
   public Response getWallets() {
     try {
       return Response.ok(accountService.listWallets()).build();
