@@ -22,7 +22,7 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_3.xsd http://www.exoplatform.org/xml/ns/kernel_1_3.xsd" xmlns="http://www.exoplatform.org/xml/ns/kernel_1_3.xsd">
   <external-component-plugins>
     <target-component>org.exoplatform.portal.config.UserPortalConfigService</target-component>
-    <component-plugin><!-- Loaded from 'file:/media/boubaker/Data/exo_sources/exo-working/plf-enterprise-tomcat-standalone-5.1.0-RC05/webapps/platform-extension/WEB-INF/conf/platform/portal/portal-configuration.xml' -->
+    <component-plugin>
       <name>new.portal.config.user.listener</name>
       <set-method>initListener</set-method>
       <type>org.exoplatform.portal.config.NewPortalConfigListener</type>

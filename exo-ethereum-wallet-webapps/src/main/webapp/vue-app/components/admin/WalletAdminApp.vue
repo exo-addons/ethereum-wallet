@@ -80,9 +80,9 @@
               Initial accounts funds
             </v-tab>
             <v-tab
-             v-if="isAdmin"
-             key="network"
-             href="#network">
+              v-if="isAdmin"
+              key="network"
+              href="#network">
               Network
             </v-tab>
             <v-tab
