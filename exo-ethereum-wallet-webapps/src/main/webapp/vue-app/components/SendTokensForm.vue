@@ -254,6 +254,9 @@ export default {
       this.amount = null;
       this.warning = null;
       this.error = null;
+      this.walletPassword = '';
+      this.walletPasswordShow = false;
+      this.error = null;
       this.transactionLabel = this.defaultLabel;
       this.transactionMessage = this.defaultMessage;
       if (!this.gasPrice) {
@@ -400,10 +403,6 @@ export default {
                 console.debug('Web3 contract.transfer method - error', error);
                 // The transaction has failed
                 this.error = `Error sending tokens: ${truncateError(error)}`;
-                // Display error on main screen only when dialog is not opened
-                if (!this.dialog) {
-                  this.$emit('error', this.error);
-                }
               });
           })
           .catch((e) => {

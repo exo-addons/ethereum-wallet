@@ -253,8 +253,8 @@ public class EthereumWalletAccountService {
     WalletType type = WalletType.getType(wallet.getType());
     if (type.isUser()) {
       if (!StringUtils.equals(modifierUsername, remoteId)) {
-        LOG.error("User '{}' attempts to modify wallet address of user '{}'", modifierUsername, remoteId);
-        throw new IllegalAccessException();
+        throw new IllegalAccessException("User '" + modifierUsername + "' attempts to modify wallet address of user '" + remoteId
+            + "'");
       }
 
       // Check if wallet is enabled for current user and check if he's admin

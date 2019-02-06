@@ -217,6 +217,8 @@ export default {
       this.showQRCodeModal = false;
       this.warning = null;
       this.errors = null;
+      this.walletPassword = '';
+      this.walletPasswordShow = false;
       this.transactionLabel = this.defaultTransactionLabel;
       this.transactionMessage = this.defaultTransactionMessage;
       this.$emit('error', '');

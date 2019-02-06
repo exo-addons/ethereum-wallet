@@ -216,6 +216,8 @@ export default {
         this.amount = null;
         this.warning = null;
         this.error = null;
+        this.walletPassword = '';
+        this.walletPasswordShow = false;
         if (!this.gasPrice) {
           this.gasPrice = window.walletSettings.minGasPrice;
         }

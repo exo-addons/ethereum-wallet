@@ -77,12 +77,10 @@ public class EthereumWalletTransactionService {
                                     String modifierUsername,
                                     boolean transactionConfirmed) throws IllegalAccessException {
     if (!transactionConfirmed) {
-      Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());
-      if (senderWallet == null) {
-        senderWallet = new Wallet();
-        senderWallet.setAddress(transactionDetail.getFrom());
-        senderWallet.setName(transactionDetail.getFrom());
-      } else {
+      String senderAddress = StringUtils.isBlank(transactionDetail.getBy()) ? transactionDetail.getFrom()
+                                                                            : transactionDetail.getBy();
+      Wallet senderWallet = walletAccountService.getWalletByAddress(senderAddress);
+      if (senderWallet != null) {
         walletAccountService.checkCanSaveWallet(senderWallet, senderWallet, modifierUsername);
       }
     }
@@ -185,7 +183,7 @@ public class EthereumWalletTransactionService {
       if (senderWalletBy != null) {
         senderWalletBy.setPassPhrase(null);
       }
-      transactionDetail.setToWallet(senderWalletBy);
+      transactionDetail.setByWallet(senderWalletBy);
       if (!displayTransactionsLabel(senderWalletBy, accessor)) {
         transactionDetail.setLabel(null);
       }

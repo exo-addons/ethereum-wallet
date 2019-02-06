@@ -170,6 +170,8 @@ export default {
       this.recipient = null;
       this.amount = null;
       this.error = null;
+      this.walletPassword = '';
+      this.walletPasswordShow = false;
       this.transactionLabel = this.defaultLabel;
       this.transactionMessage = this.defaultMessage;
       this.transactionHash = null;

@@ -40,6 +40,7 @@ export function saveTransactionDetails(transaction, contractDetails) {
       pending: transaction.pending ? Boolean(transaction.pending) : false,
       from: transaction.from ? transaction.from : '',
       to: transaction.to ? transaction.to : '',
+      by: transaction.by? transaction.by : '',
       label: transaction.label ? transaction.label : '',
       message: transaction.message ? transaction.message : '',
       value: transaction.value ? Number(transaction.value) : 0,

@@ -283,6 +283,8 @@ export default {
       }
       this.loading = false;
       this.autocompleteValue = null;
+      this.walletPassword = '';
+      this.walletPasswordShow = false;
       this.inputValue = null;
       this.warning = null;
       this.error = null;
