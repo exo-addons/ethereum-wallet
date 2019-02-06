@@ -270,13 +270,13 @@ public class EthereumWalletService implements Startable {
 
     Wallet wallet = null;
     if (StringUtils.isNotBlank(spaceId)) {
-      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId);
+      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId, username);
       if (wallet != null && !accountService.canAccessWallet(wallet, username)) {
         LOG.warn("User {} is not allowed to display space wallet {}", username, spaceId);
         globalSettings.setWalletEnabled(false);
       }
     } else {
-      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), username);
+      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), username, username);
     }
 
     if (wallet != null) {
@@ -393,7 +393,7 @@ public class EthereumWalletService implements Startable {
       throw new IllegalAccessException("Bad request sent to server with invalid sender");
     }
 
-    if (WalletType.isSpace(requestSenderType) && !isUserSpaceMember(fundsRequest.getReceipient(), requestSenderId)) {
+    if (WalletType.isSpace(requestSenderType) && !isUserSpaceMember(requestSenderId, fundsRequest.getReceipient())) {
       throw new IllegalAccessException("Request sender is not allowed to request funds from space");
     }
 

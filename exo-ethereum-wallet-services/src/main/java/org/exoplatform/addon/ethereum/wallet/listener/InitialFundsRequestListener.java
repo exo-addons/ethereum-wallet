@@ -8,8 +8,7 @@ import java.util.Set;
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
 import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.services.listener.Event;
-import org.exoplatform.services.listener.Listener;
+import org.exoplatform.services.listener.*;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -18,6 +17,7 @@ import org.exoplatform.services.log.Log;
  * a space. Thus an initial funds request should be sent to funds holder when a
  * new address is added.
  */
+@Asynchronous
 public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
 
   private static final Log      LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);

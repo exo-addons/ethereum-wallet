@@ -67,6 +67,31 @@ public class EthereumWalletAccountService {
   }
 
   /**
+   * Retrieve wallet details by identity type and remoteId accessed by a user
+   * 
+   * @param type
+   * @param remoteId
+   * @param accessor
+   * @return {@link Wallet}
+   */
+  public Wallet getWalletByTypeAndId(String type, String remoteId, String accessor) {
+    Wallet wallet = getWalletByTypeAndId(type, remoteId);
+    if (wallet != null) {
+      if (WalletType.isSpace(wallet.getType())) {
+        wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), accessor));
+        if (!wallet.isSpaceAdministrator()) {
+          // Delete passphrase for non managers
+          wallet.setPassPhrase(null);
+        }
+      } else if (!StringUtils.equals(wallet.getId(), accessor)) {
+        // Delete passphrase for other users
+        wallet.setPassPhrase(null);
+      }
+    }
+    return wallet;
+  }
+
+  /**
    * Retrieve wallet details by identity type and remoteId
    * 
    * @param type
@@ -139,7 +164,9 @@ public class EthereumWalletAccountService {
     accountStorage.saveWallet(wallet, isNew);
 
     if (broadcast) {
-      getListenerService().broadcast(isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT, oldWallet, wallet);
+      getListenerService().broadcast(isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT,
+                                     oldWallet == null ? null : oldWallet.clone(),
+                                     wallet.clone());
     }
   }
 

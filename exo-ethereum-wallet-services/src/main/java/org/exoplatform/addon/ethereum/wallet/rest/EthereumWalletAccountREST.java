@@ -71,11 +71,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
     try {
-      Wallet wallet = accountService.getWalletByTypeAndId(type, remoteId);
+      Wallet wallet = accountService.getWalletByTypeAndId(type, remoteId, getCurrentUserId());
       if (wallet != null) {
-        if (WalletType.isSpace(wallet.getType())) {
-          wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), getCurrentUserId()));
-        }
         wallet.setPassPhrase(null);
         return Response.ok(wallet).build();
       } else {
@@ -191,16 +188,17 @@ public class EthereumWalletAccountREST implements ResourceContainer {
              wallet.getId(),
              wallet.getAddress());
     try {
-      Wallet storedWallet = accountService.getWalletByTypeAndId(wallet.getType(), wallet.getId());
+      Wallet storedWallet = accountService.getWalletByTypeAndId(wallet.getType(), wallet.getId(), currentUserId);
       if (storedWallet == null) {
         wallet.setEnabled(true);
         accountService.saveWallet(wallet, currentUserId, true);
+        return Response.ok(wallet.getPassPhrase()).build();
       } else {
         storedWallet.setAddress(wallet.getAddress());
         storedWallet.setEnabled(wallet.isEnabled());
         accountService.saveWallet(storedWallet, currentUserId, true);
+        return Response.ok(storedWallet.getPassPhrase()).build();
       }
-      return Response.ok(wallet.getPassPhrase()).build();
     } catch (IllegalAccessException | IllegalStateException e) {
       return Response.status(403).build();
     } catch (Exception e) {
