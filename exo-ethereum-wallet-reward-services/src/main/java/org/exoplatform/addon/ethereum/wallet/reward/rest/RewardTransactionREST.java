@@ -128,7 +128,7 @@ public class RewardTransactionREST implements ResourceContainer {
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed({ "rewarding", "administrators" })
   public Response getRewardDates(@QueryParam("periodType") String periodType,
-                                       @QueryParam("dateInSeconds") long dateInSeconds) {
+                                 @QueryParam("dateInSeconds") long dateInSeconds) {
     if (dateInSeconds == 0) {
       LOG.warn("Bad request sent to server with empty 'dateInSeconds' parameter");
       return Response.status(400).build();

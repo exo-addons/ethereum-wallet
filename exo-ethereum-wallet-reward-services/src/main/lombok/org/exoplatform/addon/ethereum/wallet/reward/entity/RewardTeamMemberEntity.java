@@ -11,20 +11,20 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
 @Table(name = "ADDONS_WALLET_GAM_TEAM_MEMBER")
 public class RewardTeamMemberEntity implements Serializable {
 
-  private static final long      serialVersionUID = 2213798785625662208L;
+  private static final long serialVersionUID = 2213798785625662208L;
 
   @Id
   @SequenceGenerator(name = "SEQ_WALLET_GAM_TEAM_MEMBER_ID", sequenceName = "SEQ_WALLET_GAM_TEAM_MEMBER_ID")
   @GeneratedValue(strategy = GenerationType.AUTO, generator = "SEQ_WALLET_GAM_TEAM_MEMBER_ID")
   @Column(name = "MEMBER_ID")
-  private Long                   id;
+  private Long              id;
 
   @Column(name = "MEMBER_IDENTITY_ID", nullable = false)
-  private Long                   identityId;
+  private Long              identityId;
 
   @ManyToOne(fetch = FetchType.EAGER, optional = false)
   @JoinColumn(name = "TEAM_ID", referencedColumnName = "TEAM_ID")
-  private RewardTeamEntity team;
+  private RewardTeamEntity  team;
 
   public long getId() {
     return id;

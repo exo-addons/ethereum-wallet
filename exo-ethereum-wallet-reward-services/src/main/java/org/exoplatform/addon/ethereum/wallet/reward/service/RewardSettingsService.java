@@ -23,8 +23,7 @@ import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
-import org.exoplatform.addon.ethereum.wallet.reward.model.RewardPluginSettings;
-import org.exoplatform.addon.ethereum.wallet.reward.model.RewardSettings;
+import org.exoplatform.addon.ethereum.wallet.reward.model.*;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
@@ -98,6 +97,19 @@ public class RewardSettingsService {
   }
 
   public void saveSettings(RewardSettings rewardSettingsToStore) throws JsonException {
+    if (rewardSettingsToStore == null) {
+      throw new IllegalArgumentException("Empty settings to save");
+    }
+
+    // Check using pool only if not budget is of type 'points reward'
+    Set<RewardPluginSettings> pluginSettings = rewardSettingsToStore.getPluginSettings();
+    if (pluginSettings != null && !pluginSettings.isEmpty()) {
+      for (RewardPluginSettings rewardPluginSettings : pluginSettings) {
+        if (rewardPluginSettings.getBudgetType() == RewardBudgetType.FIXED_PER_POINT) {
+          rewardPluginSettings.setUsePools(false);
+        }
+      }
+    }
     String settingsString = toJsonString(rewardSettingsToStore);
     settingService.set(REWARD_CONTEXT, REWARD_SCOPE, REWARD_SETTINGS_KEY_NAME, SettingValue.create(settingsString));
 

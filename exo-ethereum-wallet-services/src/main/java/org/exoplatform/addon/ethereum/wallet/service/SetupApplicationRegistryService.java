@@ -31,9 +31,9 @@ import org.exoplatform.portal.config.model.ApplicationType;
  */
 public class SetupApplicationRegistryService implements Startable {
 
-  private static final List<String> EVERYONE_PERMISSION_LIST = Collections.singletonList("Everyone");
+  private static final List<String>  EVERYONE_PERMISSION_LIST = Collections.singletonList("Everyone");
 
-  private static final String        WALLET_CATEGORY_NAME = "EthereumWallet";
+  private static final String        WALLET_CATEGORY_NAME     = "EthereumWallet";
 
   private ExoContainer               container;
 

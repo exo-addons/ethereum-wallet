@@ -17,37 +17,37 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
 @Table(name = "ADDONS_WALLET_GAM_TEAM")
 public class RewardTeamEntity implements Serializable {
 
-  private static final long                 serialVersionUID = 4475704534821391132L;
+  private static final long           serialVersionUID = 4475704534821391132L;
 
   @Id
   @SequenceGenerator(name = "SEQ_WALLET_GAM_TEAM_ID", sequenceName = "SEQ_WALLET_GAM_TEAM_ID")
   @GeneratedValue(strategy = GenerationType.AUTO, generator = "SEQ_WALLET_GAM_TEAM_ID")
   @Column(name = "TEAM_ID")
-  private Long                              id;
+  private Long                        id;
 
   @Column(name = "TEAM_NAME", unique = true, nullable = false)
-  private String                            name;
+  private String                      name;
 
   @Column(name = "TEAM_DESCRIPTION")
-  private String                            description;
+  private String                      description;
 
   @Column(name = "TEAM_REWARD_TYPE")
   private RewardBudgetType            rewardType;
 
   @Column(name = "TEAM_BUDGET")
-  private Double                            budget;
+  private Double                      budget;
 
   @Column(name = "TEAM_MEMBER_REWARD")
-  private Double                            rewardPerMember;
+  private Double                      rewardPerMember;
 
   @Column(name = "TEAM_SPACE_ID")
-  private Long                              spaceId;
+  private Long                        spaceId;
 
   @Column(name = "TEAM_MANAGER_ID")
-  private Long                              manager;
+  private Long                        manager;
 
   @Column(name = "TEAM_DISABLED")
-  private Boolean                           disabled;
+  private Boolean                     disabled;
 
   @OneToMany(mappedBy = "team", fetch = FetchType.EAGER, cascade = { CascadeType.ALL }, orphanRemoval = true)
   private Set<RewardTeamMemberEntity> members          = new HashSet<>();

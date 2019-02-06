@@ -1,4 +1,5 @@
 package org.exoplatform.addon.ethereum.wallet.service.utils;
+
 import java.io.*;
 import java.security.Principal;
 import java.util.*;

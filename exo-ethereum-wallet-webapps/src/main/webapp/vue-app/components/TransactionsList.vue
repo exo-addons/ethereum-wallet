@@ -543,18 +543,14 @@
               <v-list-tile-content>
                 Label
               </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ item.label }}
-              </v-list-tile-content>
+              <v-list-tile-content class="align-end paragraph" v-text="item.label" />
             </v-list-tile>
 
             <v-list-tile v-if="item.message" class="dynamic-height">
               <v-list-tile-content>
                 Message
               </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ item.message }}
-              </v-list-tile-content>
+              <v-list-tile-content class="align-end paragraph" v-text="item.message" />
             </v-list-tile>
 
             <v-list-tile v-if="Number(item.contractAmount)">

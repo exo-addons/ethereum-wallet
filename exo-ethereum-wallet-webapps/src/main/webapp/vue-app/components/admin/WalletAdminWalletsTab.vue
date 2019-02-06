@@ -143,6 +143,9 @@
                   <v-list-tile @click="refreshWallet(props.item)">
                     <v-list-tile-title>Refresh</v-list-tile-title>
                   </v-list-tile>
+                  <v-list-tile @click="openAccountDetail(props.item)">
+                    <v-list-tile-title>Display transactions</v-list-tile-title>
+                  </v-list-tile>
                   <v-list-tile @click="walletToDelete = props.item; $refs.deleteWalletConfirm.open()">
                     <v-list-tile-title>Remove wallet</v-list-tile-title>
                   </v-list-tile>

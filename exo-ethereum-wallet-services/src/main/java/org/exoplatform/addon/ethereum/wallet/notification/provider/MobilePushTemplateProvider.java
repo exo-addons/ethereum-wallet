@@ -37,7 +37,8 @@ public class MobilePushTemplateProvider extends TemplateProvider {
     super(initParams);
     this.templateBuilders.put(PluginKey.key(WALLET_SENDER_NOTIFICATION_ID), new TemplateBuilder(this, container, true));
     this.templateBuilders.put(PluginKey.key(WALLET_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this, container, true));
-    this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID), new RequestFundsTemplateBuilder(this, container, true));
+    this.templateBuilders.put(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID),
+                              new RequestFundsTemplateBuilder(this, container, true));
   }
 
 }

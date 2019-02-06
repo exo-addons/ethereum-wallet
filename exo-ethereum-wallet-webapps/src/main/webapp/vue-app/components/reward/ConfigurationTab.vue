@@ -61,7 +61,7 @@
                       name="threshold"
                       class="input-text-center" />
                   </div>
-                  <div class="text-xs-left rewardWalletConfiguration">
+                  <div v-if="pluginSetting.budgetType !== 'FIXED_PER_POINT'" class="text-xs-left rewardWalletConfiguration">
                     <v-checkbox
                       v-model="pluginSetting.usePools"
                       :disabled="!configurationEditable"

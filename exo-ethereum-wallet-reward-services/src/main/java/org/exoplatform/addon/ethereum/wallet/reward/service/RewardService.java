@@ -24,25 +24,41 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
 import org.exoplatform.addon.ethereum.wallet.reward.model.*;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletAccountService;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 /**
  * A storage service to save/load reward settings
  */
 public class RewardService {
+  private static final Log             LOG = ExoLogger.getLogger(RewardService.class);
 
-  private RewardSettingsService rewardSettingsService;
+  private RewardSettingsService        rewardSettingsService;
 
-  private RewardTeamService     rewardTeamService;
+  private RewardTeamService            rewardTeamService;
 
-  public RewardService(RewardSettingsService rewardSettingsService, RewardTeamService rewardTeamService) {
+  private EthereumWalletAccountService walletAccountService;
+
+  public RewardService(EthereumWalletAccountService walletAccountService,
+                       RewardSettingsService rewardSettingsService,
+                       RewardTeamService rewardTeamService) {
+    this.walletAccountService = walletAccountService;
     this.rewardSettingsService = rewardSettingsService;
     this.rewardTeamService = rewardTeamService;
   }
 
   public Set<RewardMemberDetail> computeReward(Set<Long> identityIds, long periodDateInSeconds) {
+    if (periodDateInSeconds == 0) {
+      throw new IllegalArgumentException("periodDate is mandatory");
+    }
+    if (identityIds == null || identityIds.isEmpty()) {
+      return Collections.emptySet();
+    }
     Collection<RewardPlugin> rewardPlugins = rewardSettingsService.getRewardPlugins();
     RewardSettings rewardSettings;
     try {
@@ -64,20 +80,64 @@ public class RewardService {
     RewardPeriodType periodType = rewardSettings.getPeriodType();
     RewardPeriod periodOfTime = periodType.getPeriodOfTime(timeFromSeconds(periodDateInSeconds));
 
+    Set<Long> enabledIdentityIds = getEnabledWallets(identityIds);
+    Set<Long> walletsWithEnabledTeam = getEnabledTeamMembers(enabledIdentityIds);
+
     Set<RewardMemberDetail> rewardMemberDetails = new HashSet<>();
     for (RewardPlugin rewardPlugin : rewardPlugins) {
       if (rewardPlugin == null || !rewardPlugin.isEnabled()) {
         continue;
       }
-      Map<Long, Double> earnedPoints = rewardPlugin.gtEarnedPoints(identityIds,
-                                                                   periodOfTime.getStartDateInSeconds(),
-                                                                   periodOfTime.getEndDateInSeconds());
       RewardPluginSettings rewardPluginSettings = getPluginSetting(pluginSettings, rewardPlugin.getPluginId());
       if (rewardPluginSettings != null) {
-        computeReward(rewardPluginSettings, earnedPoints, rewardMemberDetails);
+        Map<Long, Double> earnedPoints = rewardPlugin.gtEarnedPoints(identityIds,
+                                                                     periodOfTime.getStartDateInSeconds(),
+                                                                     periodOfTime.getEndDateInSeconds());
+        Set<Long> validIdentityIdsToUse = rewardPluginSettings.isUsePools() ? walletsWithEnabledTeam : enabledIdentityIds;
+        computeReward(rewardPluginSettings, earnedPoints, validIdentityIdsToUse, rewardMemberDetails);
       }
     }
     return rewardMemberDetails;
+  }
+
+  private Set<Long> getEnabledTeamMembers(Set<Long> identityIds) {
+    Set<Long> walletsWithEnabledTeam = new HashSet<>(identityIds);
+    List<RewardTeam> teams = rewardTeamService.getTeams();
+    for (RewardTeam rewardTeam : teams) {
+      if (!rewardTeam.isDisabled() || rewardTeam.getMembers() == null || rewardTeam.getMembers().isEmpty()) {
+        continue;
+      }
+      rewardTeam.getMembers().forEach(member -> walletsWithEnabledTeam.remove(member.getIdentityId()));
+    }
+    return walletsWithEnabledTeam;
+  }
+
+  private Set<Long> getEnabledWallets(Set<Long> identityIds) {
+    Iterator<Long> identityIdsIterator = identityIds.iterator();
+    while (identityIdsIterator.hasNext()) {
+      Long identityId = identityIdsIterator.next();
+      if (identityId == null || identityId == 0) {
+        identityIdsIterator.remove();
+      }
+      Wallet wallet = null;
+      try {
+        wallet = walletAccountService.getWalletByIdentityId(identityId);
+      } catch (Exception e) {
+        if (LOG.isDebugEnabled()) {
+          LOG.warn("Error while getting wallet of identity with id {}", identityId, e);
+        } else {
+          LOG.warn("Error while getting wallet of identity with id {}. Reason: {}", identityId, e.getMessage());
+        }
+      }
+      if (wallet == null) {
+        identityIdsIterator.remove();
+        continue;
+      }
+      if (!wallet.isEnabled()) {
+        identityIdsIterator.remove();
+      }
+    }
+    return identityIds;
   }
 
   private RewardPluginSettings getPluginSetting(Set<RewardPluginSettings> pluginSettings, String pluginId) {
@@ -91,10 +151,10 @@ public class RewardService {
 
   private void computeReward(RewardPluginSettings rewardPluginSettings,
                              Map<Long, Double> earnedPoints,
+                             Set<Long> validIdentityIdsToUse,
                              Set<RewardMemberDetail> rewardMemberDetails) {
     RewardBudgetType budgetType = rewardPluginSettings.getBudgetType();
     String pluginId = rewardPluginSettings.getPluginId();
-    double threshold = rewardPluginSettings.getThreshold();
     double configuredPluginAmount = rewardPluginSettings.getAmount();
     if (configuredPluginAmount < 0) {
       throw new IllegalStateException("Plugin " + pluginId + " has a configured negative reward amount ("
@@ -102,7 +162,7 @@ public class RewardService {
     }
 
     // Filter non elligible users switch threshold
-    filterElligibleMembers(earnedPoints.entrySet(), pluginId, threshold);
+    filterElligibleMembers(earnedPoints.entrySet(), validIdentityIdsToUse, rewardPluginSettings, rewardMemberDetails);
 
     double amountPerPoint = 0;
     double totalFixedBudget = 0;
@@ -161,11 +221,24 @@ public class RewardService {
       Long identityId = identitiyPointsEntry.getKey();
       Double points = identitiyPointsEntry.getValue();
       double amount = points * amountPerPoint;
-      addTeamMemberReward(rewardMemberDetails, pluginId, identityId, points, amount);
+
+      RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
+      rewardMemberDetail.setIdentityId(identityId);
+      rewardMemberDetail.setPluginId(pluginId);
+      rewardMemberDetail.setPoints(points);
+      rewardMemberDetail.setAmount(amount);
+      rewardMemberDetail.setPoolsUsed(false);
+      rewardMemberDetails.add(rewardMemberDetail);
     }
   }
 
-  private void filterElligibleMembers(Set<Entry<Long, Double>> identitiesPointsEntries, String pluginId, double threshold) {
+  private void filterElligibleMembers(Set<Entry<Long, Double>> identitiesPointsEntries,
+                                      Set<Long> validIdentityIdsToUse,
+                                      RewardPluginSettings rewardPluginSettings,
+                                      Set<RewardMemberDetail> rewardMemberDetails) {
+    String pluginId = rewardPluginSettings.getPluginId();
+    double threshold = rewardPluginSettings.getThreshold();
+
     Iterator<Entry<Long, Double>> identitiesPointsIterator = identitiesPointsEntries.iterator();
     while (identitiesPointsIterator.hasNext()) {
       Map.Entry<java.lang.Long, java.lang.Double> entry = identitiesPointsIterator.next();
@@ -176,8 +249,10 @@ public class RewardService {
         throw new IllegalStateException("Plugin with id " + pluginId + " has assigned a negative points (" + points
             + ") to user with id " + identityId);
       }
-      if (points < threshold || points == 0) {
-        // Member doesn't have enough points, so he's not eligible
+
+      if (points < threshold || points == 0 || !validIdentityIdsToUse.contains(identityId)) {
+        // Member doesn't have enough points or his wallet is disabled => not
+        // eligible
         identitiesPointsIterator.remove();
 
         if (points > 0) {
@@ -187,22 +262,11 @@ public class RewardService {
           rewardMemberDetail.setPluginId(pluginId);
           rewardMemberDetail.setPoints(points);
           rewardMemberDetail.setAmount(0);
+          rewardMemberDetail.setPoolsUsed(rewardPluginSettings.isUsePools());
+          rewardMemberDetails.add(rewardMemberDetail);
         }
       }
     }
-  }
-
-  private void addTeamMemberReward(Set<RewardMemberDetail> rewardMemberDetails,
-                                   String pluginId,
-                                   Long identityId,
-                                   Double points,
-                                   double amount) {
-    RewardMemberDetail rewardMemberDetail = new RewardMemberDetail();
-    rewardMemberDetail.setIdentityId(identityId);
-    rewardMemberDetail.setPluginId(pluginId);
-    rewardMemberDetail.setPoints(points);
-    rewardMemberDetail.setAmount(amount);
-    rewardMemberDetails.add(rewardMemberDetail);
   }
 
   private void computeTeamsMembersBudget(String pluginId,
@@ -340,8 +404,8 @@ public class RewardService {
       rewardMemberDetail.setPluginId(pluginId);
       rewardMemberDetail.setPoints(points);
       rewardMemberDetail.setAmount(points * amountPerPoint);
+      rewardMemberDetail.setPoolsUsed(true);
       rewardMemberDetails.add(rewardMemberDetail);
     });
   }
-
 }

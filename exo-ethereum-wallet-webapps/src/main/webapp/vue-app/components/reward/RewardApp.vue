@@ -40,7 +40,7 @@
             </v-card>
           </v-dialog>
 
-          <v-flex v-if="isContractDifferentFromPrincipal" class="text-xs-center">
+          <v-flex v-if="isContractDifferentFromPrincipal && !loading" class="text-xs-center">
             <div class="alert alert-warning">
               <i class="uiIconWarning"></i> You have chosen a token that is different from principal displayed token
             </div>
@@ -71,7 +71,7 @@
                 :total-budget="totalBudget"
                 :sent-budget="sentBudget"
                 :eligible-users-count="eligibleUsersCount"
-                @dates-changed="refreshRewards"
+                @dates-changed="refreshRewardSettings"
                 @pending="pendingTransaction"
                 @success="successTransaction"
                 @error="error = $event" />
@@ -82,11 +82,9 @@
                 :wallets="wallets"
                 :contract-details="contractDetails"
                 :period="periodDatesDisplay"
-                :total-budget="totalBudget"
-                :sent-budget="sentBudget"
-                :eligible-users-count="eligibleUsersCount"
+                :eligible-pools-users-count="eligiblePoolsUsersCount"
                 @teams-refreshed="refreshRewardSettings"
-                @refresh="refreshRewards"
+                @refresh="refreshRewardSettings"
                 @error="error = $event" />
             </v-tab-item>
             <v-tab-item id="Configuration">
@@ -130,6 +128,7 @@ export default {
       transactionEtherscanLink: null,
       addressEtherscanLink: null,
       contractDetails: null,
+      periodDatesDisplay: null,
       periodType: null,
       networkId: null,
       walletAddress: null,
@@ -143,7 +142,10 @@ export default {
   },
   computed: {
     validUsers() {
-      return this.wallets.filter(wallet => wallet.enabled && !wallet.disabled);
+      return this.wallets.filter(wallet => wallet.enabled && (wallet.tokensToSend));
+    },
+    eligiblePoolsUsersCount() {
+      return this.validUsers.filter(wallet =>  !wallet.disabledPool && wallet.poolTokensToSend).length;
     },
     eligibleUsersCount() {
       return this.validUsers.filter(wallet =>  wallet.tokensToSend || wallet.tokensSent).length;
@@ -234,48 +236,43 @@ export default {
         .then(() => this.$refs.rewardTeams.refreshTeams())
         .then(() => this.$refs.sendRewards.refreshDates())
         .then(() => this.$nextTick())
+        .then(() => this.$refs.sendRewards.refreshWalletTransactionStatus())
+        .then(() => this.$nextTick())
         .then(() => this.refreshRewards())
         .finally(() => this.loading = false);
     },
     refreshRewards() {
       this.loading = true;
+      this.periodDatesDisplay = this.$refs.sendRewards.periodDatesDisplay;
       const teams = this.$refs.rewardTeams.teams;
 
-      this.duplicatedWallets = [];
-
       // Check enabled/disabled wallets
-      this.wallets.forEach((wallet) => wallet.disabled = false);
+      this.wallets.forEach((wallet) => wallet.disabledPool = false);
       teams.forEach((team) => {
         if (team.id && team.members) {
           team.members.forEach((memberObject) => {
             const wallet = this.wallets.find((wallet) => wallet && wallet.id && wallet.technicalId === memberObject.identityId);
             if (wallet) {
-              wallet.disabled = team.disabled;
+              wallet.disabledPool = team.disabled;
             }
           });
         }
       });
 
-      const validWallets = this.wallets.filter(wallet => wallet.enabled && !wallet.disabled);
-      return this.$nextTick()
-        .then(() => {
-          const identityIds = validWallets.map(wallet => wallet.technicalId);
-          return computeRewards(identityIds, this.$refs.sendRewards.selectedDateInSeconds)
-        })
+      this.duplicatedWallets = [];
+      const identityIds = this.wallets.map(wallet => wallet.technicalId);
+
+      return computeRewards(identityIds, this.$refs.sendRewards.selectedDateInSeconds)
         .then(rewardDetails => {
           if(rewardDetails.error) {
             this.error = rewardDetails.error;
             return;
           }
-          this.wallets.forEach(wallet => {
-            wallet.rewards = [];
-            wallet.tokensToSend = 0;
-            delete wallet.rewardTeams;
-          });
 
-          validWallets.forEach(wallet => {
+          this.wallets.forEach(wallet => {
             wallet.rewards = rewardDetails.filter(rewardDetail => rewardDetail.identityId === wallet.technicalId);
-            wallet.tokensToSend = wallet.rewards.reduce((sum, reward) => sum + reward.amount, 0);
+            wallet.tokensToSend = this.toFixed(wallet.rewards.reduce((sum, reward) => sum + reward.amount, 0));
+            wallet.poolTokensToSend = wallet.rewards.filter(reward => reward.poolsUsed).reduce((sum, reward) => sum + reward.amount, 0);
             delete wallet.rewardTeams;
           });
 
@@ -293,13 +290,8 @@ export default {
                   } else {
                     this.$set(wallet, 'rewardTeams', [team]);
                   }
-                  if(wallet.tokensSent || wallet.tokensToSend) {
+                  if(!team.disabled && wallet.poolTokensToSend) {
                     team.validMembersWallets.push(wallet);
-                  }
-                  wallet.disabled = team.disabled;
-                  if(wallet.disabled) {
-                    wallet.rewards = [];
-                    wallet.tokensToSend = 0;
                   }
                 }
               });
@@ -310,7 +302,7 @@ export default {
           if (membersWithEmptyTeam && membersWithEmptyTeam.length) {
             const validMembersWallets = [];
             membersWithEmptyTeam.forEach(wallet => {
-              if(wallet.tokensSent || wallet.tokensToSend) {
+              if(wallet.poolTokensToSend) {
                 validMembersWallets.push(wallet);
               }
             });
@@ -337,7 +329,7 @@ export default {
 
           teams.forEach((team) => {
             if (team.validMembersWallets && team.validMembersWallets.length) {
-              team.computedBudget = team.validMembersWallets.reduce((total, wallet) => total += wallet.tokensSent || wallet.tokensToSend || 0, 0);
+              team.computedBudget = team.validMembersWallets.reduce((total, wallet) => total += wallet.poolTokensToSend || 0, 0);
             }
           });
         })

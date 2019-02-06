@@ -50,13 +50,30 @@ public class EthereumWalletAccountService {
   }
 
   /**
+   * Retrieve wallet details by identity technical id
+   * 
+   * @param identityId
+   * @return {@link Wallet}
+   */
+  public Wallet getWalletByIdentityId(long identityId) {
+    if (identityId == 0) {
+      throw new IllegalArgumentException("identityId is mandatory");
+    }
+    Identity identity = getIdentityById(identityId);
+    if (identity == null) {
+      throw new IllegalArgumentException("Can't find identity with id " + identityId);
+    }
+    return getWalletOfIdentity(identity);
+  }
+
+  /**
    * Retrieve wallet details by identity type and remoteId
    * 
    * @param type
    * @param remoteId
    * @return {@link Wallet}
    */
-  public Wallet getWalletByTypeAndID(String type, String remoteId) {
+  public Wallet getWalletByTypeAndId(String type, String remoteId) {
     if (StringUtils.isBlank(remoteId)) {
       throw new IllegalArgumentException("id parameter is mandatory");
     }
@@ -70,16 +87,7 @@ public class EthereumWalletAccountService {
       throw new IllegalArgumentException("Can't find identity with id " + remoteId + " and type " + accountType.getId());
     }
 
-    Wallet wallet = accountStorage.getWalletByIdentityId(Long.parseLong(identity.getId()));
-    if (wallet == null) {
-      wallet = new Wallet();
-      computeWalletFromIdentity(wallet, identity);
-    } else {
-      wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
-    }
-    wallet.setDisabledUser(!identity.isEnable());
-    wallet.setDeletedUser(identity.isDeleted());
-    return wallet;
+    return getWalletOfIdentity(identity);
   }
 
   /**
@@ -163,7 +171,7 @@ public class EthereumWalletAccountService {
    * @param address
    * @param enable
    * @param username
-   * @throws IllegalAccessException 
+   * @throws IllegalAccessException
    */
   public void enableWalletByAddress(String address, boolean enable, String username) throws IllegalAccessException {
     if (address == null) {
@@ -236,6 +244,20 @@ public class EthereumWalletAccountService {
       throw new IllegalStateException("User " + modifierUsername + " attempts to assign address of wallet of "
           + walletByAddress);
     }
+  }
+
+  private Wallet getWalletOfIdentity(Identity identity) {
+    long identityId = Long.parseLong(identity.getId());
+    Wallet wallet = accountStorage.getWalletByIdentityId(identityId);
+    if (wallet == null) {
+      wallet = new Wallet();
+      computeWalletFromIdentity(wallet, identity);
+    } else {
+      wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
+    }
+    wallet.setDisabledUser(!identity.isEnable());
+    wallet.setDeletedUser(identity.isDeleted());
+    return wallet;
   }
 
   private void setWalletPassPhrase(Wallet wallet, Wallet oldWallet, boolean isNew) {

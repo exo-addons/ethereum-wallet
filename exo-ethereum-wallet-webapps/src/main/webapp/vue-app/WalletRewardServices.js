@@ -53,7 +53,7 @@ export function getRewardTransactions(networkId, periodType, startDateInSeconds)
     if (resp && resp.ok) {
       return resp.json();
     } else {
-      throw new Error('Error saving reward transactions');
+      throw new Error('Error getting reward transactions');
     }
   });
 }
@@ -117,7 +117,7 @@ export function computeRewards(identityIds, periodDateInSeconds) {
     body: JSON.stringify(identityIds),
   }).then((resp) => {
     if (resp && resp.ok) {
-      return  resp.json();
+      return resp.json();
     } else {
       throw new Error('Error computing rewards');
     }

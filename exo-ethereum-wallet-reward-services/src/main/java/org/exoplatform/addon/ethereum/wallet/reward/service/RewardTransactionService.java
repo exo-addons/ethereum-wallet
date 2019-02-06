@@ -45,12 +45,11 @@ public class RewardTransactionService {
    * @param networkId
    * @param periodType
    * @param startDateInSeconds
-   * @param walletRewardType
    * @return
    */
   public List<JSONObject> getRewardTransactions(Long networkId,
-                                                      String periodType,
-                                                      long startDateInSeconds) {
+                                                String periodType,
+                                                long startDateInSeconds) {
     String periodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds);
     SettingValue<?> periodTransactionsValue =
                                             settingService.get(REWARD_CONTEXT, REWARD_SCOPE, periodTransactionsParamName);

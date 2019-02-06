@@ -5,7 +5,7 @@
         <i class="uiIconError"></i> {{ error }}
       </div>
     </v-card-text>
-    <v-card-text v-if="!contractDetails" class="text-xs-center">
+    <v-card-text v-if="!contractDetails && !loading" class="text-xs-center">
       <div class="alert alert-warning">
         <i class="uiIconWarning"></i> No token currency is configured, please review <a href="javascript:void(0);" @click="selectedTab = 2">settings</a>
       </div>
@@ -37,10 +37,10 @@
         <span>Eligible users: <strong>{{ eligibleUsersCount }}</strong></span>
       </h4>
       <h4>
-        <span>Total budget: <strong>{{ totalBudget }} {{ symbol }}</strong></span>
+        <span>Total budget: <strong>{{ toFixed(totalBudget) }} {{ symbol }}</strong></span>
       </h4>
       <h4>
-        <span>Sent tokens: <strong>{{ sentBudget }} {{ symbol }}</strong></span>
+        <span>Sent tokens: <strong>{{ toFixed(sentBudget) }} {{ symbol }}</strong></span>
       </h4>
     </div>
     <v-container>
@@ -74,7 +74,7 @@
         <tr :active="props.selected">
           <td>
             <v-checkbox
-              v-if="props.item.address && props.item.enabled && !props.item.disabled && props.item.tokensToSend && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.enabled && props.item.tokensToSend && (!props.item.status || props.item.status === 'error')"
               :input-value="props.selected"
               hide-details
               @click="props.selected = !props.selected" />
@@ -92,7 +92,8 @@
               :space-id="props.item.spaceId"
               :profile-type="props.item.type"
               :display-name="props.item.name"
-              :enabled="props.item.enabled && !props.item.disabled"
+              :enabled="props.item.enabled"
+              :disabled-in-reward-pool="props.item.disabledPool"
               :disapproved="props.item.disapproved"
               :deleted-user="props.item.deletedUser"
               :disabled-user="props.item.disabledUser"
@@ -102,7 +103,12 @@
           <td class="text-xs-left">
             <ul v-if="props.item.rewardTeams && props.item.rewardTeams.length">
               <li v-for="team in props.item.rewardTeams" :key="team.id">
-                {{ team.name }}
+                <template v-if="team.disabled">
+                  <del class="red--text">{{ team.name }}</del> (Disabled)
+                </template>
+                <template v-else>
+                  {{ team.name }}
+                </template>
               </li>
             </ul>
             <div v-else>
@@ -115,7 +121,7 @@
               :href="`${transactionEtherscanLink}${props.item.hash}`"
               target="_blank"
               title="Open in etherscan">
-              Open in wallet
+              Open in etherscan
             </a> <span v-else>
               -
             </span>
@@ -151,7 +157,7 @@
           </td>
           <td>
             <v-text-field
-              v-if="props.item.address&& props.item.enabled && !props.item.disabled && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.enabled && (!props.item.status || props.item.status === 'error')"
               v-model.number="props.item.tokensToSend"
               type="number"
               class="input-text-center" />
@@ -164,7 +170,11 @@
             </template>
           </td>
           <td>
-            <v-btn icon small>
+            <v-btn
+              :disabled="!props.item.rewards || !props.item.rewards.length"
+              icon
+              small
+              @click="selectedWallet = props.item">
               <v-icon size="16">fa-plus</v-icon>
             </v-btn>
           </td>
@@ -198,11 +208,19 @@
       reward-count-field="points"
       @sent="newPendingTransaction"
       @error="error = $event" />
+
+    <reward-detail-modal
+      ref="rewardDetails"
+      :wallet="selectedWallet"
+      :period="periodDatesDisplay"
+      :symbol="symbol"
+      @closed="selectedWallet = null" />
   </v-card>
 </template>
 
 <script>
 import SendRewardModal from './modal/SendModal.vue';
+import RewardDetailModal from './modal/RewardDetailModal.vue';
 import ProfileChip from '../ProfileChip.vue';
 
 import {getRewardTransactions, getRewardDates} from '../../WalletRewardServices.js';
@@ -210,6 +228,7 @@ import {watchTransactionStatus} from '../../WalletUtils.js';
 
 export default {
   components: {
+    RewardDetailModal,
     SendRewardModal,
     ProfileChip,
   },
@@ -262,30 +281,20 @@ export default {
         return 0;
       },
     },
-    startDateInSeconds: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
-    endDateInSeconds: {
-      type: Number,
-      default: function() {
-        return 0;
-      },
-    },
   },
   data() {
     return {
       search: '',
       displayDisabledUsers: false,
-      defaultRewardLabelTemplate: '{rewardCount} reward points earned for period: {startDate} to {endDate}',
-      defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} reward points {earned in pool_label} for period: {startDate} to {endDate}',
+      defaultRewardLabelTemplate: '{name} is rewarded {amount} {symbol} for period: {startDate} to {endDate}',
+      defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} {pluginName} {earned in pool_label} for period: {startDate} to {endDate}',
       selectedIdentitiesList: [],
       selectedDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
       selectedDateMenu: false,
       selectedStartDate: null,
       selectedEndDate: null,
+      loading: true,
+      selectedWallet: null,
       identitiesHeaders: [
         {
           text: '',
@@ -358,13 +367,13 @@ export default {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
     recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.enabled && !item.disabled && item.tokensToSend && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.enabled && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
     validRecipients() {
-      return this.wallets ? this.wallets.filter((item) => item.address && item.tokensToSend && item.enabled && !item.disabled) : [];
+      return this.wallets ? this.wallets.filter((item) => item.address && item.tokensToSend && item.enabled) : [];
     },
     filteredIdentitiesList() {
-      return this.wallets ? this.wallets.filter((wallet) => (this.displayDisabledUsers || !wallet.disabled) && this.filterItemFromList(wallet, this.search)) : [];
+      return this.wallets ? this.wallets.filter((wallet) => (this.displayDisabledUsers || wallet.enabled || wallet.tokensSent || wallet.tokensToSend) && this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
       return this.validRecipients.filter((item) => !item.status || item.status === 'error');
@@ -382,6 +391,11 @@ export default {
     },
   },
   watch: {
+    selectedWallet() {
+      if(this.selectedWallet) {
+        this.$refs.rewardDetails.open();
+      }
+    },
     selectedDate() {
       this.refreshDates()
         .then(() => this.$nextTick())
@@ -390,11 +404,13 @@ export default {
   },
   methods: {
     refreshDates() {
+      this.loading = true;
       return getRewardDates(new Date(this.selectedDate), this.periodType)
         .then((period) => {
           this.selectedStartDate = this.formatDate(new Date(period.startDateInSeconds * 1000));
           this.selectedEndDate = this.formatDate(new Date(period.endDateInSeconds * 1000));
-        });
+        })
+        .finally(() => this.loading = false);
     },
     computeTokensToSend() {
       this.$forceUpdate();
@@ -452,7 +468,8 @@ export default {
           });
         }
       } else {
-        getRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.startDateInSeconds).then((resultTransactions) => {
+        this.loading = true;
+        return getRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.selectedStartDateInSeconds).then((resultTransactions) => {
           if (resultTransactions) {
             resultTransactions.forEach((resultTransaction) => {
               if (resultTransaction) {
@@ -474,7 +491,8 @@ export default {
               }
             });
           }
-        });
+        })
+        .finally(() => this.loading = false);
       }
     },
     formatDate(date) {

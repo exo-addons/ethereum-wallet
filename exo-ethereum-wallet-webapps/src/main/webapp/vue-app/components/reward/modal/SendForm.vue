@@ -318,14 +318,27 @@ export default {
         }
       });
     },
-    transformMessage(message, amount, symbol, rewardCount, poolName, startDate, endDate) {
-      return message.trim()
-        .replace('{amount}', amount)
-        .replace('{symbol}', symbol)
-        .replace('{earned in pool_label}', poolName && poolName.trim().length ? `earned in pool ${poolName}` : '')
-        .replace('{rewardCount}', rewardCount)
-        .replace('{startDate}', startDate)
-        .replace('{endDate}', endDate);
+    transformMessage(message, wallet, symbol, startDate, endDate) {
+      const poolName = (wallet.rewardTeams && wallet.rewardTeams.length && wallet.rewardTeams[0].name) || '';
+      const identityName = wallet.name;
+
+      const rewardMessages = [];
+      wallet.rewards.forEach(reward => {
+        if (reward.amount) {
+          const rewardMessage = message.trim()
+            .replace('{name}', identityName)
+            .replace('{amount}', this.toFixed(reward.amount))
+            .replace('{pluginName}', reward.pluginId)
+            .replace('{symbol}', symbol)
+            .replace('{earned in pool_label}', reward.poolsUsed && poolName && poolName.trim().length ? `earned in pool ${poolName}` : '')
+            .replace('{rewardCount}', reward.points)
+            .replace('{startDate}', startDate)
+            .replace('{endDate}', endDate)
+            .replace('  ', ' ');
+          rewardMessages.push(rewardMessage);
+        }
+      });
+      return (rewardMessages.length && rewardMessages.join('\r\n')) || '';
     },
     sendTokens(recipientWallet, rewardTransactions) {
       let errorAppended = false;
@@ -378,13 +391,11 @@ export default {
 
                 const amount = amountToSendForReceiver;
                 const symbol = this.contractDetails && this.contractDetails.symbol;
-                const rewardCount = recipientWallet[this.rewardCountField];
                 const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
                 const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-                const poolName = (recipientWallet.gamificationTeams && recipientWallet.gamificationTeams.length && recipientWallet.gamificationTeams[0].name) || '';
 
-                message = this.transformMessage(message, amount, symbol, rewardCount, poolName, startDate, endDate);
-                label = this.transformMessage(label, amount, symbol, rewardCount, poolName, startDate, endDate);
+                message = this.transformMessage(message, recipientWallet, symbol, startDate, endDate);
+                label = this.transformMessage(label, recipientWallet, symbol, startDate, endDate);
 
                 const pendingTransaction = {
                   hash: hash,

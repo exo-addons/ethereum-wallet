@@ -51,8 +51,8 @@ public class EventEncoder {
    * @return hash value
    */
   public static byte[] sha3(byte[] input, int offset, int length) {
-      Keccak.DigestKeccak kecc = new Keccak.Digest256();
-      kecc.update(input, offset, length);
-      return kecc.digest();
+    Keccak.DigestKeccak kecc = new Keccak.Digest256();
+    kecc.update(input, offset, length);
+    return kecc.digest();
   }
 }

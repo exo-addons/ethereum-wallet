@@ -270,13 +270,13 @@ public class EthereumWalletService implements Startable {
 
     Wallet wallet = null;
     if (StringUtils.isNotBlank(spaceId)) {
-      wallet = accountService.getWalletByTypeAndID(WalletType.SPACE.getId(), spaceId);
+      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId);
       if (wallet != null && !accountService.canAccessWallet(wallet, username)) {
         LOG.warn("User {} is not allowed to display space wallet {}", username, spaceId);
         globalSettings.setWalletEnabled(false);
       }
     } else {
-      wallet = accountService.getWalletByTypeAndID(WalletType.USER.getId(), username);
+      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), username);
     }
 
     if (wallet != null) {
@@ -412,7 +412,7 @@ public class EthereumWalletService implements Startable {
     String requestReceipientId = fundsRequest.getReceipient();
     String requestReceipientType = fundsRequest.getReceipientType();
 
-    Wallet requestReceipient = accountService.getWalletByTypeAndID(WalletType.getType(requestReceipientType).getId(),
+    Wallet requestReceipient = accountService.getWalletByTypeAndId(WalletType.getType(requestReceipientType).getId(),
                                                                    requestReceipientId);
 
     if (requestReceipient == null || requestReceipient.getTechnicalId() == 0) {
@@ -420,7 +420,7 @@ public class EthereumWalletService implements Startable {
     }
 
     ctx.append(FUNDS_REQUEST_SENDER_DETAIL_PARAMETER,
-               accountService.getWalletByTypeAndID(WalletType.USER.getId(), getCurrentUserId()));
+               accountService.getWalletByTypeAndId(WalletType.USER.getId(), getCurrentUserId()));
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, requestSender);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, requestReceipient);
     ctx.append(FUNDS_REQUEST_PARAMETER, fundsRequest);
