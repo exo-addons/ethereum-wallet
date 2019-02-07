@@ -71,6 +71,7 @@
                 :total-budget="totalBudget"
                 :sent-budget="sentBudget"
                 :eligible-users-count="eligibleUsersCount"
+                :total-rewards="totalRewards"
                 @dates-changed="refreshRewardSettings"
                 @pending="pendingTransaction"
                 @success="successTransaction"
@@ -135,6 +136,7 @@ export default {
       originalWalletAddress: null,
       duplicatedWallets: [],
       rewardSettings: {},
+      totalRewards: [],
       teams: [],
       wallets: [],
       contracts: [],
@@ -268,6 +270,13 @@ export default {
             this.error = rewardDetails.error;
             return;
           }
+
+          const totalRewards = {};
+          if(this.rewardSettings && this.rewardSettings.pluginSettings && this.rewardSettings.pluginSettings.length) {
+            this.rewardSettings.pluginSettings.forEach(pluginSetting => totalRewards[pluginSetting.pluginId] = {pluginId: pluginSetting.pluginId, total: 0})
+          }
+          rewardDetails.forEach(rewardDetail => totalRewards[rewardDetail.pluginId] && (totalRewards[rewardDetail.pluginId].total += rewardDetail.points));
+          this.totalRewards = Object.values(totalRewards);
 
           this.wallets.forEach(wallet => {
             wallet.rewards = rewardDetails.filter(rewardDetail => rewardDetail.identityId === wallet.technicalId);

@@ -42,6 +42,9 @@
       <h4>
         <span>Sent tokens: <strong>{{ toFixed(sentBudget) }} {{ symbol }}</strong></span>
       </h4>
+      <h4 v-for="totalReward in totalRewards" :key="totalReward.pluginId">
+        <span>Total {{ totalReward.pluginId }}: <strong>{{ totalReward.total }}</strong></span>
+      </h4>
     </div>
     <v-container>
       <v-layout>
@@ -279,6 +282,12 @@ export default {
       type: Number,
       default: function() {
         return 0;
+      },
+    },
+    totalRewards: {
+      type: Array,
+      default: function() {
+        return [];
       },
     },
   },
