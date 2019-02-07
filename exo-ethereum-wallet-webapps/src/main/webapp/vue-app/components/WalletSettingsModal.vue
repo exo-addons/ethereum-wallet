@@ -53,14 +53,12 @@
                     <v-combobox
                       v-model="selectedCurrency"
                       :items="currencies"
-                      attach="#selectedCurrencyParent"
                       label="Select fiat currency used to display ether amounts conversion" />
                   </div>
                   <div id="selectedOverviewAccountsParent" class="selectBoxVuetifyParent">
                     <v-combobox
                       v-model="selectedOverviewAccounts"
                       :items="accountsList"
-                      attach="#selectedOverviewAccountsParent"
                       label="List of currencies to use (by order)"
                       placeholder="List of contracts, ether and fiat to use in wallet application (by order)"
                       multiple

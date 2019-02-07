@@ -24,13 +24,8 @@
             :loading="loading"
             class="mb-3"
             is-administration
-            @loading="loadingContracts = true"
-            @end-loading="loadingContracts = false"
             @refresh="init()"
-            @error="
-              loadingContracts = false;
-              error = $event;
-            " />
+            @error="error = $event" />
 
           <v-dialog
             v-model="loading"
@@ -65,7 +60,10 @@
             hide-actions
             @error="error = $event" />
 
-          <v-tabs v-model="selectedTab" grow>
+          <v-tabs
+            v-if="settingsLoaded"
+            v-model="selectedTab"
+            grow>
             <v-tabs-slider color="primary" />
             <v-tab
               v-if="sameConfiguredNetwork && isAdmin"
@@ -99,7 +97,7 @@
             </v-tab>
           </v-tabs>
 
-          <v-tabs-items v-model="selectedTab">
+          <v-tabs-items v-if="settingsLoaded" v-model="selectedTab">
             <v-tab-item
               v-if="sameConfiguredNetwork && isAdmin"
               id="general"
@@ -108,7 +106,6 @@
                 ref="generalTab"
                 :wallet-address="walletAddress"
                 :loading="loading"
-                :loading-settings="loadingSettings"
                 :ether-balance="walletAddressEtherBalance"
                 :contracts="contracts"
                 :same-configured-network="sameConfiguredNetwork"
@@ -119,6 +116,7 @@
                 @overview-accounts-loaded="overviewAccounts = $event"
                 @save="saveGlobalSettings" />
             </v-tab-item>
+
             <v-tab-item
               v-if="sameConfiguredNetwork && isAdmin"
               id="funds"
@@ -132,9 +130,12 @@
                 @initial-funds-loaded="initialFunds = $event"
                 @save="saveGlobalSettings" />
             </v-tab-item>
-            <v-tab-item id="network" value="network">
+
+            <v-tab-item
+              v-if="isAdmin"
+              id="network"
+              value="network">
               <network-tab
-                v-if="isAdmin"
                 ref="networkTab"
                 :network-id="networkId"
                 :default-network-id="defaultNetworkId"
@@ -160,6 +161,7 @@
                 :token-etherscan-link="tokenEtherscanLink"
                 :wallets="wallets"
                 :same-configured-network="sameConfiguredNetwork"
+                :is-admin="isAdmin"
                 @contract-list-modified="$refs.walletsTab && $refs.walletsTab.init()"
                 @pending-transaction="watchPendingTransaction"
                 @contracts-loaded="contracts = $event" />
@@ -222,10 +224,9 @@ export default {
   data() {
     return {
       loading: false,
-      loadingSettings: false,
-      loadingContracts: false,
+      settingsLoaded: false,
       isAdmin: false,
-      selectedTab: true,
+      selectedTab: 'general',
       sameConfiguredNetwork: true,
       fiatSymbol: '$',
       refreshIndex: 1,
@@ -250,14 +251,13 @@ export default {
   },
   created() {
     this.init()
+      .then(() => this.isAdmin && this.sameConfiguredNetwork && (this.selectedTab = 'general'))
       .then(() => (this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId)))
       .then(() => (this.addressEtherscanLink = getAddressEtherscanlink(this.networkId)));
   },
   methods: {
     init(ignoreContracts) {
       this.loading = true;
-      this.loadingSettings = true;
-      this.loadingContracts = true;
       this.showAddContractModal = false;
       this.forceUpdate();
       this.selectedOverviewAccounts = [];
@@ -270,6 +270,9 @@ export default {
             throw new Error('Wallet settings are empty for current user');
           }
           this.isAdmin = window.walletSettings.isAdmin;
+          if(!this.isAdmin) {
+            this.selectedTab = 'contracts';
+          }
         })
         .then(() => ignoreContracts || initWeb3(false, true))
         .catch((error) => {
@@ -286,9 +289,12 @@ export default {
           this.originalWalletAddress = window.walletSettings.userPreferences.walletAddress;
           this.networkId = window.walletSettings.currentNetworkId;
           this.sameConfiguredNetwork = String(this.networkId) === String(window.walletSettings.defaultNetworkId);
-          if(!this.sameConfiguredNetwork) {
+
+          if(!this.sameConfiguredNetwork && this.isAdmin) {
             this.selectedTab = 'network';
           }
+          this.settingsLoaded = true;
+
           if (this.walletAddress) {
             return computeBalance(this.walletAddress);
           }
@@ -305,7 +311,6 @@ export default {
         .then(() => this.$refs.networkTab && this.$refs.networkTab.init())
         .then(() => {
           this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
-          this.loadingSettings = false;
         })
         .then(() => this.$refs.contractsTab && this.$refs.contractsTab.init())
         .then(() => this.$refs && this.$refs.generalTab && this.$refs.generalTab.setSelectedValues())
@@ -331,7 +336,7 @@ export default {
           this.error = String(e);
         })
         .finally(() => {
-          this.loadingContracts = this.loadingSettings = this.loadingWallets = this.loading = false;
+          this.loadingWallets = this.loading = false;
           this.forceUpdate();
         });
     },
@@ -447,7 +452,6 @@ export default {
     },
     saveGlobalSettings(globalSettings) {
       this.loading = true;
-      this.loadingSettings = true;
       const defaultInitialFundsMap = {};
       if (!globalSettings.initialFunds) {
         if (window.walletSettings.initialFunds && window.walletSettings.initialFunds.length) {

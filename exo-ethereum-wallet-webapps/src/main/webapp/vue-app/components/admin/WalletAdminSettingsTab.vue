@@ -136,12 +136,6 @@ export default {
         return false;
       },
     },
-    loadingSettings: {
-      type: Boolean,
-      default: function() {
-        return false;
-      },
-    },
   },
   data() {
     return {

@@ -18,6 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.listener;
 
 import java.util.concurrent.ExecutionException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
@@ -29,13 +30,17 @@ import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.*;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 
 /**
  * A listener to process newly detected transactions coming from configured
  * network
  */
 @Asynchronous
-public class EthereumTransactionProcessorListener extends Listener<Transaction, TransactionReceipt> {
+public class EthereumTransactionProcessorListener extends Listener<Object, TransactionReceipt> {
+
+  private static final Log                 LOG = ExoLogger.getLogger(EthereumTransactionProcessorListener.class);
 
   private EthereumWalletTransactionService transactionService;
 
@@ -48,27 +53,35 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
   }
 
   @Override
-  public void onEvent(Event<Transaction, TransactionReceipt> event) throws Exception {
+  public void onEvent(Event<Object, TransactionReceipt> event) throws Exception {
     ExoContainerContext.setCurrentContainer(container);
     RequestLifeCycle.begin(container);
     try {
-      Transaction transaction = event.getSource();
-      if (transaction == null) {
+      Object source = event.getSource();
+      if (source == null) {
         return;
       }
 
-      TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transaction.getHash(), true);
+      String transactionHash = null;
+      if (source instanceof Transaction) {
+        Transaction transaction = (Transaction) source;
+        transactionHash = transaction.getHash();
+      } else {
+        transactionHash = (String) source;
+      }
+
+      if (StringUtils.isBlank(transactionHash)) {
+        LOG.warn("Transaction hash is empty");
+      }
+
+      TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash, true);
       if (transactionDetail == null) {
         return;
       }
+
       TransactionReceipt transactionReceipt = event.getData();
       if (transactionReceipt == null) {
-        try {
-          transactionReceipt = getTransactionReceipt(transaction);
-        } catch (Exception e) {
-          // Attempt another time to get receipt
-          transactionReceipt = getTransactionReceipt(transaction);
-        }
+        transactionReceipt = getTransactionReceipt(transactionHash);
       }
       transactionDetail.setPending(false);
       transactionDetail.setSucceeded(transactionReceipt != null && transactionReceipt.isStatusOK());
@@ -79,8 +92,8 @@ public class EthereumTransactionProcessorListener extends Listener<Transaction, 
     }
   }
 
-  private TransactionReceipt getTransactionReceipt(Transaction transaction) throws InterruptedException, ExecutionException {
-    TransactionReceipt transactionReceipt = getEthereumClientConnector().getTransactionReceipt(transaction.getHash());
+  private TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
+    TransactionReceipt transactionReceipt = getEthereumClientConnector().getTransactionReceipt(transactionHash);
     if (transactionReceipt == null || "0x0".equals(transactionReceipt.getStatus())) {
       // Transaction may have failed
       return null;

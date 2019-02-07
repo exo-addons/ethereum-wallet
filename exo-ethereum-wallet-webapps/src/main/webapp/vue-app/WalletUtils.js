@@ -780,7 +780,7 @@ function waitAsyncForTransactionStatus(hash, transaction) {
     });
   } else {
     window.localWeb3.eth
-      .getBlock(transaction.blockHash)
+      .getBlock(transaction.blockHash, false)
       .then((block) => {
         // Sometimes the block is not available on time
         if (!block) {

@@ -21,8 +21,10 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.NEW_TRAN
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.picocontainer.Startable;
@@ -31,6 +33,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.core.methods.response.EthBlock.Block;
+import org.web3j.protocol.core.methods.response.EthBlock.TransactionResult;
 import org.web3j.protocol.websocket.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -73,7 +76,7 @@ public class EthereumClientConnector implements Startable {
 
   private Subscription             transactionSubscription          = null;
 
-  private Queue<Transaction>       transactionQueue                 = new ConcurrentLinkedQueue<>();
+  private Queue<String>            transactionHashesQueue           = new ConcurrentLinkedQueue<>();
 
   private ScheduledExecutorService scheduledExecutorService         = null;
 
@@ -140,23 +143,14 @@ public class EthereumClientConnector implements Startable {
         return;
       }
 
-      Transaction transaction = transactionQueue.poll();
-      while (transaction != null) {
+      String transactionHash = transactionHashesQueue.poll();
+      while (transactionHash != null) {
         try {
-          getListenerService().broadcast(NEW_TRANSACTION_EVENT, transaction, null);
-
-          if (transaction.getBlockNumber() != null && transaction.getBlockNumber().longValue() > this.lastWatchedBlockNumber) {
-            this.lastWatchedBlockNumber = transaction.getBlockNumber().longValue();
-          }
+          getListenerService().broadcast(NEW_TRANSACTION_EVENT, transactionHash, null);
         } catch (Throwable e) {
           LOG.warn("Error while handling transaction", e);
         }
-        transaction = transactionQueue.poll();
-      }
-      try {
-        getListenerService().broadcast(NEW_BLOCK_EVENT, this.lastWatchedBlockNumber, null);
-      } catch (Throwable e) {
-        LOG.warn("Error while broadcasting last watched block number event", e);
+        transactionHash = transactionHashesQueue.poll();
       }
     }, 10, 10, TimeUnit.SECONDS);
   }
@@ -174,12 +168,12 @@ public class EthereumClientConnector implements Startable {
   public void startListeninigToTransactions() {
     if (this.lastWatchedBlockNumber == 0) {
       LOG.info("Initiate subscription to Ethereum transaction events starting from latest block");
-      this.transactionSubscription = web3j.transactionObservable().subscribe(tx -> addTransactionToQueue(tx));
+      this.transactionSubscription = web3j.blockObservable(false).subscribe(tx -> addBlockTransactionsToQueue(tx));
     } else {
       LOG.info("Initiate subscription to Ethereum transaction events starting from block {}", this.lastWatchedBlockNumber);
       DefaultBlockParameterNumber startBlock = new DefaultBlockParameterNumber(this.lastWatchedBlockNumber);
-      this.transactionSubscription = web3j.catchUpToLatestAndSubscribeToNewTransactionsObservable(startBlock)
-                                          .subscribe(tx -> addTransactionToQueue(tx));
+      this.transactionSubscription = web3j.catchUpToLatestAndSubscribeToNewBlocksObservable(startBlock, false)
+                                          .subscribe(block -> addBlockTransactionsToQueue(block));
     }
     if (watchingBlockchainStartTime == 0) {
       watchingBlockchainStartTime = System.currentTimeMillis();
@@ -342,7 +336,7 @@ public class EthereumClientConnector implements Startable {
   }
 
   public int getTransactionQueueSize() {
-    return transactionQueue.size();
+    return transactionHashesQueue.size();
   }
 
   public long getWatchingBlockchainStartTime() {
@@ -375,10 +369,21 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
-  private boolean addTransactionToQueue(Transaction tx) {
-    watchedTransactionCount++;
-    transactionQueueMaxSize = Math.max(transactionQueue.size() + 1, transactionQueueMaxSize);
-    return transactionQueue.add(tx);
+  @SuppressWarnings("rawtypes")
+  private void addBlockTransactionsToQueue(EthBlock ethBlock) {
+    Block block = ethBlock.getBlock();
+    this.lastWatchedBlockNumber = block.getNumber().longValue();
+    List<TransactionResult> transactions = block.getTransactions();
+    transactionHashesQueue.addAll(transactions.parallelStream()
+                                              .map(transaction -> transaction.get().toString())
+                                              .collect(Collectors.toList()));
+    watchedTransactionCount += transactions.size();
+    transactionQueueMaxSize = Math.max(transactionHashesQueue.size() + 1, transactionQueueMaxSize);
+    try {
+      getListenerService().broadcast(NEW_BLOCK_EVENT, this.lastWatchedBlockNumber, null);
+    } catch (Throwable e) {
+      LOG.warn("Error while broadcasting last watched block number event", e);
+    }
   }
 
   private void closeConnection() {

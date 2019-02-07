@@ -5,6 +5,8 @@
         <v-combobox
           v-model="selectedNetwork"
           :items="networks"
+          item-text="text"
+          item-value="value"
           attach="#selectedNetworkParent"
           label="Select ethereum network" />
       </v-flex>
