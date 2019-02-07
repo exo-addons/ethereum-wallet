@@ -21,7 +21,6 @@ describe('WalletBrowserSetup.test.js', () => {
     isSpaceAdministrator: false,
     isAdministration: false,
     loading: false,
-    refreshIndex: 0,
     walletAddress: global.walletAddresses[1],
     loadingWalletBrowser: false,
   };

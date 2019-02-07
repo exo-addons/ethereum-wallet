@@ -19,7 +19,6 @@ describe('SendFundsModal.test.js', () => {
     accountsDetails: {},
     overviewAccounts: [],
     principalAccount: false,
-    refreshIndex: 1,
     networkId: 0,
     walletAddress: false,
     icon: false,
@@ -67,7 +66,6 @@ describe('SendFundsModal.test.js', () => {
         expectedData.walletAddress = global.walletAddress;
         expectedData.overviewAccounts = global.defaultWalletSettings.defaultOverviewAccounts;
         expectedData.disabled = true;
-        expectedData.refreshIndex = 7;
         expectedData.networkId = 4452364;
         expectedData.principalAccount = global.defaultWalletSettings.defaultPrincipalAccount;
 
@@ -118,7 +116,6 @@ describe('SendFundsModal.test.js', () => {
         expectedData.overviewAccounts = global.defaultWalletSettings.defaultOverviewAccounts;
         expectedData.disabled = false;
         expectedData.dialog = true;
-        expectedData.refreshIndex = 10;
         expectedData.networkId = 4452364;
         expectedData.principalAccount = global.defaultWalletSettings.defaultPrincipalAccount;
         expectedData.selectedOption = {};
@@ -180,7 +177,6 @@ describe('SendFundsModal.test.js', () => {
         expectedData.overviewAccounts = global.defaultWalletSettings.defaultOverviewAccounts;
         expectedData.disabled = false;
         expectedData.dialog = true;
-        expectedData.refreshIndex = 10;
         expectedData.networkId = 4452364;
         expectedData.principalAccount = global.defaultWalletSettings.defaultPrincipalAccount;
         expectedData.selectedOption = {};

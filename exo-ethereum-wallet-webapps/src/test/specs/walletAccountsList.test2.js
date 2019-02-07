@@ -23,7 +23,6 @@ describe('WalletAccountList.test.js', () => {
     principalAccount: false,
     walletAddress: false,
     networkId: 0,
-    refreshIndex: 1,
     sendEtherModal: false,
     sendTokenModal: false,
     delegateTokenModal: false,

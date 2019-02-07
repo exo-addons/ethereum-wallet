@@ -15,6 +15,7 @@
           input-label="Recipient"
           input-placeholder="Select a user, a space or an address to send to"
           title="Select a user, a space or an address to send to"
+          autofocus
           @item-selected="
             recipient = $event.address;
             $emit('receiver-selected', $event);
@@ -165,7 +166,12 @@ export default {
   },
   methods: {
     init() {
-      this.$refs.autocomplete.clear();
+      this.$nextTick(() => {
+        if (this.$refs.autocomplete) {
+          this.$refs.autocomplete.clear();
+          this.$refs.autocomplete.focus();
+        }
+      });
       this.loading = false;
       this.recipient = null;
       this.amount = null;

@@ -72,6 +72,7 @@
             :disabled="loading"
             input-label="Recipient"
             input-placeholder="Select a recipient for token delegation"
+            :autofocus="dialog"
             @item-selected="recipient = $event.address" />
           <v-text-field
             v-model.number="amount"
@@ -211,7 +212,7 @@ export default {
     },
     dialog() {
       if (this.dialog) {
-        this.$refs.autocomplete.clear();
+        this.$nextTick(() => this.$refs.autocomplete && this.$refs.autocomplete.clear());
         this.showQRCodeModal = false;
         this.recipient = null;
         this.amount = null;

@@ -8,7 +8,8 @@
           item-text="text"
           item-value="value"
           attach="#selectedNetworkParent"
-          label="Select ethereum network" />
+          label="Select ethereum network"
+          autofocus />
       </v-flex>
   
       <v-text-field
@@ -26,8 +27,7 @@
         :rules="mandatoryRule"
         type="text"
         name="providerURL"
-        label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)"
-        autofocus />
+        label="Ethereum Network HTTP URL used for static displaying spaces wallets (without Metamask)" />
   
       <v-text-field
         v-if="showSpecificNetworkFields"
@@ -135,7 +135,7 @@ export default {
   },
   data() {
     return {
-      defaultGas: 50000,
+      defaultGas: 150000,
       minGasPrice: null,
       normalGasPrice: null,
       maxGasPrice: null,

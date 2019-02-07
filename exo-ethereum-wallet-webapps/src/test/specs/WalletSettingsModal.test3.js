@@ -26,7 +26,7 @@ describe('WalletsettingsModal.test.js', () => {
     principalAccountAddress: false,
     accountsDetails: {},
     loading: false,
-    show: false,
+    dialog: false,
     error: false,
     walletAddress: false,
     selectedTab: 0,

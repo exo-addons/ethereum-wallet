@@ -179,9 +179,6 @@ export default {
     fundsHolder(newValue, oldValue) {
       if (oldValue) {
         this.fundsHolderSearchTerm = null;
-        // A hack to close on select
-        // See https://www.reddit.com/r/vuetifyjs/comments/819h8u/how_to_close_a_multiple_autocomplete_vselect/
-        this.$refs.fundsHolderAutoComplete.isFocused = false;
       }
     },
   },

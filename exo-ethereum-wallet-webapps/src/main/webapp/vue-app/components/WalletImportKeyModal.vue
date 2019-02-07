@@ -1,16 +1,16 @@
 <template>
   <v-dialog
-    v-model="importWalletDialog"
+    v-model="dialog"
     content-class="uiPopup with-overflow"
     class="walletImportKeyModal"
     width="500px"
     max-width="100vw"
     persistent
-    @keydown.esc="importWalletDialog = false">
+    @keydown.esc="dialog = false">
     <a
       slot="activator"
       href="javascript:void(0);"
-      @click="importWalletDialog = true">
+      @click="dialog = true">
       {{ walletAddress ? 'Restore your wallet' : 'Restore existing wallet' }}
     </a>
     <v-card class="elevation-12">
@@ -18,7 +18,7 @@
         <a
           class="uiIconClose pull-right"
           aria-hidden="true"
-          @click="importWalletDialog = false"></a> <span class="PopupTitle popupTitle">
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
             Restore wallet
           </span>
       </div>
@@ -52,6 +52,7 @@
             This is the private key to import a new wallet address
           </label>
           <v-text-field
+            v-if="dialog"
             v-model="walletPrivateKey"
             :append-icon="walletPrivateKeyShow ? 'visibility_off' : 'visibility'"
             :rules="[rules.priv]"
@@ -61,6 +62,7 @@
             label="Wallet private key"
             placeholder="Enter your wallet private key"
             autocomplete="off"
+            autofocus
             @click:append="walletPrivateKeyShow = !walletPrivateKeyShow" />
         </v-form>
       </v-card-text>
@@ -74,7 +76,7 @@
         </button> <button
           :disabled="loading"
           class="btn"
-          @click="importWalletDialog = false">
+          @click="dialog = false">
           Close
         </button>
         <v-spacer />
@@ -103,7 +105,7 @@ export default {
   },
   data() {
     return {
-      importWalletDialog: false,
+      dialog: false,
       walletPrivateKey: '',
       walletPrivateKeyShow: false,
       error: null,
@@ -115,8 +117,8 @@ export default {
     };
   },
   watch: {
-    importWalletDialog() {
-      if (this.importWalletDialog) {
+    dialog() {
+      if (this.dialog) {
         if (this.$refs.form) {
           this.$refs.form.reset();
         }
@@ -148,7 +150,7 @@ export default {
             saveBrowerWalletInstance(wallet, generatePassword(), thiss.isSpace, true, true)
               .then(() => {
                 thiss.loading = false;
-                thiss.importWalletDialog = false;
+                thiss.dialog = false;
                 thiss.$nextTick(() => {
                   thiss.$emit('configured');
                 });

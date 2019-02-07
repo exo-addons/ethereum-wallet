@@ -22,7 +22,6 @@ describe('WalletRequestFundsModal.test.js', () => {
     accountsDetails: {},
     overviewAccounts: [],
     principalAccount: false,
-    refreshIndex: 0,
     selectedOption: false,
     recipient: false,
     amount: false,

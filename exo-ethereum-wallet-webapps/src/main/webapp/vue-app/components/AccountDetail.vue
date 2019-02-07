@@ -206,6 +206,9 @@ export default {
         return Promise.resolve(null);
       }
       return window.localWeb3.eth.getBalance(this.walletAddress).then((balance) => {
+        if (!this.contractDetails) {
+          return Promise.resolve(null);
+        }
         balance = window.localWeb3.utils.fromWei(String(balance), 'ether');
         if (this.contractDetails.isContract) {
           this.contractDetails.etherBalance = balance;

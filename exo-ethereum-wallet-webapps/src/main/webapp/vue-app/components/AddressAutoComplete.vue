@@ -105,6 +105,12 @@ export default {
         return null;
       },
     },
+    autofocus: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
     noAddress: {
       type: Boolean,
       default: function() {
@@ -146,6 +152,11 @@ export default {
     };
   },
   watch: {
+    autofocus() {
+      if(this.autofocus) {
+        this.$refs.selectAutoComplete.focus();
+      }
+    },
     searchTerm(value) {
       if (!value) {
         return;
@@ -242,6 +253,9 @@ export default {
     });
   },
   methods: {
+    focus() {
+      this.$nextTick(() => this.$refs.selectAutoComplete.focus());
+    },
     clear() {
       if (this.currentUserItem) {
         this.items = [this.currentUserItem];

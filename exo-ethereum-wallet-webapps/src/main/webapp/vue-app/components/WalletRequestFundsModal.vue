@@ -40,52 +40,53 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-card-text>
-        <address-auto-complete
-          v-if="selectedAccount"
-          ref="autocomplete"
-          :disabled="loading"
-          input-label="Recipient"
-          input-placeholder="Select a recipient for your funds request"
-          @item-selected="recipient = $event" />
-
-        <v-container
-          flat
-          fluid
-          grid-list-lg
-          class="mt-4 pl-2">
-          <v-layout row wrap>
-            <v-text-field
-              v-if="selectedAccount"
-              v-model.number="amount"
-              :disabled="loading"
-              name="amount"
-              label="Amount"
-              placeholder="Select a suggested amount to request funds" />
-
-            <div id="requestFundsAccount" class="selectBoxVuetifyParent ml-1">
-              <v-combobox
-                v-model="selectedOption"
-                :items="accountsList"
-                attach="#requestFundsAccount"
-                label="Select currency"
-                placeholder="Select a currency to use for requesting funds"
-                cache-items />
-            </div>
-          </v-layout>
-        </v-container>
-
-        <v-textarea
-          v-if="selectedAccount"
-          id="requestMessage"
-          v-model="requestMessage"
-          :disabled="loading"
-          name="requestMessage"
-          label="Request message (Optional)"
-          placeholder="You can enter a custom message to send with your request"
-          class="mt-4"
-          rows="7"
-          flat
-          no-resize />
+        <v-form ref="form">
+          <address-auto-complete
+            ref="autocomplete"
+            :disabled="loading"
+            :autofocus="dialog"
+            input-label="Recipient"
+            input-placeholder="Select a recipient for your funds request"
+            required
+            @item-selected="recipient = $event" />
+  
+          <v-container
+            flat
+            fluid
+            grid-list-lg
+            class="mt-4 pl-2">
+            <v-layout row wrap>
+              <v-text-field
+                v-model.number="amount"
+                :disabled="loading"
+                name="amount"
+                label="Amount"
+                placeholder="Select a suggested amount to request funds" />
+  
+              <div id="requestFundsAccount" class="selectBoxVuetifyParent ml-1">
+                <v-combobox
+                  v-model="selectedOption"
+                  :items="accountsList"
+                  attach="#requestFundsAccount"
+                  label="Select currency"
+                  placeholder="Select a currency to use for requesting funds"
+                  cache-items />
+              </div>
+            </v-layout>
+          </v-container>
+  
+          <v-textarea
+            id="requestMessage"
+            v-model="requestMessage"
+            :disabled="loading"
+            name="requestMessage"
+            label="Request message (Optional)"
+            placeholder="You can enter a custom message to send with your request"
+            class="mt-4"
+            rows="7"
+            flat
+            no-resize />
+        </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />

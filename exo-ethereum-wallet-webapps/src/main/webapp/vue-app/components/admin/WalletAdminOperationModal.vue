@@ -55,23 +55,27 @@
               :input-label="autocompleteLabel"
               :input-placeholder="autocompletePlaceholder"
               class="mt-3"
+              :autofocus="dialog && autocompleteLabel"
               @item-selected="autocompleteValue = $event.address" />
 
             <v-text-field
+              v-if="dialog"
               v-show="inputLabel"
               v-model="inputValue"
               :disabled="loading"
               :label="inputLabel"
               :placeholder="inputPlaceholder"
+              :autofocus="inputLabel && !autocompleteLabel"
               class="mt-3"
               name="inputValue" />
 
             <v-text-field
-              v-if="!storedPassword"
+              v-if="dialog && !storedPassword"
               v-model="walletPassword"
               :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
               :type="walletPasswordShow ? 'text' : 'password'"
               :disabled="loading"
+              :autofocus="!inputLabel && !autocompleteLabel"
               name="walletPassword"
               label="Wallet password"
               placeholder="Enter your wallet password"
@@ -83,9 +87,11 @@
             <slot></slot>
 
             <v-text-field
+              v-if="dialog"
               v-model="transactionLabel"
               :disabled="loading"
               :class="inputLabel || 'mt-3'"
+              :autofocus="!inputLabel && !autocompleteLabel && storedPassword"
               type="text"
               name="transactionLabel"
               label="Label (Optional)"

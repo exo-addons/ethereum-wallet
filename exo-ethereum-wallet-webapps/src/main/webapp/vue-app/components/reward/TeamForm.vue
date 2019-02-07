@@ -13,7 +13,8 @@
             label="Pool name *"
             placeholder="Enter pool name"
             name="name"
-            required />
+            required
+            autofocus />
         </v-flex>
 
         <v-flex xs12 sm6>

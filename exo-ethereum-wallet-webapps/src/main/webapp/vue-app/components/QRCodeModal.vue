@@ -1,16 +1,16 @@
 <template>
   <v-dialog
-    v-model="show"
+    v-model="dialog"
     content-class="uiPopup with-overflow"
     width="500px"
     max-width="100vw"
-    @keydown.esc="show = false">
+    @keydown.esc="dialog = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a
           class="uiIconClose pull-right"
           aria-hidden="true"
-          @click="show = false"></a> <span class="PopupTitle popupTitle">
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
             {{ title }}
           </span>
       </div>
@@ -119,22 +119,22 @@ export default {
   },
   data() {
     return {
-      show: false,
+      dialog: false,
       netId: null,
     };
   },
   watch: {
     open() {
       if (this.open) {
-        this.show = true;
+        this.dialog = true;
         this.computeCanvas();
         this.$nextTick(() => {
           setDraggable();
         });
       }
     },
-    show() {
-      if (!this.show) {
+    dialog() {
+      if (!this.dialog) {
         this.netId = null;
         this.$emit('close');
       }

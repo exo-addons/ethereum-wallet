@@ -26,7 +26,6 @@ describe('WalletSummary.test.js', () => {
     hideActions: false,
     overviewAccounts: [],
     principalAccount: false,
-    refreshIndex: 0,
     etherBalance: 0,
     totalBalance: 0,
     totalFiatBalance: 0,

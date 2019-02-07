@@ -24,7 +24,8 @@
           chips
           cache-items
           dense
-          flat>
+          flat
+          autofocus>
           <template slot="no-data">
             <v-list-tile>
               <v-list-tile-title>

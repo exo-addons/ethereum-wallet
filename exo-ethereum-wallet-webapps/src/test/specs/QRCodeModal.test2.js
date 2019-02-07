@@ -28,7 +28,7 @@ describe('QRCodeModal.test.js', () => {
     argsNames: [],
     argsTypes: [],
     argsValues: [],
-    show: false,
+    dialog: false,
     netId: null,
   };
 
@@ -105,7 +105,7 @@ describe('QRCodeModal.test.js', () => {
         expectedData.amount = 2;
         expectedData.isContract = true;
         expectedData.open = true;
-        expectedData.show = true;
+        expectedData.dialog = true;
         expectedData.functionName = 'transfer';
         expectedData.argsNames = ['_to', '_value'];
         expectedData.argsTypes = ['address', 'uint256'];

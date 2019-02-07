@@ -1,18 +1,18 @@
 <template>
   <v-dialog
-    v-model="show"
+    v-model="dialog"
     content-class="uiPopup with-overflow not-draggable"
     classe="walletSettingsModal"
     width="700px"
     max-width="100vw"
     persistent
-    @keydown.esc="show = false">
+    @keydown.esc="dialog = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a
           class="uiIconClose pull-right"
           aria-hidden="true"
-          @click="show = false"></a> <span class="PopupTitle popupTitle">
+          @click="dialog = false"></a> <span class="PopupTitle popupTitle">
             Preferences
           </span>
       </div>
@@ -216,7 +216,7 @@
           :disabled="loading"
           :loading="loading"
           class="btn"
-          @click="show = false">
+          @click="dialog = false">
           Close
         </button>
         <v-spacer />
@@ -304,7 +304,7 @@ export default {
   data() {
     return {
       loading: false,
-      show: false,
+      dialog: false,
       error: null,
       walletAddress: null,
       selectedTab: 0,
@@ -385,7 +385,7 @@ export default {
         // Workaround to display slider on first popin open
         this.$refs.settingsTabs.callSlider();
 
-        this.show = true;
+        this.dialog = true;
         this.$nextTick(() => {
           setDraggable();
         });
@@ -412,8 +412,8 @@ export default {
         this.$forceUpdate();
       }
     },
-    show() {
-      if (!this.show) {
+    dialog() {
+      if (!this.dialog) {
         this.$emit('close');
       }
     },
@@ -457,7 +457,7 @@ export default {
                   defaultGas: this.defaultGas,
                   currency: this.selectedCurrency.value,
                 });
-                this.show = false;
+                this.dialog = false;
               } else {
                 this.error = 'Error saving preferences';
               }

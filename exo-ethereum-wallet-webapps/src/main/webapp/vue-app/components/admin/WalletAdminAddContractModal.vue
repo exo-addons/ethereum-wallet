@@ -1,16 +1,16 @@
 <template>
   <v-dialog
-    v-model="show"
+    v-model="dialog"
     content-class="uiPopup"
     width="500px"
     max-width="100vw"
-    @keydown.esc="show = false">
+    @keydown.esc="dialog = false">
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a
           class="uiIconClose pull-right"
           aria-hidden="true"
-          @click="show = false"></a>
+          @click="dialog = false"></a>
         <span class="PopupTitle popupTitle">
           Add Token address
         </span>
@@ -25,12 +25,14 @@
             $event.stopPropagation();
           ">
           <v-text-field
+            v-if="dialog"
             v-model="address"
             :disabled="loading"
             name="address"
             label="Address"
             placeholder="Select ERC20 Token address"
-            type="text" />
+            type="text"
+            autofocus />
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -80,7 +82,7 @@ export default {
   },
   data() {
     return {
-      show: false,
+      dialog: false,
       loading: null,
       error: null,
       address: null,
@@ -89,14 +91,14 @@ export default {
   watch: {
     open() {
       if (this.open) {
-        this.show = true;
+        this.dialog = true;
         this.$nextTick(() => {
           setDraggable();
         });
       }
     },
-    show() {
-      if (!this.show) {
+    dialog() {
+      if (!this.dialog) {
         this.$emit('close');
       }
     },
@@ -117,7 +119,7 @@ export default {
             }
             if (added) {
               this.$emit('added', this.address);
-              this.show = false;
+              this.dialog = false;
               this.address = null;
             } else {
               this.error = `Address is not recognized as ERC20 Token contract's address`;

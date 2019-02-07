@@ -18,6 +18,7 @@
           :disabled="loading"
           input-label="Recipient"
           input-placeholder="Select a user, a space or an address to send to"
+          autofocus
           @item-selected="
             recipient = $event.address;
             $emit('receiver-selected', $event);
@@ -246,9 +247,12 @@ export default {
   },
   methods: {
     init() {
-      if (this.$refs.autocomplete) {
-        this.$refs.autocomplete.clear();
-      }
+      this.$nextTick(() => {
+        if (this.$refs.autocomplete) {
+          this.$refs.autocomplete.clear();
+          this.$refs.autocomplete.focus();
+        }
+      });
       this.loading = false;
       this.showQRCodeModal = false;
       this.recipient = null;

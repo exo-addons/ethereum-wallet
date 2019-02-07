@@ -26,6 +26,7 @@
           @changed="gasPrice = $event" />
         <v-text-field
           v-if="!storedPassword"
+          ref="walletPassword"
           v-model="walletPassword"
           :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
           :type="walletPasswordShow ? 'text' : 'password'"
@@ -35,14 +36,17 @@
           placeholder="Enter your wallet password"
           counter
           autocomplete="current-passord"
+          autofocus
           @click:append="walletPasswordShow = !walletPasswordShow" />
         <v-text-field
+          ref="transactionLabel"
           v-model="transactionLabel"
           :disabled="loading"
           type="text"
           name="transactionLabel"
           label="Private transactions label"
-          placeholder="Enter label for your transaction" />
+          placeholder="Enter label for your transaction"
+          :autofocus="storedPassword" />
         <v-textarea
           v-model="transactionMessage"
           :disabled="loading"
@@ -209,12 +213,14 @@ export default {
   },
   methods: {
     init() {
-      if (this.$refs.autocomplete) {
-        this.$refs.autocomplete.clear();
+      if (this.$refs.walletPassword) {
+        this.$refs.walletPassword.focus();
+      } else if (this.$refs.transactionLabel) {
+        this.$refs.transactionLabel.focus();
       }
+
       this.loadingCount = 1;
       this.transactionsSent = 0;
-      this.showQRCodeModal = false;
       this.warning = null;
       this.errors = null;
       this.walletPassword = '';

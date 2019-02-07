@@ -23,7 +23,6 @@ describe('TransactionList.test.js', () => {
     error: false,
     displayFullTransaction: false,
     selectedTransactionHash: false,
-    refreshIndex: 1,
     loading: false,
     transactionsLimit: 10,
     transactionsPerPage: 10,
@@ -251,7 +250,6 @@ describe('TransactionList.test.js', () => {
         //        expectedData.networkId = 123;
         //        expectedData.fiatSymbol = '$';
         //        expectedData.limitReached = true;
-        //        expectedData.refreshIndex = 8;
         //        expectedData.account = global.walletAddress;
         //
         //        expectObjectValueEqual(transactionList, expectedData, '-----------', null, true);

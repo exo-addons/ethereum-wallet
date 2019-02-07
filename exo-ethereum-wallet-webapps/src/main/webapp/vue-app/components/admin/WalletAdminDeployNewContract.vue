@@ -183,7 +183,8 @@
                   :rules="mandatoryRule"
                   label="Token name"
                   placeholder="Enter the ERC20 token name"
-                  required />
+                  required
+                  autofocus />
                 <v-text-field
                   v-model="newTokenSymbol"
                   :rules="mandatoryRule"

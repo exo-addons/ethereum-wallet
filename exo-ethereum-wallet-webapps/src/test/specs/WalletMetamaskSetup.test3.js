@@ -21,7 +21,6 @@ describe('WalletMetamaskSetup.test.js', () => {
     loading: false,
     isAdministration: false,
     walletAddress: false,
-    refreshIndex: 0,
     addressAssociationDialog: false,
     installInstructionDialog: false,
     networkLabel: false,

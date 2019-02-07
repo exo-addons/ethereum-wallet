@@ -83,6 +83,7 @@
             :disabled="loading"
             input-label="From"
             input-placeholder="Select from which wallet you received a delegated tokens"
+            :autofocus="dialog"
             @item-selected="from = $event.address" />
           <address-auto-complete
             ref="autocompleteRecipient"
