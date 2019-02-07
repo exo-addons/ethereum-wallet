@@ -159,7 +159,7 @@ public class EthereumWalletAccountService {
     boolean isNew = oldWallet == null;
     wallet.setEnabled(isNew || wallet.isEnabled());
 
-    setWalletPassPhrase(wallet, oldWallet, isNew);
+    setWalletPassPhrase(wallet, oldWallet);
 
     accountStorage.saveWallet(wallet, isNew);
 
@@ -287,17 +287,12 @@ public class EthereumWalletAccountService {
     return wallet;
   }
 
-  private void setWalletPassPhrase(Wallet wallet, Wallet oldWallet, boolean isNew) {
-    if (isNew) {
-      wallet.setPassPhrase(generateSecurityPhrase());
-    } else {
-      wallet.setPassPhrase(oldWallet.getPassPhrase());
-
-      if (StringUtils.isBlank(wallet.getPassPhrase())) {
-        LOG.warn("Wallet of type {} and id {} hasn't a generated passPhrase while it's not new, generating a new one",
-                 wallet.getType(),
-                 wallet.getId());
+  private void setWalletPassPhrase(Wallet wallet, Wallet oldWallet) {
+    if (StringUtils.isBlank(wallet.getPassPhrase())) {
+      if (oldWallet == null || StringUtils.isBlank(oldWallet.getPassPhrase())) {
         wallet.setPassPhrase(generateSecurityPhrase());
+      } else {
+        wallet.setPassPhrase(oldWallet.getPassPhrase());
       }
     }
   }

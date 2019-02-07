@@ -14,7 +14,7 @@ $( document ).ready(function() {
     } else if(tentative < 20) {
       setTimeout(() => initWalletTipTip(++tentative), 300);
     }
-  };
+  }
 
   return fetch(`/portal/rest/wallet/api/global-settings`, {credentials: 'include'})
     .then(resp =>  {
