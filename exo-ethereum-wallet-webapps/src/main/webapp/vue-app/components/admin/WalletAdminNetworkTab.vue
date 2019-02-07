@@ -167,7 +167,7 @@ export default {
   },
   computed: {
     showSpecificNetworkFields() {
-      return this.selectedNetwork && this.selectedNetwork.value !== 1 && this.selectedNetwork.value !== 3;
+      return this.selectedNetwork !== this.networks[0] && this.selectedNetwork !== this.networks[1];
     },
     minGasPriceToken() {
       if (this.defaultGas && this.minGasPrice && this.principalContract && this.principalContract.isContract && this.principalContract.sellPrice) {
@@ -236,9 +236,13 @@ export default {
         this.maxGasPrice = window.walletSettings.maxGasPrice;
       }
       this.enableDelegation = window.walletSettings.enableDelegation;
-      if (window.walletSettings.defaultNetworkId === 1) {
+      if (window.walletSettings.defaultNetworkId === this.networks[0].value
+          && window.walletSettings.providerURL === this.networks[0].httpLink
+          && window.walletSettings.websocketProviderURL === this.networks[0].wsLink) {
         this.selectedNetwork = this.networks[0];
-      } else if (window.walletSettings.defaultNetworkId === 3) {
+      } else if (window.walletSettings.defaultNetworkId === this.networks[1].value
+          && window.walletSettings.providerURL === this.networks[1].httpLink
+          && window.walletSettings.websocketProviderURL === this.networks[1].wsLink) {
         this.selectedNetwork = this.networks[1];
       } else {
         this.networks[2].value = window.walletSettings.defaultNetworkId;
