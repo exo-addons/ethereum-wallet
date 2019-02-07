@@ -13,6 +13,7 @@
             <span v-if="wallet">
               Wallet transactions of:
               <profile-chip
+                ref="profileChip"
                 :profile-technical-id="wallet.technicalId"
                 :profile-id="wallet.id"
                 :profile-type="wallet.type"

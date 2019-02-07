@@ -12,6 +12,7 @@
       </div>
 
       <wallet-import-key-modal
+        ref="walletImportKeyModal"
         :is-space="isSpace"
         :wallet-address="walletAddress"
         @configured="$emit('configured')" />

@@ -35,6 +35,7 @@
       Delegate Tokens
     </button>
     <qr-code-modal
+      ref="qrCodeModal"
       :to="recipient"
       :is-contract="true"
       :function-payable="false"

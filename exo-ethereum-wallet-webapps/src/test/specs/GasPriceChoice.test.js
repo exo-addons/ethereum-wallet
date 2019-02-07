@@ -1,52 +1,58 @@
-import GasPriceChoice from '../../main/webapp/vue-app/components/GasPriceChoice';
+import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
 
-import {getWalletApp, initApp} from '../TestUtils.js';
+import GasPriceChoice from '../../main/webapp/vue-app/components/GasPriceChoice.vue';
 
-import {shallowMount} from '@vue/test-utils';
+import {mount} from '@vue/test-utils';
+
+import flushPromises from 'flush-promises';
+
+jest.setTimeout(30000);
 
 describe('GasPriceChoice.test.js', () => {
-  let app;
-  const walletApp = getWalletApp();
+  const app = getWalletApp();
 
   beforeAll(() => {
-    app = shallowMount(GasPriceChoice, {
-      propsData: {
-        estimatedFee: '5000',
-        title: 'hello',
-        disabled: false,
-      },
+    return initApp(app);
+  });
+
+  const defaultAttributesValues = {
+    estimatedFee: false,
+    title: false,
+    disabled: false,
+    choice: '1',
+  };
+
+  it('GasPriceChoice default data', () => {
+    console.log('-- GasPriceChoice default data');
+
+    const gasPriceChoice = mount(GasPriceChoice, {
       attachToDocument: true,
     });
 
-    return initApp(walletApp);
+    expectObjectValueEqual(gasPriceChoice.vm, defaultAttributesValues, 'GasPriceChoice default data');
   });
 
-  it('test html', () => {
-    expect(app.html()).toContain('5000');
-    expect(app.html()).toContain('hello');
-    expect(app.vm.disabled).toBe(false);
-    expect(app.findAll('.mt-3')).toHaveLength(1);
-    expect(app.findAll('.mt-2')).toHaveLength(0);
+  it('GasPriceChoice test when check choice 2', () => {
+    console.log('-- GasPriceChoice test when check choice 2');
+
+    const gasPriceChoice = mount(GasPriceChoice, {
+      attachToDocument: true,
+    });
+
+    gasPriceChoice.setData({choice: '2'});
+    expect(gasPriceChoice.emitted()['changed']).toBeTruthy();
+    expect(gasPriceChoice.emitted()['changed']).toEqual([[8000000000]]);
   });
 
-  it('check choice 2', () => {
-    const choice = '2';
-    expect(app.vm.choice).toBe('1');
-    app.setData({choice: choice});
-    expect(app.vm.choice).toBe('2');
-    expect(app.emitted().changed).toBeTruthy();
-    expect(app.emitted().changed.length).toBe(1);
-    expect(app.emitted().changed[0]).toEqual([8000000000]);
-  });
+  it('GasPriceChoice test when check choice 3', () => {
+    console.log('-- GasPriceChoice test when check choice 3');
 
-  it('check choice 3', () => {
-    const choice = '3';
-    expect(app.vm.choice).toBe('2');
-    app.setData({choice: choice});
-    expect(app.vm.choice).toBe('3');
-    expect(app.emitted().changed).toBeTruthy();
-    expect(app.emitted().changed.length).toBe(2);
-    expect(app.emitted().changed[0]).toEqual([8000000000]);
-    expect(app.emitted().changed[1]).toEqual([15000000000]);
+    const gasPriceChoice = mount(GasPriceChoice, {
+      attachToDocument: true,
+    });
+
+    gasPriceChoice.setData({choice: '3'});
+    expect(gasPriceChoice.emitted()['changed']).toBeTruthy();
+    expect(gasPriceChoice.emitted()['changed']).toEqual([[15000000000]]);
   });
 });

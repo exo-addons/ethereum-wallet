@@ -519,7 +519,7 @@ export function markFundRequestAsSent(notificationId) {
 export function checkFundRequestStatus(notificationId) {
   return fetch(`/portal/rest/wallet/api/account/fundRequestSent?notificationId=${notificationId}`, {credentials: 'include'})
     .then((resp) => {
-      if(resp && resp.ok) {
+      if (resp && resp.ok) {
         return resp.text();
       } else {
         throw new Error('Error checking fund request status');
@@ -530,7 +530,7 @@ export function checkFundRequestStatus(notificationId) {
 
 export function getWallets() {
   return fetch(`/portal/rest/wallet/api/account/list`, {credentials: 'include'}).then((resp) => {
-    if(resp && resp.ok) {
+    if (resp && resp.ok) {
       return resp.json();
     } else {
       throw new Error('Error retrieving wallets');

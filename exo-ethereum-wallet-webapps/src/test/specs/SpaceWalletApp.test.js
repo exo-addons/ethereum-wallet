@@ -1,6 +1,6 @@
-import {getWalletApp, initApp} from '../TestUtils.js';
+import {getWalletApp, expectCountElement, initApp} from '../TestUtils.js';
 
-import SpacewalletApp from '../../main/webapp/vue-app/components/SpaceWalletApp.vue';
+import SpaceWalletApp from '../../main/webapp/vue-app/components/SpaceWalletApp.vue';
 
 import {mount} from '@vue/test-utils';
 
@@ -16,10 +16,10 @@ describe('SpaceWalletApp.test.js', () => {
   it('Space Wallet App ', () => {
     console.log('-- Space Wallet App');
 
-    const spacewalletApp = mount(SpacewalletApp, {
+    const spaceWalletApp = mount(SpaceWalletApp, {
       attachToDocument: true,
     });
 
-    expect(spacewalletApp.html()).toContain('WalletApp');
+    expect(spaceWalletApp.html()).toContain('WalletApp');
   });
 });

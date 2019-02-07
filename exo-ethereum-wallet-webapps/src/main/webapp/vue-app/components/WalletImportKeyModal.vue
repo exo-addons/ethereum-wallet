@@ -2,6 +2,7 @@
   <v-dialog
     v-model="importWalletDialog"
     content-class="uiPopup with-overflow"
+    class="walletImportKeyModal"
     width="500px"
     max-width="100vw"
     persistent

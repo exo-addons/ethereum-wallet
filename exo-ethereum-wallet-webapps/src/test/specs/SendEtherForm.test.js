@@ -48,8 +48,8 @@ describe('SendEtherForm.test.js', () => {
     }
   });
 
-  it('SendEtherModal - test send tokens and refresh balance', (done) => {
-    console.log('--- test send tokens and refresh balance');
+  it('SendEtherForm - test send Ether Form', (done) => {
+    console.log('--- test send Ether');
 
     global.walletAddress = global.walletAddresses[0];
 
@@ -92,6 +92,19 @@ describe('SendEtherForm.test.js', () => {
         sendEtherForm.amount = 'invalid number';
         sendEtherForm.sendEther();
         expect(sendEtherForm.error).not.toBeNull();
+
+        // Send amount > balance
+        sendEtherForm.amount = 100000000000000000000000;
+        sendEtherForm.sendEther();
+        expect(sendEtherForm.error).not.toBeNull();
+
+        sendEtherForm.storedPassword = false;
+        sendEtherForm.sendEther();
+        expect(sendEtherForm.error).toBeTruthy();
+        sendEtherForm.walletPassword = 'fake password';
+        sendEtherForm.sendEther();
+        expect(sendEtherForm.error).toBeTruthy();
+        sendEtherForm.storedPassword = true;
 
         // Send form
         sendEtherForm.amount = 1;

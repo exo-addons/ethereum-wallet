@@ -3,6 +3,7 @@
     v-model="dialog"
     :disabled="disabled"
     content-class="uiPopup with-overflow"
+    class="walletResetModal"
     width="500px"
     max-width="100vw"
     persistent

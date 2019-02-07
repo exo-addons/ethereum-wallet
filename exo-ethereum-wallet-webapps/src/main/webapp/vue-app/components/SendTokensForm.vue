@@ -72,6 +72,7 @@
           no-resize />
       </v-form>
       <qr-code-modal
+        ref="qrCodeModal"
         :to="recipient"
         :from="account"
         :amount="0"

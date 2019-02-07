@@ -4,15 +4,38 @@ import Vuetify from '../main/webapp/js/lib/vuetify.min.js';
 import LocalWeb3 from 'web3';
 import fs from 'fs';
 import abiDecoder from 'abi-decoder';
+import EthereumQRPlugin from 'ethereum-qr-code';
 
 import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
 
 import {getDefaultSettings, setWalletDetails, getWalletDetailsBTypeId, getWalletDetailsBTypeAddress, getParameter, saveTransaction, getTransactions} from './TestUtils.js';
 
+function mockCanvas(window) {
+  window.HTMLCanvasElement.prototype.getContext = function() {
+    return {
+      createImageData: function() {
+        return [];
+      },
+    };
+  };
+  window.HTMLCanvasElement.prototype.toDataURL = function() {
+    return '';
+  };
+}
+const window = document.defaultView;
+mockCanvas(window);
+
+const v8 = require('v8');
+const totalHeapSize = v8.getHeapStatistics().total_available_size;
+console.warn('Total Heap Size en bytes ', totalHeapSize, 'Bytes');
+let totalHeapSizeInGB = (totalHeapSize / 1024 / 1024 / 1024).toFixed(2);
+console.warn('Total Heap Size en GB ~', totalHeapSizeInGB, 'GB');
+
 require('./constants.js');
 
 global.fetch = require('jest-fetch-mock');
 
+global.EthereumQRPlugin = EthereumQRPlugin;
 global.Vuetify = Vuetify;
 global.$ = $;
 global.abiDecoder = abiDecoder;
@@ -179,6 +202,10 @@ global.fetch.mockImplementation((url, options) => {
       const contractDetails = fs.readFileSync(`target/${contractAddress.toLowerCase()}`, 'utf8');
       resultJson = JSON.parse(contractDetails);
     }
+  } else if (url.indexOf(`/portal/rest/wallet/api/account/requestFunds`) === 0) {
+    //not needed for test
+  } else if (url.indexOf(`/portal/rest/wallet/api/account/savePreferences`) === 0) {
+    //not needed for test
   } else {
     console.warn(new Error(`URL ${url} isn't mocked`));
   }

@@ -2,6 +2,7 @@
   <v-dialog
     v-model="dialog"
     content-class="uiPopup with-overflow"
+    class="walletRequestFundsModal"
     width="500px"
     max-width="100vw"
     draggable="true"

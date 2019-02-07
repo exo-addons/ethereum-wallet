@@ -31,8 +31,8 @@ describe('WalletReceiveModal.test.js', () => {
     expectObjectValueEqual(walletReceiveModal.vm, defaultAttributesValues, 'WalletReceiveModal default data');
   });
 
-  it('WalletReceiveModal - test dialog ', (done) => {
-    console.log('--- WalletReceiveModal - test dialog  ');
+  it('WalletReceiveModal - test WalletReceiveModal enabled and open dialog', (done) => {
+    console.log('--- WalletReceiveModal - test WalletReceiveModal enbaled and open dialog  ');
 
     global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;

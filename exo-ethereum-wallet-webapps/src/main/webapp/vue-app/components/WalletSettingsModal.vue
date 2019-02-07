@@ -123,6 +123,7 @@
                       </information-bubble>
                     </h4>
                     <wallet-reset-modal
+                      ref="walletResetModal"
                       button-label="Reset wallet password"
                       display-remember-me
                       @reseted="
@@ -150,6 +151,7 @@
                         refreshFromSettings();
                       " />
                     <wallet-import-key-modal
+                      ref="walletImportKeyModal"
                       :is-space="isSpace"
                       :wallet-address="walletAddress"
                       class="ml-3"

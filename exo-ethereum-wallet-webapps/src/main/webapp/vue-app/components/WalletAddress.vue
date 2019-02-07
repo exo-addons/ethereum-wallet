@@ -42,7 +42,11 @@ export default {
   methods: {
     copyToClipboard() {
       this.$refs.clipboardInput.select();
-      document.execCommand('copy');
+      try {
+        document.execCommand('copy');
+      } catch(e) {
+        console.debug('Error executing document.execCommand', e);
+      }
     },
   },
 };

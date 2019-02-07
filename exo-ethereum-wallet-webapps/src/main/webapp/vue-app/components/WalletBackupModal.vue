@@ -1,5 +1,6 @@
 <template>
   <v-dialog
+    id="walletBackupModal" 
     v-model="dialog"
     :disabled="disabled"
     class="fixLinkHeight"
@@ -28,7 +29,10 @@
           <i class="uiIconError"></i> {{ error }}
         </div>
 
-        <div v-if="displayCompleteMessage" class="alert alert-warning v-content">
+        <div
+          v-if="displayCompleteMessage"
+          id="walletBackupWarningOne"
+          class="alert alert-warning v-content">
           <p>
             <i class="uiIconWarning"></i> Currently your wallet is accessible only on this browser and only on this machine. <br>
             You should copy the following private key to be able to: <br>
@@ -42,7 +46,10 @@
             </strong>.
           </p>
         </div>
-        <div v-else class="alert alert-warning v-content">
+        <div 
+          v-else 
+          id="walletBackupWarningTwo"
+          class="alert alert-warning v-content">
           <p>
             <i class="uiIconWarning"></i> Please make sure to keep this private key in a safe place where nobody else can get it (Write it in a piece of paper and hide it for example). <br>
             If the following code is hacked by someone, <strong>

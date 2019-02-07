@@ -36,7 +36,7 @@
       @close="sendDelegatedTokenModal = false"
       @error="$emit('error', $event)" />
     <v-container
-      v-if="accountsList.length"
+      v-if="accountsList && accountsList.length"
       id="accountListContainer"
       flat
       fluid
@@ -226,7 +226,7 @@ export default {
     refreshIndex: {
       type: Number,
       default: function() {
-        return 0;
+        return 1;
       },
     },
   },
@@ -244,7 +244,7 @@ export default {
     accountsList() {
       // A trick to force Refresh list
       if (!this.refreshIndex) {
-        return;
+        return [];
       }
 
       if(!this.overviewAccounts) {

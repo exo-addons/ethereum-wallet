@@ -28,7 +28,7 @@
         <template v-else>
           <h4 v-if="principalAccount === 'fiat'" class="headline">{{ toFixed(totalFiatBalance) }} {{ fiatSymbol }}</h4>
           <h4 v-else-if="principalAccount === 'ether'" class="headline">{{ toFixed(totalBalance) }} ether</h4>
-          <h4 v-else class="headline">{{ toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
+          <h4 v-else class="headline">{{ principalAccountDetails && toFixed(principalAccountDetails.balance) }} {{ principalAccountDetails && principalAccountDetails.symbol }}</h4>
         </template>
       </v-flex>
     </v-card-title>
@@ -93,6 +93,7 @@
             <v-divider v-if="!isMaximized" vertical />
             <wallet-request-funds-modal
               v-if="!isSpace || isSpaceAdministrator"
+              ref="walletRequestFundsModal"
               :accounts-details="accountsDetails"
               :overview-accounts="overviewAccounts"
               :principal-account="principalAccount"

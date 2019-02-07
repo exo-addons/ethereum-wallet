@@ -50,10 +50,9 @@ describe('SendDelegatedTokensModal.test.js', () => {
     expectObjectValueEqual(senddelegatedTokensModal.vm, defaultAttributesValues, 'SendDelegatedTokensModal default data');
   });
 
-  it('SendDelegatedTokensModal - test send delegation disabled', (done) => {
-    console.log('--- DelegateTokensModal - test delegation disabled');
+  it('SendDelegatedTokensModal - test send delegated tokens disabled', (done) => {
+    console.log('--- DelegateTokensModal - test send delegated tokens disabled');
 
-    global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
     global.defaultWalletSettings.enableDelegation = false;
@@ -76,8 +75,8 @@ describe('SendDelegatedTokensModal.test.js', () => {
       .catch((e) => done(e));
   });
 
-  it('sendDelegateTokensModal - test send delegation enabled', (done) => {
-    console.log('--- sendDelegatedTokensModal - test send delegation enabled');
+  it('sendDelegateTokensModal - test send delegated tokens enabled', (done) => {
+    console.log('--- sendDelegatedTokensModal - test send delegated tokens enabled');
 
     global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
@@ -128,7 +127,7 @@ describe('SendDelegatedTokensModal.test.js', () => {
 
         const sendDelegatedTokensModal = accountDetailCmp.$refs.sendDelegatedTokensModal;
         expect(sendDelegatedTokensModal).toBeTruthy();
-        expectObjectValueEqual(sendDelegatedTokensModal, expectedData, 'sendDelegatedTokensModal test send delegation enabled default data', null, true);
+        expectObjectValueEqual(sendDelegatedTokensModal, expectedData, 'sendDelegatedTokensModal test when send delegated tokens enabled default data', null, true);
       })
       .then(() => done())
       .catch((e) => done(e));
@@ -195,7 +194,7 @@ describe('SendDelegatedTokensModal.test.js', () => {
           adminLevel: 5,
         };
 
-        expectObjectValueEqual(sendDelegatedTokensModal, expectedData, ' sendDelegatedTokensModal test wallet browser enabled', null, true);
+        expectObjectValueEqual(sendDelegatedTokensModal, expectedData, ' sendDelegatedTokensModal test wallet browser enabled default data', null, true);
       })
       .then(() => done())
       .catch((e) => done(e));
@@ -247,30 +246,13 @@ describe('SendDelegatedTokensModal.test.js', () => {
         .then(() => {
           approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[9]);
         })
-        .then(() => contractDetails.contract.methods.allowance(global.walletAddresses[7], global.walletAddresses[0]).call())
-        .then((allowance) => {
-          expect(Number(allowance)).toEqual(5 * Math.pow(10, global.tokenDecimals));
-          return flushPromises();
-        })
-
-        .then(() => contractDetails.contract.methods.balanceOf(global.walletAddresses[9]).call())
-        .then((balance) => {
-          expect(Number(balance)).toEqual(0);
-        })
-
-        .then(() => contractDetails.contract.methods.isApprovedAccount(global.walletAddresses[2]).call())
-        .then((approved) => {
-          expect(approved).toBeFalsy();
-        })
 
         .then(() => {
-          expect(senddelegatedTokensModal.buttonDisabled).toBeFalsy();
-
+          //when it's empty
           senddelegatedTokensModal.sendTokens();
           expect(senddelegatedTokensModal.error).toBeTruthy();
 
           senddelegatedTokensModal.from = global.walletAddresses[7];
-
           //when recipient not approved
           senddelegatedTokensModal.recipient = 'invalid address';
           senddelegatedTokensModal.sendTokens();
@@ -290,15 +272,6 @@ describe('SendDelegatedTokensModal.test.js', () => {
           senddelegatedTokensModal.sendTokens();
         })
 
-        //when allowance < amount
-        .then(() => {
-          senddelegatedTokensModal.from = global.walletAddresses[7];
-          senddelegatedTokensModal.recipient = global.walletAddresses[9];
-          senddelegatedTokensModal.amount = 10;
-          senddelegatedTokensModal.storedPassword = true;
-          senddelegatedTokensModal.sendTokens();
-        })
-
         //when allowance < sum of amount to sent
         .then(() => {
           senddelegatedTokensModal.from = global.walletAddresses[7];
@@ -312,7 +285,6 @@ describe('SendDelegatedTokensModal.test.js', () => {
           senddelegatedTokensModal.from = global.walletAddresses[7];
           senddelegatedTokensModal.recipient = global.walletAddresses[9];
           senddelegatedTokensModal.amount = 4;
-          senddelegatedTokensModal.storedPassword = true;
           return senddelegatedTokensModal.sendTokens();
         })
 

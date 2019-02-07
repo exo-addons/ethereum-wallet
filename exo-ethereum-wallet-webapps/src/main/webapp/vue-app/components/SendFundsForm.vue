@@ -145,7 +145,7 @@ export default {
         }
       } else {
         if (receiver && receiverType) {
-          this.$emit('dialog-error', 'Selected currency is not displayed switch your preferences');
+          this.$emit('dialog-error', 'No receiver is selected');
         }
 
         if (!keepDialogOpen) {

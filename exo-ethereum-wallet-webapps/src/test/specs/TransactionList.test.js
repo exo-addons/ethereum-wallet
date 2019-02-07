@@ -76,8 +76,8 @@ describe('TransactionList.test.js', () => {
       .catch((e) => done(e));
   });
 
-  it('send tokens see transaction', (done) => {
-    console.log('send Tokens see transaction');
+  it('send tokens to see transaction', (done) => {
+    console.log('send Tokens to see transaction');
 
     global.walletAddress = global.walletAddresses[0];
     global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
@@ -122,7 +122,6 @@ describe('TransactionList.test.js', () => {
         expect(transactionList.transactions).not.toEqual({});
         return flushPromises();
       })
-
       .then(() => done())
       .catch((e) => done(e));
   });
@@ -134,54 +133,132 @@ describe('TransactionList.test.js', () => {
 
     const app = getWalletApp();
     let accountDetailCmp, contractDetails, sendTokensModal, sendTokensForm, transactionList;
-    return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
-      .then(() => initApp(app))
-      .then(() => flushPromises())
-      .then(() => {
-        contractDetails = app.vm.accountsDetails[global.tokenAddress];
-        expect(contractDetails).toBeTruthy();
-        app.vm.openAccountDetail(contractDetails);
+    return (
+      initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
+        .then(() => initApp(app))
+        .then(() => flushPromises())
+        .then(() => {
+          contractDetails = app.vm.accountsDetails[global.tokenAddress];
+          expect(contractDetails).toBeTruthy();
+          app.vm.openAccountDetail(contractDetails);
 
-        accountDetailCmp = app.vm.$refs.accountDetail;
-        expect(accountDetailCmp).toBeTruthy();
-        return flushPromises();
-      })
+          accountDetailCmp = app.vm.$refs.accountDetail;
+          expect(accountDetailCmp).toBeTruthy();
+          return flushPromises();
+        })
 
-      .then(() => {
-        transactionList = accountDetailCmp.$refs.transactionsList;
-        expect(transactionList).toBeTruthy();
-        transactionList.init();
-        return flushPromises();
-      })
+        .then(() => {
+          transactionList = accountDetailCmp.$refs.transactionsList;
+          expect(transactionList).toBeTruthy();
+        })
 
-      .then(() => {
-        sendTokensModal = accountDetailCmp.$refs.sendTokensModal;
-        expect(sendTokensModal).toBeTruthy();
-        sendTokensModal.open = true;
+        .then(() => flushPromises())
+        .then(() => transactionList.init(true))
 
-        return flushPromises();
-      })
-      .then(() => {
-        sendTokensForm = sendTokensModal.$refs.sendTokensForm;
-        return flushPromises();
-      })
+        .then(() => {
+          sendTokensModal = accountDetailCmp.$refs.sendTokensModal;
+          expect(sendTokensModal).toBeTruthy();
+          sendTokensModal.open = true;
 
-      .then(() => {
-        sendTokensForm.recipient = global.walletAddresses[5];
-        sendTokensForm.amount = 5;
-        return sendTokensForm.sendTokens();
-      })
+          return flushPromises();
+        })
+        .then(() => {
+          sendTokensForm = sendTokensModal.$refs.sendTokensForm;
+          return flushPromises();
+        })
 
-      .then(() => flushPromises())
+        .then(() => {
+          sendTokensForm.recipient = global.walletAddresses[5];
+          sendTokensForm.amount = 5;
+          return sendTokensForm.sendTokens();
+        })
 
-      .then(() => {
-        expect(transactionList.transactions).not.toEqual({});
-        expect(transactionList.transactions['0x42309b1a8931d5a6bf7943e7887ca0023539f0f55657fe35b33b1c3603e4b65b']).not.toEqual({});
-        expect(transactionList.transactions['0xbc921d43dc2e640ec8071e00b1c9fced8bc56644b943367b77c17c0e3d088b69']).not.toEqual({});
-        return flushPromises();
-      })
+        .then(() => {
+          sendTokensForm.recipient = global.walletAddresses[4];
+          sendTokensForm.amount = 4;
+          return sendTokensForm.sendTokens();
+        })
 
-      .then(() => done())
-      .catch((e) => done(e));
+        .then(() => flushPromises())
+
+        .then(() => {
+          expect(transactionList.transactions).not.toEqual({});
+          return flushPromises();
+        })
+
+        .then(() => flushPromises())
+
+        //
+        //                   .then(() => {
+        //
+        //                const expectedData = Object.assign({}, defaultAttributesValues);
+        //
+        //                expectedData.networkId = 4452364;
+        //                expectedData.fiatSymbol = '$';
+        //                expectedData.account = global.walletAddress;
+        //                expectedData.loading = true;
+        //
+        //                expectObjectValueEqual(transactionList, expectedData, '-----------', null, true);
+        //              })
+
+        .then(() => done())
+        .catch((e) => done(e))
+    );
+  });
+
+  it('test', (done) => {
+    global.walletAddress = global.walletAddresses[0];
+    global.defaultWalletSettings.defaultPrincipalAccount = global.tokenAddress;
+    global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
+
+    const app = getWalletApp();
+    let accountDetailCmp, contractDetails, sendTokensModal, sendTokensForm, transactionList;
+    return (
+      initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
+        .then(() => initApp(app))
+        .then(() => flushPromises())
+        .then(() => {
+          contractDetails = app.vm.accountsDetails[global.tokenAddress];
+          expect(contractDetails).toBeTruthy();
+          app.vm.openAccountDetail(contractDetails);
+
+          accountDetailCmp = app.vm.$refs.accountDetail;
+          expect(accountDetailCmp).toBeTruthy();
+          return flushPromises();
+        })
+
+        .then(() => {
+          transactionList = accountDetailCmp.$refs.transactionsList;
+          expect(transactionList).toBeTruthy();
+        })
+
+        .then(() => flushPromises())
+        .then(() => transactionList.init(true))
+
+        .then(() => {
+          transactionList.transactionsLimit = 3;
+          transactionList.contractDetails = {};
+          transactionList.networkId = 123;
+
+          return flushPromises();
+        })
+
+        .then(() => flushPromises())
+
+        //      .then(() => {
+        //        const expectedData = Object.assign({}, defaultAttributesValues);
+        //
+        //        expectedData.networkId = 123;
+        //        expectedData.fiatSymbol = '$';
+        //        expectedData.limitReached = true;
+        //        expectedData.refreshIndex = 8;
+        //        expectedData.account = global.walletAddress;
+        //
+        //        expectObjectValueEqual(transactionList, expectedData, '-----------', null, true);
+        //      })
+
+        .then(() => done())
+        .catch((e) => done(e))
+    );
   });
 });
