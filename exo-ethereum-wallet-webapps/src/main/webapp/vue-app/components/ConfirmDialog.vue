@@ -17,7 +17,7 @@
       </div>
       <!-- eslint-disable-next-line vue/no-v-html -->
       <v-card-text v-html="message" />
-      <v-card-actions>
+      <v-card-actions v-if="!hideActions">
         <v-spacer />
         <button
           :disabled="loading"
@@ -69,6 +69,12 @@ export default {
       type: String,
       default: function() {
         return 'Cancel';
+      },
+    },
+    hideActions: {
+      type: Boolean,
+      default: function() {
+        return false;
       },
     },
   },

@@ -8,6 +8,11 @@
       ok-label="Delete"
       cancel-label="Cancel"
       @ok="removeWalletAssociation(walletToDelete)" />
+    <confirm-dialog
+      ref="informationModal"
+      :title="informationTitle"
+      :message="informationMessage"
+      hide-actions />
     <div v-if="error" class="alert alert-error v-content">
       <i class="uiIconError"></i>{{ error }}
     </div>
@@ -155,7 +160,7 @@
                   <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
                     <v-list-tile-title>Enable wallet</v-list-tile-title>
                   </v-list-tile>
-                  <template v-if="canApprouveAccounts">
+                  <template v-if="canApprouveAccounts && (props.item.disapproved === true || props.item.disapproved === false)">
                     <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
                       <v-list-tile-title>Approve wallet</v-list-tile-title>
                     </v-list-tile>
@@ -352,6 +357,8 @@ export default {
       selectedWalletAddress: null,
       selectedWallet: null,
       selectedWalletDetails: null,
+      informationTitle: null,
+      informationMessage: null,
       initialFundsMessage: null,
       error: null,
       wallets: [],
@@ -398,7 +405,7 @@ export default {
   },
   computed: {
     canApprouveAccounts() {
-      return this.principalContract && this.principalContract.adminLevel >= 1
+      return this.principalContract && this.principalContract.adminLevel >= 1;
     },
     showLoadMore() {
       return this.displayedWallets.length === this.limit;
@@ -553,7 +560,12 @@ export default {
           this.$set(wallet.approved, accountDetails.address, approved ? 'approved' : 'disapproved');
           this.$set(wallet, 'disapproved', !approved);
           this.$forceUpdate();
-        });
+
+          if(approved) {
+            return accountDetails.contract.methods.getAdminLevel(wallet.address).call();
+          }
+        })
+        .then((adminLevel) => this.$set(wallet, 'adminLevel', adminLevel || 0));
     },
     computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
       if(!wallet.address || !wallet.displayedWallet) {
@@ -677,8 +689,17 @@ export default {
       }
     },
     openDisapproveModal(wallet) {
-      if(this.$refs.disapproveAccountModal) {
-        this.$refs.disapproveAccountModal.preselectAutocomplete(wallet.id, wallet.type, wallet.address);
+      if(!wallet) {
+        return;
+      }
+      if (wallet.adminLevel > 0) {
+        this.informationTitle = 'Disapproval denied';
+        this.informationMessage = `${wallet.type} ${wallet.name} is a token administrator, thus the wallet can't be disapproved.`;
+        this.$refs.informationModal.open();
+      } else {
+        if(this.$refs.disapproveAccountModal) {
+          this.$refs.disapproveAccountModal.preselectAutocomplete(wallet.id, wallet.type, wallet.address);
+        }
       }
     },
     approvedAccount(hash, contractDetails, methodName, address) {

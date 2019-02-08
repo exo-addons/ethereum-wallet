@@ -21,7 +21,7 @@
           <v-flex v-if="settingWarnings && settingWarnings.length && !loading" class=" text-xs-center">
             <div class="alert alert-warning text-xs-left">
               <i class="uiIconWarning"></i>
-              <span>Please check your <a href="javascript:void(0);" @click="selectedTab = 2">settings</a></span>
+              <span>Please check <a href="javascript:void(0);" @click="selectedTab = 2">rewards configuration</a></span>
               <ul>
                 <li
                   v-for="warning in settingWarnings"
