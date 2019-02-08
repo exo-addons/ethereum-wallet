@@ -44,11 +44,13 @@
             <v-flex
               v-for="pluginSetting in settingsToSave.pluginSettings"
               :key="pluginSetting.pluginId"
-              md4
+              md6
               xs12>
               <v-card flat>
                 <v-card-title primary-title>
-                  {{ pluginSetting.pluginId.toUpperCase() }}
+                  <h4>
+                    {{ pluginSetting.pluginId.toUpperCase() }}
+                  </h4>
                 </v-card-title>
                 <v-card-text>
                   <div class="text-xs-left rewardWalletConfiguration">
