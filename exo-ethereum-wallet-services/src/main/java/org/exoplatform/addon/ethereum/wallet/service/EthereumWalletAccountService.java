@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
+import org.exoplatform.addon.ethereum.wallet.storage.AddressLabelStorage;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
@@ -18,15 +19,18 @@ import org.exoplatform.social.core.identity.model.Identity;
 
 public class EthereumWalletAccountService {
 
-  private static final Log LOG =
-                               ExoLogger.getLogger(EthereumWalletAccountService.class);
+  private static final Log    LOG =
+                                  ExoLogger.getLogger(EthereumWalletAccountService.class);
 
-  private AccountStorage   accountStorage;
+  private AccountStorage      accountStorage;
 
-  private ListenerService  listenerService;
+  private AddressLabelStorage labelStorage;
 
-  public EthereumWalletAccountService(AccountStorage walletAccountStorage) {
+  private ListenerService     listenerService;
+
+  public EthereumWalletAccountService(AccountStorage walletAccountStorage, AddressLabelStorage labelStorage) {
     this.accountStorage = walletAccountStorage;
+    this.labelStorage = labelStorage;
   }
 
   /**
@@ -273,13 +277,43 @@ public class EthereumWalletAccountService {
     }
   }
 
-  public Set<AddressLabel> getAddressesLabelsVisibleBy(String username) {
-    Identity identity = getIdentityByTypeAndId(WalletType.USER, username);
-    if (identity == null || identity.getId() == null) {
-      return Collections.emptySet();
+  public AddressLabel saveOrDeleteAddressLabel(AddressLabel label, String modifier) {
+    if (label == null) {
+      throw new IllegalArgumentException("Label is empty");
+    }
+    long labelId = label.getId();
+    if (labelId > 0) {
+      Identity identity = getIdentityByTypeAndId(WalletType.USER, modifier);
+      if (identity == null) {
+        throw new IllegalStateException("Can't find identity of user " + modifier);
+      }
+      AddressLabel storedLabel = labelStorage.getLabel(labelId);
+      if (storedLabel == null) {
+        label.setId(0);
+      } else if (!StringUtils.equals(identity.getId(), String.valueOf(storedLabel.getIdentityId()))) {
+        LOG.info("{} user modified address {} label from '{}' to '{}'",
+                 modifier,
+                 label.getAddress(),
+                 storedLabel.getLabel(),
+                 label.getLabel());
+      }
     }
 
-    return Collections.emptySet();
+    if (StringUtils.isBlank(label.getLabel())) {
+      if (labelId > 0) {
+        labelStorage.removeLabel(label);
+      }
+    } else {
+      label = labelStorage.saveLabel(label);
+    }
+    return label;
+  }
+
+  public Set<AddressLabel> getAddressesLabelsVisibleBy(String username) {
+    if (!isUserAdmin(username)) {
+      return Collections.emptySet();
+    }
+    return labelStorage.getAllLabels();
   }
 
   private Wallet getWalletOfIdentity(Identity identity) {

@@ -209,6 +209,32 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
+   * Save wallet address label
+   * 
+   * @param label
+   * @return
+   */
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Path("saveOrDeleteAddressLabel")
+  @RolesAllowed({ "administrators", "rewarding" })
+  public Response saveOrDeleteAddressLabel(AddressLabel label) {
+    if (label == null) {
+      LOG.warn("Bad request sent to server with empty data");
+      return Response.status(400).build();
+    }
+
+    try {
+      label = accountService.saveOrDeleteAddressLabel(label, getCurrentUserId());
+      return Response.ok(label).build();
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while saving address label: User " + getCurrentUserId() + ", label: {}", label, e);
+      return Response.status(500).build();
+    }
+  }
+
+  /**
    * Save user preferences of Wallet
    * 
    * @param preferences

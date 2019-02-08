@@ -14,7 +14,7 @@ public class AddressLabel implements Serializable {
   private long              id;
 
   @Exclude
-  private boolean           isPublic;
+  private long              identityId;
 
   @Exclude
   private String            label;

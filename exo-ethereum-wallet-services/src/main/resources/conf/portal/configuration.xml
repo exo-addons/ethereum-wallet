@@ -16,6 +16,10 @@
   </component>
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.dao.AddressLabelDAO</type>
+  </component>
+
+  <component>
     <type>org.exoplatform.addon.ethereum.wallet.dao.WalletAccountDAO</type>
   </component>
 
@@ -31,6 +35,10 @@
   <component>
     <key>org.exoplatform.addon.ethereum.wallet.storage.TransactionStorage</key>
     <type>org.exoplatform.addon.ethereum.wallet.storage.CachedTransactionStorage</type>
+  </component>
+
+  <component>
+    <type>org.exoplatform.addon.ethereum.wallet.storage.AddressLabelStorage</type>
   </component>
 
   <component>

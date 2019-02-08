@@ -4,6 +4,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.jsonArra
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.*;
@@ -77,7 +78,8 @@ public class WalletPreferences implements Serializable {
         jsonObject.put(OVERVIEW_ACCOUNTS_PARAM, new JSONArray(overviewAccounts));
       }
       if (addresesLabels != null) {
-        jsonObject.put(ADDRESSES_LABELS, new JSONArray(addresesLabels));
+        jsonObject.put(ADDRESSES_LABELS,
+                       new JSONArray(addresesLabels.stream().map(label -> new JSONObject(label)).collect(Collectors.toSet())));
       }
     } catch (JSONException e) {
       throw new IllegalStateException("Error while converting Object to JSON", e);

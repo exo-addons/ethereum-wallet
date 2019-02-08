@@ -40,7 +40,7 @@
         {{ value }}
       </template>
     </a>
-    <v-slide-x-reverse-transition v-if="allowEdit" mode="out-in">
+    <v-slide-x-reverse-transition v-if="allowEdit && isAdmin" mode="out-in">
       <v-icon
         :key="`icon-${isEditing}`"
         :color="isEditing ? 'success' : 'info'"

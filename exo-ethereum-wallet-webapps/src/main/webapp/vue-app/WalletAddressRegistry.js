@@ -76,15 +76,10 @@ export function searchAddress(id, type) {
 }
 
 /*
- * Return the user or space object
- * {
- *  "name": display name of space of user,
- *  "id": Id of space of user,
- *  "address": Ethereum account address,
- *  "avatar": avatar URL/URI,
- *  "type": 'user' or 'space',
- *  "creator": space creator username for space type
- * }
+ * Return the user or space object { "name": display name of space of user,
+ * "id": Id of space of user, "address": Ethereum account address, "avatar":
+ * avatar URL/URI, "type": 'user' or 'space', "creator": space creator username
+ * for space type }
  */
 export function searchUserOrSpaceObject(id, type) {
   if (window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.id === id && window.walletSettings.userPreferences.wallet.type === type) {
@@ -101,14 +96,9 @@ export function searchUserOrSpaceObject(id, type) {
 }
 
 /*
- * Searches Full name (Space or user) by usin the provided address
- * Return {
- *  "name": display name of space of user,
- *  "id": Id of space of user,
- *  "address": Ethereum account address,
- *  "avatar": avatar URL/URI,
- *  "type": 'user' or 'space'
- * }
+ * Searches Full name (Space or user) by usin the provided address Return {
+ * "name": display name of space of user, "id": Id of space of user, "address":
+ * Ethereum account address, "avatar": avatar URL/URI, "type": 'user' or 'space' }
  */
 export function searchFullName(address) {
   if (!address) {
@@ -214,12 +204,27 @@ export function searchSpaces(filter, withMembers) {
 }
 
 export function saveAddressLabel(labelDetails) {
-  // TODO
-  return Promise.resolve(labelDetails);
+  return fetch('/portal/rest/wallet/api/account/saveOrDeleteAddressLabel', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(labelDetails),
+  }).then((resp) => {
+    if (resp && resp.ok) {
+      return resp.json();
+    } else {
+      console.error('Error saving address label', resp);
+      throw new Error('Error saving address label');
+    }
+  });
 }
 
 /*
- * Determins whether the suggested users should belong to a specific space or not
+ * Determins whether the suggested users should belong to a specific space or
+ * not
  */
 function isOnlySpaceMembers() {
   return window.walletSettings.accessPermission && window.walletSettings.accessPermission.length;
