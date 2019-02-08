@@ -310,7 +310,7 @@ export default {
       selectedDateMenu: false,
       selectedStartDate: null,
       selectedEndDate: null,
-      loading: true,
+      loading: false,
       selectedWallet: null,
       identitiesHeaders: [
         {

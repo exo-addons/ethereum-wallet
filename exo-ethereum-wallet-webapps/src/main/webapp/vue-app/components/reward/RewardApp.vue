@@ -249,15 +249,18 @@ export default {
       return getRewardSettings()
         .then(settings => {
           this.rewardSettings = settings;
-          if(this.rewardSettings) {
-            if (this.contracts && this.contracts.length && this.rewardSettings.contractAddress) {
-              const contractAddress = this.rewardSettings.contractAddress.toLowerCase();
-              this.contractDetails = this.contracts.find(contract  => contract && contract.address && contract.address.toLowerCase() === contractAddress);
-            } else {
-              this.contractDetails = null;
-            }
-            this.periodType = this.rewardSettings.periodType;
+
+          if(!this.rewardSettings) {
+            this.rewardSettings = {};
           }
+
+          if (this.contracts && this.contracts.length && this.rewardSettings.contractAddress) {
+            const contractAddress = this.rewardSettings.contractAddress.toLowerCase();
+            this.contractDetails = this.contracts.find(contract  => contract && contract.address && contract.address.toLowerCase() === contractAddress);
+          } else {
+            this.contractDetails = null;
+          }
+          this.periodType = this.rewardSettings.periodType;
           this.$refs.configurationTab.init();
           return this.$nextTick();
         })

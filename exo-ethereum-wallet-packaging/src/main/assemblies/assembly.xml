@@ -30,6 +30,15 @@
       <useProjectArtifact>false</useProjectArtifact>
       <outputDirectory>/lib</outputDirectory>
       <includes>
+        <include>${project.groupId}:exo-ethereum-wallet-reward-services:jar</include>
+      </includes>
+      <scope>provided</scope>
+      <outputFileNameMapping>exo-ethereum-wallet-reward-services.jar</outputFileNameMapping>
+    </dependencySet>
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
         <include>${project.groupId}:exo-ethereum-wallet-contracts:jar</include>
       </includes>
       <scope>provided</scope>
