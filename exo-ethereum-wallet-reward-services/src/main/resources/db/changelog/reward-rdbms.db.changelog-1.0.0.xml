@@ -8,7 +8,7 @@
   <property name="autoIncrement" value="true" dbms="mysql,mssql,h2,sybase,db2,hsqldb"/>
   <property name="autoIncrement" value="false" dbms="oracle,postgresql"/>
 
-  <changeSet author="wallet" id="1.0.0-1">
+  <changeSet author="wallet" id="1.0.0-1" failOnError="false" runOnChange="false">
     <createTable tableName="ADDONS_WALLET_GAM_TEAM">
       <column name="TEAM_ID" type="BIGINT" autoIncrement="${autoIncrement}" startWith="1">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_GAM_TEAM"/>
@@ -28,7 +28,7 @@
     </modifySql>
   </changeSet>
 
-  <changeSet author="wallet" id="1.0.0-2">
+  <changeSet author="wallet" id="1.0.0-2" failOnError="false" runOnChange="false">
     <createTable tableName="ADDONS_WALLET_GAM_TEAM_MEMBER">
       <column name="MEMBER_ID" type="BIGINT" autoIncrement="${autoIncrement}" startWith="1">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_GAM_TEAM_MEM"/>
@@ -45,12 +45,12 @@
     </modifySql>
   </changeSet>
 
-  <changeSet author="wallet" id="1.0.0-3" dbms="oracle,postgresql">
+  <changeSet author="wallet" id="1.0.0-3" dbms="oracle,postgresql" failOnError="false" runOnChange="false">
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_ID" startValue="1"/>
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_MEMBER_ID" startValue="1"/>
   </changeSet>
 
-  <changeSet author="wallet" id="1.0.0-4">
+  <changeSet author="wallet" id="1.0.0-4" failOnError="false" runOnChange="false">
     <addColumn tableName="ADDONS_WALLET_GAM_TEAM">
       <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false" />
     </addColumn>
