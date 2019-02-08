@@ -195,7 +195,7 @@
                     information="You can send this Wallet address or QR code to other users to send you ether and tokens" />
 
                   <div class="text-xs-center">
-                    <wallet-address :value="walletAddress" />
+                    <wallet-address :value="walletAddress" :allow-edit="false" />
                   </div>
                 </v-card-text>
               </v-card>

@@ -2,7 +2,7 @@
   <v-chip outline class="walletAddressCmp">
     <v-btn
       v-if="allowCopy"
-      title="Copy to clipboard"
+      title="Copy address"
       class="ml-0 mr-0 mb-0 mt-0"
       icon
       small
@@ -13,22 +13,28 @@
     </v-btn>
     <input
       v-if="isEditing && allowEdit"
+      ref="labelDetailEditInput"
       v-model="labelDetail.label"
       :disabled="loading"
       name="addressLabel"
       placeholder="Label"
       class="walletAddressLabelInput mr-2"
       autofocus
+      @click="ignoreDefaultActions"
       @keydown.esc="reset"
       @keyup.enter="save">
     <a
       v-else
       :href="addressEtherscanLink && `${addressEtherscanLink}${value}` || '#'"
       :title="addressEtherscanLink && 'Open on etherscan' || ''"
+      :class="!allowCopy && 'mr-4'"
       target="_blank"
       class="walletAddressLabel ellipsis mr-2">
       <template v-if="labelDetail && labelDetail.label">
         {{ labelDetail.label }}
+      </template>
+      <template v-else-if="name">
+        {{ name }}
       </template>
       <template v-else>
         {{ value }}
@@ -39,6 +45,7 @@
         :key="`icon-${isEditing}`"
         :color="isEditing ? 'success' : 'info'"
         class="walletAddressEdit"
+        title="Edit label"
         size="16"
         @click="editOrSave">
         {{ isEditing ? 'fa-check-circle' : 'fa-pencil-alt' }}
@@ -60,6 +67,12 @@ import {getAddressEtherscanlink} from '../WalletUtils.js';
 
 export default {
   props: {
+    name: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
     value: {
       type: String,
       default: function() {
@@ -92,6 +105,7 @@ export default {
   created() {
     this.init();
     this.isAdmin = window.walletSettings && window.walletSettings.isAdmin;
+    document.addEventListener('exo-wallet-label-changed', this.refresh);
   },
   methods: {
     init() {
@@ -115,14 +129,21 @@ export default {
       this.labelDetail = window.walletSettings.userPreferences.addresesLabels.find(label => label && label.address.toLowerCase() === walletAddress) || {address: walletAddress};
       this.labelDetail = Object.assign({}, this.labelDetail);
     },
-    editOrSave() {
+    ignoreDefaultActions(event) {
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    editOrSave(event) {
+      this.ignoreDefaultActions(event);
       if(!this.allowEdit) {
         return;
       }
       if(this.isEditing) {
         return this.save();
+      } else {
+        this.isEditing = !this.isEditing;
+        this.$nextTick(() => this.$refs.labelDetailEditInput && this.$refs.labelDetailEditInput.focus());
       }
-      this.isEditing = !this.isEditing;
     },
     reset() {
       this.refresh();
@@ -148,15 +169,16 @@ export default {
           } else {
             window.walletSettings.userPreferences.addresesLabels.push(this.labelDetail);
           }
-
-          this.refresh();
           this.isEditing = false;
+
+          document.dispatchEvent(new CustomEvent('exo-wallet-label-changed'));
         })
         .finally(() => {
           this.loading = false;
         });
     },
-    copyToClipboard() {
+    copyToClipboard(event) {
+      this.ignoreDefaultActions(event);
       this.$refs.clipboardInput.select();
       try {
         document.execCommand('copy');

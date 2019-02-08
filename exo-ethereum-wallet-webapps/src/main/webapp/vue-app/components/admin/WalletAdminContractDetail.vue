@@ -222,29 +222,15 @@
                 </v-avatar>
               </td>
               <td>
-                <template v-if="props.item.technicalId || props.item.owner">
-                  <profile-chip
-                    :address="props.item.address"
-                    :profile-id="props.item.id"
-                    :profile-technical-id="props.item.technicalId"
-                    :space-id="props.item.spaceId"
-                    :profile-type="props.item.type"
-                    :display-name="props.item.name"
-                    :enabled="props.item.enabled"
-                    :avatar="props.item.avatar" />
-                </template>
-                <template v-else-if="props.item.address">
-                  <a
-                    v-if="addressEtherscanLink"
-                    :href="`${addressEtherscanLink}${props.item.address}`"
-                    target="_blank"
-                    title="Open on etherscan">
-                    {{ props.item.address }}
-                  </a>
-                  <template v-else>
-                    {{ props.item.address }}
-                  </template>                  
-                </template>
+                <profile-chip
+                  :address="props.item.address"
+                  :profile-id="props.item.id"
+                  :profile-technical-id="props.item.technicalId"
+                  :space-id="props.item.spaceId"
+                  :profile-type="props.item.type"
+                  :display-name="props.item.name"
+                  :enabled="props.item.enabled"
+                  :avatar="props.item.avatar" />
               </td>
               <td v-if="$refs.disapproveAccountModal">
                 <span v-if="props.item.accountAdminLevel && props.item.accountAdminLevel[contractDetails.address] != 'not admin' && props.item.accountAdminLevel[contractDetails.address] >= 1">
@@ -292,29 +278,15 @@
                 </v-avatar>
               </td>
               <td>
-                <template v-if="props.item.technicalId || props.item.owner">
-                  <profile-chip
-                    :address="props.item.address"
-                    :profile-id="props.item.id"
-                    :profile-technical-id="props.item.technicalId"
-                    :space-id="props.item.spaceId"
-                    :profile-type="props.item.type"
-                    :display-name="props.item.name"
-                    :enabled="props.item.enabled"
-                    :avatar="props.item.avatar" />
-                </template>
-                <template v-else-if="props.item.address">
-                  <a
-                    v-if="addressEtherscanLink"
-                    :href="`${addressEtherscanLink}${props.item.address}`"
-                    target="_blank"
-                    title="Open on etherscan">
-                    {{ props.item.address }}
-                  </a>
-                  <template v-else>
-                    {{ props.item.address }}
-                  </template>
-                </template>
+                <profile-chip
+                  :address="props.item.address"
+                  :profile-id="props.item.id"
+                  :profile-technical-id="props.item.technicalId"
+                  :space-id="props.item.spaceId"
+                  :profile-type="props.item.type"
+                  :display-name="props.item.name"
+                  :enabled="props.item.enabled"
+                  :avatar="props.item.avatar" />
               </td>
               <td>
                 {{ props.item.accountAdminLevel[contractDetails.address] }} level

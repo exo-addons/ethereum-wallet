@@ -61,13 +61,8 @@
                     Created contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'ether'">
@@ -227,13 +222,8 @@
                     as administrator on contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'removeAdmin'">
@@ -261,13 +251,8 @@
                     as administrator from contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferOwnership'">
                   <profile-chip
@@ -294,13 +279,8 @@
                     on contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approveAccount'">
@@ -328,13 +308,8 @@
                     account on contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'disapproveAccount'">
@@ -362,13 +337,8 @@
                     account on contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'pause'">
@@ -385,13 +355,8 @@
                     Paused contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'unPause'">
@@ -408,13 +373,8 @@
                     Un-paused contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'setSellPrice'">
@@ -431,13 +391,8 @@
                     Modified sell price to contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.amount && Number(item.amount) && item.amountFiat">
@@ -454,13 +409,8 @@
                     Sent ether to contract
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else>
@@ -468,13 +418,8 @@
                     Contract transaction
                   </span>
                   <wallet-address
-                    v-if="item.contractName"
-                    :value="item.contractName"
-                    :allow-copy="false" />
-                  <wallet-address
-                    v-else
                     :value="item.contractAddress"
-                    allow-copy />
+                    :name="item.contractName" />
                 </v-list-tile-title>
 
                 <v-list-tile-sub-title>

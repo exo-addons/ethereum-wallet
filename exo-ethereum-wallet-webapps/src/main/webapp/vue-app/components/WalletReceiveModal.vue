@@ -42,7 +42,10 @@
           :to="walletAddress"
           title="Address QR Code"
           information="You can send this Wallet address or QR code to other users to send you ether or tokens" />
-        <wallet-address ref="walletAddress" :value="walletAddress" />
+        <wallet-address
+          ref="walletAddress"
+          :value="walletAddress"
+          :allow-edit="false" />
       </v-card-text>
       <v-card-actions>
         <v-spacer />
