@@ -12,10 +12,26 @@
             </v-card-text>
           </v-card>
         </v-flex>
-        <v-flex class="white text-xs-center" flat>
-          <div v-if="error && !loading" class="alert alert-error v-content">
-            <i class="uiIconError"></i>{{ error }}
-          </div>
+        <v-layout column class="white">
+          <v-flex v-if="error && !loading" class="text-xs-center">
+            <div class="alert alert-error text-xs-left">
+              <i class="uiIconError"></i>{{ error }}
+            </div>
+          </v-flex>
+          <v-flex v-if="settingWarnings && settingWarnings.length && !loading" class=" text-xs-center">
+            <div class="alert alert-warning text-xs-left">
+              <i class="uiIconWarning"></i>
+              <span>Please check your <a href="javascript:void(0);" @click="selectedTab = 2">settings</a></span>
+              <ul>
+                <li
+                  v-for="warning in settingWarnings"
+                  :key="warning"
+                  class="pl-2">
+                  - {{ warning }}
+                </li>
+              </ul>
+            </div>
+          </v-flex>
 
           <wallet-setup
             ref="walletSetup"
@@ -96,7 +112,7 @@
                 @error="error = $event" />
             </v-tab-item>
           </v-tabs-items>
-        </v-flex>
+        </v-layout>
       </v-layout>
     </main>
   </v-app>
@@ -125,6 +141,8 @@ export default {
   data() {
     return {
       loading: false,
+      error: null,
+      settingWarnings: [],
       selectedTab: null,
       transactionEtherscanLink: null,
       addressEtherscanLink: null,
@@ -183,6 +201,8 @@ export default {
   methods: {
     init() {
       this.loading = true;
+
+      this.error = null;
       return initSettings()
         .then(() => {
           if (!window.walletSettings) {
@@ -214,13 +234,17 @@ export default {
         .then(() => this.refreshRewardSettings())
         .catch((e) => {
           console.debug('init method - error', e);
-          this.error = `Error encountered: ${e}`;
+          this.error = e ? String(e) : 'Error encountered';
         })
         .finally(() => {
           this.loading = false;
         });
     },
     refreshRewardSettings() {
+      // Reload all if an error occurred
+      if(this.error) {
+        return this.init();
+      }
       this.loading = true;
       return getRewardSettings()
         .then(settings => {
@@ -229,6 +253,8 @@ export default {
             if (this.contracts && this.contracts.length && this.rewardSettings.contractAddress) {
               const contractAddress = this.rewardSettings.contractAddress.toLowerCase();
               this.contractDetails = this.contracts.find(contract  => contract && contract.address && contract.address.toLowerCase() === contractAddress);
+            } else {
+              this.contractDetails = null;
             }
             this.periodType = this.rewardSettings.periodType;
           }
@@ -246,7 +272,7 @@ export default {
     refreshRewards() {
       this.loading = true;
       this.periodDatesDisplay = this.$refs.sendRewards.periodDatesDisplay;
-      const teams = this.$refs.rewardTeams.teams;
+      const teams = this.$refs.rewardTeams.teams || [];
 
       // Check enabled/disabled wallets
       this.wallets.forEach((wallet) => wallet.disabledPool = false);
@@ -263,6 +289,10 @@ export default {
 
       this.duplicatedWallets = [];
       const identityIds = this.wallets.map(wallet => wallet.technicalId);
+
+      if(!this.checkConfigurationConsistency()) {
+        return;
+      }
 
       return computeRewards(identityIds, this.$refs.sendRewards.selectedDateInSeconds)
         .then(rewardDetails => {
@@ -343,6 +373,36 @@ export default {
           });
         })
         .finally(() => this.loading = false);
+    },
+    checkConfigurationConsistency() {
+      this.settingWarnings = [];
+
+      if(!this.rewardSettings) {
+        this.settingWarnings.push('Empty settings');
+      } else {
+        if(!this.rewardSettings.pluginSettings || !this.rewardSettings.pluginSettings.length) {
+          this.settingWarnings.push('Can\'t compute rewards, no reward plugins is configured');
+        } else {
+          this.rewardSettings.pluginSettings.forEach(pluginSetting => {
+            if(pluginSetting && !pluginSetting.budgetType) {
+              this.settingWarnings.push(`Can't compute rewards, plugin '${pluginSetting.pluginId}' doesn't have a configured budget type`);
+            }
+          });
+        }
+      }
+
+      if (!this.contractDetails) {
+        this.settingWarnings.push('No token is configured');
+      }
+
+      if (!this.periodType) {
+        this.settingWarnings.push('No reward periodicity is configured');
+      }
+
+      if(this.settingWarnings.length) {
+        return false;
+      }
+      return true;
     },
   },
 };

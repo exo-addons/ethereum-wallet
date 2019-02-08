@@ -154,6 +154,10 @@ public class RewardService {
                              Set<Long> validIdentityIdsToUse,
                              Set<RewardMemberDetail> rewardMemberDetails) {
     RewardBudgetType budgetType = rewardPluginSettings.getBudgetType();
+    if (budgetType == null) {
+      LOG.warn("Budget type of reward plugin {} is empty, thus no computing is possible", rewardPluginSettings.getPluginId());
+      return;
+    }
     String pluginId = rewardPluginSettings.getPluginId();
     double configuredPluginAmount = rewardPluginSettings.getAmount();
     if (configuredPluginAmount < 0) {

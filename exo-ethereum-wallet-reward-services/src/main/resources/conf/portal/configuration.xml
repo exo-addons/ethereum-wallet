@@ -63,7 +63,7 @@
         <values-param>
           <name>changelogs</name>
           <description>Change logs of Wallet RDBMS</description>
-          <value>db/changelog/wallet-rdbms.db.changelog-master.xml</value>
+          <value>db/changelog/reward-rdbms.db.changelog-master.xml</value>
         </values-param>
       </init-params>
     </component-plugin>

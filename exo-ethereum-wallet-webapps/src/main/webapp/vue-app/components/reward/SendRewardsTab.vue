@@ -5,11 +5,6 @@
         <i class="uiIconError"></i> {{ error }}
       </div>
     </v-card-text>
-    <v-card-text v-if="!contractDetails && !loading" class="text-xs-center">
-      <div class="alert alert-warning">
-        <i class="uiIconWarning"></i> No token currency is configured, please review <a href="javascript:void(0);" @click="selectedTab = 2">settings</a>
-      </div>
-    </v-card-text>
     <v-card-text
       class="text-xs-center"
       data-app>
@@ -32,20 +27,29 @@
           @input="selectedDateMenu = false" />
       </v-menu>
     </v-card-text>
-    <div class="ml-5 mr-5">
-      <h4>
-        <span>Eligible users: <strong>{{ eligibleUsersCount }}</strong></span>
-      </h4>
-      <h4>
-        <span>Total budget: <strong>{{ toFixed(totalBudget) }} {{ symbol }}</strong></span>
-      </h4>
-      <h4>
-        <span>Sent tokens: <strong>{{ toFixed(sentBudget) }} {{ symbol }}</strong></span>
-      </h4>
-      <h4 v-for="totalReward in totalRewards" :key="totalReward.pluginId">
-        <span>Total {{ totalReward.pluginId }}: <strong>{{ totalReward.total }}</strong></span>
-      </h4>
-    </div>
+    <v-container fluid grid-list-md>
+      <v-layout
+        row
+        wrap
+        class="text-xs-center">
+        <v-flex md4 xs12>
+          <h4>Eligible users: <strong>{{ eligibleUsersCount }}</strong></h4>
+        </v-flex>
+        <v-flex md4 xs12>
+          <h4>Total budget: <strong>{{ toFixed(totalBudget) }} {{ symbol }}</strong></h4>
+        </v-flex>
+        <v-flex md4 xs12>
+          <h4>Sent tokens: <strong>{{ toFixed(sentBudget) }} {{ symbol }}</strong></h4>
+        </v-flex>
+        <v-flex
+          v-for="totalReward in totalRewards"
+          :key="totalReward.pluginId"
+          md4
+          xs12>
+          <h4>Total {{ totalReward.pluginId }}: <strong>{{ totalReward.total }}</strong></h4>
+        </v-flex>
+      </v-layout>
+    </v-container>
     <v-container>
       <v-layout>
         <v-flex md4 xs12>
@@ -199,18 +203,22 @@
       </template>
     </v-data-table>
 
-    <send-reward-modal
-      :account="walletAddress"
-      :contract-details="contractDetails"
-      :recipients="recipients"
-      :period-type="periodType"
-      :start-date-in-seconds="selectedStartDateInSeconds"
-      :end-date-in-seconds="selectedEndDateInSeconds"
-      :default-transaction-label="defaultRewardLabelTemplate"
-      :default-transaction-message="defaultRewardMessageTemplate"
-      reward-count-field="points"
-      @sent="newPendingTransaction"
-      @error="error = $event" />
+    <v-card-actions>
+      <v-spacer />
+      <send-reward-modal
+        :account="walletAddress"
+        :contract-details="contractDetails"
+        :recipients="recipients"
+        :period-type="periodType"
+        :start-date-in-seconds="selectedStartDateInSeconds"
+        :end-date-in-seconds="selectedEndDateInSeconds"
+        :default-transaction-label="defaultRewardLabelTemplate"
+        :default-transaction-message="defaultRewardMessageTemplate"
+        reward-count-field="points"
+        @sent="newPendingTransaction"
+        @error="error = $event" />
+      <v-spacer />
+    </v-card-actions>
 
     <reward-detail-modal
       ref="rewardDetails"
