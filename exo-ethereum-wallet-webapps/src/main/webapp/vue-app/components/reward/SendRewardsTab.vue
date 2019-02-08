@@ -182,7 +182,7 @@
               icon
               small
               @click="selectedWallet = props.item">
-              <v-icon size="16">fa-plus</v-icon>
+              <v-icon :color="(props.item.rewards && props.item.rewards.length) && 'primary'" size="16">fa-info-circle</v-icon>
             </v-btn>
           </td>
         </tr>
