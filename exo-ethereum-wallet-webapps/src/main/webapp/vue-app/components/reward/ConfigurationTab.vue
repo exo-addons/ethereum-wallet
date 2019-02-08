@@ -39,7 +39,10 @@
         </div>
       </div>
       <v-card v-if="settingsToSave && settingsToSave.pluginSettings" flat>
-        <v-container fluid grid-list-lg class="pt-0 pb-0">
+        <v-container
+          fluid
+          grid-list-lg
+          class="pt-0 pb-0">
           <v-layout row wrap>
             <v-flex
               v-for="pluginSetting in settingsToSave.pluginSettings"

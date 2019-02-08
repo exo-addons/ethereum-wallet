@@ -2,13 +2,13 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 
-import org.exoplatform.addon.ethereum.wallet.model.Wallet;
-import org.exoplatform.addon.ethereum.wallet.model.WalletType;
+import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.ListenerService;
@@ -271,6 +271,15 @@ public class EthereumWalletAccountService {
       throw new IllegalStateException("User " + modifierUsername + " attempts to assign address of wallet of "
           + walletByAddress);
     }
+  }
+
+  public Set<AddressLabel> getAddressesLabelsVisibleBy(String username) {
+    Identity identity = getIdentityByTypeAndId(WalletType.USER, username);
+    if (identity == null || identity.getId() == null) {
+      return Collections.emptySet();
+    }
+
+    return Collections.emptySet();
   }
 
   private Wallet getWalletOfIdentity(Identity identity) {

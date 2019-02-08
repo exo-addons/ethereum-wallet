@@ -31,6 +31,8 @@ public class WalletPreferences implements Serializable {
 
   private static final String CURRENCY_PARAM          = "currency";
 
+  private static final String ADDRESSES_LABELS        = "addresesLabels";
+
   private static final long   serialVersionUID        = -5725443183560646198L;
 
   private Integer             dataVersion             = 0;
@@ -50,6 +52,8 @@ public class WalletPreferences implements Serializable {
   private Boolean             enableDelegation        = null;
 
   private Wallet              wallet                  = null;
+
+  private Set<AddressLabel>   addresesLabels;
 
   public String toJSONString() {
     return toJSONObject().toString();
@@ -71,6 +75,9 @@ public class WalletPreferences implements Serializable {
       }
       if (overviewAccounts != null) {
         jsonObject.put(OVERVIEW_ACCOUNTS_PARAM, new JSONArray(overviewAccounts));
+      }
+      if (addresesLabels != null) {
+        jsonObject.put(ADDRESSES_LABELS, new JSONArray(addresesLabels));
       }
     } catch (JSONException e) {
       throw new IllegalStateException("Error while converting Object to JSON", e);

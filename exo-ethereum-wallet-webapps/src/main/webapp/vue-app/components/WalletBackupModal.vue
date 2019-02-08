@@ -84,7 +84,8 @@
           v-if="walletPrivateKey"
           id="walletPrivateKey"
           :value="walletPrivateKey"
-          :allow-copy="false" />
+          :allow-copy="false"
+          :allow-edit="false" />
       </v-card-text>
       <v-card-actions>
         <v-spacer />

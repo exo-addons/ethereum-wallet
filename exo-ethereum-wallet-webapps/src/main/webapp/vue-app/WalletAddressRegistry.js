@@ -213,6 +213,11 @@ export function searchSpaces(filter, withMembers) {
     });
 }
 
+export function saveAddressLabel(labelDetails) {
+  // TODO
+  return Promise.resolve(labelDetails);
+}
+
 /*
  * Determins whether the suggested users should belong to a specific space or not
  */

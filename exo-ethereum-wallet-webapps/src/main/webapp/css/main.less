@@ -334,23 +334,25 @@
     margin-left: 5px;
     margin-right: 5px;
   }
-  .copyToClipboard {
-    position:relative;
-    display: inline-block;
-    max-width: 100%;
 
-    code {
-      height: 15px;
-      line-height: 15px;
-    }
-    button {
-      right: 0;
-      top: 0;
-      border-radius: 0;
-    }
-    input {
+  .walletAddressCmp {
+    .copyToClipboardInput {
       position: absolute;
       left:-9999px;
+    }
+    .v-chip__content {
+      padding-left: 0;
+      padding-right: 18px;
+      position: relative;
+    }
+
+    .walletAddressEdit {
+      display: none;
+      position: absolute;
+      right: 5px;
+    }
+    &:hover .walletAddressEdit {
+      display: block;
     }
   }
   .alert{
@@ -584,6 +586,13 @@
   }
   .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
     opacity: 0;
+  }
+
+  .walletAddressLabel {
+    max-width: 100px;
+  }
+  .walletAddressLabelInput {
+    width: 100px;
   }
 }
 

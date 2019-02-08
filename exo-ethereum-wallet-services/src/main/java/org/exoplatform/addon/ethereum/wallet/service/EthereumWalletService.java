@@ -243,40 +243,40 @@ public class EthereumWalletService implements Startable {
    * 
    * @param networkId
    * @param spaceId
-   * @param username
+   * @param accessor
    * @return
    * @throws IllegalAccessException
    */
-  public GlobalSettings getSettings(Long networkId, String spaceId, String username) throws IllegalAccessException {
+  public GlobalSettings getSettings(Long networkId, String spaceId, String accessor) throws IllegalAccessException {
     GlobalSettings globalSettings = null;
-    if (StringUtils.isBlank(username)) {
+    if (StringUtils.isBlank(accessor)) {
       // Retrieve settings without computed user data
       return getStoredGlobalSettings();
     } else {
       globalSettings = getSettings(networkId);
     }
 
-    globalSettings.setAdmin(isUserAdmin(username));
+    globalSettings.setAdmin(isUserAdmin(accessor));
     globalSettings.setWalletEnabled(true);
 
     if (StringUtils.isNotBlank(globalSettings.getAccessPermission())) {
       Space space = getSpace(globalSettings.getAccessPermission());
       // Disable wallet for users not member of the permitted space members
-      if (space != null && !(spaceService.isMember(space, username) || spaceService.isSuperManager(username))) {
-        LOG.debug("Wallet is disabled for user {} because he's not member of space {}", username, space.getPrettyName());
+      if (space != null && !(spaceService.isMember(space, accessor) || spaceService.isSuperManager(accessor))) {
+        LOG.debug("Wallet is disabled for user {} because he's not member of space {}", accessor, space.getPrettyName());
         globalSettings.setWalletEnabled(false);
       }
     }
 
     Wallet wallet = null;
     if (StringUtils.isNotBlank(spaceId)) {
-      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId, username);
-      if (wallet != null && !accountService.canAccessWallet(wallet, username)) {
-        LOG.warn("User {} is not allowed to display space wallet {}", username, spaceId);
+      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId, accessor);
+      if (wallet != null && !accountService.canAccessWallet(wallet, accessor)) {
+        LOG.warn("User {} is not allowed to display space wallet {}", accessor, spaceId);
         globalSettings.setWalletEnabled(false);
       }
     } else {
-      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), username, username);
+      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), accessor, accessor);
     }
 
     if (wallet != null) {
@@ -285,11 +285,11 @@ public class EthereumWalletService implements Startable {
 
     if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
       // Append user preferences
-      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(username), WALLET_SCOPE, SETTINGS_KEY_NAME);
+      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(accessor), WALLET_SCOPE, SETTINGS_KEY_NAME);
       WalletPreferences userSettings = null;
       if (userSettingsValue != null && userSettingsValue.getValue() != null) {
         userSettings = WalletPreferences.parseStringToObject(userSettingsValue.getValue().toString());
-        checkDataToUpgrade(username, userSettings);
+        checkDataToUpgrade(accessor, userSettings);
       } else {
         userSettings = new WalletPreferences();
       }
@@ -300,7 +300,7 @@ public class EthereumWalletService implements Startable {
         userSettings.setWalletAddress(wallet.getAddress());
         userSettings.setWallet(wallet);
       }
-
+      userSettings.setAddresesLabels(accountService.getAddressesLabelsVisibleBy(accessor));
       globalSettings.setContractAbi(contractService.getContractAbi());
       globalSettings.setContractBin(contractService.getContractBinary());
     }
@@ -337,9 +337,6 @@ public class EthereumWalletService implements Startable {
                        WALLET_SCOPE,
                        SETTINGS_KEY_NAME,
                        SettingValue.create(userPreferences.toJSONString()));
-
-    // Clear cached in memory stored settings
-    this.storedSettings = null;
   }
 
   /**

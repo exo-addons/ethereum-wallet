@@ -16,7 +16,6 @@ describe('QRCode.test.js', () => {
   });
 
   const defaultAttributesValues = {
-    netId: false,
     information: false,
     amount: 0,
     from: false,
@@ -95,63 +94,61 @@ describe('QRCode.test.js', () => {
 
     const app = getWalletApp();
     let accountDetailCmp, contractDetails, delegateTokensModal, qrCodeModal, qrCode;
-    return (
-      initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
-        .then(() => initApp(app))
-        .then(() => flushPromises())
-        .then(() => {
-          contractDetails = app.vm.accountsDetails[global.tokenAddress];
-          expect(contractDetails).toBeTruthy();
-          app.vm.openAccountDetail(contractDetails);
+    return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
+      .then(() => initApp(app))
+      .then(() => flushPromises())
+      .then(() => {
+        contractDetails = app.vm.accountsDetails[global.tokenAddress];
+        expect(contractDetails).toBeTruthy();
+        app.vm.openAccountDetail(contractDetails);
 
-          accountDetailCmp = app.vm.$refs.accountDetail;
-          expect(accountDetailCmp).toBeTruthy();
-          return flushPromises();
-        })
-        .then(() => {
-          delegateTokensModal = accountDetailCmp.$refs.delegateTokensModal;
-          expect(delegateTokensModal).toBeTruthy();
-          delegateTokensModal.open = true;
-          delegateTokensModal.showQRCodeModal = true;
+        accountDetailCmp = app.vm.$refs.accountDetail;
+        expect(accountDetailCmp).toBeTruthy();
+        return flushPromises();
+      })
+      .then(() => {
+        delegateTokensModal = accountDetailCmp.$refs.delegateTokensModal;
+        expect(delegateTokensModal).toBeTruthy();
+        delegateTokensModal.open = true;
+        delegateTokensModal.showQRCodeModal = true;
 
-          delegateTokensModal.recipient = global.walletAddresses[2];
-          delegateTokensModal.amount = 4;
+        delegateTokensModal.recipient = global.walletAddresses[2];
+        delegateTokensModal.amount = 4;
 
-          return flushPromises();
-        })
+        return flushPromises();
+      })
 
-        .then(() => {
-          qrCodeModal = delegateTokensModal.$refs.qrCodeModal;
-          expect(qrCodeModal).toBeTruthy();
-          qrCodeModal.open = true;
-          return flushPromises();
-        })
+      .then(() => {
+        qrCodeModal = delegateTokensModal.$refs.qrCodeModal;
+        expect(qrCodeModal).toBeTruthy();
+        qrCodeModal.open = true;
+        return flushPromises();
+      })
 
-        .then(() => {
-          qrCodeModal.to = global.walletAddresses[2];
-          qrCodeModal.amount = 4;
-          return flushPromises();
-        })
+      .then(() => {
+        qrCodeModal.to = global.walletAddresses[2];
+        qrCodeModal.amount = 4;
+        return flushPromises();
+      })
 
-        .then(() => {
-          qrCode = qrCodeModal.$refs.qrCode;
-          expect(qrCode).toBeTruthy();
-          return flushPromises();
-        })
+      .then(() => {
+        qrCode = qrCodeModal.$refs.qrCode;
+        expect(qrCode).toBeTruthy();
+        return flushPromises();
+      })
 
-        .then(() => {
-          expect(qrCode.information).toBe('You can scan this QR code by using a different application that supports QR code transaction generation to delegate tokens');
-          expect(qrCode.to).toBe(global.walletAddresses[2]);
-          expect(qrCode.amount).toBe(4);
-          expect(qrCode.isContract).toBeTruthy();
-          expect(qrCode.functionName).toBe('approve');
-          expect(qrCode.argsNames).toEqual(['_spender', '_value']);
-          expect(qrCode.argsTypes).toEqual(['address', 'uint256']);
-        })
+      .then(() => {
+        expect(qrCode.information).toBe('You can scan this QR code by using a different application that supports QR code transaction generation to delegate tokens');
+        expect(qrCode.to).toBe(global.walletAddresses[2]);
+        expect(qrCode.amount).toBe(4);
+        expect(qrCode.isContract).toBeTruthy();
+        expect(qrCode.functionName).toBe('approve');
+        expect(qrCode.argsNames).toEqual(['_spender', '_value']);
+        expect(qrCode.argsTypes).toEqual(['address', 'uint256']);
+      })
 
-        .then(() => done())
-        .catch((e) => done(e))
-    );
+      .then(() => done())
+      .catch((e) => done(e));
   });
 
   it('QRCodeModal - Test generating QRCode to send tokens', (done) => {
