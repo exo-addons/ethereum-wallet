@@ -41,10 +41,10 @@
         </v-icon>
       </v-btn>
     </h3>
-    <h4 v-show="!selectedTeam">
+    <h4 v-show="!selectedTeam" class="text-xs-center">
       <span>Eligible pools users: <strong>{{ eligiblePoolsUsersCount }}</strong></span>
     </h4>
-    <h4 v-show="!selectedTeam">
+    <h4 v-show="!selectedTeam" class="text-xs-center">
       <span>Total pools budget: <strong>{{ toFixed(poolsBudget) }} {{ symbol }}</strong></span>
     </h4>
     <v-container
