@@ -200,6 +200,8 @@ global.fetch.mockImplementation((url, options) => {
     //not needed for test
   } else if (url.indexOf(`/portal/rest/wallet/api/account/savePreferences`) === 0) {
     //not needed for test
+  } else if (url.indexOf(`/portal/rest/wallet/api/account/saveOrDeleteAddressLabel`) === 0) {
+    //not needed for test
   } else {
     console.warn(new Error(`URL ${url} isn't mocked`));
   }
