@@ -99,12 +99,18 @@ public class EthereumTransactionVerifier implements Startable {
     scheduledExecutorService.shutdown();
   }
 
+  /**
+   * Run verifier instantly in an asynchronous way
+   */
   public void runNow() {
     if (scheduledExecutorService != null && transactionVerifierRunnable != null) {
       scheduledExecutorService.execute(transactionVerifierRunnable);
     }
   }
 
+  /**
+   * @return transactions hashes that are marked as pensing in internal database
+   */
   public Set<String> getPendingTransactionHashes() {
     List<TransactionDetail> pendingTransactions = getPendingTransactions();
     if (pendingTransactions == null || pendingTransactions.isEmpty()) {

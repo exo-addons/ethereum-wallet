@@ -49,8 +49,10 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   /**
    * Get global settings of aplication
    * 
-   * @param networkId
-   * @return
+   * @param networkId used blockchain network id
+   * @param spaceId space wallet id to display
+   * @return REST response with global settings with current user preferences
+   *         and current space settings
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -59,8 +61,6 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
     try {
       GlobalSettings globalSettings = ethereumWalletService.getSettings(networkId, spaceId, getCurrentUserId());
       return Response.ok(globalSettings.toJSONString(true)).build();
-    } catch (IllegalAccessException e) {
-      return Response.status(403).build();
     } catch (Exception e) {
       LOG.warn("Error getting settings for network {} and spaceId {}", networkId, spaceId, e);
       return Response.status(403).build();
@@ -70,8 +70,8 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
   /**
    * Save global settings
    * 
-   * @param globalSettings
-   * @return
+   * @param globalSettings global settings details to save
+   * @return REST response with status
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -99,10 +99,10 @@ public class EthereumWalletGlobalSettingsREST implements ResourceContainer {
     try {
       ethereumWalletService.saveSettings(globalSettings);
       LOG.info("{} saved wallet settings details '{}'", getCurrentUserId(), globalSettings.toJSONString(false));
+      return Response.ok().build();
     } catch (Exception e) {
       LOG.warn("Error saving global settings", e);
       return Response.serverError().build();
     }
-    return Response.ok().build();
   }
 }

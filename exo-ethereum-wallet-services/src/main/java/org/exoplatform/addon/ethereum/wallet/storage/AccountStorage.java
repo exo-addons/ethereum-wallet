@@ -25,7 +25,7 @@ public class AccountStorage {
   /**
    * Retrieves the list registered wallets
    * 
-   * @return
+   * @return {@link Set} of {@link Wallet} details with associated addresses
    */
   public Set<Wallet> listWallets() {
     List<WalletEntity> walletEntities = walletAccountDAO.findAll();
@@ -36,10 +36,17 @@ public class AccountStorage {
     }
   }
 
+  /**
+   * @return associated wallets counts
+   */
   public long getWalletsCount() {
     return walletAccountDAO.count();
   }
 
+  /**
+   * @param identityId user/space technical identty id
+   * @return {@link Wallet} details for identity
+   */
   public Wallet getWalletByIdentityId(long identityId) {
     WalletEntity walletEntity = walletAccountDAO.find(identityId);
     if (walletEntity == null) {
@@ -48,6 +55,10 @@ public class AccountStorage {
     return fromEntity(walletEntity);
   }
 
+  /**
+   * @param address wallet address
+   * @return {@link Wallet} details identified by address
+   */
   public Wallet getWalletByAddress(String address) {
     WalletEntity walletEntity = walletAccountDAO.findByAddress(address.toLowerCase());
     if (walletEntity == null) {
@@ -56,6 +67,10 @@ public class AccountStorage {
     return fromEntity(walletEntity);
   }
 
+  /**
+   * @param wallet wallet details to save
+   * @param isNew whether this is a new wallet association or not
+   */
   public void saveWallet(Wallet wallet, boolean isNew) {
     WalletEntity walletEntity = toEntity(wallet);
 
@@ -66,6 +81,12 @@ public class AccountStorage {
     }
   }
 
+  /**
+   * Removes a wallet identitied by user/space identity technical id
+   * 
+   * @param identityId user/space technical identty id
+   * @return removed {@link Wallet}
+   */
   public Wallet removeWallet(long identityId) {
     WalletEntity walletEntity = walletAccountDAO.find(identityId);
     walletAccountDAO.delete(walletEntity);

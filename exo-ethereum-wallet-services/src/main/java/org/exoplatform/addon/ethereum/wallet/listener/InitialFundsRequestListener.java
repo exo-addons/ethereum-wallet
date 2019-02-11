@@ -14,8 +14,8 @@ import org.exoplatform.services.log.Log;
 
 /**
  * This listener will be triggered when a new address is associated to a user or
- * a space. Thus an initial funds request should be sent to funds holder when a
- * new address is added.
+ * a space. Thus an initial funds request should be sent to funds holder when an
+ * address is added or modified.
  */
 @Asynchronous
 public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {

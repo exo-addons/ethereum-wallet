@@ -80,6 +80,11 @@ public class EthereumWalletContractService implements Startable {
     // Nothing to stop
   }
 
+  /**
+   * @param address contract address to check
+   * @param networkId blockchain network id
+   * @return true if contract address is a watched contract
+   */
   public boolean isContract(String address, long networkId) {
     return getContractDetail(address, networkId) != null;
   }
@@ -87,7 +92,7 @@ public class EthereumWalletContractService implements Startable {
   /**
    * Save a new contract details
    * 
-   * @param contractDetail
+   * @param contractDetail contract details to save
    */
   public void saveContract(ContractDetail contractDetail) {
     if (StringUtils.isBlank(contractDetail.getAddress())) {
@@ -121,9 +126,9 @@ public class EthereumWalletContractService implements Startable {
    * Removes a contract address from default contracts displayed in wallet of
    * all users
    * 
-   * @param address
-   * @param networkId
-   * @return
+   * @param address contract address to remove from watched list
+   * @param networkId blockchain network id where contract is deployed
+   * @return true if removed
    */
   public boolean removeDefaultContract(String address, Long networkId) {
     if (StringUtils.isBlank(address)) {
@@ -154,9 +159,9 @@ public class EthereumWalletContractService implements Startable {
   /**
    * Get contract detail
    * 
-   * @param address
-   * @param networkId
-   * @return
+   * @param address contract address to get from watched list
+   * @param networkId blockchain network id where contract is deployed
+   * @return {@link ContractDetail} contract details
    */
   public ContractDetail getContractDetail(String address, Long networkId) {
     if (StringUtils.isBlank(address)) {
@@ -178,8 +183,8 @@ public class EthereumWalletContractService implements Startable {
   /**
    * Retrieves the list of default contract addreses
    * 
-   * @param networkId
-   * @return
+   * @param networkId blockchain network id where contract is deployed
+   * @return {@link Set} of watched contracts addresses
    */
   public Set<String> getDefaultContractsAddresses(Long networkId) {
     if (networkId == null || networkId == 0) {
@@ -199,9 +204,10 @@ public class EthereumWalletContractService implements Startable {
   /**
    * Retreive the ABI content of a contract
    * 
-   * @param name
-   * @return
-   * @throws IOException
+   * @param name contract name
+   * @param extension contract ABI file extension ('json' or 'abi')
+   * @return ABI of contract in JSON format represented in {@link String}
+   * @throws IOException when an error occurs while getting contract ABI file from filesystem
    */
   public String getContract(String name, String extension) throws IOException {
     try (InputStream abiInputStream = this.getClass()
@@ -215,7 +221,7 @@ public class EthereumWalletContractService implements Startable {
   /**
    * Get Contract ABI
    * 
-   * @return
+   * @return {@link JSONArray} ABI of contract in JSON format
    */
   public JSONArray getContractAbi() {
     return contractAbi;
@@ -224,7 +230,7 @@ public class EthereumWalletContractService implements Startable {
   /**
    * Get Contract BINARY to deploy
    * 
-   * @return
+   * @return UTF-8 String of contract BIN
    */
   public String getContractBinary() {
     return contractBinary;

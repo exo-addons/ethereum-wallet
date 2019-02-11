@@ -107,21 +107,16 @@ public class GlobalSettings implements Serializable, Cloneable {
   // Computed
   private boolean             isAdmin                                = false;
 
+  // Computed: managed in other storage location
   private WalletPreferences   userPreferences;
 
-  /**
-   * Managed in other storage location
-   */
+  // Computed: managed in other storage location
   private Set<String>         defaultContractsToDisplay;
 
-  /**
-   * Managed by code
-   */
+  // Computed: managed in file system storage
   private transient JSONArray contractAbi                            = null;
 
-  /**
-   * Managed by code
-   */
+  // Computed: managed in file system storage
   private String              contractBin                            = null;
 
   public String toJSONString(boolean includeTransient) {

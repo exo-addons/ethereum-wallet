@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2018 eXo Platform SAS.
+ * Copyright (C) 2003-2019 eXo Platform SAS.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -54,8 +54,8 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
   /**
    * Store transaction hash in sender, receiver and contract accounts
    * 
-   * @param transactionDetail
-   * @return
+   * @param transactionDetail transaction details to save
+   * @return REST response with status
    */
   @POST
   @Path("saveTransactionDetails")
@@ -71,6 +71,7 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
     String currentUserId = getCurrentUserId();
     try {
       transactionService.saveTransactionDetail(transactionDetail, currentUserId, false);
+      return Response.ok().build();
     } catch (IllegalAccessException e) {
       LOG.warn("User {} is attempting to save transaction {}", currentUserId, transactionDetail, e);
       return Response.status(403).build();
@@ -78,20 +79,21 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
       LOG.warn("Error saving transaction message", e);
       return Response.serverError().build();
     }
-    return Response.ok().build();
   }
 
   /**
    * Get list of transactions of an address
    * 
-   * @param networkId
-   * @param address
-   * @param contractAddress
-   * @param hash
-   * @param limit
-   * @param pending
-   * @param administration
-   * @return
+   * @param networkId blockchain network id
+   * @param address wallet address to retrieve its transactions
+   * @param contractAddress filtered contract address transactions
+   * @param hash transaction hash to include in the returned list
+   * @param limit transactions list limit
+   * @param onlyPending whether retrieve only pending transactions of wallet or
+   *          all
+   * @param administration whether include or not administrative transactions or
+   *          not
+   * @return REST Response with the list of transactions details
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -102,7 +104,7 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
                                   @QueryParam("contractAddress") String contractAddress,
                                   @QueryParam("hash") String hash,
                                   @QueryParam("limit") int limit,
-                                  @QueryParam("pending") boolean pending,
+                                  @QueryParam("pending") boolean onlyPending,
                                   @QueryParam("administration") boolean administration) {
     if (networkId == 0) {
       LOG.warn("Bad request sent to server with empty networkId {}", networkId);
@@ -120,7 +122,7 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
                                                                                       contractAddress,
                                                                                       hash,
                                                                                       limit,
-                                                                                      pending,
+                                                                                      onlyPending,
                                                                                       administration,
                                                                                       currentUserId);
       return Response.ok(transactionDetails).build();

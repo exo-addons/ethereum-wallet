@@ -22,7 +22,7 @@ import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.*;
 
 /**
- * A listener to listen to transactions made on newly configured global settings
+ * A listener to listen to apply new global settings on blockchain connection
  */
 @Asynchronous
 public class GlobalSettingsModificationListener extends Listener<Object, GlobalSettings> {

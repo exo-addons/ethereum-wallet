@@ -44,7 +44,7 @@ public class EthereumWalletServiceManaged {
   @Managed
   @ManagedDescription("Get ethereum blockchain known treated transactions")
   public long getKnownTreatedTransactionsCount() {
-    return getTransactionService().getKnownTreatedTransactionsCount();
+    return getTransactionService().getWatchedTreatedTransactionsCount();
   }
 
   @Managed

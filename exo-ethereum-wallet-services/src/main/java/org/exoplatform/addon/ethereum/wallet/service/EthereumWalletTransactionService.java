@@ -31,7 +31,7 @@ public class EthereumWalletTransactionService {
 
   private ListenerService               listenerService;
 
-  private long                          knownTreatedTransactionsCount;
+  private long                          watchedTreatedTransactionsCount;
 
   public EthereumWalletTransactionService(EthereumWalletAccountService walletAccountService,
                                           TransactionStorage walletTransactionStorage,
@@ -50,13 +50,13 @@ public class EthereumWalletTransactionService {
                                                  String contractAddress,
                                                  String hash,
                                                  int limit,
-                                                 boolean pending,
+                                                 boolean onlyPending,
                                                  boolean administration,
                                                  String currentUser) throws IllegalAccessException {
     if (contractService.isContract(address, networkId)) {
       return getContractTransactions(networkId, address, limit, currentUser);
     } else {
-      return getWalletTransactions(networkId, address, contractAddress, hash, limit, pending, administration, currentUser);
+      return getWalletTransactions(networkId, address, contractAddress, hash, limit, onlyPending, administration, currentUser);
     }
   }
 
@@ -68,40 +68,45 @@ public class EthereumWalletTransactionService {
    * Save temporary transaction label and message and save transaction hash in
    * sender and receiver account
    *
-   * @param transactionDetail
-   * @param modifierUsername
-   * @param transactionConfirmed
-   * @throws IllegalAccessException
+   * @param transactionDetail transaction detail to save
+   * @param currentUser current username that is saving transaction
+   * @param transactionMined whether the transaction has been mined on
+   *          blockchain or not
+   * @throws IllegalAccessException if current user is not allowed to save
+   *           transaction to sender and receiver wallet
    */
   public void saveTransactionDetail(TransactionDetail transactionDetail,
-                                    String modifierUsername,
-                                    boolean transactionConfirmed) throws IllegalAccessException {
-    if (!transactionConfirmed) {
+                                    String currentUser,
+                                    boolean transactionMined) throws IllegalAccessException {
+    if (!transactionMined) {
       String senderAddress = StringUtils.isBlank(transactionDetail.getBy()) ? transactionDetail.getFrom()
                                                                             : transactionDetail.getBy();
       Wallet senderWallet = walletAccountService.getWalletByAddress(senderAddress);
       if (senderWallet != null) {
-        walletAccountService.checkCanSaveWallet(senderWallet, senderWallet, modifierUsername);
+        walletAccountService.checkCanSaveWallet(senderWallet, senderWallet, currentUser);
       }
     }
     walletTransactionStorage.saveTransactionDetail(transactionDetail);
-    if (transactionConfirmed) {
+    if (transactionMined) {
       broadcastNewTransactionEvent(transactionDetail);
     }
   }
 
-  public long getKnownTreatedTransactionsCount() {
-    return knownTreatedTransactionsCount;
+  /**
+   * @return watched transactions count treated since the server startup
+   */
+  public long getWatchedTreatedTransactionsCount() {
+    return watchedTreatedTransactionsCount;
   }
 
   /**
    * Get list of transactions for a contract
    * 
-   * @param networkId
-   * @param contractAddress
-   * @param limit
-   * @param currentUser
-   * @return
+   * @param networkId blockchain network id
+   * @param contractAddress contract address used ti filter transactions
+   * @param limit limit of transactions list to retrieve
+   * @param currentUser current user retrieving transactions
+   * @return {@link List} of {@link TransactionDetail}
    */
   private List<TransactionDetail> getContractTransactions(Long networkId,
                                                           String contractAddress,
@@ -210,7 +215,7 @@ public class EthereumWalletTransactionService {
     } catch (Exception e) {
       LOG.warn("Error while broadcasting transaction mined event: {}", transactionDetail, e);
     }
-    this.knownTreatedTransactionsCount++;
+    this.watchedTreatedTransactionsCount++;
   }
 
   private SpaceService getSpaceService() {

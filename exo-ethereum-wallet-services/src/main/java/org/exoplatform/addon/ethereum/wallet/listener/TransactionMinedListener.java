@@ -17,6 +17,11 @@ import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.*;
 import org.exoplatform.social.core.service.LinkProvider;
 
+/**
+ * A listener that is triggered when a watched transaction by the addon is mined
+ * on blockchain. This will mark the transaction as not pending in internal
+ * database and send notifications.
+ */
 @Asynchronous
 public class TransactionMinedListener extends Listener<Object, JSONObject> {
 

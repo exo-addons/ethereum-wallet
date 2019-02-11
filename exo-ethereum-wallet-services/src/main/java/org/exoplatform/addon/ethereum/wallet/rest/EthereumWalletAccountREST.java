@@ -55,11 +55,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
-   * Retrieves the user or space details by username or spacePrettyName
+   * Retrieves the user or space details by username or space pretty name
    * 
-   * @param remoteId
-   * @param type
-   * @return
+   * @param remoteId username or space pretty name
+   * @param type 'user' or 'space'
+   * @return Rest Response with wallet details object
    */
   @Path("detailsById")
   @GET
@@ -87,8 +87,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Retrieves the user or space details associated to an address
    * 
-   * @param address
-   * @return
+   * @param address wallet address
+   * @return Rest Response with wallet details object
    */
   @Path("detailsByAddress")
   @GET
@@ -119,9 +119,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Enable/Disable wallet
    * 
-   * @param address
-   * @param enable
-   * @return
+   * @param address address of wallet to enable/disable
+   * @param enable if true enable wallet else disable it
+   * @return Rest Response of request
    */
   @Path("enable")
   @GET
@@ -144,8 +144,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Remove the user or space details associated to an address
    * 
-   * @param address
-   * @return
+   * @param address wallet address to remove
+   * @return Rest Response of request
    */
   @Path("remove")
   @GET
@@ -168,8 +168,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Save address a user or space associated address
    * 
-   * @param wallet
-   * @return
+   * @param wallet wallet details to save
+   * @return Rest Response with saved pass phrase of wallet
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -211,8 +211,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Save wallet address label
    * 
-   * @param label
-   * @return
+   * @param label a label details to save for a given address
+   * @return Rest Response with saved label detail
    */
   @POST
   @Produces(MediaType.APPLICATION_JSON)
@@ -235,10 +235,10 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   }
 
   /**
-   * Save user preferences of Wallet
+   * Save Wallet preferences
    * 
-   * @param preferences
-   * @return
+   * @param preferences wallet preferences to save
+   * @return Rest Response of request
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -268,8 +268,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Sends a fund request notifications
    * 
-   * @param fundsRequest
-   * @return
+   * @param fundsRequest fund request details to send
+   * @return Rest Response of request
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -311,8 +311,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Mark a notification as sent
    * 
-   * @param notificationId
-   * @return
+   * @param notificationId web notification id of fund request to mark as sent
+   * @return Rest Response of request
    */
   @GET
   @Path("markFundRequestAsSent")
@@ -341,8 +341,8 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Returns fund request status
    * 
-   * @param notificationId
-   * @return
+   * @param notificationId web notification id of fund request to check if sent
+   * @return Rest Response 'true' if sent else 'false'
    */
   @GET
   @Path("fundRequestSent")
@@ -371,7 +371,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
   /**
    * Get list of wallet accounts
    * 
-   * @return
+   * @return Rest Responseof type json with the list of wallets
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)

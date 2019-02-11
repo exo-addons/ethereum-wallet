@@ -50,9 +50,9 @@ public class EthereumWalletContractREST implements ResourceContainer {
   /**
    * Return saved contract details by address
    * 
-   * @param address
-   * @param networkId
-   * @return
+   * @param address token contract address
+   * @param networkId token contract blockchain network id
+   * @return REST Response with contract details
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -75,6 +75,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
     }
   }
 
+  /**
+   * Return contract bin content
+   * 
+   * @param name contract name to retrieve
+   * @return REST Response with contract bin content
+   */
   @GET
   @Path("bin/{name}")
   @RolesAllowed({ "rewarding", "administrators" })
@@ -96,6 +102,12 @@ public class EthereumWalletContractREST implements ResourceContainer {
     }
   }
 
+  /**
+   * Return contract abi content
+   * 
+   * @param name contract name to retrieve
+   * @return REST Response with contract abi content
+   */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("abi/{name}")
@@ -122,8 +134,8 @@ public class EthereumWalletContractREST implements ResourceContainer {
    * Save a new contract address to display it in wallet of all users and save
    * contract name and symbol
    * 
-   * @param contractDetail
-   * @return
+   * @param contractDetail contract detail to save
+   * @return REST response with status
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -146,20 +158,20 @@ public class EthereumWalletContractREST implements ResourceContainer {
     try {
       contractService.saveContract(contractDetail);
       LOG.info("{} saved contract details '{}'", getCurrentUserId(), contractDetail.toJSONString());
+      return Response.ok().build();
     } catch (Exception e) {
       LOG.warn("Error saving contract as default: " + contractDetail.getAddress(), e);
       return Response.serverError().build();
     }
-    return Response.ok().build();
   }
 
   /**
    * Removes a contract address from default contracts displayed in wallet of
    * all users
    * 
-   * @param address
-   * @param networkId
-   * @return
+   * @param address cotnract address to remove
+   * @param networkId blockchain network id where contract is deployed
+   * @return REST response with status
    */
   @POST
   @Path("remove")
@@ -176,11 +188,11 @@ public class EthereumWalletContractREST implements ResourceContainer {
     try {
       contractService.removeDefaultContract(address.toLowerCase(), networkId);
       LOG.info("{} removed contract details '{}'", getCurrentUserId(), address);
+      return Response.ok().build();
     } catch (Exception e) {
       LOG.warn("Error removing default contract: " + address, e);
       return Response.serverError().build();
     }
-    return Response.ok().build();
   }
 
 }

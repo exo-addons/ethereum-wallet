@@ -148,7 +148,7 @@ public class EthereumWalletService implements Startable {
   /**
    * Save global settings
    * 
-   * @param newGlobalSettings
+   * @param newGlobalSettings global settings to save
    */
   public void saveSettings(GlobalSettings newGlobalSettings) {
     if (newGlobalSettings == null) {
@@ -159,6 +159,12 @@ public class EthereumWalletService implements Startable {
     saveSettings(newGlobalSettings, oldGlobalSettings.getDataVersion());
   }
 
+  /**
+   * Save global settings with new dataversion
+   * 
+   * @param newGlobalSettings global settings to save
+   * @param dataVersion new data version of global settings to save
+   */
   public void saveSettings(GlobalSettings newGlobalSettings, Integer dataVersion) {
     if (newGlobalSettings == null) {
       throw new IllegalArgumentException("globalSettings parameter is mandatory");
@@ -195,7 +201,8 @@ public class EthereumWalletService implements Startable {
   /**
    * Retrieves global stored settings used for all users.
    * 
-   * @return
+   * @return {@link GlobalSettings} global settings of default watched
+   *         blockchain network without user preferences
    */
   public GlobalSettings getSettings() {
     if (this.storedSettings != null) {
@@ -212,17 +219,14 @@ public class EthereumWalletService implements Startable {
    * Retrieves global stored settings. if username is not null, the personal
    * settings will be included.
    * 
-   * @param networkId
-   * @return
+   * @param networkId blockchain network id to retrieve its settings
+   * @return {@link GlobalSettings} global settings of blockchain network id
+   *         without user preferences
    */
   public GlobalSettings getSettings(Long networkId) {
     GlobalSettings globalSettings = null;
     if (this.storedSettings == null) {
-      try {
-        globalSettings = getSettings(networkId, null, null);
-      } catch (IllegalAccessException e) {
-        return null;
-      }
+      globalSettings = getSettings(networkId, null, null);
     } else {
       globalSettings = this.storedSettings.clone();
     }
@@ -241,13 +245,13 @@ public class EthereumWalletService implements Startable {
    * settings will be included. if spaceId is not null wallet address will be
    * retrieved
    * 
-   * @param networkId
-   * @param spaceId
-   * @param currentUser
-   * @return
-   * @throws IllegalAccessException
+   * @param networkId blockchain network id to retrieve its settings
+   * @param spaceId space pretty name to include its settings
+   * @param currentUser username to include its preferences
+   * @return {@link GlobalSettings} global settings with user and space
+   *         preferences included into it
    */
-  public GlobalSettings getSettings(Long networkId, String spaceId, String currentUser) throws IllegalAccessException {
+  public GlobalSettings getSettings(Long networkId, String spaceId, String currentUser) {
     GlobalSettings globalSettings = null;
     if (StringUtils.isBlank(currentUser)) {
       // Retrieve settings without computed user data
@@ -307,33 +311,17 @@ public class EthereumWalletService implements Startable {
     return globalSettings;
   }
 
-  private void retrieveContractsPreferences(GlobalSettings globalSettings, Long networkId) {
-    if ((networkId == null || networkId == 0) && globalSettings.getDefaultNetworkId() != null) {
-      networkId = globalSettings.getDefaultNetworkId();
-    }
-
-    // Retrieve default contracts to display for all users
-    globalSettings.setDefaultContractsToDisplay(contractService.getDefaultContractsAddresses(networkId));
-
-    // Generic global settings computing
-    String defaultPrincipalAccount = globalSettings.getDefaultPrincipalAccount();
-    if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
-      ContractDetail principalContractDetails = contractService.getContractDetail(defaultPrincipalAccount, networkId);
-      globalSettings.setPrincipalContractAdminAddress(principalContractDetails == null ? null
-                                                                                       : principalContractDetails.getOwner());
-    }
-  }
-
   /**
    * Save user preferences of Wallet
    * 
-   * @param userPreferences
+   * @param currentUser current user name to save its preferences
+   * @param userPreferences user preferences to save
    */
-  public void saveUserPreferences(String userId, WalletPreferences userPreferences) {
+  public void saveUserPreferences(String currentUser, WalletPreferences userPreferences) {
     if (userPreferences == null) {
       throw new IllegalArgumentException("userPreferences parameter is mandatory");
     }
-    settingService.set(Context.USER.id(userId),
+    settingService.set(Context.USER.id(currentUser),
                        WALLET_SCOPE,
                        SETTINGS_KEY_NAME,
                        SettingValue.create(userPreferences.toJSONString()));
@@ -342,8 +330,8 @@ public class EthereumWalletService implements Startable {
   /**
    * Returns last watched block
    * 
-   * @param networkId
-   * @return
+   * @param networkId blockchain network id
+   * @return last watched block number
    */
   public long getLastWatchedBlockNumber(long networkId) {
     SettingValue<?> lastBlockNumberValue =
@@ -357,8 +345,8 @@ public class EthereumWalletService implements Startable {
   /**
    * Save last watched block
    * 
-   * @param networkId
-   * @param lastWatchedBlockNumber
+   * @param networkId blockchain network id
+   * @param lastWatchedBlockNumber last watched block number
    */
   public void saveLastWatchedBlockNumber(long networkId, long lastWatchedBlockNumber) {
     LOG.debug("Save watched block number {} on network {}", lastWatchedBlockNumber, networkId);
@@ -369,10 +357,11 @@ public class EthereumWalletService implements Startable {
   }
 
   /**
-   * Request funds
+   * Save funds request and send notifications
    * 
-   * @param fundsRequest
-   * @throws IllegalAccessException
+   * @param fundsRequest funds request details to save
+   * @throws IllegalAccessException if request sender is not allowed to send
+   *           request to receiver wallet
    */
   public void requestFunds(FundsRequest fundsRequest) throws IllegalAccessException {
     String currentUser = getCurrentUserId();
@@ -428,8 +417,9 @@ public class EthereumWalletService implements Startable {
   /**
    * Mark a fund request web notification as sent
    * 
-   * @param notificationId
-   * @param currentUser
+   * @param notificationId web notification id
+   * @param currentUser current username that is marking the notification as
+   *          sent
    * @throws IllegalAccessException if current user is not the targetted user of
    *           notification
    */
@@ -448,8 +438,8 @@ public class EthereumWalletService implements Startable {
   /**
    * Get fund request status
    * 
-   * @param notificationId
-   * @param currentUser
+   * @param notificationId web notification id
+   * @param currentUser current username
    * @return true if fund request sent
    * @throws IllegalAccessException if current user is not the targetted user of
    *           notification
@@ -474,6 +464,23 @@ public class EthereumWalletService implements Startable {
       globalSettings = GlobalSettings.parseStringToObject(defaultSettings, globalSettingsValue.getValue().toString());
     }
     return globalSettings;
+  }
+
+  private void retrieveContractsPreferences(GlobalSettings globalSettings, Long networkId) {
+    if ((networkId == null || networkId == 0) && globalSettings.getDefaultNetworkId() != null) {
+      networkId = globalSettings.getDefaultNetworkId();
+    }
+
+    // Retrieve default contracts to display for all users
+    globalSettings.setDefaultContractsToDisplay(contractService.getDefaultContractsAddresses(networkId));
+
+    // Generic global settings computing
+    String defaultPrincipalAccount = globalSettings.getDefaultPrincipalAccount();
+    if (StringUtils.isNotBlank(defaultPrincipalAccount)) {
+      ContractDetail principalContractDetails = contractService.getContractDetail(defaultPrincipalAccount, networkId);
+      globalSettings.setPrincipalContractAdminAddress(principalContractDetails == null ? null
+                                                                                       : principalContractDetails.getOwner());
+    }
   }
 
   private void checkDataToUpgrade(String username, WalletPreferences userPreferences) {
@@ -520,7 +527,7 @@ public class EthereumWalletService implements Startable {
     }
   }
 
-  public ListenerService getListenerService() {
+  private ListenerService getListenerService() {
     if (listenerService == null) {
       listenerService = CommonsUtils.getService(ListenerService.class);
     }

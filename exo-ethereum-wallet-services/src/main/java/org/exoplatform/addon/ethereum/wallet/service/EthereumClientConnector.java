@@ -51,7 +51,7 @@ import org.exoplatform.services.log.Log;
 import rx.Subscription;
 
 /**
- * A Web3j connector class to interact with Ethereum Network
+ * A Web3j connector class to interact with Ethereum Blockchain
  */
 @ManagedBy(EthereumClientConnectorManaged.class)
 public class EthereumClientConnector implements Startable {
@@ -206,14 +206,13 @@ public class EthereumClientConnector implements Startable {
   }
 
   /**
-   * Get transaction
+   * Get transaction by hash
    * 
-   * @param transactionHash
-   * @return
-   * @throws ExecutionException
-   * @throws InterruptedException
+   * @param transactionHash transaction hash to retrieve
+   * @return Web3j Transaction object
+   * @throws InterruptedException when Blockchain request is interrupted
    */
-  public Transaction getTransaction(String transactionHash) throws InterruptedException, ExecutionException {
+  public Transaction getTransaction(String transactionHash) throws InterruptedException {
     waitConnection();
     EthTransaction ethTransaction;
     try {
@@ -231,14 +230,13 @@ public class EthereumClientConnector implements Startable {
   }
 
   /**
-   * Get block
+   * Get block by hash
    * 
-   * @param blockHash
-   * @return
-   * @throws ExecutionException
-   * @throws InterruptedException
+   * @param blockHash block hash to retrieve
+   * @return Web3j Block object
+   * @throws InterruptedException when Blockchain request is interrupted
    */
-  public Block getBlock(String blockHash) throws InterruptedException, ExecutionException {
+  public Block getBlock(String blockHash) throws InterruptedException {
     waitConnection();
     EthBlock ethBlock;
     try {
@@ -256,14 +254,13 @@ public class EthereumClientConnector implements Startable {
   }
 
   /**
-   * Get transaction receipt
+   * Get transaction receipt by hash
    * 
-   * @param transactionHash
-   * @return
-   * @throws ExecutionException
-   * @throws InterruptedException
+   * @param transactionHash transaction hash to retrieve
+   * @return Web3j Transaction receipt object
+   * @throws InterruptedException when Blockchain request is interrupted
    */
-  public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
+  public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException {
     waitConnection();
     EthGetTransactionReceipt ethGetTransactionReceipt;
     try {
@@ -283,7 +280,7 @@ public class EthereumClientConnector implements Startable {
   /**
    * Returns used Websocket URL
    * 
-   * @return
+   * @return blockchain web socket endpoint URL
    */
   public String getWebsocketProviderURL() {
     GlobalSettings settings = ethereumWalletService.getSettings();
@@ -293,7 +290,7 @@ public class EthereumClientConnector implements Startable {
   /**
    * Change currently used globalSettings and re-init
    * 
-   * @param newGlobalSettings
+   * @param newGlobalSettings newly saved global settings
    */
   public void changeSettings(GlobalSettings newGlobalSettings) {
     if (newGlobalSettings == null) {
@@ -319,42 +316,72 @@ public class EthereumClientConnector implements Startable {
     }
   }
 
+  /**
+   * @return true if the connection to the blockchain is established
+   */
   public boolean isConnected() {
     return web3j != null && web3jService != null && webSocketClient != null && webSocketClient.isOpen();
   }
 
+  /**
+   * @return last wtahced block number
+   */
   public long getLastWatchedBlockNumber() {
     return lastWatchedBlockNumber;
   }
 
+  /**
+   * @return number of blockchain connection interruption
+   */
   public int getConnectionInterruptionCount() {
     return connectionInterruptionCount;
   }
 
+  /**
+   * @param lastWatchedBlockNumber last watched block number
+   */
   public void setLastWatchedBlockNumber(long lastWatchedBlockNumber) {
     this.lastWatchedBlockNumber = lastWatchedBlockNumber;
   }
 
+  /**
+   * @return transaction queue currently processing size
+   */
   public int getTransactionQueueSize() {
     return transactionHashesQueue.size();
   }
 
+  /**
+   * @return timestamp in milliseconds of blockchaing watching start time
+   */
   public long getWatchingBlockchainStartTime() {
     return watchingBlockchainStartTime;
   }
 
+  /**
+   * @return number of treated watched transactions count
+   */
   public int getWatchedTransactionCount() {
     return watchedTransactionCount;
   }
 
+  /**
+   * @return max treating transactions queue size
+   */
   public int getTransactionQueueMaxSize() {
     return transactionQueueMaxSize;
   }
 
+  /**
+   * @return block number on blockchain in stratup time
+   */
   public long getLastBlockNumberOnStartupTime() {
     return lastBlockNumberOnStartupTime;
   }
 
+  /**
+   * @return estimation of transactions count per block
+   */
   public int getTransactionsCountPerBlock() {
     return transactionsCountPerBlock;
   }
