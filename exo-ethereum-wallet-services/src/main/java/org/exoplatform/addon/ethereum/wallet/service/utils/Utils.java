@@ -31,8 +31,6 @@ import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.api.settings.data.Scope;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.PortalContainer;
-import org.exoplatform.portal.application.PortalApplication;
-import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.UserPortalConfigService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -45,9 +43,6 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
-import org.exoplatform.web.ControllerContext;
-import org.exoplatform.web.WebAppController;
-import org.exoplatform.webui.application.WebuiRequestContext;
 
 /**
  * Utils class to provide common tools and constants
@@ -249,8 +244,7 @@ public class Utils {
       profileLink = account.getId() == null
           || account.getType() == null ? account.getName()
                                        : WalletType.isUser(account.getType()) ? LinkProvider.getProfileLink(account.getId())
-                                                                              : getPermanentLink(getSpacePrettyName(account.getId()),
-                                                                                                 account.getName());
+                                                                              : getPermanentLink(getSpace(account.getId()));
     } catch (Exception e) {
       LOG.error("Error getting profile link of space", e);
     }
@@ -385,7 +379,9 @@ public class Utils {
       if (space == null) {
         return CommonsUtils.getCurrentDomain() + getMyWalletLink();
       } else {
-        return CommonsUtils.getCurrentDomain() + LinkProvider.getSpaceUri(space.getPrettyName()) + "/EthereumSpaceWallet";
+        String groupId = space.getGroupId().split("/")[2];
+        return CommonsUtils.getCurrentDomain() + LinkProvider.getActivityUriForSpace(space.getPrettyName(), groupId)
+            + "/EthereumSpaceWallet";
       }
     }
   }
@@ -395,36 +391,22 @@ public class Utils {
     return "/" + PortalContainer.getInstance().getName() + "/" + userPortalConfigService.getDefaultPortal() + "/wallet";
   }
 
-  public static String getPermanentLink(String prettyName, String name) {
-    WebAppController webAppController = CommonsUtils.getService(WebAppController.class);
-    ControllerContext controllerContext = new ControllerContext(webAppController,
-                                                                webAppController.getRouter(),
-                                                                new FakeHTTPServletResponse(),
-                                                                new FakeHTTPServletRequest(),
-                                                                null);
-    PortalApplication application = webAppController.getApplication(PortalApplication.PORTAL_APPLICATION_ID);
-    PortalRequestContext requestContext = new PortalRequestContext(application,
-                                                                   controllerContext,
-                                                                   org.exoplatform.portal.mop.SiteType.PORTAL.toString(),
-                                                                   "",
-                                                                   "",
-                                                                   null);
-    WebuiRequestContext.setCurrentInstance(requestContext);
-    try {
-      String spaceUrl = LinkProvider.getSpaceUri(prettyName);
-      if (StringUtils.isBlank(spaceUrl)) {
-        return CommonsUtils.getCurrentDomain();
-      }
-
-      spaceUrl = CommonsUtils.getCurrentDomain() + spaceUrl;
-      return new StringBuilder("<a href=\"").append(spaceUrl)
-                                            .append("\" target=\"_parent\">")
-                                            .append(StringEscapeUtils.escapeHtml(name))
-                                            .append("</a>")
-                                            .toString();
-    } finally {
-      WebuiRequestContext.setCurrentInstance(null);
+  public static String getPermanentLink(Space space) {
+    if (space == null) {
+      return null;
     }
+    String groupId = space.getGroupId().split("/")[2];
+    String spaceUrl = LinkProvider.getActivityUriForSpace(space.getPrettyName(), groupId);
+    if (StringUtils.isBlank(spaceUrl)) {
+      return CommonsUtils.getCurrentDomain();
+    }
+
+    spaceUrl = CommonsUtils.getCurrentDomain() + spaceUrl;
+    return new StringBuilder("<a href=\"").append(spaceUrl)
+                                          .append("\" target=\"_blank\">")
+                                          .append(StringEscapeUtils.escapeHtml(space.getDisplayName()))
+                                          .append("</a>")
+                                          .toString();
   }
 
   public static Set<String> jsonArrayToList(JSONObject jsonObject, String key) throws JSONException {
