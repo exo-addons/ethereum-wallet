@@ -25,12 +25,6 @@ function mockCanvas(window) {
 const window = document.defaultView;
 mockCanvas(window);
 
-const v8 = require('v8');
-const totalHeapSize = v8.getHeapStatistics().total_available_size;
-console.warn('Total Heap Size en bytes ', totalHeapSize, 'Bytes');
-const totalHeapSizeInGB = (totalHeapSize / 1024 / 1024 / 1024).toFixed(2);
-console.warn('Total Heap Size en GB ~', totalHeapSizeInGB, 'GB');
-
 require('./constants.js');
 
 global.fetch = require('jest-fetch-mock');

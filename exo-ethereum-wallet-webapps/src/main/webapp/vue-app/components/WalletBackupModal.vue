@@ -79,13 +79,8 @@
             @click:append="walletPasswordShow = !walletPasswordShow" />
         </v-form>
       </v-card-text>
-      <v-card-text class="text-xs-center">
-        <wallet-address
-          v-if="walletPrivateKey"
-          id="walletPrivateKey"
-          :value="walletPrivateKey"
-          :allow-copy="false"
-          :allow-edit="false" />
+      <v-card-text v-if="walletPrivateKey" class="text-xs-center">
+        <code v-text="walletPrivateKey"></code>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
@@ -114,14 +109,10 @@
 </template>
 
 <script>
-import WalletAddress from './WalletAddress.vue';
 
 import {setDraggable, unlockBrowerWallet, lockBrowerWallet, getCurrentBrowerWallet, hashCode} from '../WalletUtils.js';
 
 export default {
-  components: {
-    WalletAddress,
-  },
   props: {
     displayCompleteMessage: {
       type: Boolean,
