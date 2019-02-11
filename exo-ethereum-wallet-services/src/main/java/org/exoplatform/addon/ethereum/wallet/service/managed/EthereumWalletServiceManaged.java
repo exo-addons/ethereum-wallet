@@ -18,6 +18,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service.managed;
 
+import java.util.Set;
+
 import org.exoplatform.addon.ethereum.wallet.service.*;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.management.annotations.Managed;
@@ -34,6 +36,8 @@ public class EthereumWalletServiceManaged {
 
   private EthereumWalletTransactionService transactionService;
 
+  private EthereumTransactionVerifier      transactionVerifier;
+
   public EthereumWalletServiceManaged(EthereumWalletService ethereumWalletService) {
   }
 
@@ -49,6 +53,18 @@ public class EthereumWalletServiceManaged {
     return getAccountService().getWalletsCount();
   }
 
+  @Managed
+  @ManagedDescription("Run ethereum transaction verifier")
+  public void runTransactionVerifier() {
+    getTransactionVerifier().runNow();
+  }
+
+  @Managed
+  @ManagedDescription("Get pending transactions")
+  public Set<String> getPendingTransactionHashes() {
+    return getTransactionVerifier().getPendingTransactionHashes();
+  }
+
   public EthereumWalletTransactionService getTransactionService() {
     if (transactionService == null) {
       transactionService = CommonsUtils.getService(EthereumWalletTransactionService.class);
@@ -61,5 +77,12 @@ public class EthereumWalletServiceManaged {
       accountService = CommonsUtils.getService(EthereumWalletAccountService.class);
     }
     return accountService;
+  }
+
+  public EthereumTransactionVerifier getTransactionVerifier() {
+    if (transactionVerifier == null) {
+      transactionVerifier = CommonsUtils.getService(EthereumTransactionVerifier.class);
+    }
+    return transactionVerifier;
   }
 }

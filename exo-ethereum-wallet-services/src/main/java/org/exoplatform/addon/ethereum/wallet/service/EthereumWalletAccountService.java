@@ -75,19 +75,19 @@ public class EthereumWalletAccountService {
    * 
    * @param type
    * @param remoteId
-   * @param accessor
+   * @param currentUser
    * @return {@link Wallet}
    */
-  public Wallet getWalletByTypeAndId(String type, String remoteId, String accessor) {
+  public Wallet getWalletByTypeAndId(String type, String remoteId, String currentUser) {
     Wallet wallet = getWalletByTypeAndId(type, remoteId);
     if (wallet != null) {
       if (WalletType.isSpace(wallet.getType())) {
-        wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), accessor));
+        wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), currentUser));
         if (!wallet.isSpaceAdministrator()) {
           // Delete passphrase for non managers
           wallet.setPassPhrase(null);
         }
-      } else if (!StringUtils.equals(wallet.getId(), accessor)) {
+      } else if (!StringUtils.equals(wallet.getId(), currentUser)) {
         // Delete passphrase for other users
         wallet.setPassPhrase(null);
       }
@@ -143,10 +143,11 @@ public class EthereumWalletAccountService {
    * Save wallet address to currentUser or to a space managed by current user
    * 
    * @param wallet
-   * @param modifierUsername
+   * @param currentUser
+   * @param broadcast
    * @throws Exception
    */
-  public void saveWallet(Wallet wallet, String modifierUsername, boolean broadcast) throws Exception {
+  public void saveWallet(Wallet wallet, String currentUser, boolean broadcast) throws Exception {
     if (wallet == null) {
       throw new IllegalArgumentException("Wallet is mandatory");
     }
@@ -158,7 +159,7 @@ public class EthereumWalletAccountService {
     computeWalletIdentity(wallet);
 
     Wallet oldWallet = accountStorage.getWalletByIdentityId(wallet.getTechnicalId());
-    checkCanSaveWallet(wallet, oldWallet, modifierUsername);
+    checkCanSaveWallet(wallet, oldWallet, currentUser);
 
     boolean isNew = oldWallet == null;
     wallet.setEnabled(isNew || wallet.isEnabled());
@@ -178,10 +179,10 @@ public class EthereumWalletAccountService {
    * Remove User or Space wallet address association
    * 
    * @param address
-   * @param username
+   * @param currentUser
    * @throws IllegalAccessException
    */
-  public void removeWalletByAddress(String address, String username) throws IllegalAccessException {
+  public void removeWalletByAddress(String address, String currentUser) throws IllegalAccessException {
     if (address == null) {
       throw new IllegalArgumentException("address paramter is mandatory");
     }
@@ -189,8 +190,8 @@ public class EthereumWalletAccountService {
     if (wallet == null) {
       throw new IllegalStateException("Can't find wallet associated to address " + address);
     }
-    if (!isUserAdmin(username)) {
-      throw new IllegalAccessException("Current user " + username + " attempts to delete wallet with address " + address + " of "
+    if (!isUserAdmin(currentUser)) {
+      throw new IllegalAccessException("Current user " + currentUser + " attempts to delete wallet with address " + address + " of "
           + wallet.getType() + " " + wallet.getId());
     }
     accountStorage.removeWallet(wallet.getTechnicalId());

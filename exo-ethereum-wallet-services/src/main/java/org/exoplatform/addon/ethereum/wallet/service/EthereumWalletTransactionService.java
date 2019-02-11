@@ -52,11 +52,11 @@ public class EthereumWalletTransactionService {
                                                  int limit,
                                                  boolean pending,
                                                  boolean administration,
-                                                 String accessor) throws IllegalAccessException {
+                                                 String currentUser) throws IllegalAccessException {
     if (contractService.isContract(address, networkId)) {
-      return getContractTransactions(networkId, address, limit, accessor);
+      return getContractTransactions(networkId, address, limit, currentUser);
     } else {
-      return getWalletTransactions(networkId, address, contractAddress, hash, limit, pending, administration, accessor);
+      return getWalletTransactions(networkId, address, contractAddress, hash, limit, pending, administration, currentUser);
     }
   }
 
@@ -100,43 +100,30 @@ public class EthereumWalletTransactionService {
    * @param networkId
    * @param contractAddress
    * @param limit
-   * @param accessor
+   * @param currentUser
    * @return
    */
   private List<TransactionDetail> getContractTransactions(Long networkId,
                                                           String contractAddress,
                                                           int limit,
-                                                          String accessor) throws IllegalAccessException {
+                                                          String currentUser) throws IllegalAccessException {
     ContractDetail contractDetail = contractService.getContractDetail(contractAddress, networkId);
     if (contractDetail == null) {
       throw new IllegalStateException("Can't find contract with address " + contractAddress);
     }
 
-    if (!isUserAdmin(accessor) && !isUserRewardingAdmin(accessor)) {
-      throw new IllegalAccessException("User " + accessor + " attempts to access contract transactions with address "
+    if (!isUserAdmin(currentUser) && !isUserRewardingAdmin(currentUser)) {
+      throw new IllegalAccessException("User " + currentUser + " attempts to access contract transactions with address "
           + contractAddress);
     }
 
     List<TransactionDetail> transactionDetails = walletTransactionStorage.getContractTransactions(networkId,
                                                                                                   contractAddress,
                                                                                                   limit);
-    transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, accessor));
+    transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, currentUser));
     return transactionDetails;
   }
 
-  /**
-   * Get list of transactions for a wallet designated by an address
-   * 
-   * @param networkId
-   * @param address
-   * @param accessor
-   * @param limit
-   * @param hash
-   * @param isAdministration
-   * @param accessor2
-   * @param administration
-   * @return
-   */
   private List<TransactionDetail> getWalletTransactions(long networkId,
                                                         String address,
                                                         String contractAddress,
@@ -144,12 +131,12 @@ public class EthereumWalletTransactionService {
                                                         int limit,
                                                         boolean pending,
                                                         boolean administration,
-                                                        String accessor) throws IllegalAccessException {
+                                                        String currentUser) throws IllegalAccessException {
     Wallet wallet = walletAccountService.getWalletByAddress(address);
     if (wallet == null) {
       return Collections.emptyList();
     }
-    if (!walletAccountService.canAccessWallet(wallet, accessor)) {
+    if (!walletAccountService.canAccessWallet(wallet, currentUser)) {
       throw new IllegalAccessException("Can't access wallet with address " + address);
     }
 
@@ -161,11 +148,11 @@ public class EthereumWalletTransactionService {
                                                                                                 pending,
                                                                                                 administration);
 
-    transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, accessor));
+    transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, currentUser));
     return transactionDetails;
   }
 
-  private void retrieveWalletsDetails(TransactionDetail transactionDetail, String accessor) {
+  private void retrieveWalletsDetails(TransactionDetail transactionDetail, String currentUser) {
     Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());
     transactionDetail.setFromWallet(senderWallet);
     if (senderWallet != null) {
@@ -184,10 +171,10 @@ public class EthereumWalletTransactionService {
         senderWalletBy.setPassPhrase(null);
       }
       transactionDetail.setByWallet(senderWalletBy);
-      if (!displayTransactionsLabel(senderWalletBy, accessor)) {
+      if (!displayTransactionsLabel(senderWalletBy, currentUser)) {
         transactionDetail.setLabel(null);
       }
-    } else if (!displayTransactionsLabel(senderWallet, accessor)) {
+    } else if (!displayTransactionsLabel(senderWallet, currentUser)) {
       transactionDetail.setLabel(null);
     }
   }

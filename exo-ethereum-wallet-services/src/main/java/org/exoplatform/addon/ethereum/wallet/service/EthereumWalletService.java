@@ -243,40 +243,40 @@ public class EthereumWalletService implements Startable {
    * 
    * @param networkId
    * @param spaceId
-   * @param accessor
+   * @param currentUser
    * @return
    * @throws IllegalAccessException
    */
-  public GlobalSettings getSettings(Long networkId, String spaceId, String accessor) throws IllegalAccessException {
+  public GlobalSettings getSettings(Long networkId, String spaceId, String currentUser) throws IllegalAccessException {
     GlobalSettings globalSettings = null;
-    if (StringUtils.isBlank(accessor)) {
+    if (StringUtils.isBlank(currentUser)) {
       // Retrieve settings without computed user data
       return getStoredGlobalSettings();
     } else {
       globalSettings = getSettings(networkId);
     }
 
-    globalSettings.setAdmin(isUserAdmin(accessor));
+    globalSettings.setAdmin(isUserAdmin(currentUser));
     globalSettings.setWalletEnabled(true);
 
     if (StringUtils.isNotBlank(globalSettings.getAccessPermission())) {
       Space space = getSpace(globalSettings.getAccessPermission());
       // Disable wallet for users not member of the permitted space members
-      if (space != null && !(spaceService.isMember(space, accessor) || spaceService.isSuperManager(accessor))) {
-        LOG.debug("Wallet is disabled for user {} because he's not member of space {}", accessor, space.getPrettyName());
+      if (space != null && !(spaceService.isMember(space, currentUser) || spaceService.isSuperManager(currentUser))) {
+        LOG.debug("Wallet is disabled for user {} because he's not member of space {}", currentUser, space.getPrettyName());
         globalSettings.setWalletEnabled(false);
       }
     }
 
     Wallet wallet = null;
     if (StringUtils.isNotBlank(spaceId)) {
-      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId, accessor);
-      if (wallet != null && !accountService.canAccessWallet(wallet, accessor)) {
-        LOG.warn("User {} is not allowed to display space wallet {}", accessor, spaceId);
+      wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId, currentUser);
+      if (wallet != null && !accountService.canAccessWallet(wallet, currentUser)) {
+        LOG.warn("User {} is not allowed to display space wallet {}", currentUser, spaceId);
         globalSettings.setWalletEnabled(false);
       }
     } else {
-      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), accessor, accessor);
+      wallet = accountService.getWalletByTypeAndId(WalletType.USER.getId(), currentUser, currentUser);
     }
 
     if (wallet != null) {
@@ -285,11 +285,11 @@ public class EthereumWalletService implements Startable {
 
     if (globalSettings.isWalletEnabled() || globalSettings.isAdmin()) {
       // Append user preferences
-      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(accessor), WALLET_SCOPE, SETTINGS_KEY_NAME);
+      SettingValue<?> userSettingsValue = settingService.get(Context.USER.id(currentUser), WALLET_SCOPE, SETTINGS_KEY_NAME);
       WalletPreferences userSettings = null;
       if (userSettingsValue != null && userSettingsValue.getValue() != null) {
         userSettings = WalletPreferences.parseStringToObject(userSettingsValue.getValue().toString());
-        checkDataToUpgrade(accessor, userSettings);
+        checkDataToUpgrade(currentUser, userSettings);
       } else {
         userSettings = new WalletPreferences();
       }
@@ -300,7 +300,7 @@ public class EthereumWalletService implements Startable {
         userSettings.setWalletAddress(wallet.getAddress());
         userSettings.setWallet(wallet);
       }
-      userSettings.setAddresesLabels(accountService.getAddressesLabelsVisibleBy(accessor));
+      userSettings.setAddresesLabels(accountService.getAddressesLabelsVisibleBy(currentUser));
       globalSettings.setContractAbi(contractService.getContractAbi());
       globalSettings.setContractBin(contractService.getContractBinary());
     }

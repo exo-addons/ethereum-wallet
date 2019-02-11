@@ -3,8 +3,9 @@ package org.exoplatform.addon.ethereum.wallet.service;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.EMPTY_HASH;
 import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.NEW_TRANSACTION_EVENT;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.picocontainer.Startable;
@@ -36,6 +37,10 @@ public class EthereumTransactionVerifier implements Startable {
 
   private ScheduledExecutorService         scheduledExecutorService = null;
 
+  private ScheduledFuture<?>               scheduledFuture;
+
+  private Runnable                         transactionVerifierRunnable;
+
   public EthereumTransactionVerifier(ExoContainer container,
                                      EthereumClientConnector ethereumClientConnector,
                                      EthereumWalletTransactionService transactionService) {
@@ -50,12 +55,12 @@ public class EthereumTransactionVerifier implements Startable {
     scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
 
     // Transactions Queue processing
-    scheduledExecutorService.scheduleWithFixedDelay(() -> {
+    transactionVerifierRunnable = () -> {
       ExoContainerContext.setCurrentContainer(container);
       RequestLifeCycle.begin(container);
       try {
         LOG.debug("Checking transactions with not sent notifications");
-        List<TransactionDetail> pendingTransactions = transactionService.getPendingTransactions();
+        List<TransactionDetail> pendingTransactions = getPendingTransactions();
         if (pendingTransactions != null && !pendingTransactions.isEmpty()) {
           LOG.info("Checking {} pending transactions if it has not been notified to users", pendingTransactions.size());
           for (TransactionDetail transactionDetail : pendingTransactions) {
@@ -81,12 +86,35 @@ public class EthereumTransactionVerifier implements Startable {
       } finally {
         RequestLifeCycle.end();
       }
-    }, 1, 5, TimeUnit.MINUTES);
+    };
+
+    scheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(transactionVerifierRunnable, 1, 5, TimeUnit.MINUTES);
   }
 
   @Override
   public void stop() {
-    scheduledExecutorService.shutdownNow();
+    if (scheduledFuture != null) {
+      scheduledFuture.cancel(true);
+    }
+    scheduledExecutorService.shutdown();
+  }
+
+  public void runNow() {
+    if (scheduledExecutorService != null && transactionVerifierRunnable != null) {
+      scheduledExecutorService.execute(transactionVerifierRunnable);
+    }
+  }
+
+  public Set<String> getPendingTransactionHashes() {
+    List<TransactionDetail> pendingTransactions = getPendingTransactions();
+    if (pendingTransactions == null || pendingTransactions.isEmpty()) {
+      return Collections.emptySet();
+    }
+    return pendingTransactions.stream().map(transactionDetail -> transactionDetail.getHash()).collect(Collectors.toSet());
+  }
+
+  private List<TransactionDetail> getPendingTransactions() {
+    return transactionService.getPendingTransactions();
   }
 
   private ListenerService getListenerService() {

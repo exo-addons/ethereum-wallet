@@ -126,7 +126,7 @@ export default {
       }
       const walletAddress = this.value.toLowerCase();
 
-      this.labelDetail = window.walletSettings.userPreferences.addresesLabels.find(label => label && label.address.toLowerCase() === walletAddress) || {address: walletAddress};
+      this.labelDetail = window.walletSettings.userPreferences.addresesLabels.find(label => label && label.address && label.address.toLowerCase() === walletAddress) || {address: walletAddress};
       this.labelDetail = Object.assign({}, this.labelDetail);
     },
     ignoreDefaultActions(event) {
@@ -163,7 +163,7 @@ export default {
             window.walletSettings.userPreferences.addresesLabels = [];
           }
           const walletAddress = this.value.toLowerCase();
-          const labelDetailToChange = window.walletSettings.userPreferences.addresesLabels.find(label => label && label.address.toLowerCase() === walletAddress);
+          const labelDetailToChange = window.walletSettings.userPreferences.addresesLabels.find(label => label && label.address && label.address.toLowerCase() === walletAddress);
           if(labelDetailToChange) {
             Object.assign(labelDetailToChange, labelDetail);
           } else {
