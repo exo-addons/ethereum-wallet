@@ -182,11 +182,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     String currentUserId = getCurrentUserId();
-    LOG.info("User '{}' is saving new wallet address for {} '{}' with address '{}'",
-             currentUserId,
-             wallet.getType(),
-             wallet.getId(),
-             wallet.getAddress());
+    LOG.debug("User '{}' is saving new wallet address for {} '{}' with address '{}'",
+              currentUserId,
+              wallet.getType(),
+              wallet.getId(),
+              wallet.getAddress());
     try {
       Wallet storedWallet = accountService.getWalletByTypeAndId(wallet.getType(), wallet.getId(), currentUserId);
       if (storedWallet == null) {
@@ -255,7 +255,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       return Response.status(400).build();
     }
 
-    LOG.info("Saving user preferences '{}'", getCurrentUserId());
+    LOG.debug("Saving user preferences '{}'", getCurrentUserId());
     try {
       ethereumWalletService.saveUserPreferences(getCurrentUserId(), preferences);
       return Response.ok().build();

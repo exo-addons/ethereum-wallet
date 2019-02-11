@@ -175,7 +175,7 @@ public class MigrationService implements Startable {
     int computedTransactions = 0;
     int errorComputedTransactions = 0;
     int transactionsCount = transactionHashes.size();
-    LOG.info("Compute {} saved transactions details from blockchain", transactionsCount);
+    LOG.debug("Compute {} saved transactions details from blockchain", transactionsCount);
     for (String hash : transactionHashes) {
       TransactionDetail transactionDetail = transactionStorage.getTransactionByHash(hash, false);
       try {
@@ -192,7 +192,7 @@ public class MigrationService implements Startable {
         }
       }
       computedTransactions++;
-      if (computedTransactions % 10 == 0) {
+      if (computedTransactions % 100 == 0) {
         LOG.info("{}/{} transactions has been computed from blockchain, errors = {}",
                  computedTransactions,
                  transactionsCount,
