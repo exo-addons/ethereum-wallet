@@ -398,8 +398,8 @@ export default {
                 }
 
                 const symbol = this.contractDetails && this.contractDetails.symbol;
-                const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
-                const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language);
+                const startDate = new Date(this.startDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language, { year: 'numeric', month: 'long', day: 'numeric' });
+                const endDate = new Date(this.endDateInSeconds * 1000).toLocaleDateString(eXo.env.portal.language, { year: 'numeric', month: 'long', day: 'numeric' });
 
                 message = this.transformMessage(message, recipientWallet, symbol, startDate, endDate);
                 label = this.transformMessage(label, recipientWallet, symbol, startDate, endDate);
