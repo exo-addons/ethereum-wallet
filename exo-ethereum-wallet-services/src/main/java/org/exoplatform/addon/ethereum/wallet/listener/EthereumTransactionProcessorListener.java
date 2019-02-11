@@ -16,12 +16,12 @@
  */
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import java.util.concurrent.ExecutionException;
-
 import org.apache.commons.lang3.StringUtils;
+import org.web3j.protocol.core.methods.response.EthBlock.Block;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import org.exoplatform.addon.ethereum.wallet.model.MinedTransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService;
@@ -63,9 +63,16 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
       }
 
       String transactionHash = null;
-      if (source instanceof Transaction) {
+      Long blockTimestamp = null;
+      if (source instanceof MinedTransactionDetail) {
+        MinedTransactionDetail transaction = (MinedTransactionDetail) source;
+        transactionHash = transaction.getHash();
+        blockTimestamp = transaction.getBlockTimestamp();
+      } else if (source instanceof Transaction) {
         Transaction transaction = (Transaction) source;
         transactionHash = transaction.getHash();
+        Block block = getEthereumClientConnector().getBlock(transaction.getBlockHash());
+        blockTimestamp = block.getTimestamp().longValue();
       } else {
         transactionHash = (String) source;
       }
@@ -85,6 +92,9 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
       }
       transactionDetail.setPending(false);
       transactionDetail.setSucceeded(transactionReceipt != null && transactionReceipt.isStatusOK());
+      if (blockTimestamp != null && transactionDetail.getTimestamp() == 0) {
+        transactionDetail.setTimestamp(blockTimestamp);
+      }
 
       getTransactionService().saveTransactionDetail(transactionDetail, null, true);
     } finally {
@@ -92,7 +102,7 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
     }
   }
 
-  private TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException, ExecutionException {
+  private TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException {
     TransactionReceipt transactionReceipt = getEthereumClientConnector().getTransactionReceipt(transactionHash);
     if (transactionReceipt == null || "0x0".equals(transactionReceipt.getStatus())) {
       // Transaction may have failed

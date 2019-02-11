@@ -90,10 +90,10 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
       }
 
       if (senderWallet != null && senderWallet.getTechnicalId() > 0 && senderWallet.isEnabled()) {
-        sendNotification(transactionDetail, TransactionStatus.SENDER, senderWallet, receiverWallet);
+        sendNotification(transactionDetail, TransactionNotificationType.SENDER, senderWallet, receiverWallet);
       }
       if (receiverWallet != null && receiverWallet.getTechnicalId() > 0 && receiverWallet.isEnabled()) {
-        sendNotification(transactionDetail, TransactionStatus.RECEIVER, senderWallet, receiverWallet);
+        sendNotification(transactionDetail, TransactionNotificationType.RECEIVER, senderWallet, receiverWallet);
       }
     } finally {
       RequestLifeCycle.end();
@@ -101,7 +101,7 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
   }
 
   private void sendNotification(TransactionDetail transactionDetail,
-                                TransactionStatus transactionStatus,
+                                TransactionNotificationType transactionStatus,
                                 Wallet senderWallet,
                                 Wallet receiverWallet) {
     NotificationContext ctx = NotificationContextImpl.cloneInstance();

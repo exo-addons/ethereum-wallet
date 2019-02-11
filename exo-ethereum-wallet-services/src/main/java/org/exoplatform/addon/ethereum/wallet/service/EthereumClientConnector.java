@@ -39,6 +39,7 @@ import org.web3j.protocol.websocket.*;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
+import org.exoplatform.addon.ethereum.wallet.model.MinedTransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.service.managed.EthereumClientConnectorManaged;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.ExoContainer;
@@ -56,47 +57,47 @@ import rx.Subscription;
 @ManagedBy(EthereumClientConnectorManaged.class)
 public class EthereumClientConnector implements Startable {
 
-  private static final String      ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
+  private static final String           ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
 
-  private static final Log         LOG                              = ExoLogger.getLogger(EthereumClientConnector.class);
+  private static final Log              LOG                              = ExoLogger.getLogger(EthereumClientConnector.class);
 
-  private ExoContainer             container;
+  private ExoContainer                  container;
 
-  private EthereumWalletService    ethereumWalletService;
+  private EthereumWalletService         ethereumWalletService;
 
-  private ListenerService          listenerService;
+  private ListenerService               listenerService;
 
-  private GlobalSettings           globalSettings                   = null;
+  private GlobalSettings                globalSettings                   = null;
 
-  private Web3j                    web3j                            = null;
+  private Web3j                         web3j                            = null;
 
-  private WebSocketClient          webSocketClient                  = null;
+  private WebSocketClient               webSocketClient                  = null;
 
-  private WebSocketService         web3jService                     = null;
+  private WebSocketService              web3jService                     = null;
 
-  private Subscription             transactionSubscription          = null;
+  private Subscription                  transactionSubscription          = null;
 
-  private Queue<String>            transactionHashesQueue           = new ConcurrentLinkedQueue<>();
+  private Queue<MinedTransactionDetail> transactionHashesQueue           = new ConcurrentLinkedQueue<>();
 
-  private ScheduledExecutorService scheduledExecutorService         = null;
+  private ScheduledExecutorService      scheduledExecutorService         = null;
 
-  private long                     lastWatchedBlockNumber           = 0;
+  private long                          lastWatchedBlockNumber           = 0;
 
-  private long                     lastBlockNumberOnStartupTime     = 0;
+  private long                          lastBlockNumberOnStartupTime     = 0;
 
-  private int                      transactionsCountPerBlock        = 0;
+  private int                           transactionsCountPerBlock        = 0;
 
-  private boolean                  initializing                     = false;
+  private boolean                       initializing                     = false;
 
-  private int                      connectionInterruptionCount      = -1;
+  private int                           connectionInterruptionCount      = -1;
 
-  private long                     watchingBlockchainStartTime      = 0;
+  private long                          watchingBlockchainStartTime      = 0;
 
-  private int                      watchedTransactionCount          = 0;
+  private int                           watchedTransactionCount          = 0;
 
-  private int                      transactionQueueMaxSize          = 0;
+  private int                           transactionQueueMaxSize          = 0;
 
-  private boolean                  stopping                         = false;
+  private boolean                       stopping                         = false;
 
   public EthereumClientConnector(EthereumWalletService ethereumWalletService,
                                  ExoContainer container) {
@@ -143,14 +144,14 @@ public class EthereumClientConnector implements Startable {
         return;
       }
 
-      String transactionHash = transactionHashesQueue.poll();
-      while (transactionHash != null) {
+      MinedTransactionDetail minedTransactionDetail = transactionHashesQueue.poll();
+      while (minedTransactionDetail != null) {
         try {
-          getListenerService().broadcast(NEW_TRANSACTION_EVENT, transactionHash, null);
+          getListenerService().broadcast(NEW_TRANSACTION_EVENT, minedTransactionDetail, null);
         } catch (Throwable e) {
           LOG.warn("Error while handling transaction", e);
         }
-        transactionHash = transactionHashesQueue.poll();
+        minedTransactionDetail = transactionHashesQueue.poll();
       }
     }, 10, 10, TimeUnit.SECONDS);
   }
@@ -398,11 +399,12 @@ public class EthereumClientConnector implements Startable {
 
   @SuppressWarnings("rawtypes")
   private void addBlockTransactionsToQueue(EthBlock ethBlock) {
-    Block block = ethBlock.getBlock();
+    final Block block = ethBlock.getBlock();
     this.lastWatchedBlockNumber = block.getNumber().longValue();
     List<TransactionResult> transactions = block.getTransactions();
     transactionHashesQueue.addAll(transactions.parallelStream()
-                                              .map(transaction -> transaction.get().toString())
+                                              .map(transaction -> new MinedTransactionDetail(transaction.get().toString(),
+                                                                                             block.getTimestamp().longValue()))
                                               .collect(Collectors.toList()));
     watchedTransactionCount += transactions.size();
     transactionQueueMaxSize = Math.max(transactionHashesQueue.size() + 1, transactionQueueMaxSize);

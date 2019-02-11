@@ -20,7 +20,7 @@ import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
 
 import java.util.List;
 
-import org.exoplatform.addon.ethereum.wallet.model.TransactionStatus;
+import org.exoplatform.addon.ethereum.wallet.model.TransactionNotificationType;
 import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
@@ -36,7 +36,7 @@ public class WalletSenderNotificationPlugin extends BaseNotificationPlugin {
 
   @Override
   public String getId() {
-    return TransactionStatus.SENDER.getNotificationId();
+    return TransactionNotificationType.SENDER.getNotificationId();
   }
 
   @Override

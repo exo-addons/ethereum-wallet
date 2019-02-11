@@ -20,7 +20,6 @@ import static org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV1.*;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.EventValues;
@@ -97,8 +96,7 @@ public class EthereumTransactionDecoder {
     this.accountService = accountService;
   }
 
-  public TransactionDetail computeTransactionDetail(TransactionDetail transactionDetail) throws InterruptedException,
-                                                                                         ExecutionException {
+  public TransactionDetail computeTransactionDetail(TransactionDetail transactionDetail) throws InterruptedException {
     GlobalSettings settings = ethereumWalletService.getSettings();
     long networkId = settings.getDefaultNetworkId();
     transactionDetail.setNetworkId(networkId);

@@ -181,12 +181,12 @@ public class MigrationService implements Startable {
       try {
         transactionDecoder.computeTransactionDetail(transactionDetail);
         transactionStorage.saveTransactionDetail(transactionDetail);
-      } catch (InterruptedException | ExecutionException e) { // NOSONAR
+      } catch (InterruptedException e) { // NOSONAR
         // Reattempt to compute details
         try {
           transactionDecoder.computeTransactionDetail(transactionDetail);
           transactionStorage.saveTransactionDetail(transactionDetail);
-        } catch (InterruptedException | ExecutionException e1) { // NOSONAR
+        } catch (InterruptedException e1) { // NOSONAR
           errorComputedTransactions++;
           LOG.warn("Can't compute transaction details with hash: " + transactionDetail.getHash());
         }
