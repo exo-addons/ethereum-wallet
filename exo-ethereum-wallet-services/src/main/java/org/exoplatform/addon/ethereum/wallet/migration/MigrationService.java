@@ -24,7 +24,7 @@ public class MigrationService implements Startable {
 
   private static final Log                LOG                 = ExoLogger.getLogger(MigrationService.class);
 
-  private static final int                GLOBAL_DATA_VERSION = 3;
+  private static final int                GLOBAL_DATA_VERSION = 4;
 
   private DeprecatedEthereumWalletService deprecatedEthereumWalletService;
 
