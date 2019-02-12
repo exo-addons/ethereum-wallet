@@ -14,11 +14,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.addon.ethereum.wallet.dao;
+package org.exoplatform.addon.ethereum.wallet.test;
 
-import org.exoplatform.addon.ethereum.wallet.entity.AddressLabelEntity;
-import org.exoplatform.commons.persistence.impl.GenericDAOJPAImpl;
+import org.junit.Test;
 
-public class AddressLabelDAO extends GenericDAOJPAImpl<AddressLabelEntity, Long> {
+import org.exoplatform.container.PortalContainer;
 
+public class EthereumTransactionTest {
+
+  @Test
+  public void testStart() {
+    PortalContainer.getInstance();
+  }
 }

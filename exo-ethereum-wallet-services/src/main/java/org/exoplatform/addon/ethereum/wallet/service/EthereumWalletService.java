@@ -36,6 +36,9 @@ import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.management.annotations.ManagedBy;
 import org.exoplatform.services.listener.ListenerService;
@@ -51,6 +54,8 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 public class EthereumWalletService implements Startable {
 
   private static final Log              LOG = ExoLogger.getLogger(EthereumWalletService.class);
+
+  private ExoContainer                  container;
 
   private EthereumWalletContractService contractService;
 
@@ -76,7 +81,9 @@ public class EthereumWalletService implements Startable {
                                SettingService settingService,
                                SpaceService spaceService,
                                WebNotificationStorage webNotificationStorage,
+                               ExoContainer container,
                                InitParams params) {
+    this.container = container;
     this.settingService = settingService;
     this.clientConnector = clientConnector;
     this.accountService = accountService;
@@ -140,13 +147,19 @@ public class EthereumWalletService implements Startable {
 
   @Override
   public void start() {
-    GlobalSettings settings = getSettings();
+    ExoContainerContext.setCurrentContainer(container);
+    RequestLifeCycle.begin(container);
+    try {
+      GlobalSettings settings = getSettings();
 
-    // start connection to blockchain
-    clientConnector.start(settings);
+      // start connection to blockchain
+      clientConnector.start(settings);
 
-    // check global settings upgrade
-    checkDataToUpgrade(settings);
+      // check global settings upgrade
+      checkDataToUpgrade(settings);
+    } finally {
+      RequestLifeCycle.end();
+    }
   }
 
   @Override
