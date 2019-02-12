@@ -202,21 +202,15 @@ public class EthereumWalletTransactionService {
   private void retrieveWalletsDetails(TransactionDetail transactionDetail, String currentUser) {
     Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());
     transactionDetail.setFromWallet(senderWallet);
-    if (senderWallet != null) {
-      senderWallet.setPassPhrase(null);
-    }
+    hideWalletOwnerPrivateInformation(senderWallet);
     if (StringUtils.isNotBlank(transactionDetail.getTo())) {
       Wallet receiverWallet = walletAccountService.getWalletByAddress(transactionDetail.getTo());
-      if (receiverWallet != null) {
-        receiverWallet.setPassPhrase(null);
-      }
+      hideWalletOwnerPrivateInformation(receiverWallet);
       transactionDetail.setToWallet(receiverWallet);
     }
     if (StringUtils.isNotBlank(transactionDetail.getBy())) {
       Wallet senderWalletBy = walletAccountService.getWalletByAddress(transactionDetail.getBy());
-      if (senderWalletBy != null) {
-        senderWalletBy.setPassPhrase(null);
-      }
+      hideWalletOwnerPrivateInformation(senderWalletBy);
       transactionDetail.setByWallet(senderWalletBy);
       if (!displayTransactionsLabel(senderWalletBy, currentUser)) {
         transactionDetail.setLabel(null);

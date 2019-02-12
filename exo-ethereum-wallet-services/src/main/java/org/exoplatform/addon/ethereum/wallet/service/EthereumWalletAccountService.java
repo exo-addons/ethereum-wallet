@@ -28,7 +28,8 @@ public class EthereumWalletAccountService {
 
   private ListenerService     listenerService;
 
-  public EthereumWalletAccountService(AccountStorage walletAccountStorage, AddressLabelStorage labelStorage) {
+  public EthereumWalletAccountService(AccountStorage walletAccountStorage,
+                                      AddressLabelStorage labelStorage) {
     this.accountStorage = walletAccountStorage;
     this.labelStorage = labelStorage;
   }
@@ -40,7 +41,7 @@ public class EthereumWalletAccountService {
    */
   public Set<Wallet> listWallets() {
     Set<Wallet> wallets = accountStorage.listWallets();
-    wallets.forEach(wallet -> wallet.setPassPhrase(null));
+    wallets.forEach(wallet -> hideWalletOwnerPrivateInformation(wallet));
     return wallets;
   }
 
@@ -56,7 +57,7 @@ public class EthereumWalletAccountService {
   /**
    * Retrieve wallet details by identity technical id
    * 
-   * @param identityId User/Space identity technical id 
+   * @param identityId User/Space identity technical id
    * @return {@link Wallet} wallet details identified by identity technical id
    */
   public Wallet getWalletByIdentityId(long identityId) {
@@ -75,7 +76,7 @@ public class EthereumWalletAccountService {
    * 
    * @param type 'user' or 'space'
    * @param remoteId username or space pretty name
-   * @param currentUser current user retrieving wallet details
+   * @param currentUser current username saving wallet private key
    * @return {@link Wallet} wallet details identified by type and remote Id
    */
   public Wallet getWalletByTypeAndId(String type, String remoteId, String currentUser) {
@@ -84,12 +85,10 @@ public class EthereumWalletAccountService {
       if (WalletType.isSpace(wallet.getType())) {
         wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), currentUser));
         if (!wallet.isSpaceAdministrator()) {
-          // Delete passphrase for non managers
-          wallet.setPassPhrase(null);
+          hideWalletOwnerPrivateInformation(wallet);
         }
       } else if (!StringUtils.equals(wallet.getId(), currentUser)) {
-        // Delete passphrase for other users
-        wallet.setPassPhrase(null);
+        hideWalletOwnerPrivateInformation(wallet);
       }
     }
     return wallet;
@@ -115,8 +114,67 @@ public class EthereumWalletAccountService {
     if (identity == null) {
       throw new IllegalArgumentException("Can't find identity with id " + remoteId + " and type " + accountType.getId());
     }
-
     return getWalletOfIdentity(identity);
+  }
+
+  /**
+   * Save wallet private key for a wallet identified by identity type and
+   * remoteId
+   * 
+   * @param type 'user' or 'space'
+   * @param remoteId username or space pretty name
+   * @param content crypted private key
+   * @throws IllegalAccessException when the current user is not allowed to save
+   *           the encrypted private key of wallet
+   */
+  public void savePrivateKeyByTypeAndId(String type,
+                                        String remoteId,
+                                        String content,
+                                        String currentUser) throws IllegalAccessException {
+    Wallet wallet = getWalletByTypeAndId(type, remoteId);
+    if (wallet == null || wallet.getTechnicalId() < 1) {
+      throw new IllegalStateException("Can't find " + type + " with remote id " + remoteId
+          + ". Wallet private key will not be created.");
+    }
+    checkIsWalletOwner(wallet, currentUser);
+    accountStorage.saveWalletPrivateKey(wallet.getTechnicalId(), content);
+  }
+
+  /**
+   * Retrieve wallet private key by identity type and remoteId
+   * 
+   * @param type 'user' or 'space'
+   * @param remoteId username or space pretty name
+   * @param currentUser current username getting wallet private key
+   * @return encrypted wallet private key identified by type and remote Id
+   * @throws IllegalAccessException when the current user is not allowed to get
+   *           the encrypted private key of wallet
+   */
+  public String getPrivateKeyByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException {
+    Wallet wallet = getWalletByTypeAndId(type, remoteId);
+    if (wallet == null || wallet.getTechnicalId() < 1) {
+      return null;
+    }
+    checkIsWalletOwner(wallet, currentUser);
+    return accountStorage.getWalletPrivateKey(wallet.getTechnicalId());
+  }
+
+  /**
+   * Removes wallet private key by identity type and remoteId
+   * 
+   * @param type 'user' or 'space'
+   * @param remoteId username or space pretty name
+   * @param currentUser current username removing wallet private key
+   * @throws IllegalAccessException when the current user is not an owner of
+   *           wallet
+   */
+  public void removePrivateKeyByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException {
+    Wallet wallet = getWalletByTypeAndId(type, remoteId);
+    if (wallet == null || wallet.getTechnicalId() < 1) {
+      return;
+    }
+    checkIsWalletOwner(wallet, currentUser);
+    accountStorage.removeWalletPrivateKey(wallet.getTechnicalId());
   }
 
   /**
@@ -147,7 +205,7 @@ public class EthereumWalletAccountService {
    * @param broadcast broadcast saving event or not
    * @throws Exception when an error happens while saving the wallet details
    */
-  public void saveWallet(Wallet wallet, String currentUser, boolean broadcast) throws Exception {
+  public void saveWalletAddress(Wallet wallet, String currentUser, boolean broadcast) throws Exception {
     if (wallet == null) {
       throw new IllegalArgumentException("Wallet is mandatory");
     }
@@ -167,6 +225,9 @@ public class EthereumWalletAccountService {
     setWalletPassPhrase(wallet, oldWallet);
 
     accountStorage.saveWallet(wallet, isNew);
+    if (!isNew) {
+      accountStorage.removeWalletPrivateKey(wallet.getTechnicalId());
+    }
 
     if (broadcast) {
       getListenerService().broadcast(isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT,
@@ -191,7 +252,8 @@ public class EthereumWalletAccountService {
       throw new IllegalStateException("Can't find wallet associated to address " + address);
     }
     if (!isUserAdmin(currentUser)) {
-      throw new IllegalAccessException("Current user " + currentUser + " attempts to delete wallet with address " + address + " of "
+      throw new IllegalAccessException("Current user " + currentUser + " attempts to delete wallet with address " + address
+          + " of "
           + wallet.getType() + " " + wallet.getId());
     }
     accountStorage.removeWallet(wallet.getTechnicalId());
@@ -227,31 +289,24 @@ public class EthereumWalletAccountService {
    * @param wallet wallet details to save
    * @param storedWallet stored wallet in database
    * @param currentUser current username that is making the modification
-   * @throws IllegalAccessException if current user is not allowed to modify wallet
+   * @throws IllegalAccessException if current user is not allowed to modify
+   *           wallet
    */
   public void checkCanSaveWallet(Wallet wallet, Wallet storedWallet, String currentUser) throws IllegalAccessException {
     if (isUserAdmin(currentUser)) {
       return;
     }
 
-    String remoteId = wallet.getId();
-    WalletType type = WalletType.getType(wallet.getType());
-    if (type.isUser()) {
-      if (!StringUtils.equals(currentUser, remoteId)) {
-        throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
-            + "'");
-      }
+    checkIsWalletOwner(wallet, currentUser);
 
-      // Check if wallet is enabled for current user and check if he's admin
-      if (storedWallet != null && !storedWallet.isEnabled()) {
-        LOG.error("User '{}' attempts to modify his wallet while it's disabled", currentUser);
-        throw new IllegalAccessException();
-      }
-    } else {
-      checkUserIsSpaceManager(remoteId, currentUser, true);
+    // Check if wallet is enabled
+    if (storedWallet != null && !storedWallet.isEnabled()) {
+      LOG.error("User '{}' attempts to modify his wallet while it's disabled", currentUser);
+      throw new IllegalAccessException();
     }
 
-    Wallet walletByAddress = accountStorage.getWalletByAddress(wallet.getAddress());
+    Wallet walletByAddress =
+                           accountStorage.getWalletByAddress(wallet.getAddress());
     if (walletByAddress != null && walletByAddress.getId() != wallet.getId()) {
       throw new IllegalStateException("User " + currentUser + " attempts to assign address of wallet of "
           + walletByAddress);
@@ -259,10 +314,47 @@ public class EthereumWalletAccountService {
   }
 
   /**
+   * Return true if user is accessing his wallet or is accessing a space that he
+   * manages wallet
+   * 
+   * @param wallet
+   * @param currentUser
+   * @return
+   */
+  public boolean isWalletOwner(Wallet wallet, String currentUser) {
+    if (wallet == null) {
+      return false;
+    }
+    String remoteId = wallet.getId();
+    WalletType type = WalletType.getType(wallet.getType());
+    if (type.isSpace()) {
+      try {
+        return checkUserIsSpaceManager(remoteId, currentUser, false);
+      } catch (IllegalAccessException e) {
+        return false;
+      }
+    } else {
+      return StringUtils.equals(currentUser, remoteId);
+    }
+  }
+
+  private void checkIsWalletOwner(Wallet wallet, String currentUser) throws IllegalAccessException {
+    String remoteId = wallet.getId();
+    WalletType type = WalletType.getType(wallet.getType());
+    if (type.isSpace()) {
+      checkUserIsSpaceManager(remoteId, currentUser, true);
+    } else if (!StringUtils.equals(currentUser, remoteId)) {
+      throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
+          + "'");
+    }
+  }
+
+  /**
    * Saves label if label is not empty else, delete it
    * 
    * @param label label details object to process
-   * @param currentUser current user making the label creation/modification/deletion
+   * @param currentUser current user making the label
+   *          creation/modification/deletion
    * @return {@link AddressLabel} saved or deleted label details
    */
   public AddressLabel saveOrDeleteAddressLabel(AddressLabel label, String currentUser) {

@@ -145,7 +145,7 @@ describe('SendTokensForm.test.js', () => {
 
         sendTokensForm.contractDetails.isPaused = true;
         sendTokensForm.sendTokens();
-        expect(sendTokensForm.error).toBeTruthy();
+        expect(sendTokensForm.warning).toBeTruthy();
         sendTokensForm.contractDetails.isPaused = false;
 
         const initialBalance = contractDetails.balance;

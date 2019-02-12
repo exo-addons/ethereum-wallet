@@ -327,7 +327,13 @@ public class EthereumWalletService implements Startable {
       globalSettings.setUserPreferences(userSettings);
 
       if (wallet != null) {
-        userSettings.setPhrase(wallet.getPassPhrase());
+        if (accountService.isWalletOwner(wallet, currentUser)) {
+          userSettings.setPhrase(wallet.getPassPhrase());
+          userSettings.setHasKeyOnServerSide(wallet.isHasKeyOnServerSide());
+        } else {
+          hideWalletOwnerPrivateInformation(wallet);
+        }
+
         userSettings.setWalletAddress(wallet.getAddress());
         userSettings.setWallet(wallet);
       }

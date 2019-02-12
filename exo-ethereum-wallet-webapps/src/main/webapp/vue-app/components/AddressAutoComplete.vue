@@ -12,6 +12,7 @@
       :placeholder="inputPlaceholder"
       :content-class="`contactAutoCompleteContent ${bigField && 'bigContactAutoComplete'}`"
       :filter="filterIgnoredItems"
+      :required="required"
       class="contactAutoComplete"
       max-width="100%"
       item-text="name"
@@ -124,6 +125,12 @@ export default {
       },
     },
     bigField: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
+    required: {
       type: Boolean,
       default: function() {
         return false;

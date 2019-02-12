@@ -6,20 +6,41 @@ import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getSpace;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.exoplatform.addon.ethereum.wallet.dao.WalletAccountDAO;
+import org.exoplatform.addon.ethereum.wallet.dao.WalletPrivateKeyDAO;
 import org.exoplatform.addon.ethereum.wallet.entity.WalletEntity;
+import org.exoplatform.addon.ethereum.wallet.entity.WalletPrivateKeyEntity;
 import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.model.WalletType;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.web.security.codec.AbstractCodec;
+import org.exoplatform.web.security.codec.CodecInitializer;
+import org.exoplatform.web.security.security.TokenServiceInitializationException;
 
 public class AccountStorage {
+  private static final Log    LOG = ExoLogger.getLogger(AccountStorage.class);
 
-  private WalletAccountDAO walletAccountDAO;
+  private WalletAccountDAO    walletAccountDAO;
 
-  public AccountStorage(WalletAccountDAO walletAccountDAO) {
+  private WalletPrivateKeyDAO privateKeyDAO;
+
+  private AbstractCodec       codec;
+
+  public AccountStorage(WalletAccountDAO walletAccountDAO, WalletPrivateKeyDAO privateKeyDAO, CodecInitializer codecInitializer) {
     this.walletAccountDAO = walletAccountDAO;
+    this.privateKeyDAO = privateKeyDAO;
+
+    try {
+      this.codec = codecInitializer.getCodec();
+    } catch (TokenServiceInitializationException e) {
+      LOG.error("Error initializing codecs", e);
+    }
   }
 
   /**
@@ -93,6 +114,53 @@ public class AccountStorage {
     return fromEntity(walletEntity);
   }
 
+  public String getWalletPrivateKey(long walletId) {
+    WalletEntity walletEntity = walletAccountDAO.find(walletId);
+    if (walletEntity != null && walletEntity.getPrivateKey() != null
+        && StringUtils.isNotBlank(walletEntity.getPrivateKey().getKeyContent())) {
+      String privateKey = walletEntity.getPrivateKey().getKeyContent();
+      return decodeWalletKey(privateKey);
+    }
+    return null;
+  }
+
+  public void removeWalletPrivateKey(long walletId) {
+    WalletEntity walletEntity = walletAccountDAO.find(walletId);
+    WalletPrivateKeyEntity privateKey = walletEntity == null ? null : walletEntity.getPrivateKey();
+    if (privateKey != null) {
+      privateKeyDAO.delete(privateKey);
+    }
+  }
+
+  public void saveWalletPrivateKey(long walletId, String content) {
+    WalletEntity walletEntity = walletAccountDAO.find(walletId);
+    if (walletEntity == null) {
+      throw new IllegalStateException("Wallet with id " + walletId + " wasn't found");
+    }
+    WalletPrivateKeyEntity privateKey = walletEntity.getPrivateKey();
+    if (privateKey == null) {
+      privateKey = new WalletPrivateKeyEntity();
+      privateKey.setId(null);
+      privateKey.setWallet(walletEntity);
+    } else if (StringUtils.isNotBlank(privateKey.getKeyContent())) {
+      LOG.info("Replacing wallet {}/{} private key", walletEntity.getType(), walletEntity.getId());
+    }
+    privateKey.setKeyContent(encodeWalletKey(content));
+    if (privateKey.getId() == null) {
+      privateKeyDAO.create(privateKey);
+    } else {
+      privateKeyDAO.update(privateKey);
+    }
+  }
+
+  private String decodeWalletKey(String content) {
+    return this.codec.decode(content);
+  }
+
+  private String encodeWalletKey(String content) {
+    return this.codec.encode(content);
+  }
+
   private Wallet fromEntity(WalletEntity walletEntity) {
     Wallet wallet = new Wallet();
     wallet.setTechnicalId(walletEntity.getId());
@@ -117,6 +185,7 @@ public class AccountStorage {
       wallet.setSpaceId(Long.parseLong(space.getId()));
     }
 
+    wallet.setHasKeyOnServerSide(walletEntity.getPrivateKey() != null);
     wallet.setId(identity.getRemoteId());
     wallet.setAvatar(LinkProvider.buildAvatarURL(identity.getProviderId(), identity.getRemoteId()));
     return wallet;

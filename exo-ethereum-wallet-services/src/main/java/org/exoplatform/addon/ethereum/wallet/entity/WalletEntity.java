@@ -17,23 +17,26 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
     @NamedQuery(name = "Wallet.findByAddress", query = "SELECT w FROM Wallet w WHERE w.address = :address"),
 })
 public class WalletEntity implements Serializable {
-  private static final long serialVersionUID = -1622032986992776281L;
+  private static final long      serialVersionUID = -1622032986992776281L;
 
   @Id
   @Column(name = "IDENTITY_ID")
-  private Long              id;
+  private Long                   id;
 
   @Column(name = "IDENTITY_TYPE", nullable = false)
-  private WalletType        type;
+  private WalletType             type;
 
   @Column(name = "ADDRESS", unique = true, nullable = false)
-  private String            address;
+  private String                 address;
 
   @Column(name = "PHRASE", nullable = false)
-  private String            passPhrase;
+  private String                 passPhrase;
 
   @Column(name = "ENABLED", nullable = false)
-  private boolean           isEnabled;
+  private boolean                isEnabled;
+
+  @OneToOne(fetch = FetchType.EAGER, mappedBy = "wallet", cascade = CascadeType.REMOVE)
+  private WalletPrivateKeyEntity privateKey;
 
   public Long getId() {
     return id;
@@ -73,6 +76,14 @@ public class WalletEntity implements Serializable {
 
   public void setPassPhrase(String passPhrase) {
     this.passPhrase = passPhrase;
+  }
+
+  public WalletPrivateKeyEntity getPrivateKey() {
+    return privateKey;
+  }
+
+  public void setPrivateKey(WalletPrivateKeyEntity privateKey) {
+    this.privateKey = privateKey;
   }
 
 }

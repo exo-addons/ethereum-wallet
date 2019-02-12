@@ -3,6 +3,7 @@ package org.exoplatform.addon.ethereum.wallet.storage.cached;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.dao.WalletAccountDAO;
+import org.exoplatform.addon.ethereum.wallet.dao.WalletPrivateKeyDAO;
 import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.model.WalletCacheKey;
 import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
@@ -10,13 +11,17 @@ import org.exoplatform.commons.cache.future.FutureExoCache;
 import org.exoplatform.commons.cache.future.Loader;
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.cache.ExoCache;
+import org.exoplatform.web.security.codec.CodecInitializer;
 
 public class CachedAccountStorage extends AccountStorage {
 
   private FutureExoCache<WalletCacheKey, Wallet, Object> walletFutureCache = null;
 
-  public CachedAccountStorage(CacheService cacheService, WalletAccountDAO walletAccountDAO) {
-    super(walletAccountDAO);
+  public CachedAccountStorage(CacheService cacheService,
+                              WalletAccountDAO walletAccountDAO,
+                              WalletPrivateKeyDAO privateKeyDAO,
+                              CodecInitializer codecInitializer) {
+    super(walletAccountDAO, privateKeyDAO, codecInitializer);
 
     ExoCache<WalletCacheKey, Wallet> walletCache = cacheService.getCacheInstance("wallet.account");
 
@@ -73,4 +78,29 @@ public class CachedAccountStorage extends AccountStorage {
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getTechnicalId()));
     return wallet;
   }
+
+  @Override
+  public void removeWalletPrivateKey(long walletId) {
+    super.removeWalletPrivateKey(walletId);
+
+    Wallet wallet = getWalletByIdentityId(walletId);
+    if (wallet != null) {
+      // Remove cached wallet for 'hasKeyOnServerSide' property
+      this.walletFutureCache.remove(new WalletCacheKey(wallet.getAddress()));
+      this.walletFutureCache.remove(new WalletCacheKey(wallet.getTechnicalId()));
+    }
+  }
+
+  @Override
+  public void saveWalletPrivateKey(long walletId, String content) {
+    super.saveWalletPrivateKey(walletId, content);
+
+    Wallet wallet = getWalletByIdentityId(walletId);
+    if (wallet != null) {
+      // Remove cached wallet for 'hasKeyOnServerSide' property
+      this.walletFutureCache.remove(new WalletCacheKey(wallet.getAddress()));
+      this.walletFutureCache.remove(new WalletCacheKey(wallet.getTechnicalId()));
+    }
+  }
+
 }

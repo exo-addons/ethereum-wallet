@@ -527,4 +527,12 @@ public class Utils {
     return transactionHash;
   }
 
+  public static final void hideWalletOwnerPrivateInformation(Wallet wallet) {
+    if (wallet == null) {
+      return;
+    }
+    wallet.setPassPhrase(null);
+    wallet.setHasKeyOnServerSide(false);
+  }
+
 }

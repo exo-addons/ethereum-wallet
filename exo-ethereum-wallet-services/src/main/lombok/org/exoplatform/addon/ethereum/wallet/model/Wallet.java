@@ -13,15 +13,16 @@ public class Wallet implements Serializable, Cloneable {
   // wallet user/space Remote ID
   private String            id;
 
+  // A string is used instead of enum, because of cache clustering
+  // problems with enums
+  private String            type;
+
+  // Social Identity Id === Wallet technical id
   @Exclude
   private long              technicalId;
 
   @Exclude
   private long              spaceId;
-
-  // A string is used instead of enum, because of cache clustering
-  // problems with enums
-  private String            type;
 
   @Exclude
   private String            name;
@@ -40,6 +41,9 @@ public class Wallet implements Serializable, Cloneable {
 
   @Exclude
   private boolean           isDeletedUser;
+
+  @Exclude
+  private boolean           hasKeyOnServerSide;
 
   @Exclude
   private String            avatar;

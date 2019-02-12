@@ -9,6 +9,7 @@
         <i class="uiIconInfo"></i>{{ information }}
       </div>
       <v-form
+        ref="form"
         @submit="
           $event.preventDefault();
           $event.stopPropagation();
@@ -19,6 +20,7 @@
           input-label="Recipient"
           input-placeholder="Select a user, a space or an address to send to"
           autofocus
+          required
           @item-selected="
             recipient = $event.address;
             $emit('receiver-selected', $event);
@@ -35,6 +37,7 @@
               :disabled="loading"
               name="amount"
               label="Amount"
+              required
               placeholder="Select an amount of tokens to send"
               @input="$emit('amount-selected', amount)" />
             <slot></slot>
@@ -47,11 +50,14 @@
           :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
           :type="walletPasswordShow ? 'text' : 'password'"
           :disabled="loading"
+          :rules="mandatoryRule"
           name="walletPassword"
           label="Wallet password"
           placeholder="Enter your wallet password"
           counter
+          required
           autocomplete="current-passord"
+          class="mb-2"
           @click:append="walletPasswordShow = !walletPasswordShow" />
         <gas-price-choice :estimated-fee="transactionFeeString" @changed="gasPrice = $event" />
         <v-text-field
@@ -169,6 +175,7 @@ export default {
       warning: null,
       information: null,
       error: null,
+      mandatoryRule: [(v) => !!v || 'Field is required'],
     };
   },
   computed: {
@@ -310,6 +317,10 @@ export default {
       }
     },
     sendTokens() {
+      this.error = null;
+      this.warning = null;
+
+      this.$refs.form.validate();
       if (this.contractDetails && this.contractDetails.isPaused) {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
         return;

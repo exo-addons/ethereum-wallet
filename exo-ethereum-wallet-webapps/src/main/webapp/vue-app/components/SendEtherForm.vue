@@ -5,6 +5,7 @@
         <i class="uiIconError"></i>{{ error }}
       </div>
       <v-form
+        ref="form"
         @submit="
           $event.preventDefault();
           $event.stopPropagation();
@@ -16,6 +17,7 @@
           input-placeholder="Select a user, a space or an address to send to"
           title="Select a user, a space or an address to send to"
           autofocus
+          required
           @item-selected="
             recipient = $event.address;
             $emit('receiver-selected', $event);
@@ -33,6 +35,7 @@
               name="amount"
               label="Amount"
               placeholder="Select an amount of ethers to send"
+              required
               @input="$emit('amount-selected', amount)" />
             <slot></slot>
           </v-layout>
@@ -43,11 +46,14 @@
           :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
           :type="walletPasswordShow ? 'text' : 'password'"
           :disabled="loading"
+          :rules="mandatoryRule"
           name="walletPassword"
           label="Wallet password"
           placeholder="Enter your wallet password"
           counter
+          required
           autocomplete="current-passord"
+          class="mb-2"
           @click:append="walletPasswordShow = !walletPasswordShow" />
         <v-text-field
           v-model="transactionLabel"
@@ -153,6 +159,7 @@ export default {
       amount: null,
       gasPrice: 0,
       error: null,
+      mandatoryRule: [(v) => !!v || 'Field is required'],
     };
   },
   watch: {
@@ -189,6 +196,7 @@ export default {
     },
     sendEther() {
       this.error = null;
+      this.$refs.form.validate();
       if (!window.localWeb3.utils.isAddress(this.recipient)) {
         this.error = 'Invalid recipient address';
         return;

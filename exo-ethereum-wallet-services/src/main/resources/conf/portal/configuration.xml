@@ -16,6 +16,10 @@
   </component>
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.dao.WalletPrivateKeyDAO</type>
+  </component>
+
+  <component>
     <key>org.exoplatform.addon.ethereum.wallet.storage.AccountStorage</key>
     <type>org.exoplatform.addon.ethereum.wallet.storage.cached.CachedAccountStorage</type>
   </component>

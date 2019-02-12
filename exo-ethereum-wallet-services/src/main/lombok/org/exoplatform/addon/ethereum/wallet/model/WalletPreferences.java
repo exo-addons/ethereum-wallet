@@ -11,6 +11,7 @@ import org.json.*;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode.Exclude;
 
 @Data
 @NoArgsConstructor
@@ -36,24 +37,36 @@ public class WalletPreferences implements Serializable {
 
   private static final long   serialVersionUID        = -5725443183560646198L;
 
-  private Integer             dataVersion             = 0;
-
-  private Long                defaultGas              = 0L;
-
-  private String              currency                = "usd";
-
   private String              walletAddress           = null;
 
+  @Exclude
+  private Integer             dataVersion             = 0;
+
+  @Exclude
+  private Long                defaultGas              = 0L;
+
+  @Exclude
+  private String              currency                = "usd";
+
+  @Exclude
   private String              phrase                  = null;
 
+  @Exclude
   private String              principalAccount        = null;
 
+  @Exclude
   private Set<String>         overviewAccounts;
 
+  @Exclude
   private Boolean             enableDelegation        = null;
 
+  @Exclude
   private Wallet              wallet                  = null;
 
+  @Exclude
+  private boolean             hasKeyOnServerSide;
+
+  @Exclude
   private Set<AddressLabel>   addresesLabels;
 
   public String toJSONString() {

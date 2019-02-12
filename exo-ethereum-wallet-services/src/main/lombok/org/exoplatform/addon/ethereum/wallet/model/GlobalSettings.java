@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GlobalSettings implements Serializable, Cloneable {
 
+  private static final String USER_WALLET_PARAM                      = "wallet";
+
   private static final long   serialVersionUID                       = -4672745644323864680L;
 
   private static final String CONTRACT_BIN_PARAM                     = "contractBin";
@@ -28,6 +30,8 @@ public class GlobalSettings implements Serializable, Cloneable {
   private static final String PRINCIPAL_CONTRACT_ADMIN_NAME_PARAM    = "principalContractAdminName";
 
   private static final String USER_PREFERENCES_PARAM                 = "userPreferences";
+
+  private static final String USER_HAS_SERVER_KEY_PARAM              = "hasKeyOnServerSide";
 
   private static final String IS_WALLET_ENABLED_PARAM                = "isWalletEnabled";
 
@@ -186,7 +190,8 @@ public class GlobalSettings implements Serializable, Cloneable {
         if (userPreferences != null) {
           JSONObject userPrefsObject = userPreferences.toJSONObject();
           if (userPreferences.getWallet() != null) {
-            userPrefsObject.put("wallet", new JSONObject(userPreferences.getWallet()));
+            userPrefsObject.put(USER_WALLET_PARAM, new JSONObject(userPreferences.getWallet()));
+            userPrefsObject.put(USER_HAS_SERVER_KEY_PARAM, userPreferences.isHasKeyOnServerSide());
           }
           jsonObject.put(USER_PREFERENCES_PARAM, userPrefsObject);
         }

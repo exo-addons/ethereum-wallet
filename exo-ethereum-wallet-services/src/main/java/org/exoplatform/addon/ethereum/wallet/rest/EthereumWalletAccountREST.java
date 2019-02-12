@@ -16,8 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getCurrentUserId;
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.isUserSpaceManager;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -41,9 +40,13 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("users")
 public class EthereumWalletAccountREST implements ResourceContainer {
 
-  private static final String          EMPTY_ADDRESS_ERROR = "Bad request sent to server with empty address {}";
+  private static final String          WALLET_NOT_FOUND_MESSAGE = "Wallet was not found with address {}";
 
-  private static final Log             LOG                 = ExoLogger.getLogger(EthereumWalletAccountREST.class);
+  private static final String          BAD_REQUEST_MESSAGE      = "Bad request sent to server with empty address";
+
+  private static final String          EMPTY_ADDRESS_ERROR      = "Bad request sent to server with empty address {}";
+
+  private static final Log             LOG                      = ExoLogger.getLogger(EthereumWalletAccountREST.class);
 
   private EthereumWalletService        ethereumWalletService;
 
@@ -73,7 +76,6 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     try {
       Wallet wallet = accountService.getWalletByTypeAndId(type, remoteId, getCurrentUserId());
       if (wallet != null) {
-        wallet.setPassPhrase(null);
         return Response.ok(wallet).build();
       } else {
         return Response.ok("{}").build();
@@ -105,7 +107,7 @@ public class EthereumWalletAccountREST implements ResourceContainer {
         if (WalletType.isSpace(wallet.getType())) {
           wallet.setSpaceAdministrator(isUserSpaceManager(wallet.getId(), getCurrentUserId()));
         }
-        wallet.setPassPhrase(null);
+        hideWalletOwnerPrivateInformation(wallet);
         return Response.ok(wallet).build();
       } else {
         return Response.ok("{}").build();
@@ -191,12 +193,11 @@ public class EthereumWalletAccountREST implements ResourceContainer {
       Wallet storedWallet = accountService.getWalletByTypeAndId(wallet.getType(), wallet.getId(), currentUserId);
       if (storedWallet == null) {
         wallet.setEnabled(true);
-        accountService.saveWallet(wallet, currentUserId, true);
+        accountService.saveWalletAddress(wallet, currentUserId, true);
         return Response.ok(wallet.getPassPhrase()).build();
       } else {
         storedWallet.setAddress(wallet.getAddress());
-        storedWallet.setEnabled(wallet.isEnabled());
-        accountService.saveWallet(storedWallet, currentUserId, true);
+        accountService.saveWalletAddress(storedWallet, currentUserId, true);
         return Response.ok(storedWallet.getPassPhrase()).build();
       }
     } catch (IllegalAccessException | IllegalStateException e) {
@@ -204,6 +205,133 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     } catch (Exception e) {
       LOG.error("Unknown error occurred while saving address: User " + currentUserId + " attempts to save address of "
           + wallet.getType() + " '" + wallet.getId() + "' using address " + wallet.getAddress(), e);
+      return Response.status(500).build();
+    }
+  }
+
+  /**
+   * Save private key of a wallet in server side
+   * 
+   * @param address wallet address
+   * @param privateKey encrypted wallet private key
+   * @return Rest Response with operation status
+   */
+  @POST
+  @Path("savePrivateKey")
+  @RolesAllowed("users")
+  public Response savePrivateKey(@FormParam("address") String address,
+                                 @FormParam("remoteId") String remoteId,
+                                 @FormParam("privateKey") String privateKey) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(BAD_REQUEST_MESSAGE);
+      return Response.status(400).build();
+    }
+
+    String currentUserId = getCurrentUserId();
+    LOG.debug("User '{}' is saving new wallet private key for address {}",
+              currentUserId,
+              address);
+    try {
+      Wallet wallet = accountService.getWalletByAddress(address);
+      if (wallet == null) {
+        LOG.debug(WALLET_NOT_FOUND_MESSAGE, address);
+        return Response.status(400).build();
+      }
+      accountService.savePrivateKeyByTypeAndId(wallet.getType(), wallet.getId(), privateKey, currentUserId);
+      return Response.ok().build();
+    } catch (IllegalAccessException e) {
+      LOG.warn("Error saving wallet private key by user '{}' for address {}",
+               currentUserId,
+               address,
+               e);
+      return Response.status(403).build();
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while saving wallet private key: User {} attempts to save wallet private key of address '{}'",
+                currentUserId,
+                address,
+                e);
+      return Response.status(500).build();
+    }
+  }
+
+  /**
+   * Get private key of a wallet stored in server side
+   * 
+   * @param address wallet address
+   * @return Rest Response with operation status
+   */
+  @GET
+  @Path("getPrivateKey")
+  @RolesAllowed("users")
+  public Response getPrivateKey(@QueryParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(BAD_REQUEST_MESSAGE);
+      return Response.status(400).build();
+    }
+
+    String currentUserId = getCurrentUserId();
+    try {
+      Wallet wallet = accountService.getWalletByAddress(address);
+      if (wallet == null) {
+        LOG.debug(WALLET_NOT_FOUND_MESSAGE, address);
+        return Response.status(400).build();
+      }
+
+      String privateKeyEncrypted = accountService.getPrivateKeyByTypeAndId(wallet.getType(), wallet.getId(), currentUserId);
+      return Response.ok(privateKeyEncrypted).build();
+    } catch (IllegalAccessException e) {
+      LOG.warn("Error getting wallet private key by user '{}' for address {}",
+               currentUserId,
+               address,
+               e);
+      return Response.status(403).build();
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while saving wallet private key: User {} attempts to save wallet private key of address {}",
+                currentUserId,
+                address,
+                e);
+      return Response.status(500).build();
+    }
+  }
+
+  /**
+   * Get private key of a wallet stored in server side
+   * 
+   * @param address wallet address
+   * @return Rest Response with operation status
+   */
+  @GET
+  @Path("removePrivateKey")
+  @RolesAllowed("users")
+  public Response removePrivateKey(@QueryParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(BAD_REQUEST_MESSAGE);
+      return Response.status(400).build();
+    }
+
+    String currentUserId = getCurrentUserId();
+    LOG.debug("User '{}' is removing wallet private key stored on server for address {}",
+              currentUserId,
+              address);
+    try {
+      Wallet wallet = accountService.getWalletByAddress(address);
+      if (wallet == null) {
+        LOG.debug(WALLET_NOT_FOUND_MESSAGE, address);
+        return Response.status(400).build();
+      }
+      accountService.removePrivateKeyByTypeAndId(wallet.getType(), wallet.getId(), currentUserId);
+      return Response.ok().build();
+    } catch (IllegalAccessException e) {
+      LOG.warn("Error removing wallet private key by user '{}' for address {}",
+               currentUserId,
+               address,
+               e);
+      return Response.status(403).build();
+    } catch (Exception e) {
+      LOG.error("Unknown error occurred while saving wallet private key: User {} attempts to save wallet private key of address {}",
+                currentUserId,
+                address,
+                e);
       return Response.status(500).build();
     }
   }
