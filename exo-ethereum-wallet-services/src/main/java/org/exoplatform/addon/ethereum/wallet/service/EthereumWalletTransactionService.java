@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.storage.TransactionStorage;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -33,12 +34,20 @@ public class EthereumWalletTransactionService {
 
   private long                          watchedTreatedTransactionsCount;
 
+  private long                          pendingTransactionMaxDays;
+
   public EthereumWalletTransactionService(EthereumWalletAccountService walletAccountService,
                                           TransactionStorage walletTransactionStorage,
-                                          EthereumWalletContractService contractService) {
+                                          EthereumWalletContractService contractService,
+                                          InitParams params) {
     this.walletTransactionStorage = walletTransactionStorage;
     this.walletAccountService = walletAccountService;
     this.contractService = contractService;
+
+    if (params != null && params.containsKey(TRANSACTION_PENDING_MAX_DAYS)) {
+      String value = params.getValueParam(TRANSACTION_PENDING_MAX_DAYS).getValue();
+      this.pendingTransactionMaxDays = Long.parseLong(value);
+    }
   }
 
   /**
@@ -57,6 +66,10 @@ public class EthereumWalletTransactionService {
       return Collections.emptySet();
     }
     return pendingTransactions.stream().map(transactionDetail -> transactionDetail.getHash()).collect(Collectors.toSet());
+  }
+
+  public long getPendingTransactionMaxDays() {
+    return pendingTransactionMaxDays;
   }
 
   public List<TransactionDetail> getTransactions(long networkId,

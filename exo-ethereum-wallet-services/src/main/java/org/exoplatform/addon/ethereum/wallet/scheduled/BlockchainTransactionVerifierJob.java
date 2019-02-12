@@ -3,6 +3,7 @@ package org.exoplatform.addon.ethereum.wallet.scheduled;
 import static org.exoplatform.addon.ethereum.wallet.utils.Utils.EMPTY_HASH;
 import static org.exoplatform.addon.ethereum.wallet.utils.Utils.NEW_TRANSACTION_EVENT;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -48,8 +49,9 @@ public class BlockchainTransactionVerifierJob implements Job {
       if (pendingTransactions != null && !pendingTransactions.isEmpty()) {
         LOG.debug("Checking on blockchain the status of {} transactions marked as pending in database",
                   pendingTransactions.size());
-        for (TransactionDetail transactionDetail : pendingTransactions) {
-          String hash = transactionDetail.getHash();
+        long pendingTransactionMaxDays = getTransactionService().getPendingTransactionMaxDays();
+        for (TransactionDetail pendingTransactionDetail : pendingTransactions) {
+          String hash = pendingTransactionDetail.getHash();
           try { // NOSONAR
             Transaction transaction = getEthereumClientConnector().getTransaction(hash);
             String blockHash = transaction == null ? null : transaction.getBlockHash();
@@ -57,6 +59,17 @@ public class BlockchainTransactionVerifierJob implements Job {
                 && !StringUtils.equalsIgnoreCase(EMPTY_HASH, blockHash)
                 && transaction.getBlockNumber() != null) {
               getListenerService().broadcast(NEW_TRANSACTION_EVENT, transaction, null);
+            } else if (pendingTransactionMaxDays > 0) {
+              long creationTimestamp = pendingTransactionDetail.getTimestamp();
+              if (transaction == null && creationTimestamp > 0) {
+                Duration duration = Duration.ofMillis(System.currentTimeMillis() - creationTimestamp);
+                if (duration.toDays() >= pendingTransactionMaxDays) {
+                  LOG.info("Transaction '{}' was not found on blockchain for more than '{}' days, so mark it as failed",
+                           hash,
+                           pendingTransactionMaxDays);
+                  getListenerService().broadcast(NEW_TRANSACTION_EVENT, hash, null);
+                }
+              }
             }
           } catch (Exception e) {
             LOG.warn("Error treating pending transaction: {}", hash, e);

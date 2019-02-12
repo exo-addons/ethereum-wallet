@@ -47,6 +47,13 @@
 
   <component>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService</type>
+    <init-params>
+      <value-param>
+        <name>transaction.pending.maxDays</name>
+        <description>Maximum days to wait until transaction is added to blockchain, if exxceeding this duration, transaction will be marked as failed</description>
+        <value>${exo.addon.wallet.transaction.pending.maxDays:3}</value>
+      </value-param>
+    </init-params>
   </component>
 
   <component>

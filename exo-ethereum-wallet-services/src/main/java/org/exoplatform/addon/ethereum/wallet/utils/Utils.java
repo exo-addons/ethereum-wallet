@@ -127,6 +127,8 @@ public class Utils {
   public static final String                          NEW_TRANSACTION_EVENT                 =
                                                                             "exo.addon.wallet.transaction.loaded";
 
+  public static final String                          TRANSACTION_PENDING_MAX_DAYS          = "transaction.pending.maxDays";
+
   public static final String                          WALLET_SENDER_NOTIFICATION_ID         = "EtherSenderNotificationPlugin";
 
   public static final String                          WALLET_RECEIVER_NOTIFICATION_ID       = "EtherReceiverNotificationPlugin";
