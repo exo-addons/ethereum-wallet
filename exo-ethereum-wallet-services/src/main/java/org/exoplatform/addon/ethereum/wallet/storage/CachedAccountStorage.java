@@ -18,17 +18,19 @@ public class CachedAccountStorage extends AccountStorage {
     super(walletAccountDAO);
 
     ExoCache<WalletCacheKey, Wallet> walletCache = cacheService.getCacheInstance("wallet.account");
-    Loader<WalletCacheKey, Wallet, Object> walletLoader = new Loader<WalletCacheKey, Wallet, Object>() {
+
+    // Future cache is used for clustered environment improvements (usage of
+    // putLocal VS put)
+    this.walletFutureCache = new FutureExoCache<>(new Loader<WalletCacheKey, Wallet, Object>() {
       @Override
       public Wallet retrieve(Object context, WalletCacheKey cacheKey) throws Exception {
-        if (StringUtils.isNotBlank(cacheKey.getAddress())) {
-          return CachedAccountStorage.super.getWalletByAddress(cacheKey.getAddress());
-        } else {
+        if (StringUtils.isBlank(cacheKey.getAddress())) {
           return CachedAccountStorage.super.getWalletByIdentityId(cacheKey.getIdentityId());
+        } else {
+          return CachedAccountStorage.super.getWalletByAddress(cacheKey.getAddress());
         }
       }
-    };
-    this.walletFutureCache = new FutureExoCache<>(walletLoader, walletCache);
+    }, walletCache);
   }
 
   @Override
@@ -45,21 +47,27 @@ public class CachedAccountStorage extends AccountStorage {
 
   @Override
   public void saveWallet(Wallet wallet, boolean isNew) {
-    Wallet oldWallet = null;
+    String oldAddress = null;
     if (!isNew) {
-      oldWallet = getWalletByIdentityId(wallet.getTechnicalId());
+      // Retrieve old wallet address
+      Wallet oldWallet = getWalletByIdentityId(wallet.getTechnicalId());
+      oldAddress = oldWallet == null ? null : oldWallet.getAddress();
     }
     super.saveWallet(wallet, isNew);
-    if (oldWallet != null) {
-      this.walletFutureCache.remove(new WalletCacheKey(oldWallet.getAddress()));
-    }
+
+    // Remove cached wallet
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getAddress()));
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getTechnicalId()));
+    if (StringUtils.isNotBlank(oldAddress) && !StringUtils.equalsIgnoreCase(oldAddress, wallet.getAddress())) {
+      this.walletFutureCache.remove(new WalletCacheKey(oldAddress));
+    }
   }
 
   @Override
   public Wallet removeWallet(long identityId) {
     Wallet wallet = super.removeWallet(identityId);
+
+    // Remove cached wallet
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getAddress()));
     this.walletFutureCache.remove(new WalletCacheKey(wallet.getTechnicalId()));
     return wallet;

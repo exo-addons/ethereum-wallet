@@ -44,7 +44,6 @@ public class BlockchainTransactionVerifierJob implements Job {
     ExoContainer currentContainer = ExoContainerContext.getCurrentContainer();
     ExoContainerContext.setCurrentContainer(container);
     try {
-      LOG.debug("Checking on blockchain the status of pending transactions");
       List<TransactionDetail> pendingTransactions = getPendingTransactions();
       if (pendingTransactions != null && !pendingTransactions.isEmpty()) {
         LOG.debug("Checking on blockchain the status of {} transactions marked as pending in database",
