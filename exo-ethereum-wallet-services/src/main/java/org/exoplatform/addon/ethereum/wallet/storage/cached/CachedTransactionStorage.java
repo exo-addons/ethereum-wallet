@@ -1,7 +1,8 @@
-package org.exoplatform.addon.ethereum.wallet.storage;
+package org.exoplatform.addon.ethereum.wallet.storage.cached;
 
 import org.exoplatform.addon.ethereum.wallet.dao.WalletTransactionDAO;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
+import org.exoplatform.addon.ethereum.wallet.storage.TransactionStorage;
 import org.exoplatform.commons.cache.future.FutureExoCache;
 import org.exoplatform.commons.cache.future.Loader;
 import org.exoplatform.services.cache.CacheService;

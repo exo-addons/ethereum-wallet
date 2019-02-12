@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.picocontainer.Startable;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.service.mbean.EthereumWalletServiceManaged;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
 import org.exoplatform.commons.api.notification.model.PluginKey;
@@ -49,8 +50,7 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 @ManagedBy(EthereumWalletServiceManaged.class)
 public class EthereumWalletService implements Startable {
 
-  private static final Log              LOG             =
-                                            ExoLogger.getLogger(EthereumWalletService.class);
+  private static final Log              LOG = ExoLogger.getLogger(EthereumWalletService.class);
 
   private EthereumWalletContractService contractService;
 
@@ -66,8 +66,7 @@ public class EthereumWalletService implements Startable {
 
   private ListenerService               listenerService;
 
-  private GlobalSettings                defaultSettings =
-                                                        new GlobalSettings();
+  private GlobalSettings                defaultSettings;
 
   private GlobalSettings                storedSettings;
 
@@ -85,44 +84,46 @@ public class EthereumWalletService implements Startable {
     this.spaceService = spaceService;
     this.webNotificationStorage = webNotificationStorage;
 
+    this.defaultSettings = new GlobalSettings();
+
     if (params.containsKey(DEFAULT_NETWORK_ID)) {
       String value = params.getValueParam(DEFAULT_NETWORK_ID).getValue();
       long defaultNetworkId = Long.parseLong(value);
-      defaultSettings.setDefaultNetworkId(defaultNetworkId);
+      this.defaultSettings.setDefaultNetworkId(defaultNetworkId);
     }
 
     if (params.containsKey(DEFAULT_NETWORK_URL)) {
       String defaultNetworkURL = params.getValueParam(DEFAULT_NETWORK_URL).getValue();
-      defaultSettings.setProviderURL(defaultNetworkURL);
+      this.defaultSettings.setProviderURL(defaultNetworkURL);
     }
 
     if (params.containsKey(DEFAULT_ACCESS_PERMISSION)) {
       String defaultAccessPermission = params.getValueParam(DEFAULT_ACCESS_PERMISSION).getValue();
-      defaultSettings.setAccessPermission(defaultAccessPermission);
+      this.defaultSettings.setAccessPermission(defaultAccessPermission);
     }
 
     if (params.containsKey(DEFAULT_GAS)) {
       String value = params.getValueParam(DEFAULT_GAS).getValue();
       long defaultGas = Long.parseLong(value);
-      defaultSettings.setDefaultGas(defaultGas);
+      this.defaultSettings.setDefaultGas(defaultGas);
     }
 
     if (params.containsKey(MIN_GAS_PRICE)) {
       String value = params.getValueParam(MIN_GAS_PRICE).getValue();
       long minGasPrice = Long.parseLong(value);
-      defaultSettings.setMinGasPrice(minGasPrice);
+      this.defaultSettings.setMinGasPrice(minGasPrice);
     }
 
     if (params.containsKey(NORMAL_GAS_PRICE)) {
       String value = params.getValueParam(NORMAL_GAS_PRICE).getValue();
       long normalGasPrice = Long.parseLong(value);
-      defaultSettings.setNormalGasPrice(normalGasPrice);
+      this.defaultSettings.setNormalGasPrice(normalGasPrice);
     }
 
     if (params.containsKey(MAX_GAS_PRICE)) {
       String value = params.getValueParam(MAX_GAS_PRICE).getValue();
       long maxGasPrice = Long.parseLong(value);
-      defaultSettings.setMaxGasPrice(maxGasPrice);
+      this.defaultSettings.setMaxGasPrice(maxGasPrice);
     }
 
     if (params.containsKey(DEFAULT_CONTRACTS_ADDRESSES)) {
@@ -132,7 +133,7 @@ public class EthereumWalletService implements Startable {
                                              .map(contractAddress -> contractAddress.trim().toLowerCase())
                                              .filter(contractAddress -> !contractAddress.isEmpty())
                                              .collect(Collectors.toSet());
-        defaultSettings.setDefaultContractsToDisplay(defaultContracts);
+        this.defaultSettings.setDefaultContractsToDisplay(defaultContracts);
       }
     }
   }

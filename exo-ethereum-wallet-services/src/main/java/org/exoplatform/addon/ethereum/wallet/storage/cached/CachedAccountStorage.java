@@ -1,10 +1,11 @@
-package org.exoplatform.addon.ethereum.wallet.storage;
+package org.exoplatform.addon.ethereum.wallet.storage.cached;
 
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.dao.WalletAccountDAO;
 import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.model.WalletCacheKey;
+import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
 import org.exoplatform.commons.cache.future.FutureExoCache;
 import org.exoplatform.commons.cache.future.Loader;
 import org.exoplatform.services.cache.CacheService;

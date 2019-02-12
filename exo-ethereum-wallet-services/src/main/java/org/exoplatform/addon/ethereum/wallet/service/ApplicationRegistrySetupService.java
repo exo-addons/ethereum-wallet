@@ -28,7 +28,7 @@ import org.exoplatform.portal.config.model.ApplicationType;
  * This Service installs application registry category and application for
  * EthereumSpaceWallet portlet if the application registry was already populated
  */
-public class SetupApplicationRegistryService implements StartableClusterAware {
+public class ApplicationRegistrySetupService implements StartableClusterAware {
 
   private static final List<String>  EVERYONE_PERMISSION_LIST = Collections.singletonList("Everyone");
 
@@ -40,7 +40,7 @@ public class SetupApplicationRegistryService implements StartableClusterAware {
 
   private boolean                    isDone;
 
-  public SetupApplicationRegistryService(ExoContainer container, ApplicationRegistryService applicationRegistryService) {
+  public ApplicationRegistrySetupService(ExoContainer container, ApplicationRegistryService applicationRegistryService) {
     this.container = container;
     this.applicationRegistryService = applicationRegistryService;
   }
