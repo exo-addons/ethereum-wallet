@@ -35,6 +35,9 @@ public class WalletEntity implements Serializable {
   @Column(name = "ENABLED", nullable = false)
   private boolean           isEnabled;
 
+  @Column(name = "BACKED_UP", nullable = false)
+  private boolean           backedUp;
+
   public Long getId() {
     return id;
   }
@@ -73,6 +76,14 @@ public class WalletEntity implements Serializable {
 
   public void setPassPhrase(String passPhrase) {
     this.passPhrase = passPhrase;
+  }
+
+  public boolean isBackedUp() {
+    return backedUp;
+  }
+
+  public void setBackedUp(boolean backedUp) {
+    this.backedUp = backedUp;
   }
 
 }

@@ -2,11 +2,10 @@
   <v-dialog
     v-model="dialog"
     content-class="uiPopup with-overflow not-draggable"
-    classe="walletSettingsModal"
+    class="walletSettingsModal"
     width="700px"
     max-width="100vw"
-    persistent
-    @keydown.esc="dialog = false">
+    persistent>
     <v-card class="elevation-12">
       <div class="popupHeader ClearFix">
         <a
@@ -106,6 +105,8 @@
                       <v-radio label="Connect with browser (recommended)" value="1" />
                       <v-radio label="Connect with Metamask (advanced users)" value="2" />
                     </v-radio-group>
+                    <wallet-key-server-settings />
+                    </div>
                   </div>
 
                   <div v-if="displayWalletResetOption" class="mb-3">

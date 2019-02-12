@@ -195,7 +195,6 @@ public class EthereumWalletAccountREST implements ResourceContainer {
         return Response.ok(wallet.getPassPhrase()).build();
       } else {
         storedWallet.setAddress(wallet.getAddress());
-        storedWallet.setEnabled(wallet.isEnabled());
         accountService.saveWallet(storedWallet, currentUserId, true);
         return Response.ok(storedWallet.getPassPhrase()).build();
       }

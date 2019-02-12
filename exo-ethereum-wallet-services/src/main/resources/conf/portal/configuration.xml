@@ -30,6 +30,10 @@
   </component>
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletPrivateKeyService</type>
+  </component>
+
+  <component>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletAccountService</type>
   </component>
 
