@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.storage;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getIdentityById;
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getSpace;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getIdentityById;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getSpace;
 
 import java.util.*;
 import java.util.stream.Collectors;

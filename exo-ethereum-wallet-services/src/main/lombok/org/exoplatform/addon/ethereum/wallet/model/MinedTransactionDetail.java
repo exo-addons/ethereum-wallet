@@ -14,5 +14,7 @@ public class MinedTransactionDetail implements Serializable {
 
   private String            hash;
 
+  private String            blockHash;
+
   private long              blockTimestamp;
 }

@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
 import java.util.Collections;
 import java.util.Set;

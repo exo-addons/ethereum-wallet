@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.exoplatform.addon.ethereum.wallet.fork;
+package org.exoplatform.addon.ethereum.wallet.migration;
 
 // This package is added as workaround because of embedded bouncycastle version
 // inside eXo Platform

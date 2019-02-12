@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -26,7 +26,6 @@ import org.apache.commons.lang.StringUtils;
 import org.picocontainer.Startable;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
-import org.exoplatform.addon.ethereum.wallet.service.managed.EthereumWalletServiceManaged;
 import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.NotificationInfo;
 import org.exoplatform.commons.api.notification.model.PluginKey;
@@ -57,6 +56,8 @@ public class EthereumWalletService implements Startable {
 
   private EthereumWalletAccountService  accountService;
 
+  private EthereumClientConnector       clientConnector;
+
   private SettingService                settingService;
 
   private SpaceService                  spaceService;
@@ -70,13 +71,15 @@ public class EthereumWalletService implements Startable {
 
   private GlobalSettings                storedSettings;
 
-  public EthereumWalletService(EthereumWalletContractService contractService,
+  public EthereumWalletService(EthereumClientConnector clientConnector,
+                               EthereumWalletContractService contractService,
                                EthereumWalletAccountService accountService,
                                SettingService settingService,
                                SpaceService spaceService,
                                WebNotificationStorage webNotificationStorage,
                                InitParams params) {
     this.settingService = settingService;
+    this.clientConnector = clientConnector;
     this.accountService = accountService;
     this.contractService = contractService;
     this.spaceService = spaceService;
@@ -136,13 +139,18 @@ public class EthereumWalletService implements Startable {
 
   @Override
   public void start() {
+    GlobalSettings settings = getSettings();
+
+    // start connection to blockchain
+    clientConnector.start(settings);
+
     // check global settings upgrade
-    checkDataToUpgrade(getSettings());
+    checkDataToUpgrade(settings);
   }
 
   @Override
   public void stop() {
-    // Nothing to stop
+    clientConnector.stop();
   }
 
   /**
@@ -328,35 +336,6 @@ public class EthereumWalletService implements Startable {
   }
 
   /**
-   * Returns last watched block
-   * 
-   * @param networkId blockchain network id
-   * @return last watched block number
-   */
-  public long getLastWatchedBlockNumber(long networkId) {
-    SettingValue<?> lastBlockNumberValue =
-                                         settingService.get(WALLET_CONTEXT, WALLET_SCOPE, LAST_BLOCK_NUMBER_KEY_NAME + networkId);
-    if (lastBlockNumberValue != null && lastBlockNumberValue.getValue() != null) {
-      return Long.valueOf(lastBlockNumberValue.getValue().toString());
-    }
-    return 0;
-  }
-
-  /**
-   * Save last watched block
-   * 
-   * @param networkId blockchain network id
-   * @param lastWatchedBlockNumber last watched block number
-   */
-  public void saveLastWatchedBlockNumber(long networkId, long lastWatchedBlockNumber) {
-    LOG.debug("Save watched block number {} on network {}", lastWatchedBlockNumber, networkId);
-    settingService.set(WALLET_CONTEXT,
-                       WALLET_SCOPE,
-                       LAST_BLOCK_NUMBER_KEY_NAME + networkId,
-                       SettingValue.create(lastWatchedBlockNumber));
-  }
-
-  /**
    * Save funds request and send notifications
    * 
    * @param fundsRequest funds request details to save
@@ -533,4 +512,5 @@ public class EthereumWalletService implements Startable {
     }
     return listenerService;
   }
+
 }

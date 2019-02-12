@@ -8,11 +8,11 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.migration.EthereumTransactionDecoder</type>
+    <type>org.exoplatform.addon.ethereum.wallet.migration.MigrationService</type>
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.migration.MigrationService</type>
+    <type>org.exoplatform.addon.ethereum.wallet.migration.EthereumTransactionDecoder</type>
   </component>
 
   <component>
@@ -47,10 +47,6 @@
 
   <component>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService</type>
-  </component>
-
-  <component>
-    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumTransactionVerifier</type>
   </component>
 
   <component>
@@ -136,14 +132,8 @@
     <component-plugin>
       <name>exo.addon.wallet.transaction.loaded</name>
       <set-method>addListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.EthereumTransactionProcessorListener</type>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.BlockchainTransactionProcessorListener</type>
       <description>Listening to transactions coming from configured ethereum network</description>
-    </component-plugin>
-    <component-plugin>
-      <name>exo.addon.wallet.block.loaded</name>
-      <set-method>addListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.EthereumLastWatchedBlockListener</type>
-      <description>Save last watched block number</description>
     </component-plugin>
     <component-plugin>
       <name>exo.addon.wallet.addressAssociation.new</name>
@@ -160,7 +150,7 @@
     <component-plugin>
       <name>exo.addon.wallet.transaction.mined</name>
       <set-method>addListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.TransactionMinedListener</type>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.TransactionNotificationListener</type>
       <description>Send transaction mined notification to sender and receiver</description>
     </component-plugin>
   </external-component-plugins>
@@ -343,17 +333,18 @@
       </init-params>
     </component-plugin>
   </external-component-plugins>
+
   <external-component-plugins>
     <target-component>org.exoplatform.services.cache.CacheService</target-component>
     <component-plugin>
       <name>addExoCacheConfig</name>
       <set-method>addExoCacheConfig</set-method>
       <type>org.exoplatform.services.cache.ExoCacheConfigPlugin</type>
-      <description>Configures the cache for Wallet Transaction Messages Cache</description>
+      <description>Configures the cache for Blockchain mined transactions</description>
       <init-params>
         <object-param>
           <name>wallet.transactions</name>
-          <description></description>
+          <description>Wallet application transactions cache</description>
           <object type="org.exoplatform.services.cache.impl.infinispan.generic.GenericExoCacheConfig">
             <field name="name">
               <string>wallet.transactions</string>
@@ -364,10 +355,16 @@
             <field name="liveTime">
               <long>${exo.cache.wallet.transactions.TimeToLive:-1}</long>
             </field>
+            <field name="strategy" profiles="cluster">
+              <string>${exo.cache.wallet.transactions.strategy:LIRS}</string>
+            </field>
+            <field name="cacheMode" profiles="cluster">
+              <string>${exo.cache.wallet.transactions.cacheMode:asyncInvalidation}</string>
+            </field>
           </object>
         </object-param>
         <object-param>
-          <name>wallet.accountDetailCache</name>
+          <name>wallet.account</name>
           <description></description>
           <object type="org.exoplatform.services.cache.impl.infinispan.generic.GenericExoCacheConfig">
             <field name="name">
@@ -378,6 +375,12 @@
             </field>
             <field name="liveTime">
               <long>${exo.cache.wallet.account.TimeToLive:-1}</long>
+            </field>
+            <field name="strategy" profiles="cluster">
+              <string>${exo.cache.wallet.account.strategy:LIRS}</string>
+            </field>
+            <field name="cacheMode" profiles="cluster">
+              <string>${exo.cache.wallet.account.cacheMode:asyncInvalidation}</string>
             </field>
           </object>
         </object-param>
@@ -397,6 +400,26 @@
           <description>Change logs of Wallet RDBMS</description>
           <value>db/changelog/wallet-rdbms.db.changelog-master.xml</value>
         </values-param>
+      </init-params>
+    </component-plugin>
+  </external-component-plugins>
+
+  <external-component-plugins>
+    <target-component>org.exoplatform.services.scheduler.JobSchedulerService</target-component>
+    <component-plugin>
+      <name>AddCronJob</name>
+      <set-method>addCronJob</set-method>
+      <type>org.exoplatform.services.scheduler.CronJob</type>
+      <description>Add a job to verify if mined transactions notifications aren't sent</description>
+      <init-params>
+        <properties-param>
+          <name>cronjob.info</name>
+          <description>Configuration for wallet transaction stored status verifier</description>
+          <property name="jobName" value="BlockchainTransactionVerifierJob"/>
+          <property name="groupName" value="Wallet"/>
+          <property name="job" value="org.exoplatform.addon.ethereum.wallet.scheduled.BlockchainTransactionVerifierJob"/>
+          <property name="expression" value="${exo.addon.wallet.BlockchainTransactionVerifierJob.expression:0/10 * * * * ?}"/>
+        </properties-param>
       </init-params>
     </component-plugin>
   </external-component-plugins>

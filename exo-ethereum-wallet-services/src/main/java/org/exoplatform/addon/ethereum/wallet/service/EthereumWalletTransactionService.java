@@ -1,9 +1,9 @@
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
@@ -41,8 +41,22 @@ public class EthereumWalletTransactionService {
     this.contractService = contractService;
   }
 
+  /**
+   * @return {@link List} of pending {@link TransactionDetail}
+   */
   public List<TransactionDetail> getPendingTransactions() {
     return walletTransactionStorage.getPendingTransactions();
+  }
+
+  /**
+   * @return transactions hashes that are marked as pensing in internal database
+   */
+  public Set<String> getPendingTransactionHashes() {
+    List<TransactionDetail> pendingTransactions = getPendingTransactions();
+    if (pendingTransactions == null || pendingTransactions.isEmpty()) {
+      return Collections.emptySet();
+    }
+    return pendingTransactions.stream().map(transactionDetail -> transactionDetail.getHash()).collect(Collectors.toSet());
   }
 
   public List<TransactionDetail> getTransactions(long networkId,
@@ -60,8 +74,8 @@ public class EthereumWalletTransactionService {
     }
   }
 
-  public TransactionDetail getTransactionByHash(String hash, boolean onlyPending) {
-    return walletTransactionStorage.getTransactionByHash(hash, onlyPending);
+  public TransactionDetail getTransactionByHash(String hash) {
+    return walletTransactionStorage.getTransactionByHash(hash);
   }
 
   /**

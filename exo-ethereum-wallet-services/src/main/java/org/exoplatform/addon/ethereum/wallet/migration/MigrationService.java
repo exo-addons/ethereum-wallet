@@ -177,7 +177,7 @@ public class MigrationService implements Startable {
     int transactionsCount = transactionHashes.size();
     LOG.debug("Compute {} saved transactions details from blockchain", transactionsCount);
     for (String hash : transactionHashes) {
-      TransactionDetail transactionDetail = transactionStorage.getTransactionByHash(hash, false);
+      TransactionDetail transactionDetail = transactionStorage.getTransactionByHash(hash);
       try {
         transactionDecoder.computeTransactionDetail(transactionDetail);
         transactionStorage.saveTransactionDetail(transactionDetail);
@@ -253,7 +253,7 @@ public class MigrationService implements Startable {
   private void migrateTransaction(String address, TransactionDetail transaction, long networkId) {
     String hash = transaction.getHash();
     transactionHashes.add(transaction.getHash().toLowerCase());
-    TransactionDetail migratedTransaction = getTransactionStorage().getTransactionByHash(hash, false);
+    TransactionDetail migratedTransaction = getTransactionStorage().getTransactionByHash(hash);
     if (migratedTransaction == null) {
       transaction.setNetworkId(networkId);
       transaction.setFrom(address);

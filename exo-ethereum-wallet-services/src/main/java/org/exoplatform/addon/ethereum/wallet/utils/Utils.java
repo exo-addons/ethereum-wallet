@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.addon.ethereum.wallet.service.utils;
+package org.exoplatform.addon.ethereum.wallet.utils;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -84,13 +84,7 @@ public class Utils {
 
   public static final String                          GLOBAL_SETTINGS_KEY_NAME              = "GLOBAL_SETTINGS";
 
-  public static final String                          ADDRESS_KEY_NAME                      = "ADDONS_ETHEREUM_WALLET_ADDRESS";
-
-  public static final String                          LAST_BLOCK_NUMBER_KEY_NAME            =
-                                                                                 "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
-
-  public static final String                          SETTINGS_KEY_NAME                     =
-                                                                        "ADDONS_ETHEREUM_WALLET_SETTINGS";
+  public static final String                          SETTINGS_KEY_NAME                     = "ADDONS_ETHEREUM_WALLET_SETTINGS";
 
   public static final Context                         WALLET_CONTEXT                        = Context.GLOBAL;
 
@@ -133,12 +127,9 @@ public class Utils {
   public static final String                          NEW_TRANSACTION_EVENT                 =
                                                                             "exo.addon.wallet.transaction.loaded";
 
-  public static final String                          NEW_BLOCK_EVENT                       = "exo.addon.wallet.block.loaded";
-
   public static final String                          WALLET_SENDER_NOTIFICATION_ID         = "EtherSenderNotificationPlugin";
 
-  public static final String                          WALLET_RECEIVER_NOTIFICATION_ID       =
-                                                                                      "EtherReceiverNotificationPlugin";
+  public static final String                          WALLET_RECEIVER_NOTIFICATION_ID       = "EtherReceiverNotificationPlugin";
 
   public static final String                          FUNDS_REQUEST_NOTIFICATION_ID         = "FundsRequestNotificationPlugin";
 

@@ -18,9 +18,8 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import java.util.*;
 
-import org.picocontainer.Startable;
-
 import org.exoplatform.application.registry.*;
+import org.exoplatform.commons.cluster.StartableClusterAware;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.portal.config.model.ApplicationType;
@@ -29,7 +28,7 @@ import org.exoplatform.portal.config.model.ApplicationType;
  * This Service installs application registry category and application for
  * EthereumSpaceWallet portlet if the application registry was already populated
  */
-public class SetupApplicationRegistryService implements Startable {
+public class SetupApplicationRegistryService implements StartableClusterAware {
 
   private static final List<String>  EVERYONE_PERMISSION_LIST = Collections.singletonList("Everyone");
 
@@ -38,6 +37,8 @@ public class SetupApplicationRegistryService implements Startable {
   private ExoContainer               container;
 
   private ApplicationRegistryService applicationRegistryService;
+
+  private boolean                    isDone;
 
   public SetupApplicationRegistryService(ExoContainer container, ApplicationRegistryService applicationRegistryService) {
     this.container = container;
@@ -68,6 +69,7 @@ public class SetupApplicationRegistryService implements Startable {
         applicationRegistryService.save(applicationCategory);
         applicationRegistryService.save(applicationCategory, application);
       }
+      this.isDone = true;
     } finally {
       RequestLifeCycle.end();
     }
@@ -76,5 +78,10 @@ public class SetupApplicationRegistryService implements Startable {
   @Override
   public void stop() {
     // Nothing to shutdown
+  }
+
+  @Override
+  public boolean isDone() {
+    return isDone;
   }
 }

@@ -16,11 +16,8 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.exoplatform.addon.ethereum.wallet.service.managed;
+package org.exoplatform.addon.ethereum.wallet.service;
 
-import java.util.Set;
-
-import org.exoplatform.addon.ethereum.wallet.service.*;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.management.annotations.Managed;
 import org.exoplatform.management.annotations.ManagedDescription;
@@ -32,11 +29,11 @@ import org.exoplatform.management.jmx.annotations.Property;
 @ManagedDescription("Ethereum blockchain wallet service")
 public class EthereumWalletServiceManaged {
 
+  private EthereumClientConnector          clientConnector;
+
   private EthereumWalletAccountService     accountService;
 
   private EthereumWalletTransactionService transactionService;
-
-  private EthereumTransactionVerifier      transactionVerifier;
 
   public EthereumWalletServiceManaged(EthereumWalletService ethereumWalletService) {
   }
@@ -54,15 +51,9 @@ public class EthereumWalletServiceManaged {
   }
 
   @Managed
-  @ManagedDescription("Run ethereum transaction verifier")
-  public void runTransactionVerifier() {
-    getTransactionVerifier().runNow();
-  }
-
-  @Managed
-  @ManagedDescription("Get pending transactions")
-  public Set<String> getPendingTransactionHashes() {
-    return getTransactionVerifier().getPendingTransactionHashes();
+  @ManagedDescription("Get ethereum blockchain connection interruption count")
+  public int getConnectionInterruptionCount() {
+    return getClientConnector().getConnectionInterruptionCount();
   }
 
   public EthereumWalletTransactionService getTransactionService() {
@@ -79,10 +70,10 @@ public class EthereumWalletServiceManaged {
     return accountService;
   }
 
-  public EthereumTransactionVerifier getTransactionVerifier() {
-    if (transactionVerifier == null) {
-      transactionVerifier = CommonsUtils.getService(EthereumTransactionVerifier.class);
+  public EthereumClientConnector getClientConnector() {
+    if (clientConnector == null) {
+      clientConnector = CommonsUtils.getService(EthereumClientConnector.class);
     }
-    return transactionVerifier;
+    return clientConnector;
   }
 }

@@ -1,4 +1,4 @@
-package org.exoplatform.addon.ethereum.wallet.fork;
+package org.exoplatform.addon.ethereum.wallet.migration;
 
 import org.bouncycastle.crypto.ExtendedDigest;
 import org.bouncycastle.util.Arrays;

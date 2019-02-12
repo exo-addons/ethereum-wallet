@@ -16,8 +16,8 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.isUserSpaceManager;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.isUserSpaceManager;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;

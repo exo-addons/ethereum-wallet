@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.migration;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,6 +53,8 @@ public class DeprecatedEthereumWalletService {
 
   private static final String SPACE_WITH_ID_MESSAGE                  =
                                                     "Space with id '";
+
+  public static final String  ADDRESS_KEY_NAME                       = "ADDONS_ETHEREUM_WALLET_ADDRESS";
 
   private static final String IS_NOT_FOUND_MESSAGE                   =
                                                    "' is not found";

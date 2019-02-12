@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getCurrentUserId;
 
 import java.util.Map;
 import java.util.Set;

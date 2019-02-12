@@ -1,4 +1,4 @@
-package org.exoplatform.addon.ethereum.wallet.fork;
+package org.exoplatform.addon.ethereum.wallet.migration;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;

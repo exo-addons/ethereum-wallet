@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.listener;
 
-import static org.exoplatform.addon.ethereum.wallet.service.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
@@ -23,7 +23,7 @@ import org.exoplatform.social.core.service.LinkProvider;
  * database and send notifications.
  */
 @Asynchronous
-public class TransactionMinedListener extends Listener<Object, JSONObject> {
+public class TransactionNotificationListener extends Listener<Object, JSONObject> {
 
   private ExoContainer                     container;
 
@@ -35,7 +35,7 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
 
   private EthereumWalletContractService    contractService;
 
-  public TransactionMinedListener(ExoContainer container) {
+  public TransactionNotificationListener(ExoContainer container) {
     this.container = container;
   }
 
@@ -48,7 +48,7 @@ public class TransactionMinedListener extends Listener<Object, JSONObject> {
       if (StringUtils.isBlank(transactionHash)) {
         return;
       }
-      TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash, false);
+      TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash);
       if (transactionDetail == null || !transactionDetail.isSucceeded() || transactionDetail.isAdminOperation()) {
         // No notification for admin operation or not watched transaction or not
         // succeeded transaction

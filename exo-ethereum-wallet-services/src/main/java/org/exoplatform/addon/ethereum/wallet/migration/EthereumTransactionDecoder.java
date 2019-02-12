@@ -28,8 +28,6 @@ import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV1;
-import org.exoplatform.addon.ethereum.wallet.fork.ContractUtils;
-import org.exoplatform.addon.ethereum.wallet.fork.EventEncoder;
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.*;
 import org.exoplatform.services.log.ExoLogger;

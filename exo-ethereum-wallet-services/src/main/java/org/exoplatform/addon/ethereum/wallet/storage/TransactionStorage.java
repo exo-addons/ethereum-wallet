@@ -64,7 +64,7 @@ public class TransactionStorage {
     }
   }
 
-  public TransactionDetail getTransactionByHash(String hash, boolean onlyPending) { // NOSONAR
+  public TransactionDetail getTransactionByHash(String hash) {
     TransactionEntity transactionEntity = walletTransactionDAO.getTransactionByHash(hash);
     return fromEntity(transactionEntity);
   }

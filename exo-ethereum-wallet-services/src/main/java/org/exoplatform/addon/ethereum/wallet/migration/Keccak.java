@@ -1,4 +1,4 @@
-package org.exoplatform.addon.ethereum.wallet.fork;
+package org.exoplatform.addon.ethereum.wallet.migration;
 
 @SuppressWarnings("all")
 public class Keccak {

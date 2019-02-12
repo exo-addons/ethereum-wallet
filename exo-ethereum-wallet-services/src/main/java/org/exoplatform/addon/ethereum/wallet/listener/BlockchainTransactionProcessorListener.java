@@ -38,9 +38,9 @@ import org.exoplatform.services.log.Log;
  * network
  */
 @Asynchronous
-public class EthereumTransactionProcessorListener extends Listener<Object, TransactionReceipt> {
+public class BlockchainTransactionProcessorListener extends Listener<Object, TransactionReceipt> {
 
-  private static final Log                 LOG = ExoLogger.getLogger(EthereumTransactionProcessorListener.class);
+  private static final Log                 LOG = ExoLogger.getLogger(BlockchainTransactionProcessorListener.class);
 
   private EthereumWalletTransactionService transactionService;
 
@@ -48,7 +48,7 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
 
   private ExoContainer                     container;
 
-  public EthereumTransactionProcessorListener(ExoContainer container) {
+  public BlockchainTransactionProcessorListener(ExoContainer container) {
     this.container = container;
   }
 
@@ -63,16 +63,17 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
       }
 
       String transactionHash = null;
+      String blockHash = null;
       Long blockTimestamp = null;
       if (source instanceof MinedTransactionDetail) {
         MinedTransactionDetail transaction = (MinedTransactionDetail) source;
         transactionHash = transaction.getHash();
+        blockHash = transaction.getBlockHash();
         blockTimestamp = transaction.getBlockTimestamp();
       } else if (source instanceof Transaction) {
         Transaction transaction = (Transaction) source;
         transactionHash = transaction.getHash();
-        Block block = getEthereumClientConnector().getBlock(transaction.getBlockHash());
-        blockTimestamp = block.getTimestamp().longValue();
+        blockHash = transaction.getBlockHash();
       } else {
         transactionHash = (String) source;
       }
@@ -81,7 +82,7 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
         LOG.warn("Transaction hash is empty");
       }
 
-      TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash, true);
+      TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash);
       if (transactionDetail == null) {
         return;
       }
@@ -92,8 +93,15 @@ public class EthereumTransactionProcessorListener extends Listener<Object, Trans
       }
       transactionDetail.setPending(false);
       transactionDetail.setSucceeded(transactionReceipt != null && transactionReceipt.isStatusOK());
-      if (blockTimestamp != null && transactionDetail.getTimestamp() == 0) {
-        transactionDetail.setTimestamp(blockTimestamp);
+
+      // Ensure that stored transaction has a timestamp
+      if (transactionDetail.getTimestamp() == 0) {
+        if (blockTimestamp != null) {
+          transactionDetail.setTimestamp(blockTimestamp);
+        } else if (StringUtils.isNotBlank(blockHash)) {
+          Block block = getEthereumClientConnector().getBlock(blockHash);
+          transactionDetail.setTimestamp(block.getTimestamp().longValue());
+        }
       }
 
       getTransactionService().saveTransactionDetail(transactionDetail, null, true);
