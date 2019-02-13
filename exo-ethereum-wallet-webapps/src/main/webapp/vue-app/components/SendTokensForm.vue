@@ -210,15 +210,21 @@ export default {
       this.checkErrors();
     },
     recipient(newValue, oldValue) {
-      this.error = null;
+      if (oldValue !== newValue) {
+        this.error = null;
+        this.warning = null;
+        this.information = null;
+
+        this.isApprovedRecipient = true;
+        this.canSendToken = true;
+      }
+
       if (newValue && oldValue !== newValue) {
         this.checkErrors();
         if (this.error) {
           return;
         }
 
-        this.isApprovedRecipient = true;
-        this.canSendToken = true;
         // Admin will implicitly approve account, so not necessary
         // to check if the receiver is approved or not
         if (this.contractDetails.contractType > 0) {
