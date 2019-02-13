@@ -300,7 +300,7 @@ export default {
       return computeRewards(identityIds, this.$refs.sendRewards.selectedDateInSeconds)
         .then(rewardDetails => {
           if(rewardDetails.error) {
-            this.error = rewardDetails.error;
+            this.error = (typeof rewardDetails.error === 'object' ? rewardDetails.error[0] : rewardDetails.error);
             return;
           }
 

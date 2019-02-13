@@ -7,6 +7,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import org.exoplatform.addon.ethereum.wallet.reward.model.RewardMemberDetail;
 import org.exoplatform.addon.ethereum.wallet.reward.service.RewardService;
 import org.exoplatform.services.log.ExoLogger;
@@ -45,7 +48,13 @@ public class RewardBudgetREST implements ResourceContainer {
       return Response.ok(rewards).build();
     } catch (Exception e) {
       LOG.warn("Error getting computed reward", e);
-      return Response.status(500).type(MediaType.APPLICATION_JSON).entity("{error: " + e.getMessage() + "}").build();
+      JSONObject object = new JSONObject();
+      try {
+        object.append("error", e.getMessage());
+      } catch (JSONException e1) {
+        // Nothing to do
+      }
+      return Response.status(500).type(MediaType.APPLICATION_JSON).entity(object.toString()).build();
     }
   }
 
