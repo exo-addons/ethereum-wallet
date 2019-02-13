@@ -61,7 +61,7 @@
         </div>
 
         <div v-if="!backedUp && !rememberPasswordToChange" class="alert alert-warning v-content">
-          <i class="uiIconWarning"></i> It's highly recommended to backup your wallet before proceeding this operation
+          <i id="backupWarningWhenSetPassword" class="uiIconWarning"></i> It's highly recommended to backup your wallet before proceeding this operation
         </div>
 
         <v-form

@@ -119,9 +119,7 @@ describe('WalletImportKeyModal.test.js', () => {
       .then(() => done())
       .catch((e) => done(e));
   });
-  
-  
-  
+
   it('WalletImportKeyModal no existing  private key ', (done) => {
     console.log('--WalletImportKeyModal no existing private key ');
 
@@ -160,22 +158,4 @@ describe('WalletImportKeyModal.test.js', () => {
       .then(() => done())
       .catch((e) => done(e));
   });
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
 });
