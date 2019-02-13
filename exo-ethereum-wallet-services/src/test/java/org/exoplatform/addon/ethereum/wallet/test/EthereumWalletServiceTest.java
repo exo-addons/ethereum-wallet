@@ -58,29 +58,29 @@ public class EthereumWalletServiceTest {
 
     assertNull("default settings: principal contrat admin address should be null", settings.getPrincipalContractAdminAddress());
 
-    assertNull("default settings: principal contrat admin address should be null", settings.getProviderURL());
+    assertNotNull("default settings: blockchain provider URL shouldn't be null", settings.getProviderURL());
+
+    assertNotNull("default settings: blockchain websocket provider URL shouldn't be null", settings.getWebsocketProviderURL());
 
     assertNull("default settings: funds holder type should be null", settings.getFundsHolderType());
 
     assertNull("default settings: initial funds message should be null", settings.getInitialFundsRequestMessage());
 
     assertNotNull("default settings: max gas price shouldn't be null", settings.getMaxGasPrice());
-    assertEquals("default settings: wrong value for max gas price", settings.getMaxGasPrice().longValue(), 150000L);
+    assertEquals("default settings: wrong value for max gas price", settings.getMaxGasPrice().longValue(), 15000000000L);
 
     assertNotNull("default settings: min gas price shouldn't be null", settings.getMinGasPrice());
-    assertEquals("default settings: wrong value for min gas price", settings.getMinGasPrice().longValue(), 150000L);
+    assertEquals("default settings: wrong value for min gas price", settings.getMinGasPrice().longValue(), 4000000000L);
 
     assertNotNull("default settings: normal gas price shouldn't be null", settings.getNormalGasPrice());
-    assertEquals("default settings: wrong value for normal gas price", settings.getNormalGasPrice().longValue(), 150000L);
+    assertEquals("default settings: wrong value for normal gas price", settings.getNormalGasPrice().longValue(), 8000000000L);
 
-    assertNotNull("default settings: initial funds map shouldn't be null", settings.getInitialFunds());
-    assertEquals("default settings: initial funds map should be empty", settings.getInitialFunds().size(), 0);
+    assertNull("default settings: initial funds map should be null", settings.getInitialFunds());
 
     assertNotNull("default settings: network id shouldn't be null", settings.getDefaultNetworkId());
     assertEquals("default settings: wrong value for network id", settings.getDefaultNetworkId().intValue(), 3);
 
-    assertNotNull("default settings: overview accounts set shouldn't be null", settings.getDefaultOverviewAccounts());
-    assertEquals("default settings: overview accounts set should be empty", settings.getDefaultOverviewAccounts().size(), 0);
+    assertNull("default settings: overview accounts set should be null", settings.getDefaultOverviewAccounts());
 
     assertNotNull("default settings: data version shouldn't be null", settings.getDataVersion());
     assertEquals("default settings: wrong value for data version", settings.getDataVersion().intValue(), GLOBAL_DATA_VERSION);

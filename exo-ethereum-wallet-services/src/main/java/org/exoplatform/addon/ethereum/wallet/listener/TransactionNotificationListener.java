@@ -81,7 +81,7 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
           senderWallet.setAvatar(LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
           if (StringUtils.isNotBlank(principalContractAdminAddress)
               && StringUtils.equalsIgnoreCase(principalContractAdminAddress, senderAddress)) {
-            senderWallet.setName("Admin");
+            senderWallet.setName(PRINCIPAL_CONTRACT_ADMIN_NAME);
           } else {
             senderWallet.setName(senderAddress);
           }
@@ -98,7 +98,7 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
           receiverWallet.setAvatar(LinkProvider.PROFILE_DEFAULT_AVATAR_URL);
           if (StringUtils.isNotBlank(principalContractAdminAddress)
               && StringUtils.equalsIgnoreCase(principalContractAdminAddress, receiverAddress)) {
-            receiverWallet.setName("Admin");
+            receiverWallet.setName(PRINCIPAL_CONTRACT_ADMIN_NAME);
           } else {
             receiverWallet.setName(receiverAddress);
           }

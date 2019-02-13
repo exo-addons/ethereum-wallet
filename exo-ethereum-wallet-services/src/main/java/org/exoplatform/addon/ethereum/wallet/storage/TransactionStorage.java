@@ -98,6 +98,7 @@ public class TransactionStorage {
     if (entity.getCreatedDate() > 0 && entity.getCreatedDate() < MINIMUM_CREATED_DATE_MILLIS) {
       detail.setTimestamp(entity.getCreatedDate() * 1000);
     }
+
     detail.setHash(entity.getHash());
     detail.setFrom(entity.getFromAddress());
     detail.setTo(entity.getToAddress());

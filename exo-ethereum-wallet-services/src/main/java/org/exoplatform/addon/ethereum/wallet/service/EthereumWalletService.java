@@ -103,6 +103,11 @@ public class EthereumWalletService implements Startable {
       String defaultNetworkURL = params.getValueParam(DEFAULT_NETWORK_URL).getValue();
       this.defaultSettings.setProviderURL(defaultNetworkURL);
     }
+    
+    if (params.containsKey(DEFAULT_NETWORK_WS_URL)) {
+      String defaultNetworkWsURL = params.getValueParam(DEFAULT_NETWORK_WS_URL).getValue();
+      this.defaultSettings.setWebsocketProviderURL(defaultNetworkWsURL);
+    }
 
     if (params.containsKey(DEFAULT_ACCESS_PERMISSION)) {
       String defaultAccessPermission = params.getValueParam(DEFAULT_ACCESS_PERMISSION).getValue();

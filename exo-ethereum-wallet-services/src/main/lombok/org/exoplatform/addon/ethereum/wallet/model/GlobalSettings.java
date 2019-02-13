@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GlobalSettings implements Serializable, Cloneable {
 
+  private static final long   serialVersionUID                       = -4672745644323864680L;
+
   private static final String CONTRACT_BIN_PARAM                     = "contractBin";
 
   private static final String CONTRACT_ABI_PARAM                     = "contractAbi";
@@ -63,8 +65,6 @@ public class GlobalSettings implements Serializable, Cloneable {
 
   private static final String ENABLE_DELEGATION_PARAM                = "enableDelegation";
 
-  private static final long   serialVersionUID                       = -4672745644323864680L;
-
   private Integer             dataVersion                            = 0;
 
   private boolean             enableDelegation                       = false;
@@ -75,7 +75,7 @@ public class GlobalSettings implements Serializable, Cloneable {
 
   private String              initialFundsRequestMessage             = null;
 
-  private String              fundsHolderType                        = WalletType.USER.getId();
+  private String              fundsHolderType                        = null;
 
   private String              providerURL                            = null;
 

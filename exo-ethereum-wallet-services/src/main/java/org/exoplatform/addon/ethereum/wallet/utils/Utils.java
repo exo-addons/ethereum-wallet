@@ -112,6 +112,8 @@ public class Utils {
 
   public static final String                          REWARDINGS_GROUP                      = "/platform/rewarding";
 
+  public static final String                          PRINCIPAL_CONTRACT_ADMIN_NAME         = "Admin";
+
   public static final String                          GLOAL_SETTINGS_CHANGED_EVENT          =
                                                                                    "exo.addon.wallet.settings.changed";
 
@@ -216,13 +218,13 @@ public class Utils {
       if (space == null) {
         return Collections.singletonList(toAccount.getId());
       } else {
-        String[] members = space.getMembers();
-        if (members == null || members.length == 0) {
+        String[] managers = space.getManagers();
+        if (managers == null || managers.length == 0) {
           return Collections.emptyList();
         } else if (StringUtils.isBlank(excludedId)) {
-          return Arrays.asList(members);
+          return Arrays.asList(managers);
         } else {
-          return Arrays.stream(members).filter(member -> !excludedId.equals(member)).collect(Collectors.toList());
+          return Arrays.stream(managers).filter(member -> !excludedId.equals(member)).collect(Collectors.toList());
         }
       }
     } else {

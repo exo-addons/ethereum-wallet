@@ -120,6 +120,7 @@
           <systemPropertyVariables>
             <exo.properties.url>classpath:/conf/configuration.properties</exo.properties.url>
             <exo.profiles>hsqldb</exo.profiles>
+            <exo.files.storage.dir>target/files</exo.files.storage.dir>
           </systemPropertyVariables>
         </configuration>
       </plugin>
