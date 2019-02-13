@@ -490,4 +490,21 @@ public class Utils {
     }
   }
 
+  public static final String formatTransactionHash(String transactionHash) {
+    if (transactionHash == null) {
+      return null;
+    }
+    transactionHash = transactionHash.trim().toLowerCase();
+    if (transactionHash.length() == 64 && !transactionHash.startsWith("0x")) {
+      transactionHash = "0x" + transactionHash;
+    }
+    if (transactionHash.length() != 66) {
+      throw new IllegalStateException("Transaction hash " + transactionHash + " isn't well formatted. It should be of length 66");
+    }
+    if (!transactionHash.startsWith("0x")) {
+      throw new IllegalStateException("Transaction hash " + transactionHash + " isn't well formatted. It should starts with 0x");
+    }
+    return transactionHash;
+  }
+
 }

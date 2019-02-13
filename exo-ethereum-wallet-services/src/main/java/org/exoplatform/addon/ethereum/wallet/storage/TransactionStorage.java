@@ -1,6 +1,9 @@
 package org.exoplatform.addon.ethereum.wallet.storage;
 
-import java.time.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.formatTransactionHash;
+
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,6 +81,7 @@ public class TransactionStorage {
   }
 
   public TransactionDetail getTransactionByHash(String hash) {
+    hash = formatTransactionHash(hash);
     TransactionEntity transactionEntity = walletTransactionDAO.getTransactionByHash(hash);
     return fromEntity(transactionEntity);
   }
@@ -118,7 +122,7 @@ public class TransactionStorage {
       transactionEntity.setId(transactionDetail.getId());
     }
     transactionEntity.setNetworkId(transactionDetail.getNetworkId());
-    transactionEntity.setHash(StringUtils.lowerCase(transactionDetail.getHash()));
+    transactionEntity.setHash(formatTransactionHash(transactionDetail.getHash()));
     transactionEntity.setFromAddress(StringUtils.lowerCase(transactionDetail.getFrom()));
     transactionEntity.setToAddress(StringUtils.lowerCase(transactionDetail.getTo()));
     transactionEntity.setByAddress(StringUtils.lowerCase(transactionDetail.getBy()));
