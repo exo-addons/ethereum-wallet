@@ -123,7 +123,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
   private void addMessageSubject(MessageInfo messageInfo, TemplateContext templateContext, String type) {
     String pluginId = templateContext.getPluginId();
     PluginConfig templateConfig = getPluginConfig(pluginId);
-    pluginId = WalletType.isUser(type) ? "Space" + pluginId : pluginId;
+    pluginId = WalletType.isUser(type) ? pluginId : "Space" + pluginId;
     Element subjectElement = NotificationUtils.getSubject(templateConfig, pluginId, templateContext.getLanguage());
     if (subjectElement != null && subjectElement.getTemplate() != null) {
       messageInfo.subject(subjectElement.getTemplate());
