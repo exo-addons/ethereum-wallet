@@ -115,7 +115,7 @@ public class EthereumWalletTransactionService {
     }
     walletTransactionStorage.saveTransactionDetail(transactionDetail);
     if (transactionMined) {
-      broadcastNewTransactionEvent(transactionDetail);
+      broadcastTransactionMinedEvent(transactionDetail);
     }
   }
 
@@ -232,7 +232,7 @@ public class EthereumWalletTransactionService {
     }
   }
 
-  private void broadcastNewTransactionEvent(TransactionDetail transactionDetail) {
+  private void broadcastTransactionMinedEvent(TransactionDetail transactionDetail) {
     try {
       JSONObject transaction = new JSONObject();
       transaction.put("hash", transactionDetail.getHash());

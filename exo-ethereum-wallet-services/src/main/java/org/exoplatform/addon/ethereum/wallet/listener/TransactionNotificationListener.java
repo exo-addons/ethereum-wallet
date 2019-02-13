@@ -27,10 +27,11 @@ import org.exoplatform.commons.api.notification.NotificationContext;
 import org.exoplatform.commons.api.notification.model.PluginKey;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.*;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.*;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.service.LinkProvider;
 
 /**
@@ -40,6 +41,7 @@ import org.exoplatform.social.core.service.LinkProvider;
  */
 @Asynchronous
 public class TransactionNotificationListener extends Listener<Object, JSONObject> {
+  private static final Log                 LOG = ExoLogger.getLogger(TransactionNotificationListener.class);
 
   private ExoContainer                     container;
 
@@ -51,7 +53,7 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
 
   private EthereumWalletContractService    contractService;
 
-  public TransactionNotificationListener(ExoContainer container) {
+  public TransactionNotificationListener(PortalContainer container) {
     this.container = container;
   }
 
@@ -111,6 +113,8 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
       if (receiverWallet != null && receiverWallet.getTechnicalId() > 0 && receiverWallet.isEnabled()) {
         sendNotification(transactionDetail, TransactionNotificationType.RECEIVER, senderWallet, receiverWallet);
       }
+    } catch (Exception e) {
+      LOG.error("Error processing transaction notification {}", event.getData(), e);
     } finally {
       RequestLifeCycle.end();
     }

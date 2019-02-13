@@ -26,10 +26,10 @@ import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService;
 import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.*;
 import org.exoplatform.container.component.RequestLifeCycle;
-import org.exoplatform.services.listener.*;
+import org.exoplatform.services.listener.Event;
+import org.exoplatform.services.listener.Listener;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -37,7 +37,6 @@ import org.exoplatform.services.log.Log;
  * A listener to process newly detected transactions coming from configured
  * network
  */
-@Asynchronous
 public class BlockchainTransactionProcessorListener extends Listener<Object, TransactionReceipt> {
 
   private static final Log                 LOG = ExoLogger.getLogger(BlockchainTransactionProcessorListener.class);
@@ -48,7 +47,7 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
 
   private ExoContainer                     container;
 
-  public BlockchainTransactionProcessorListener(ExoContainer container) {
+  public BlockchainTransactionProcessorListener(PortalContainer container) {
     this.container = container;
   }
 
@@ -80,6 +79,7 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
 
       if (StringUtils.isBlank(transactionHash)) {
         LOG.warn("Transaction hash is empty");
+        return;
       }
 
       TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash);

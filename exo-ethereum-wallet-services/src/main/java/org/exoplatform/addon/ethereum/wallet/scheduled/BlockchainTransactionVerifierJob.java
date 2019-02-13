@@ -51,35 +51,39 @@ public class BlockchainTransactionVerifierJob implements Job {
                   pendingTransactions.size());
         long pendingTransactionMaxDays = getTransactionService().getPendingTransactionMaxDays();
         for (TransactionDetail pendingTransactionDetail : pendingTransactions) {
-          String hash = pendingTransactionDetail.getHash();
-          try { // NOSONAR
-            Transaction transaction = getEthereumClientConnector().getTransaction(hash);
-            String blockHash = transaction == null ? null : transaction.getBlockHash();
-            if (!StringUtils.isBlank(blockHash)
-                && !StringUtils.equalsIgnoreCase(EMPTY_HASH, blockHash)
-                && transaction.getBlockNumber() != null) {
-              getListenerService().broadcast(NEW_TRANSACTION_EVENT, transaction, null);
-            } else if (pendingTransactionMaxDays > 0) {
-              long creationTimestamp = pendingTransactionDetail.getTimestamp();
-              if (transaction == null && creationTimestamp > 0) {
-                Duration duration = Duration.ofMillis(System.currentTimeMillis() - creationTimestamp);
-                if (duration.toDays() >= pendingTransactionMaxDays) {
-                  LOG.info("Transaction '{}' was not found on blockchain for more than '{}' days, so mark it as failed",
-                           hash,
-                           pendingTransactionMaxDays);
-                  getListenerService().broadcast(NEW_TRANSACTION_EVENT, hash, null);
-                }
-              }
-            }
-          } catch (Exception e) {
-            LOG.warn("Error treating pending transaction: {}", hash, e);
-          }
+          verifyTransactionStatusOnBlockchain(pendingTransactionDetail, pendingTransactionMaxDays);
         }
       }
     } catch (Exception e) {
       LOG.error("Error while checking pending transactions", e);
     } finally {
       ExoContainerContext.setCurrentContainer(currentContainer);
+    }
+  }
+
+  private void verifyTransactionStatusOnBlockchain(TransactionDetail pendingTransactionDetail, long pendingTransactionMaxDays) {
+    String hash = pendingTransactionDetail.getHash();
+    try {
+      Transaction transaction = getEthereumClientConnector().getTransaction(hash);
+      String blockHash = transaction == null ? null : transaction.getBlockHash();
+      if (!StringUtils.isBlank(blockHash)
+          && !StringUtils.equalsIgnoreCase(EMPTY_HASH, blockHash)
+          && transaction.getBlockNumber() != null) {
+        getListenerService().broadcast(NEW_TRANSACTION_EVENT, transaction, null);
+      } else if (pendingTransactionMaxDays > 0) {
+        long creationTimestamp = pendingTransactionDetail.getTimestamp();
+        if (transaction == null && creationTimestamp > 0) {
+          Duration duration = Duration.ofMillis(System.currentTimeMillis() - creationTimestamp);
+          if (duration.toDays() >= pendingTransactionMaxDays) {
+            LOG.info("Transaction '{}' was not found on blockchain for more than '{}' days, so mark it as failed",
+                     hash,
+                     pendingTransactionMaxDays);
+            getListenerService().broadcast(NEW_TRANSACTION_EVENT, hash, null);
+          }
+        }
+      }
+    } catch (Exception e) {
+      LOG.warn("Error treating pending transaction: {}", hash, e);
     }
   }
 

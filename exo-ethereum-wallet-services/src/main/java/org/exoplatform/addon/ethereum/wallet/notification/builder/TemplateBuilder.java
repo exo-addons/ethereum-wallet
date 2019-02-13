@@ -22,6 +22,7 @@ import org.exoplatform.commons.notification.NotificationUtils;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.notification.template.TemplateUtils;
 import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -38,7 +39,7 @@ public class TemplateBuilder extends AbstractTemplateBuilder {
 
   private ExoContainer     container;
 
-  public TemplateBuilder(TemplateProvider templateProvider, ExoContainer container, boolean pushNotification) {
+  public TemplateBuilder(TemplateProvider templateProvider, PortalContainer container, boolean pushNotification) {
     this.templateProvider = templateProvider;
     this.container = container;
     this.pushNotification = pushNotification;

@@ -24,7 +24,7 @@ import org.exoplatform.commons.api.notification.annotation.TemplateConfig;
 import org.exoplatform.commons.api.notification.annotation.TemplateConfigs;
 import org.exoplatform.commons.api.notification.channel.template.TemplateProvider;
 import org.exoplatform.commons.api.notification.model.PluginKey;
-import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.InitParams;
 
 @TemplateConfigs(templates = {
@@ -33,7 +33,7 @@ import org.exoplatform.container.xml.InitParams;
     @TemplateConfig(pluginId = FUNDS_REQUEST_NOTIFICATION_ID, template = "war:/conf/ethereum-wallet/templates/notification/push/WalletRequestFundsPushPlugin.gtmpl") })
 public class MobilePushTemplateProvider extends TemplateProvider {
 
-  public MobilePushTemplateProvider(ExoContainer container, InitParams initParams) {
+  public MobilePushTemplateProvider(PortalContainer container, InitParams initParams) {
     super(initParams);
     this.templateBuilders.put(PluginKey.key(WALLET_SENDER_NOTIFICATION_ID), new TemplateBuilder(this, container, true));
     this.templateBuilders.put(PluginKey.key(WALLET_RECEIVER_NOTIFICATION_ID), new TemplateBuilder(this, container, true));

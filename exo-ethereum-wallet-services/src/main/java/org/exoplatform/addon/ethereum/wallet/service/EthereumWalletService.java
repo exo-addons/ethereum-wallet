@@ -36,8 +36,7 @@ import org.exoplatform.commons.api.settings.SettingValue;
 import org.exoplatform.commons.api.settings.data.Context;
 import org.exoplatform.commons.notification.impl.NotificationContextImpl;
 import org.exoplatform.commons.utils.CommonsUtils;
-import org.exoplatform.container.ExoContainer;
-import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.*;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.management.annotations.ManagedBy;
@@ -81,7 +80,7 @@ public class EthereumWalletService implements Startable {
                                SettingService settingService,
                                SpaceService spaceService,
                                WebNotificationStorage webNotificationStorage,
-                               ExoContainer container,
+                               PortalContainer container,
                                InitParams params) {
     this.container = container;
     this.settingService = settingService;

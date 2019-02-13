@@ -21,6 +21,7 @@ import java.util.*;
 import org.exoplatform.application.registry.*;
 import org.exoplatform.commons.cluster.StartableClusterAware;
 import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.portal.config.model.ApplicationType;
 
@@ -40,7 +41,7 @@ public class ApplicationRegistrySetupService implements StartableClusterAware {
 
   private boolean                    isDone;
 
-  public ApplicationRegistrySetupService(ExoContainer container, ApplicationRegistryService applicationRegistryService) {
+  public ApplicationRegistrySetupService(PortalContainer container, ApplicationRegistryService applicationRegistryService) {
     this.container = container;
     this.applicationRegistryService = applicationRegistryService;
   }
