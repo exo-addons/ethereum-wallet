@@ -84,6 +84,7 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
 
       TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash);
       if (transactionDetail == null) {
+        LOG.warn("Transaction detail with hash {} wasn't found in database", transactionHash);
         return;
       }
 

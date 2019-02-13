@@ -88,11 +88,6 @@
         <description>Default used gas for transactions</description>
         <value>${exo.addon.wallet.defaultGas:150000}</value>
       </value-param>
-      <value-param>
-        <name>defaultGasPrice</name>
-        <description>Default used gas for transactions</description>
-        <value>${exo.addon.wallet.defaultGasPrice:4000000000}</value>
-      </value-param>
     </init-params>
   </component>
 
