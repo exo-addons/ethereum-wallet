@@ -429,8 +429,8 @@
                     title="Transaction failed">
                     warning
                   </v-icon>
-                  <v-list-tile-action-text v-if="item.date && !item.pending">
-                    {{ item.date.toLocaleDateString() }} - {{ item.date.toLocaleTimeString() }}
+                  <v-list-tile-action-text v-if="item.dateFormatted">
+                    {{ item.dateFormatted }}
                   </v-list-tile-action-text>
                 </v-list-tile-sub-title>
               </v-list-tile-content>
