@@ -1,5 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.storage;
 
+import java.time.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,6 +12,18 @@ import org.exoplatform.addon.ethereum.wallet.entity.TransactionEntity;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
 
 public class TransactionStorage {
+
+  private static final long    MINIMUM_CREATED_DATE_MILLIS = ZonedDateTime
+                                                                          .of(2018,
+                                                                              1,
+                                                                              1,
+                                                                              0,
+                                                                              0,
+                                                                              0,
+                                                                              0,
+                                                                              ZoneId.systemDefault().normalized())
+                                                                          .toEpochSecond()
+      * 1000;
 
   private WalletTransactionDAO walletTransactionDAO;
 
@@ -80,6 +93,11 @@ public class TransactionStorage {
     detail.setContractAmount(entity.getContractAmount());
     detail.setContractMethodName(entity.getContractMethodName());
     detail.setTimestamp(entity.getCreatedDate());
+
+    // Workaround for old bug when adding timestamp in seconds
+    if (entity.getCreatedDate() > 0 && entity.getCreatedDate() < MINIMUM_CREATED_DATE_MILLIS) {
+      detail.setTimestamp(entity.getCreatedDate() * 1000);
+    }
     detail.setHash(entity.getHash());
     detail.setFrom(entity.getFromAddress());
     detail.setTo(entity.getToAddress());
