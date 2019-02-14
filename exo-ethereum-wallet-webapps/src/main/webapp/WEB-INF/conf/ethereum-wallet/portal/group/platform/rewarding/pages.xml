@@ -26,7 +26,7 @@
     <page>
         <name>walletAdministration</name>
         <title>Wallet administration</title>
-        <access-permissions>manager:/platform/rewarding</access-permissions>
+        <access-permissions>*:/platform/rewarding</access-permissions>
         <edit-permission>manager:/platform/rewarding</edit-permission>
         <portlet-application>
             <portlet>
@@ -41,7 +41,7 @@
     <page>
         <name>rewardAdministration</name>
         <title>Reward administration</title>
-        <access-permissions>manager:/platform/rewarding</access-permissions>
+        <access-permissions>*:/platform/rewarding</access-permissions>
         <edit-permission>manager:/platform/rewarding</edit-permission>
         <portlet-application>
             <portlet>
