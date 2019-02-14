@@ -5,7 +5,7 @@
 <script>
 import * as constants from '../../WalletConstants.js';
 import {saveTransactionDetails} from '../../WalletTransactions.js';
-import {retrieveContractDetails} from '../../WalletToken.js';
+import {retrieveContractDetails, sendContractTransaction} from '../../WalletToken.js';
 import {initWeb3, initSettings, watchMetamaskAccount, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../../WalletUtils.js';
 import {searchAddress} from '../../WalletAddressRegistry.js';
 
@@ -263,6 +263,7 @@ export default {
         const defaultGas = window.walletSettings.userPreferences.defaultGas;
         const transfer = this.principalContractDetails.contract.methods.transfer;
         const isApprovedAccount = this.principalContractDetails.contract.methods.isApprovedAccount;
+        const contractAddress = this.principalContractDetails.address;
         const contractType = this.principalContractDetails.contractType;
         const amountWithDecimals = convertTokenAmountToSend(amount, this.principalContractDetails.decimals);
 
@@ -350,43 +351,49 @@ export default {
                 }));
                 return;
               }
-              return transfer(receiverAddress, amountWithDecimals)
-                .send({
-                  from: senderAddress,
-                  gas: defaultGas,
-                  gasPrice: gasPrice,
-                })
-                .on('transactionHash', (hash) => {
-                  const pendingTransaction = {
-                    hash: hash,
-                    from: senderAddress.toLowerCase(),
-                    to: receiverAddress.toLowerCase(),
-                    value: 0,
-                    gas: defaultGas,
-                    gasPrice: gasPrice,
-                    pending: true,
-                    contractAddress: this.principalContractDetails.address,
-                    contractMethodName: 'transfer',
-                    contractAmount: amount,
-                    label: label,
-                    message: message,
-                    timestamp: Date.now()
-                  };
-  
-                  // *async* save transaction message for contract, sender and receiver
-                  saveTransactionDetails(pendingTransaction);
-  
-                  // The transaction has been hashed and will be sent
-                  document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-pending', {
-                    detail : pendingTransaction
-                  }));
-                })
-                .on('error', (error, receipt) => {
-                  console.debug('contract transfer method - error', error, receipt);
-                  document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-                    detail : `Payment transaction error: ${error}`
-                  }));
-                });
+
+              //finally paas this data parameter to send Transaction
+              return sendContractTransaction(this.useMetamask, this.networkId, {
+                   contractAddress: contractAddress,
+                   senderAddress: senderAddress,
+                   gas: defaultGas,
+                   gasPrice: gasPrice,
+                   method: transfer,
+                   parameters: [receiverAddress, amountWithDecimals],
+                  },
+                  (hash) => {
+                    const pendingTransaction = {
+                      hash: hash,
+                      from: senderAddress.toLowerCase(),
+                      to: receiverAddress.toLowerCase(),
+                      value: 0,
+                      gas: defaultGas,
+                      gasPrice: gasPrice,
+                      pending: true,
+                      contractAddress: contractAddress,
+                      contractMethodName: 'transfer',
+                      contractAmount: amount,
+                      label: label,
+                      message: message,
+                      timestamp: Date.now()
+                    };
+
+                    // *async* save transaction message for contract, sender and receiver
+                    saveTransactionDetails(pendingTransaction);
+
+                    // The transaction has been hashed and will be sent
+                    document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-pending', {
+                      detail : pendingTransaction
+                    }));
+                  },
+                  null,
+                  null,
+                  (error, receipt) => {
+                    console.debug('contract transfer method - error', error, receipt);
+                    document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
+                      detail : `Payment transaction error: ${error}`
+                    }));
+                  });
             })
             .catch((e) => {
               console.debug('contract transfer method - error', e);

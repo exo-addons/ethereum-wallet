@@ -119,7 +119,7 @@ export function computeRewards(identityIds, periodDateInSeconds) {
     if (resp) {
       try {
         return resp.json().catch(() => {
-          throw new Error('Error computing rewards')
+          throw new Error('Error computing rewards');
         });
       } catch (e) {
         throw new Error('Error computing rewards');

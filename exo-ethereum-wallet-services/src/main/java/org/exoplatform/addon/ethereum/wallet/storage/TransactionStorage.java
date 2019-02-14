@@ -34,14 +34,16 @@ public class TransactionStorage {
     this.walletTransactionDAO = walletTransactionDAO;
   }
 
-  public List<TransactionDetail> getPendingTransactions() {
-    List<TransactionEntity> transactions = walletTransactionDAO.getPendingTransactions();
+  public List<TransactionDetail> getPendingTransactions(long networkId) {
+    List<TransactionEntity> transactions = walletTransactionDAO.getPendingTransactions(networkId);
     return transactions == null ? Collections.emptyList()
                                 : transactions.stream().map(this::fromEntity).collect(Collectors.toList());
   }
 
   public List<TransactionDetail> getContractTransactions(long networkId, String contractAddress, int limit) {
-    List<TransactionEntity> transactions = walletTransactionDAO.getContractTransactions(networkId, contractAddress, limit);
+    List<TransactionEntity> transactions = walletTransactionDAO.getContractTransactions(networkId,
+                                                                                        StringUtils.lowerCase(contractAddress),
+                                                                                        limit);
     return transactions == null ? Collections.emptyList()
                                 : transactions.stream().map(this::fromEntity).collect(Collectors.toList());
   }
@@ -54,6 +56,7 @@ public class TransactionStorage {
                                                        boolean pending,
                                                        boolean administration) {
 
+    address = StringUtils.lowerCase(address);
     List<TransactionEntity> transactions = walletTransactionDAO.getWalletTransactions(networkId,
                                                                                       address,
                                                                                       contractAddress,
@@ -78,6 +81,11 @@ public class TransactionStorage {
     } else {
       walletTransactionDAO.update(transactionEntity);
     }
+  }
+
+  public TransactionDetail getAddressLastPendingTransactionSent(long networkId, String address) {
+    TransactionEntity transactionEntity = walletTransactionDAO.getAddressLastPendingTransactionSent(networkId, address);
+    return fromEntity(transactionEntity);
   }
 
   public TransactionDetail getTransactionByHash(String hash) {

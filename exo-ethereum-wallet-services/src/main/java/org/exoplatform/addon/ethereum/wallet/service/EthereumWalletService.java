@@ -302,7 +302,7 @@ public class EthereumWalletService implements Startable {
     Wallet wallet = null;
     if (StringUtils.isNotBlank(spaceId)) {
       wallet = accountService.getWalletByTypeAndId(WalletType.SPACE.getId(), spaceId, currentUser);
-      if (wallet != null && !accountService.canAccessWallet(wallet, currentUser)) {
+      if (wallet != null && !canAccessWallet(wallet, currentUser)) {
         LOG.warn("User {} is not allowed to display space wallet {}", currentUser, spaceId);
         globalSettings.setWalletEnabled(false);
       }

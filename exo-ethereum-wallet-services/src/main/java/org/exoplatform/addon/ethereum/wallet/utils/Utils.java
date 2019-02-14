@@ -440,6 +440,26 @@ public class Utils {
     }
   }
 
+  /**
+   * Return true if user can access wallet detailed information
+   * 
+   * @param wallet wallet details to check
+   * @param currentUser user accessing wallet details
+   * @return true if has access, else false
+   */
+  public static boolean canAccessWallet(Wallet wallet, String currentUser) {
+    String remoteId = wallet.getId();
+    WalletType type = WalletType.getType(wallet.getType());
+    boolean isUserAdmin = isUserAdmin(currentUser);
+
+    if (isUserAdmin) {
+      return true;
+    }
+
+    return (type.isUser() && StringUtils.equals(currentUser, remoteId))
+        || (type.isSpace() && isUserSpaceMember(wallet.getId(), currentUser));
+  }
+
   public static boolean isUserSpaceMember(String spaceId, String accesssor) {
     Space space = getSpace(spaceId);
     if (space == null) {

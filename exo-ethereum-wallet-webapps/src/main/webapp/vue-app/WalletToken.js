@@ -1,4 +1,5 @@
 import {convertTokenAmountReceived, computeBalance} from './WalletUtils.js';
+import {getLastNonce} from './WalletTransactions.js';
 
 /*
  * Get the list of Contracts with details:
@@ -574,6 +575,49 @@ export function getContractInstance(account, address, usePromise, abi, bin) {
       return null;
     }
   }
+}
+
+export function sendContractTransaction(useMetamask, networkId, txDetails, hashCallback, receiptCallback, confirmedCallback, errorCallback) {
+  // suppose you want to call a function named myFunction of myContract
+  const data = txDetails.method(...txDetails.parameters).encodeABI();
+  const transactionToSend = {
+    to: txDetails.contractAddress,
+    from: txDetails.senderAddress,
+    data: data,
+    gas: txDetails.gas,
+    gasPrice: txDetails.gasPrice,
+  };
+
+  return getLastNonce(networkId, txDetails.senderAddress, useMetamask).then((nonce) => {
+    console.log('************ nonce *****************', nonce);
+    // Increment manually nonce if we have the last transaction always pending
+    if (nonce && Number(nonce) > 0) {
+      transactionToSend.nonce = nonce + 1;
+    }
+
+    return window.localWeb3.eth
+      .sendTransaction(transactionToSend)
+      .on('transactionHash', (hash) => {
+        if (hashCallback) {
+          return hashCallback(hash);
+        }
+      })
+      .on('receipt', (receipt) => {
+        if (receiptCallback) {
+          return receiptCallback(receipt);
+        }
+      })
+      .on('confirmation', (confirmationNumber, receipt) => {
+        if (confirmedCallback) {
+          return confirmedCallback(confirmationNumber, receipt);
+        }
+      })
+      .on('error', (error, receipt) => {
+        if (errorCallback) {
+          return errorCallback(error, receipt);
+        }
+      });
+  });
 }
 
 function transformContracDetailsToFailed(contractDetails, e) {

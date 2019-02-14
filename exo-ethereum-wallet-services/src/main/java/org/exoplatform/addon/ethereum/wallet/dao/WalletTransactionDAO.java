@@ -27,13 +27,21 @@ import org.exoplatform.commons.persistence.impl.GenericDAOJPAImpl;
 
 public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, Long> {
 
-  private static final String NETWORK_ID_PARAM = "networkId";
+  private static final String HASH_PARAM             = "hash";
+
+  private static final String ADDRESS_PARAM          = "address";
+
+  private static final String CONTRACT_ADDRESS_PARAM = "contractAddress";
+
+  private static final String NETWORK_ID_PARAM       = "networkId";
 
   public List<TransactionEntity> getContractTransactions(long networkId, String contractAddress, int limit) {
+    contractAddress = StringUtils.lowerCase(contractAddress);
+
     TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getContractTransactions",
                                                                               TransactionEntity.class);
     query.setParameter(NETWORK_ID_PARAM, networkId);
-    query.setParameter("contractAddress", contractAddress.toLowerCase());
+    query.setParameter(CONTRACT_ADDRESS_PARAM, contractAddress.toLowerCase());
     if (limit > 0) {
       query.setMaxResults(limit);
     }
@@ -47,6 +55,8 @@ public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, L
                                                        boolean pending,
                                                        boolean administration) {
 
+    address = StringUtils.lowerCase(address);
+    contractAddress = StringUtils.lowerCase(contractAddress);
     StringBuilder queryString = new StringBuilder("SELECT tx FROM WalletTransaction tx WHERE tx.networkId = ");
     queryString.append(networkId);
 
@@ -80,16 +90,29 @@ public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, L
     return query.getResultList();
   }
 
-  public List<TransactionEntity> getPendingTransactions() {
+  public List<TransactionEntity> getPendingTransactions(long networkId) {
     TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getPendingTransactions",
                                                                               TransactionEntity.class);
+    query.setParameter(NETWORK_ID_PARAM, networkId);
     return query.getResultList();
   }
 
   public TransactionEntity getTransactionByHash(String hash) {
     TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getTransactionByHash",
                                                                               TransactionEntity.class);
-    query.setParameter("hash", hash.toLowerCase());
+    query.setParameter(HASH_PARAM, StringUtils.lowerCase(hash));
+    List<TransactionEntity> resultList = query.getResultList();
+    return resultList == null || resultList.isEmpty() ? null : resultList.get(0);
+  }
+
+  public TransactionEntity getAddressLastPendingTransactionSent(long networkId, String address) {
+    TypedQuery<TransactionEntity> query =
+                                        getEntityManager().createNamedQuery("WalletTransaction.getAddressLastPendingTransactionSent",
+                                                                            TransactionEntity.class);
+    query.setParameter(ADDRESS_PARAM, StringUtils.lowerCase(address));
+    query.setParameter(NETWORK_ID_PARAM, networkId);
+    query.setMaxResults(1);
+
     List<TransactionEntity> resultList = query.getResultList();
     return resultList == null || resultList.isEmpty() ? null : resultList.get(0);
   }

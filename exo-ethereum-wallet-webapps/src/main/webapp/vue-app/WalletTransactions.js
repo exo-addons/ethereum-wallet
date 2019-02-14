@@ -2,6 +2,30 @@ import {searchFullName} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, getTransactionReceipt, getTransaction, convertTokenAmountReceived} from './WalletUtils.js';
 import {getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
 
+export function getLastNonce(networkId, walletAddress, useMetamask) {
+  if (useMetamask) {
+    return Promise.resolve(null);
+  }
+
+  return getLastPendingTransactionSent(networkId, walletAddress)
+    .then((lastPendingTransaction) => {
+      if (!lastPendingTransaction || !lastPendingTransaction.hash) {
+        return;
+      }
+      return getTransaction(lastPendingTransaction.hash);
+    })
+    .then((pendingTransaction) => {
+      // If not pending on blockchain, use auto-increment nonce
+      if (!pendingTransaction || !pendingTransaction.nonce || pendingTransaction.blockNumber) {
+        return;
+      }
+      return pendingTransaction.nonce;
+    })
+    .catch((e) => {
+      console.debug('Error getting last nonce of wallet address', walletAddress, e);
+    });
+}
+
 export function loadTransactions(networkId, account, contractDetails, transactions, onlyPending, transactionsLimit, transactionHashToSearch, isAdministration, refreshCallback) {
   if (!transactionsLimit) {
     transactionsLimit = 10;
@@ -395,5 +419,24 @@ function getStoredTransactions(networkId, account, contractAddress, limit, trans
     })
     .catch((error) => {
       throw new Error('Error retrieving transactions list', error);
+    });
+}
+
+function getLastPendingTransactionSent(networkId, address) {
+  return fetch(`/portal/rest/wallet/api/transaction/getLastPendingTransactionSent?networkId=${networkId}&address=${address}`, {credentials: 'include'})
+    .then((resp) => {
+      if (resp && resp.ok) {
+        const contentType = resp.headers && resp.headers.get("content-type");
+        if(contentType && contentType.indexOf("application/json") !== -1) {
+          return resp.json();
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    })
+    .catch((error) => {
+      throw new Error('Error retrieving last pending transaction', error);
     });
 }

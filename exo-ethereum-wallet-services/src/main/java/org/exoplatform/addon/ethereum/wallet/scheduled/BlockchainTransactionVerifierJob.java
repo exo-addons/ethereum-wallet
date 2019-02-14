@@ -10,11 +10,12 @@ import org.apache.commons.lang.StringUtils;
 import org.quartz.*;
 import org.web3j.protocol.core.methods.response.Transaction;
 
+import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService;
+import org.exoplatform.addon.ethereum.wallet.service.*;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.*;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -23,6 +24,8 @@ import org.exoplatform.services.log.Log;
 public class BlockchainTransactionVerifierJob implements Job {
 
   private static final Log                 LOG = ExoLogger.getLogger(BlockchainTransactionVerifierJob.class);
+
+  private EthereumWalletService            ethereumWalletService;
 
   private EthereumClientConnector          ethereumClientConnector;
 
@@ -36,16 +39,22 @@ public class BlockchainTransactionVerifierJob implements Job {
     this(PortalContainer.getInstance());
   }
 
-  public BlockchainTransactionVerifierJob(ExoContainer exoContainer) {
-    this.container = exoContainer;
+  public BlockchainTransactionVerifierJob(ExoContainer container) {
+    this.container = container;
   }
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
     ExoContainer currentContainer = ExoContainerContext.getCurrentContainer();
     ExoContainerContext.setCurrentContainer(container);
+    RequestLifeCycle.begin(this.container);
     try {
-      List<TransactionDetail> pendingTransactions = getPendingTransactions();
+      GlobalSettings settings = getEthereumWalletService().getSettings();
+      if (settings == null || settings.getDefaultNetworkId() == null) {
+        LOG.debug("Empty network id on settings, ignore blockchain listening");
+        return;
+      }
+      List<TransactionDetail> pendingTransactions = getPendingTransactions(settings.getDefaultNetworkId());
       if (pendingTransactions != null && !pendingTransactions.isEmpty()) {
         LOG.debug("Checking on blockchain the status of {} transactions marked as pending in database",
                   pendingTransactions.size());
@@ -57,6 +66,7 @@ public class BlockchainTransactionVerifierJob implements Job {
     } catch (Exception e) {
       LOG.error("Error while checking pending transactions", e);
     } finally {
+      RequestLifeCycle.end();
       ExoContainerContext.setCurrentContainer(currentContainer);
     }
   }
@@ -87,8 +97,15 @@ public class BlockchainTransactionVerifierJob implements Job {
     }
   }
 
-  private List<TransactionDetail> getPendingTransactions() {
-    return getTransactionService().getPendingTransactions();
+  private List<TransactionDetail> getPendingTransactions(long networkId) {
+    return getTransactionService().getPendingTransactions(networkId);
+  }
+
+  private EthereumWalletService getEthereumWalletService() {
+    if (ethereumWalletService == null) {
+      ethereumWalletService = CommonsUtils.getService(EthereumWalletService.class);
+    }
+    return ethereumWalletService;
   }
 
   private EthereumClientConnector getEthereumClientConnector() {

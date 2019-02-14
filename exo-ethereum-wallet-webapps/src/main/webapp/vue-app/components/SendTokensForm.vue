@@ -115,7 +115,7 @@ import GasPriceChoice from './GasPriceChoice.vue';
 
 import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
-import {retrieveContractDetails} from '../WalletToken.js';
+import {retrieveContractDetails, sendContractTransaction} from '../WalletToken.js';
 
 export default {
   components: {
@@ -350,7 +350,7 @@ export default {
 
       this.loading = true;
       try {
-      return  this.contractDetails.contract.methods
+      return this.contractDetails.contract.methods
           .transfer(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals).toString())
           .estimateGas({
             from: this.contractDetails.contract.options.from,
@@ -369,14 +369,17 @@ export default {
             const sender = this.contractDetails.contract.options.from;
             const receiver = this.recipient;
             const contractDetails = this.contractDetails;
-            return contractDetails.contract.methods
-              .transfer(receiver, convertTokenAmountToSend(this.amount, contractDetails.decimals).toString())
-              .send({
-                from: sender,
-                gas: window.walletSettings.userPreferences.defaultGas,
-                gasPrice: this.gasPrice,
-              })
-              .on('transactionHash', (hash) => {
+            const transfer =  contractDetails.contract.methods.transfer;
+
+            return sendContractTransaction(this.useMetamask, window.walletSettings.defaultNetworkId, {
+              contractAddress: contractDetails.address,
+              senderAddress: sender,
+              gas: window.walletSettings.userPreferences.defaultGas,
+              gasPrice: this.gasPrice,
+              method: transfer,
+              parameters: [receiver, convertTokenAmountToSend(this.amount, contractDetails.decimals).toString()],
+            },
+              (hash) => {
                 const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
 
                 const pendingTransaction = {
@@ -409,8 +412,10 @@ export default {
                     );
                     this.$emit('close');
                   });
-              })
-              .on('error', (error, receipt) => {
+              },
+              null,
+              null,
+              (error, receipt) => {
                 console.debug('Web3 contract.transfer method - error', error);
                 // The transaction has failed
                 this.error = `Error sending tokens: ${truncateError(error)}`;

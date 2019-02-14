@@ -51,17 +51,19 @@ public class EthereumWalletTransactionService {
   }
 
   /**
+   * @param networkId blockchain network id
    * @return {@link List} of pending {@link TransactionDetail}
    */
-  public List<TransactionDetail> getPendingTransactions() {
-    return walletTransactionStorage.getPendingTransactions();
+  public List<TransactionDetail> getPendingTransactions(long networkId) {
+    return walletTransactionStorage.getPendingTransactions(networkId);
   }
 
   /**
+   * @param networkId blockchain network id
    * @return transactions hashes that are marked as pensing in internal database
    */
-  public Set<String> getPendingTransactionHashes() {
-    List<TransactionDetail> pendingTransactions = getPendingTransactions();
+  public Set<String> getPendingTransactionHashes(long networkId) {
+    List<TransactionDetail> pendingTransactions = getPendingTransactions(networkId);
     if (pendingTransactions == null || pendingTransactions.isEmpty()) {
       return Collections.emptySet();
     }
@@ -89,6 +91,19 @@ public class EthereumWalletTransactionService {
 
   public TransactionDetail getTransactionByHash(String hash) {
     return walletTransactionStorage.getTransactionByHash(hash);
+  }
+
+  public TransactionDetail getAddressLastPendingTransactionSent(long networkId,
+                                                                String address,
+                                                                String currentUser) throws IllegalAccessException {
+    Wallet wallet = walletAccountService.getWalletByAddress(address);
+    if (wallet == null) {
+      return null;
+    }
+    if (!canAccessWallet(wallet, currentUser)) {
+      throw new IllegalAccessException("Can't access wallet with address " + address);
+    }
+    return walletTransactionStorage.getAddressLastPendingTransactionSent(networkId, address);
   }
 
   /**
@@ -168,7 +183,7 @@ public class EthereumWalletTransactionService {
     if (wallet == null) {
       return Collections.emptyList();
     }
-    if (!walletAccountService.canAccessWallet(wallet, currentUser)) {
+    if (!canAccessWallet(wallet, currentUser)) {
       throw new IllegalAccessException("Can't access wallet with address " + address);
     }
 

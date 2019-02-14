@@ -82,6 +82,43 @@ public class EthereumWalletTransactionREST implements ResourceContainer {
   }
 
   /**
+   * Get last pending transaction of an address
+   * 
+   * @param networkId blockchain network id
+   * @param address wallet address to retrieve its transactions
+   * @return REST Response with the last pending transaction of an address
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("getLastPendingTransactionSent")
+  @RolesAllowed("users")
+  public Response getLastPendingTransactionSent(@QueryParam("networkId") long networkId,
+                                                @QueryParam("address") String address) {
+    if (networkId == 0) {
+      LOG.warn("Bad request sent to server with empty networkId {}", networkId);
+      return Response.status(400).build();
+    }
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
+      return Response.status(400).build();
+    }
+
+    String currentUserId = getCurrentUserId();
+    try {
+      TransactionDetail transactionDetail = transactionService.getAddressLastPendingTransactionSent(networkId,
+                                                                                                    address,
+                                                                                                    currentUserId);
+      return Response.ok(transactionDetail).build();
+    } catch (IllegalAccessException e) {
+      LOG.warn("User {} attempts to display transactions of address {}", currentUserId, address);
+      return Response.status(403).build();
+    } catch (Exception e) {
+      LOG.warn("Error getting transactions of wallet " + address, e);
+      return Response.serverError().build();
+    }
+  }
+
+  /**
    * Get list of transactions of an address
    * 
    * @param networkId blockchain network id
