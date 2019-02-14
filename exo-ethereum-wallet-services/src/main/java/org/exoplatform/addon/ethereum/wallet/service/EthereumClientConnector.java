@@ -60,6 +60,10 @@ public class EthereumClientConnector {
   public EthereumClientConnector() {
     ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-websocket-connector-%d").build();
     connectionVerifierExecutor = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
+  }
+
+  public void start(GlobalSettings storedSettings) {
+    this.globalSettings = storedSettings;
 
     // Blockchain connection verifier
     connectionVerifierExecutor.scheduleWithFixedDelay(() -> {
@@ -73,10 +77,6 @@ public class EthereumClientConnector {
         return;
       }
     }, 5, 10, TimeUnit.SECONDS);
-  }
-
-  public void start(GlobalSettings storedSettings) {
-    this.globalSettings = storedSettings;
   }
 
   public void stop() {
