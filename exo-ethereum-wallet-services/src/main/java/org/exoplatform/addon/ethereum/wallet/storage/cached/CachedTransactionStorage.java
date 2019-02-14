@@ -29,7 +29,8 @@ public class CachedTransactionStorage extends TransactionStorage {
 
   @Override
   public TransactionDetail getTransactionByHash(String hash) {
-    return this.transactionFutureCache.get(null, hash.toLowerCase());
+    TransactionDetail transactionDetail = this.transactionFutureCache.get(null, hash.toLowerCase());
+    return transactionDetail == null ? null : transactionDetail.clone();
   }
 
   @Override
