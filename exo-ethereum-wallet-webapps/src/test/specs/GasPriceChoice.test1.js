@@ -1,10 +1,8 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual} from '../TestUtils.js';
 
 import GasPriceChoice from '../../main/webapp/vue-app/components/GasPriceChoice.vue';
 
 import {mount} from '@vue/test-utils';
-
-import flushPromises from 'flush-promises';
 
 jest.setTimeout(30000);
 

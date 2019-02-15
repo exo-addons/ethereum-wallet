@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther, approveTokens, approveAccount} from '../TestUtils.js';
+import {getWalletApp, initApp, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import ProfileChip from '../../main/webapp/vue-app/components/ProfileChip.vue';
 

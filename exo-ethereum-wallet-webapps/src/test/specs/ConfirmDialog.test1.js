@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual} from '../TestUtils.js';
 
 import ConfirmDialog from '../../main/webapp/vue-app/components/ConfirmDialog';
 
