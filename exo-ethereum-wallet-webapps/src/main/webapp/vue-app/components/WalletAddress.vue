@@ -2,6 +2,7 @@
   <v-chip outline class="walletAddressCmp">
     <v-btn
       v-if="allowCopy"
+      id="copy"
       title="Copy address"
       class="ml-0 mr-0 mb-0 mt-0"
       icon
@@ -42,6 +43,7 @@
     </a>
     <v-slide-x-reverse-transition v-if="allowEdit && isAdmin" mode="out-in">
       <v-icon
+        id="walletAddressEdit"
         :key="`icon-${isEditing}`"
         :color="isEditing ? 'success' : 'info'"
         class="walletAddressEdit"

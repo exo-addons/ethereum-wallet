@@ -426,8 +426,8 @@ function getLastPendingTransactionSent(networkId, address) {
   return fetch(`/portal/rest/wallet/api/transaction/getLastPendingTransactionSent?networkId=${networkId}&address=${address}`, {credentials: 'include'})
     .then((resp) => {
       if (resp && resp.ok) {
-        const contentType = resp.headers && resp.headers.get("content-type");
-        if(contentType && contentType.indexOf("application/json") !== -1) {
+        const contentType = resp.headers && resp.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
           return resp.json();
         } else {
           return null;

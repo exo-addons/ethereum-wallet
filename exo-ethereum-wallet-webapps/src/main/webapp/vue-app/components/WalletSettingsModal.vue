@@ -2,7 +2,7 @@
   <v-dialog
     v-model="dialog"
     content-class="uiPopup with-overflow not-draggable"
-    classe="walletSettingsModal"
+    class="walletSettingsModal"
     width="700px"
     max-width="100vw"
     persistent
