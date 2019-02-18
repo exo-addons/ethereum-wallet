@@ -4,8 +4,6 @@ import WalletMetamaskSetup from '../../main/webapp/vue-app/components/WalletMeta
 
 import {mount} from '@vue/test-utils';
 
-import flushPromises from 'flush-promises';
-
 jest.setTimeout(30000);
 
 describe('WalletMetamaskSetup.test.js', () => {

@@ -1,5 +1,6 @@
 <template>
   <v-dialog
+    id="sendTokensModal"
     v-model="dialog"
     :disabled="disabled"
     content-class="uiPopup"

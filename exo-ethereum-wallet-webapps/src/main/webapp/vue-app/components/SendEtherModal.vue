@@ -1,5 +1,6 @@
 <template>
   <v-dialog
+    id="sendEtherModal"
     v-model="dialog"
     :disabled="disabled"
     content-class="uiPopup with-overflow"

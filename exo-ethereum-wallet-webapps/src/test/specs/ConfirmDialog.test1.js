@@ -4,8 +4,6 @@ import ConfirmDialog from '../../main/webapp/vue-app/components/ConfirmDialog';
 
 import {mount} from '@vue/test-utils';
 
-import flushPromises from 'flush-promises';
-
 describe('ConfirmDialog.test.js', () => {
   const app = getWalletApp();
 

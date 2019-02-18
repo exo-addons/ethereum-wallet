@@ -42,6 +42,35 @@ describe('WalletAccountList.test.js', () => {
     expectObjectValueEqual(walletAccountList.vm, defaultAttributesValues, 'walletAccountList default data');
   });
 
+  it('WalletAccountList visible components', () => {
+    const walletAccountList = mount(WalletAccountList, {
+      attachToDocument: true,
+    });
+
+    expectCountElement(walletAccountList, 'sendEtherModal', 1);
+    expectCountElement(walletAccountList, 'sendTokensModal', 1);
+    expectCountElement(walletAccountList, 'delegateTokenModal', 1);
+    expectCountElement(walletAccountList, 'sendDelegatedTokenModal', 1);
+  });
+
+  it('WalletAccountList test when no index to refresh, accountList retun empty', () => {
+    const walletAccountList = mount(WalletAccountList, {
+      attachToDocument: true,
+    });
+
+    walletAccountList.vm.refreshIndex = null;
+    expect(walletAccountList.vm.accountsList).toEqual([]);
+  });
+
+  it('WalletAccountList test when no overviewAccounts, accountList retun empty ', () => {
+    const walletAccountList = mount(WalletAccountList, {
+      attachToDocument: true,
+    });
+
+    walletAccountList.vm.overviewAccounts = null;
+    expect(walletAccountList.vm.accountsList).toEqual([]);
+  });
+
   it('WalletAccountList - test wallet Accounts List is enabled ', (done) => {
     console.log('--- WalletAccountList - test wallet Accounts List is enabled');
 
