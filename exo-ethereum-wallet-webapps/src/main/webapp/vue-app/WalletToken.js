@@ -589,7 +589,6 @@ export function sendContractTransaction(useMetamask, networkId, txDetails, hashC
   };
 
   return getLastNonce(networkId, txDetails.senderAddress, useMetamask).then((nonce) => {
-    console.log('************ nonce *****************', nonce);
     // Increment manually nonce if we have the last transaction always pending
     if (nonce && Number(nonce) > 0) {
       transactionToSend.nonce = nonce + 1;

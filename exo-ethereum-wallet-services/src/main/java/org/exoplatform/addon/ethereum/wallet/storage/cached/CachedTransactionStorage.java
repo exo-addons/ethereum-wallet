@@ -36,8 +36,6 @@ public class CachedTransactionStorage extends TransactionStorage {
   @Override
   public void saveTransactionDetail(TransactionDetail transactionDetail) {
     super.saveTransactionDetail(transactionDetail);
-    if (transactionDetail.isPending()) {
-      this.transactionFutureCache.remove(transactionDetail.getHash().toLowerCase());
-    }
+    this.transactionFutureCache.remove(transactionDetail.getHash().toLowerCase());
   }
 }
