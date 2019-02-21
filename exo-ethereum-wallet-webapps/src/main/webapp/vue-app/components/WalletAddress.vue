@@ -31,7 +31,7 @@
       :class="!allowCopy && 'mr-4'"
       target="_blank"
       class="walletAddressLabel ellipsis mr-2">
-      <template v-if="labelDetail && labelDetail.label">
+      <template v-if="displayLabel && labelDetail && labelDetail.label">
         {{ labelDetail.label }}
       </template>
       <template v-else-if="name">
@@ -41,7 +41,7 @@
         {{ value }}
       </template>
     </a>
-    <v-slide-x-reverse-transition v-if="allowEdit && isAdmin" mode="out-in">
+    <v-slide-x-reverse-transition v-if="allowEdit && displayLabel && isAdmin" mode="out-in">
       <v-icon
         id="walletAddressEdit"
         :key="`icon-${isEditing}`"
@@ -91,6 +91,12 @@ export default {
       type: Boolean,
       default: function() {
         return true;
+      },
+    },
+    displayLabel: {
+      type: Boolean,
+      default: function() {
+        return false;
       },
     },
   },

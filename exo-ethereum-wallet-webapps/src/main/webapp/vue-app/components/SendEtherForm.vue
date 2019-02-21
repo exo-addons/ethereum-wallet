@@ -109,7 +109,7 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, hashCode, truncateError} from '../WalletUtils.js';
+import {unlockBrowserWallet, lockBrowserWallet, hashCode, truncateError} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
@@ -218,7 +218,7 @@ export default {
         return;
       }
 
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+      const unlocked = this.useMetamask || unlockBrowserWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
       if (!unlocked) {
         this.error = 'Wrong password';
         return;
@@ -284,7 +284,7 @@ export default {
         this.error = truncateError(`Error sending ether: ${e}`);
       } finally {
         if (!this.useMetamask) {
-          lockBrowerWallet();
+          lockBrowserWallet();
         }
       }
     },

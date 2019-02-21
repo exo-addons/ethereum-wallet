@@ -6,7 +6,7 @@
 import * as constants from '../../WalletConstants.js';
 import {saveTransactionDetails} from '../../WalletTransactions.js';
 import {retrieveContractDetails, sendContractTransaction} from '../../WalletToken.js';
-import {initWeb3, initSettings, watchMetamaskAccount, convertTokenAmountToSend, truncateError, lockBrowerWallet, unlockBrowerWallet, hashCode} from '../../WalletUtils.js';
+import {initWeb3, initSettings, watchMetamaskAccount, convertTokenAmountToSend, truncateError, lockBrowserWallet, unlockBrowserWallet, hashCode} from '../../WalletUtils.js';
 import {searchAddress} from '../../WalletAddressRegistry.js';
 
 export default {
@@ -238,7 +238,7 @@ export default {
         }
 
         try {
-          const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
+          const unlocked = this.useMetamask || unlockBrowserWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
           if (!unlocked) {
             document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
               detail : 'Wrong password'
@@ -400,7 +400,7 @@ export default {
               this.loading = false;
               throw new Error(`Error sending tokens: ${truncateError(e)}`);
             })
-            .finally(() => this.useMetamask || lockBrowerWallet());
+            .finally(() => this.useMetamask || lockBrowserWallet());
           })
           .catch((error) => {
             console.debug('sendTokens method - error', error);

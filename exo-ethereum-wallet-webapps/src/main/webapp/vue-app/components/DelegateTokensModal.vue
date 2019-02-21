@@ -124,7 +124,7 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {setDraggable, unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
+import {setDraggable, unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
 
 export default {
@@ -252,7 +252,7 @@ export default {
       }
 
       try {
-        const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+        const unlocked = this.useMetamask || unlockBrowserWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
         if (!unlocked) {
           this.error = 'Wrong password';
           return;
@@ -332,7 +332,7 @@ export default {
             this.loading = false;
             this.error = `Error delegating tokens: ${truncateError(e)}`;
           })
-          .finally(() => this.useMetamask || lockBrowerWallet());
+          .finally(() => this.useMetamask || lockBrowserWallet());
       } catch (e) {
         console.debug('Web3 contract.approve method - error', e);
         this.loading = false;

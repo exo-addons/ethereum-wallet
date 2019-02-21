@@ -62,7 +62,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'ether'">
@@ -223,7 +224,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'removeAdmin'">
@@ -252,7 +254,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferOwnership'">
                   <profile-chip
@@ -280,7 +283,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approveAccount'">
@@ -309,7 +313,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'disapproveAccount'">
@@ -338,7 +343,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'pause'">
@@ -356,7 +362,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'unPause'">
@@ -374,7 +381,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'setSellPrice'">
@@ -392,7 +400,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else-if="item.type === 'contract' && item.amount && Number(item.amount) && item.amountFiat">
@@ -410,7 +419,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else>
@@ -419,7 +429,8 @@
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
-                    :name="item.contractName" />
+                    :name="item.contractName"
+                    display-label />
                 </v-list-tile-title>
 
                 <v-list-tile-sub-title>

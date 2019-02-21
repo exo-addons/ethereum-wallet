@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import {sendPrivateKey} from '../WalletUtils.js';
+import {sendPrivateKeyToServer} from '../WalletUtils.js';
 
 export default {
   props: {
@@ -134,7 +134,7 @@ export default {
       }
 
       this.loading = true;
-      return sendPrivateKey(this.walletAddress, this.walletPassword, this.newWalletPassword)
+      return sendPrivateKeyToServer(this.walletAddress, this.walletPassword, this.newWalletPassword)
         .then((result, error) => {
           if (error) {
             console.log("error", error);

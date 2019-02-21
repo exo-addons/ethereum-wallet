@@ -119,7 +119,7 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
+import {unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
 import {retrieveContractDetails, sendContractTransaction} from '../WalletToken.js';
 
@@ -341,7 +341,7 @@ export default {
         return;
       }
 
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+      const unlocked = this.useMetamask || unlockBrowserWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
       if (!unlocked) {
         this.error = 'Wrong password';
         return;
@@ -439,7 +439,7 @@ export default {
           .finally(() => {
             this.loading = false;
             if (!this.useMetamask) {
-              lockBrowerWallet();
+              lockBrowserWallet();
             }
           });
       } catch (e) {

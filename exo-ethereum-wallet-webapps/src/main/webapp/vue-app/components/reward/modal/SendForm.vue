@@ -76,7 +76,7 @@
 <script>
 import GasPriceChoice from '../../GasPriceChoice.vue';
 
-import {unlockBrowerWallet, lockBrowerWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../../../WalletUtils.js';
+import {unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../../../WalletUtils.js';
 import {saveTransactionDetails} from '../../../WalletTransactions.js';
 import {sendContractTransaction} from '../../../WalletToken.js';
 import {saveRewardTransactions, saveRewardTransaction} from '../../../WalletRewardServices.js';
@@ -294,7 +294,7 @@ export default {
         return;
       }
 
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
+      const unlocked = this.useMetamask || unlockBrowserWallet(this.storedPassword ? window.walletSettings.userP : hashCode(this.walletPassword));
       if (!unlocked) {
         this.errors = 'Wrong password';
         return;
@@ -474,7 +474,7 @@ export default {
           .finally(() => {
             this.loadingCount--;
             if (!this.useMetamask) {
-              lockBrowerWallet();
+              lockBrowserWallet();
             }
             if (!this.errors && this.transactionsSent === this.recipientsHavingAddress.length) {
               this.$emit('close');

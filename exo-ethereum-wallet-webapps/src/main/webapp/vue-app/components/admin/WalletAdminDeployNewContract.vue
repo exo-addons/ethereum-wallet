@@ -238,7 +238,7 @@
 import ContractDeploymentStep from './WalletAdminContractDeploymentStep.vue';
 
 import {createNewContractInstanceByNameAndAddress, estimateContractDeploymentGas, createNewContractInstanceByName, deployContract, saveContractAddressAsDefault, retrieveContractDetails} from '../../WalletToken.js';
-import {getTokenEtherscanlink, gasToFiat, unlockBrowerWallet, lockBrowerWallet, hashCode, convertTokenAmountToSend, watchTransactionStatus} from '../../WalletUtils.js';
+import {getTokenEtherscanlink, gasToFiat, unlockBrowserWallet, lockBrowserWallet, hashCode, convertTokenAmountToSend, watchTransactionStatus} from '../../WalletUtils.js';
 
 export default {
   components: {
@@ -426,7 +426,7 @@ export default {
         return;
       }
 
-      const unlocked = this.useMetamask || unlockBrowerWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
+      const unlocked = this.useMetamask || unlockBrowserWallet(this.storedPassword ? window.walletSettings.userP : hashCode(password));
       if (!unlocked) {
         this.error = 'Wrong password';
         return;
@@ -509,7 +509,7 @@ export default {
           this.saveState();
         }
       } catch (e) {
-        lockBrowerWallet();
+        lockBrowserWallet();
         console.debug('proceedStep method - error', e);
         this.$set(this.processingStep, step, false);
         this.error = `Error during contract deployment: ${e}`;

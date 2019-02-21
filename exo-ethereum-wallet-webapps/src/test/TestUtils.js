@@ -13,7 +13,7 @@ import WalletBackupModal from '../main/webapp/vue-app/components/WalletBackupMod
 import WalletResetModal from '../main/webapp/vue-app/components/WalletResetModal';
 
 import {deployContract, createNewContractInstanceByName, createNewContractInstanceByNameAndAddress, saveContractAddressAsDefault} from '../main/webapp/vue-app/WalletToken.js';
-import {saveBrowerWalletInstance} from '../main/webapp/vue-app/WalletUtils.js';
+import {saveBrowserWalletInstance} from '../main/webapp/vue-app/WalletUtils.js';
 
 const {mount} = require('@vue/test-utils');
 
@@ -264,7 +264,7 @@ export function initiateBrowserWallet(address, password, isSpace, generated, bac
   }
   window.localWeb3.eth.accounts.wallet.clear();
   const wallet = window.localWeb3.eth.accounts.wallet.add(walletDetails.secretKey);
-  return saveBrowerWalletInstance(wallet, password, isSpace, generated, backedUp);
+  return saveBrowserWalletInstance(wallet, password, isSpace, generated, backedUp);
 }
 
 export function getParameter(url, param) {

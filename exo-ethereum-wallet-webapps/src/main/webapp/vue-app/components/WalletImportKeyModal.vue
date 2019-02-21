@@ -64,6 +64,19 @@
             autocomplete="off"
             autofocus
             @click:append="walletPrivateKeyShow = !walletPrivateKeyShow" />
+          <v-text-field
+            v-model="walletPassword"
+            :append-icon="walletPasswordShow ? 'visibility_off' : 'visibility'"
+            :rules="[rules.min]"
+            :type="walletPasswordShow ? 'text' : 'password'"
+            :disabled="loading"
+            label="Wallet password"
+            name="walletPassword"
+            placeholder="Enter your wallet password"
+            counter
+            autocomplete="current-passord"
+            autofocus
+            @click:append="walletPasswordShow = !walletPasswordShow" />
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -86,7 +99,7 @@
 </template>
 
 <script>
-import {setDraggable, saveBrowerWalletInstance, generatePassword} from '../WalletUtils.js';
+import {setDraggable, saveBrowserWalletInstance, sendPrivateKeyToServer} from '../WalletUtils.js';
 
 export default {
   props: {
@@ -110,6 +123,8 @@ export default {
       walletPrivateKeyShow: false,
       error: null,
       loading: false,
+      walletPassword: null,
+      walletPasswordShow: false,
       rules: {
         min: (v) => (v && v.length >= 8) || 'At least 8 characters',
         priv: (v) => (v && (v.length === 66 || v.length === 64)) || 'Exactly 64 or 66 (with "0x") characters are required',
@@ -133,10 +148,15 @@ export default {
     resetForm() {
       this.walletPrivateKey = '';
       this.walletPrivateKeyShow = false;
+      this.walletPassword = '';
+      this.walletPasswordShow = false;
       this.error = null;
       this.loading = false;
     },
     importWallet() {
+      if (!this.$refs.form.validate()) {
+        return;
+      }
       this.error = null;
       this.loading = true;
       const thiss = this;
@@ -147,7 +167,7 @@ export default {
           }
           const wallet = window.localWeb3.eth.accounts.wallet.add(thiss.walletPrivateKey);
           if (!thiss.walletAddress || wallet.address.toLowerCase() === thiss.walletAddress.toLowerCase()) {
-            saveBrowerWalletInstance(wallet, generatePassword(), thiss.isSpace, true, true)
+            saveBrowserWalletInstance(wallet, this.walletPassword, thiss.isSpace, true, true)
               .then(() => {
                 thiss.loading = false;
                 thiss.dialog = false;
@@ -157,8 +177,8 @@ export default {
               })
               .catch((e) => {
                 thiss.loading = false;
-                console.debug('saveBrowerWalletInstance method - error', e);
-                thiss.error = `Error saving new Wallet address`;
+                console.debug('saveBrowserWalletInstance method - error', e);
+                thiss.error = `Error processing new keys`;
               });
           } else {
             thiss.loading = false;

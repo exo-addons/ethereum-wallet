@@ -36,7 +36,10 @@
       <del class="red--text">{{ displayName }}</del> (Disabled)
     </span>
   </code>
-  <wallet-address v-else :value="address" />
+  <wallet-address
+    v-else
+    :value="address"
+    display-label />
 </template>
 
 <script>
