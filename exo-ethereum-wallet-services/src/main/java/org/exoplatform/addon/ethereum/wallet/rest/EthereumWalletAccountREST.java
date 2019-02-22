@@ -228,9 +228,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     String currentUserId = getCurrentUserId();
-    LOG.debug("User '{}' is saving new wallet private key for address {}",
-              currentUserId,
-              address);
+    LOG.info("User '{}' is saving new wallet private key for address {}",
+             currentUserId,
+             address);
     try {
       Wallet wallet = accountService.getWalletByAddress(address);
       if (wallet == null) {
@@ -310,9 +310,9 @@ public class EthereumWalletAccountREST implements ResourceContainer {
     }
 
     String currentUserId = getCurrentUserId();
-    LOG.debug("User '{}' is removing wallet private key stored on server for address {}",
-              currentUserId,
-              address);
+    LOG.info("User '{}' is removing wallet private key stored on server for address {}",
+             currentUserId,
+             address);
     try {
       Wallet wallet = accountService.getWalletByAddress(address);
       if (wallet == null) {
