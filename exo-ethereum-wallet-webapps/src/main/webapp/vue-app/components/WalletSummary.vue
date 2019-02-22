@@ -1,6 +1,18 @@
 <template>
   <v-card id="waletSummary" class="elevation-0">
     <v-card-title
+      v-if="firstWalletCreation"
+      primary-title
+      class="pb-0">
+      <v-spacer />
+      <div id="firstWalletCreation" class="alert alert-info">
+        <i class="uiIconInfo"></i>
+        Almost done! Your wallet will be ready to use once an administrator approves it.
+      </div>
+      <v-spacer />
+    </v-card-title>
+
+    <v-card-title
       v-if="pendingTransactionsCount"
       primary-title
       class="pb-0">
@@ -226,6 +238,9 @@ export default {
     };
   },
   computed: {
+    firstWalletCreation() {
+      return this.principalAccountDetails && this.principalAccountDetails.isContract && !Number(this.principalAccountDetails.balance) && !this.principalAccountDetails.isApproved;
+    },
     disableSendButton() {
       return this.isReadOnly || !this.etherBalance || !Number(this.etherBalance);
     },
