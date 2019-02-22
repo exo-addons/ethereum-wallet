@@ -125,7 +125,7 @@
               id="keys"
               value="keys">
               <v-card>
-                <v-card-text>
+                <v-card-text class="pb-0">
                   <qr-code
                     ref="qrCode"
                     :to="walletAddress"
@@ -135,7 +135,7 @@
                     <wallet-address :value="walletAddress" :allow-edit="false" />
                   </div>
                 </v-card-text>
-                <v-card-text v-if="browserWalletExists" class="text-xs-center">
+                <v-card-text v-if="browserWalletExists" class="text-xs-center pb-0">
                   <wallet-backup-modal
                     ref="walletBackupModal"
                     :display-complete-message="false"
@@ -159,6 +159,7 @@
           </v-tabs-items>
         </v-flex>
       </v-card-text>
+      <v-divider />
       <v-card-actions>
         <v-spacer />
         <button

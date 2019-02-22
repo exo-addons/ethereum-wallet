@@ -126,7 +126,7 @@ export default {
       this.loadingWalletBrowser = true;
 
       // Use set timeout to allow refresh UI by disabling button before processing
-      window.setTimeout(() => this.createWalletInstance, 200);
+      window.setTimeout(this.createWalletInstance, 200);
     },
     createWalletInstance() {
       const entropy = this.walletPassword + Math.random();
