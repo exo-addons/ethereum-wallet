@@ -188,10 +188,12 @@ export default {
     copyToClipboard(event) {
       this.ignoreDefaultActions(event);
       this.$refs.clipboardInput.select();
-      try {
-        document.execCommand('copy');
-      } catch(e) {
-        console.debug('Error executing document.execCommand', e);
+      if (document.execCommand) {
+        try {
+          document.execCommand('copy');
+        } catch(e) {
+          console.debug('Error executing document.execCommand', e);
+        }
       }
     },
   },

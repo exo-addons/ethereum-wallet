@@ -3,7 +3,6 @@ import {getWalletApp, initApp, expectObjectValueEqual} from '../TestUtils.js';
 import WalletBrowserSetup from '../../main/webapp/vue-app/components/WalletBrowserSetup';
 
 import {mount} from '@vue/test-utils';
-import {hashCode} from '../../main/webapp/vue-app/WalletUtils.js';
 
 import flushPromises from 'flush-promises';
 
@@ -38,25 +37,19 @@ describe('WalletBrowserSetup.test.js', () => {
   it('WalletBrowserSetup test when creating new wallet Address', (done) => {
     console.log('-- Test WalletBrowserSetup test when creating new wallet Address');
 
-    let walletSetup, walletBrowserSetup;
-    return initApp(app)
-      .then(() => app.vm.$nextTick())
+    const walletBrowserSetup = mount(WalletBrowserSetup, {
+      attachToDocument: true,
+    });
+
+    walletBrowserSetup.vm.walletPassword = '12345678';
+
+    return walletBrowserSetup.vm
+      .$nextTick()
+      .then(() => walletBrowserSetup.vm.createWalletInstance())
+      .then(() => flushPromises())
       .then(() => {
-        walletSetup = app.vm.$refs.walletSetup;
-        expect(walletSetup).toBeTruthy();
-
-        walletSetup.displayWalletSetup = true;
-
-        walletBrowserSetup = walletSetup.$refs.walletBrowserSetup;
-        expect(walletBrowserSetup).toBeTruthy();
-
-        walletBrowserSetup.createWallet();
-
-        expect(walletBrowserSetup.loadingWalletBrowser).toBeTruthy();
-
-        return flushPromises();
+        expect(walletBrowserSetup.emitted()['configured']).toBeTruthy();
       })
-
       .then(() => done())
       .catch((e) => done(e));
   });

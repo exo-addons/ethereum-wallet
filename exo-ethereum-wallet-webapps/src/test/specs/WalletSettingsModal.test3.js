@@ -1,10 +1,8 @@
-import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, expectObjectValueEqual} from '../TestUtils.js';
 
 import WalletsettingsModal from '../../main/webapp/vue-app/components/WalletSettingsModal.vue';
 
 import {mount} from '@vue/test-utils';
-
-import flushPromises from 'flush-promises';
 
 jest.setTimeout(30000);
 
@@ -29,7 +27,6 @@ describe('WalletsettingsModal.test.js', () => {
     dialog: false,
     error: false,
     walletAddress: false,
-    selectedTab: 0,
     currencies: [
       {symbol: '$ (AUD)', text: 'Australia Dollar (AUD)', value: 'aud'},
       {symbol: 'R$', text: 'Brazil Real (R$)', value: 'brl'},

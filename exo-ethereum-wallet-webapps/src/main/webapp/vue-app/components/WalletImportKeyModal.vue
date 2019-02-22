@@ -154,10 +154,10 @@ export default {
       this.loading = false;
     },
     importWallet() {
+      this.error = null;
       if (!this.$refs.form.validate()) {
         return;
       }
-      this.error = null;
       this.loading = true;
       const thiss = this;
       window.setTimeout(() => {

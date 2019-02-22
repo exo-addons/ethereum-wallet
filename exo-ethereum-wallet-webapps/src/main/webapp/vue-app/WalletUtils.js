@@ -581,7 +581,7 @@ export function setWalletBackedUp(address, backedUp) {
 export function hashCode(s) {
   let h = 0,
     i = 0;
-  if (s.length > 0) {
+  if (s && s.length > 0) {
     while (i < s.length) {
       h = ((h << 5) - h + s.charCodeAt(i++)) | 0;
     }

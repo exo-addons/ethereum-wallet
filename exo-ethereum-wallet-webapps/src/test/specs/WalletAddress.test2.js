@@ -82,24 +82,14 @@ describe('WalletAddress.test.js', () => {
     });
 
     walletAddress.vm.isAdmin = true;
-    walletAddress.vm.name = 'nermine';
+    walletAddress.vm.name = 'testuser';
     walletAddress.vm.value = '0x627306090abab3a6e1400e9345bc60c78a8bef57';
+    walletAddress.vm.displayLabel = true;
     walletAddress.vm.allowEdit = false;
     expectCountElement(walletAddress, 'walletAddressEdit', 0);
     walletAddress.vm.allowEdit = true;
     expectCountElement(walletAddress, 'walletAddressEdit', 1);
     walletAddress.find('.walletAddressEdit').trigger('click');
     expect(walletAddress.vm.isEditing).toBeTruthy();
-
-    //  console.warn('name',walletAddress.vm.name);
-    //  console.warn('value',walletAddress.vm.value);
-    //  console.warn('allowCopy',walletAddress.vm.allowCopy);
-    //  console.warn('allowEdit',walletAddress.vm.allowEdit);
-    //  console.warn('isediting',walletAddress.vm.isEditing);
-    //  console.warn('loading',walletAddress.vm.loading);
-    //  console.warn('isAdmin',walletAddress.vm.isAdmin);
-    //  console.warn('addressEtherscanLink',walletAddress.vm.addressEtherscanLink);
-    //  console.warn('labelDetail',walletAddress.vm.labelDetail);
-    //  console.warn('labelDetailToEdit',walletAddress.vm.labelDetailToEdit);
   });
 });

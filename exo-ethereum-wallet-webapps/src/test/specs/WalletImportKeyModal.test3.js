@@ -18,11 +18,7 @@ describe('WalletImportKeyModal.test.js', () => {
   const defaultAttributesValues = {
     isSpace: false,
     walletAddress: false,
-    dialog: false,
-    walletPrivateKey: '',
-    walletPrivateKeyShow: false,
     error: false,
-    loading: false,
   };
 
   it('WalletImportKeyModal default data', () => {
@@ -56,21 +52,16 @@ describe('WalletImportKeyModal.test.js', () => {
         walletImportKeyModal = walletBrowserSetup.$refs.walletImportKeyModal;
         expect(walletImportKeyModal).toBeTruthy();
       })
-
       .then(() => {
-        walletImportKeyModal.dialog = true;
         walletImportKeyModal.walletPrivateKey = '9b2b566b5b9eec0e21a559da10b3d8545f1037e239e128b9cd980c9580fcd949';
         walletImportKeyModal.importWallet();
-        expect(walletImportKeyModal.error).toBeNull();
         return flushPromises();
       })
-
       .then(() => {
+        expect(walletImportKeyModal.error).toBeFalsy();
+
         const expectedData = Object.assign({}, defaultAttributesValues);
         expectedData.walletAddress = global.walletAddress;
-        expectedData.loading = true;
-        expectedData.dialog = true;
-        expectedData.walletPrivateKey = '9b2b566b5b9eec0e21a559da10b3d8545f1037e239e128b9cd980c9580fcd949';
         expectObjectValueEqual(walletImportKeyModal, expectedData, 'Restore existing wallet private key (without 0x) ', null, true);
       })
 
@@ -99,19 +90,15 @@ describe('WalletImportKeyModal.test.js', () => {
         walletImportKeyModal = walletBrowserSetup.$refs.walletImportKeyModal;
         expect(walletImportKeyModal).toBeTruthy();
       })
-
       .then(() => {
-        walletImportKeyModal.dialog = true;
         walletImportKeyModal.walletPrivateKey = '0x9b2b566b5b9eec0e21a559da10b3d8545f1037e239e128b9cd980c9580fcd949';
         walletImportKeyModal.importWallet();
-        expect(walletImportKeyModal.error).toBeNull();
+        expect(walletImportKeyModal.error).toBeFalsy();
         return flushPromises();
       })
-
       .then(() => {
         const expectedData = Object.assign({}, defaultAttributesValues);
         expectedData.walletAddress = global.walletAddress;
-        expectedData.dialog = true;
         expectObjectValueEqual(walletImportKeyModal, expectedData, 'restore existing wallet private key (with 0x)', null, true);
       })
 
@@ -141,19 +128,9 @@ describe('WalletImportKeyModal.test.js', () => {
       })
 
       .then(() => {
-        walletImportKeyModal.dialog = true;
         walletImportKeyModal.walletPrivateKey = 'test';
-        walletImportKeyModal.importWallet();
-        return flushPromises();
+        expect(walletImportKeyModal.$refs.form.validate()).toBeFalsy();
       })
-
-      .then(() => {
-        const expectedData = Object.assign({}, defaultAttributesValues);
-        expectedData.walletAddress = global.walletAddress;
-        expectedData.dialog = true;
-        expectObjectValueEqual(walletImportKeyModal, expectedData, 'when no existing private key', null, true);
-      })
-
       .then(() => app.vm.$nextTick())
       .then(() => done())
       .catch((e) => done(e));
