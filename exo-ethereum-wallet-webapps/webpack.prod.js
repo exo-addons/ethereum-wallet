@@ -23,7 +23,8 @@ const config = merge(webpackCommonConfig, {
     walletAPI: './src/main/webapp/vue-app/walletAPI.js',
     spaceWallet: './src/main/webapp/vue-app/spaceWallet.js',
     walletAdmin: './src/main/webapp/vue-app/walletAdmin.js',
-    rewardApp: './src/main/webapp/vue-app/rewardApp.js'
+    rewardApp: './src/main/webapp/vue-app/rewardApp.js',
+    todoList: './src/main/webapp/vue-app/todoList.js'
   },
   output: {
     path: path.join(__dirname, 'target/exo-ethereum-wallet/'),

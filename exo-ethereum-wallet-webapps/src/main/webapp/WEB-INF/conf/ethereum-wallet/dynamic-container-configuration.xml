@@ -135,5 +135,30 @@
         </object-param>
       </init-params>
     </component-plugin>
+    <component-plugin>
+      <name>addPlugin</name>
+      <set-method>addPlugin</set-method>
+      <type>org.exoplatform.commons.addons.AddOnPluginImpl</type>
+      <description></description>
+      <init-params>
+        <value-param>
+          <name>priority</name>
+          <value>5</value>
+        </value-param>
+        <value-param>
+          <name>containerName</name>
+          <value>top-application-container</value>
+        </value-param>
+        <object-param>
+          <name>todo-list-portlet</name>
+          <description></description>
+          <object type="org.exoplatform.commons.addons.PortletModel">
+            <field name="contentId">
+              <string>exo-ethereum-wallet/TodoList</string>
+            </field>
+          </object>
+        </object-param>
+      </init-params>
+    </component-plugin>
   </external-component-plugins>
 </configuration>

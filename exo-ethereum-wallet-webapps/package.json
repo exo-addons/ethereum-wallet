@@ -16,7 +16,7 @@
     "test3": "jest src/test/specs/*.test3.js --runInBand",
     "test-coverage": "jest --runInBand --coverage",
     "format": "prettier --config ./.prettierrc --write ./src/test/**/*.js ./src/main/webapp/vue-app/**.js ./src/test/**.js",
-    "lint": "eslint --fix ./src/main/webapp/vue-app/*.js ./src/test/*.js ./src/test/specs/*.js ./src/main/webapp/vue-app/components/reward/*.vue ./src/main/webapp/vue-app/components/reward/modal/*.vue ./src/main/webapp/vue-app/components/admin/*.vue ./src/main/webapp/vue-app/components/*.vue",
+    "lint": "eslint --fix ./src/main/webapp/vue-app/*.js ./src/test/*.js ./src/test/specs/*.js ./src/main/webapp/vue-app/components/todo-list/*.vue ./src/main/webapp/vue-app/components/reward/*.vue ./src/main/webapp/vue-app/components/reward/modal/*.vue ./src/main/webapp/vue-app/components/admin/*.vue ./src/main/webapp/vue-app/components/*.vue",
     "eslint-check": "eslint --print-config . | eslint-config-prettier-check",
     "build": "webpack --config webpack.prod.js --mode production",
     "ganache-cli": "ganache-cli --networkId 4452364 --blockTime 120 --debug --db target/ganache-data"

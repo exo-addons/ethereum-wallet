@@ -18,6 +18,7 @@
     <module>exo-ethereum-wallet-contracts</module>
     <module>exo-ethereum-wallet-services</module>
     <module>exo-ethereum-wallet-reward-services</module>
+    <module>exo-ethereum-wallet-task-services</module>
     <module>exo-ethereum-wallet-webapps</module>
     <module>exo-ethereum-wallet-packaging</module>
   </modules>
@@ -78,6 +79,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>exo-ethereum-wallet-reward-services</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>exo-ethereum-wallet-task-services</artifactId>
         <version>${project.version}</version>
       </dependency>
 

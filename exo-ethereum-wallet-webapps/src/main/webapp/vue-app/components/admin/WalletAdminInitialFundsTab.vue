@@ -64,7 +64,7 @@
         name="initialFundsRequestMessage"
         label="Initial funds default message"
         placeholder="You can enter a default message to send with initial funds"
-        class="mt-4"
+        class="mt-4 mb-0"
         rows="7"
         flat
         no-resize />

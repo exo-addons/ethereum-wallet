@@ -24,6 +24,12 @@
     </dependency>
 
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>exo-ethereum-wallet-task-services</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.web3j</groupId>
       <artifactId>core</artifactId>
       <scope>provided</scope>

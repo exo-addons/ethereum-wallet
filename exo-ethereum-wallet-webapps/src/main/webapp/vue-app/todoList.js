@@ -1,4 +1,4 @@
-import RewardApp from './components/reward/RewardApp.vue';
+import TodoListApp from './components/todo-list/TodoListApp.vue';
 import {toFixed} from './WalletUtils.js';
 import './../css/main.less';
 
@@ -6,6 +6,6 @@ Vue.prototype.toFixed = toFixed;
 Vue.use(Vuetify);
 
 const vueInstance = new Vue({
-  el: '#RewardApp',
-  render: (h) => h(RewardApp),
+  el: '#TodoListApp',
+  render: (h) => h(TodoListApp),
 });

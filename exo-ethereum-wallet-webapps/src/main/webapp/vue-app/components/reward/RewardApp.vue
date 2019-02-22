@@ -308,11 +308,13 @@ export default {
           if(this.rewardSettings && this.rewardSettings.pluginSettings && this.rewardSettings.pluginSettings.length) {
             this.rewardSettings.pluginSettings.forEach(pluginSetting => totalRewards[pluginSetting.pluginId] = {pluginId: pluginSetting.pluginId, total: 0})
           }
-          rewardDetails.forEach(rewardDetail => totalRewards[rewardDetail.pluginId] && (totalRewards[rewardDetail.pluginId].total += rewardDetail.points));
+          if (rewardDetails) {
+            rewardDetails.forEach(rewardDetail => totalRewards[rewardDetail.pluginId] && (totalRewards[rewardDetail.pluginId].total += rewardDetail.points));
+          }
           this.totalRewards = Object.values(totalRewards);
 
           this.wallets.forEach(wallet => {
-            wallet.rewards = rewardDetails.filter(rewardDetail => rewardDetail.identityId === wallet.technicalId);
+            wallet.rewards = (rewardDetails && rewardDetails.filter(rewardDetail => rewardDetail.identityId === wallet.technicalId)) || [];
             wallet.tokensToSend = this.toFixed(wallet.rewards.reduce((sum, reward) => sum + reward.amount, 0));
             wallet.poolTokensToSend = wallet.rewards.filter(reward => reward.poolsUsed).reduce((sum, reward) => sum + reward.amount, 0);
             delete wallet.rewardTeams;
