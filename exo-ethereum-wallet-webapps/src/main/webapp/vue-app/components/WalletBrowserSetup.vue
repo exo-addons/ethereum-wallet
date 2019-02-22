@@ -48,7 +48,7 @@
 <script>
 import WalletImportKeyModal from './WalletImportKeyModal.vue';
 
-import {enableMetamask, initEmptyWeb3Instance, saveBrowserWalletInstance, sendPrivateKeyToServer} from '../WalletUtils.js';
+import {enableMetamask, initEmptyWeb3Instance, saveBrowserWalletInstance} from '../WalletUtils.js';
 
 export default {
   components: {

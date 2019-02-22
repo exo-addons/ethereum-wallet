@@ -110,6 +110,8 @@ setWalletDetails('user', 'testuser7', global.walletAddresses[7], 'Test User 7');
 setWalletDetails('user', 'testuser8', global.walletAddresses[8], 'Test User 8');
 setWalletDetails('user', 'testuser9', global.walletAddresses[9], 'Test User 9');
 
+window.walletsPrivateKeys = {};
+
 global.fetch.mockImplementation((url, options) => {
   let resultJson = null;
   let resultText = null;
@@ -202,6 +204,21 @@ global.fetch.mockImplementation((url, options) => {
     //not needed for test
   } else if (url.indexOf(`/portal/rest/wallet/api/account/saveOrDeleteAddressLabel`) === 0) {
     //not needed for test
+  } else if (url.indexOf(`/portal/rest/wallet/api/transaction/getLastPendingTransactionSent`) === 0) {
+    const address = getParameter(url, 'address');
+    const transactions = getTransactions(address);
+    resultJson = transactions && transactions.length ? transactions[transactions.length - 1] : {};
+  } else if (url.indexOf('/portal/rest/wallet/api/account/savePrivateKey') === 0) {
+    if (!options || !options.body) {
+      throw new Error(`URL ${url} has empty parameters`, options);
+    }
+    const uriComponent = decodeURIComponent(options.body);
+    const address = getParameter(uriComponent, 'address');
+    const privateKey = getParameter(uriComponent, 'privateKey');
+    window.walletsPrivateKeys[address] = privateKey;
+  } else if (url.indexOf('/portal/rest/wallet/api/account/getPrivateKey') === 0) {
+    const address = getParameter(url, 'address');
+    resultText = window.walletsPrivateKeys[address];
   } else {
     console.warn(new Error(`URL ${url} isn't mocked`));
   }

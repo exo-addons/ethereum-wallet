@@ -269,6 +269,9 @@ export function initiateBrowserWallet(address, password, isSpace, generated, bac
 
 export function getParameter(url, param) {
   let urlPart;
+  if (url.indexOf('?') < 0) {
+    url = `?${url}`;
+  }
   // eslint-disable-next-line no-useless-escape
   if (!param || !(url = url && url.trim()) || url.indexOf('?') < 0 || !(urlPart = url.match(new RegExp(`[\?&]{1}${param}=[^&#]*`)))) {
     return null;

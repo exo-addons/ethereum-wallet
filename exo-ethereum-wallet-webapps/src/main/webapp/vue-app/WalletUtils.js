@@ -26,7 +26,7 @@ export function sendPrivateKeyToServer(walletAddress, password, newPassword) {
   walletAddress = walletAddress.toLowerCase();
 
   if (!localStorage.getItem(walletAddress)) {
-    return Promise.reject(new Error("No private key was found"));
+    return Promise.reject(new Error('No private key was found'));
   }
 
   const walletPassword = (password && hashCode(password)) || window.walletSettings.userP;
@@ -39,13 +39,13 @@ export function sendPrivateKeyToServer(walletAddress, password, newPassword) {
         return Promise.reject(new Error('Error encrypting wallet with new password'));
       }
     } else {
-      lockBrowserWallet(walletAddress)
+      lockBrowserWallet(walletAddress);
     }
   } else {
     return Promise.reject(new Error('Error occurred while decrypting wallet keys'));
   }
 
-  return fetch(`/portal/rest/wallet/api/account/savePrivateKey?address=${walletAddress}`, {
+  return fetch(`/portal/rest/wallet/api/account/savePrivateKey`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -259,7 +259,7 @@ export function initSettings(isSpace, spaceGroup) {
       }
 
       const accountId = getRemoteId(isSpace);
-      window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${accountId}-metamask`) === "true";
+      window.walletSettings.userPreferences.useMetamask = localStorage.getItem(`exo-wallet-${accountId}-metamask`) === 'true';
 
       const address = window.walletSettings.userPreferences.walletAddress;
       if (address) {

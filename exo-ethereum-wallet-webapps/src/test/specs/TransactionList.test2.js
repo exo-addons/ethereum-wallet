@@ -211,7 +211,7 @@ describe('TransactionList.test.js', () => {
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
 
     const app = getWalletApp();
-    let accountDetailCmp, contractDetails, sendTokensModal, sendTokensForm, transactionList;
+    let accountDetailCmp, contractDetails, transactionList;
     return (
       initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
         .then(() => initApp(app))
