@@ -34,6 +34,13 @@
         <description>Kudos reward plugin</description>
       </component-plugin>
     </component-plugins>
+    <init-params>
+      <value-param>
+        <name>reminder.days</name>
+        <description>Days before reward end date to remind managers</description>
+        <value>${exo.addon.wallet.reward.reminder.days:3}</value>
+      </value-param>
+    </init-params>
   </component>
 
   <component>
@@ -69,6 +76,26 @@
           <description>Change logs of Wallet RDBMS</description>
           <value>db/changelog/reward-rdbms.db.changelog-master.xml</value>
         </values-param>
+      </init-params>
+    </component-plugin>
+  </external-component-plugins>
+
+  <external-component-plugins>
+    <target-component>org.exoplatform.services.scheduler.JobSchedulerService</target-component>
+    <component-plugin>
+      <name>AddCronJob</name>
+      <set-method>addCronJob</set-method>
+      <type>org.exoplatform.services.scheduler.CronJob</type>
+      <description>Add a job to add an admin task reminder for reward</description>
+      <init-params>
+        <properties-param>
+          <name>cronjob.info</name>
+          <description>Configuration for reward admin task reminder</description>
+          <property name="jobName" value="RewardReminderJob"/>
+          <property name="groupName" value="Wallet"/>
+          <property name="job" value="org.exoplatform.addon.ethereum.wallet.reward.scheduled.RewardReminderJob"/>
+          <property name="expression" value="${exo.addon.wallet.RewardReminderJob.expression:0 0 0 ? * * *}"/>
+        </properties-param>
       </init-params>
     </component-plugin>
   </external-component-plugins>

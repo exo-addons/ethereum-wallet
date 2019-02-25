@@ -247,11 +247,12 @@ export default {
       initialFunds: [],
       contracts: [],
       wallets: [],
+      anchor: document.URL.indexOf('#') >= 0 ? document.URL.split('#')[1] : null,
     };
   },
   created() {
     this.init()
-      .then(() => this.isAdmin && this.sameConfiguredNetwork && (this.selectedTab = 'general'))
+      .then(() => this.isAdmin && this.sameConfiguredNetwork && (this.selectedTab = this.anchor || 'general'))
       .then(() => (this.tokenEtherscanLink = getTokenEtherscanlink(this.networkId)))
       .then(() => (this.addressEtherscanLink = getAddressEtherscanlink(this.networkId)));
   },

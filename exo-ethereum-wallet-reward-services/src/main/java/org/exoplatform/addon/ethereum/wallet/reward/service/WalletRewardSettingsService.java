@@ -26,6 +26,7 @@ import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
 import org.exoplatform.addon.ethereum.wallet.reward.model.*;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
+import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 /**
@@ -33,14 +34,21 @@ import org.exoplatform.ws.frameworks.json.impl.JsonException;
  */
 public class WalletRewardSettingsService implements RewardSettingsService {
 
+  private static final String       REMINDER_DAYS_PARAMETER = "reminder.days";
+
   private SettingService            settingService;
 
   private RewardSettings            rewardSettings;
 
-  private Map<String, RewardPlugin> rewardPlugins = new HashMap<>();
+  private Map<String, RewardPlugin> rewardPlugins           = new HashMap<>();
 
-  public WalletRewardSettingsService(SettingService settingService) {
+  private int                       reminderDateInDays      = 3;
+
+  public WalletRewardSettingsService(SettingService settingService, InitParams params) {
     this.settingService = settingService;
+    if (params != null && params.containsKey(REMINDER_DAYS_PARAMETER)) {
+      this.reminderDateInDays = Integer.parseInt(params.getValueParam(REMINDER_DAYS_PARAMETER).getValue());
+    }
   }
 
   @Override
@@ -144,4 +152,8 @@ public class WalletRewardSettingsService implements RewardSettingsService {
     rewardPlugins.put(rewardPlugin.getPluginId(), rewardPlugin);
   }
 
+  @Override
+  public int getReminderDateInDays() {
+    return reminderDateInDays;
+  }
 }

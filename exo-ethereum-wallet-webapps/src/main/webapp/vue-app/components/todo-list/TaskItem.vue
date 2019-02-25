@@ -59,7 +59,9 @@ export default {
     },
     detail() {
       if (this.task.type === 'reward') {
-        return `Reward for period ${this.task.parameters[0]}`;
+        const startDate = new Date(Number(this.task.parameters[0]) * 1000).toLocaleDateString(eXo.env.portal.language, { year: 'numeric', month: 'long', day: 'numeric' });
+        const endDate = new Date(Number((this.task.parameters[1]) -1) * 1000).toLocaleDateString(eXo.env.portal.language, { year: 'numeric', month: 'long', day: 'numeric' });
+        return `Reward for period ${startDate} to ${endDate}`;
       } else if (this.task.type === 'new-wallet') {
         return `${this.parameters.length} new wallets to initialize`;
       } else if (this.task.type === 'modify-wallet') {
@@ -72,7 +74,7 @@ export default {
       if (this.task.type === 'reward') {
         return '/portal/g/:platform:rewarding/rewardAdministration';
       } else if (this.task.type === 'new-wallet' || this.task.type === 'modify-wallet') {
-        return '/portal/g/:platform:rewarding/walletAdministration';
+        return '/portal/g/:platform:rewarding/walletAdministration#wallets';
       } else {
         return this.task.link;
       }

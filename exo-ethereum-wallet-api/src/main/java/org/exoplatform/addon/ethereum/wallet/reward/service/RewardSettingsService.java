@@ -56,4 +56,9 @@ public interface RewardSettingsService {
    */
   public void registerPlugin(RewardPlugin rewardPlugin);
 
+  /**
+   * @return days number before reward end date to create reminder
+   */
+  int getReminderDateInDays();
+
 }
