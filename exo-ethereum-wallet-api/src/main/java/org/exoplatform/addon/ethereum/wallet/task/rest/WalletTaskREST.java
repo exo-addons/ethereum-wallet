@@ -22,7 +22,7 @@ import org.exoplatform.services.security.ConversationState;
  * This class provide a REST endpoint to manage wallet admin tasks
  */
 @Path("/wallet/api/task")
-@RolesAllowed({ "rewarding", "administrators" })
+@RolesAllowed("users")
 public class WalletTaskREST implements ResourceContainer {
   private static final Log  LOG = ExoLogger.getLogger(WalletTaskREST.class);
 
@@ -42,7 +42,7 @@ public class WalletTaskREST implements ResourceContainer {
   public Response listTasks() {
     ConversationState currentState = ConversationState.getCurrent();
     if (currentState == null || currentState.getIdentity() == null || currentState.getIdentity().getUserId() == null
-        || !currentState.getIdentity().getRoles().contains("rewarding")) {
+        || currentState.getIdentity().getRoles() == null || !currentState.getIdentity().getRoles().contains("rewarding")) {
       return Response.ok(Collections.emptyList()).build();
     }
     try {
@@ -50,6 +50,31 @@ public class WalletTaskREST implements ResourceContainer {
       return Response.ok(tasks).build();
     } catch (Exception e) {
       LOG.warn("Error getting listing tasks", e);
+      JSONObject object = new JSONObject();
+      try {
+        object.append("error", e.getMessage());
+      } catch (JSONException e1) {
+        // Nothing to do
+      }
+      return Response.status(500).type(MediaType.APPLICATION_JSON).entity(object.toString()).build();
+    }
+  }
+
+  /**
+   * Marks a task identified by its technical id as completed
+   * @param taskId technical wallet task id
+   * @return HTTP Response corresponding to the operation status
+   */
+  @GET
+  @Path("markCompleted")
+  @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed({ "rewarding" })
+  public Response markCompleted(@QueryParam("taskId") long taskId) {
+    try {
+      walletTaskService.markCompleted(taskId);
+      return Response.ok().build();
+    } catch (Exception e) {
+      LOG.warn("Error marking task with id {} as completed", taskId, e);
       JSONObject object = new JSONObject();
       try {
         object.append("error", e.getMessage());

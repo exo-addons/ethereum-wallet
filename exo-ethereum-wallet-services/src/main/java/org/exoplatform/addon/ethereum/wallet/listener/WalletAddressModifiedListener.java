@@ -83,7 +83,7 @@ public class WalletAddressModifiedListener extends Listener<Wallet, Wallet> {
           + " . Would you like to send to wallet the initial funds ?");
 
       try {
-        getWalletService().requestFunds(request);
+        getWalletService().requestFunds(request, null);
       } catch (Exception e) {
         LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
             + wallet.getType() + "' with id '" + wallet.getId() + "'", e);

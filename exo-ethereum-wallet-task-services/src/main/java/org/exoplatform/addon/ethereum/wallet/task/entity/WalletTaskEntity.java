@@ -14,7 +14,8 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
 @DynamicUpdate
 @Table(name = "ADDONS_WALLET_TASK")
 @NamedQueries({
-    @NamedQuery(name = "WalletTask.getUserTasks", query = "SELECT wt FROM WalletTask wt WHERE wt.completed = FALSE AND (wt.assignee IS EMPTY OR wt.assignee = :assignee)"),
+    @NamedQuery(name = "WalletTask.getUserTasks", query = "SELECT wt FROM WalletTask wt WHERE wt.completed = FALSE AND (wt.assignee = 0 OR wt.assignee = :assignee)"),
+    @NamedQuery(name = "WalletTask.getTasksByType", query = "SELECT wt FROM WalletTask wt WHERE wt.type = :type"),
 })
 public class WalletTaskEntity implements Serializable {
 
@@ -43,7 +44,7 @@ public class WalletTaskEntity implements Serializable {
 
   @ElementCollection
   @CollectionTable(name = "ADDONS_WALLET_TASK_PARAMETERS", joinColumns = @JoinColumn(name = "TASK_ID"))
-  @Column(name = "TASK_PARAMETER_ID")
+  @Column(name = "TASK_PARAMETER")
   private List<String>      parameters;
 
   public Long getId() {

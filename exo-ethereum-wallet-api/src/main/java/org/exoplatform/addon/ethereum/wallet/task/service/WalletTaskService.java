@@ -33,4 +33,25 @@ public interface WalletTaskService {
    */
   public Set<WalletAdminTask> listTasks(String currentUser);
 
+  /**
+   * @param taskType
+   * @return a task by identified type
+   */
+  public Set<WalletAdminTask> getTasksByType(String taskType);
+
+  /**
+   * Creates/Updates an admin task
+   * 
+   * @param task to create/update task
+   * @param assignee assignee of task
+   */
+  public void save(WalletAdminTask task, String assignee);
+
+  /**
+   * Mark a task as completed
+   * 
+   * @param taskId technical wallet task id
+   */
+  public void markCompleted(long taskId);
+
 }

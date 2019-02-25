@@ -10,7 +10,7 @@
         <h6 class="pb-0 pt-2 text-xs-center">
           Wallet todo list
         </h6>
-        <tasks-list :tasks="tasks" />
+        <tasks-list :tasks="tasks" @refresh="init" />
       </v-card>
     </main>
   </v-app>
@@ -33,22 +33,19 @@ export default {
   },
   methods: {
     init() {
-      this.tasks = [{
-        id: 1,
-        link: '/portal/g/:platform:rewarding/rewardAdministration',
-        message: null,
-        parameters: ['28/02/2019'],
-        type: 'reward',
-        completed: false,
-      },
-      {
-        id: 2,
-        link: '/portal/g/:platform:rewarding/walletAdministration',
-        message: null,
-        parameters: ['2'],
-        type: 'wallet-init',
-        completed: false,
-      }];
+      fetch('/portal/rest/wallet/api/task/list', {credentials: 'include'})
+        .then(resp => {
+          if (resp && resp.ok) {
+            return resp.json();
+          } else {
+            throw new Error('Error while requesting tasks list', resp);
+          }
+        })
+        .then(tasks => this.tasks = tasks)
+        .catch(e => {
+          console.debug(e);
+          this.tasks = [];
+        });
     },
   },
 };

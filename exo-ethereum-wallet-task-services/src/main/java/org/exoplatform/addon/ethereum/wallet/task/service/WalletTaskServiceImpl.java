@@ -16,12 +16,15 @@
  */
 package org.exoplatform.addon.ethereum.wallet.task.service;
 
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getIdentityByTypeAndId;
+
 import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.addon.ethereum.wallet.task.model.WalletAdminTask;
 import org.exoplatform.addon.ethereum.wallet.task.storage.WalletTaskStorage;
-import org.exoplatform.addon.ethereum.wallet.utils.Utils;
 import org.exoplatform.social.core.identity.model.Identity;
 
 /**
@@ -37,9 +40,32 @@ public class WalletTaskServiceImpl implements WalletTaskService {
 
   @Override
   public Set<WalletAdminTask> listTasks(String userId) {
-    Identity identity = Utils.getIdentityByTypeAndId(WalletType.USER, userId);
-    long identityId = Long.parseLong(identity.getId());
+    long identityId = getUserIdentityId(userId);
     return walletTaskStorage.listTasks(identityId);
+  }
+
+  @Override
+  public Set<WalletAdminTask> getTasksByType(String taskType) {
+    return walletTaskStorage.getTasksByType(taskType);
+  }
+
+  @Override
+  public void save(WalletAdminTask task, String assignee) {
+    long assigneeIdentityId = 0;
+    if (StringUtils.isNotBlank(assignee)) {
+      assigneeIdentityId = getUserIdentityId(assignee);
+    }
+    walletTaskStorage.save(task, assigneeIdentityId);
+  }
+
+  @Override
+  public void markCompleted(long taskId) {
+    walletTaskStorage.markCompleted(taskId);
+  }
+
+  private long getUserIdentityId(String userId) {
+    Identity identity = getIdentityByTypeAndId(WalletType.USER, userId);
+    return Long.parseLong(identity.getId());
   }
 
 }

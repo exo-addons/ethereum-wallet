@@ -325,28 +325,26 @@ public class EthereumWalletService implements WalletService, Startable {
   }
 
   @Override
-  public void requestFunds(FundsRequest fundsRequest) throws IllegalAccessException {
-    String currentUser = getCurrentUserId();
-
+  public void requestFunds(FundsRequest fundsRequest, String currentUser) throws IllegalAccessException {
     Wallet requestSender = accountService.getWalletByAddress(fundsRequest.getAddress());
-    if (requestSender == null) {
-      throw new IllegalStateException("Bad request sent to server with unknown sender address");
-    }
+    if (StringUtils.isNotBlank(currentUser)) {
+      // Check if user can send request funds for a wallet (user or space type)
+      if (requestSender == null) {
+        throw new IllegalStateException("Bad request sent to server with unknown sender address");
+      }
 
-    String requestSenderId = requestSender.getId();
-    String requestSenderType = requestSender.getType();
+      String requestSenderId = requestSender.getId();
+      String requestSenderType = requestSender.getType();
 
-    if (WalletType.isUser(requestSenderType) && !StringUtils.equals(currentUser, requestSenderId)) {
-      LOG.warn("Bad request sent to server with invalid sender type or id {} / {}", requestSenderType, requestSenderId);
-      throw new IllegalAccessException("Bad request sent to server with invalid sender");
-    }
-
-    if (WalletType.isSpace(requestSenderType) && !isUserSpaceMember(requestSenderId, fundsRequest.getReceipient())) {
-      throw new IllegalAccessException("Request sender is not allowed to request funds from space");
+      if (WalletType.isUser(requestSenderType) && !StringUtils.equals(currentUser, requestSenderId)) {
+        LOG.warn("Bad request sent to server with invalid sender type or id {} / {}", requestSenderType, requestSenderId);
+        throw new IllegalAccessException("Bad request sent to server with invalid sender");
+      } else if (WalletType.isSpace(requestSenderType) && !isUserSpaceMember(requestSenderId, fundsRequest.getReceipient())) {
+        throw new IllegalAccessException("Request sender is not allowed to request funds from space");
+      }
     }
 
     NotificationContext ctx = NotificationContextImpl.cloneInstance();
-
     GlobalSettings settings = getSettings();
     if (!StringUtils.isBlank(fundsRequest.getContract())) {
       ContractDetail contractDetail =
@@ -372,7 +370,6 @@ public class EthereumWalletService implements WalletService, Startable {
     ctx.append(SENDER_ACCOUNT_DETAIL_PARAMETER, requestSender);
     ctx.append(RECEIVER_ACCOUNT_DETAIL_PARAMETER, requestReceipient);
     ctx.append(FUNDS_REQUEST_PARAMETER, fundsRequest);
-
     ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID))).execute(ctx);
   }
 

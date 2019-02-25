@@ -76,7 +76,7 @@ public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
       request.setMessage("A new wallet has been created");
 
       try {
-        getEthereumWalletService().requestFunds(request);
+        getEthereumWalletService().requestFunds(request, null);
       } catch (Exception e) {
         LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
             + wallet.getType() + "' with id '" + wallet.getId() + "'", e);

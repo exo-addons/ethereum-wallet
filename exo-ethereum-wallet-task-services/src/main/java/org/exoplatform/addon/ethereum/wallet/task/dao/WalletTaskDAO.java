@@ -16,4 +16,11 @@ public class WalletTaskDAO extends GenericDAOJPAImpl<WalletTaskEntity, Long> {
     return query.getResultList();
   }
 
+  public List<WalletTaskEntity> getTasksByType(String taskType) {
+    TypedQuery<WalletTaskEntity> query = getEntityManager().createNamedQuery("WalletTask.getTasksByType",
+                                                                             WalletTaskEntity.class);
+    query.setParameter("type", taskType);
+    return query.getResultList();
+  }
+
 }

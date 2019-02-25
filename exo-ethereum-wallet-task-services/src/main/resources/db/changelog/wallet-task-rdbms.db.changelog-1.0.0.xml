@@ -8,18 +8,17 @@
   <property name="autoIncrement" value="true" dbms="mysql,mssql,h2,sybase,db2,hsqldb"/>
   <property name="autoIncrement" value="false" dbms="oracle,postgresql"/>
 
-  <changeSet author="wallet-task" id="1.0.0-1" runOnChange="false">
+  <changeSet author="wallet-task" id="1.0.0-1">
+    <validCheckSum>7:ce94997f141ba4f57ba32bfc50c74a61</validCheckSum>
     <createTable tableName="ADDONS_WALLET_TASK">
       <column name="TASK_ID" type="BIGINT" autoIncrement="${autoIncrement}" startWith="1">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_TASK"/>
       </column>
-      <column name="TASK_MESSAGE" type="NVARCHAR(200)" />
+      <column name="TASK_MESSAGE" type="NVARCHAR(200)"/>
       <column name="TASK_TYPE" type="NVARCHAR(200)">
-        <constraints nullable="false" />
+        <constraints nullable="false"/>
       </column>
-      <column name="TASK_LINK" type="NVARCHAR(200)">
-        <constraints nullable="false" />
-      </column>
+      <column name="TASK_LINK" type="NVARCHAR(300)"/>
       <column name="TASK_ASSIGNEE" type="BIGINT"/>
       <column name="TASK_COMPLETED" type="BOOLEAN"/>
     </createTable>
@@ -28,13 +27,13 @@
     </modifySql>
   </changeSet>
 
-  <changeSet author="wallet-task" id="1.0.0-2" runOnChange="false">
+  <changeSet author="wallet-task" id="1.0.0-2">
     <createTable tableName="ADDONS_WALLET_TASK_PARAMETERS">
       <column name="TASK_ID" type="BIGINT">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_TASK_PARAMETER"/>
-      </column>
-      <column name="TASK_PARAMETER_ID" type="BIGINT">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_TASK_PARAMETER" foreignKeyName="FK_ADDONS_WALLET_TASK_PARAMETER" references="ADDONS_WALLET_TASK(TASK_ID)"/>
+      </column>
+      <column name="TASK_PARAMETER" type="NVARCHAR(200)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_TASK_PARAMETER" />
       </column>
     </createTable>
     <modifySql dbms="mysql">
@@ -42,7 +41,7 @@
     </modifySql>
   </changeSet>
 
-  <changeSet author="wallet" id="1.0.0-3" dbms="oracle,postgresql" failOnError="false" runOnChange="false">
+  <changeSet author="wallet" id="1.0.0-3" dbms="oracle,postgresql">
     <createSequence sequenceName="SEQ_WALLET_TASK_ID" startValue="1"/>
   </changeSet>
 

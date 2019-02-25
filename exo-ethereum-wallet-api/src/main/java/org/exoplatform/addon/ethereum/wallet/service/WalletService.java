@@ -81,10 +81,11 @@ public interface WalletService {
    * Save funds request and send notifications
    * 
    * @param fundsRequest funds request details to save
+   * @param currentUser username of user sending request
    * @throws IllegalAccessException if request sender is not allowed to send
    *           request to receiver wallet
    */
-  public void requestFunds(FundsRequest fundsRequest) throws IllegalAccessException;
+  public void requestFunds(FundsRequest fundsRequest, String currentUser) throws IllegalAccessException;
 
   /**
    * Mark a fund request web notification as sent

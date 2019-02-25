@@ -423,7 +423,7 @@ public class WalletAccountREST implements ResourceContainer {
     }
 
     try {
-      walletService.requestFunds(fundsRequest);
+      walletService.requestFunds(fundsRequest, getCurrentUserId());
       return Response.ok().build();
     } catch (IllegalAccessException e) {
       return Response.status(403).build();

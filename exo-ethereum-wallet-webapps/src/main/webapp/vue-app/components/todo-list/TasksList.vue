@@ -3,7 +3,8 @@
     <task-item
       v-for="task in tasks"
       :key="task.id"
-      :task="task" />
+      :task="task"
+      @refresh="$emit('refresh')" />
   </v-list>
 </template>
 
