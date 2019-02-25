@@ -30,11 +30,11 @@ import org.exoplatform.management.jmx.annotations.Property;
 @ManagedDescription("Ethereum blockchain wallet service")
 public class EthereumWalletServiceManaged {
 
-  private EthereumClientConnector          clientConnector;
+  private EthereumClientConnector  clientConnector;
 
-  private EthereumWalletAccountService     accountService;
+  private WalletAccountService     accountService;
 
-  private EthereumWalletTransactionService transactionService;
+  private WalletTransactionService transactionService;
 
   public EthereumWalletServiceManaged(EthereumWalletService ethereumWalletService) {
   }
@@ -57,16 +57,16 @@ public class EthereumWalletServiceManaged {
     return getClientConnector().getConnectionInterruptionCount();
   }
 
-  public EthereumWalletTransactionService getTransactionService() {
+  public WalletTransactionService getTransactionService() {
     if (transactionService == null) {
-      transactionService = CommonsUtils.getService(EthereumWalletTransactionService.class);
+      transactionService = CommonsUtils.getService(WalletTransactionService.class);
     }
     return transactionService;
   }
 
-  public EthereumWalletAccountService getAccountService() {
+  public WalletAccountService getAccountService() {
     if (accountService == null) {
-      accountService = CommonsUtils.getService(EthereumWalletAccountService.class);
+      accountService = CommonsUtils.getService(WalletAccountService.class);
     }
     return accountService;
   }

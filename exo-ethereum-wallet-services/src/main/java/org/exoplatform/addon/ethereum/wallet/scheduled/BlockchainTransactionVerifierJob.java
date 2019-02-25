@@ -23,17 +23,17 @@ import org.exoplatform.services.log.Log;
 @DisallowConcurrentExecution
 public class BlockchainTransactionVerifierJob implements Job {
 
-  private static final Log                 LOG = ExoLogger.getLogger(BlockchainTransactionVerifierJob.class);
+  private static final Log         LOG = ExoLogger.getLogger(BlockchainTransactionVerifierJob.class);
 
-  private EthereumWalletService            ethereumWalletService;
+  private EthereumClientConnector  ethereumClientConnector;
 
-  private EthereumClientConnector          ethereumClientConnector;
+  private WalletService            walletService;
 
-  private EthereumWalletTransactionService transactionService;
+  private WalletTransactionService transactionService;
 
-  private ListenerService                  listenerService;
+  private ListenerService          listenerService;
 
-  private ExoContainer                     container;
+  private ExoContainer             container;
 
   public BlockchainTransactionVerifierJob() {
     this(PortalContainer.getInstance());
@@ -49,7 +49,7 @@ public class BlockchainTransactionVerifierJob implements Job {
     ExoContainerContext.setCurrentContainer(container);
     RequestLifeCycle.begin(this.container);
     try {
-      GlobalSettings settings = getEthereumWalletService().getSettings();
+      GlobalSettings settings = getWalletService().getSettings();
       if (settings == null || settings.getDefaultNetworkId() == null) {
         LOG.debug("Empty network id on settings, ignore blockchain listening");
         return;
@@ -101,11 +101,11 @@ public class BlockchainTransactionVerifierJob implements Job {
     return getTransactionService().getPendingTransactions(networkId);
   }
 
-  private EthereumWalletService getEthereumWalletService() {
-    if (ethereumWalletService == null) {
-      ethereumWalletService = CommonsUtils.getService(EthereumWalletService.class);
+  private WalletService getWalletService() {
+    if (walletService == null) {
+      walletService = CommonsUtils.getService(WalletService.class);
     }
-    return ethereumWalletService;
+    return walletService;
   }
 
   private EthereumClientConnector getEthereumClientConnector() {
@@ -115,9 +115,9 @@ public class BlockchainTransactionVerifierJob implements Job {
     return ethereumClientConnector;
   }
 
-  private EthereumWalletTransactionService getTransactionService() {
+  private WalletTransactionService getTransactionService() {
     if (transactionService == null) {
-      transactionService = CommonsUtils.getService(EthereumWalletTransactionService.class);
+      transactionService = CommonsUtils.getService(WalletTransactionService.class);
     }
     return transactionService;
   }

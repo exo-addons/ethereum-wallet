@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
+import org.exoplatform.addon.ethereum.wallet.service.WalletService;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.*;
 import org.exoplatform.services.log.ExoLogger;
@@ -36,9 +36,9 @@ import org.exoplatform.services.log.Log;
 @Asynchronous
 public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
 
-  private static final Log      LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
+  private static final Log LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
 
-  private EthereumWalletService ethereumWalletService;
+  private WalletService    walletService;
 
   @Override
   public void onEvent(Event<Wallet, Wallet> event) throws Exception {
@@ -85,11 +85,11 @@ public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
     }
   }
 
-  public EthereumWalletService getEthereumWalletService() {
-    if (ethereumWalletService == null) {
-      ethereumWalletService = CommonsUtils.getService(EthereumWalletService.class);
+  public WalletService getEthereumWalletService() {
+    if (walletService == null) {
+      walletService = CommonsUtils.getService(WalletService.class);
     }
-    return ethereumWalletService;
+    return walletService;
   }
 
 }

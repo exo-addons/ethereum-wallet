@@ -41,17 +41,17 @@ import org.exoplatform.social.core.service.LinkProvider;
  */
 @Asynchronous
 public class TransactionNotificationListener extends Listener<Object, JSONObject> {
-  private static final Log                 LOG = ExoLogger.getLogger(TransactionNotificationListener.class);
+  private static final Log         LOG = ExoLogger.getLogger(TransactionNotificationListener.class);
 
-  private ExoContainer                     container;
+  private ExoContainer             container;
 
-  private EthereumWalletService            walletService;
+  private WalletService            walletService;
 
-  private EthereumWalletTransactionService transactionService;
+  private WalletTransactionService transactionService;
 
-  private EthereumWalletAccountService     walletAccountService;
+  private WalletAccountService     walletAccountService;
 
-  private EthereumWalletContractService    contractService;
+  private WalletContractService    contractService;
 
   public TransactionNotificationListener(PortalContainer container) {
     this.container = container;
@@ -147,30 +147,30 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
     ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(transactionStatus.getNotificationId()))).execute(ctx);
   }
 
-  private EthereumWalletService getWalletService() {
+  private WalletService getWalletService() {
     if (walletService == null) {
-      walletService = CommonsUtils.getService(EthereumWalletService.class);
+      walletService = CommonsUtils.getService(WalletService.class);
     }
     return walletService;
   }
 
-  private EthereumWalletTransactionService getTransactionService() {
+  private WalletTransactionService getTransactionService() {
     if (transactionService == null) {
-      transactionService = CommonsUtils.getService(EthereumWalletTransactionService.class);
+      transactionService = CommonsUtils.getService(WalletTransactionService.class);
     }
     return transactionService;
   }
 
-  private EthereumWalletAccountService getWalletAccountService() {
+  private WalletAccountService getWalletAccountService() {
     if (walletAccountService == null) {
-      walletAccountService = CommonsUtils.getService(EthereumWalletAccountService.class);
+      walletAccountService = CommonsUtils.getService(WalletAccountService.class);
     }
     return walletAccountService;
   }
 
-  private EthereumWalletContractService getContractService() {
+  private WalletContractService getContractService() {
     if (contractService == null) {
-      contractService = CommonsUtils.getService(EthereumWalletContractService.class);
+      contractService = CommonsUtils.getService(WalletContractService.class);
     }
     return contractService;
   }

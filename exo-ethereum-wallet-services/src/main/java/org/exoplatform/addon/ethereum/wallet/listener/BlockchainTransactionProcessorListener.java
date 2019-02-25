@@ -24,7 +24,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.exoplatform.addon.ethereum.wallet.model.MinedTransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTransactionService;
+import org.exoplatform.addon.ethereum.wallet.service.WalletTransactionService;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.*;
 import org.exoplatform.container.component.RequestLifeCycle;
@@ -39,13 +39,13 @@ import org.exoplatform.services.log.Log;
  */
 public class BlockchainTransactionProcessorListener extends Listener<Object, TransactionReceipt> {
 
-  private static final Log                 LOG = ExoLogger.getLogger(BlockchainTransactionProcessorListener.class);
+  private static final Log         LOG = ExoLogger.getLogger(BlockchainTransactionProcessorListener.class);
 
-  private EthereumWalletTransactionService transactionService;
+  private WalletTransactionService transactionService;
 
-  private EthereumClientConnector          ethereumClientConnector;
+  private EthereumClientConnector  ethereumClientConnector;
 
-  private ExoContainer                     container;
+  private ExoContainer             container;
 
   public BlockchainTransactionProcessorListener(PortalContainer container) {
     this.container = container;
@@ -127,9 +127,9 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
     return ethereumClientConnector;
   }
 
-  private EthereumWalletTransactionService getTransactionService() {
+  private WalletTransactionService getTransactionService() {
     if (transactionService == null) {
-      transactionService = CommonsUtils.getService(EthereumWalletTransactionService.class);
+      transactionService = CommonsUtils.getService(WalletTransactionService.class);
     }
     return transactionService;
   }

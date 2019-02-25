@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
-import org.exoplatform.addon.ethereum.wallet.reward.service.utils.RewardUtils;
+import org.exoplatform.addon.ethereum.wallet.utils.RewardUtils;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.configuration.ConfigurationManager;

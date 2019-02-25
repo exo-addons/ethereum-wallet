@@ -18,30 +18,30 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 
-public class EthereumWalletTransactionService {
+public class EthereumWalletTransactionService implements WalletTransactionService {
 
-  private static final Log              LOG = ExoLogger.getLogger(EthereumWalletTransactionService.class);
+  private static final Log      LOG = ExoLogger.getLogger(EthereumWalletTransactionService.class);
 
-  private TransactionStorage            walletTransactionStorage;
+  private WalletAccountService  accountService;
 
-  private EthereumWalletAccountService  walletAccountService;
+  private WalletContractService contractService;
 
-  private EthereumWalletContractService contractService;
+  private TransactionStorage    transactionStorage;
 
-  private SpaceService                  spaceService;
+  private SpaceService          spaceService;
 
-  private ListenerService               listenerService;
+  private ListenerService       listenerService;
 
-  private long                          watchedTreatedTransactionsCount;
+  private long                  watchedTreatedTransactionsCount;
 
-  private long                          pendingTransactionMaxDays;
+  private long                  pendingTransactionMaxDays;
 
-  public EthereumWalletTransactionService(EthereumWalletAccountService walletAccountService,
-                                          TransactionStorage walletTransactionStorage,
-                                          EthereumWalletContractService contractService,
+  public EthereumWalletTransactionService(WalletAccountService accountService,
+                                          TransactionStorage transactionStorage,
+                                          WalletContractService contractService,
                                           InitParams params) {
-    this.walletTransactionStorage = walletTransactionStorage;
-    this.walletAccountService = walletAccountService;
+    this.transactionStorage = transactionStorage;
+    this.accountService = accountService;
     this.contractService = contractService;
 
     if (params != null && params.containsKey(TRANSACTION_PENDING_MAX_DAYS)) {
@@ -50,18 +50,12 @@ public class EthereumWalletTransactionService {
     }
   }
 
-  /**
-   * @param networkId blockchain network id
-   * @return {@link List} of pending {@link TransactionDetail}
-   */
+  @Override
   public List<TransactionDetail> getPendingTransactions(long networkId) {
-    return walletTransactionStorage.getPendingTransactions(networkId);
+    return transactionStorage.getPendingTransactions(networkId);
   }
 
-  /**
-   * @param networkId blockchain network id
-   * @return transactions hashes that are marked as pensing in internal database
-   */
+  @Override
   public Set<String> getPendingTransactionHashes(long networkId) {
     List<TransactionDetail> pendingTransactions = getPendingTransactions(networkId);
     if (pendingTransactions == null || pendingTransactions.isEmpty()) {
@@ -70,10 +64,7 @@ public class EthereumWalletTransactionService {
     return pendingTransactions.stream().map(transactionDetail -> transactionDetail.getHash()).collect(Collectors.toSet());
   }
 
-  public long getPendingTransactionMaxDays() {
-    return pendingTransactionMaxDays;
-  }
-
+  @Override
   public List<TransactionDetail> getTransactions(long networkId,
                                                  String address,
                                                  String contractAddress,
@@ -89,67 +80,53 @@ public class EthereumWalletTransactionService {
     }
   }
 
+  @Override
   public TransactionDetail getTransactionByHash(String hash) {
-    return walletTransactionStorage.getTransactionByHash(hash);
+    return transactionStorage.getTransactionByHash(hash);
   }
 
+  @Override
   public TransactionDetail getAddressLastPendingTransactionSent(long networkId,
                                                                 String address,
                                                                 String currentUser) throws IllegalAccessException {
-    Wallet wallet = walletAccountService.getWalletByAddress(address);
+    Wallet wallet = accountService.getWalletByAddress(address);
     if (wallet == null) {
       return null;
     }
     if (!canAccessWallet(wallet, currentUser)) {
       throw new IllegalAccessException("Can't access wallet with address " + address);
     }
-    return walletTransactionStorage.getAddressLastPendingTransactionSent(networkId, address);
+    return transactionStorage.getAddressLastPendingTransactionSent(networkId, address);
   }
 
-  /**
-   * Save temporary transaction label and message and save transaction hash in
-   * sender and receiver account
-   *
-   * @param transactionDetail transaction detail to save
-   * @param currentUser current username that is saving transaction
-   * @param transactionMined whether the transaction has been mined on
-   *          blockchain or not
-   * @throws IllegalAccessException if current user is not allowed to save
-   *           transaction to sender and receiver wallet
-   */
+  @Override
   public void saveTransactionDetail(TransactionDetail transactionDetail,
                                     String currentUser,
                                     boolean transactionMined) throws IllegalAccessException {
     if (!transactionMined) {
       String senderAddress = StringUtils.isBlank(transactionDetail.getBy()) ? transactionDetail.getFrom()
                                                                             : transactionDetail.getBy();
-      Wallet senderWallet = walletAccountService.getWalletByAddress(senderAddress);
+      Wallet senderWallet = accountService.getWalletByAddress(senderAddress);
       if (senderWallet != null) {
-        walletAccountService.checkCanSaveWallet(senderWallet, senderWallet, currentUser);
+        accountService.checkCanSaveWallet(senderWallet, senderWallet, currentUser);
       }
     }
-    walletTransactionStorage.saveTransactionDetail(transactionDetail);
+    transactionStorage.saveTransactionDetail(transactionDetail);
     if (transactionMined) {
       broadcastTransactionMinedEvent(transactionDetail);
     }
   }
 
-  /**
-   * @return watched transactions count treated since the server startup
-   */
+  @Override
   public long getWatchedTreatedTransactionsCount() {
     return watchedTreatedTransactionsCount;
   }
 
-  /**
-   * Get list of transactions for a contract
-   * 
-   * @param networkId blockchain network id
-   * @param contractAddress contract address used ti filter transactions
-   * @param limit limit of transactions list to retrieve
-   * @param currentUser current user retrieving transactions
-   * @return {@link List} of {@link TransactionDetail}
-   */
+  @Override
+  public long getPendingTransactionMaxDays() {
+    return pendingTransactionMaxDays;
+  }
+
   private List<TransactionDetail> getContractTransactions(Long networkId,
                                                           String contractAddress,
                                                           int limit,
@@ -164,9 +141,9 @@ public class EthereumWalletTransactionService {
           + contractAddress);
     }
 
-    List<TransactionDetail> transactionDetails = walletTransactionStorage.getContractTransactions(networkId,
-                                                                                                  contractAddress,
-                                                                                                  limit);
+    List<TransactionDetail> transactionDetails = transactionStorage.getContractTransactions(networkId,
+                                                                                            contractAddress,
+                                                                                            limit);
     transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, currentUser));
     return transactionDetails;
   }
@@ -179,7 +156,7 @@ public class EthereumWalletTransactionService {
                                                         boolean pending,
                                                         boolean administration,
                                                         String currentUser) throws IllegalAccessException {
-    Wallet wallet = walletAccountService.getWalletByAddress(address);
+    Wallet wallet = accountService.getWalletByAddress(address);
     if (wallet == null) {
       return Collections.emptyList();
     }
@@ -187,29 +164,29 @@ public class EthereumWalletTransactionService {
       throw new IllegalAccessException("Can't access wallet with address " + address);
     }
 
-    List<TransactionDetail> transactionDetails = walletTransactionStorage.getWalletTransactions(networkId,
-                                                                                                address,
-                                                                                                contractAddress,
-                                                                                                hash,
-                                                                                                limit,
-                                                                                                pending,
-                                                                                                administration);
+    List<TransactionDetail> transactionDetails = transactionStorage.getWalletTransactions(networkId,
+                                                                                          address,
+                                                                                          contractAddress,
+                                                                                          hash,
+                                                                                          limit,
+                                                                                          pending,
+                                                                                          administration);
 
     transactionDetails.stream().forEach(transactionDetail -> retrieveWalletsDetails(transactionDetail, currentUser));
     return transactionDetails;
   }
 
   private void retrieveWalletsDetails(TransactionDetail transactionDetail, String currentUser) {
-    Wallet senderWallet = walletAccountService.getWalletByAddress(transactionDetail.getFrom());
+    Wallet senderWallet = accountService.getWalletByAddress(transactionDetail.getFrom());
     transactionDetail.setFromWallet(senderWallet);
     hideWalletOwnerPrivateInformation(senderWallet);
     if (StringUtils.isNotBlank(transactionDetail.getTo())) {
-      Wallet receiverWallet = walletAccountService.getWalletByAddress(transactionDetail.getTo());
+      Wallet receiverWallet = accountService.getWalletByAddress(transactionDetail.getTo());
       hideWalletOwnerPrivateInformation(receiverWallet);
       transactionDetail.setToWallet(receiverWallet);
     }
     if (StringUtils.isNotBlank(transactionDetail.getBy())) {
-      Wallet senderWalletBy = walletAccountService.getWalletByAddress(transactionDetail.getBy());
+      Wallet senderWalletBy = accountService.getWalletByAddress(transactionDetail.getBy());
       hideWalletOwnerPrivateInformation(senderWalletBy);
       transactionDetail.setByWallet(senderWalletBy);
       if (!displayTransactionsLabel(senderWalletBy, currentUser)) {

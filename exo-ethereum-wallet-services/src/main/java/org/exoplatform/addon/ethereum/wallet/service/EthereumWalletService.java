@@ -50,33 +50,33 @@ import org.exoplatform.social.core.space.spi.SpaceService;
  * A storage service to save/load information used by users and spaces wallets
  */
 @ManagedBy(EthereumWalletServiceManaged.class)
-public class EthereumWalletService implements Startable {
+public class EthereumWalletService implements WalletService, Startable {
 
-  private static final Log              LOG = ExoLogger.getLogger(EthereumWalletService.class);
+  private static final Log        LOG = ExoLogger.getLogger(EthereumWalletService.class);
 
-  private ExoContainer                  container;
+  private ExoContainer            container;
 
-  private EthereumWalletContractService contractService;
+  private EthereumClientConnector clientConnector;
 
-  private EthereumWalletAccountService  accountService;
+  private WalletContractService   contractService;
 
-  private EthereumClientConnector       clientConnector;
+  private WalletAccountService    accountService;
 
-  private SettingService                settingService;
+  private SettingService          settingService;
 
-  private SpaceService                  spaceService;
+  private SpaceService            spaceService;
 
-  private WebNotificationStorage        webNotificationStorage;
+  private WebNotificationStorage  webNotificationStorage;
 
-  private ListenerService               listenerService;
+  private ListenerService         listenerService;
 
-  private GlobalSettings                defaultSettings;
+  private GlobalSettings          defaultSettings;
 
-  private GlobalSettings                storedSettings;
+  private GlobalSettings          storedSettings;
 
   public EthereumWalletService(EthereumClientConnector clientConnector,
-                               EthereumWalletContractService contractService,
-                               EthereumWalletAccountService accountService,
+                               WalletContractService contractService,
+                               WalletAccountService accountService,
                                SettingService settingService,
                                SpaceService spaceService,
                                WebNotificationStorage webNotificationStorage,
@@ -172,11 +172,7 @@ public class EthereumWalletService implements Startable {
     clientConnector.stop();
   }
 
-  /**
-   * Save global settings
-   * 
-   * @param newGlobalSettings global settings to save
-   */
+  @Override
   public void saveSettings(GlobalSettings newGlobalSettings) {
     if (newGlobalSettings == null) {
       throw new IllegalArgumentException("globalSettings parameter is mandatory");
@@ -186,12 +182,7 @@ public class EthereumWalletService implements Startable {
     saveSettings(newGlobalSettings, oldGlobalSettings.getDataVersion());
   }
 
-  /**
-   * Save global settings with new dataversion
-   * 
-   * @param newGlobalSettings global settings to save
-   * @param dataVersion new data version of global settings to save
-   */
+  @Override
   public void saveSettings(GlobalSettings newGlobalSettings, Integer dataVersion) {
     if (newGlobalSettings == null) {
       throw new IllegalArgumentException("globalSettings parameter is mandatory");
@@ -225,12 +216,7 @@ public class EthereumWalletService implements Startable {
     }
   }
 
-  /**
-   * Retrieves global stored settings used for all users.
-   * 
-   * @return {@link GlobalSettings} global settings of default watched
-   *         blockchain network without user preferences
-   */
+  @Override
   public GlobalSettings getSettings() {
     if (this.storedSettings != null) {
       retrieveContractsPreferences(this.storedSettings, this.storedSettings.getDefaultNetworkId());
@@ -242,14 +228,7 @@ public class EthereumWalletService implements Startable {
     return this.storedSettings.clone();
   }
 
-  /**
-   * Retrieves global stored settings. if username is not null, the personal
-   * settings will be included.
-   * 
-   * @param networkId blockchain network id to retrieve its settings
-   * @return {@link GlobalSettings} global settings of blockchain network id
-   *         without user preferences
-   */
+  @Override
   public GlobalSettings getSettings(Long networkId) {
     GlobalSettings globalSettings = null;
     if (this.storedSettings == null) {
@@ -267,17 +246,7 @@ public class EthereumWalletService implements Startable {
     return globalSettings;
   }
 
-  /**
-   * Retrieves global stored settings. if username is not null, the personal
-   * settings will be included. if spaceId is not null wallet address will be
-   * retrieved
-   * 
-   * @param networkId blockchain network id to retrieve its settings
-   * @param spaceId space pretty name to include its settings
-   * @param currentUser username to include its preferences
-   * @return {@link GlobalSettings} global settings with user and space
-   *         preferences included into it
-   */
+  @Override
   public GlobalSettings getSettings(Long networkId, String spaceId, String currentUser) {
     GlobalSettings globalSettings = null;
     if (StringUtils.isBlank(currentUser)) {
@@ -344,12 +313,7 @@ public class EthereumWalletService implements Startable {
     return globalSettings;
   }
 
-  /**
-   * Save user preferences of Wallet
-   * 
-   * @param currentUser current user name to save its preferences
-   * @param userPreferences user preferences to save
-   */
+  @Override
   public void saveUserPreferences(String currentUser, WalletPreferences userPreferences) {
     if (userPreferences == null) {
       throw new IllegalArgumentException("userPreferences parameter is mandatory");
@@ -360,13 +324,7 @@ public class EthereumWalletService implements Startable {
                        SettingValue.create(userPreferences.toJSONString()));
   }
 
-  /**
-   * Save funds request and send notifications
-   * 
-   * @param fundsRequest funds request details to save
-   * @throws IllegalAccessException if request sender is not allowed to send
-   *           request to receiver wallet
-   */
+  @Override
   public void requestFunds(FundsRequest fundsRequest) throws IllegalAccessException {
     String currentUser = getCurrentUserId();
 
@@ -418,15 +376,7 @@ public class EthereumWalletService implements Startable {
     ctx.getNotificationExecutor().with(ctx.makeCommand(PluginKey.key(FUNDS_REQUEST_NOTIFICATION_ID))).execute(ctx);
   }
 
-  /**
-   * Mark a fund request web notification as sent
-   * 
-   * @param notificationId web notification id
-   * @param currentUser current username that is marking the notification as
-   *          sent
-   * @throws IllegalAccessException if current user is not the targetted user of
-   *           notification
-   */
+  @Override
   public void markFundRequestAsSent(String notificationId, String currentUser) throws IllegalAccessException {
     NotificationInfo notificationInfo = webNotificationStorage.get(notificationId);
     if (notificationInfo == null) {
@@ -439,15 +389,7 @@ public class EthereumWalletService implements Startable {
     webNotificationStorage.update(notificationInfo, false);
   }
 
-  /**
-   * Get fund request status
-   * 
-   * @param notificationId web notification id
-   * @param currentUser current username
-   * @return true if fund request sent
-   * @throws IllegalAccessException if current user is not the targetted user of
-   *           notification
-   */
+  @Override
   public boolean isFundRequestSent(String notificationId, String currentUser) throws IllegalAccessException {
     NotificationInfo notificationInfo = webNotificationStorage.get(notificationId);
     if (notificationInfo == null) {

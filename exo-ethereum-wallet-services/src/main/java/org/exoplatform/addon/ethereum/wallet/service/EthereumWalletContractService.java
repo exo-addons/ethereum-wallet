@@ -21,7 +21,7 @@ import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
-public class EthereumWalletContractService implements Startable {
+public class EthereumWalletContractService implements WalletContractService, Startable {
 
   private static final Log     LOG                                    =
                                    ExoLogger.getLogger(EthereumWalletContractService.class);
@@ -80,20 +80,12 @@ public class EthereumWalletContractService implements Startable {
     // Nothing to stop
   }
 
-  /**
-   * @param address contract address to check
-   * @param networkId blockchain network id
-   * @return true if contract address is a watched contract
-   */
+  @Override
   public boolean isContract(String address, long networkId) {
     return getContractDetail(address, networkId) != null;
   }
 
-  /**
-   * Save a new contract details
-   * 
-   * @param contractDetail contract details to save
-   */
+  @Override
   public void saveContract(ContractDetail contractDetail) {
     if (StringUtils.isBlank(contractDetail.getAddress())) {
       throw new IllegalArgumentException(ADDRESS_PARAMETER_IS_MANDATORY_MESSAGE);
@@ -122,14 +114,7 @@ public class EthereumWalletContractService implements Startable {
     }
   }
 
-  /**
-   * Removes a contract address from default contracts displayed in wallet of
-   * all users
-   * 
-   * @param address contract address to remove from watched list
-   * @param networkId blockchain network id where contract is deployed
-   * @return true if removed
-   */
+  @Override
   public boolean removeDefaultContract(String address, Long networkId) {
     if (StringUtils.isBlank(address)) {
       LOG.warn("Can't remove empty address for contract");
@@ -156,13 +141,7 @@ public class EthereumWalletContractService implements Startable {
     return true;
   }
 
-  /**
-   * Get contract detail
-   * 
-   * @param address contract address to get from watched list
-   * @param networkId blockchain network id where contract is deployed
-   * @return {@link ContractDetail} contract details
-   */
+  @Override
   public ContractDetail getContractDetail(String address, Long networkId) {
     if (StringUtils.isBlank(address)) {
       return null;
@@ -180,12 +159,7 @@ public class EthereumWalletContractService implements Startable {
     return null;
   }
 
-  /**
-   * Retrieves the list of default contract addreses
-   * 
-   * @param networkId blockchain network id where contract is deployed
-   * @return {@link Set} of watched contracts addresses
-   */
+  @Override
   public Set<String> getDefaultContractsAddresses(Long networkId) {
     if (networkId == null || networkId == 0) {
       return Collections.emptySet();
@@ -201,39 +175,24 @@ public class EthereumWalletContractService implements Startable {
     return Collections.emptySet();
   }
 
-  /**
-   * Retreive the ABI content of a contract
-   * 
-   * @param name contract name
-   * @param extension contract ABI file extension ('json' or 'abi')
-   * @return ABI of contract in JSON format represented in {@link String}
-   * @throws IOException when an error occurs while getting contract ABI file from filesystem
-   */
-  public String getContract(String name, String extension) throws IOException {
+  @Override
+  public JSONArray getContractAbi() {
+    return contractAbi;
+  }
+
+  @Override
+  public String getContractBinary() {
+    return contractBinary;
+  }
+
+  @Override
+  public String getContractFileContent(String name, String extension) throws IOException {
     try (InputStream abiInputStream = this.getClass()
                                           .getClassLoader()
                                           .getResourceAsStream("org/exoplatform/addon/ethereum/wallet/contract/" + name + "."
                                               + extension)) {
       return IOUtils.toString(abiInputStream);
     }
-  }
-
-  /**
-   * Get Contract ABI
-   * 
-   * @return {@link JSONArray} ABI of contract in JSON format
-   */
-  public JSONArray getContractAbi() {
-    return contractAbi;
-  }
-
-  /**
-   * Get Contract BINARY to deploy
-   * 
-   * @return UTF-8 String of contract BIN
-   */
-  public String getContractBinary() {
-    return contractBinary;
   }
 
 }

@@ -24,7 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumWalletService;
+import org.exoplatform.addon.ethereum.wallet.service.WalletService;
 import org.exoplatform.container.PortalContainer;
 
 public class EthereumWalletServiceTest {
@@ -212,7 +212,7 @@ public class EthereumWalletServiceTest {
     }
   }
 
-  private EthereumWalletService getService() {
-    return PortalContainer.getInstance().getComponentInstanceOfType(EthereumWalletService.class);
+  private WalletService getService() {
+    return PortalContainer.getInstance().getComponentInstanceOfType(WalletService.class);
   }
 }

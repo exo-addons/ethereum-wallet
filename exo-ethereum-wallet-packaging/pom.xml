@@ -13,6 +13,12 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>exo-ethereum-wallet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>exo-ethereum-wallet-services</artifactId>
       <scope>provided</scope>
     </dependency>

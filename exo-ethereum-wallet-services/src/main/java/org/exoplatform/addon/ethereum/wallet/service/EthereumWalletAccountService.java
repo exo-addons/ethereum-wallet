@@ -17,7 +17,7 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
 
-public class EthereumWalletAccountService {
+public class EthereumWalletAccountService implements WalletAccountService {
 
   private static final Log    LOG =
                                   ExoLogger.getLogger(EthereumWalletAccountService.class);
@@ -34,32 +34,19 @@ public class EthereumWalletAccountService {
     this.labelStorage = labelStorage;
   }
 
-  /**
-   * Retrieves the list registered wallets
-   * 
-   * @return list of associated wallets to users and spaces
-   */
+  @Override
   public Set<Wallet> listWallets() {
     Set<Wallet> wallets = accountStorage.listWallets();
     wallets.forEach(wallet -> hideWalletOwnerPrivateInformation(wallet));
     return wallets;
   }
 
-  /**
-   * Retrieve wallets count
-   * 
-   * @return associated wallets count
-   */
+  @Override
   public long getWalletsCount() {
     return accountStorage.getWalletsCount();
   }
 
-  /**
-   * Retrieve wallet details by identity technical id
-   * 
-   * @param identityId User/Space identity technical id
-   * @return {@link Wallet} wallet details identified by identity technical id
-   */
+  @Override
   public Wallet getWalletByIdentityId(long identityId) {
     if (identityId == 0) {
       throw new IllegalArgumentException("identityId is mandatory");
@@ -71,14 +58,7 @@ public class EthereumWalletAccountService {
     return getWalletOfIdentity(identity);
   }
 
-  /**
-   * Retrieve wallet details by identity type and remoteId accessed by a user
-   * 
-   * @param type 'user' or 'space'
-   * @param remoteId username or space pretty name
-   * @param currentUser current username saving wallet private key
-   * @return {@link Wallet} wallet details identified by type and remote Id
-   */
+  @Override
   public Wallet getWalletByTypeAndId(String type, String remoteId, String currentUser) {
     Wallet wallet = getWalletByTypeAndId(type, remoteId);
     if (wallet != null) {
@@ -94,13 +74,7 @@ public class EthereumWalletAccountService {
     return wallet;
   }
 
-  /**
-   * Retrieve wallet details by identity type and remoteId
-   * 
-   * @param type 'user' or 'space'
-   * @param remoteId username or space pretty name
-   * @return {@link Wallet} wallet details identified by type and remote Id
-   */
+  @Override
   public Wallet getWalletByTypeAndId(String type, String remoteId) {
     if (StringUtils.isBlank(remoteId)) {
       throw new IllegalArgumentException("id parameter is mandatory");
@@ -117,16 +91,7 @@ public class EthereumWalletAccountService {
     return getWalletOfIdentity(identity);
   }
 
-  /**
-   * Save wallet private key for a wallet identified by identity type and
-   * remoteId
-   * 
-   * @param type 'user' or 'space'
-   * @param remoteId username or space pretty name
-   * @param content crypted private key
-   * @throws IllegalAccessException when the current user is not allowed to save
-   *           the encrypted private key of wallet
-   */
+  @Override
   public void savePrivateKeyByTypeAndId(String type,
                                         String remoteId,
                                         String content,
@@ -140,16 +105,7 @@ public class EthereumWalletAccountService {
     accountStorage.saveWalletPrivateKey(wallet.getTechnicalId(), content);
   }
 
-  /**
-   * Retrieve wallet private key by identity type and remoteId
-   * 
-   * @param type 'user' or 'space'
-   * @param remoteId username or space pretty name
-   * @param currentUser current username getting wallet private key
-   * @return encrypted wallet private key identified by type and remote Id
-   * @throws IllegalAccessException when the current user is not allowed to get
-   *           the encrypted private key of wallet
-   */
+  @Override
   public String getPrivateKeyByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException {
     Wallet wallet = getWalletByTypeAndId(type, remoteId);
     if (wallet == null || wallet.getTechnicalId() < 1) {
@@ -159,15 +115,7 @@ public class EthereumWalletAccountService {
     return accountStorage.getWalletPrivateKey(wallet.getTechnicalId());
   }
 
-  /**
-   * Removes wallet private key by identity type and remoteId
-   * 
-   * @param type 'user' or 'space'
-   * @param remoteId username or space pretty name
-   * @param currentUser current username removing wallet private key
-   * @throws IllegalAccessException when the current user is not an owner of
-   *           wallet
-   */
+  @Override
   public void removePrivateKeyByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException {
     Wallet wallet = getWalletByTypeAndId(type, remoteId);
     if (wallet == null || wallet.getTechnicalId() < 1) {
@@ -177,12 +125,7 @@ public class EthereumWalletAccountService {
     accountStorage.removeWalletPrivateKey(wallet.getTechnicalId());
   }
 
-  /**
-   * Retrieve wallet by address
-   * 
-   * @param address address of wallet to retrieve
-   * @return {@link Wallet} wallet details identified by type and remote Id
-   */
+  @Override
   public Wallet getWalletByAddress(String address) {
     if (address == null) {
       throw new IllegalArgumentException("address is mandatory");
@@ -197,15 +140,8 @@ public class EthereumWalletAccountService {
     return wallet;
   }
 
-  /**
-   * Save wallet address to currentUser or to a space managed by current user
-   * 
-   * @param wallet {@link Wallet} wallet details to save
-   * @param currentUser current username saving wallet details
-   * @param broadcast broadcast saving event or not
-   * @throws Exception when an error happens while saving the wallet details
-   */
-  public void saveWalletAddress(Wallet wallet, String currentUser, boolean broadcast) throws Exception {
+  @Override
+  public void saveWalletAddress(Wallet wallet, String currentUser, boolean broadcast) throws IllegalAccessException {
     if (wallet == null) {
       throw new IllegalArgumentException("Wallet is mandatory");
     }
@@ -230,19 +166,19 @@ public class EthereumWalletAccountService {
     }
 
     if (broadcast) {
-      getListenerService().broadcast(isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT,
-                                     oldWallet == null ? null : oldWallet.clone(),
-                                     wallet.clone());
+      String eventName = isNew ? NEW_ADDRESS_ASSOCIATED_EVENT : MODIFY_ADDRESS_ASSOCIATED_EVENT;
+      wallet = wallet.clone();
+      try {
+        getListenerService().broadcast(eventName,
+                                       oldWallet == null ? null : oldWallet.clone(),
+                                       wallet);
+      } catch (Exception e) {
+        LOG.error("Error broadcasting event {} for wallet {}", eventName, wallet, e);
+      }
     }
   }
 
-  /**
-   * Remove User or Space wallet address association
-   * 
-   * @param address wallet address association to remove
-   * @param currentUser current username removing wallet details
-   * @throws IllegalAccessException if current user is not an administrator
-   */
+  @Override
   public void removeWalletByAddress(String address, String currentUser) throws IllegalAccessException {
     if (address == null) {
       throw new IllegalArgumentException("address paramter is mandatory");
@@ -259,14 +195,7 @@ public class EthereumWalletAccountService {
     accountStorage.removeWallet(wallet.getTechnicalId());
   }
 
-  /**
-   * Enable/Disable User or Space wallet
-   * 
-   * @param address address of wallet to enable/disable
-   * @param enable whether enable or disable wallet
-   * @param currentUser username of current user making the operation
-   * @throws IllegalAccessException if current user is not an administrator
-   */
+  @Override
   public void enableWalletByAddress(String address, boolean enable, String currentUser) throws IllegalAccessException {
     if (address == null) {
       throw new IllegalArgumentException("address paramter is mandatory");
@@ -283,15 +212,7 @@ public class EthereumWalletAccountService {
     accountStorage.saveWallet(wallet, false);
   }
 
-  /**
-   * Throws an exception if the user is not allowed to modify wallet information
-   * 
-   * @param wallet wallet details to save
-   * @param storedWallet stored wallet in database
-   * @param currentUser current username that is making the modification
-   * @throws IllegalAccessException if current user is not allowed to modify
-   *           wallet
-   */
+  @Override
   public void checkCanSaveWallet(Wallet wallet, Wallet storedWallet, String currentUser) throws IllegalAccessException {
     if (isUserAdmin(currentUser)) {
       return;
@@ -313,14 +234,7 @@ public class EthereumWalletAccountService {
     }
   }
 
-  /**
-   * Return true if user is accessing his wallet or is accessing a space that he
-   * manages wallet
-   * 
-   * @param wallet
-   * @param currentUser
-   * @return
-   */
+  @Override
   public boolean isWalletOwner(Wallet wallet, String currentUser) {
     if (wallet == null) {
       return false;
@@ -338,25 +252,7 @@ public class EthereumWalletAccountService {
     }
   }
 
-  private void checkIsWalletOwner(Wallet wallet, String currentUser) throws IllegalAccessException {
-    String remoteId = wallet.getId();
-    WalletType type = WalletType.getType(wallet.getType());
-    if (type.isSpace()) {
-      checkUserIsSpaceManager(remoteId, currentUser, true);
-    } else if (!StringUtils.equals(currentUser, remoteId)) {
-      throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
-          + "'");
-    }
-  }
-
-  /**
-   * Saves label if label is not empty else, delete it
-   * 
-   * @param label label details object to process
-   * @param currentUser current user making the label
-   *          creation/modification/deletion
-   * @return {@link AddressLabel} saved or deleted label details
-   */
+  @Override
   public AddressLabel saveOrDeleteAddressLabel(AddressLabel label, String currentUser) {
     if (label == null) {
       throw new IllegalArgumentException("Label is empty");
@@ -389,17 +285,23 @@ public class EthereumWalletAccountService {
     return label;
   }
 
-  /**
-   * List of labels that current user can access
-   * 
-   * @param currentUser current username accessing the list of addresses labels
-   * @return a {@link Set} of label details
-   */
+  @Override
   public Set<AddressLabel> getAddressesLabelsVisibleBy(String currentUser) {
     if (!isUserAdmin(currentUser)) {
       return Collections.emptySet();
     }
     return labelStorage.getAllLabels();
+  }
+
+  private void checkIsWalletOwner(Wallet wallet, String currentUser) throws IllegalAccessException {
+    String remoteId = wallet.getId();
+    WalletType type = WalletType.getType(wallet.getType());
+    if (type.isSpace()) {
+      checkUserIsSpaceManager(remoteId, currentUser, true);
+    } else if (!StringUtils.equals(currentUser, remoteId)) {
+      throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
+          + "'");
+    }
   }
 
   private Wallet getWalletOfIdentity(Identity identity) {

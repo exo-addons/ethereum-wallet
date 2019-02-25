@@ -8,15 +8,18 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardTransactionService</type>
+    <key>org.exoplatform.addon.ethereum.wallet.reward.service.RewardTransactionService</key>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.WalletRewardTransactionService</type>
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardTeamService</type>
+    <key>org.exoplatform.addon.ethereum.wallet.reward.service.RewardTeamService</key>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.WalletRewardTeamService</type>
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardSettingsService</type>
+    <key>org.exoplatform.addon.ethereum.wallet.reward.service.RewardSettingsService</key>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.WalletRewardSettingsService</type>
     <component-plugins>
       <component-plugin>
         <name>gamification</name>
@@ -34,7 +37,8 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.reward.service.RewardService</type>
+    <key>org.exoplatform.addon.ethereum.wallet.reward.service.RewardService</key>
+    <type>org.exoplatform.addon.ethereum.wallet.reward.service.WalletRewardService</type>
   </component>
 
   <component>

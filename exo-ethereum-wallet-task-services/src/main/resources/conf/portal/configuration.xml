@@ -12,7 +12,8 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.task.service.WalletTaskService</type>
+    <key>org.exoplatform.addon.ethereum.wallet.task.service.WalletTaskService</key>
+    <type>org.exoplatform.addon.ethereum.wallet.task.service.WalletTaskServiceImpl</type>
   </component>
 
   <component>

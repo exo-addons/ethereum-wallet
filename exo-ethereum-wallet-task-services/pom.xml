@@ -10,7 +10,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>exo-ethereum-wallet-services</artifactId>
+      <artifactId>exo-ethereum-wallet-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -38,11 +38,6 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.exoplatform.social</groupId>
       <artifactId>social-component-core-jpa</artifactId>
       <scope>provided</scope>
@@ -51,20 +46,6 @@
   <build>
     <finalName>exo-ethereum-wallet-task-services</finalName>
     <plugins>
-      <plugin>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok-maven-plugin</artifactId>
-      </plugin>
-      <!-- we need to overide the enforcer rules here because lombok doesn't match it -->
-      <plugin>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>check-java-compat</id>
-            <phase>none</phase>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>com.jcabi</groupId>
         <artifactId>jcabi-maven-plugin</artifactId>
