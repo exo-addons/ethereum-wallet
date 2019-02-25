@@ -8,7 +8,12 @@
   <property name="autoIncrement" value="true" dbms="mysql,mssql,h2,sybase,db2,hsqldb"/>
   <property name="autoIncrement" value="false" dbms="oracle,postgresql"/>
 
-  <changeSet author="wallet" id="1.0.0-1" failOnError="false" runOnChange="false">
+  <changeSet author="reward" id="1.0.0-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="ADDONS_WALLET_GAM_TEAM"/>
+      </not>
+    </preConditions>
     <createTable tableName="ADDONS_WALLET_GAM_TEAM">
       <column name="TEAM_ID" type="BIGINT" autoIncrement="${autoIncrement}" startWith="1">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_GAM_TEAM"/>
@@ -28,7 +33,12 @@
     </modifySql>
   </changeSet>
 
-  <changeSet author="wallet" id="1.0.0-2" failOnError="false" runOnChange="false">
+  <changeSet author="reward" id="1.0.0-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="ADDONS_WALLET_GAM_TEAM_MEMBER"/>
+      </not>
+    </preConditions>
     <createTable tableName="ADDONS_WALLET_GAM_TEAM_MEMBER">
       <column name="MEMBER_ID" type="BIGINT" autoIncrement="${autoIncrement}" startWith="1">
         <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WALLET_GAM_TEAM_MEM"/>
@@ -39,21 +49,22 @@
       <column name="TEAM_ID" type="BIGINT">
         <constraints foreignKeyName="FK_WALLET_GAM_01" references="ADDONS_WALLET_GAM_TEAM(TEAM_ID)" nullable="false"/>
       </column>
+      <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false"/>
     </createTable>
     <modifySql dbms="mysql">
       <append value=" ENGINE=INNODB CHARSET=UTF8 COLLATE utf8_general_ci"/>
     </modifySql>
   </changeSet>
 
-  <changeSet author="wallet" id="1.0.0-3" dbms="oracle,postgresql" failOnError="false" runOnChange="false">
+  <changeSet author="reward" id="1.0.0-4" dbms="oracle,postgresql">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <sequenceExists sequenceName="SEQ_WALLET_GAM_TEAM_ID"/>
+      </not>
+    </preConditions>
+
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_ID" startValue="1"/>
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_MEMBER_ID" startValue="1"/>
-  </changeSet>
-
-  <changeSet author="wallet" id="1.0.0-4" failOnError="false" runOnChange="false">
-    <addColumn tableName="ADDONS_WALLET_GAM_TEAM">
-      <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false" />
-    </addColumn>
   </changeSet>
 
 </databaseChangeLog>
