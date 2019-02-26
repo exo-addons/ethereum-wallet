@@ -3,6 +3,7 @@
     id="walletBackupModal" 
     v-model="dialog"
     :disabled="disabled"
+    attach="#walletDialogsParent"
     class="fixLinkHeight"
     content-class="uiPopup with-overflow"
     width="500px"

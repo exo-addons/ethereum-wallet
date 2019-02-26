@@ -2,6 +2,7 @@
   <v-dialog
     v-model="dialog"
     :disabled="disabled"
+    attach="#walletDialogsParent"
     content-class="uiPopup"
     width="600px"
     max-width="100vw"

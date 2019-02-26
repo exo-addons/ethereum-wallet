@@ -12,6 +12,8 @@
         </h6>
         <tasks-list :tasks="tasks" @refresh="init" />
       </v-card>
+      <div id="walletDialogsParent">
+      </div>
     </main>
   </v-app>
 </template>

@@ -3,6 +3,7 @@
     id="sendEtherModal"
     v-model="dialog"
     :disabled="disabled"
+    attach="#walletDialogsParent"
     content-class="uiPopup with-overflow"
     class="sendEtherModal"
     width="600px"

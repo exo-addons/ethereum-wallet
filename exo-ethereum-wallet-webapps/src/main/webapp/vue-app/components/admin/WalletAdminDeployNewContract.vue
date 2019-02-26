@@ -1,6 +1,7 @@
 <template>
   <v-dialog
     v-model="createNewToken"
+    attach="#walletDialogsParent"
     content-class="uiPopup createNewToken"
     fullscreen
     hide-overlay

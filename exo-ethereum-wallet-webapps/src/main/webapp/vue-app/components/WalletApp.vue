@@ -165,6 +165,8 @@
           </v-card>
         </v-flex>
       </v-layout>
+      <div id="walletDialogsParent">
+      </div>
     </main>
     <main v-else-if="isMaximized && !loading" id="walletDisabledContent">
       <v-layout>

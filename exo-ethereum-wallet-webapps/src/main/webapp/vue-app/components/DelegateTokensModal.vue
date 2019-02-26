@@ -3,6 +3,7 @@
     id="delegateTokenModal"
     v-model="dialog"
     :disabled="disabled"
+    attach="#walletDialogsParent"
     content-class="uiPopup with-overflow"
     class="delegateTokenModal"
     width="600px"

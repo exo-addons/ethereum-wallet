@@ -39,6 +39,11 @@
   min-height: auto !important;
 }
 
+#walletDialogsParent {
+  z-index: 1055;
+  position: relative;
+}
+
 #WalletApp, #WalletSpaceApp, #RewardApp, #WalletAdminApp, #TodoListApp {
   background: transparent;
 
@@ -625,10 +630,6 @@
 
 #WalletAdminApp, #RewardApp, #TodoListApp {
    margin: 10px 11px 0;
-
-  .v-dialog__content {
-    z-index: 100000 !important;
-  }
 
   .selectBoxVuetify .v-select__selections {
     line-height: 17px;

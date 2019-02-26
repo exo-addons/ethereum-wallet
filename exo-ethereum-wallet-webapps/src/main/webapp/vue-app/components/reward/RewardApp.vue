@@ -43,6 +43,7 @@
 
           <v-dialog
             v-model="loading"
+            attach="#walletDialogsParent"
             persistent
             width="300">
             <v-card color="primary" dark>
@@ -114,6 +115,8 @@
           </v-tabs-items>
         </v-layout>
       </v-layout>
+      <div id="walletDialogsParent">
+      </div>
     </main>
   </v-app>
 </template>
