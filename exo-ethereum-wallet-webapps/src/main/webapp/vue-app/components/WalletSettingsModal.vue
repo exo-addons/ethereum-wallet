@@ -168,7 +168,7 @@
       <v-card-actions>
         <v-spacer />
         <button
-          v-if="!loading && !isSpace && (selectedTab === 0 || selectedTab === 2)"
+          v-if="!loading && !isSpace && (selectedTab === 'display' || selectedTab === 'advanced')"
           :disabled="loading"
           :loading="loading"
           class="btn btn-primary mr-1"
@@ -267,7 +267,7 @@ export default {
       dialog: false,
       error: null,
       walletAddress: null,
-      selectedTab: 0,
+      selectedTab: null,
       selectedCurrency: FIAT_CURRENCIES['usd'],
       currencies: [],
       defaultGas: 0,

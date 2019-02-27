@@ -127,6 +127,7 @@ import GasPriceChoice from './GasPriceChoice.vue';
 
 import {setDraggable, unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
+import {sendContractTransaction} from '../WalletToken.js';
 
 export default {
   components: {
@@ -282,43 +283,45 @@ export default {
               this.warning = `You have set a low gas ${window.walletSettings.userPreferences.defaultGas} while the estimation of necessary gas is ${result}. Please change it in your preferences.`;
               return;
             }
-            return this.contractDetails.contract.methods
-              .approve(this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals))
-              .send({
+            return sendContractTransaction(this.useMetamask, window.walletSettings.defaultNetworkId, {
+              contractAddress: this.contractDetails.address,
+              senderAddress: this.contractDetails.contract.options.from,
+              gas: window.walletSettings.userPreferences.defaultGas,
+              gasPrice: this.gasPrice,
+              method: this.contractDetails.contract.methods.approve,
+              parameters: [this.recipient, convertTokenAmountToSend(this.amount, this.contractDetails.decimals)],
+            },
+            (hash) => {
+              const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
+              const pendingTransaction = {
+                hash: hash,
                 from: this.contractDetails.contract.options.from,
-                gas: window.walletSettings.userPreferences.defaultGas,
+                to: this.recipient,
+                value: 0,
+                gas: gas,
                 gasPrice: this.gasPrice,
-              })
-              .on('transactionHash', (hash) => {
-                const gas = window.walletSettings.userPreferences.defaultGas ? window.walletSettings.userPreferences.defaultGas : 35000;
+                contractAddress: this.contractDetails.address,
+                contractMethodName: 'approve',
+                contractAmount: this.amount,
+                pending: true,
+                timestamp: Date.now(),
+              };
 
-                const pendingTransaction = {
-                  hash: hash,
-                  from: this.contractDetails.contract.options.from,
-                  to: this.recipient,
-                  value: 0,
-                  gas: gas,
-                  gasPrice: this.gasPrice,
-                  contractAddress: this.contractDetails.address,
-                  contractMethodName: 'approve',
-                  contractAmount: this.amount,
-                  pending: true,
-                  timestamp: Date.now(),
-                };
-                    
-                // *async* save transaction message for contract, sender and receiver
-                saveTransactionDetails(pendingTransaction)
-                  .then(() => {
-                    // The transaction has been hashed and will be sent
-                    this.$emit(
-                      'sent',
-                      pendingTransaction,
-                      this.contractDetails
-                    );
-                    this.dialog = false;
-                  });
-              })
-              .on('error', (error, receipt) => {
+              // *async* save transaction message for contract, sender and receiver
+              saveTransactionDetails(pendingTransaction)
+                .then(() => {
+                  // The transaction has been hashed and will be sent
+                  this.$emit(
+                    'sent',
+                    pendingTransaction,
+                    this.contractDetails
+                  );
+                  this.dialog = false;
+                });
+            },
+            null,
+            null,
+            (error, receipt) => {
                 console.debug('Web3 contract.approve method - error', error);
                 this.loading = false;
                 this.error = `Error delegating tokens: ${truncateError(error)}`;
@@ -326,7 +329,7 @@ export default {
                 if (!this.dialog) {
                   this.$emit('error', this.error);
                 }
-              });
+            });
           })
           .catch((e) => {
             console.debug('Web3 contract.approve method - error', e);
