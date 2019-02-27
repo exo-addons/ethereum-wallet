@@ -135,9 +135,6 @@ export default {
   watch: {
     dialog() {
       if (this.dialog) {
-        if (this.$refs.form) {
-          this.$refs.form.reset();
-        }
         this.resetForm();
         this.$nextTick(() => {
           setDraggable();
@@ -147,9 +144,9 @@ export default {
   },
   methods: {
     resetForm() {
-      this.walletPrivateKey = '';
+      this.walletPrivateKey = null;
       this.walletPrivateKeyShow = false;
-      this.walletPassword = '';
+      this.walletPassword = null;
       this.walletPasswordShow = false;
       this.error = null;
       this.loading = false;

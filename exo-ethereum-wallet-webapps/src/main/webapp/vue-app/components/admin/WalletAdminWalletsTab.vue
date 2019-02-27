@@ -69,6 +69,9 @@
                 display-no-address />
             </td>
             <td class="clickable" @click="openAccountDetail(props.item)">
+              {{ props.item.initializationState.toLowerCase() }}
+            </td>
+            <td class="clickable" @click="openAccountDetail(props.item)">
               <a
                 v-if="addressEtherscanLink"
                 :href="`${addressEtherscanLink}${props.item.address}`"
@@ -153,6 +156,9 @@
                   </v-list-tile>
                   <v-list-tile @click="walletToDelete = props.item; $refs.deleteWalletConfirm.open()">
                     <v-list-tile-title>Remove wallet</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile v-if="initializationActionLabels[props.item.initializationState]" @click="changeWalletInitializationStatus(props.item, 'DENIED')">
+                    <v-list-tile-title>{{ initializationActionLabels[props.item.initializationState] }}</v-list-tile-title>
                   </v-list-tile>
                   <v-list-tile v-if="props.item.enabled" @click="enableWallet(props.item, false)">
                     <v-list-tile-title>Disable wallet</v-list-tile-title>
@@ -250,6 +256,7 @@
     </template>
   </v-flex>
 </template>
+
 <script>
 import SendFundsModal from '../SendFundsModal.vue';
 import AccountDetail from '../AccountDetail.vue';
@@ -258,7 +265,7 @@ import ProfileChip from '../ProfileChip.vue';
 import ConfirmDialog from '../ConfirmDialog.vue';
 
 import {refreshWallet} from '../../WalletAddressRegistry.js';
-import {getWallets, removeWalletAssociation, enableWallet, computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
+import {getWallets, removeWalletAssociation, enableWallet, computeBalance, convertTokenAmountReceived, saveWalletInitializationStatus} from '../../WalletUtils.js';
 
 export default {
   components: {
@@ -365,6 +372,12 @@ export default {
       walletToDelete: null,
       limit: 10,
       pageSize: 10,
+      initializationActionLabels: {
+        'INITIALIZED': null,
+        'PENDING': 'Deny wallet creation',
+        'PENDING_REINIT': 'Deny wallet creation',
+        'DENIED': null
+      },
       walletHeaders: [
         {
           text: '',
@@ -377,6 +390,12 @@ export default {
           align: 'left',
           sortable: true,
           value: 'name',
+        },
+        {
+          text: 'Initialization status',
+          align: 'center',
+          sortable: true,
+          value: 'initializationState',
         },
         {
           text: 'Address',
@@ -712,6 +731,16 @@ export default {
       const wallet = this.wallets.find(wallet => wallet.address === address);
       if(wallet) {
         wallet.disapproved = true;
+      }
+    },
+    changeWalletInitializationStatus(wallet, status) {
+      if(wallet) {
+        return saveWalletInitializationStatus(wallet.address, status)
+          .then(() => {
+            return this.refreshWallet(wallet);
+          }).catch(e => {
+            this.error = String(e);
+          });
       }
     },
   },

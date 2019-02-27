@@ -1,13 +1,38 @@
 <template>
   <v-card id="waletSummary" class="elevation-0">
     <v-card-title
-      v-if="firstWalletCreation"
+      v-if="walletInitializationStatus === 'PENDING'"
       primary-title
       class="pb-0">
       <v-spacer />
-      <div id="firstWalletCreation" class="alert alert-info">
+      <div class="alert alert-info">
         <i class="uiIconInfo"></i>
         Almost done! Your wallet will be ready to use once an administrator approves it.
+      </div>
+      <v-spacer />
+    </v-card-title>
+    <v-card-title
+      v-else-if="walletInitializationStatus === 'PENDING_REINIT'"
+      primary-title
+      class="pb-0">
+      <v-spacer />
+      <div class="alert alert-info">
+        <i class="uiIconInfo"></i>
+        Your request to enable your wallet has been sent. Please wait until an administrator approves it.
+      </div>
+      <v-spacer />
+    </v-card-title>
+    <v-card-title
+      v-else-if="walletInitializationStatus === 'DENIED'"
+      primary-title
+      class="pb-0">
+      <v-spacer />
+      <div class="alert alert-info">
+        <i class="uiIconInfo"></i>
+        Wallet access is denied.
+        <button class="btn" @click="requestAccessAuthorization()">
+          Request authorization
+        </button>
       </div>
       <v-spacer />
     </v-card-title>
@@ -126,6 +151,7 @@ import WalletRequestFundsModal from './WalletRequestFundsModal.vue';
 import SendFundsModal from './SendFundsModal.vue';
 
 import {loadTransactions} from '../WalletTransactions.js';
+import {refreshWallet} from '../WalletAddressRegistry.js';
 
 export default {
   components: {
@@ -234,13 +260,11 @@ export default {
   data() {
     return {
       updatePendingTransactionsIndex: 1,
+      walletInitializationStatus: null,
       pendingTransactions: {},
     };
   },
   computed: {
-    firstWalletCreation() {
-      return this.principalAccountDetails && this.principalAccountDetails.isContract && !Number(this.principalAccountDetails.balance) && !this.principalAccountDetails.isApproved;
-    },
     disableSendButton() {
       return this.isReadOnly || !this.etherBalance || !Number(this.etherBalance);
     },
@@ -283,7 +307,8 @@ export default {
     this.loadPendingTransactions();
   },
   methods: {
-    checkSendingRequest(isReadOnly) {
+    init(isReadOnly) {
+      this.walletInitializationStatus = window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.initializationState;
       if (document.location.search && document.location.search.length) {
         const search = document.location.search.substring(1);
         const parameters = JSON.parse(
@@ -309,6 +334,22 @@ export default {
         this.$emit('refresh-token-balance', accountDetails);
       } else {
         this.$emit('refresh-balance');
+      }
+    },
+    requestAccessAuthorization() {
+      if(window.walletSettings.userPreferences.wallet) {
+        return fetch(`/portal/rest/wallet/api/account/requestAuthorization?address=${window.walletSettings.userPreferences.wallet.address}`, {
+          credentials: 'include',
+        }).then((resp) => {
+          if(!resp || !resp.ok) {
+            throw new Error('Error while requesting authorization for wallet');
+          }
+          return refreshWallet(window.walletSettings.userPreferences.wallet);
+        }).then(() => {
+          this.walletInitializationStatus = window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.initializationState;
+        }).catch(e => {
+          this.error = String(e);
+        });
       }
     },
     loadPendingTransactions() {

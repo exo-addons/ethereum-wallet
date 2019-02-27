@@ -39,6 +39,10 @@
   min-height: auto !important;
 }
 
+.v-tooltip__content {
+  z-index: 2000!important;
+}
+
 #walletDialogsParent {
   z-index: 1055;
   position: relative;
@@ -314,6 +318,7 @@
     max-width: 100%;
     word-break: break-word;
     white-space: normal;
+    z-index: auto;
 
     /* To fix links baseline positions */
     .popupWithLink {
@@ -458,7 +463,6 @@
       left: -30px!important;
       width: max-content;
       width: -moz-max-content;
-      z-index: 2000!important;
     }
   }
   .autocompleteSelectedItem {

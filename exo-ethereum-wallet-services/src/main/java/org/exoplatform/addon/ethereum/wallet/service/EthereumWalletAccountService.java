@@ -19,7 +19,13 @@ import org.exoplatform.social.core.identity.model.Identity;
 
 public class EthereumWalletAccountService implements WalletAccountService {
 
-  private static final Log    LOG =
+  private static final String USER_MESSAGE_PREFIX                     = "User ";
+
+  private static final String CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS = "Can't find wallet associated to address ";
+
+  private static final String ADDRESS_PARAMTER_IS_MANDATORY           = "address paramter is mandatory";
+
+  private static final Log    LOG                                     =
                                   ExoLogger.getLogger(EthereumWalletAccountService.class);
 
   private AccountStorage      accountStorage;
@@ -133,9 +139,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
     Wallet wallet = accountStorage.getWalletByAddress(address);
     if (wallet != null) {
       Identity identity = getIdentityById(wallet.getTechnicalId());
-      wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
-      wallet.setDisabledUser(!identity.isEnable());
-      wallet.setDeletedUser(identity.isDeleted());
+      computeWalletFromIdentity(wallet, identity);
     }
     return wallet;
   }
@@ -153,11 +157,20 @@ public class EthereumWalletAccountService implements WalletAccountService {
     computeWalletIdentity(wallet);
 
     Wallet oldWallet = accountStorage.getWalletByIdentityId(wallet.getTechnicalId());
-    checkCanSaveWallet(wallet, oldWallet, currentUser);
-
     boolean isNew = oldWallet == null;
-    wallet.setEnabled(isNew || wallet.isEnabled());
 
+    checkCanSaveWallet(wallet, oldWallet, currentUser);
+    if (isNew) {
+      // New wallet created for user/space
+      wallet.setInitializationState(WalletInitializationState.PENDING.name());
+    } else if (!StringUtils.equalsIgnoreCase(oldWallet.getAddress(), wallet.getAddress())) {
+      // User changing associated address to him or to a space he manages
+      wallet.setInitializationState(WalletInitializationState.PENDING_REINIT.name());
+    } else {
+      // No initialization state change
+      wallet.setInitializationState(oldWallet.getInitializationState());
+    }
+    wallet.setEnabled(isNew || oldWallet.isEnabled());
     setWalletPassPhrase(wallet, oldWallet);
 
     accountStorage.saveWallet(wallet, isNew);
@@ -181,11 +194,11 @@ public class EthereumWalletAccountService implements WalletAccountService {
   @Override
   public void removeWalletByAddress(String address, String currentUser) throws IllegalAccessException {
     if (address == null) {
-      throw new IllegalArgumentException("address paramter is mandatory");
+      throw new IllegalArgumentException(ADDRESS_PARAMTER_IS_MANDATORY);
     }
     Wallet wallet = accountStorage.getWalletByAddress(address);
     if (wallet == null) {
-      throw new IllegalStateException("Can't find wallet associated to address " + address);
+      throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
     }
     if (!isUserAdmin(currentUser)) {
       throw new IllegalAccessException("Current user " + currentUser + " attempts to delete wallet with address " + address
@@ -198,17 +211,48 @@ public class EthereumWalletAccountService implements WalletAccountService {
   @Override
   public void enableWalletByAddress(String address, boolean enable, String currentUser) throws IllegalAccessException {
     if (address == null) {
-      throw new IllegalArgumentException("address paramter is mandatory");
+      throw new IllegalArgumentException(ADDRESS_PARAMTER_IS_MANDATORY);
     }
     Wallet wallet = accountStorage.getWalletByAddress(address);
     if (wallet == null) {
-      throw new IllegalStateException("Can't find wallet associated to address " + address);
+      throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
     }
     if (!isUserAdmin(currentUser)) {
-      throw new IllegalAccessException("User " + currentUser + " attempts to disable wallet with address " + address + " of "
+      throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " attempts to disable wallet with address " + address
+          + " of "
           + wallet.getType() + " " + wallet.getId());
     }
     wallet.setEnabled(enable);
+    accountStorage.saveWallet(wallet, false);
+  }
+
+  @Override
+  public void setInitializationStatus(String address,
+                                      WalletInitializationState initializationState,
+                                      String currentUser) throws IllegalAccessException {
+    if (address == null) {
+      throw new IllegalArgumentException(ADDRESS_PARAMTER_IS_MANDATORY);
+    }
+    if (initializationState == null) {
+      throw new IllegalArgumentException("Initialization stte is mandatory");
+    }
+    Wallet wallet = accountStorage.getWalletByAddress(address);
+    if (wallet == null) {
+      throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
+    }
+    WalletInitializationState oldInitializationState = WalletInitializationState.valueOf(wallet.getInitializationState());
+    if ((oldInitializationState != WalletInitializationState.DENIED
+        || initializationState != WalletInitializationState.PENDING_REINIT
+        || !isWalletOwner(wallet, currentUser)) && !isUserAdmin(currentUser)
+        && !isUserRewardingAdmin(currentUser)) {
+      throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " attempts to change wallet status with address "
+          + address + " to " + initializationState.name());
+    }
+    if (oldInitializationState == WalletInitializationState.INITIALIZED) {
+      throw new IllegalAccessException("Wallet was already marked as initialized, thus the status for address " + address
+          + " can't change to status " + initializationState.name());
+    }
+    wallet.setInitializationState(initializationState.name());
     accountStorage.saveWallet(wallet, false);
   }
 
@@ -229,7 +273,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
     Wallet walletByAddress =
                            accountStorage.getWalletByAddress(wallet.getAddress());
     if (walletByAddress != null && walletByAddress.getId() != wallet.getId()) {
-      throw new IllegalStateException("User " + currentUser + " attempts to assign address of wallet of "
+      throw new IllegalStateException(USER_MESSAGE_PREFIX + currentUser + " attempts to assign address of wallet of "
           + walletByAddress);
     }
   }
@@ -309,12 +353,9 @@ public class EthereumWalletAccountService implements WalletAccountService {
     Wallet wallet = accountStorage.getWalletByIdentityId(identityId);
     if (wallet == null) {
       wallet = new Wallet();
-      computeWalletFromIdentity(wallet, identity);
-    } else {
-      wallet.setEnabled(wallet.isEnabled() && identity.isEnable() && !identity.isDeleted());
+      wallet.setEnabled(true);
     }
-    wallet.setDisabledUser(!identity.isEnable());
-    wallet.setDeletedUser(identity.isDeleted());
+    computeWalletFromIdentity(wallet, identity);
     return wallet;
   }
 

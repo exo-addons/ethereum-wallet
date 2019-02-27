@@ -6,6 +6,7 @@ import javax.persistence.*;
 
 import org.hibernate.annotations.DynamicUpdate;
 
+import org.exoplatform.addon.ethereum.wallet.model.WalletInitializationState;
 import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.commons.api.persistence.ExoEntity;
 
@@ -17,26 +18,29 @@ import org.exoplatform.commons.api.persistence.ExoEntity;
     @NamedQuery(name = "Wallet.findByAddress", query = "SELECT w FROM Wallet w WHERE w.address = :address"),
 })
 public class WalletEntity implements Serializable {
-  private static final long      serialVersionUID = -1622032986992776281L;
+  private static final long         serialVersionUID = -1622032986992776281L;
 
   @Id
   @Column(name = "IDENTITY_ID")
-  private Long                   id;
+  private Long                      id;
 
   @Column(name = "IDENTITY_TYPE", nullable = false)
-  private WalletType             type;
+  private WalletType                type;
 
   @Column(name = "ADDRESS", unique = true, nullable = false)
-  private String                 address;
+  private String                    address;
 
   @Column(name = "PHRASE", nullable = false)
-  private String                 passPhrase;
+  private String                    passPhrase;
 
   @Column(name = "ENABLED", nullable = false)
-  private boolean                isEnabled;
+  private boolean                   isEnabled;
+
+  @Column(name = "INITIALIZATION_STATE")
+  private WalletInitializationState initializationState;
 
   @OneToOne(fetch = FetchType.EAGER, mappedBy = "wallet", cascade = CascadeType.REMOVE)
-  private WalletPrivateKeyEntity privateKey;
+  private WalletPrivateKeyEntity    privateKey;
 
   public Long getId() {
     return id;
@@ -76,6 +80,14 @@ public class WalletEntity implements Serializable {
 
   public void setPassPhrase(String passPhrase) {
     this.passPhrase = passPhrase;
+  }
+
+  public WalletInitializationState getInitializationState() {
+    return initializationState;
+  }
+
+  public void setInitializationState(WalletInitializationState initializationState) {
+    this.initializationState = initializationState;
   }
 
   public WalletPrivateKeyEntity getPrivateKey() {

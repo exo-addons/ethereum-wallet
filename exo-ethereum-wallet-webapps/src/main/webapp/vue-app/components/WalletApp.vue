@@ -315,7 +315,7 @@ export default {
       this.init()
         .then((result, error) => {
           if (this.$refs.walletSummary) {
-            this.$refs.walletSummary.checkSendingRequest(this.isReadOnly);
+            this.$refs.walletSummary.init(this.isReadOnly);
           }
           if (this.$refs.walletAccountsList) {
             this.$refs.walletAccountsList.checkOpenTransaction();

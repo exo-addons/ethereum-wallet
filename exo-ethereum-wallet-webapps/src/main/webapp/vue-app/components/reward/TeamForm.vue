@@ -7,7 +7,10 @@
     </v-card-title>
     <v-container grid-list-md class="pt-2">
       <v-layout wrap class="rewardPoolForm">
-        <v-flex xs12 sm6>
+        <v-flex 
+          v-if="!viewOnly"
+          xs12
+          sm6>
           <v-text-field
             v-model="name"
             label="Pool name *"
@@ -17,7 +20,10 @@
             autofocus />
         </v-flex>
 
-        <v-flex xs12 sm6>
+        <v-flex
+          v-if="!viewOnly"
+          xs12
+          sm6>
           <v-text-field
             v-model="description"
             label="Pool description"
@@ -26,6 +32,7 @@
         </v-flex>
 
         <v-flex
+          v-if="!viewOnly"
           id="rewardTeamSpaceAutoComplete"
           class="contactAutoComplete"
           xs12
@@ -94,6 +101,7 @@
         </v-flex>
 
         <address-auto-complete
+          v-if="!viewOnly"
           ref="managerAutocomplete"
           input-label="Pool manager"
           input-placeholder="Select a pool manager"
@@ -103,7 +111,7 @@
           class="xs12 sm6"
           @item-selected="manager = $event && $event.id" />
 
-        <v-flex xs12>
+        <v-flex v-if="!viewOnly" xs12>
           <v-radio-group v-model="rewardType" label="Reward pool members">
             <v-radio value="COMPUTED" label="By computing pool reward from total budget" />
             <v-radio value="FIXED" label="By a total fixed budget (not retained from global budget)" />
@@ -133,6 +141,7 @@
 
         <v-flex xs12>
           <address-auto-complete
+            v-if="!viewOnly"
             ref="memberAutocomplete"
             :ignore-items="members"
             input-label="Pool members"
@@ -162,6 +171,7 @@
                 </th>
                 <th class="text-xs-right">
                   <v-btn
+                    v-if="!viewOnly"
                     icon
                     title="Delete all"
                     @click="members = []">
@@ -196,6 +206,7 @@
                 </td>
                 <td class="text-xs-right">
                   <v-btn
+                    v-if="!viewOnly"
                     icon
                     title="Delete"
                     @click="deleteMember(props.item)">
@@ -213,6 +224,7 @@
     <v-card-actions>
       <v-spacer />
       <v-btn
+        v-if="!viewOnly"
         :loading="loading"
         class="btn btn-primary mr-1"
         dark
@@ -223,7 +235,7 @@
         class="btn"
         color="white"
         @click="$emit('close')">
-        Cancel
+        Close
       </v-btn>
       <v-spacer />
     </v-card-actions>
@@ -283,6 +295,11 @@ export default {
     rewardTeamSpaceSearchTerm: null,
     isLoadingSpaceSuggestions: false,
   }),
+  computed: {
+    viewOnly() {
+      return !this.team || !this.team.id;
+    }
+  },
   watch: {
     team() {
       if (this.team) {

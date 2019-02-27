@@ -766,6 +766,16 @@ export function toFixed(value, decimals) {
   }
 }
 
+export function saveWalletInitializationStatus(address, status) {
+  return fetch(`/portal/rest/wallet/api/account/setInitializationStatus?address=${address}&status=${status}`, {
+      credentials: 'include',
+    }).then((resp) => {
+      if(!resp || !resp.ok) {
+        throw new Error('Error while changing initialization status of wallet');
+      }
+    });
+}
+
 function createLocalWeb3Instance(isSpace, useMetamask) {
   if (window.walletSettings.userPreferences.walletAddress) {
     window.localWeb3 = new LocalWeb3(new LocalWeb3.providers.HttpProvider(window.walletSettings.providerURL));

@@ -107,10 +107,12 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
         }
       }
 
-      if (senderWallet != null && senderWallet.getTechnicalId() > 0 && senderWallet.isEnabled()) {
+      if (senderWallet != null && senderWallet.getTechnicalId() > 0 && senderWallet.isEnabled() && !senderWallet.isDeletedUser()
+          && !senderWallet.isDisabledUser()) {
         sendNotification(transactionDetail, TransactionNotificationType.SENDER, senderWallet, receiverWallet);
       }
-      if (receiverWallet != null && receiverWallet.getTechnicalId() > 0 && receiverWallet.isEnabled()) {
+      if (receiverWallet != null && receiverWallet.getTechnicalId() > 0 && receiverWallet.isEnabled()
+          && !receiverWallet.isDeletedUser() && !receiverWallet.isDisabledUser()) {
         sendNotification(transactionDetail, TransactionNotificationType.RECEIVER, senderWallet, receiverWallet);
       }
     } catch (Exception e) {

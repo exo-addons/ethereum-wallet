@@ -212,7 +212,7 @@ export default {
                 this.$emit('item-selected', {
                   id: details.id,
                   type: details.type,
-                  address: details.enabled ? details.address : null,
+                  address: details.enabled && !details.deletedUser && !details.disabledUser ? details.address : null,
                   id_type: `${details.type}_${details.id}`,
                 });
               } else {
@@ -296,7 +296,7 @@ export default {
           item.id_type = item.type && item.id ? `${item.type}_${item.id}` : null;
           this.items.push(item);
           if (this.$refs.selectAutoComplete) {
-            if(!item.enabled) {
+            if(!item.enabled || item.deletedUser || item.disabledUser) {
               item.address = null;
             }
             this.$refs.selectAutoComplete.selectItem(item);

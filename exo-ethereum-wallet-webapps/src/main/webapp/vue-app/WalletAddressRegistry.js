@@ -56,7 +56,7 @@ export function refreshWallet(wallet) {
     return Promise.resolve(null);
   }
   if (wallet.address) {
-    return searchFullName(wallet.address).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
+    return searchFullName(wallet.address, true).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
   } else {
     return searchUserOrSpaceObject(wallet.id, wallet.type).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
   }
@@ -67,7 +67,7 @@ export function refreshWallet(wallet) {
  */
 export function searchAddress(id, type) {
   return searchUserOrSpaceObject(id, type).then((data) => {
-    if (data && data.enabled && data.address && data.address.length && data.address.indexOf('0x') === 0) {
+    if (data && data.enabled &&  !data.deletedUser && !data.disabledUser && data.address && data.address.length && data.address.indexOf('0x') === 0) {
       return data.address;
     } else {
       return null;
@@ -100,14 +100,14 @@ export function searchUserOrSpaceObject(id, type) {
  * "name": display name of space of user, "id": Id of space of user, "address":
  * Ethereum account address, "avatar": avatar URL/URI, "type": 'user' or 'space' }
  */
-export function searchFullName(address) {
+export function searchFullName(address, noCache) {
   if (!address) {
     return Promise.resolve(null);
   }
 
   address = address.toLowerCase();
 
-  if (window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.address && window.walletSettings.userPreferences.wallet.address.toLowerCase() === address) {
+  if (!noCache && window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.address && window.walletSettings.userPreferences.wallet.address.toLowerCase() === address) {
     return Promise.resolve(window.walletSettings.userPreferences.wallet);
   }
 

@@ -165,7 +165,7 @@ export default {
   },
   computed: {
     validUsers() {
-      return this.wallets.filter(wallet => wallet.enabled && (wallet.tokensToSend));
+      return this.wallets.filter(wallet => wallet.enabled && !wallet.deletedUser && !wallet.disabledUser && (wallet.tokensToSend));
     },
     eligiblePoolsUsersCount() {
       return this.validUsers.filter(wallet =>  !wallet.disabledPool && wallet.poolTokensToSend).length;
@@ -232,7 +232,7 @@ export default {
         .then((contracts) => (this.contracts = contracts ? contracts.filter((contract) => contract.isDefault) : []))
         .then(() => getWallets())
         .then((wallets) => {
-          this.wallets = wallets ? wallets.filter(wallet => wallet && wallet.address && wallet.enabled && wallet.type === 'user') : [];
+          this.wallets = wallets ? wallets.filter(wallet => wallet && wallet.address && wallet.enabled && !wallet.deletedUser && !wallet.disabledUser && wallet.type === 'user') : [];
         })
         .then(() => this.refreshRewardSettings())
         .catch((e) => {

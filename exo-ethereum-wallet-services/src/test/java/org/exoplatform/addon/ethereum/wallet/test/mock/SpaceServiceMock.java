@@ -26,6 +26,7 @@ import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceLifeCycleListener;
 import org.exoplatform.social.core.space.spi.SpaceService;
 
+@SuppressWarnings("all")
 public class SpaceServiceMock implements SpaceService {
 
   @Override

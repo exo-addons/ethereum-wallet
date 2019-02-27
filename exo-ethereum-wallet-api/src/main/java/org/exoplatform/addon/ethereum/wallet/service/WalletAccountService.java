@@ -2,8 +2,7 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import java.util.Set;
 
-import org.exoplatform.addon.ethereum.wallet.model.AddressLabel;
-import org.exoplatform.addon.ethereum.wallet.model.Wallet;
+import org.exoplatform.addon.ethereum.wallet.model.*;
 
 public interface WalletAccountService {
 
@@ -162,5 +161,19 @@ public interface WalletAccountService {
    * @return a {@link Set} of label details
    */
   public Set<AddressLabel> getAddressesLabelsVisibleBy(String currentUser);
+
+  /**
+   * Change wallet initialization status
+   * 
+   * @param address wallet address
+   * @param initializationState wallet initialization status of type
+   *          {@link WalletInitializationState}
+   * @param currentUserId user changing wallet status
+   * @throws IllegalAccessException if current user is not allowed to modify
+   *           wallet initialization status
+   */
+  public void setInitializationStatus(String address,
+                                      WalletInitializationState initializationState,
+                                      String currentUserId) throws IllegalAccessException;
 
 }

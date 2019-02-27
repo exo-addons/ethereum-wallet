@@ -68,7 +68,7 @@
           lg4>
           <v-card :style="props.item.spacePrettyName && `background: url(/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/banner)  0 0/100% auto no-repeat`" class="elevation-3">
             <v-card flat class="transparent">
-              <v-card-title :class="props.item.description && 'pb-0'">
+              <v-card-title class="pb-0">
                 <v-chip dark>
                   <v-avatar v-if="props.item.spacePrettyName">
                     <img :src="`/portal/rest/v1/social/spaces/${props.item.spacePrettyName}/avatar`">
@@ -81,10 +81,13 @@
                   </h3>
                 </v-chip>
               </v-card-title>
-              <v-card-title v-if="props.item.description" class="pt-0">
+              <v-card-title class="pt-0">
                 <v-chip dark>
-                  <h4>
+                  <h4 v-if="props.item.description">
                     {{ props.item.description }}
+                  </h4>
+                  <h4 v-else>
+                    <i>No description</i>
                   </h4>
                 </v-chip>
               </v-card-title>
@@ -184,6 +187,13 @@
                 color="primary"
                 @click="selectedTeam = props.item">
                 Edit
+              </v-btn>
+              <v-btn
+                v-else
+                flat
+                color="primary"
+                @click="selectedTeam = props.item">
+                View
               </v-btn>
               <v-btn
                 v-if="props.item.id && props.item.disabled"

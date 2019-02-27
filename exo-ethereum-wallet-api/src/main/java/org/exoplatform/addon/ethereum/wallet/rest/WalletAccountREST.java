@@ -127,7 +127,6 @@ public class WalletAccountREST implements ResourceContainer {
    */
   @Path("enable")
   @GET
-  @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("administrators")
   public Response enableWalletByAddress(@QueryParam("address") String address, @QueryParam("enable") boolean enable) {
     if (StringUtils.isBlank(address)) {
@@ -151,7 +150,6 @@ public class WalletAccountREST implements ResourceContainer {
    */
   @Path("remove")
   @GET
-  @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed("administrators")
   public Response removeWalletByAddress(@QueryParam("address") String address) {
     if (StringUtils.isBlank(address)) {
@@ -163,6 +161,43 @@ public class WalletAccountREST implements ResourceContainer {
       return Response.ok().build();
     } catch (Exception e) {
       LOG.warn("Can't delete address '{}' association", address, e);
+      return Response.serverError().build();
+    }
+  }
+
+  @Path("setInitializationStatus")
+  @GET
+  @RolesAllowed({ "administrators", "rewarding" })
+  public Response setInitializationStatus(@QueryParam("address") String address, @QueryParam("status") String status) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
+      return Response.status(400).build();
+    }
+    try {
+      accountService.setInitializationStatus(address,
+                                             WalletInitializationState.valueOf(status.toUpperCase()),
+                                             getCurrentUserId());
+      return Response.ok().build();
+    } catch (Exception e) {
+      LOG.warn("Can't set wallet initialized status '{}'", status, e);
+      return Response.serverError().build();
+    }
+  }
+
+  @Path("requestAuthorization")
+  @GET
+  public Response requestAuthorization(@QueryParam("address") String address) {
+    if (StringUtils.isBlank(address)) {
+      LOG.warn(EMPTY_ADDRESS_ERROR, address);
+      return Response.status(400).build();
+    }
+    try {
+      accountService.setInitializationStatus(address,
+                                             WalletInitializationState.PENDING_REINIT,
+                                             getCurrentUserId());
+      return Response.ok().build();
+    } catch (Exception e) {
+      LOG.warn("Can't request authorization for wallet {}", address, e);
       return Response.serverError().build();
     }
   }
@@ -192,7 +227,6 @@ public class WalletAccountREST implements ResourceContainer {
     try {
       Wallet storedWallet = accountService.getWalletByTypeAndId(wallet.getType(), wallet.getId(), currentUserId);
       if (storedWallet == null) {
-        wallet.setEnabled(true);
         accountService.saveWalletAddress(wallet, currentUserId, true);
         return Response.ok(wallet.getPassPhrase()).build();
       } else {

@@ -119,7 +119,7 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat} from '../WalletUtils.js';
+import {unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat, saveWalletInitializationStatus} from '../WalletUtils.js';
 import {saveTransactionDetails} from '../WalletTransactions.js';
 import {retrieveContractDetails, sendContractTransaction} from '../WalletToken.js';
 
@@ -320,6 +320,8 @@ export default {
       this.error = null;
       this.warning = null;
 
+      const setWalletInitialized = !this.isApprovedRecipient && Number(this.contractDetails.adminLevel) > 0; 
+
       this.$refs.form.validate();
       if (this.contractDetails && this.contractDetails.isPaused) {
         this.warning = `Contract '${this.contractDetails.name}' is paused, thus you will be unable to send tokens`;
@@ -423,6 +425,12 @@ export default {
                     );
                     this.$emit('close');
                   });
+
+                if (setWalletInitialized) {
+                  console.log('pendingTransaction', pendingTransaction, this.recipient);
+                  // *async* set wallet as initialized
+                  saveWalletInitializationStatus(pendingTransaction.to, 'INITIALIZED');
+                }
               },
               null,
               null,

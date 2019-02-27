@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.storage;
 
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.computeWalletFromIdentity;
 import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getIdentityById;
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getSpace;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,13 +12,10 @@ import org.exoplatform.addon.ethereum.wallet.dao.WalletAccountDAO;
 import org.exoplatform.addon.ethereum.wallet.dao.WalletPrivateKeyDAO;
 import org.exoplatform.addon.ethereum.wallet.entity.WalletEntity;
 import org.exoplatform.addon.ethereum.wallet.entity.WalletPrivateKeyEntity;
-import org.exoplatform.addon.ethereum.wallet.model.Wallet;
-import org.exoplatform.addon.ethereum.wallet.model.WalletType;
+import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.service.LinkProvider;
-import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.web.security.codec.AbstractCodec;
 import org.exoplatform.web.security.codec.CodecInitializer;
 import org.exoplatform.web.security.security.TokenServiceInitializationException;
@@ -164,30 +161,14 @@ public class AccountStorage {
   private Wallet fromEntity(WalletEntity walletEntity) {
     Wallet wallet = new Wallet();
     wallet.setTechnicalId(walletEntity.getId());
-    wallet.setEnabled(walletEntity.isEnabled());
     wallet.setAddress(walletEntity.getAddress());
     wallet.setPassPhrase(walletEntity.getPassPhrase());
+    wallet.setEnabled(walletEntity.isEnabled());
+    wallet.setInitializationState(walletEntity.getInitializationState().name());
 
     Identity identity = getIdentityById(walletEntity.getId());
-    if (wallet.isEnabled()) {
-      wallet.setEnabled(identity.isEnable() && !identity.isDeleted());
-    }
-    wallet.setDisabledUser(!identity.isEnable());
-    wallet.setDeletedUser(identity.isDeleted());
-
-    WalletType type = walletEntity.getType();
-    wallet.setType(type.getId());
-    if (type.isUser()) {
-      wallet.setName(identity.getProfile().getFullName());
-    } else {
-      Space space = getSpace(identity.getRemoteId());
-      wallet.setName(space.getDisplayName());
-      wallet.setSpaceId(Long.parseLong(space.getId()));
-    }
-
+    computeWalletFromIdentity(wallet, identity);
     wallet.setHasKeyOnServerSide(walletEntity.getPrivateKey() != null);
-    wallet.setId(identity.getRemoteId());
-    wallet.setAvatar(LinkProvider.buildAvatarURL(identity.getProviderId(), identity.getRemoteId()));
     return wallet;
   }
 
@@ -196,6 +177,7 @@ public class AccountStorage {
     walletEntity.setId(wallet.getTechnicalId());
     walletEntity.setAddress(wallet.getAddress().toLowerCase());
     walletEntity.setEnabled(wallet.isEnabled());
+    walletEntity.setInitializationState(WalletInitializationState.valueOf(wallet.getInitializationState()));
     walletEntity.setPassPhrase(wallet.getPassPhrase());
     walletEntity.setType(WalletType.getType(wallet.getType()));
     return walletEntity;

@@ -81,7 +81,7 @@
         <tr :active="props.selected">
           <td>
             <v-checkbox
-              v-if="props.item.address && props.item.enabled && props.item.tokensToSend && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.enabled && !props.item.deletedUser && !props.item.disabledUser && props.item.tokensToSend && (!props.item.status || props.item.status === 'error')"
               :input-value="props.selected"
               hide-details
               @click="props.selected = !props.selected" />
@@ -162,14 +162,15 @@
               :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
               v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
           </td>
-          <td>
+          <td class="text-xs-center">
             <v-text-field
-              v-if="props.item.address && props.item.enabled && (!props.item.status || props.item.status === 'error')"
+              v-if="props.item.address && props.item.enabled && !props.item.deletedUser && !props.item.disabledUser && (!props.item.status || props.item.status === 'error')"
               v-model.number="props.item.tokensToSend"
               type="number"
+              title="Computed amount to send"
               class="input-text-center" />
             <template v-else-if="props.item.status === 'success' || props.item.status === 'pending'">
-              <span>{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
+              <span class="grey--text text--darken-1" title="Amount sent">{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
             </template>
             <template
               v-else>
@@ -181,6 +182,7 @@
               :disabled="!props.item.rewards || !props.item.rewards.length"
               icon
               small
+              title="Display reward details"
               @click="selectedWallet = props.item">
               <v-icon :color="(props.item.rewards && props.item.rewards.length) && 'primary'" size="16">fa-info-circle</v-icon>
             </v-btn>
@@ -384,13 +386,13 @@ export default {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
     recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.enabled && item.tokensToSend && (!item.status || item.status === 'error')) : [];
+      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.enabled && !item.deletedUser && !item.disabledUser && item.tokensToSend && (!item.status || item.status === 'error')) : [];
     },
     validRecipients() {
-      return this.wallets ? this.wallets.filter((item) => item.address && item.tokensToSend && item.enabled) : [];
+      return this.wallets ? this.wallets.filter((item) => item.address && item.tokensToSend && item.enabled && !item.deletedUser && !item.disabledUser) : [];
     },
     filteredIdentitiesList() {
-      return this.wallets ? this.wallets.filter((wallet) => (this.displayDisabledUsers || wallet.enabled || wallet.tokensSent || wallet.tokensToSend) && this.filterItemFromList(wallet, this.search)) : [];
+      return this.wallets ? this.wallets.filter((wallet) => (this.displayDisabledUsers || (wallet.enabled && !wallet.deletedUser && !wallet.disabledUser) || wallet.tokensSent || wallet.tokensToSend) && this.filterItemFromList(wallet, this.search)) : [];
     },
     selectableRecipients() {
       return this.validRecipients.filter((item) => !item.status || item.status === 'error');

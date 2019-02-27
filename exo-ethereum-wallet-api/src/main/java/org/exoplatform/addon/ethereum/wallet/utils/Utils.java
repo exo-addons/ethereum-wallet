@@ -500,7 +500,6 @@ public class Utils {
     WalletType walletType = WalletType.getType(identity.getProviderId());
     wallet.setId(identity.getRemoteId());
     wallet.setTechnicalId(Long.parseLong(identity.getId()));
-    wallet.setEnabled(identity.isEnable() && !identity.isDeleted());
     wallet.setDisabledUser(!identity.isEnable());
     wallet.setDeletedUser(identity.isDeleted());
     wallet.setType(walletType.getId());

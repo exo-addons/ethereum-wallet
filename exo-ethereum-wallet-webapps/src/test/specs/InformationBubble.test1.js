@@ -1,18 +1,9 @@
-import {getWalletApp, initApp, expectObjectValueEqual} from '../TestUtils.js';
-
 import InformationBubble from '../../main/webapp/vue-app/components/InformationBubble.vue';
 
+import {expectObjectValueEqual} from '../TestUtils.js';
 import {mount} from '@vue/test-utils';
 
-jest.setTimeout(30000);
-
 describe('informationBubble.test.js', () => {
-  const app = getWalletApp();
-
-  beforeAll(() => {
-    return initApp(app);
-  });
-
   const defaultAttributesValues = {
     title: false,
     dialog: false,

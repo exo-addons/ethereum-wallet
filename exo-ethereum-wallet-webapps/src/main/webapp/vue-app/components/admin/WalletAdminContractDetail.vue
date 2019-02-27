@@ -230,6 +230,8 @@
                   :profile-type="props.item.type"
                   :display-name="props.item.name"
                   :enabled="props.item.enabled"
+                  :deleted-user="props.item.deletedUser"
+                  :disabled-user="props.item.disabledUser"
                   :avatar="props.item.avatar" />
               </td>
               <td v-if="$refs.disapproveAccountModal">
@@ -286,6 +288,8 @@
                   :profile-type="props.item.type"
                   :display-name="props.item.name"
                   :enabled="props.item.enabled"
+                  :deleted-user="props.item.deletedUser"
+                  :disabled-user="props.item.disabledUser"
                   :avatar="props.item.avatar" />
               </td>
               <td>
