@@ -10,11 +10,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import lombok.*;
+import lombok.EqualsAndHashCode.Exclude;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @ToString
 public class RewardTransaction implements Serializable {
 
@@ -22,18 +21,24 @@ public class RewardTransaction implements Serializable {
 
   private Long              networkId;
 
-  private String            periodType;
-
-  private long              startDateInSeconds;
-
   private String            hash;
 
+  @Exclude
+  private String            periodType;
+
+  @Exclude
+  private long              startDateInSeconds;
+
+  @Exclude
   private String            receiverType;
 
+  @Exclude
   private String            receiverId;
 
+  @Exclude
   private String            receiverIdentityId;
 
+  @Exclude
   private String            tokensAmountSent;
 
   public static RewardTransaction fromStoredValue(String storedTransactionDetails) {

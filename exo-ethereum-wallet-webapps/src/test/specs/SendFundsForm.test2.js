@@ -1,9 +1,8 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet, sendTokens, sendEther} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import SendFundsForm from '../../main/webapp/vue-app/components/SendFundsForm';
 
 import {mount} from '@vue/test-utils';
-import {hashCode} from '../../main/webapp/vue-app/WalletUtils.js';
 
 import flushPromises from 'flush-promises';
 
@@ -46,7 +45,7 @@ describe('SendFundsForm.test.js', () => {
     global.defaultWalletSettings.defaultOverviewAccounts = global.defaultWalletSettings.defaultContractsToDisplay = [global.tokenAddress, 'ether'];
 
     const app = getWalletApp();
-    let walletSummary, contractDetails, sendFundsModal, sendFundsForm, sendTokensForm, transaction;
+    let walletSummary, contractDetails, sendFundsModal, sendFundsForm, sendTokensForm;
     return initiateBrowserWallet(global.walletAddress, 'testpassword', /* Not space*/ false, /* generated */ true, /* not backedup */ false)
       .then(() => initApp(app))
       .then(() => flushPromises())
@@ -59,7 +58,6 @@ describe('SendFundsForm.test.js', () => {
         expect(walletSummary).toBeTruthy();
         return flushPromises();
       })
-
       .then(() => {
         sendFundsModal = walletSummary.$refs.sendFundsModal;
         expect(sendFundsModal).toBeTruthy();

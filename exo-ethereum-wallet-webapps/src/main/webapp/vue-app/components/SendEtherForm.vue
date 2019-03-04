@@ -30,6 +30,7 @@
           class="mt-4 pl-2">
           <v-layout row wrap>
             <v-text-field
+              ref="amountInput"
               v-model.number="amount"
               :disabled="loading"
               name="amount"
@@ -172,11 +173,16 @@ export default {
     },
   },
   methods: {
-    init() {
+    init(recipient) {
       this.$nextTick(() => {
         if (this.$refs.autocomplete) {
           this.$refs.autocomplete.clear();
-          this.$refs.autocomplete.focus();
+          if (recipient) {
+            this.$refs.autocomplete.selectItem(recipient);
+            this.$refs.amountInput.focus();
+          } else {
+            this.$refs.autocomplete.focus();
+          }
         }
       });
       this.loading = false;

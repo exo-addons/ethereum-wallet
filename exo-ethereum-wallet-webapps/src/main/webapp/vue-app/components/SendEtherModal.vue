@@ -106,9 +106,9 @@ export default {
       },
     },
     recipient: {
-      type: Number,
+      type: String,
       default: function() {
-        return 0;
+        return null;
       },
     },
   },
@@ -133,12 +133,7 @@ export default {
     },
     dialog() {
       if (this.dialog) {
-        this.$refs.sendEtherForm.init();
-        if (this.recipient && this.$refs.sendEtherForm.$refs.autocomplete) {
-          this.$refs.sendEtherForm.$refs.autocomplete.selectItem(this.recipient);
-          // To force update
-          this.$refs.sendEtherForm.recipient = this.recipient;
-        }
+        this.$refs.sendEtherForm.init(this.recipient);
       } else {
         this.$emit('close');
       }
