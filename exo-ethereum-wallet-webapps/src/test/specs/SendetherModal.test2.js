@@ -21,8 +21,8 @@ describe('SendEtherModal.test.js', () => {
     noButton: false,
     useNavigation: false,
     open: false,
-    balance: 0,
-    recipient: 0,
+    balance: false,
+    recipient: false,
     dialog: false,
     disabled: true,
   };

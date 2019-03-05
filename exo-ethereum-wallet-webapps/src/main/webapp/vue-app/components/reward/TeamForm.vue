@@ -246,7 +246,7 @@
 import AddressAutoComplete from '../AddressAutoComplete.vue';
 import ProfileChip from '../ProfileChip.vue';
 
-import {searchSpaces, searchUserOrSpaceObject} from '../../WalletAddressRegistry.js';
+import {searchSpaces, searchWalletByTypeAndId} from '../../WalletAddressRegistry.js';
 import {saveRewardTeam} from '../../WalletRewardServices.js';
 
 export default {
@@ -353,7 +353,7 @@ export default {
         if (wallet) {
           this.managerObject = Object.assign({identityId: wallet.technicalId}, wallet);
         } else {
-          searchUserOrSpaceObject(this.manager, 'user').then((userDetails) => {
+          searchWalletByTypeAndId(this.manager, 'user').then((userDetails) => {
             if (userDetails) {
               this.managerObject = Object.assign({identityId: userDetails.technicalId}, userDetails);
             }
@@ -374,7 +374,7 @@ export default {
             if (wallet) {
               this.membersObjects.push(Object.assign({identityId: wallet.technicalId}, wallet));
             } else {
-              searchUserOrSpaceObject(memberId, 'user').then((userDetails) => {
+              searchWalletByTypeAndId(memberId, 'user').then((userDetails) => {
                 if (userDetails) {
                   this.membersObjects.push(Object.assign({identityId: userDetails.technicalId}, userDetails));
                 }

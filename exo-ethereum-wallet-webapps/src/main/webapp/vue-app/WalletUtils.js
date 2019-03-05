@@ -1,5 +1,5 @@
 import * as constants from './WalletConstants';
-import {searchUserOrSpaceObject, saveNewAddress} from './WalletAddressRegistry';
+import {searchWalletByTypeAndId, saveNewAddress} from './WalletAddressRegistry';
 
 const DECIMALS = 3;
 const DECIMALS_POW = Math.pow(10, DECIMALS);
@@ -867,7 +867,7 @@ function checkMetamaskEnabled(waitTime) {
 }
 
 function initSpaceAccount(spaceGroup) {
-  return searchUserOrSpaceObject(spaceGroup, 'space').then((spaceObject, error) => {
+  return searchWalletByTypeAndId(spaceGroup, 'space').then((spaceObject, error) => {
     if (error) {
       throw error;
     }

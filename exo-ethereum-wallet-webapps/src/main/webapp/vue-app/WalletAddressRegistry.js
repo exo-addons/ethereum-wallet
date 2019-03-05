@@ -6,14 +6,14 @@
  *  avatar: Avatar URL/URI
  * }
  */
-export function searchContact(filter) {
+export function searchWallets(filter) {
   let items = null;
   return searchUsers(filter)
     .then((users) => (items = users && users.length ? users : []))
     .then(() => searchSpaces(filter))
     .then((spaces) => (items = items.concat(spaces)))
     .catch((e) => {
-      console.debug('searchContact method - error', e);
+      console.debug('searchWallets method - error', e);
     });
 }
 
@@ -56,9 +56,9 @@ export function refreshWallet(wallet) {
     return Promise.resolve(null);
   }
   if (wallet.address) {
-    return searchFullName(wallet.address, true).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
+    return searchWalletByAddress(wallet.address, true).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
   } else {
-    return searchUserOrSpaceObject(wallet.id, wallet.type).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
+    return searchWalletByTypeAndId(wallet.id, wallet.type).then((freshWallet) => freshWallet && Object.assign(wallet, freshWallet));
   }
 }
 
@@ -66,8 +66,8 @@ export function refreshWallet(wallet) {
  * Return the address of a user or space
  */
 export function searchAddress(id, type) {
-  return searchUserOrSpaceObject(id, type).then((data) => {
-    if (data && data.enabled &&  !data.deletedUser && !data.disabledUser && data.address && data.address.length && data.address.indexOf('0x') === 0) {
+  return searchWalletByTypeAndId(id, type).then((data) => {
+    if (data && data.address && data.address.length && data.address.indexOf('0x') === 0) {
       return data.address;
     } else {
       return null;
@@ -81,7 +81,7 @@ export function searchAddress(id, type) {
  * avatar URL/URI, "type": 'user' or 'space', "creator": space creator username
  * for space type }
  */
-export function searchUserOrSpaceObject(id, type) {
+export function searchWalletByTypeAndId(id, type) {
   if (window.walletSettings && window.walletSettings.userPreferences && window.walletSettings.userPreferences.wallet && window.walletSettings.userPreferences.wallet.id === id && window.walletSettings.userPreferences.wallet.type === type) {
     return Promise.resolve(window.walletSettings.userPreferences.wallet);
   }
@@ -100,7 +100,7 @@ export function searchUserOrSpaceObject(id, type) {
  * "name": display name of space of user, "id": Id of space of user, "address":
  * Ethereum account address, "avatar": avatar URL/URI, "type": 'user' or 'space' }
  */
-export function searchFullName(address, noCache) {
+export function searchWalletByAddress(address, noCache) {
   if (!address) {
     return Promise.resolve(null);
   }

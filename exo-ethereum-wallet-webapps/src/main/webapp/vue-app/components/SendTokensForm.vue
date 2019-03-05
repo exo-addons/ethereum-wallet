@@ -427,7 +427,6 @@ export default {
                   });
 
                 if (setWalletInitialized) {
-                  console.log('pendingTransaction', pendingTransaction, this.recipient);
                   // *async* set wallet as initialized
                   saveWalletInitializationStatus(pendingTransaction.to, 'INITIALIZED');
                 }

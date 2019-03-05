@@ -148,7 +148,7 @@ import WalletAddress from './WalletAddress.vue';
 import * as constants from '../WalletConstants.js';
 
 import {setDraggable, disableMetamask} from '../WalletUtils.js';
-import {searchFullName, saveNewAddress} from '../WalletAddressRegistry.js';
+import {searchWalletByAddress, saveNewAddress} from '../WalletAddressRegistry.js';
 
 export default {
   components: {
@@ -277,7 +277,7 @@ export default {
       }
     },
     initAccount() {
-      return searchFullName(this.detectedMetamaskAccount)
+      return searchWalletByAddress(this.detectedMetamaskAccount)
         .then((item, error) => {
           if (error) {
             throw error;

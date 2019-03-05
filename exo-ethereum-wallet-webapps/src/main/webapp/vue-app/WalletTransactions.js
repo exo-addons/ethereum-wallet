@@ -1,4 +1,4 @@
-import {searchFullName} from './WalletAddressRegistry.js';
+import {searchWalletByAddress} from './WalletAddressRegistry.js';
 import {etherToFiat, watchTransactionStatus, getTransactionReceipt, getTransaction, convertTokenAmountReceived} from './WalletUtils.js';
 import {getSavedContractDetails, retrieveContractDetails} from './WalletToken.js';
 
@@ -391,7 +391,7 @@ function retrieveWalletDetails(transactionDetails, prefix) {
       transactionDetails[`${prefix}Avatar`] = transactionDetails[`${prefix}Wallet`].avatar;
       transactionDetails[`${prefix}DisplayName`] = transactionDetails[`${prefix}Wallet`].name;
     } else if (transactionDetails[`${prefix}Address`]) {
-      return searchFullName(transactionDetails[`${prefix}Address`]).then((item) => {
+      return searchWalletByAddress(transactionDetails[`${prefix}Address`]).then((item) => {
         if (item && item.name && item.name.length) {
           transactionDetails[`${prefix}TechnicalId`] = item.technicalId;
           transactionDetails[`${prefix}SpaceId`] = item.spaceId;

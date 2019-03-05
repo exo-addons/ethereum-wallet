@@ -49,8 +49,16 @@
             color="white"
             class="mr-2" />
           <v-icon
+            v-else-if="!item.enabled || item.deletedUser || item.disabledUser"
+            :title="(!item.enabled && 'Wallet is disabled') || (item.disabledUser && 'Disabled user') || (item.deletedUser && 'Deleted space')"
+            class="mr-2"
+            color="orange"
+            size="15">
+            warning
+          </v-icon>
+          <v-icon
             v-else-if="addressLoad === 'error'"
-            alt="Invalid address"
+            title="Invalid address"
             class="mr-2"
             color="red"
             size="15">
@@ -84,7 +92,7 @@
 </template>
 
 <script>
-import {searchAddress, searchContact, searchFullName, searchUserOrSpaceObject} from '../WalletAddressRegistry.js';
+import {searchWallets, searchWalletByAddress, searchWalletByTypeAndId} from '../WalletAddressRegistry.js';
 
 export default {
   props: {
@@ -176,7 +184,7 @@ export default {
         });
       } else if (value && value.length) {
         this.isLoadingSuggestions = true;
-        return searchContact(value).then((data) => {
+        return searchWallets(value).then((data) => {
           this.items = data;
           if (!this.items) {
             if (this.currentUserItem) {
@@ -205,14 +213,14 @@ export default {
         const type = isAddress ? null : this.selectedValue.substring(0, this.selectedValue.indexOf('_'));
         const id = isAddress ? this.selectedValue : this.selectedValue.substring(this.selectedValue.indexOf('_') + 1);
         if (this.noAddress || isAddress) {
-          return searchFullName(this.selectedValue)
+          return searchWalletByAddress(this.selectedValue)
             .then(details => {
               if(details && details.type) {
                 this.addressLoad = 'success';
                 this.$emit('item-selected', {
                   id: details.id,
                   type: details.type,
-                  address: details.enabled && !details.deletedUser && !details.disabledUser ? details.address : null,
+                  address: details.address,
                   id_type: `${details.type}_${details.id}`,
                 });
               } else {
@@ -225,8 +233,9 @@ export default {
               }
             });
         } else {
-          return searchAddress(id, type)
-            .then((address) => {
+          return searchWalletByTypeAndId(id, type)
+            .then((data) => {
+              const address = data && data.address && data.address.length && data.address.indexOf('0x') === 0 && data.address;
               if (address && address.length) {
                 this.addressLoad = 'success';
                 this.$emit('item-selected', {
@@ -252,7 +261,7 @@ export default {
     },
   },
   created() {
-    searchUserOrSpaceObject(eXo.env.portal.userName, 'user').then((item) => {
+    searchWalletByTypeAndId(eXo.env.portal.userName, 'user').then((item) => {
       if (item) {
         item.id_type = `${item.type}_${item.id}`;
         this.currentUserItem = item;
@@ -292,13 +301,10 @@ export default {
       if (!id) {
         this.$refs.selectAutoComplete.selectItem(null);
       } else if (type) {
-        return searchUserOrSpaceObject(id, type).then((item) => {
+        return searchWalletByTypeAndId(id, type).then((item) => {
           item.id_type = item.type && item.id ? `${item.type}_${item.id}` : null;
           this.items.push(item);
           if (this.$refs.selectAutoComplete) {
-            if(!item.enabled || item.deletedUser || item.disabledUser) {
-              item.address = null;
-            }
             this.$refs.selectAutoComplete.selectItem(item);
           }
         });
