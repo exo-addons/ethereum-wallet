@@ -70,6 +70,9 @@ public class Utils {
 
   public static final String                          DEFAULT_ACCESS_PERMISSION             = "defaultAccessPermission";
 
+  public static final String                          LAST_BLOCK_NUMBER_KEY_NAME            =
+                                                                                 "ADDONS_ETHEREUM_LAST_BLOCK_NUMBER";
+
   public static final String                          DEFAULT_GAS                           = "defaultGas";
 
   public static final String                          MIN_GAS_PRICE                         = "minGasPrice";

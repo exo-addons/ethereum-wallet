@@ -101,9 +101,18 @@ public class EthereumWalletTransactionService implements WalletTransactionServic
 
   @Override
   public void saveTransactionDetail(TransactionDetail transactionDetail,
+                                    boolean broadcastMinedTransaction) {
+    transactionStorage.saveTransactionDetail(transactionDetail);
+    if (broadcastMinedTransaction) {
+      broadcastTransactionMinedEvent(transactionDetail);
+    }
+  }
+
+  @Override
+  public void saveTransactionDetail(TransactionDetail transactionDetail,
                                     String currentUser,
-                                    boolean transactionMined) throws IllegalAccessException {
-    if (!transactionMined) {
+                                    boolean broadcastMinedTransaction) throws IllegalAccessException {
+    if (!broadcastMinedTransaction) {
       String senderAddress = StringUtils.isBlank(transactionDetail.getBy()) ? transactionDetail.getFrom()
                                                                             : transactionDetail.getBy();
       Wallet senderWallet = accountService.getWalletByAddress(senderAddress);
@@ -112,7 +121,7 @@ public class EthereumWalletTransactionService implements WalletTransactionServic
       }
     }
     transactionStorage.saveTransactionDetail(transactionDetail);
-    if (transactionMined) {
+    if (broadcastMinedTransaction) {
       broadcastTransactionMinedEvent(transactionDetail);
     }
   }

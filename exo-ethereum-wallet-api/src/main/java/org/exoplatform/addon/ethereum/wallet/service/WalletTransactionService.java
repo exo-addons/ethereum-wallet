@@ -64,19 +64,27 @@ public interface WalletTransactionService {
                                                                 String currentUser) throws IllegalAccessException;
 
   /**
-   * Save temporary transaction label and message and save transaction hash in
-   * sender and receiver account
+   * Save transaction details in database
+   * 
+   * @param transactionDetail transaction detail to save
+   * @param broadcastMinedTransaction whether the transaction has been mined on
+   *          blockchain or not
+   */
+  void saveTransactionDetail(TransactionDetail transactionDetail, boolean broadcastMinedTransaction);
+
+  /**
+   * Save transaction details in database
    *
    * @param transactionDetail transaction detail to save
    * @param currentUser current username that is saving transaction
-   * @param transactionMined whether the transaction has been mined on
+   * @param broadcastMinedTransaction whether the transaction has been mined on
    *          blockchain or not
    * @throws IllegalAccessException if current user is not allowed to save
    *           transaction to sender and receiver wallet
    */
   public void saveTransactionDetail(TransactionDetail transactionDetail,
                                     String currentUser,
-                                    boolean transactionMined) throws IllegalAccessException;
+                                    boolean broadcastMinedTransaction) throws IllegalAccessException;
 
   /**
    * @return watched transactions count treated since the server startup

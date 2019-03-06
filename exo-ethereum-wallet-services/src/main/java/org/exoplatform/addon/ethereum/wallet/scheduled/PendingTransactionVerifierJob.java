@@ -21,9 +21,9 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
 @DisallowConcurrentExecution
-public class BlockchainTransactionVerifierJob implements Job {
+public class PendingTransactionVerifierJob implements Job {
 
-  private static final Log         LOG = ExoLogger.getLogger(BlockchainTransactionVerifierJob.class);
+  private static final Log         LOG = ExoLogger.getLogger(PendingTransactionVerifierJob.class);
 
   private EthereumClientConnector  ethereumClientConnector;
 
@@ -35,11 +35,11 @@ public class BlockchainTransactionVerifierJob implements Job {
 
   private ExoContainer             container;
 
-  public BlockchainTransactionVerifierJob() {
+  public PendingTransactionVerifierJob() {
     this(PortalContainer.getInstance());
   }
 
-  public BlockchainTransactionVerifierJob(ExoContainer container) {
+  public PendingTransactionVerifierJob(ExoContainer container) {
     this.container = container;
   }
 

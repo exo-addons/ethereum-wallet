@@ -34,6 +34,10 @@
   </component>
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.EthereumTransactionDecoder</type>
+  </component>
+
+  <component>
     <key>org.exoplatform.addon.ethereum.wallet.service.WalletAccountService</key>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletAccountService</type>
   </component>
@@ -413,10 +417,26 @@
         <properties-param>
           <name>cronjob.info</name>
           <description>Configuration for wallet transaction stored status verifier</description>
-          <property name="jobName" value="BlockchainTransactionVerifierJob"/>
+          <property name="jobName" value="PendingTransactionVerifierJob"/>
           <property name="groupName" value="Wallet"/>
-          <property name="job" value="org.exoplatform.addon.ethereum.wallet.scheduled.BlockchainTransactionVerifierJob"/>
-          <property name="expression" value="${exo.addon.wallet.BlockchainTransactionVerifierJob.expression:0/10 * * * * ?}"/>
+          <property name="job" value="org.exoplatform.addon.ethereum.wallet.scheduled.PendingTransactionVerifierJob"/>
+          <property name="expression" value="${exo.addon.wallet.PendingTransactionVerifierJob.expression:0/10 * * * * ?}"/>
+        </properties-param>
+      </init-params>
+    </component-plugin>
+    <component-plugin>
+      <name>AddCronJob</name>
+      <set-method>addCronJob</set-method>
+      <type>org.exoplatform.services.scheduler.CronJob</type>
+      <description>Add a job to verify if mined contract transactions are added in database</description>
+      <init-params>
+        <properties-param>
+          <name>cronjob.info</name>
+          <description>Configuration for contract stored transactions verifier</description>
+          <property name="jobName" value="ContractTransactionVerifierJob"/>
+          <property name="groupName" value="Wallet"/>
+          <property name="job" value="org.exoplatform.addon.ethereum.wallet.scheduled.ContractTransactionVerifierJob"/>
+          <property name="expression" value="${exo.addon.wallet.ContractTransactionVerifierJob.expression:0 0 * ? * * *}"/>
         </properties-param>
       </init-params>
     </component-plugin>

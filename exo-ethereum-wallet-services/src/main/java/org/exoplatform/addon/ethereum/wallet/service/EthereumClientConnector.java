@@ -18,12 +18,16 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.*;
 import java.util.concurrent.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.core.methods.response.EthBlock.Block;
+import org.web3j.protocol.core.methods.response.EthLog.LogResult;
 import org.web3j.protocol.websocket.*;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -195,6 +199,51 @@ public class EthereumClientConnector {
     return connectionInterruptionCount;
   }
 
+  /**
+   * @return last mined block number from blockchain
+   * @throws InterruptedException
+   * @throws IOException
+   */
+  public long getLastestBlockNumber() throws InterruptedException, IOException {
+    waitConnection();
+    Block block = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
+    return block.getNumber().longValue();
+  }
+
+  /**
+   * Retrieve from blockchain transaction hashes from contract starting from a
+   * block number to a block number
+   * 
+   * @param contractsAddress blockchain contract address
+   * @param fromBlock search starting from this block number
+   * @param toBlock search until this block number
+   * @return a {@link Set} of transaction hashes
+   * @throws IOException if an error happens while getting information from
+   *           blockchain
+   * @throws InterruptedException if an interruption is made while getting
+   *           information from blockchain
+   */
+  public Set<String> getContractTransactions(String contractsAddress,
+                                             long fromBlock,
+                                             long toBlock) throws IOException, InterruptedException {
+    waitConnection();
+    org.web3j.protocol.core.methods.request.EthFilter filter =
+                                                             new org.web3j.protocol.core.methods.request.EthFilter(new DefaultBlockParameterNumber(fromBlock),
+                                                                                                                   new DefaultBlockParameterNumber(toBlock),
+                                                                                                                   contractsAddress);
+    EthLog contractTransactions = web3j.ethGetLogs(filter).send();
+
+    @SuppressWarnings("rawtypes")
+    List<LogResult> logs = contractTransactions.getResult();
+    Set<String> txHashes = new HashSet<>();
+    for (LogResult<?> logResult : logs) {
+      org.web3j.protocol.core.methods.response.Log contractEventLog =
+                                                                    (org.web3j.protocol.core.methods.response.Log) logResult.get();
+      txHashes.add(contractEventLog.getTransactionHash());
+    }
+    return txHashes;
+  }
+
   private String getWebsocketProviderURL() {
     return globalSettings == null ? null : globalSettings.getWebsocketProviderURL();
   }
@@ -354,4 +403,5 @@ public class EthereumClientConnector {
   private String getConnectionFailedMessage() {
     return "Connection failed to " + getWebsocketProviderURL();
   }
+
 }
