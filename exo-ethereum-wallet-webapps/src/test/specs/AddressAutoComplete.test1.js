@@ -75,6 +75,7 @@ describe('AddressAutoComplete.test.js', () => {
               id: 'testuser3',
               type: 'user',
               address: testedAddress,
+              enabled: true,
               id_type: 'user_testuser3',
             },
           ],

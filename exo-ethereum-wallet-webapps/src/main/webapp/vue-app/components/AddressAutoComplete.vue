@@ -49,8 +49,8 @@
             color="white"
             class="mr-2" />
           <v-icon
-            v-else-if="!item.enabled || item.deletedUser || item.disabledUser"
-            :title="(!item.enabled && 'Wallet is disabled') || (item.disabledUser && 'Disabled user') || (item.deletedUser && 'Deleted space')"
+            v-else-if="item.enabled === false || item.deletedUser || item.disabledUser"
+            :title="(item.disabledUser && 'Disabled user') || (item.deletedUser && 'Deleted space') || (item.enabled === false && 'Wallet is disabled')"
             class="mr-2"
             color="orange"
             size="15">
@@ -221,6 +221,7 @@ export default {
                   id: details.id,
                   type: details.type,
                   address: details.address,
+                  enabled: details.enabled,
                   id_type: `${details.type}_${details.id}`,
                 });
               } else {
