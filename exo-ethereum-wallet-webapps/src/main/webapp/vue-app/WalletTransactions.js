@@ -366,6 +366,11 @@ function computeTransactionDetailsTokenOperation(transactionDetails, logs) {
     const transactionFeeLog = decodedLogs && decodedLogs.find((decodedLog) => decodedLog && decodedLog.name === 'TransactionFee');
     if (transactionFeeLog) {
       transactionDetails.feeToken = convertTokenAmountReceived(transactionFeeLog.events[1].value, transactionDetails.contractDecimals);
+    } else {
+      const noSufficientFundsLog = decodedLogs && decodedLogs.find((decodedLog) => decodedLog && decodedLog.name === 'NoSufficientFund');
+      if (noSufficientFundsLog) {
+        transactionDetails.feeNoSufficientFunds = true;
+      }
     }
   }
   transactionDetails.decodedLogs = true;

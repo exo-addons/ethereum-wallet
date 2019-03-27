@@ -596,7 +596,15 @@
                 {{ toFixed(item.feeToken) }} {{ item.contractSymbol }}
               </v-list-tile-content>
               <v-list-tile-content v-else class="align-end">
-                {{ toFixed(item.feeFiat) }} {{ fiatSymbol }}
+                <div class="no-wrap">
+                  {{ toFixed(item.feeFiat) }} {{ fiatSymbol }}
+                  <v-icon
+                    v-if="item.feeNoSufficientFunds"
+                    color="orange"
+                    title="You financed transaction fee with ether instead of Token.">
+                    warning
+                  </v-icon>
+                </div>
               </v-list-tile-content>
             </v-list-tile>
 
