@@ -1,21 +1,22 @@
-const ERTTokenV1 = artifacts.require("ERTTokenV1");
+const ERTTokenV1 = artifacts.require("ERTTokenV2");
 const ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
+const ERTTokenDataV2 = artifacts.require("ERTTokenDataV2");
 
 const decimals = Math.pow(10, 18);
 
-contract('ERTTokenV1 ABI', function() {
+contract('ERTTokenV2 ABI', function() {
 
   const abi = ERTTokenV1.abi;
 
   it (`Abi elements count` , function(){
-    assert.equal(abi.length, 51, `Token Abi isn't coherent`);
-    assert.equal(abi.filter(element => element.stateMutability === 'view').length, 17, `Token Abi doesn't have exact match functions in view mode`);
-    assert.equal(abi.filter(element => element.stateMutability === 'nonpayable').length, 18, `Token Abi doesn't have exact match for nonpayable functions`);
-    assert.equal(abi.filter(element => element.stateMutability === 'payable').length, 1, `Token Abi doesn't have exact match for payable functions`);
-    assert.equal(abi.filter(element => element.type === 'function').length, 34, `Token Abi doesn't have exact match functions with type 'function'`);
+    assert.equal(abi.length, 60, `Token Abi isn't coherent`);
+    assert.equal(abi.filter(element => element.stateMutability === 'view').length, 20, `Token Abi doesn't have exact match functions in view mode`);
+    assert.equal(abi.filter(element => element.stateMutability === 'nonpayable').length, 19, `Token Abi doesn't have exact match for nonpayable functions`);
+    assert.equal(abi.filter(element => element.stateMutability === 'payable').length, 2, `Token Abi doesn't have exact match for payable functions`);
+    assert.equal(abi.filter(element => element.type === 'function').length, 40, `Token Abi doesn't have exact match functions with type 'function'`);
     assert.equal(abi.filter(element => element.type === 'fallback').length, 1, `Token Abi doesn't have exact match functions with type 'fallback'`);
-    assert.equal(abi.filter(element => element.type === 'constructor').length, 1, `Token Abi doesn't have exact match functions with type 'constructor'`);
-    assert.equal(abi.filter(element => element.type === 'event').length, 15, `Token Abi doesn't have exact match functions with type 'event'`);
+    assert.equal(abi.filter(element => element.type === 'constructor').length, 0, `Token Abi doesn't have exact match functions with type 'constructor'`);
+    assert.equal(abi.filter(element => element.type === 'event').length, 19, `Token Abi doesn't have exact match functions with type 'event'`);
   });
 
   it (`Abi doesn't expose internal methods` , function(){
@@ -53,6 +54,9 @@ contract('ERTTokenV1 ABI', function() {
     assert.equal(abi.filter(element => element.type === 'function' && element.name === 'getSellPrice' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'getSellPrice' method`);
     assert.equal(abi.filter(element => element.type === 'function' && element.name === 'setName' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'setName' method`);
     assert.equal(abi.filter(element => element.type === 'function' && element.name === 'setSymbol' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'setSymbol' method`);
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'isInitializedAccount' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'isInitializedAccount' method`);
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'rewardBalanceOf' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'rewardBalanceOf' method`);
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'vestingBalanceOf' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'vestingBalanceOf' method`);
   });
 
   it (`Abi have ERTTokenV1.sol methods` , function(){
@@ -89,6 +93,18 @@ contract('ERTTokenV1 ABI', function() {
     assert.equal(abi.filter(element => element.type === 'function' && element.name === 'upgradeDataAndImplementation' && element.inputs && element.inputs.length === 5).length, 1, `Token Abi doesn't have 'upgradeDataAndImplementation' method`);
     assert.equal(abi.filter(element => element.type === 'function' && element.name === 'upgradeData' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'upgradeData' method`);
   });
+  
+  it (`Abi have AccountInitialization.sol methods` , function(){
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'initializeAccount' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'initializeAccount' method`);
+  });
+
+  it (`Abi have AccountRewarding.sol methods` , function(){
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'reward' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'reward' method`);
+  });
+  
+  it (`Abi have TokenVesting.sol methods` , function(){
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'transformToVested' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'transformToVested' method`);
+  });
 
 });
 
@@ -117,7 +133,7 @@ contract('ERTTokenDataV1 ABI', function() {
   });
 
   it (`Data abi have ERTTokenDataV1.sol methods` , function(){
-    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'initialized' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'transferDataOwnership' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'initialized' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'initialized' method`);
     assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'name' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'name' method`);
     assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'symbol' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'symbol' method`);
     assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'decimals' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'decimals' method`);
@@ -140,4 +156,39 @@ contract('ERTTokenDataV1 ABI', function() {
     assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'setSellPrice' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'setSellPrice' method`);
   });
 
+})
+
+contract('ERTTokenDataV2 ABI', function() {
+  const dataAbi = ERTTokenDataV2.abi;
+  
+  it (`Data abi elements count` , function(){
+    assert.equal(dataAbi.length, 12, `Token Abi isn't coherent`);
+    assert.equal(dataAbi.filter(element => element.stateMutability === 'view').length, 5, `Token Data Abi doesn't have exact match functions in view mode`);
+    assert.equal(dataAbi.filter(element => element.stateMutability === 'nonpayable').length, 6, `Token Data Abi doesn't have exact match for nonpayable functions`);
+    assert.equal(dataAbi.filter(element => element.stateMutability === 'payable').length, 0, `Token Data Abi doesn't have exact match for payable functions`);
+    assert.equal(dataAbi.filter(element => element.type === 'function').length, 9, `Token Data Abi doesn't have exact match functions with type 'function'`);
+    assert.equal(dataAbi.filter(element => element.type === 'fallback').length, 1, `Token Data Abi doesn't have exact match functions with type 'fallback'`);
+    assert.equal(dataAbi.filter(element => element.type === 'constructor').length, 1, `Token Data Abi doesn't have exact match functions with type 'constructor'`);
+    assert.equal(dataAbi.filter(element => element.type === 'event').length, 1, `Token Data Abi doesn't have exact match functions with type 'event'`);
+  });
+  
+  it (`Data abi doesn't expose internal methods` , function(){
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name.indexOf('_') >= 0).length, 0, `Token Abi shouldn't have a supposed internal method into it`);
+  });
+  
+  it (`Data abi have DataOwned.sol methods` , function(){
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'proxy' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'proxy' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'implementation' && element.inputs && element.inputs.length === 0).length, 1, `Token Abi doesn't have 'implementation' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'transferDataOwnership' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'transferDataOwnership' method`);
+  });
+
+  it (`Data abi have ERTTokenDataV2.sol methods` , function(){
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'isInitializedAccount' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'isInitializedAccount' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'setInitializedAccount' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'setInitializedAccount' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'rewardBalanceOf' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'rewardBalanceOf' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'setRewardBalance' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'setRewardBalance' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'vestingBalanceOf' && element.inputs && element.inputs.length === 1).length, 1, `Token Abi doesn't have 'vestingBalanceOf' method`);
+    assert.equal(dataAbi.filter(element => element.type === 'function' && element.name === 'setVestingBalance' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'setVestingBalance' method`);
+  });
+  
 })

@@ -1,6 +1,5 @@
-var ERTToken = artifacts.require("ERTToken");
-var ERTTokenV1 = artifacts.require("ERTTokenV1");
-
+const ERTToken = artifacts.require("ERTToken");
+const ERTTokenV1 = artifacts.require("ERTTokenV1");
 
 const decimals = Math.pow(10, 18);
 
@@ -53,16 +52,15 @@ contract('ERC20', function(accounts) {
         return tokenInstance.balanceOf(accounts[0]);
       }).then(balance => {
         assert.equal(balance.toNumber(), 100000 * decimals, 'Wrong balance of contract owner');
+        return tokenInstance.approveAccount(accounts[1], {
+          from : accounts[0]
+        });
+      }).then(receipt => {
         return tokenInstance.transfer(accounts[1], 6 * decimals, {
           from : accounts[0]
         });
       }).then(receipt => {
-        assert.isDefined(receipt.logs, 'ApprovedAccount and Transfer events are expected');
-
-        const approvedAccountLog = receipt.logs.find(log => log.event === 'ApprovedAccount');
-        assert.isDefined(approvedAccountLog, 'ApprovedAccount event is expected');
-        assert.isDefined(approvedAccountLog.args, 'ApprovedAccount event should have arguments');
-        assert.equal(approvedAccountLog.args.target, accounts[1], 'ApprovedAccount event should have "target" argument that equals to accounts[1]');
+        assert.isDefined(receipt.logs, 'Transfer event is expected');
 
         const transferLog = receipt.logs.find(log => log.event === 'Transfer');
         assert.isDefined(transferLog, 'Transfer event is expected');
@@ -75,7 +73,7 @@ contract('ERC20', function(accounts) {
         });
       }).then(receipt => {
         const approvedAccountLog = receipt.logs.find(log => log.event === 'ApprovedAccount');
-        assert.isUndefined(approvedAccountLog, `ApprovedAccount event shouldn't be emitted again`);
+        assert.isUndefined(approvedAccountLog, `ApprovedAccount event shouldn't be emitted`);
 
         const transferLog = receipt.logs.find(log => log.event === 'Transfer');
         assert.isDefined(transferLog, 'Transfer event is expected');
@@ -95,23 +93,32 @@ contract('ERC20', function(accounts) {
   });
 
   it('approves tokens for delegated transfer', function() {
-    return tokenInstance.approve(accounts[1], 11111111111111 * decimals, {from : accounts[0]})
+    return tokenInstance.approveAccount(accounts[1], {
+        from : accounts[0]
+      })
+      .then(receipt => {
+        return tokenInstance.approve(accounts[1], 11111111111111 * decimals, {
+          from : accounts[0]
+        });
+      })
       .then(assert.fail).catch(function(error) {
         assert(error.message.indexOf('revert') >= 0, `token holder shouldn't be able to approve an amount that is greater than his balance`);
         // Test require msg.sender != _spender
-        return tokenInstance.approve(accounts[0], 11 * decimals, {from : accounts[0]});
+        return tokenInstance.approve(accounts[0], 11 * decimals, {
+          from : accounts[0]
+        });
       }).then(assert.fail).catch(function(error) {
         assert(error.message.indexOf('revert') >= 0, `token holder shouldn't be able to approve tokens sending for himself`);
         return tokenInstance.approve.call(accounts[1], 5 * decimals);
       }).then(success => {
         assert.equal(success, true, 'ERC20 approve transaction failed');
+      }).then(() => {
+        return tokenInstance.approveAccount(accounts[2], {
+          from : accounts[0]
+        });
+      }).then(() => {
         return tokenInstance.approve(accounts[2], 5 * decimals);
       }).then(receipt => {
-        const approvedAccountLog = receipt.logs.find(log => log.event === 'ApprovedAccount');
-        assert.isDefined(approvedAccountLog, 'ApprovedAccount event is expected');
-        assert.isDefined(approvedAccountLog.args, 'ApprovedAccount event should have arguments');
-        assert.equal(approvedAccountLog.args.target, accounts[2], 'ApprovedAccount event should have "target" argument that equals to accounts[2]');
-
         const approveLog = receipt.logs.find(log => log.event === 'Approval');
         assert.isDefined(approveLog, 'Approval event is expected');
         assert.isDefined(approveLog.args, 'Approval event should have arguments');
@@ -128,7 +135,22 @@ contract('ERC20', function(accounts) {
   let fromAccount = accounts[3], toAccount = accounts[4], spendingAccount = accounts[5];
   let cannotTransferAgain = false;
   it('handles delegated token transfers', function() {
-    return tokenInstance.transfer(fromAccount, 100 * decimals)
+    return tokenInstance.approveAccount(accounts[3], {
+        from : accounts[0]
+      })
+      .then(receipt => {
+        return tokenInstance.approveAccount(accounts[4], {
+          from : accounts[0]
+        });
+      })
+      .then(receipt => {
+        return tokenInstance.approveAccount(accounts[5], {
+          from : accounts[0]
+        });
+      })
+      .then(receipt => {
+        return tokenInstance.transfer(fromAccount, 100 * decimals);
+      })
       .then(receipt => {
         // Reciever address should be approved first to be able to receive Tokens
         return tokenInstance.approveAccount(spendingAccount, {

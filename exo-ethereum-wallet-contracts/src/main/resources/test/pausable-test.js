@@ -1,14 +1,14 @@
-var ERTToken = artifacts.require("ERTToken");
-var ERTTokenV1 = artifacts.require("ERTTokenV1");
+const ERTToken = artifacts.require("ERTToken");
+const ERTTokenV2 = artifacts.require("ERTTokenV2");
 
 contract('Pausable', function(accounts) {
 
   let tokenInstance;
-  let tokenV1Instance;
+  let tokenV2Instance;
 
   async function setTokenInstance() {
     tokenInstance = await ERTToken.deployed();
-    tokenV1Instance = await ERTTokenV1.deployed();
+    tokenV2Instance = await ERTTokenV2.deployed();
     const paused = await tokenInstance.isPaused();
     if (paused)  {
       await tokenInstance.unPause();
@@ -23,9 +23,9 @@ contract('Pausable', function(accounts) {
     return tokenInstance.isPaused()
       .then(paused => {
         assert.equal(paused, false, 'Proxy contract seems to be unexpectedly paused');
-        return tokenV1Instance.isPaused();
+        return tokenV2Instance.isPaused();
       }).then(paused => {
-        assert.equal(paused, true, 'Implementation contract should be paused to not allow users to use it directly but through the proxy contract');
+        assert.equal(paused, true, 'Implementation V2 contract should be paused to not allow users to use it directly but through the proxy contract');
       });
   });
 

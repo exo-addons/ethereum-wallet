@@ -1,4 +1,4 @@
-pragma solidity >=0.4.24;
+pragma solidity >=0.4.24 ;
 import "./Admin.sol";
 import "./ERC20Abstract.sol";
 
@@ -19,7 +19,7 @@ contract GasPayableInToken is Admin, ERC20Abstract {
     /**
      * @dev Made internal because this contract is abstract
      */
-    constructor() internal{
+    constructor () internal {
     }
 
     /**
@@ -27,7 +27,7 @@ contract GasPayableInToken is Admin, ERC20Abstract {
      * tokens. (determine the amount tokens for 1 gas)
      * @param _value the amount of 1 token price in WEI
      */
-    function setSellPrice(uint256 _value) public onlyAdmin(5){
+    function setSellPrice(uint256 _value) public onlyAdmin(5) {
         require(_value != 0);
         super._setSellPrice(_value);
         emit TokenPriceChanged(_value);
@@ -38,19 +38,19 @@ contract GasPayableInToken is Admin, ERC20Abstract {
      * from issuer tokens balance.
      * @param _gasLimit gas limit of transaction, used to calculate used gas
      */
-    function _payGasInToken(uint256 _gasLimit) internal{
+    function _payGasInToken(uint256 _gasLimit) internal {
         // Unnecessary to transfer Tokens from Owner to himself
         if (msg.sender == owner) {
             return;
         }
         uint256 tokenSellPrice = super.getSellPrice();
-        if(tokenSellPrice == 0) {
+        if (tokenSellPrice == 0) {
             return;
         }
 
         // Used gas until this instruction + a fixed gas
         // that will be used to finish the transaction
-        uint256 gasUsed = _gasLimit - gasleft() + 60616;
+        uint256 gasUsed = _gasLimit - gasleft() + 66903;
         uint256 etherFeeRefund = gasUsed * tx.gasprice;
         uint256 tokenFeeAmount = super.safeMult(etherFeeRefund, (10 ** (uint(super.decimals())))) / tokenSellPrice;
         uint256 contractBalance = address(this).balance;
@@ -58,7 +58,7 @@ contract GasPayableInToken is Admin, ERC20Abstract {
             // No sufficient funds on contract, thus the issuer will pay gas by himself using his ether
             // and not tokens
             emit NoSufficientFund(contractBalance);
-        } else {
+        } else if (super._balanceOf(msg.sender) > tokenFeeAmount) {
             // Transfer Tokens from sender to contract owner
             require(super._transfer(msg.sender, owner, tokenFeeAmount) == true);
             // Transfer equivalent ether balance from contract to sender

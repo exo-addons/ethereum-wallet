@@ -1,6 +1,7 @@
-pragma solidity >=0.4.24;
+pragma solidity >=0.4.24 ;
 import "./Owned.sol";
 import "./ERTTokenDataV1.sol";
+import "./ERTTokenDataV2.sol";
 
 /**
  * @title DataAccess.sol
@@ -63,6 +64,27 @@ contract DataAccess is Owned{
         return ERTTokenDataV1(dataAddresses_[1]).getSellPrice();
     }
 
+    /**
+     * @return true if the address has been already initialized before
+     */
+    function isInitializedAccount(address _target) public view returns(bool){
+        return ERTTokenDataV2(dataAddresses_[2]).isInitializedAccount(_target);
+    }
+
+    /**
+     * @return reward balance of an address
+     */
+    function rewardBalanceOf(address _target) public view returns(uint256){
+        return ERTTokenDataV2(dataAddresses_[2]).rewardBalanceOf(_target);
+    }
+
+    /**
+     * @return vested balance of an address
+     */
+    function vestingBalanceOf(address _target) public view returns(uint256){
+        return ERTTokenDataV2(dataAddresses_[2]).vestingBalanceOf(_target);
+    }
+
     // Public owner write methods
 
     /**
@@ -121,7 +143,6 @@ contract DataAccess is Owned{
      * @param _balance new tokens amount affected to address
      */
     function _setBalance(address _target, uint256 _balance) internal{
-        require(_balance > 0);
         ERTTokenDataV1(dataAddresses_[1]).setBalance(_target, _balance);
     }
 
@@ -204,10 +225,38 @@ contract DataAccess is Owned{
         return ERTTokenDataV1(dataAddresses_[1]).balance(_target);
     }
 
+
     /**
      * @return ERC20 tokens allowance from an account to another spender account
      */
     function _getAllowance(address _account, address _spender) internal view returns (uint256){
         return ERTTokenDataV1(dataAddresses_[1]).getAllowance(_account, _spender);
     }
+
+    /**
+     * @dev Change the affected reward balance for the given address
+     * @param _target addres to change its reward balance
+     * @param _balance new reward balance affected to address
+     */
+    function _setRewardBalance(address _target, uint256 _balance) internal{
+        ERTTokenDataV2(dataAddresses_[2]).setRewardBalance(_target, _balance);
+    }
+
+    /**
+     * @dev Change the affected vested balance for the given address
+     * @param _target addres to change its vested balance
+     * @param _balance new vested balance affected to address
+     */
+    function _setVestingBalance(address _target, uint256 _balance) internal{
+        ERTTokenDataV2(dataAddresses_[2]).setVestingBalance(_target, _balance);
+    }
+
+    /**
+     * @dev mark address as initialized
+     * @param _target addres to mark as initialized
+     */
+    function _setInitializedAccount(address _target) internal{
+        ERTTokenDataV2(dataAddresses_[2]).setInitializedAccount(_target);
+    }
+
 }

@@ -1,11 +1,11 @@
-var ERTToken = artifacts.require("ERTToken");
+const ERTToken = artifacts.require("ERTToken");
 
 contract('Proxy', function(accounts) {
 
   let tokenInstance;
   let initialProxyBalance;
 
-  const fiveWei = web3.toWei(5, 'ether').toString();
+  const fiveWei = web3.toWei("5", 'ether').toString();
 
   it('Send ether to Proxy', () => {
     return ERTToken.deployed()

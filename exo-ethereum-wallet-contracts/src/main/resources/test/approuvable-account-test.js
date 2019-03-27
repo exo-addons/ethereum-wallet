@@ -58,8 +58,8 @@ contract('ApprouvableAccount', function(accounts) {
     }) 
   })
 
-  it ('test approveAccount by admin level 1 when the onlyAdmin(1) ' , function(){
-    return tokenInstance.addAdmin(accounts[1], 1).then(receipt => {
+  it ('test approveAccount by admin level 1 when the onlyAdmin(4) ' , function(){
+    return tokenInstance.addAdmin(accounts[1], 4).then(receipt => {
       return tokenInstance.approveAccount(accounts[7], {from : accounts[1]});
     }).then(receipt => {
       return tokenInstance.isApprovedAccount(accounts[7]);

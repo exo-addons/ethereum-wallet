@@ -2,7 +2,6 @@ pragma solidity >=0.4.24;
 import './TokenStorage.sol';
 import './Owned.sol';
 import './DataOwned.sol';
-import './Upgradability.sol';
 
 /**
  * @title ERTToken.sol
@@ -52,4 +51,5 @@ contract ERTToken is TokenStorage, Owned {
          default { return(ptr, size) }
       }
     }
+
 }

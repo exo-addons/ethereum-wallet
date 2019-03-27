@@ -1,5 +1,5 @@
 const ERTToken = artifacts.require("ERTToken");
-var ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
+const ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
 
 const decimals = Math.pow(10, 18);
 
@@ -45,7 +45,14 @@ contract('DataAccess', function(accounts) {
       assert.equal(decimals, 18, 'has not the correct decimals');
       return tokenInstance.balanceOf(accounts[1]);
     }).then(function(balance) {
-      assert.equal(balance, 0, 'has not the correct balance');
+      assert.equal(balance, 0, 'wrong token balance for accounts[1]');
+      return tokenInstance.balanceOf(accounts[0]);
+    }).then(function(balance) {
+      assert.equal(balance > decimals, true, 'wrong token balance for accounts[0]');
+      return tokenInstance.approveAccount(accounts[1], {
+        from : accounts[0]
+      });
+    }).then(receipt => {
       return tokenInstance.approve(accounts[1], 1 * decimals, {
         from : accounts[0]
       });
@@ -151,7 +158,7 @@ contract('DataAccess', function(accounts) {
         return web3.eth.sendTransaction({
           from : accounts[0],
           to: ERTTokenDataV1.address,
-          value : web3.toWei(1, 'ether')
+          value : web3.toWei("1", 'ether')
         });
       })
       .then(assert.fail).catch(error => {

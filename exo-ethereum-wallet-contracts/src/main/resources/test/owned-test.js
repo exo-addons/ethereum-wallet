@@ -1,14 +1,17 @@
-var ERTToken = artifacts.require("ERTToken");
-var ERTTokenV1 = artifacts.require("ERTTokenV1");
+const ERTToken = artifacts.require("ERTToken");
+const ERTTokenV1 = artifacts.require("ERTTokenV1");
+const ERTTokenV2 = artifacts.require("ERTTokenV2");
 
 contract('Owned', function(accounts) {
   
   let tokenInstance;
   let tokenV1Instance;
+  let tokenV2Instance;
 
   async function setTokenInstance() {
     tokenInstance = await ERTToken.deployed();
     tokenV1Instance = await ERTTokenV1.deployed();
+    tokenV2Instance = await ERTTokenV2.deployed();
   }
 
   beforeEach(async function () {
@@ -21,7 +24,10 @@ contract('Owned', function(accounts) {
         assert.equal(owner, accounts[0], 'Wrong owner on Token Proxy contract');
         return tokenV1Instance.owner.call();
       }).then(owner => {
-        assert.equal(owner, accounts[0], 'Wrong owner on Token Implementation contract');
+        assert.equal(owner, accounts[0], 'Wrong owner on Token Implementation V1 contract');
+        return tokenV2Instance.owner.call();
+      }).then(owner => {
+        assert.equal(owner, accounts[0], 'Wrong owner on Token Implementation V2 contract');
       });
   })
 

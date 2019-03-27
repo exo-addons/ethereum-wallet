@@ -1,52 +1,62 @@
-var ERTToken = artifacts.require("ERTToken");
-var TestERTTokenV2 = artifacts.require("TestERTTokenV2");
-var ERTTokenV1 = artifacts.require("ERTTokenV1");
-var ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
-var TestERTTokenDataV2 = artifacts.require("TestERTTokenDataV2");
-var TestERTTokenV3 = artifacts.require("TestERTTokenV3");
+const ERTToken = artifacts.require("ERTToken");
+
+const ERTTokenV2 = artifacts.require("ERTTokenV2");
+
+const ERTTokenDataV1 = artifacts.require("ERTTokenDataV1");
+const ERTTokenDataV2 = artifacts.require("ERTTokenDataV2");
+const TestERTTokenNewDataVersion = artifacts.require("TestERTTokenNewDataVersion");
+
+const TestTokenNewVersion = artifacts.require("TestTokenNewVersion");
+const TestTokenNewerVersion = artifacts.require("TestTokenNewerVersion");
 
 const decimals = Math.pow(10, 18);
+
+const testDataVersion = 3;
+
+const testTokenImplV1 = 3;
+const testTokenImplV2 = 4;
 
 contract('Upgradability', function(accounts) {
 
   let tokenInstance;
   let tokenDataV1Instance;
   let tokenDataV2Instance;
+  let testDataVersionInstance;
 
-  it('Test ownership of V2 contract', function() {
-   return TestERTTokenV2.deployed()
+  it('Test ownership of Test impl contract', function() {
+   return TestTokenNewVersion.deployed()
      .then(instance => {
        tokenInstance = instance;
        return tokenInstance.owner.call();
      }).then(function(result) {
-       assert.equal(result, accounts[0] , 'the owner of TestERTTokenV2 is wrong'); 
+       assert.equal(result, accounts[0] , 'the owner of TestTokenNewVersion is wrong'); 
      });
   })
 
-  it('Test ownership of V2 Data contract', function() {
-    return TestERTTokenDataV2.deployed()
+  it('Test ownership of Test Data contract', function() {
+    return TestERTTokenNewDataVersion.deployed()
       .then(instance => {
         tokenInstance = instance;
         return tokenInstance.implementation.call();
       }).then(function(result) {
-        assert.equal(result, TestERTTokenV2.address , 'the implementation of TestERTTokenDataV2 is wrong'); 
+        assert.equal(result, TestTokenNewVersion.address , 'the implementation of TestERTTokenNewDataVersion is wrong'); 
         return tokenInstance.proxy.call();
       }).then(function(result) {
-        assert.equal(result, ERTToken.address , 'the proxy of TestERTTokenDataV2 is wrong'); 
+        assert.equal(result, ERTToken.address , 'the proxy of TestERTTokenNewDataVersion is wrong'); 
       });
   })
 
-  it('Test ownership of V3 contract', function() {
-    return TestERTTokenV3.deployed()
+  it('Test ownership of newer Test impl contract', function() {
+    return TestTokenNewerVersion.deployed()
       .then(instance => {
         tokenInstance = instance;
         return tokenInstance.owner.call();
       }).then(function(result) {
-        assert.equal(result, accounts[0] , 'the owner of TestERTTokenV3 is wrong'); 
+        assert.equal(result, accounts[0] , 'the owner of TestTokenNewerVersion is wrong'); 
       });
   })
 
-  const fiveWei = web3.toWei(5, 'ether').toString();
+  const fiveEtherInWei = web3.toWei("5", 'ether').toString();
 
   it('Send ether to Proxy', () => {
     return ERTToken.deployed()
@@ -59,86 +69,100 @@ contract('Upgradability', function(accounts) {
         return web3.eth.sendTransaction({
           from : accounts[0],
           to: ERTToken.address,
-          value : fiveWei
+          value : fiveEtherInWei
         });
       })
       .then(result => web3.eth.getBalance(ERTToken.address))
       .then(result => 
-        assert.equal(Number(String(result)), initialProxyBalance + Number(fiveWei), 'the balance of ERTToken is wrong ')
+        assert.equal(Number(String(result)), initialProxyBalance + Number(fiveEtherInWei), 'the balance of ERTToken is wrong ')
       );
   });
 
-  it('Upgrade implementation to V2 and add data contract V2', () => {
+  it('Upgrade implementation to new test version and add test data version contract', () => {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
-        return tokenInstance.upgradeImplementation(ERTToken.address, 1, TestERTTokenV2.address);
+        return tokenInstance.upgradeImplementation(ERTToken.address, 2, TestTokenNewVersion.address);
       }).then(assert.fail).catch(function(error) {
-        assert(error.message.indexOf('revert') >= 0, "Version 1 shouldn't be accepted. It should be greater than previous one to be accepted");
-        return tokenInstance.upgradeImplementation(ERTToken.address, 2, ERTTokenV1.address);
+        assert(error.message.indexOf('revert') >= 0, "Version 1 address shouldn't be accepted. It should be greater than previous one to be accepted");
+        return tokenInstance.upgradeImplementation(ERTToken.address, 3, ERTTokenV2.address);
       }).then(assert.fail).catch(function(error) {
         assert(error.message.indexOf('revert') >= 0, "New implementation should be different from old one");
-        return tokenInstance.upgradeImplementation(ERTToken.address, 2, TestERTTokenV2.address, {from: accounts[5]});
+        return tokenInstance.upgradeImplementation(ERTToken.address, 3, TestTokenNewVersion.address, {
+          from: accounts[5]
+        });
       }).then(assert.fail).catch(function(error) {
-        assert(error.message.indexOf('revert') >= 0, "Only owner can upgrade implementation");
+        assert(error.message.indexOf('revert') >= 0, "Only owner should be able to upgrade implementation");
         return tokenInstance.implementationAddress.call();
       }).then(function(implementation) {
-        assert.equal(implementation, ERTTokenV1.address, 'Current V1 implementation seems to be wrong');
-        return tokenInstance.upgradeDataAndImplementation(ERTToken.address, 2, TestERTTokenV2.address, 2, TestERTTokenDataV2.address);
+        assert.equal(implementation, ERTTokenV2.address, 'Current V2 implementation seems to be wrong');
+        return tokenInstance.upgradeDataAndImplementation(ERTToken.address, testTokenImplV1, TestTokenNewVersion.address, testDataVersion, TestERTTokenNewDataVersion.address);
       }).then(function(receipt) {
         const upgradedEvent = receipt.logs.find(log => log && log.event && log.event === 'Upgraded');
         assert.isDefined(upgradedEvent ,'Upgraded event should be emitted');
-        assert.equal(upgradedEvent.args.implementationVersion, 2, 'the implementation version is wrong');
-        assert.equal(upgradedEvent.args.implementationAddress, TestERTTokenV2.address,'the implementation address is wrong');
+        assert.equal(upgradedEvent.args.implementationVersion, testTokenImplV1, 'the implementation version is wrong');
+        assert.equal(upgradedEvent.args.implementationAddress, TestTokenNewVersion.address,'the implementation address is wrong');
 
         const upgradedDataEvent = receipt.logs.find(log => log && log.event && log.event === 'UpgradedData');
         assert.isDefined(upgradedDataEvent ,'UpgradedData event should be emitted');
-        assert.equal(upgradedDataEvent.args.dataVersion, 2, 'the data version is wrong in event');
-        assert.equal(upgradedDataEvent.args.dataAddress, TestERTTokenDataV2.address,'the data V2 address is wrong in event');
+        assert.equal(upgradedDataEvent.args.dataVersion, testDataVersion, 'the data version is wrong in event');
+        assert.equal(upgradedDataEvent.args.dataAddress, TestERTTokenNewDataVersion.address,'the data V2 address is wrong in event');
         return tokenInstance.implementationAddress.call();
       }).then(function(implementation) {
-        assert.equal(implementation, TestERTTokenV2.address, 'Currently used implementation on Proxy contract should be V2 implementation after the upgrade');
+        assert.equal(implementation, TestTokenNewVersion.address, 'Currently used implementation on Proxy contract should be V2 implementation after the upgrade');
         return tokenInstance.version.call();
       }).then(version => {
-        assert.equal(version, 2, 'Currently used implementation version on Proxy contract should be 2 after the upgrade');
+        assert.equal(version, testDataVersion, 'Currently used implementation version on Proxy contract should be 2 after the upgrade');
         return tokenInstance.getDataAddress(1);
       }).then(dataAddressV1 => {
-        assert.equal(dataAddressV1, ERTTokenDataV1.address , 'the Data Token V1 address should be preserved on proxy contract'); 
+        assert.equal(dataAddressV1, ERTTokenDataV1.address , 'the Data Contract V1 address should be preserved on proxy contract'); 
         return tokenInstance.getDataAddress(2);
       }).then(dataAddressV2 => {
-        assert.equal(dataAddressV2, TestERTTokenDataV2.address , 'the Data Token V2 address should be added on proxy contract'); 
+        assert.equal(dataAddressV2, ERTTokenDataV2.address , 'the Data Contract V2 address should be preserved on proxy contract'); 
+        return tokenInstance.getDataAddress(testDataVersion);
+      }).then(testDataAddress => {
+        assert.equal(testDataAddress, TestERTTokenNewDataVersion.address , 'the Test Data Contract address should be added on proxy contract'); 
         return ERTTokenDataV1.deployed();
       }).then(instance => {
         tokenDataV1Instance = instance;
         return tokenDataV1Instance.implementation.call();
       }).then(address => {
-        assert.equal(address, TestERTTokenV2.address , 'the Data Token should have transferred its ownership to implementation V2'); 
+        assert.equal(address, TestTokenNewVersion.address , 'the Data Token should have transferred its ownership to implementation V2'); 
         return tokenDataV1Instance.proxy.call();
       }).then(address => {
         assert.equal(address, ERTToken.address , 'the Data Token should have transferred its ownership to implementation V2'); 
-        return TestERTTokenDataV2.deployed();
+        return ERTTokenDataV2.deployed();
       }).then(instance => {
         tokenDataV2Instance = instance;
         return tokenDataV2Instance.implementation.call();
       }).then(address => {
-        assert.equal(address, TestERTTokenV2.address , 'the Data Token V2 should have transferred its ownership to implementation V2'); 
+        assert.equal(address, TestTokenNewVersion.address , 'the Data Token should have transferred its ownership to implementation V2'); 
         return tokenDataV2Instance.proxy.call();
+      }).then(address => {
+        assert.equal(address, ERTToken.address , 'the Data Token should have transferred its ownership to implementation V2'); 
+        return TestERTTokenNewDataVersion.deployed();
+      }).then(instance => {
+        testDataVersionInstance = instance;
+        return testDataVersionInstance.implementation.call();
+      }).then(address => {
+        assert.equal(address, TestTokenNewVersion.address , 'the Data Token V2 should have transferred its ownership to implementation V2'); 
+        return testDataVersionInstance.proxy.call();
       }).then(address => {
         assert.equal(address, ERTToken.address , 'the Data Token V2 should have transferred its ownership to implementation V2'); 
         return web3.eth.getBalance(ERTToken.address);
       }).then(function(result) {
-        assert.equal(String(result), fiveWei, 'the balance of the ERTToken should be 5 ether');
-        return web3.eth.getBalance(ERTTokenV1.address);
+        assert.equal(String(result), fiveEtherInWei, 'the balance of the ERTToken should be 5 ether');
+        return web3.eth.getBalance(ERTTokenV2.address);
       }).then(result => {
-        assert.equal(result, 0, 'the balance of ERTTokenV1 should be 0 ');
-        return web3.eth.getBalance(TestERTTokenV2.address);
+        assert.equal(result, 0, 'the balance of ERTTokenV2 should be 0 ');
+        return web3.eth.getBalance(TestTokenNewVersion.address);
       }).then(function(result) {
         assert.equal(result, 0, 'the balance of TestERTokenV2 should be 0');
       });
   });
 
   it('Old implementation should be kept paused', function() {
-   return ERTTokenV1.deployed()
+   return ERTTokenV2.deployed()
      .then(instance => {
        tokenInstance = instance;
        return tokenInstance.paused.call();
@@ -148,16 +172,16 @@ contract('Upgradability', function(accounts) {
   })
 
   it('New implementations should be kept paused', function() {
-   return TestERTTokenV2.deployed()
+   return TestTokenNewVersion.deployed()
      .then(instance => {
        return instance.paused.call();
      }).then(function(result) {
-       assert.equal(result, true, 'V2 implementation should be paused to avoid calling the contract impl directly');
-       return TestERTTokenV3.deployed();
+       assert.equal(result, true, 'Test V1 implementation should be paused to avoid calling the contract impl directly');
+       return TestTokenNewerVersion.deployed();
      }).then(instance => {
        return instance.paused.call();
      }).then(function(result) {
-       assert.equal(result, true, 'V3 implementation should be paused to avoid calling the contract impl directly'); 
+       assert.equal(result, true, 'Test V2 implementation should be paused to avoid calling the contract impl directly'); 
      });
   })
 
@@ -191,11 +215,11 @@ contract('Upgradability', function(accounts) {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;  
-        return tokenInstance.setSellPrice(web3.toWei(3, 'finney'));
+        return tokenInstance.setSellPrice(web3.toWei("3", 'finney'));
       }).then(function(result) {
         return tokenInstance.getSellPrice();
       }).then(function(sellPrice) {
-        assert.equal(sellPrice.toNumber(), web3.toWei(3, 'finney').toString(), 'writing for old implementation is wrong should be the new setting ');
+        assert.equal(sellPrice.toNumber(), web3.toWei("3", 'finney').toString(), 'writing for old implementation is wrong should be the new setting ');
       });
   })
 
@@ -214,6 +238,10 @@ contract('Upgradability', function(accounts) {
       }).then(function(result) {
         assert.equal(result, false, "accounts shouldn't be frozen");
         return tokenInstance.freeze(accounts[5]);
+      }).then(() => {
+        return tokenInstance.approveAccount(accounts[5]);
+      }).then(() => {
+        return tokenInstance.approveAccount(accounts[3]);
       }).then(() => {
         return tokenInstance.transfer(accounts[5], 50 * decimals);
       }).then(receipt => {
@@ -237,33 +265,33 @@ contract('Upgradability', function(accounts) {
       });
   })
 
-  it('Upgrade implementation to V3', function() {
+  it('Upgrade implementation to test Token V2', function() {
     return ERTToken.deployed()
       .then(instance => {
         tokenInstance = instance;
           return tokenInstance.implementationAddress.call();
         }).then(function(implementation) {
-          assert.equal(implementation, TestERTTokenV2.address, 'should return the current implementation');    
-          return tokenInstance.upgradeImplementation(ERTToken.address, 3, TestERTTokenV3.address);
+          assert.equal(implementation, TestTokenNewVersion.address, 'should return the current implementation');    
+          return tokenInstance.upgradeImplementation(ERTToken.address, testTokenImplV2, TestTokenNewerVersion.address);
         }).then(function(receipt) {
           return tokenInstance.implementationAddress.call();
         }).then(function(implementation) {
-          assert.equal(implementation, TestERTTokenV3.address, 'should return the given implementation'); 
+          assert.equal(implementation, TestTokenNewerVersion.address, 'should return the given implementation'); 
         });
   })
 
   it('Test data addresses referenced in old V2 implementation', function() {
-    return TestERTTokenV2.deployed()
+    return TestTokenNewVersion.deployed()
       .then(instance => {
         tokenInstance = instance;
         return tokenInstance.getDataAddress(1);
       }).then(function(result) {
-        assert.equal(result, 0x0 , 'the TestERTTokenV2 shouldn\'t have a reference to new address'); 
+        assert.equal(result, 0x0 , 'the TestTokenNewVersion shouldn\'t have a reference to new address'); 
       });
   });
 
   it('Old implementation should be paused', function() {
-    return TestERTTokenV2.deployed()
+    return TestTokenNewVersion.deployed()
       .then(instance => {
         tokenInstance = instance;
         return tokenInstance.paused.call();
@@ -273,7 +301,7 @@ contract('Upgradability', function(accounts) {
   })
 
   it('new implementation should be paused', function() {
-    return TestERTTokenV3.deployed()
+    return TestTokenNewerVersion.deployed()
       .then(instance => {
         tokenInstance = instance;
         return tokenInstance.paused.call();
@@ -294,6 +322,8 @@ contract('Upgradability', function(accounts) {
         return tokenInstance.isFrozen(accounts[6]);
       }).then(function(result) {
         assert.equal(result, true, 'accounts should be frozen ');
+        return tokenInstance.approveAccount(accounts[6]);
+      }).then(() => {
         return tokenInstance.transfer(accounts[6], String(50 * decimals));
       }).then(receipt => {
         return tokenInstance.unFreeze(accounts[6]);
@@ -358,5 +388,4 @@ contract('Upgradability', function(accounts) {
         assert.equal(totalSupply, (100000-35+50) * decimals, 'has not the correct totalSupply');  
       });
   });
-
 });

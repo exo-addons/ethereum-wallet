@@ -1,4 +1,4 @@
-pragma solidity >=0.4.24;
+pragma solidity >=0.4.24 ;
 import "./TokenStorage.sol";
 import "./Owned.sol";
 import "./DataAccess.sol";
@@ -121,7 +121,7 @@ contract ERTTokenV1 is
         return _transferFromWithGas(gasLimit, _from, _to, _value);
     }
 
-    function _transferWithGas(uint256 gasLimit, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _to) returns (bool success){
+    function _transferWithGas(uint256 gasLimit, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender) whenApproved(_to) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _to);
         if (super.isAdmin(msg.sender, 1)) {
@@ -135,7 +135,7 @@ contract ERTTokenV1 is
         return true;
     }
 
-    function _approveWithGas(uint256 gasLimit, address _spender, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _spender) returns (bool success){
+    function _approveWithGas(uint256 gasLimit, address _spender, uint256 _value) internal whenNotPaused whenApproved(msg.sender) whenApproved(_spender) returns (bool success){
         // Make sure that this is not about a fake transaction
         require(msg.sender != _spender);
         require(super._balanceOf(msg.sender) >= _value);
@@ -148,7 +148,7 @@ contract ERTTokenV1 is
         return true;
     }
 
-    function _transferFromWithGas(uint256 gasLimit, address _from, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender, _to) whenApproved(_from, _to) returns (bool success){
+    function _transferFromWithGas(uint256 gasLimit, address _from, address _to, uint256 _value) internal whenNotPaused whenApproved(msg.sender) whenApproved(_to) whenApproved(_from) returns (bool success){
         require(super._balanceOf(_from) >= _value);
         uint256 _allowance = super._getAllowance(_from, msg.sender);
         require(_allowance >= _value);

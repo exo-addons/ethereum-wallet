@@ -15,7 +15,7 @@ contract TestMint is Owned,  ERC20Abstract{
         uint256 totalSupply = super.totalSupply();
         require(totalSupply + _mintedAmount > totalSupply);
         super._setTotalSupply(totalSupply + _mintedAmount);
-        emit Transfer(0, owner, _mintedAmount);
+        emit Transfer(address(0), owner, _mintedAmount);
         emit Transfer(owner, _target, _mintedAmount);
         emit MintedToken(msg.sender, _target, _mintedAmount);
     }

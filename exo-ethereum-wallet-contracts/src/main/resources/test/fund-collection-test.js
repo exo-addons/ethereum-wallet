@@ -1,4 +1,4 @@
-var ERTToken = artifacts.require("ERTToken");
+const ERTToken = artifacts.require("ERTToken");
 
 contract('FundCollection', function(accounts) {
   it('Send ether to contract', function() {
@@ -12,7 +12,7 @@ contract('FundCollection', function(accounts) {
       return web3.eth.sendTransaction({
         from : accounts[0],
         to: tokenInstance.address,
-        value : web3.toWei(1,"ether")
+        value : web3.toWei("1","ether")
       });
     }).then(() => {
       return web3.eth.getBalance(tokenInstance.address);

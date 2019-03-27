@@ -1,4 +1,4 @@
-var ERTTokenV1 = artifacts.require("ERTTokenV1");
+const ERTTokenV1 = artifacts.require("ERTTokenV1");
 
 contract('Token Implementation', function(accounts) {
     let tokenV1Instance;
@@ -25,6 +25,3 @@ contract('Token Implementation', function(accounts) {
         });
     })
 });
-
-  
-  

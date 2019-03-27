@@ -1,4 +1,4 @@
-pragma solidity >=0.4.24;
+pragma solidity >=0.4.24 ;
 import "./Admin.sol";
 import "./DataAccess.sol";
 
@@ -25,13 +25,11 @@ contract ApprouvableAccount is DataAccess, Admin {
 
     /**
      * @dev Modifier to make a function callable only when
-     * the receiver and the sender are approved or one of them
-     * is the owner of the ERC20 Token Contract
-     * @param _from transaction sender
-     * @param _to transaction receiver
+     * the address is approved 
+     * @param _target address to test its approval status
      */
-    modifier whenApproved(address _from, address _to){
-        require (super.isAdmin(_from, 1) || super.isAdmin(_to, 1) || (super._isApprovedAccount(_from) && super._isApprovedAccount(_to)));
+    modifier whenApproved(address _target){
+        require(super._isApprovedAccount(_target));
         _;
     }
 
@@ -39,9 +37,10 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @dev Sets an account as approved to receive and send ERC20 tokens
      * @param _target address to approve
      */
-    function approveAccount(address _target) public onlyAdmin(1){
+    function approveAccount(address _target) public onlyAdmin(4){
         // Shouldn't approve a contract address
         require(!_isContract(_target));
+
         if (!super._isApprovedAccount(_target)) {
             super._setApprovedAccount(_target, true);
             emit ApprovedAccount(_target);
@@ -52,7 +51,7 @@ contract ApprouvableAccount is DataAccess, Admin {
      * @dev Sets an account as disapproved to receive and send ERC20 tokens
      * @param _target address to disapprove
      */
-    function disapproveAccount(address _target) public onlyAdmin(1){
+    function disapproveAccount(address _target) public onlyAdmin(4){
         // If the address is an admin, disapproving it shouldn't work
         // until revoking its privileges
         require (!super.isAdmin(_target, 1));
@@ -71,11 +70,12 @@ contract ApprouvableAccount is DataAccess, Admin {
         return super.isAdmin(_target, 1) || super._isApprovedAccount(_target);
     }
 
-    function _isContract(address _addr) private view returns (bool){
+    function _isContract(address _addr) internal view returns (bool){
         uint32 size;
         assembly {
           size := extcodesize(_addr)
         }
         return (size > 0);
     }
+
 }
