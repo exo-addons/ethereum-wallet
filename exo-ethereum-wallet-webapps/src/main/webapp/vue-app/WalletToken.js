@@ -330,74 +330,31 @@ export function getSavedContractDetails(address, networkId) {
 /*
  * Creates a Web3 conract instance
  */
-export function createNewContractInstanceByName(tokenName, ...args) {
-  let contractBin, contractAbi;
-  return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
-    method: 'GET',
-    credentials: 'include',
-  })
-    .then((resp) => {
-      if (resp && resp.ok) {
-        return resp.text();
-      } else {
-        throw new Error(`Cannot find contract BIN with name ${tokenName}`);
-      }
-    })
-    .then((bin) => (contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`))
-    .then(() =>
-      fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
-        method: 'GET',
-        credentials: 'include',
-      })
-    )
-    .then((resp) => {
-      if (resp && resp.ok) {
-        return resp.json();
-      } else {
-        throw new Error(`Cannot find contract ABI with name ${tokenName}`);
-      }
-    })
-    .then((abi) => (contractAbi = abi))
-    .then(() => newContractInstance(contractAbi, contractBin, ...args))
-    .then((contractInstance) => {
-      contractInstance.abi = contractAbi;
-      contractInstance.bin = contractBin.substring(2);
-      return contractInstance;
-    });
+ export function createNewContractInstanceByName(tokenName, ...args) {
+   let contractFiles;
+   return getContractFiles(tokenName)
+     .then((filesContents) => contractFiles = filesContents)
+     .then(() => newContractInstance(contractFiles.abi, contractFiles.bin, ...args))
+     .then((contractInstance) => {
+       contractInstance.abi = contractFiles.abi;
+       contractInstance.bin = contractFiles.bin;
+       return contractInstance;
+     });
 }
 
 /*
  * Creates a Web3 conract instance
  */
 export function createNewContractInstanceByNameAndAddress(tokenName, tokenAddress) {
-  let contractBin, contractAbi;
-  return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
-    method: 'GET',
-    credentials: 'include',
-  })
-    .then((resp) => {
-      if (resp && resp.ok) {
-        return resp.text();
-      } else {
-        throw new Error(`Cannot find contract BIN with name ${tokenName}`);
-      }
-    })
-    .then((bin) => (contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`))
-    .then(() =>
-      fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
-        method: 'GET',
-        credentials: 'include',
-      })
-    )
-    .then((resp) => {
-      if (resp && resp.ok) {
-        return resp.json();
-      } else {
-        throw new Error(`Cannot find contract ABI with name ${tokenName}`);
-      }
-    })
-    .then((abi) => (contractAbi = abi))
-    .then(() => getContractInstance(window.localWeb3.eth.defaultAccount, tokenAddress, false, contractAbi, contractBin));
+   let contractFiles;
+   return getContractFiles(tokenName)
+     .then((filesContents) => contractFiles = filesContents)
+     .then(() => getContractInstance(window.localWeb3.eth.defaultAccount, tokenAddress, false, contractFiles.abi, contractFiles.bin))
+     .then((contractInstance) => {
+       contractInstance.abi = contractFiles.abi;
+       contractInstance.bin = contractFiles.bin;
+       return contractInstance;
+     });
 }
 
 export function estimateContractDeploymentGas(instance) {
@@ -624,4 +581,39 @@ function transformContracDetailsToFailed(contractDetails, e) {
   contractDetails.title = contractDetails.address;
   contractDetails.error = `Error retrieving contract at specified address ${e ? e : ''}`;
   return contractDetails;
+}
+
+function getContractFiles(tokenName) {
+  let contractBin;
+  return fetch(`/portal/rest/wallet/api/contract/bin/${tokenName}`, {
+    method: 'GET',
+    credentials: 'include',
+  })
+    .then((resp) => {
+      if (resp && resp.ok) {
+        return resp.text();
+      } else {
+        throw new Error(`Cannot find contract BIN with name ${tokenName}`);
+      }
+    })
+    .then((bin) => (contractBin = bin.indexOf('0x') === 0 ? bin : `0x${bin}`))
+    .then(() =>
+      fetch(`/portal/rest/wallet/api/contract/abi/${tokenName}`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+    )
+    .then((resp) => {
+      if (resp && resp.ok) {
+        return resp.json();
+      } else {
+        throw new Error(`Cannot find contract ABI with name ${tokenName}`);
+      }
+    })
+    .then((abi) => {
+      return {
+        abi: abi,
+        bin: contractBin
+      }
+    });
 }

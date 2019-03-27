@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV1.*;
+import static org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2.*;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -29,7 +29,7 @@ import org.web3j.protocol.core.methods.response.EthBlock.Block;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
-import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV1;
+import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2;
 import org.exoplatform.addon.ethereum.wallet.model.ContractDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
 import org.exoplatform.services.log.ExoLogger;
@@ -37,57 +37,74 @@ import org.exoplatform.services.log.Log;
 
 public class EthereumTransactionDecoder {
 
-  private static final Log                 LOG                          = ExoLogger.getLogger(EthereumTransactionDecoder.class);
+  private static final Log                 LOG                              =
+                                               ExoLogger.getLogger(EthereumTransactionDecoder.class);
 
-  private static final String              FUNC_DEPOSIT_FUNDS           = "depositFunds";
+  private static final String              FUNC_DEPOSIT_FUNDS               = "depositFunds";
 
-  private static final String              TRANSFER_SIGNATURE           =
-                                                              org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.TRANSFER_EVENT);
+  private static final String              TRANSFER_SIGNATURE               =
+                                                              org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.TRANSFER_EVENT);
 
-  private static final String              APPROVAL_SIGNATURE           =
-                                                              org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.APPROVAL_EVENT);
+  private static final String              APPROVAL_SIGNATURE               =
+                                                              org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.APPROVAL_EVENT);
 
-  private static final String              ADDEDADMIN_METHOD_SIGNATURE  =
-                                                                       org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.ADDEDADMIN_EVENT);
+  private static final String              ADDED_ADMIN_METHOD_SIGNATURE     =
+                                                                        org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.ADDEDADMIN_EVENT);
 
-  private static final String              REMOVEDADMIN_SIGNATURE       =
-                                                                  org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.REMOVEDADMIN_EVENT);
+  private static final String              REMOVED_ADMIN_SIGNATURE          =
+                                                                   org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.REMOVEDADMIN_EVENT);
 
-  private static final String              APPROVEDACCOUNT_SIGNATURE    =
-                                                                     org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.APPROVEDACCOUNT_EVENT);
+  private static final String              APPROVED_ACCOUNT_SIGNATURE       =
+                                                                      org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.APPROVEDACCOUNT_EVENT);
 
-  private static final String              DISAPPROVEDACCOUNT_SIGNATURE =
-                                                                        org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.DISAPPROVEDACCOUNT_EVENT);
+  private static final String              DISAPPROVED_ACCOUNT_SIGNATURE    =
+                                                                         org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.DISAPPROVEDACCOUNT_EVENT);
 
-  private static final String              CONTRACTPAUSED_SIGNATURE     =
-                                                                    org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.CONTRACTPAUSED_EVENT);
+  private static final String              CONTRACT_PAUSED_SIGNATURE        =
+                                                                     org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.CONTRACTPAUSED_EVENT);
 
-  private static final String              CONTRACTUNPAUSED_SIGNATURE   =
-                                                                      org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.CONTRACTUNPAUSED_EVENT);
+  private static final String              CONTRACT_UNPAUSED_SIGNATURE      =
+                                                                       org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.CONTRACTUNPAUSED_EVENT);
 
-  private static final String              DEPOSITRECEIVED_SIGNATURE    =
-                                                                     org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.DEPOSITRECEIVED_EVENT);
+  private static final String              DEPOSIT_RECEIVED_SIGNATURE       =
+                                                                      org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.DEPOSITRECEIVED_EVENT);
 
-  private static final String              TOKENPRICECHANGED_SIGNATURE  =
-                                                                       org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.TOKENPRICECHANGED_EVENT);
+  private static final String              TOKEN_PRICE_CHANGED_SIGNATURE    =
+                                                                         org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.TOKENPRICECHANGED_EVENT);
 
-  private static final String              TRANSFEROWNERSHIP_SIGNATURE  =
-                                                                       org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV1.TRANSFEROWNERSHIP_EVENT);
+  private static final String              TRANSFER_OWNERSHIP_SIGNATURE     =
+                                                                        org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.TRANSFEROWNERSHIP_EVENT);
 
-  private static final Map<String, String> CONTRACT_METHODS_BY_SIG      = new HashMap<>();
+  private static final String              ACCOUNT_INITIALIZATION_SIGNATURE =
+                                                                            org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.INITIALIZATION_EVENT);
+
+  private static final String              ACCOUNT_REWARD_SIGNATURE         =
+                                                                    org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.REWARD_EVENT);
+
+  private static final String              ACCOUNT_VESTED_SIGNATURE         =
+                                                                    org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.VESTING_EVENT);
+
+  private static final String              TRANSFER_VESTING_SIGNATURE       =
+                                                                      org.exoplatform.addon.ethereum.wallet.fork.EventEncoder.encode(ERTTokenV2.VESTINGTRANSFER_EVENT);
+
+  private static final Map<String, String> CONTRACT_METHODS_BY_SIG          = new HashMap<>();
 
   static {
     CONTRACT_METHODS_BY_SIG.put(TRANSFER_SIGNATURE, FUNC_TRANSFER);
     CONTRACT_METHODS_BY_SIG.put(APPROVAL_SIGNATURE, FUNC_APPROVE);
-    CONTRACT_METHODS_BY_SIG.put(ADDEDADMIN_METHOD_SIGNATURE, FUNC_ADDADMIN);
-    CONTRACT_METHODS_BY_SIG.put(REMOVEDADMIN_SIGNATURE, FUNC_REMOVEADMIN);
-    CONTRACT_METHODS_BY_SIG.put(APPROVEDACCOUNT_SIGNATURE, FUNC_APPROVEACCOUNT);
-    CONTRACT_METHODS_BY_SIG.put(DISAPPROVEDACCOUNT_SIGNATURE, FUNC_DISAPPROVEACCOUNT);
-    CONTRACT_METHODS_BY_SIG.put(CONTRACTPAUSED_SIGNATURE, FUNC_PAUSE);
-    CONTRACT_METHODS_BY_SIG.put(CONTRACTUNPAUSED_SIGNATURE, FUNC_UNPAUSE);
-    CONTRACT_METHODS_BY_SIG.put(DEPOSITRECEIVED_SIGNATURE, FUNC_DEPOSIT_FUNDS);
-    CONTRACT_METHODS_BY_SIG.put(TOKENPRICECHANGED_SIGNATURE, FUNC_SETSELLPRICE);
-    CONTRACT_METHODS_BY_SIG.put(TRANSFEROWNERSHIP_SIGNATURE, FUNC_TRANSFEROWNERSHIP);
+    CONTRACT_METHODS_BY_SIG.put(ADDED_ADMIN_METHOD_SIGNATURE, FUNC_ADDADMIN);
+    CONTRACT_METHODS_BY_SIG.put(REMOVED_ADMIN_SIGNATURE, FUNC_REMOVEADMIN);
+    CONTRACT_METHODS_BY_SIG.put(APPROVED_ACCOUNT_SIGNATURE, FUNC_APPROVEACCOUNT);
+    CONTRACT_METHODS_BY_SIG.put(DISAPPROVED_ACCOUNT_SIGNATURE, FUNC_DISAPPROVEACCOUNT);
+    CONTRACT_METHODS_BY_SIG.put(CONTRACT_PAUSED_SIGNATURE, FUNC_PAUSE);
+    CONTRACT_METHODS_BY_SIG.put(CONTRACT_UNPAUSED_SIGNATURE, FUNC_UNPAUSE);
+    CONTRACT_METHODS_BY_SIG.put(DEPOSIT_RECEIVED_SIGNATURE, FUNC_DEPOSIT_FUNDS);
+    CONTRACT_METHODS_BY_SIG.put(TOKEN_PRICE_CHANGED_SIGNATURE, FUNC_SETSELLPRICE);
+    CONTRACT_METHODS_BY_SIG.put(TRANSFER_OWNERSHIP_SIGNATURE, FUNC_TRANSFEROWNERSHIP);
+    CONTRACT_METHODS_BY_SIG.put(ACCOUNT_INITIALIZATION_SIGNATURE, FUNC_INITIALIZEACCOUNT);
+    CONTRACT_METHODS_BY_SIG.put(ACCOUNT_REWARD_SIGNATURE, FUNC_REWARD);
+    CONTRACT_METHODS_BY_SIG.put(ACCOUNT_VESTED_SIGNATURE, FUNC_TRANSFORMTOVESTED);
+    CONTRACT_METHODS_BY_SIG.put(TRANSFER_VESTING_SIGNATURE, FUNC_TRANSFER);
   }
 
   private EthereumWalletContractService contractService;

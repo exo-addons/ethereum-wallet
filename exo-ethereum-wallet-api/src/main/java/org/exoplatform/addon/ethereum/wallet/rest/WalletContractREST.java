@@ -94,8 +94,8 @@ public class WalletContractREST implements ResourceContainer {
       return Response.status(403).build();
     }
     try {
-      String contractAbi = contractService.getContractFileContent(name, "bin");
-      return Response.ok(contractAbi).build();
+      String contractBin = contractService.getContractFileContent(name, "bin");
+      return Response.ok(contractBin).build();
     } catch (Exception e) {
       LOG.warn("Error retrieving contract BIN: " + name, e);
       return Response.serverError().build();
