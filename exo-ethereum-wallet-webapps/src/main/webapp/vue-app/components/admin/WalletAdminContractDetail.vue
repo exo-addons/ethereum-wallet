@@ -152,6 +152,15 @@
             @sent="newTransactionPending"
             @success="successTransaction"
             @error="transactionError" />
+
+          <upgrade-token-modal
+            v-if="contractDetails.isOwner"
+            ref="upgrade"
+            :contract-details="contractDetails"
+            :wallet-address="walletAddress"
+            @sent="newTransactionPending"
+            @success="successTransaction"
+            @error="transactionError" />
         </v-flex>
         <v-btn
           icon
@@ -328,6 +337,7 @@
 <script>
 import SendEtherModal from '../SendEtherModal.vue';
 import ContractAdminModal from './WalletAdminOperationModal.vue';
+import UpgradeTokenModal from './WalletAdminUpgradeTokenModal.vue';
 import TransactionsList from '../TransactionsList.vue';
 import WalletAddress from '../WalletAddress.vue';
 import ProfileChip from '../ProfileChip.vue';
@@ -338,6 +348,7 @@ export default {
   components: {
     SendEtherModal,
     ContractAdminModal,
+    UpgradeTokenModal,
     TransactionsList,
     WalletAddress,
     ProfileChip,
