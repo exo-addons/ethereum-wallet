@@ -95,7 +95,7 @@ export function getTokenAccountDetails(address, balance) {
   return {
     isDefault: true,
     isContract: true,
-    contractType: 1,
+    contractType: 2,
     contractTypeLabel: 'ERT Token',
     networkId: global.testNetworkId,
     address: global.tokenAddress,
@@ -323,11 +323,11 @@ export function deployTokenContract(adminAddress) {
     }
   }
 
-  const gasLimit = 10000000;
+  const gasLimit = 4700000;
   const gasPrice = 4000000000;
 
   let ertDataContractInstance, ertERTTokenImplInstance, ertTokenContractInstance;
-  let ertDataContractAddress, ertERTTokenImplAddress, ertTokenContractAddress;
+  let ertDataContractAddress, ertERTTokenImplAddress, ertTokenContractAddress, ertTokenDataV2Address, ertTokenV2Address;
 
   // Deploy Data contract
   return (
@@ -465,7 +465,6 @@ export function deployTokenContract(adminAddress) {
         expect(adminBalance).not.toBeNull();
         expect(Number(adminBalance)).toBe(Number(global.tokenSupply));
       })
-
       // Save contract details
       .then(() =>
         saveContractAddressAsDefault({
@@ -482,6 +481,51 @@ export function deployTokenContract(adminAddress) {
         global.tokenAddress = ertTokenContractAddress.toLowerCase();
         fs.writeFileSync('target/contractAddress.txt', global.tokenAddress);
         return ertTokenContractAddress;
+      })
+      // Upgrade To Token V2
+      .then(() => createNewContractInstanceByName('ERTTokenV2'))
+      .then((ertTokenV2Instance) => {
+        return deployContract(ertTokenV2Instance, adminAddress, gasLimit, gasPrice);
+      })
+      .then((data, error) => {
+        if (error) {
+          throw error;
+        }
+        if (!data || !data.options || !data.options.address) {
+          throw new Error('Cannot find address of newly deployed address');
+        } else {
+          ertTokenV2Address = data.options.address;
+        }
+      })
+      .then(() => createNewContractInstanceByName('ERTTokenDataV2', ertTokenContractAddress, ertTokenV2Address))
+      .then((ertTokenDataV2Instance) => {
+        return deployContract(ertTokenDataV2Instance, adminAddress, gasLimit, gasPrice);
+      })
+      .then((data, error) => {
+        if (error) {
+          throw error;
+        }
+        if (!data || !data.options || !data.options.address) {
+          throw new Error('Cannot find address of newly deployed address');
+        } else {
+          ertTokenDataV2Address = data.options.address;
+        }
+      })
+      .then(() => ertTokenContractInstance.methods.upgradeData(2, ertTokenDataV2Address))
+      .then((operation) => {
+        return operation.send({
+          from: adminAddress,
+          gas: gasLimit,
+          gasPrice: gasPrice,
+        });
+      })
+      .then(() => ertTokenContractInstance.methods.upgradeImplementation(ertTokenContractAddress, 2, ertTokenV2Address))
+      .then((operation) => {
+        return operation.send({
+          from: adminAddress,
+          gas: gasLimit,
+          gasPrice: gasPrice,
+        });
       })
       .catch((e) => {
         console.error('Error deploying contracts', e);
@@ -500,14 +544,14 @@ export function getDefaultSettings() {
     maxGasPrice: global.defaultWalletSettings.maxGasPrice, // Max gas price choice amount to use when sending a transaction
     dataVersion: 2, // Global Settings data version
     websocketProviderURL: 'http://localhost:8545', // Not used in UI, only server side to listen to blockchain events
-    defaultGas: 1500000, // Default gas limit to use for transactions to send
+    defaultGas: 150000, // Default gas limit to use for transactions to send
     isAdmin: false, // Whether the current user is in /platform/administrators group or not
     defaultPrincipalAccount: global.defaultWalletSettings.defaultPrincipalAccount, // Default contract/ether account to display for user in Wallet Application UI
     // Contracts List to display in UI in Wallet Application (may use 'ether' and 'fiat' to display ether account details)
     defaultContractsToDisplay: global.defaultWalletSettings.defaultContractsToDisplay,
     // List of accounts configured in administration that the user can display in his wallet
     defaultOverviewAccounts: global.defaultWalletSettings.defaultOverviewAccounts,
-    providerURL: 'http://localhost:8545', // The blockchain URL to use
+    providerURL: 'http://localhost:9545', // The blockchain URL to use
     enableDelegation: global.defaultWalletSettings.enableDelegation, // Whether the end delegate tokens is enabled or not for current user
     fundsHolderType: 'user', // Funds holder type: 'space' or 'user'
     fundsHolder: 'root', // Funds holder username/spacePrettyName

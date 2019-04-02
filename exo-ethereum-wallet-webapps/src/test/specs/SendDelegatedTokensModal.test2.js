@@ -111,7 +111,7 @@ describe('SendDelegatedTokensModal.test.js', () => {
           isApproved: true,
           isAdmin: true,
           isPaused: false,
-          contractType: 1,
+          contractType: 2,
           contractTypeLabel: 'ERT Token',
           networkId: global.testNetworkId,
           name: global.tokenName,
@@ -180,7 +180,7 @@ describe('SendDelegatedTokensModal.test.js', () => {
           isApproved: true,
           isAdmin: true,
           isPaused: false,
-          contractType: 1,
+          contractType: 2,
           contractTypeLabel: 'ERT Token',
           networkId: global.testNetworkId,
           name: global.tokenName,
@@ -232,6 +232,10 @@ describe('SendDelegatedTokensModal.test.js', () => {
         })
 
         .then(() => {
+          return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[7]);
+        })
+        
+        .then(() => {
           sendTokens(contractDetails.contract, global.walletAddress, global.walletAddresses[7], 20);
         })
 
@@ -241,10 +245,10 @@ describe('SendDelegatedTokensModal.test.js', () => {
         })
 
         .then(() => {
-          approveTokens(contractDetails.contract, global.walletAddresses[7], global.walletAddresses[0], 5);
+          return approveTokens(contractDetails.contract, global.walletAddresses[7], global.walletAddresses[0], 5);
         })
         .then(() => {
-          approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[9]);
+          return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[9]);
         })
 
         .then(() => {
@@ -310,6 +314,7 @@ describe('SendDelegatedTokensModal.test.js', () => {
           expect(receiverTransactions.length > 0).toBeTruthy();
           done();
         })
+
         .catch((e) => {
           done(e);
         })

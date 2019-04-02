@@ -235,6 +235,9 @@ export default {
         // Admin will implicitly approve account, so not necessary
         // to check if the receiver is approved or not
         if (this.contractDetails.contractType > 0) {
+          this.warning = null;
+          this.information = null;
+
           return this.contractDetails.contract.methods
             .isApprovedAccount(this.recipient)
             .call()
@@ -243,14 +246,10 @@ export default {
               if (this.contractDetails && this.contractDetails.isPaused) {
                 this.warning = `Contract '${this.contractDetails.name}' is paused, thus you can't send tokens`;
                 this.canSendToken = false;
-              } else if (!this.isApprovedRecipient && !this.contractDetails.adminLevel) {
-                this.warning = `The recipient isn't approved by contract administrators to receive tokens`;
+              } else if (!this.isApprovedRecipient) {
+                this.warning = `The recipient isn't approved to receive tokens`;
                 this.canSendToken = false;
-              } else if (!this.isApprovedRecipient && Number(this.contractDetails.adminLevel) > 0) {
-                this.information = `The recipient isn't approved. You are an administrator of contract, thus the recipient will be implicitely approved.`;
-                this.canSendToken = true;
               } else {
-                this.warning = null;
                 this.canSendToken = true;
               }
             });

@@ -166,7 +166,7 @@ describe('AccountDetail.test.js', () => {
           isApproved: true,
           isAdmin: true,
           isPaused: false,
-          contractType: 1,
+          contractType: 2,
           contractTypeLabel: 'ERT Token',
           networkId: global.testNetworkId,
           name: global.tokenName,

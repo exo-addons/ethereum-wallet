@@ -1,53 +1,53 @@
 global.WALLET_ACCOUNTS = [
   {
-    secretKey: '0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3',
-    address: '0x627306090abab3a6e1400e9345bc60c78a8bef57',
+    secretKey: '0x00d88cfc3445dcdfaca5032c422c809764a52bd1abe847ab48c2e1442b855244',
+    address: '0xa065a2c41346b4e52ded15afb95a5c1af2ca4da8',
     balance: '100000000000000000000', // 100 eth
   },
   {
-    secretKey: '0x9b2b566b5b9eec0e21a559da10b3d8545f1037e239e128b9cd980c9580fcd949',
-    address: '0xb460a021b66a1f421970b07262ed11d626b798ef',
+    secretKey: '0x95872cc1c03d9a0577e52c7efd07164ce8ea90f0d113089d58779d2f0eafd9e6',
+    address: '0x55dbef1f47e79450a807fdea009914bb6c19fac4',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0x22c11f85efdc6c0c365e15ff3892e59c4856110aa9adce48481318a433e9d16e',
-    address: '0x0a6b396f8eb23cdaf2db137410ff7c1f20bbbc57',
+    secretKey: '0xd695813ef071c2946e2e0a05408162b5ed2de6f93c610b8f473981e994e0574a',
+    address: '0x3694751be7180da3cc1a2bebfe433c9b82d80673',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0x18bc5095bf56b8513d70a3d145e9485371100cb7bd3ff4b0a9d99b1b8b15d624',
-    address: '0xf8622910fa3c83d9a5b22c5e5f00d719a93deb38',
+    secretKey: '0x5c14ce9e2adb4dbebe5e7a266c925229025a23bb7a1dcb46690243c1388b97a6',
+    address: '0x110bdf7fe7672ed53ff7b1a6a27e33f34607ba0e',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0x7faca2b78ed01cbacb188c4473cb6cfa2edd74d51229cb2266c46c220b27cab8',
-    address: '0xc48aee6064444d6a62b0fd41f79818b3a77e3ab9',
+    secretKey: '0xf8803bca18913bddd928c609b25ad8eae7ee0ed791d5b7298b4bf7da11ad1da6',
+    address: '0xe9e2be40078692c901ad503e9611cbbd3db776f9',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0xd17de90ca3bd4ddf87f10053bea977e395c3ba4959fddb6b1d7daa1c9c89ed26',
-    address: '0x1c970755cac148a89c01f39b3a148199fc4b8329',
+    secretKey: '0x9b082567aa5f3f2917d37028cec6753d9cfa17bb2ca41894c2126e437d96e9ac',
+    address: '0x9ebab58c4b79a31f46c4bbc83bf065209e7c16c9',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0x688e4b89b5daf7cb3fc991e0f739c3cabc64dbdc8c558aac579345543888c247',
-    address: '0x79032c0930f9ceb7546946ebc94e0cb00732c8a7',
+    secretKey: '0x23a1b23d0176079f40a42ae7ab14f39541b90177855712c9985d1f81e0f00a92',
+    address: '0x464945cb9d36c0d944ffda2cf217075fc0c28cac',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0xedf8ba07c6816ffb136c04ed0ad337e0994b8d0e8cc7c8aa7092b9f065ec466b',
-    address: '0xb64f82a96569f932aa7cb9b997e73e6b3b299ccf',
+    secretKey: '0x0f787f1d3623600d0747ce40448d0435e26a4fe638f75ba54f6d5b9fee73807d',
+    address: '0x6801cfc30945604d41d298de79dae212620eef56',
     balance: '100000000000000000000',
   },
   {
-    secretKey: '0xaad16f2c4cac7b45a80434db6554af6866f0e8935020f3c9d75a2be6b48e6751',
-    address: '0x5743fe9068772006c9e337917dfe493db8207f6c',
+    secretKey: '0x71bcf9252aa13da822442bd7e919c8a8ff8a69af9869ad437a2402ce4e574c7f',
+    address: '0x3dbc47f88ba8996cfd025f32410e4ee290979d8f',
     balance: '100000000000000000000',
   },
   {
     // This account will not have 100 ether
-    secretKey: '0x817f258f52af8741f1082ad1f46bbd6caa87947e547eb13965dfad47b10cb803',
-    address: '0x8f651bd0238e9515612fcb1b668ddbc70894e3f1',
+    secretKey: '0xe63dfce46eb91efec2eb7ecf924da5e585d380ae1b6b7116787e01f981335419',
+    address: '0xa206ba0207fa2cdfb15ead48908c9acd781a242c',
     balance: '0',
   },
 ];

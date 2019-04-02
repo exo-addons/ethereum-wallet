@@ -86,7 +86,7 @@ describe('SendFundsForm.test.js', () => {
         const expectedData = Object.assign({}, defaultAttributesValues);
 
         expectedData.walletAddress = global.walletAddress;
-        expectedData.networkId = 4452364;
+        expectedData.networkId = 4452365;
         expectedData.formName = 'token';
 
         expectedData.receiver = 'testuser';
@@ -147,7 +147,7 @@ describe('SendFundsForm.test.js', () => {
         const expectedData = Object.assign({}, defaultAttributesValues);
 
         expectedData.walletAddress = global.walletAddress;
-        expectedData.networkId = 4452364;
+        expectedData.networkId = 4452365;
         expectedData.formName = 'ether';
         expectedData.amount = 5;
         expectedData.receiver = 'testuser';

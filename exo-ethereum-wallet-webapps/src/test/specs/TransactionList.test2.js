@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, expectObjectValueEqual, approveAccount, initiateBrowserWallet} from '../TestUtils.js';
 
 import TransactionList from '../../main/webapp/vue-app/components/TransactionsList.vue';
 
@@ -62,7 +62,7 @@ describe('TransactionList.test.js', () => {
 
         const expectedData = Object.assign({}, defaultAttributesValues);
 
-        expectedData.networkId = 4452364;
+        expectedData.networkId = 4452365;
         expectedData.fiatSymbol = '$';
         expectedData.account = global.walletAddress;
         expectedData.loading = true;
@@ -106,6 +106,10 @@ describe('TransactionList.test.js', () => {
         sendTokensModal.open = true;
 
         return flushPromises();
+      })
+
+      .then(() => {
+        return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[2]);
       })
 
       .then(() => {
@@ -192,7 +196,7 @@ describe('TransactionList.test.js', () => {
         //
         //                const expectedData = Object.assign({}, defaultAttributesValues);
         //
-        //                expectedData.networkId = 4452364;
+        //                expectedData.networkId = 4452365;
         //                expectedData.fiatSymbol = '$';
         //                expectedData.account = global.walletAddress;
         //                expectedData.loading = true;

@@ -72,7 +72,7 @@ global.eXo = {
 
 global.walletAddresses = global.WALLET_ACCOUNTS.map((account) => account.address);
 global.defaultWalletAddress = global.walletAddress = global.walletAddresses[1];
-global.testNetworkId = 4452364;
+global.testNetworkId = 4452365;
 global.addressAssociations = {};
 global.userAddresses = {};
 

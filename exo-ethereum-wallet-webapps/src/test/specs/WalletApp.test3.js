@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, getTokenAccountDetails, initiateBrowserWallet, sendTokens} from '../TestUtils.js';
+import {getWalletApp, initApp, expectCountElement, expectHasClass, expectObjectValueEqual, getEtherAccountDetails, getTokenAccountDetails, initiateBrowserWallet, sendTokens, approveAccount} from '../TestUtils.js';
 
 jest.setTimeout(30000);
 
@@ -201,6 +201,9 @@ describe('WalletApp.test.js', () => {
       .then(() => {
         contractDetails = app.vm.accountsDetails[global.tokenAddress];
         initialBalance = contractDetails.balance;
+        return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[2]);
+      })
+      .then(() => {
         return sendTokens(contractDetails.contract, global.walletAddress, global.walletAddresses[2], 3);
       })
       .then(() => app.vm.refreshTokenBalance(contractDetails))

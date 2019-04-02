@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, getTransactions, approveAccount, expectCountElement, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import SendTokensForm from '../../main/webapp/vue-app/components/SendTokensForm';
 
@@ -75,6 +75,12 @@ describe('SendTokensForm.test.js', () => {
         accountDetailCmp = app.vm.$refs.accountDetail;
         expect(accountDetailCmp).toBeTruthy();
         return flushPromises();
+      })
+      .then(() => {
+        return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[3]);
+      })
+      .then(() => {
+        return approveAccount(contractDetails.contract, global.walletAddress, '0x1111111111111111111111111111111111111111');
       })
       .then(() => {
         sendTokensModal = accountDetailCmp.$refs.sendTokensModal;

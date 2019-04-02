@@ -1,4 +1,4 @@
-import {getWalletApp, initApp, getTransactions, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
+import {getWalletApp, initApp, getTransactions, approveAccount, expectObjectValueEqual, initiateBrowserWallet} from '../TestUtils.js';
 
 import DelegateTokensModal from '../../main/webapp/vue-app/components/DelegateTokensModal.vue';
 
@@ -110,7 +110,7 @@ describe('DelegateTokensModal.test.js', () => {
           isApproved: true,
           isAdmin: true,
           isPaused: false,
-          contractType: 1,
+          contractType: 2,
           contractTypeLabel: 'ERT Token',
           networkId: global.testNetworkId,
           name: global.tokenName,
@@ -179,7 +179,7 @@ describe('DelegateTokensModal.test.js', () => {
           isApproved: true,
           isAdmin: true,
           isPaused: false,
-          contractType: 1,
+          contractType: 2,
           contractTypeLabel: 'ERT Token',
           networkId: global.testNetworkId,
           name: global.tokenName,
@@ -229,6 +229,12 @@ describe('DelegateTokensModal.test.js', () => {
         return flushPromises();
       })
       .then(() => {
+        return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[9]);
+      })
+      .then(() => {
+        return approveAccount(contractDetails.contract, global.walletAddress, global.walletAddresses[2]);
+      })
+      .then(() => {
         delegateTokensModal.amount = '999999999999999999999999';
 
         return flushPromises();
@@ -275,11 +281,26 @@ describe('DelegateTokensModal.test.js', () => {
         const initialBalance = contractDetails.balance;
         contractDetails.balance = 0;
         delegateTokensModal.sendTokens();
+
         expect(delegateTokensModal.error).toBeTruthy();
         contractDetails.balance = initialBalance;
+        return contractDetails.contract.methods.balanceOf(global.walletAddress).call();
+      })
+      .then((balance) => {
+        expect(balance > 1 * Math.pow(10, global.tokenDecimals)).toBeTruthy();
+      })
+      .then(() => {
+        if (delegateTokensModal.error) {
+          done.fail(delegateTokensModal.error);
+        }
         return delegateTokensModal.sendTokens();
       })
-      .then(() => contractDetails.contract.methods.allowance(global.walletAddress, delegateTokensModal.recipient).call())
+      .then(() => {
+        if (delegateTokensModal.error) {
+          done.fail(delegateTokensModal.error);
+        }
+        return contractDetails.contract.methods.allowance(global.walletAddress, delegateTokensModal.recipient).call();
+      })
       .then((allowance) => {
         expect(Number(allowance)).toEqual(Math.pow(10, global.tokenDecimals));
         return flushPromises();

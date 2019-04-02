@@ -66,7 +66,7 @@ describe('SendFundsModal.test.js', () => {
         expectedData.walletAddress = global.walletAddress;
         expectedData.overviewAccounts = global.defaultWalletSettings.defaultOverviewAccounts;
         expectedData.disabled = true;
-        expectedData.networkId = 4452364;
+        expectedData.networkId = 4452365;
         expectedData.principalAccount = global.defaultWalletSettings.defaultPrincipalAccount;
 
         const sendFundsModal = walletSummary.$refs.sendFundsModal;
@@ -116,7 +116,7 @@ describe('SendFundsModal.test.js', () => {
         expectedData.overviewAccounts = global.defaultWalletSettings.defaultOverviewAccounts;
         expectedData.disabled = false;
         expectedData.dialog = true;
-        expectedData.networkId = 4452364;
+        expectedData.networkId = 4452365;
         expectedData.principalAccount = global.defaultWalletSettings.defaultPrincipalAccount;
         expectedData.selectedOption = {};
 
@@ -177,7 +177,7 @@ describe('SendFundsModal.test.js', () => {
         expectedData.overviewAccounts = global.defaultWalletSettings.defaultOverviewAccounts;
         expectedData.disabled = false;
         expectedData.dialog = true;
-        expectedData.networkId = 4452364;
+        expectedData.networkId = 4452365;
         expectedData.principalAccount = global.defaultWalletSettings.defaultPrincipalAccount;
         expectedData.selectedOption = {};
         expectedData.error = 'No receiver is selected';

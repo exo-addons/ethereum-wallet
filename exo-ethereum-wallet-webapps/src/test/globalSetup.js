@@ -45,14 +45,14 @@ module.exports = () => {
   try {
     global.server = ganache.server({
       host: 'localhost',
-      network_id: 4452364,
+      network_id: 4452365,
       debug: true,
       gasPrice: '0x77359400', // 2 GWei
       gasLimit: '0x989680', // 10 000 000
       accounts: global.WALLET_ACCOUNTS, // Accounts to initialize
       db_path: 'target/ganache-data',
     });
-    global.server.listen(8545, (err) => {
+    global.server.listen(9545, (err) => {
       if (err) {
         console.error(err);
       }
