@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.reward.model;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.decodeString;
-import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.encodeString;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.decodeString;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.encodeString;
 
 import java.io.Serializable;
 

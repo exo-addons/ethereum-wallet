@@ -7,15 +7,19 @@ import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.web3j.crypto.*;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
 import org.exoplatform.addon.ethereum.wallet.storage.AddressLabelStorage;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 public class EthereumWalletAccountService implements WalletAccountService {
 
@@ -34,10 +38,17 @@ public class EthereumWalletAccountService implements WalletAccountService {
 
   private ListenerService     listenerService;
 
+  private String              adminAccountPassword;
+
   public EthereumWalletAccountService(AccountStorage walletAccountStorage,
-                                      AddressLabelStorage labelStorage) {
+                                      AddressLabelStorage labelStorage,
+                                      InitParams params) {
     this.accountStorage = walletAccountStorage;
     this.labelStorage = labelStorage;
+    if (params != null && params.containsKey(ADMIN_PASSWORD_PARAMETER)
+        && StringUtils.isNotBlank(params.getValueParam(ADMIN_PASSWORD_PARAMETER).getValue())) {
+      this.adminAccountPassword = params.getValueParam(ADMIN_PASSWORD_PARAMETER).getValue();
+    }
   }
 
   @Override
@@ -95,6 +106,70 @@ public class EthereumWalletAccountService implements WalletAccountService {
       throw new IllegalArgumentException("Can't find identity with id " + remoteId + " and type " + accountType.getId());
     }
     return getWalletOfIdentity(identity);
+  }
+
+  @Override
+  public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException {
+    if (!isUserAdmin(currentUser)) {
+      throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " is not allowed to create admin wallet");
+    }
+
+    Identity identity = getIdentityByTypeAndId(WalletType.ADMIN, WALLET_ADMIN_REMOTE_ID);
+    if (identity == null) {
+      throw new IllegalStateException("Can't find identity of admin wallet");
+    }
+
+    long identityId = Long.parseLong(identity.getId());
+    Wallet wallet = getWalletByIdentityId(identityId);
+    if (wallet != null && wallet.getAddress() != null
+        && getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID, currentUser) != null) {
+      throw new IllegalStateException("Admin wallet has already an associated wallet, thus can't overwrite it");
+    }
+
+    ECKeyPair ecKeyPair = null;
+    if (StringUtils.isBlank(privateKey)) {
+      try {
+        ecKeyPair = Keys.createEcKeyPair();
+      } catch (Exception e) {
+        throw new IllegalStateException("Error creating new wallet keys pair", e);
+      }
+    } else {
+      if (!WalletUtils.isValidPrivateKey(privateKey)) {
+        throw new IllegalStateException("Private key isn't valid");
+      }
+      ecKeyPair = Credentials.create(privateKey).getEcKeyPair();
+    }
+
+    WalletFile adminWallet = null;
+    try {
+      adminWallet = org.web3j.crypto.Wallet.createLight(adminAccountPassword, ecKeyPair);
+    } catch (CipherException e) {
+      throw new IllegalStateException("Error creating new wallet", e);
+    }
+
+    String walletJson = null;
+    try {
+      walletJson = toJsonString(adminWallet);
+    } catch (JsonException e) {
+      throw new IllegalStateException("Error converting wallet to JSON object", e);
+    }
+
+    wallet = new Wallet();
+    wallet.setEnabled(true);
+    wallet.setId(WALLET_ADMIN_REMOTE_ID);
+    wallet.setType(WalletType.ADMIN.getId());
+    wallet.setAddress("0x" + adminWallet.getAddress());
+    wallet.setTechnicalId(identityId);
+    wallet.setHasKeyOnServerSide(true);
+
+    saveWalletAddress(wallet, currentUser, false);
+    try {
+      accountStorage.saveWalletPrivateKey(identityId, walletJson);
+    } catch (Exception e) {
+      // Make sure to delete corresponding wallet when the private key isn't
+      // saved
+      removeWalletByAddress(adminWallet.getAddress(), currentUser);
+    }
   }
 
   @Override
@@ -162,10 +237,10 @@ public class EthereumWalletAccountService implements WalletAccountService {
     checkCanSaveWallet(wallet, oldWallet, currentUser);
     if (isNew) {
       // New wallet created for user/space
-      wallet.setInitializationState(WalletInitializationState.PENDING.name());
+      wallet.setInitializationState(WalletInitializationState.NEW.name());
     } else if (!StringUtils.equalsIgnoreCase(oldWallet.getAddress(), wallet.getAddress())) {
       // User changing associated address to him or to a space he manages
-      wallet.setInitializationState(WalletInitializationState.PENDING_REINIT.name());
+      wallet.setInitializationState(WalletInitializationState.MODIFIED.name());
     } else {
       // No initialization state change
       wallet.setInitializationState(oldWallet.getInitializationState());
@@ -209,6 +284,31 @@ public class EthereumWalletAccountService implements WalletAccountService {
   }
 
   @Override
+  public void removeWalletByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException {
+    if (StringUtils.isBlank(type)) {
+      throw new IllegalArgumentException("wallet type parameter is mandatory");
+    }
+    if (StringUtils.isBlank(remoteId)) {
+      throw new IllegalArgumentException("remote id parameter is mandatory");
+    }
+    if (!isUserAdmin(currentUser)) {
+      throw new IllegalAccessException("Current user " + currentUser + " attempts to delete wallet of "
+          + type + " " + remoteId);
+    }
+    Identity identity = getIdentityByTypeAndId(WalletType.getType(type), remoteId);
+    if (identity == null) {
+      throw new IllegalStateException("Can't find identity with type/id: " + type + "/" + remoteId);
+    }
+    long identityId = Long.parseLong(identity.getId());
+    Wallet wallet = accountStorage.getWalletByIdentityId(identityId);
+
+    if (wallet == null) {
+      throw new IllegalStateException("Can't find wallet with type/id: " + type + "/" + remoteId);
+    }
+    accountStorage.removeWallet(wallet.getTechnicalId());
+  }
+
+  @Override
   public void enableWalletByAddress(String address, boolean enable, String currentUser) throws IllegalAccessException {
     if (address == null) {
       throw new IllegalArgumentException(ADDRESS_PARAMTER_IS_MANDATORY);
@@ -240,11 +340,15 @@ public class EthereumWalletAccountService implements WalletAccountService {
     if (wallet == null) {
       throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
     }
+
+    // The only authorized initialization transition allowed to a regular user
+    // is to request
+    // to initialize his wallet when it has been denied by an administrator
     WalletInitializationState oldInitializationState = WalletInitializationState.valueOf(wallet.getInitializationState());
-    if ((oldInitializationState != WalletInitializationState.DENIED
-        || initializationState != WalletInitializationState.PENDING_REINIT
-        || !isWalletOwner(wallet, currentUser)) && !isUserAdmin(currentUser)
-        && !isUserRewardingAdmin(currentUser)) {
+    if (!isUserAdmin(currentUser) && !isUserRewardingAdmin(currentUser)
+        && (oldInitializationState != WalletInitializationState.DENIED
+            || initializationState != WalletInitializationState.MODIFIED
+            || !isWalletOwner(wallet, currentUser))) {
       throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " attempts to change wallet status with address "
           + address + " to " + initializationState.name());
     }
@@ -272,7 +376,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
 
     Wallet walletByAddress =
                            accountStorage.getWalletByAddress(wallet.getAddress());
-    if (walletByAddress != null && walletByAddress.getId() != wallet.getId()) {
+    if (walletByAddress != null && walletByAddress.getId() != null && !walletByAddress.getId().equals(wallet.getId())) {
       throw new IllegalStateException(USER_MESSAGE_PREFIX + currentUser + " attempts to assign address of wallet of "
           + walletByAddress);
     }
@@ -342,9 +446,17 @@ public class EthereumWalletAccountService implements WalletAccountService {
     WalletType type = WalletType.getType(wallet.getType());
     if (type.isSpace()) {
       checkUserIsSpaceManager(remoteId, currentUser, true);
-    } else if (!StringUtils.equals(currentUser, remoteId)) {
-      throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
-          + "'");
+    } else if (type.isAdmin()) {
+      if (!isUserAdmin(currentUser)) {
+        throw new IllegalAccessException("User '" + currentUser + "' attempts to access admin wallet");
+      }
+    } else if (type.isUser()) {
+      if (!StringUtils.equals(currentUser, remoteId)) {
+        throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
+            + "'");
+      } else {
+        // User is owner
+      }
     }
   }
 

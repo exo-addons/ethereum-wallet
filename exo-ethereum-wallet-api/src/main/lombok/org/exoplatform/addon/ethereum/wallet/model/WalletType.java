@@ -1,13 +1,15 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
-import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.plugin.WalletAdminIdentityProvider;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 
 public enum WalletType {
   USER,
-  SPACE;
+  SPACE,
+  ADMIN;
 
   private String id;
 
@@ -15,7 +17,19 @@ public enum WalletType {
 
   private WalletType() {
     this.id = this.name().toLowerCase();
-    this.providerId = this.ordinal() == 0 ? OrganizationIdentityProvider.NAME : SpaceIdentityProvider.NAME;
+
+    switch (this.ordinal()) {
+    case 0:
+      this.providerId = OrganizationIdentityProvider.NAME;
+      break;
+    case 1:
+      this.providerId = SpaceIdentityProvider.NAME;
+      break;
+    case 2:
+      this.providerId = WalletAdminIdentityProvider.NAME;
+      break;
+    default:
+    }
   }
 
   public String getId() {
@@ -34,16 +48,45 @@ public enum WalletType {
     return this == USER;
   }
 
+  public boolean isAdmin() {
+    return this == ADMIN;
+  }
+
   public static WalletType getType(String type) {
-    return StringUtils.equals(SpaceIdentityProvider.NAME, type) || SPACE.name().equalsIgnoreCase(type) ? SPACE : USER;
+    if (StringUtils.isBlank(type)) {
+      return WalletType.USER;
+    }
+    switch (type.toUpperCase()) {
+    case "SPACE":
+      return WalletType.SPACE;
+    case "ADMIN":
+      return WalletType.ADMIN;
+    case "USER":
+      return WalletType.USER;
+    default:
+    }
+    switch (type) {
+    case SpaceIdentityProvider.NAME:
+      return WalletType.SPACE;
+    case WalletAdminIdentityProvider.NAME:
+      return WalletType.ADMIN;
+    case OrganizationIdentityProvider.NAME:
+      return WalletType.USER;
+    default:
+    }
+    return WalletType.USER;
   }
 
   public static boolean isSpace(String type) {
-    return StringUtils.equals(SpaceIdentityProvider.NAME, type) || SPACE.name().equalsIgnoreCase(type);
+    return getType(type) == SPACE;
   }
 
   public static boolean isUser(String type) {
-    return StringUtils.equals(OrganizationIdentityProvider.NAME, type) || USER.name().equalsIgnoreCase(type);
+    return getType(type) == USER;
+  }
+
+  public static boolean isAdmin(String type) {
+    return getType(type) == ADMIN;
   }
 
 }

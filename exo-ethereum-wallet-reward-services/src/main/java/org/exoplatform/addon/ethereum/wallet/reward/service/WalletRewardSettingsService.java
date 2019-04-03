@@ -17,6 +17,8 @@
 package org.exoplatform.addon.ethereum.wallet.reward.service;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.fromJsonString;
+import static org.exoplatform.addon.ethereum.wallet.utils.Utils.toJsonString;
 
 import java.util.*;
 

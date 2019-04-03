@@ -193,7 +193,7 @@ public class WalletAccountREST implements ResourceContainer {
     }
     try {
       accountService.setInitializationStatus(address,
-                                             WalletInitializationState.PENDING_REINIT,
+                                             WalletInitializationState.MODIFIED,
                                              getCurrentUserId());
       return Response.ok().build();
     } catch (Exception e) {
@@ -239,6 +239,53 @@ public class WalletAccountREST implements ResourceContainer {
     } catch (Exception e) {
       LOG.error("Unknown error occurred while saving address: User " + currentUserId + " attempts to save address of "
           + wallet.getType() + " '" + wallet.getId() + "' using address " + wallet.getAddress(), e);
+      return Response.status(500).build();
+    }
+  }
+
+  /**
+   * Creates admin account wallet in server side
+   * 
+   * @param privateKey admin account wallet private key
+   * @return Rest Response with operation status
+   */
+  @POST
+  @Path("createAdminAccount")
+  @RolesAllowed("administrators")
+  public Response createAdminAccount(@FormParam("privateKey") String privateKey) {
+    String currentUserId = getCurrentUserId();
+    LOG.info("User '{}' is creating admin account wallet", currentUserId);
+    try {
+      accountService.createAdminAccount(privateKey, currentUserId);
+      return Response.ok().build();
+    } catch (IllegalAccessException e) {
+      LOG.warn("Error creating admin account wallet by user '{}'", currentUserId, e);
+      return Response.status(403).build();
+    } catch (Exception e) {
+      LOG.error("Error creating admin account wallet by user '{}'", currentUserId, e);
+      return Response.status(500).build();
+    }
+  }
+
+  /**
+   * Removes admin account wallet from server
+   * 
+   * @return Rest Response with operation status
+   */
+  @GET
+  @Path("removeAdminWallet")
+  @RolesAllowed("administrators")
+  public Response removeAdminWallet() {
+    String currentUserId = getCurrentUserId();
+    LOG.info("User '{}' is removing admin account wallet", currentUserId);
+    try {
+      accountService.removeWalletByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID, currentUserId);
+      return Response.ok().build();
+    } catch (IllegalAccessException e) {
+      LOG.warn("Error removing admin account wallet by user '{}'", currentUserId, e);
+      return Response.status(403).build();
+    } catch (Exception e) {
+      LOG.error("Error removing admin account wallet by user '{}'", currentUserId, e);
       return Response.status(500).build();
     }
   }

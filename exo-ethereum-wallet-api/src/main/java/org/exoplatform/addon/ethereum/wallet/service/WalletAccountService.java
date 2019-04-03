@@ -114,6 +114,16 @@ public interface WalletAccountService {
   public void removeWalletByAddress(String address, String currentUser) throws IllegalAccessException;
 
   /**
+   * Remove wallet address association by type and remote id
+   * 
+   * @param type USER/SPACE/ADMIN, see {@link WalletType}
+   * @param remoteId username or space pretty name
+   * @param currentUser current username saving wallet details
+   * @throws IllegalAccessException
+   */
+  public void removeWalletByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException;
+
+  /**
    * Enable/Disable User or Space wallet
    * 
    * @param address address of wallet to enable/disable
@@ -175,5 +185,15 @@ public interface WalletAccountService {
   public void setInitializationStatus(String address,
                                       WalletInitializationState initializationState,
                                       String currentUserId) throws IllegalAccessException;
+
+  /**
+   * Creates admin account wallet in server side
+   * 
+   * @param privateKey admin account wallet private key
+   * @param currentUser current user creating wallet
+   * @throws IllegalAccessException if current user is not allowed to create
+   *           admin wallet account
+   */
+  public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException;
 
 }

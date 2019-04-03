@@ -373,9 +373,10 @@ export default {
       limit: 10,
       pageSize: 10,
       initializationActionLabels: {
+        'NEW': 'Deny wallet creation',
+        'MODIFIED': 'Deny wallet creation',
+        'PENDING': null,
         'INITIALIZED': null,
-        'PENDING': 'Deny wallet creation',
-        'PENDING_REINIT': 'Deny wallet creation',
         'DENIED': null
       },
       walletHeaders: [

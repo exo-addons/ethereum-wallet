@@ -1,8 +1,9 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
 public enum WalletInitializationState {
-  INITIALIZED,
+  NEW,
+  MODIFIED,
   PENDING,
-  PENDING_REINIT,
+  INITIALIZED,
   DENIED
 }

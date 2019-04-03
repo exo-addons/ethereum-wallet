@@ -96,6 +96,12 @@
               href="#wallets">
               Wallets
             </v-tab>
+            <v-tab
+              v-if="sameConfiguredNetwork && isAdmin"
+              key="adminAccount"
+              href="#adminAccount">
+              Admin account
+            </v-tab>
           </v-tabs>
 
           <v-tabs-items v-if="settingsLoaded" v-model="selectedTab">
@@ -191,6 +197,26 @@
                 @loading-wallets-changed="loadingWallets = $event"
                 @refresh-balance="refreshCurrentWalletBalances" />
             </v-tab-item>
+
+            <v-tab-item
+              v-if="sameConfiguredNetwork && isAdmin"
+              id="adminAccount"
+              value="adminAccount">
+              <admin-account-tab
+                ref="adminAccountTab"
+                :network-id="networkId"
+                :wallet-address="walletAddress"
+                :loading="loading"
+                :fiat-symbol="fiatSymbol"
+                :refresh-index="refreshIndex"
+                :address-etherscan-link="addressEtherscanLink"
+                :principal-account-address="principalAccountAddress"
+                :principal-account="principalAccount"
+                :principal-contract="principalContract"
+                :initial-funds="initialFunds"
+                :accounts-details="accountsDetails"
+                :same-configured-network="sameConfiguredNetwork" />
+            </v-tab-item>
           </v-tabs-items>
         </v-flex>
       </v-layout>
@@ -206,6 +232,7 @@ import InitialFundsTab from './WalletAdminInitialFundsTab.vue';
 import NetworkTab from './WalletAdminNetworkTab.vue';
 import ContractsTab from './WalletAdminContractsTab.vue';
 import WalletsTab from './WalletAdminWalletsTab.vue';
+import AdminAccountTab from './WalletAdminAccountTab.vue';
 
 import WalletSetup from '../WalletSetup.vue';
 import WalletSummary from '../WalletSummary.vue';
@@ -221,6 +248,7 @@ export default {
     NetworkTab,
     ContractsTab,
     WalletsTab,
+    AdminAccountTab,
     WalletSummary,
     WalletSetup,
   },
@@ -313,6 +341,7 @@ export default {
         .then(() => this.$refs.generalTab && this.$refs.generalTab.init())
         .then(() => this.$refs.fundsTab && this.$refs.fundsTab.init())
         .then(() => this.$refs.networkTab && this.$refs.networkTab.init())
+        .then(() => this.$refs.adminAccountTab && this.$refs.adminAccountTab.init())
         .then(() => {
           this.fiatSymbol = (window.walletSettings && window.walletSettings.fiatSymbol) || '$';
         })

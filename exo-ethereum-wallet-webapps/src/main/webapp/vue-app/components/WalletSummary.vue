@@ -1,24 +1,13 @@
 <template>
   <v-card id="waletSummary" class="elevation-0">
     <v-card-title
-      v-if="walletInitializationStatus === 'PENDING'"
+      v-if="walletInitializationStatus === 'NEW' || walletInitializationStatus === 'MODIFIED' || walletInitializationStatus === 'PENDING'"
       primary-title
       class="pb-0">
       <v-spacer />
       <div class="alert alert-info">
         <i class="uiIconInfo"></i>
         Almost done! Your wallet will be ready to use once an administrator approves it.
-      </div>
-      <v-spacer />
-    </v-card-title>
-    <v-card-title
-      v-else-if="walletInitializationStatus === 'PENDING_REINIT'"
-      primary-title
-      class="pb-0">
-      <v-spacer />
-      <div class="alert alert-info">
-        <i class="uiIconInfo"></i>
-        Your request to enable your wallet has been sent. Please wait until an administrator approves it.
       </div>
       <v-spacer />
     </v-card-title>

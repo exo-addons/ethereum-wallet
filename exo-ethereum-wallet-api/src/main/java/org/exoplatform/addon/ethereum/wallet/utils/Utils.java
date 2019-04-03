@@ -16,6 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.utils;
 
+import java.io.ByteArrayInputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
@@ -43,6 +44,9 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.service.LinkProvider;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.ws.frameworks.json.JsonGenerator;
+import org.exoplatform.ws.frameworks.json.JsonParser;
+import org.exoplatform.ws.frameworks.json.impl.*;
 
 /**
  * Utils class to provide common tools and constants
@@ -58,6 +62,10 @@ public class Utils {
       'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
       'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1',
       '2', '3', '4', '5', '6', '7', '8', '9' };
+
+  public static final JsonParser                      JSON_PARSER                           = new JsonParserImpl();
+
+  public static final JsonGenerator                   JSON_GENERATOR                        = new JsonGeneratorImpl();
 
   public static final String                          EMPTY_HASH                            =
                                                                  "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -99,6 +107,9 @@ public class Utils {
 
   public static final String                          WALLET_BROWSER_PHRASE_NAME            = "WALLET_BROWSER_PHRASE";
 
+  @SuppressWarnings("all")
+  public static final String                          ADMIN_PASSWORD_PARAMETER              = "admin.wallet.password";
+
   public static final String                          ABI_PATH_PARAMETER                    = "contract.abi.path";
 
   public static final String                          BIN_PATH_PARAMETER                    = "contract.bin.path";
@@ -114,6 +125,8 @@ public class Utils {
   public static final String                          ADMINISTRATORS_GROUP                  = "/platform/administrators";
 
   public static final String                          REWARDINGS_GROUP                      = "/platform/rewarding";
+
+  public static final String                          WALLET_ADMIN_REMOTE_ID                = "admin";
 
   public static final String                          PRINCIPAL_CONTRACT_ADMIN_NAME         = "Admin";
 
@@ -464,7 +477,8 @@ public class Utils {
     }
 
     return (type.isUser() && StringUtils.equals(currentUser, remoteId))
-        || (type.isSpace() && isUserSpaceMember(wallet.getId(), currentUser));
+        || (type.isSpace() && isUserSpaceMember(wallet.getId(), currentUser))
+        || (type.isAdmin() && (isUserAdmin(currentUser) || isUserRewardingAdmin(currentUser)));
   }
 
   public static boolean isUserSpaceMember(String spaceId, String accesssor) {
@@ -506,10 +520,18 @@ public class Utils {
     wallet.setDisabledUser(!identity.isEnable());
     wallet.setDeletedUser(identity.isDeleted());
     wallet.setType(walletType.getId());
-    wallet.setAvatar(LinkProvider.buildAvatarURL(identity.getProviderId(), identity.getRemoteId()));
+    if (walletType.isUser() || walletType.isSpace()) {
+      wallet.setAvatar(LinkProvider.buildAvatarURL(identity.getProviderId(), identity.getRemoteId()));
+    }
     if (walletType.isUser()) {
       wallet.setName(identity.getProfile().getFullName());
-    } else {
+    } else if (walletType.isAdmin()) {
+      if (StringUtils.equals(identity.getRemoteId(), WALLET_ADMIN_REMOTE_ID)) {
+        wallet.setName(PRINCIPAL_CONTRACT_ADMIN_NAME);
+      } else {
+        // Space auto generated wallet
+      }
+    } else if (walletType.isSpace()) {
       Space space = getSpace(identity.getRemoteId());
       wallet.setName(space.getDisplayName());
       wallet.setSpaceId(Long.parseLong(space.getId()));
@@ -539,6 +561,19 @@ public class Utils {
     }
     wallet.setPassPhrase(null);
     wallet.setHasKeyOnServerSide(false);
+  }
+
+  public static final <T> T fromJsonString(String value, Class<T> resultClass) throws JsonException {
+    if (StringUtils.isBlank(value)) {
+      return null;
+    }
+    JsonDefaultHandler jsonDefaultHandler = new JsonDefaultHandler();
+    JSON_PARSER.parse(new ByteArrayInputStream(value.getBytes()), jsonDefaultHandler);
+    return ObjectBuilder.createObject(resultClass, jsonDefaultHandler.getJsonObject());
+  }
+
+  public static final String toJsonString(Object object) throws JsonException {
+    return JSON_GENERATOR.createJsonObject(object).toString();
   }
 
 }
