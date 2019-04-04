@@ -140,10 +140,18 @@ export default {
     },
     saveKeysOnServer() {
       if (this.hasKeyOnServerSide) {
-        return sendPrivateKeyToServer()
-          .then();
+        return sendPrivateKeyToServer(this.walletAddress)
+          .then((result, error) => {
+            if (error) {
+              throw error;
+            }
+          })
+          .catch(error => {
+            console.debug("Error occurred", error);
+            this.hasKeyOnServerSide = false;
+          });
       } else {
-        return removeServerSideBackup();
+        return removeServerSideBackup(this.walletAddress);
       }
     },
   }

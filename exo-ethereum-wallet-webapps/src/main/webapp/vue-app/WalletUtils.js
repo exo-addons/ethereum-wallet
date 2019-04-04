@@ -29,22 +29,6 @@ export function sendPrivateKeyToServer(walletAddress, password, newPassword) {
     return Promise.reject(new Error('No private key was found'));
   }
 
-  const walletPassword = (password && hashCode(password)) || window.walletSettings.userP;
-  if (walletPassword && unlockBrowserWallet(walletPassword, null, walletAddress)) {
-    if (newPassword) {
-      try {
-        saveBrowserWallet(newPassword, null, walletAddress);
-      } catch (e) {
-        console.debug('saveBrowserWallet method error', e);
-        return Promise.reject(new Error('Error encrypting wallet with new password'));
-      }
-    } else {
-      lockBrowserWallet(walletAddress);
-    }
-  } else {
-    return Promise.reject(new Error('Error occurred while decrypting wallet keys'));
-  }
-
   return fetch(`/portal/rest/wallet/api/account/savePrivateKey`, {
     method: 'POST',
     credentials: 'include',
