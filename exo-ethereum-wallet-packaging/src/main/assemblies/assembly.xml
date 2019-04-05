@@ -120,10 +120,10 @@
       <useProjectArtifact>false</useProjectArtifact>
       <outputDirectory>/lib</outputDirectory>
       <includes>
-        <include>org.bouncycastle:bcprov-jdk15on:jar</include>
+        <include>org.bouncycastle:bcprov-ext-jdk15on:jar</include>
       </includes>
       <scope>provided</scope>
-      <outputFileNameMapping>bcprov-jdk15on.jar</outputFileNameMapping>
+      <outputFileNameMapping>bcprov-ext-jdk15on.jar</outputFileNameMapping>
     </dependencySet>
   </dependencySets>
 </assembly>
