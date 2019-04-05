@@ -60,6 +60,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.web3j</groupId>
+      <artifactId>rlp</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-ext-jdk15on</artifactId>
       <scope>provided</scope>

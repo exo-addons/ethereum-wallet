@@ -24,7 +24,9 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.service.WalletAccountService;
 import org.exoplatform.addon.ethereum.wallet.service.WalletService;
+import org.exoplatform.addon.ethereum.wallet.utils.TokenUtils;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.Event;
 import org.exoplatform.services.listener.Listener;
@@ -38,9 +40,11 @@ import org.exoplatform.services.log.Log;
  */
 public class WalletAddressModifiedListener extends Listener<Wallet, Wallet> {
 
-  private static final Log LOG = ExoLogger.getLogger(WalletAddressModifiedListener.class);
+  private static final Log     LOG = ExoLogger.getLogger(WalletAddressModifiedListener.class);
 
-  private WalletService    walletService;
+  private WalletService        walletService;
+
+  private WalletAccountService walletAccountService;
 
   @Override
   public void onEvent(Event<Wallet, Wallet> event) throws Exception {
@@ -51,44 +55,52 @@ public class WalletAddressModifiedListener extends Listener<Wallet, Wallet> {
     }
 
     GlobalSettings settings = getWalletService().getSettings();
-    Map<String, Double> initialFunds = settings.getInitialFunds();
-    if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null || settings.getFundsHolder().isEmpty()
-        || wallet.getId() == null || settings.getFundsHolder().equals(wallet.getId())) {
-      return;
-    }
 
-    Set<String> addresses = initialFunds.keySet();
-    for (String address : addresses) {
-      Double amount = initialFunds.get(address);
-      if (amount == null || amount == 0) {
-        LOG.info("Fund request amount is 0, thus no notification will be sent.", address);
-        continue;
+    Wallet adminWallet = getWalletAccountService().getAdminWallet();
+    String adminAddress = adminWallet == null ? null : adminWallet.getAddress();
+    if (StringUtils.isBlank(adminAddress)) {
+      Map<String, Double> initialFunds = settings.getInitialFunds();
+      if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null
+          || settings.getFundsHolder().isEmpty()
+          || wallet.getId() == null || settings.getFundsHolder().equals(wallet.getId())) {
+        return;
       }
 
-      address = address.toLowerCase();
-      FundsRequest request = new FundsRequest();
-      if (!"ether".equalsIgnoreCase(address)) {
-        // If contract adress is not a default one anymore, skip
-        if (!settings.getDefaultContractsToDisplay().contains(address)) {
-          LOG.warn("Can't find contract with address {}. No fund request notification will be sent.", address);
+      Set<String> addresses = initialFunds.keySet();
+      for (String address : addresses) {
+        Double amount = initialFunds.get(address);
+        if (amount == null || amount == 0) {
+          LOG.info("Fund request amount is 0, thus no notification will be sent.", address);
           continue;
         }
-        request.setContract(address);
-      }
-      request.setAmount(amount);
-      request.setAddress(wallet.getAddress());
-      request.setReceipient(settings.getFundsHolder());
-      request.setReceipientType(settings.getFundsHolderType());
-      request.setMessage("Wallet address has been modified from " + oldWallet.getAddress() + " to " + wallet.getAddress()
-          + " . Would you like to send to wallet the initial funds ?");
 
-      try {
-        getWalletService().requestFunds(request, null);
-      } catch (Exception e) {
-        LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
-            + wallet.getType() + "' with id '" + wallet.getId() + "'", e);
-        throw e;
+        address = address.toLowerCase();
+        FundsRequest request = new FundsRequest();
+        if (!"ether".equalsIgnoreCase(address)) {
+          // If contract adress is not a default one anymore, skip
+          if (!settings.getDefaultContractsToDisplay().contains(address)) {
+            LOG.warn("Can't find contract with address {}. No fund request notification will be sent.", address);
+            continue;
+          }
+          request.setContract(address);
+        }
+        request.setAmount(amount);
+        request.setAddress(wallet.getAddress());
+        request.setReceipient(settings.getFundsHolder());
+        request.setReceipientType(settings.getFundsHolderType());
+        request.setMessage("Wallet address has been modified from " + oldWallet.getAddress() + " to " + wallet.getAddress()
+            + " . Would you like to send to wallet the initial funds ?");
+
+        try {
+          getWalletService().requestFunds(request, null);
+        } catch (Exception e) {
+          LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
+              + wallet.getType() + "' with id '" + wallet.getId() + "'", e);
+          throw e;
+        }
       }
+    } else {
+      TokenUtils.disapproveAccount(oldWallet.getAddress());
     }
   }
 
@@ -97,6 +109,13 @@ public class WalletAddressModifiedListener extends Listener<Wallet, Wallet> {
       walletService = CommonsUtils.getService(WalletService.class);
     }
     return walletService;
+  }
+
+  public WalletAccountService getWalletAccountService() {
+    if (walletAccountService == null) {
+      walletAccountService = CommonsUtils.getService(WalletAccountService.class);
+    }
+    return walletAccountService;
   }
 
 }

@@ -131,6 +131,13 @@
 
       <dependency>
         <groupId>org.web3j</groupId>
+        <artifactId>rlp</artifactId>
+        <version>${org.web3j.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.web3j</groupId>
         <artifactId>crypto</artifactId>
         <version>${org.web3j.version}</version>
         <scope>provided</scope>

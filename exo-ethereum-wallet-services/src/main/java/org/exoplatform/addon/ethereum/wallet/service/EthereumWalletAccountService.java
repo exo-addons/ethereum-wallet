@@ -8,6 +8,9 @@ import java.util.Set;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.web3j.crypto.*;
+import org.web3j.protocol.ObjectMapperFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.model.Wallet;
@@ -122,7 +125,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
     long identityId = Long.parseLong(identity.getId());
     Wallet wallet = getWalletByIdentityId(identityId);
     if (wallet != null && wallet.getAddress() != null
-        && getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID, currentUser) != null) {
+        && getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID) != null) {
       throw new IllegalStateException("Admin wallet has already an associated wallet, thus can't overwrite it");
     }
 
@@ -168,8 +171,13 @@ public class EthereumWalletAccountService implements WalletAccountService {
     } catch (Exception e) {
       // Make sure to delete corresponding wallet when the private key isn't
       // saved
-      removeWalletByAddress(adminWallet.getAddress(), currentUser);
+      removeWalletByAddress(wallet.getAddress(), currentUser);
     }
+  }
+
+  @Override
+  public Wallet getAdminWallet() {
+    return getWalletByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
   }
 
   @Override
@@ -193,6 +201,15 @@ public class EthereumWalletAccountService implements WalletAccountService {
       return null;
     }
     checkIsWalletOwner(wallet, currentUser);
+    return accountStorage.getWalletPrivateKey(wallet.getTechnicalId());
+  }
+
+  @Override
+  public String getPrivateKeyByTypeAndId(String type, String remoteId) {
+    Wallet wallet = getWalletByTypeAndId(type, remoteId);
+    if (wallet == null || wallet.getTechnicalId() < 1) {
+      return null;
+    }
     return accountStorage.getWalletPrivateKey(wallet.getTechnicalId());
   }
 
@@ -439,6 +456,25 @@ public class EthereumWalletAccountService implements WalletAccountService {
       return Collections.emptySet();
     }
     return labelStorage.getAllLabels();
+  }
+
+  protected ECKeyPair getAdminWalletKeys() {
+    String adminPrivateKey = getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
+    if (StringUtils.isBlank(adminPrivateKey)) {
+      throw new IllegalStateException("Admin wallet keys are not stored");
+    }
+    WalletFile adminWallet = null;
+    try {
+      ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+      adminWallet = objectMapper.reader(WalletFile.class).readValue(adminPrivateKey);
+    } catch (Exception e) {
+      throw new IllegalStateException("An error occurred while parsing admin wallet keys", e);
+    }
+    try {
+      return org.web3j.crypto.Wallet.decrypt(adminAccountPassword, adminWallet);
+    } catch (CipherException e) {
+      throw new IllegalStateException("Can't descrypt stored admin wallet", e);
+    }
   }
 
   private void checkIsWalletOwner(Wallet wallet, String currentUser) throws IllegalAccessException {

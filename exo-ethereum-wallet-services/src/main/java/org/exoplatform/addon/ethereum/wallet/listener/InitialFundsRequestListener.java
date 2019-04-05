@@ -21,7 +21,10 @@ import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getCurrentUserId
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.service.WalletAccountService;
 import org.exoplatform.addon.ethereum.wallet.service.WalletService;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.*;
@@ -36,15 +39,23 @@ import org.exoplatform.services.log.Log;
 @Asynchronous
 public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
 
-  private static final Log LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
+  private static final Log     LOG = ExoLogger.getLogger(InitialFundsRequestListener.class);
 
-  private WalletService    walletService;
+  private WalletService        walletService;
+
+  private WalletAccountService walletAccountService;
 
   @Override
   public void onEvent(Event<Wallet, Wallet> event) throws Exception {
+    Wallet adminWallet = getWalletAccountService().getAdminWallet();
+    String adminAddress = adminWallet == null ? null : adminWallet.getAddress();
+    if (StringUtils.isNotBlank(adminAddress)) {
+      return;
+    }
+
     Wallet wallet = event.getData();
 
-    GlobalSettings settings = getEthereumWalletService().getSettings();
+    GlobalSettings settings = getWalletService().getSettings();
     Map<String, Double> initialFunds = settings.getInitialFunds();
     if (initialFunds == null || initialFunds.isEmpty() || settings.getFundsHolder() == null || settings.getFundsHolder().isEmpty()
         || wallet.getId() == null || settings.getFundsHolder().equals(wallet.getId())) {
@@ -76,7 +87,7 @@ public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
       request.setMessage("A new wallet has been created");
 
       try {
-        getEthereumWalletService().requestFunds(request, null);
+        getWalletService().requestFunds(request, null);
       } catch (Exception e) {
         LOG.error("Unknown error occurred while user '" + getCurrentUserId() + "' requesting funds for wallet of type '"
             + wallet.getType() + "' with id '" + wallet.getId() + "'", e);
@@ -85,11 +96,18 @@ public class InitialFundsRequestListener extends Listener<Wallet, Wallet> {
     }
   }
 
-  public WalletService getEthereumWalletService() {
+  public WalletService getWalletService() {
     if (walletService == null) {
       walletService = CommonsUtils.getService(WalletService.class);
     }
     return walletService;
+  }
+
+  public WalletAccountService getWalletAccountService() {
+    if (walletAccountService == null) {
+      walletAccountService = CommonsUtils.getService(WalletAccountService.class);
+    }
+    return walletAccountService;
   }
 
 }

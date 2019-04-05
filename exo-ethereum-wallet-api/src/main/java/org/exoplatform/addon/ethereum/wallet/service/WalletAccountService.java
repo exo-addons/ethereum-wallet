@@ -75,6 +75,15 @@ public interface WalletAccountService {
   public String getPrivateKeyByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException;
 
   /**
+   * Retrieve wallet private key by identity type and remoteId
+   * 
+   * @param type 'user' or 'space'
+   * @param remoteId username or space pretty name
+   * @return encrypted wallet private key identified by type and remote Id
+   */
+  public String getPrivateKeyByTypeAndId(String type, String remoteId);
+
+  /**
    * Removes wallet private key by identity type and remoteId
    * 
    * @param type 'user' or 'space'
@@ -195,5 +204,10 @@ public interface WalletAccountService {
    *           admin wallet account
    */
   public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException;
+
+  /**
+   * @return Admin wallet object
+   */
+  public Wallet getAdminWallet();
 
 }

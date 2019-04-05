@@ -244,6 +244,10 @@ public class EthereumClientConnector {
     return txHashes;
   }
 
+  public Web3j getWeb3j() {
+    return web3j;
+  }
+
   private String getWebsocketProviderURL() {
     return globalSettings == null ? null : globalSettings.getWebsocketProviderURL();
   }
