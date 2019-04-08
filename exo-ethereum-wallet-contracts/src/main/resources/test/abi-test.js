@@ -99,7 +99,7 @@ contract('ERTTokenV2 ABI', function() {
   });
 
   it (`Abi have AccountRewarding.sol methods` , function(){
-    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'reward' && element.inputs && element.inputs.length === 3).length, 1, `Token Abi doesn't have 'reward' method`);
+    assert.equal(abi.filter(element => element.type === 'function' && element.name === 'reward' && element.inputs && element.inputs.length === 2).length, 1, `Token Abi doesn't have 'reward' method`);
   });
   
   it (`Abi have TokenVesting.sol methods` , function(){

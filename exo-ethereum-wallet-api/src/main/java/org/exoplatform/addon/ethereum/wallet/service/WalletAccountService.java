@@ -210,4 +210,14 @@ public interface WalletAccountService {
    */
   public Wallet getAdminWallet();
 
+  /**
+   * @return Admin wallet address
+   */
+  public String getAdminWalletAddress();
+
+  /**
+   * @return Admin wallet private key
+   */
+  public Object getAdminWalletKeys();
+
 }

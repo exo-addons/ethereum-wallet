@@ -19,30 +19,26 @@ import org.exoplatform.services.log.Log;
 
 public class EthereumWalletTokenOperationService {
 
-  private static final Log     LOG = ExoLogger.getLogger(EthereumWalletTokenOperationService.class);
+  private static final Log        LOG = ExoLogger.getLogger(EthereumWalletTokenOperationService.class);
 
-  EthereumWalletService        walletService;
+  private WalletService           walletService;
 
-  EthereumClientConnector      clientConnector;
+  private EthereumClientConnector clientConnector;
 
-  EthereumWalletAccountService accountService;
-
-  WalletTransactionService     transactionService;
+  private WalletAccountService    accountService;
 
   public EthereumWalletTokenOperationService(EthereumClientConnector ethereumClientConnector,
-                                             EthereumWalletService ethereumWalletService,
-                                             WalletAccountService walletAccountService,
-                                             WalletTransactionService transactionService) {
+                                             WalletService ethereumWalletService,
+                                             WalletAccountService walletAccountService) {
     this.walletService = ethereumWalletService;
     this.clientConnector = ethereumClientConnector;
-    this.transactionService = transactionService;
-    this.accountService = (EthereumWalletAccountService) walletAccountService;
+    this.accountService = walletAccountService;
   }
 
-  public CompletableFuture<TransactionReceipt> executeWriteOperation(final String contractAddress,
-                                                                     final String methodName,
-                                                                     final Object... arguments) throws Exception {
-    ECKeyPair adminWalletKeys = accountService.getAdminWalletKeys();
+  public CompletableFuture<TransactionReceipt> executeTokenTransaction(final String contractAddress,
+                                                                       final String methodName,
+                                                                       final Object... arguments) throws Exception { // NOSONAR
+    ECKeyPair adminWalletKeys = (ECKeyPair) accountService.getAdminWalletKeys();
     if (adminWalletKeys == null) {
       return null;
     }
@@ -66,6 +62,32 @@ public class EthereumWalletTokenOperationService {
     return response.sendAsync();
   }
 
+  public Object executeReadOperation(final String contractAddress,
+                                     final String methodName,
+                                     final Object... arguments) throws Exception {
+    ECKeyPair adminWalletKeys = (ECKeyPair) accountService.getAdminWalletKeys();
+    if (adminWalletKeys == null) {
+      return null;
+    }
+    Credentials credentials = Credentials.create(adminWalletKeys);
+    GlobalSettings settings = walletService.getSettings();
+    ContractGasProvider gasProvider = new StaticGasProvider(new BigInteger(String.valueOf(settings.getMinGasPrice())),
+                                                            new BigInteger(String.valueOf(settings.getDefaultGas())));
+    ERTTokenV2 ertInstance = ERTTokenV2.load(contractAddress, clientConnector.getWeb3j(), credentials, gasProvider);
+    Method methodToInvoke = getMethod(methodName);
+    if (methodToInvoke == null) {
+      throw new IllegalStateException("Can't find method " + methodName + " in Token instance");
+    }
+    RemoteCall<?> response = (RemoteCall<?>) methodToInvoke.invoke(ertInstance, arguments);
+    response.observable()
+            .doOnError(error -> LOG.error("Error while calling method {} on contract with address {}, arguments: {}",
+                                          methodName,
+                                          contractAddress,
+                                          arguments,
+                                          error));
+    return response.send();
+  }
+
   private Method getMethod(String methodName) {
     Method methodToInvoke = null;
     Method[] methods = ERTTokenV2.class.getDeclaredMethods();
@@ -76,4 +98,5 @@ public class EthereumWalletTokenOperationService {
     }
     return methodToInvoke;
   }
+
 }

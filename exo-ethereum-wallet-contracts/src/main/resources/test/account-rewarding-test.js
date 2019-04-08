@@ -10,8 +10,7 @@ contract('AccountRewarding', function(accounts) {
   const accountsAdmin = accounts[1];
 
   let rewardingAccountTokenBalance, rewardedAccountTokenBalance;
-  const tokensToReward = 3 * decimals;
-  const tokensToTransfer = 2 * decimals;
+  const tokensToReward = 2 * decimals;
 
   beforeEach(async function () {
     tokenInstance = await ERTToken.deployed();
@@ -26,11 +25,11 @@ contract('AccountRewarding', function(accounts) {
         });
       }).then(() => {
         // Transfer enough funds to admin account that will reward other accounts
-        return tokenInstance.transfer(accountsAdmin, tokensToTransfer * 2, {
+        return tokenInstance.transfer(accountsAdmin, tokensToReward * 2, {
           from : accounts[0]
         })
       }).then(() => {
-        return tokenInstance.reward(accountToReward, tokensToTransfer, tokensToReward, {
+        return tokenInstance.reward(accountToReward, tokensToReward, {
           from: accountsAdmin
         });
       }).then(assert.fail).catch((error) => {
@@ -47,7 +46,7 @@ contract('AccountRewarding', function(accounts) {
         });
       }).then(() => {
         // Transfer enough funds to admin account that will reward other accounts
-        return tokenInstance.transfer(accountsAdmin, tokensToTransfer * 2, {
+        return tokenInstance.transfer(accountsAdmin, tokensToReward * 2, {
           from : accounts[0]
         })
       }).then((balance) => {
@@ -59,19 +58,19 @@ contract('AccountRewarding', function(accounts) {
         rewardingAccountTokenBalance = Number(balance);
 
         // Send rewarded tokens
-        return tokenInstance.reward(accountToReward, tokensToTransfer, tokensToReward, {
+        return tokenInstance.reward(accountToReward, tokensToReward, {
           from: accountsAdmin
         });
       }).then(() => {
         return tokenInstance.balanceOf(accountToReward);
       }).then((balance) => {
-        assert.equal(Number(balance), rewardedAccountTokenBalance + tokensToTransfer, "Account should have received rewarded tokens");
+        assert.equal(Number(balance), rewardedAccountTokenBalance + tokensToReward, "Account should have received rewarded tokens");
         return tokenInstance.rewardBalanceOf(accountToReward);
       }).then((balance) => {
         assert.equal(Number(balance), tokensToReward, "Account should have been rewarded with thr exact amount of tokens sent");
         return tokenInstance.balanceOf(accountsAdmin);
       }).then((balance) => {
-        assert.isAtMost(Number(balance), rewardingAccountTokenBalance - tokensToTransfer, "Admin account should have sent tokens from his balance while rewarding");
+        assert.isAtMost(Number(balance), rewardingAccountTokenBalance - tokensToReward, "Admin account should have sent tokens from his balance while rewarding");
       });
   });
 

@@ -41,9 +41,9 @@ import org.exoplatform.services.log.Log;
  */
 public class EthereumClientConnector {
 
-  private static final String      ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
-
   private static final Log         LOG                              = ExoLogger.getLogger(EthereumClientConnector.class);
+
+  private static final String      ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
 
   private Web3j                    web3j                            = null;
 

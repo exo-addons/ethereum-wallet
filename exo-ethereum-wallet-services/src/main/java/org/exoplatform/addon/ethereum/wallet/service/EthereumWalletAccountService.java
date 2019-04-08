@@ -181,6 +181,12 @@ public class EthereumWalletAccountService implements WalletAccountService {
   }
 
   @Override
+  public String getAdminWalletAddress() {
+    Wallet adminWallet = getAdminWallet();
+    return adminWallet == null ? null : adminWallet.getAddress();
+  }
+
+  @Override
   public void savePrivateKeyByTypeAndId(String type,
                                         String remoteId,
                                         String content,
@@ -458,7 +464,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
     return labelStorage.getAllLabels();
   }
 
-  protected ECKeyPair getAdminWalletKeys() {
+  public Object getAdminWalletKeys() {
     String adminPrivateKey = getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
     if (StringUtils.isBlank(adminPrivateKey)) {
       throw new IllegalStateException("Admin wallet keys are not stored");
