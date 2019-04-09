@@ -270,10 +270,18 @@ function loadContractTransactionProperties(walletAddress, transactionDetails, co
   }
 
   if (transactionDetails.contractMethodName === 'addAdmin') {
-    transactionDetails.contractSymbol = 'Level';
-    transactionDetails.contractAmountLabel = 'Level';
+    transactionDetails.contractSymbol = '';
+    transactionDetails.contractAmountLabel = 'Admin level';
   } else if (transactionDetails.contractMethodName === 'setSellPrice') {
     transactionDetails.contractSymbol = 'eth';
+    transactionDetails.contractAmountLabel = 'New sell price';
+  } else if (transactionDetails.contractMethodName === 'upgradeData' || transactionDetails.contractMethodName === 'upgradeImplementation') {
+    transactionDetails.contractSymbol = '';
+    transactionDetails.contractAmountLabel = 'Version';
+  } else if (transactionDetails.contractMethodName === 'transformToVested') {
+    transactionDetails.contractAmountLabel = 'Initialization amount';
+  } else if (transactionDetails.contractMethodName === 'reward') {
+    transactionDetails.contractAmountLabel = 'Rewarded amount';
   }
 
   const promises = [];

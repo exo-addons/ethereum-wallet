@@ -56,7 +56,7 @@
               </v-list-tile-avatar>
 
               <v-list-tile-content class="transactionDetailContent">
-                <v-list-tile-title v-if="item.type === 'contract' && item.isContractCreation">
+                <v-list-tile-title v-if="item.isContractCreation">
                   <span>
                     Created contract
                   </span>
@@ -101,6 +101,7 @@
                     :profile-type="item.fromType"
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
+
                   <profile-chip
                     v-else
                     :address="item.toAddress"
@@ -112,7 +113,7 @@
                     :avatar="item.toAvatar" />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferFrom'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'transferFrom'">
                   <span>
                     Sent to
                   </span>
@@ -148,7 +149,7 @@
                     :avatar="item.fromAvatar" />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && (item.contractMethodName === 'transfer' || item.contractMethodName === 'approve')">
+                <v-list-tile-title v-else-if="(item.contractMethodName === 'transfer' || item.contractMethodName === 'approve')">
                   <profile-chip
                     v-if="displayFullTransaction && item.isReceiver"
                     :address="item.toAddress"
@@ -198,7 +199,7 @@
                     :avatar="item.toAvatar" />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'addAdmin'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'addAdmin'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -209,7 +210,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Added
+                    added
                   </span>
                   <profile-chip
                     :address="item.toAddress"
@@ -228,7 +229,7 @@
                     display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'removeAdmin'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'removeAdmin'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -239,7 +240,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Removed
+                    removed
                   </span>
                   <profile-chip
                     :address="item.toAddress"
@@ -257,7 +258,7 @@
                     :name="item.contractName"
                     display-label />
                 </v-list-tile-title>
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'transferOwnership'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'transferOwnership'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -268,7 +269,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Transfered ownership to
+                    transferred ownership to
                   </span>
                   <profile-chip
                     :address="item.toAddress"
@@ -287,7 +288,7 @@
                     display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'approveAccount'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'approveAccount'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -298,7 +299,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Approved
+                    approved
                   </span>
                   <profile-chip
                     :address="item.toAddress"
@@ -317,7 +318,7 @@
                     display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'disapproveAccount'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'disapproveAccount'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -328,7 +329,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Disapproved
+                    disapproved
                   </span>
                   <profile-chip
                     :address="item.toAddress"
@@ -347,7 +348,7 @@
                     display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'pause'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'pause'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -358,7 +359,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Paused contract
+                    paused contract
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
@@ -366,7 +367,7 @@
                     display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'unPause'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'unPause'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -377,7 +378,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Un-paused contract
+                    un-paused contract
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
@@ -385,7 +386,7 @@
                     display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.contractMethodName === 'setSellPrice'">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'setSellPrice'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -396,15 +397,87 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Modified sell price of contract
+                    modified sell price
                   </span>
-                  <wallet-address
-                    :value="item.contractAddress"
-                    :name="item.contractName"
-                    display-label />
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.type === 'contract' && item.amount && Number(item.amount) && item.amountFiat">
+                <v-list-tile-title v-else-if="item.contractMethodName === 'upgradeData'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>
+                    upgraded data contract
+                  </span>
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.contractMethodName === 'upgradeImplementation'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>
+                    upgraded implementation contract
+                  </span>
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.contractMethodName === 'transformToVested'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>
+                    vested tokens to
+                  </span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.contractMethodName === 'initializeAccount'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>
+                    initialized wallet of
+                  </span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.contractMethodName === 'depositFunds'">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -417,10 +490,21 @@
                   <span>
                     Sent ether to contract
                   </span>
-                  <wallet-address
-                    :value="item.contractAddress"
-                    :name="item.contractName"
-                    display-label />
+                </v-list-tile-title>
+
+                <v-list-tile-title v-else-if="item.amount && Number(item.amount) && item.amountFiat">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>
+                    Sent ether to contract
+                  </span>
                 </v-list-tile-title>
 
                 <v-list-tile-title v-else>
@@ -517,20 +601,28 @@
                 {{ toFixed(item.contractAmount) }} {{ item.contractSymbol }}
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile v-else-if="Number(item.amountFiat)">
+            <v-list-tile v-if="Number(item.amountFiat)">
               <v-list-tile-content>
-                Amount
+                Fiat amount
               </v-list-tile-content>
               <v-list-tile-content class="align-end">
                 {{ toFixed(item.amountFiat) }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile v-else-if="Number(item.amount)">
+            <v-list-tile v-if="Number(item.amount)">
               <v-list-tile-content>
-                Amount
+                Ether amount
               </v-list-tile-content>
               <v-list-tile-content class="align-end">
                 {{ toFixed(item.amount) }} ether
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile v-if="item.contractMethodName === 'reward' && Number(item.value)">
+              <v-list-tile-content>
+                Transferred amount
+              </v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                {{ toFixed(item.value) }} {{ item.contractSymbol }}
               </v-list-tile-content>
             </v-list-tile>
 

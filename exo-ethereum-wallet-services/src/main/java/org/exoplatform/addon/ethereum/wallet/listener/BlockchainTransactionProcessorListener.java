@@ -23,8 +23,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import org.exoplatform.addon.ethereum.wallet.model.MinedTransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
-import org.exoplatform.addon.ethereum.wallet.service.WalletTransactionService;
+import org.exoplatform.addon.ethereum.wallet.service.*;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.*;
 import org.exoplatform.container.component.RequestLifeCycle;
@@ -39,13 +38,15 @@ import org.exoplatform.services.log.Log;
  */
 public class BlockchainTransactionProcessorListener extends Listener<Object, TransactionReceipt> {
 
-  private static final Log         LOG = ExoLogger.getLogger(BlockchainTransactionProcessorListener.class);
+  private static final Log           LOG = ExoLogger.getLogger(BlockchainTransactionProcessorListener.class);
 
-  private WalletTransactionService transactionService;
+  private WalletTransactionService   transactionService;
 
-  private EthereumClientConnector  ethereumClientConnector;
+  private EthereumTransactionDecoder ethereumTransactionDecoder;
 
-  private ExoContainer             container;
+  private EthereumClientConnector    ethereumClientConnector;
+
+  private ExoContainer               container;
 
   public BlockchainTransactionProcessorListener(PortalContainer container) {
     this.container = container;
@@ -105,7 +106,10 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
         }
       }
 
-      getTransactionService().saveTransactionDetail(transactionDetail, null, true);
+      // Ensure that all fields are computed correctly
+      getTransactionDecoderService().computeContractTransactionDetail(transactionDetail, transactionReceipt);
+
+      getTransactionService().saveTransactionDetail(transactionDetail, true);
     } finally {
       RequestLifeCycle.end();
     }
@@ -132,6 +136,13 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
       transactionService = CommonsUtils.getService(WalletTransactionService.class);
     }
     return transactionService;
+  }
+
+  private EthereumTransactionDecoder getTransactionDecoderService() {
+    if (ethereumTransactionDecoder == null) {
+      ethereumTransactionDecoder = CommonsUtils.getService(EthereumTransactionDecoder.class);
+    }
+    return ethereumTransactionDecoder;
   }
 
 }

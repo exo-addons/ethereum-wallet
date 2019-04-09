@@ -186,23 +186,19 @@ public class EthereumTransactionDecoder {
     return transactionDetail;
   }
 
-  private void computeContractTransactionDetail(TransactionDetail transactionDetail,
-                                                TransactionReceipt transactionReceipt) {
+  public void computeContractTransactionDetail(TransactionDetail transactionDetail,
+                                               TransactionReceipt transactionReceipt) {
     List<org.web3j.protocol.core.methods.response.Log> logs = transactionReceipt.getLogs();
+    transactionDetail.setSucceeded(transactionReceipt.isStatusOK());
 
     String hash = transactionDetail.getHash();
-    if (logs == null || logs.isEmpty()) {
-      if (transactionDetail.getValue() == 0) {
-        LOG.debug("Retrieving information from blockchain for transaction {} with NO LOGS, set it as failed", hash);
-        transactionDetail.setSucceeded(false);
-      }
-    } else {
-      LOG.debug("Retrieving information from blockchain for transaction {} with {} LOGS", hash, logs.size());
-      transactionDetail.setSucceeded(transactionReceipt.isStatusOK());
-
+    if (logs != null && !logs.isEmpty()) {
+      int logsSize = logs.size();
+      LOG.debug("Retrieving information from blockchain for transaction {} with {} LOGS", hash, logsSize);
+      int i = 0;
       boolean transactionLogTreated = false;
-      for (int i = 0; i < logs.size(); i++) {
-        org.web3j.protocol.core.methods.response.Log log = logs.get(i);
+      while (!transactionLogTreated && i < logsSize) {
+        org.web3j.protocol.core.methods.response.Log log = logs.get(i++);
 
         List<String> topics = log.getTopics();
         if (topics == null || topics.isEmpty()) {
@@ -215,7 +211,6 @@ public class EthereumTransactionDecoder {
         String methodName = CONTRACT_METHODS_BY_SIG.get(topic);
         transactionDetail.setContractMethodName(methodName);
         if (StringUtils.equals(methodName, FUNC_TRANSFER)) {
-          transactionLogTreated = true;
           EventValues parameters = extractEventParameters(TRANSFER_EVENT, log);
           if (parameters == null) {
             continue;
@@ -239,7 +234,7 @@ public class EthereumTransactionDecoder {
           BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
           transactionDetail.setContractAmount(amount.doubleValue());
         } else if (StringUtils.equals(methodName, FUNC_APPROVEACCOUNT)) {
-          if (logs.size() > 1) {
+          if (logsSize > 1) {
             // Implicit acccount approval
             continue;
           }
@@ -350,11 +345,13 @@ public class EthereumTransactionDecoder {
           }
           transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
+          // Transfered tokens amount
           transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          // Reward amount
           transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
           transactionDetail.setAdminOperation(true);
-        } else if (!transactionLogTreated && (i + 1) == logs.size()) {
-          LOG.info("Can't find contract method name of transaction {}", transactionDetail);
+        } else if (!transactionLogTreated && (i + 1) == logsSize) {
+          LOG.warn("Can't find contract method name of transaction {}", transactionDetail);
         }
       }
     }
