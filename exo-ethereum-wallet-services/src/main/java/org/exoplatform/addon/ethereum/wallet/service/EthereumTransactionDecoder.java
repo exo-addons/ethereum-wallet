@@ -23,7 +23,8 @@ import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.*;
-import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.core.methods.response.EthBlock.Block;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -267,6 +268,7 @@ public class EthereumTransactionDecoder {
           }
           transactionDetail.setFrom(transactionReceipt.getFrom());
           transactionDetail.setTo(parameters.getNonIndexedValues().get(0).getValue().toString());
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
           transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_REMOVEADMIN)) {
           transactionLogTreated = true;
@@ -283,7 +285,16 @@ public class EthereumTransactionDecoder {
           if (parameters == null) {
             continue;
           }
-          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          transactionDetail.setTo(parameters.getNonIndexedValues().get(1).getValue().toString());
+          transactionDetail.setAdminOperation(true);
+        } else if (StringUtils.equals(methodName, FUNC_UPGRADEIMPLEMENTATION)) {
+          transactionLogTreated = true;
+          EventValues parameters = extractEventParameters(UPGRADED_EVENT, log);
+          if (parameters == null) {
+            continue;
+          }
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
           transactionDetail.setTo(parameters.getNonIndexedValues().get(1).getValue().toString());
           transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_DEPOSIT_FUNDS)) {
@@ -295,6 +306,14 @@ public class EthereumTransactionDecoder {
           transactionDetail.setFrom(parameters.getNonIndexedValues().get(0).getValue().toString());
           transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
           transactionDetail.setAdminOperation(true);
+        } else if (StringUtils.equals(methodName, FUNC_SETSELLPRICE)) {
+          transactionLogTreated = true;
+          EventValues parameters = extractEventParameters(TOKENPRICECHANGED_EVENT, log);
+          if (parameters == null) {
+            continue;
+          }
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_TRANSFORMTOVESTED)) {
           transactionLogTreated = true;
           EventValues parameters = extractEventParameters(VESTING_EVENT, log);
@@ -302,7 +321,7 @@ public class EthereumTransactionDecoder {
             continue;
           }
           transactionDetail.setTo(parameters.getIndexedValues().get(0).getValue().toString());
-          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
           transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_TRANSFEROWNERSHIP)) {
           transactionLogTreated = true;
@@ -320,9 +339,19 @@ public class EthereumTransactionDecoder {
           }
           transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
-          String tokenAmount = ((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).toString();
-          String etherAmount = ((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).toString();
-          transactionDetail.setValue(new Double(tokenAmount + "." + etherAmount));
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
+          transactionDetail.setAdminOperation(true);
+        } else if (StringUtils.equals(methodName, FUNC_REWARD)) {
+          transactionLogTreated = true;
+          EventValues parameters = extractEventParameters(REWARD_EVENT, log);
+          if (parameters == null) {
+            continue;
+          }
+          transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
+          transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
+          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
           transactionDetail.setAdminOperation(true);
         } else if (!transactionLogTreated && (i + 1) == logs.size()) {
           LOG.info("Can't find contract method name of transaction {}", transactionDetail);

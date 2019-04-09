@@ -26,11 +26,10 @@ contract AccountInitialization is ERTTokenV1 {
         // Test if the account has already been initialized
         require(!super.isInitializedAccount(_to));
 
-        // Test if the sender has enough tokens
-        require(_tokenAmount == 0 || super.balanceOf(msg.sender) > _tokenAmount);
-
         // Mark address as initialized
         super._setInitializedAccount(_to);
+        // Emit a specific event for initialization operation
+        emit Initialization(msg.sender, _to, _tokenAmount, msg.value);
 
         // Transfer intial ether amount
         if (msg.value > 0) {
@@ -47,9 +46,6 @@ contract AccountInitialization is ERTTokenV1 {
           // Emit Standard ERC-20 event
           emit Transfer(msg.sender, _to, _tokenAmount);
         }
-
-        // Emit a specific event for initialization operation
-        emit Initialization(msg.sender, _to, _tokenAmount, msg.value);
     }
 
 }

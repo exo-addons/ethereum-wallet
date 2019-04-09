@@ -8,7 +8,7 @@ import "./ERTTokenV1.sol";
 contract AccountRewarding is ERTTokenV1 {
 
     // Event emited when an address is rewarded
-    event Reward(address indexed _from, address indexed _to, uint256 _tokenAmount);
+    event Reward(address indexed _from, address indexed _to, uint256 _tokenAmount, uint256 _rewardAmount);
 
     constructor () internal {
     }
@@ -22,18 +22,20 @@ contract AccountRewarding is ERTTokenV1 {
     function reward(address _to, uint256 _amount, uint256 _reward) public onlyAdmin(2) whenNotPaused whenApproved(_to) {
         uint256 gasLimit = gasleft();
 
+        // If no reward, the transfer method should be used instead
+        require(_reward > 0);
+
         // Add the new reward balance to the recipient
         super._setRewardBalance(_to, super.safeAdd(super.rewardBalanceOf(_to), _reward));
         // Emit a specific event for initialization operation
-        emit Reward(msg.sender, _to, _reward);
+        emit Reward(msg.sender, _to, _amount, _reward);
 
-        // Transfer rewarded token amount
-        require(super._transfer(msg.sender, _to, _amount) == true);
-        // Emit Standard ERC-20 event
-        emit Transfer(msg.sender, _to, _amount);
-
-        // Pay transaction with token instead of ether
-        super._payGasInToken(gasLimit);
+        if (_amount > 0) {
+          // Transfer rewarded token amount
+          require(super._transfer(msg.sender, _to, _amount) == true);
+          // Emit Standard ERC-20 event
+          emit Transfer(msg.sender, _to, _amount);
+        }
     }
 
 }

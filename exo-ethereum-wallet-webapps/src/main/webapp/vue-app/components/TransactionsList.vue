@@ -396,7 +396,7 @@
                     :display-name="item.fromDisplayName"
                     :avatar="item.fromAvatar" />
                   <span>
-                    Modified sell price to contract
+                    Modified sell price of contract
                   </span>
                   <wallet-address
                     :value="item.contractAddress"
