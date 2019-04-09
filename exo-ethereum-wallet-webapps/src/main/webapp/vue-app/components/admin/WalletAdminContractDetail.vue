@@ -154,7 +154,7 @@
             @error="transactionError" />
 
           <upgrade-token-modal
-            v-if="contractDetails.isOwner"
+            v-if="contractDetails.isOwner && contractDetails.contractType === 1"
             ref="upgrade"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
