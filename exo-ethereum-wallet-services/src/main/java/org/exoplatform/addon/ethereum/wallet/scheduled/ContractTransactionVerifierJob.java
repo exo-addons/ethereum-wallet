@@ -4,6 +4,7 @@ import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.*;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
@@ -70,23 +71,35 @@ public class ContractTransactionVerifierJob implements Job {
       }
 
       boolean processed = true;
-      for (String contractsAddress : defaultContractsAddresses) {
-        Set<String> transactionHashes = getEthereumClientConnector().getContractTransactions(contractsAddress,
+      for (String contractAddress : defaultContractsAddresses) {
+        Set<String> transactionHashes = getEthereumClientConnector().getContractTransactions(contractAddress,
                                                                                              lastWatchedBlockNumber,
                                                                                              lastEthereumBlockNumber);
 
         LOG.debug("{} transactions has been found on contract {} between block {} and {}",
                   transactionHashes.size(),
-                  contractsAddress,
+                  contractAddress,
                   lastWatchedBlockNumber,
                   lastEthereumBlockNumber);
 
-        ContractDetail contractDetail = getContractService().getContractDetail(contractsAddress, networkId);
+        ContractDetail contractDetail = getContractService().getContractDetail(contractAddress, networkId);
         int treatedTransactionsCount = 0;
         for (String transactionHash : transactionHashes) {
           TransactionDetail transactionDetail = getTransactionService().getTransactionByHash(transactionHash);
           if (transactionDetail != null) {
-            LOG.debug(" - transaction {} already exists on database, ignore it.", transactionHash);
+            LOG.debug(" - transaction {} already exists on database, ignore it.", transactionDetail);
+            boolean changed = false;
+            if (StringUtils.isBlank(transactionDetail.getContractAddress())) {
+              transactionDetail.setContractAddress(contractAddress);
+              changed = true;
+            }
+            if (StringUtils.isBlank(transactionDetail.getContractMethodName())) {
+              getEthereumTransactionDecoder().computeTransactionDetail(transactionDetail, contractDetail);
+              changed = true;
+            }
+            if (changed) {
+              getTransactionService().saveTransactionDetail(transactionDetail, true);
+            }
             continue;
           }
           processed = processTransaction(networkId, transactionHash, contractDetail) && processed;
@@ -97,7 +110,7 @@ public class ContractTransactionVerifierJob implements Job {
 
         LOG.debug("{} transactions has been added on database using contract {} between block {} and {}",
                   treatedTransactionsCount,
-                  contractsAddress,
+                  contractAddress,
                   lastWatchedBlockNumber,
                   lastEthereumBlockNumber);
       }

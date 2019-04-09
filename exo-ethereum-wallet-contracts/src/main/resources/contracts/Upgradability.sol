@@ -40,7 +40,8 @@ contract Upgradability is Owned{
     }
 
     /**
-     * @dev Upgrade to a new implementation of ERC20 contract
+     * @dev NOTE: Depricated (should use upgradeData and upgradeImplementation in separate transactions).
+     *      Upgrade to a new implementation of ERC20 contract
      * @param _proxy proxy contract address
      * @param _version the version of the new implementation that should be higher
      * that current version
