@@ -83,10 +83,9 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .catch((e) => {
       console.debug('retrieveContractDetails method - error retrieving saved details', contractDetails.address, new Error(e));
     })
-    .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.implementationAddress().call())
-    .then(() => contractDetails.contractType > 0 || contractDetails.contract.methods.version().call())
+    .then(() => contractDetails.contractType > 1 || contractDetails.contract.methods.version().call())
     .then((version) => {
-      if (version) {
+      if (version !== true && version) {
         version = Number(version);
         const originalContractType = contractDetails.contractType;
         contractDetails.contractType = version && !Number.isNaN(Number(version)) && Number.isInteger(version) ? Number(version) : 0;

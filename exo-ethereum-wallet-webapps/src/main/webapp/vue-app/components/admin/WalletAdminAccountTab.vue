@@ -1,5 +1,5 @@
 <template>
-  <v-flex v-if="sameConfiguredNetwork" flat>
+  <v-flex v-if="principalContract && principalContract.contractType >= 2" flat>
     <confirm-dialog
       ref="deleteAdminWalletConfirm"
       message="Would you like to delete admin wallet?"
@@ -82,18 +82,98 @@
           </v-radio-group>
         </v-flex>
       </v-layout>
+      <v-layout v-if="adminWallet && useAdminWallet">
+        <v-flex md6 xs12>
+          <v-list>
+            <v-subheader>Admin account properties</v-subheader>
+            <v-list-tile>
+              <v-list-tile-title>
+                Admin level
+                <warning-bubble v-if="adminWallet.level < 4">
+                  <template slot="bubble-content">
+                    Admin wallet should having admin level 4 at least on token {{ principalContract.name }}
+                  </template>
+                  <template slot="content">
+                    Admin wallet should having admin level 4 at least on token {{ principalContract.name }}
+                  </template>
+                </warning-bubble>
+              </v-list-tile-title>
+              <v-list-tile-title>
+                {{ adminWallet.level }}
+              </v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile>
+              <v-list-tile-title>
+                Approval
+                <warning-bubble v-if="adminWallet.level < 4">
+                  <template slot="bubble-content">
+                    Admin wallet should having admin level 4 and approved on token {{ principalContract.name }}
+                  </template>
+                  <template slot="content">
+                    Admin wallet should having admin level 4 and approved on token {{ principalContract.name }}
+                  </template>
+                </warning-bubble>
+              </v-list-tile-title>
+              <v-list-tile-title>
+                {{ adminWallet.approved ? 'Yes' : 'No' }}
+              </v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile>
+              <v-list-tile-title>
+                Token balance
+                <warning-bubble v-if="adminWallet.balanceToken < 100">
+                  <template slot="bubble-content">
+                    No enough funds to manage wallets
+                  </template>
+                  <template slot="content">
+                    No enough funds to manage wallets
+                  </template>
+                </warning-bubble>
+              </v-list-tile-title>
+              <v-list-tile-title>
+                {{ adminWallet.balanceToken }} {{ principalContract.symbol }}
+              </v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile>
+              <v-list-tile-title>
+                Ether balance
+                <warning-bubble v-if="adminWallet.balanceEther < 0.05">
+                  <template slot="bubble-content">
+                    No enough funds to manage wallets
+                  </template>
+                  <template slot="content">
+                    No enough funds to manage wallets
+                  </template>
+                </warning-bubble>
+              </v-list-tile-title>
+              <v-list-tile-title :title="`${adminWallet.balanceEther} ether / ${adminWallet.balanceFiat} ${symbol}`">
+                {{ adminWallet.balanceEther }} ether / {{ adminWallet.balanceFiat }} {{ symbol }}
+              </v-list-tile-title>
+            </v-list-tile>
+          </v-list>
+        </v-flex>
+      </v-layout>
     </v-container>
+  </v-flex>
+  <v-flex v-else>
+    <div class="alert alert-warning v-content">
+      <i class="uiIconWarning"></i>
+      No token or Type ERT Token V2 is added as principal contract
+    </div>
   </v-flex>
 </template>
 
 <script>
 import ConfirmDialog from '../ConfirmDialog.vue';
+import WarningBubble from '../WarningBubble.vue';
 
+import {computeBalance, convertTokenAmountReceived} from '../../WalletUtils.js';
 import {searchWalletByTypeAndId} from '../..//WalletAddressRegistry.js';
 
 export default {
   components: {
     ConfirmDialog,
+    WarningBubble,
   },
   props: {
     networkId: {
@@ -102,10 +182,16 @@ export default {
         return null;
       },
     },
-    sameConfiguredNetwork: {
-      type: Boolean,
+    symbol: {
+      type: String,
       default: function() {
-        return false;
+        return '$';
+      },
+    },
+    principalContract: {
+      type: Object,
+      default: function() {
+        return {};
       },
     },
   },
@@ -129,6 +215,11 @@ export default {
   computed: {
   },
   watch: {
+    principalContract() {
+      if (this.principalContract) {
+        this.init();
+      }
+    },
     adminWalletCreationAction() {
       this.walletPrivateKey = '';
       this.walletPrivateKeyShow = false;
@@ -141,17 +232,48 @@ export default {
   },
   methods: {
     init() {
+      if (!this.principalContract || this.principalContract.contractType < 2) {
+        return;
+      }
       this.loading = true;
       return searchWalletByTypeAndId('admin', 'ADMIN')
-      .then((wallet) => {
-        this.adminWallet = wallet;
-        this.useAdminWallet = this.adminWalletExists = !!(wallet && wallet.address);
-      }).catch((error) => {
-        this.error = String(error);
-      })
-      .finally(() => {
-        this.loading = false;
-      });
+        .then((wallet) => {
+          this.adminWallet = wallet;
+          this.useAdminWallet = this.adminWalletExists = !!(wallet && wallet.address);
+          if (this.useAdminWallet) {
+            const loadAdminLevelPromise = this.principalContract.contract.methods.getAdminLevel(this.adminWallet.address).call()
+              .then((level) => {
+                this.$set(this.adminWallet, 'level', level);
+              });
+
+            const loadApprovalPromise = this.principalContract.contract.methods.isApprovedAccount(this.adminWallet.address).call()
+              .then((approved) => {
+                this.$set(this.adminWallet, 'approved', approved);
+              });
+
+            const loadAdminTokenBalance = this.principalContract.contract.methods.balanceOf(this.adminWallet.address).call()
+              .then((balance) => {
+                this.$set(this.adminWallet, 'balanceToken', convertTokenAmountReceived(balance, this.principalContract.decimals));
+              });
+
+            const loadAdminEtherBalance = computeBalance(this.adminWallet.address)
+              .then((balanceDetails) => {
+                if (balanceDetails) {
+                  this.$set(this.adminWallet, 'balanceEther', balanceDetails.balance);
+                  this.$set(this.adminWallet, 'balanceFiat', balanceDetails.balanceFiat);
+                } else {
+                  this.$set(this.adminWallet, 'balanceEther', 0);
+                  this.$set(this.adminWallet, 'balanceFiat', 0);
+                }
+              });
+            return Promise.all([loadAdminLevelPromise, loadApprovalPromise, loadAdminTokenBalance, loadAdminEtherBalance]);
+          }
+        }).catch((error) => {
+          this.error = String(error);
+        })
+        .finally(() => {
+          this.loading = false;
+        });
     },
     removeAdminWallet() {
       this.removingWallet = true;

@@ -331,7 +331,7 @@ export default {
                 }, e);
 
                 document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-                  detail : 'Error simulating transaction, please contact your adminitrator'
+                  detail : 'Error simulating transaction, please contact your administrator'
                 }));
               } else {
                 document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
@@ -347,7 +347,7 @@ export default {
               }
               if (result > defaultGas) {
                 document.dispatchEvent(new CustomEvent('exo-wallet-send-tokens-error', {
-                  detail : 'Payment transaction needs more fee, please contact your adminitrator'
+                  detail : 'Payment transaction needs more fee, please contact your administrator'
                 }));
                 return;
               }
