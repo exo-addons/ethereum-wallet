@@ -31,6 +31,9 @@ public class TransactionEntity implements Serializable {
   @Column(name = "NETWORK_ID", nullable = false)
   private long              networkId;
 
+  @Column(name = "ISSUER_ID")
+  private long              issuerIdentityId;
+
   @Column(name = "HASH", unique = true, nullable = false)
   private String            hash;
 
@@ -199,6 +202,14 @@ public class TransactionEntity implements Serializable {
 
   public void setCreatedDate(long createdDate) {
     this.createdDate = createdDate;
+  }
+
+  public long getIssuerIdentityId() {
+    return issuerIdentityId;
+  }
+
+  public void setIssuerIdentityId(long issuerIdentityId) {
+    this.issuerIdentityId = issuerIdentityId;
   }
 
 }

@@ -105,6 +105,7 @@ public class TransactionStorage {
     detail.setContractAmount(entity.getContractAmount());
     detail.setContractMethodName(entity.getContractMethodName());
     detail.setTimestamp(entity.getCreatedDate());
+    detail.setIssuerIdentityId(entity.getIssuerIdentityId());
 
     // Workaround for old bug when adding timestamp in seconds
     if (entity.getCreatedDate() > 0 && entity.getCreatedDate() < MINIMUM_CREATED_DATE_MILLIS) {
@@ -144,6 +145,7 @@ public class TransactionStorage {
     transactionEntity.setSuccess(transactionDetail.isSucceeded());
     transactionEntity.setValue(transactionDetail.getValue());
     transactionEntity.setCreatedDate(transactionDetail.getTimestamp());
+    transactionEntity.setIssuerIdentityId(transactionDetail.getIssuerIdentityId());
     return transactionEntity;
   }
 

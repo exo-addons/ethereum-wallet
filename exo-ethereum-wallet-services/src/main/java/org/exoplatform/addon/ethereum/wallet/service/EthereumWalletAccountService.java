@@ -357,7 +357,10 @@ public class EthereumWalletAccountService implements WalletAccountService {
       throw new IllegalArgumentException(ADDRESS_PARAMTER_IS_MANDATORY);
     }
     if (initializationState == null) {
-      throw new IllegalArgumentException("Initialization stte is mandatory");
+      throw new IllegalArgumentException("Initialization state is mandatory");
+    }
+    if (StringUtils.isBlank(currentUser)) {
+      throw new IllegalArgumentException("Modifier username is mandatory");
     }
     Wallet wallet = accountStorage.getWalletByAddress(address);
     if (wallet == null) {
@@ -378,6 +381,22 @@ public class EthereumWalletAccountService implements WalletAccountService {
     if (oldInitializationState == WalletInitializationState.INITIALIZED) {
       throw new IllegalAccessException("Wallet was already marked as initialized, thus the status for address " + address
           + " can't change to status " + initializationState.name());
+    }
+    wallet.setInitializationState(initializationState.name());
+    accountStorage.saveWallet(wallet, false);
+  }
+
+  @Override
+  public void setInitializationStatus(String address, WalletInitializationState initializationState) {
+    if (address == null) {
+      throw new IllegalArgumentException(ADDRESS_PARAMTER_IS_MANDATORY);
+    }
+    if (initializationState == null) {
+      throw new IllegalArgumentException("Initialization state is mandatory");
+    }
+    Wallet wallet = accountStorage.getWalletByAddress(address);
+    if (wallet == null) {
+      throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
     }
     wallet.setInitializationState(initializationState.name());
     accountStorage.saveWallet(wallet, false);

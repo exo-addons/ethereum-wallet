@@ -196,6 +196,15 @@ public interface WalletAccountService {
                                       String currentUserId) throws IllegalAccessException;
 
   /**
+   * Change wallet initialization status
+   * 
+   * @param address wallet address
+   * @param initializationState wallet initialization status of type
+   *          {@link WalletInitializationState}
+   */
+  public void setInitializationStatus(String address, WalletInitializationState initializationState);
+
+  /**
    * Creates admin account wallet in server side
    * 
    * @param privateKey admin account wallet private key

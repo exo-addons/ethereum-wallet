@@ -165,7 +165,8 @@ public class EthereumTransactionDecoder {
 
     String senderAddress = transaction.getFrom();
     transactionDetail.setFrom(senderAddress);
-    transactionDetail.setValue(transaction.getValue() == null ? 0 : transaction.getValue().longValue());
+    BigInteger weiAmount = transaction.getValue();
+    transactionDetail.setValueDecimal(weiAmount, 18);
 
     TransactionReceipt transactionReceipt = ethereumClientConnector.getTransactionReceipt(hash);
     transactionDetail.setPending(transactionReceipt == null);
@@ -190,6 +191,13 @@ public class EthereumTransactionDecoder {
                                                TransactionReceipt transactionReceipt) {
     List<org.web3j.protocol.core.methods.response.Log> logs = transactionReceipt.getLogs();
     transactionDetail.setSucceeded(transactionReceipt.isStatusOK());
+
+    ContractDetail contractDetail =
+                                  contractService.getContractDetail(transactionReceipt.getTo(), transactionDetail.getNetworkId());
+    if (contractDetail == null) {
+      throw new IllegalStateException("Can't find contract detail");
+    }
+    Integer contractDecimals = contractDetail.getDecimals();
 
     String hash = transactionDetail.getHash();
     if (logs != null && !logs.isEmpty()) {
@@ -218,7 +226,7 @@ public class EthereumTransactionDecoder {
           transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
           BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
-          transactionDetail.setContractAmount(amount.doubleValue());
+          transactionDetail.setContractAmountDecimal(amount, contractDecimals);
           if (!StringUtils.equals(transactionReceipt.getFrom(), transactionDetail.getFrom())) {
             transactionDetail.setBy(transactionReceipt.getFrom());
             transactionDetail.setContractMethodName(FUNC_TRANSFERFROM);
@@ -232,7 +240,7 @@ public class EthereumTransactionDecoder {
           transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
           BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
-          transactionDetail.setContractAmount(amount.doubleValue());
+          transactionDetail.setContractAmountDecimal(amount, contractDecimals);
         } else if (StringUtils.equals(methodName, FUNC_APPROVEACCOUNT)) {
           if (logsSize > 1) {
             // Implicit acccount approval
@@ -299,7 +307,8 @@ public class EthereumTransactionDecoder {
             continue;
           }
           transactionDetail.setFrom(parameters.getNonIndexedValues().get(0).getValue().toString());
-          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
+          BigInteger weiAmount = (BigInteger) parameters.getNonIndexedValues().get(1).getValue();
+          transactionDetail.setValueDecimal(weiAmount, 18);
           transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_SETSELLPRICE)) {
           transactionLogTreated = true;
@@ -316,7 +325,8 @@ public class EthereumTransactionDecoder {
             continue;
           }
           transactionDetail.setTo(parameters.getIndexedValues().get(0).getValue().toString());
-          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
+          transactionDetail.setContractAmountDecimal(amount, contractDecimals);
           transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_TRANSFEROWNERSHIP)) {
           transactionLogTreated = true;
@@ -334,8 +344,10 @@ public class EthereumTransactionDecoder {
           }
           transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
-          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
-          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
+          BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
+          transactionDetail.setContractAmountDecimal(amount, contractDecimals);
+          BigInteger weiAmount = (BigInteger) parameters.getNonIndexedValues().get(1).getValue();
+          transactionDetail.setValueDecimal(weiAmount, 18);
           transactionDetail.setAdminOperation(true);
         } else if (StringUtils.equals(methodName, FUNC_REWARD)) {
           transactionLogTreated = true;
@@ -346,9 +358,11 @@ public class EthereumTransactionDecoder {
           transactionDetail.setFrom(parameters.getIndexedValues().get(0).getValue().toString());
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
           // Transfered tokens amount
-          transactionDetail.setValue(((BigInteger) parameters.getNonIndexedValues().get(0).getValue()).longValue());
+          BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
+          transactionDetail.setValueDecimal(amount, contractDecimals);
           // Reward amount
-          transactionDetail.setContractAmount(((BigInteger) parameters.getNonIndexedValues().get(1).getValue()).longValue());
+          amount = (BigInteger) parameters.getNonIndexedValues().get(1).getValue();
+          transactionDetail.setContractAmountDecimal(amount, contractDecimals);
           transactionDetail.setAdminOperation(true);
         } else if (!transactionLogTreated && (i + 1) == logsSize) {
           LOG.warn("Can't find contract method name of transaction {}", transactionDetail);

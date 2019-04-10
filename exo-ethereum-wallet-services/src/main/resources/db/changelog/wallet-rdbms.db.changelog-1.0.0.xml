@@ -141,4 +141,10 @@
     </addColumn>
   </changeSet>
 
+  <changeSet author="wallet" id="1.3.0-13">
+    <addColumn tableName="ADDONS_WALLET_TRANSACTION">
+      <column name="ISSUER_ID" type="BIGINT" defaultValueNumeric="0" />
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

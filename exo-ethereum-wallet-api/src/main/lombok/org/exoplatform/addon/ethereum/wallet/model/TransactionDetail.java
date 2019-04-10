@@ -1,6 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 
 import lombok.Data;
 import lombok.ToString;
@@ -12,6 +13,8 @@ public class TransactionDetail implements Serializable, Cloneable {
   private static final long serialVersionUID = 658273092293607458L;
 
   private long              id;
+
+  private long              issuerIdentityId;
 
   private long              networkId;
 
@@ -55,6 +58,38 @@ public class TransactionDetail implements Serializable, Cloneable {
       return (TransactionDetail) super.clone();
     } catch (CloneNotSupportedException e) {
       throw new IllegalStateException("Error while cloning object", e);
+    }
+  }
+
+  public BigInteger getContractAmountDecimal(int decimals) {
+    if (contractAmount == 0) {
+      return BigInteger.ZERO;
+    }
+    BigInteger amountBI = new BigInteger(String.valueOf(contractAmount));
+    return amountBI.multiply(BigInteger.valueOf(10).pow(decimals));
+  }
+
+  public BigInteger getValueDecimal(int decimals) {
+    if (value == 0) {
+      return BigInteger.ZERO;
+    }
+    BigInteger amountBI = new BigInteger(String.valueOf(value));
+    return amountBI.multiply(BigInteger.valueOf(10).pow(decimals));
+  }
+
+  public void setContractAmountDecimal(BigInteger amount, int decimals) {
+    if (amount == null) {
+      this.contractAmount = 0;
+      return;
+    }
+    this.contractAmount = amount.divide(BigInteger.valueOf(10).pow(decimals)).doubleValue();
+  }
+
+  public void setValueDecimal(BigInteger amount, int decimals) {
+    if (amount == null) {
+      this.value = 0;
+    } else {
+      this.value = amount.divide(BigInteger.valueOf(10).pow(decimals)).doubleValue();
     }
   }
 }
