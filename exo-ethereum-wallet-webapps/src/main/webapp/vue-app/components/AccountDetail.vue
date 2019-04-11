@@ -110,8 +110,8 @@ import SendDelegatedTokensModal from './SendDelegatedTokensModal.vue';
 import SendEtherModal from './SendEtherModal.vue';
 import ProfileChip from './ProfileChip.vue';
 
-import {retrieveContractDetails} from '../WalletToken.js';
-import {etherToFiat} from '../WalletUtils.js';
+import {retrieveContractDetails} from '../js/TokenUtils.js';
+import {etherToFiat} from '../js/WalletUtils.js';
 
 export default {
   components: {

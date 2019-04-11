@@ -77,7 +77,7 @@
 <script>
 import SendFundsForm from './SendFundsForm.vue';
 
-import {setDraggable, checkFundRequestStatus} from '../WalletUtils.js';
+import {setDraggable, checkFundRequestStatus} from '../js/WalletUtils.js';
 
 export default {
   components: {

@@ -111,7 +111,7 @@
 <script>
 import AddressAutoComplete from './AddressAutoComplete.vue';
 
-import {setDraggable} from '../WalletUtils.js';
+import {setDraggable} from '../js/WalletUtils.js';
 
 export default {
   components: {

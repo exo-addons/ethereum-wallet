@@ -82,7 +82,7 @@ import WalletResetModal from './WalletResetModal.vue';
 import InformationBubble from './InformationBubble.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 
-import {enableMetamask, disableMetamask, removeServerSideBackup, sendPrivateKeyToServer} from '../WalletUtils.js';
+import {enableMetamask, disableMetamask, removeServerSideBackup, sendPrivateKeyToServer} from '../js/WalletUtils.js';
 
 export default {
   components: {

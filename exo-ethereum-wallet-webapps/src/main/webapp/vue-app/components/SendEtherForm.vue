@@ -110,8 +110,8 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowserWallet, lockBrowserWallet, hashCode, truncateError} from '../WalletUtils.js';
-import {saveTransactionDetails} from '../WalletTransactions.js';
+import {unlockBrowserWallet, lockBrowserWallet, hashCode, truncateError} from '../js/WalletUtils.js';
+import {saveTransactionDetails} from '../js/TransactionUtils.js';
 
 export default {
   components: {

@@ -1,5 +1,5 @@
 import WalletAPIApp from './components/api/WalletAPIApp.vue';
-import {toFixed} from './WalletUtils.js';
+import {toFixed} from './js/WalletUtils.js';
 import './../css/main.less';
 
 Vue.prototype.toFixed = toFixed;

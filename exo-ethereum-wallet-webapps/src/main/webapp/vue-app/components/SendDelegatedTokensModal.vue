@@ -142,8 +142,8 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {setDraggable, unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend} from '../WalletUtils.js';
-import {saveTransactionDetails} from '../WalletTransactions.js';
+import {setDraggable, unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend} from '../js/WalletUtils.js';
+import {saveTransactionDetails} from '../js/TransactionUtils.js';
 
 export default {
   components: {

@@ -92,6 +92,20 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>exo-ethereum-wallet-webapps-admin</artifactId>
+      <type>war</type>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>exo-ethereum-wallet-webapps-reward</artifactId>
+      <type>war</type>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>exo-ethereum-wallet-contracts</artifactId>
       <scope>provided</scope>
     </dependency>

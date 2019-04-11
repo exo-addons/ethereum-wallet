@@ -6,7 +6,7 @@ import fs from 'fs';
 import abiDecoder from 'abi-decoder';
 import EthereumQRPlugin from 'ethereum-qr-code';
 
-import {toFixed} from '../main/webapp/vue-app/WalletUtils.js';
+import {toFixed} from '../main/webapp/vue-app/js/WalletUtils.js';
 
 import {getDefaultSettings, setWalletDetails, getWalletDetailsBTypeId, getWalletDetailsBTypeAddress, getParameter, saveTransaction, getTransactions} from './TestUtils.js';
 

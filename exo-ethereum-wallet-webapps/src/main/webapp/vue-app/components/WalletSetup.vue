@@ -114,7 +114,7 @@ import WalletMetamaskSetup from './WalletMetamaskSetup.vue';
 import WalletBackupModal from './WalletBackupModal.vue';
 import WalletResetModal from './WalletResetModal.vue';
 
-import {watchMetamaskAccount, setWalletBackedUp} from '../WalletUtils.js';
+import {watchMetamaskAccount, setWalletBackedUp} from '../js/WalletUtils.js';
 
 export default {
   components: {

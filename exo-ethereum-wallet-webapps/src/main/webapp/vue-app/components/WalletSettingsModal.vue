@@ -194,8 +194,8 @@ import WalletSettingsSecurityTab from './WalletSettingsSecurityTab.vue';
 import WalletBackupModal from './WalletBackupModal.vue';
 import WalletImportKeyModal from './WalletImportKeyModal.vue';
 
-import {setDraggable, gasToFiat, enableMetamask, disableMetamask, removeServerSideBackup} from '../WalletUtils.js';
-import {FIAT_CURRENCIES} from '../WalletConstants.js';
+import {setDraggable, gasToFiat, enableMetamask, disableMetamask, removeServerSideBackup} from '../js/WalletUtils.js';
+import {FIAT_CURRENCIES} from '../js/Constants.js';
 
 export default {
   components: {

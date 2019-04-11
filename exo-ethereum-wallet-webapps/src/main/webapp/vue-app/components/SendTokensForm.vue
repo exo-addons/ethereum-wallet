@@ -119,9 +119,9 @@ import AddressAutoComplete from './AddressAutoComplete.vue';
 import QrCodeModal from './QRCodeModal.vue';
 import GasPriceChoice from './GasPriceChoice.vue';
 
-import {unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat, saveWalletInitializationStatus} from '../WalletUtils.js';
-import {saveTransactionDetails} from '../WalletTransactions.js';
-import {retrieveContractDetails, sendContractTransaction} from '../WalletToken.js';
+import {unlockBrowserWallet, lockBrowserWallet, truncateError, hashCode, convertTokenAmountToSend, etherToFiat, saveWalletInitializationStatus} from '../js/WalletUtils.js';
+import {saveTransactionDetails} from '../js/TransactionUtils.js';
+import {retrieveContractDetails, sendContractTransaction} from '../js/TokenUtils.js';
 
 export default {
   components: {

@@ -80,6 +80,7 @@
           <!-- Split tested files to avoid an OOM error -->
           <execution>
             <id>npm run test part1</id>
+            <phase>test</phase>
             <goals>
               <goal>npm</goal>
             </goals>
@@ -89,6 +90,7 @@
           </execution>
           <execution>
             <id>npm run test part2</id>
+            <phase>test</phase>
             <goals>
               <goal>npm</goal>
             </goals>
@@ -98,6 +100,7 @@
           </execution>
           <execution>
             <id>npm run test part3</id>
+            <phase>test</phase>
             <goals>
               <goal>npm</goal>
             </goals>

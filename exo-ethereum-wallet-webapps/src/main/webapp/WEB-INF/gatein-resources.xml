@@ -31,19 +31,6 @@
     <css-path>/css/wallet.css</css-path>
   </portlet-skin>
 
-  <portlet-skin>
-    <application-name>exo-ethereum-wallet</application-name>
-    <portlet-name>EthereumWalletAdmin</portlet-name>
-    <skin-name>Enterprise</skin-name>
-    <css-path>/css/wallet.css</css-path>
-  </portlet-skin>
-
-  <portlet-skin>
-    <application-name>exo-ethereum-wallet</application-name>
-    <portlet-name>EthereumWalletAdmin</portlet-name>
-    <skin-name>Default</skin-name>
-    <css-path>/css/wallet.css</css-path>
-  </portlet-skin>
 -->
 
   <portal-skin>
@@ -212,98 +199,6 @@
   </portlet>
 
   <portlet>
-    <name>EthereumWalletAdmin</name>
-    <module>
-      <script>
-        <minify>false</minify>
-        <path>/js/walletAdmin.bundle.js</path>
-      </script>
-      <depends>
-        <module>jquery</module>
-        <as>$</as>
-      </depends>
-      <depends>
-        <module>walletJQueryUI</module>
-      </depends>
-      <depends>
-        <module>fetchPolyfill</module>
-      </depends>
-      <depends>
-        <module>customEventPolyfill</module>
-      </depends>
-      <depends>
-        <module>iePolyfills</module>
-      </depends>
-      <depends>
-        <module>vuetify</module>
-      </depends>
-      <depends>
-        <module>Web3</module>
-        <as>LocalWeb3</as>
-      </depends>
-      <depends>
-        <module>ethQRCode</module>
-        <as>EthereumQRPlugin</as>
-      </depends>
-      <depends>
-        <module>abiDecoder</module>
-      </depends>
-      <depends>
-        <module>userPopupPlugin</module>
-      </depends>
-      <depends>
-        <module>spacePopupPlugin</module>
-      </depends>
-    </module>
-  </portlet>
-
-  <portlet>
-    <name>RewardAdmin</name>
-    <module>
-      <script>
-        <minify>false</minify>
-        <path>/js/rewardApp.bundle.js</path>
-      </script>
-      <depends>
-        <module>jquery</module>
-        <as>$</as>
-      </depends>
-      <depends>
-        <module>walletJQueryUI</module>
-      </depends>
-      <depends>
-        <module>fetchPolyfill</module>
-      </depends>
-      <depends>
-        <module>customEventPolyfill</module>
-      </depends>
-      <depends>
-        <module>iePolyfills</module>
-      </depends>
-      <depends>
-        <module>vuetify</module>
-      </depends>
-      <depends>
-        <module>Web3</module>
-        <as>LocalWeb3</as>
-      </depends>
-      <depends>
-        <module>ethQRCode</module>
-        <as>EthereumQRPlugin</as>
-      </depends>
-      <depends>
-        <module>abiDecoder</module>
-      </depends>
-      <depends>
-        <module>userPopupPlugin</module>
-      </depends>
-      <depends>
-        <module>spacePopupPlugin</module>
-      </depends>
-    </module>
-  </portlet>
-
-  <portlet>
     <name>TodoList</name>
     <module>
       <script>
@@ -346,6 +241,58 @@
     </script>
     <depends>
       <module>vue</module>
+    </depends>
+  </module>
+
+  <module>
+    <name>walletCommon</name>
+    <script>
+      <minify>false</minify>
+      <adapter>
+        (function() {
+          <include>/js/walletCommon.bundle.js</include>
+          return WalletCommon;
+        })();
+      </adapter>
+    </script>
+    <depends>
+      <module>vue</module>
+    </depends>
+    <depends>
+      <module>jquery</module>
+      <as>$</as>
+    </depends>
+    <depends>
+      <module>walletJQueryUI</module>
+    </depends>
+    <depends>
+      <module>fetchPolyfill</module>
+    </depends>
+    <depends>
+      <module>customEventPolyfill</module>
+    </depends>
+    <depends>
+      <module>iePolyfills</module>
+    </depends>
+    <depends>
+      <module>vuetify</module>
+    </depends>
+    <depends>
+      <module>Web3</module>
+      <as>LocalWeb3</as>
+    </depends>
+    <depends>
+      <module>ethQRCode</module>
+      <as>EthereumQRPlugin</as>
+    </depends>
+    <depends>
+      <module>abiDecoder</module>
+    </depends>
+    <depends>
+      <module>userPopupPlugin</module>
+    </depends>
+    <depends>
+      <module>spacePopupPlugin</module>
     </depends>
   </module>
 

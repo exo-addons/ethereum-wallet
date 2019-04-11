@@ -192,9 +192,9 @@ import WalletAccountsList from './WalletAccountsList.vue';
 import AccountDetail from './AccountDetail.vue';
 import WalletSettingsModal from './WalletSettingsModal.vue';
 
-import * as constants from '../WalletConstants.js';
-import {getContractsDetails, retrieveContractDetails} from '../WalletToken.js';
-import {initWeb3, initSettings, computeBalance, etherToFiat, gasToEther} from '../WalletUtils.js';
+import * as constants from '../js/Constants.js';
+import {getContractsDetails, retrieveContractDetails} from '../js/TokenUtils.js';
+import {initWeb3, initSettings, computeBalance, etherToFiat, gasToEther} from '../js/WalletUtils.js';
 
 export default {
   components: {

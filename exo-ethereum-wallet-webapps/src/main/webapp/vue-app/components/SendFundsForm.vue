@@ -43,7 +43,7 @@
 import SendEtherForm from './SendEtherForm.vue';
 import SendTokensForm from './SendTokensForm.vue';
 
-import {markFundRequestAsSent} from '../WalletUtils.js';
+import {markFundRequestAsSent} from '../js/WalletUtils.js';
 
 export default {
   components: {

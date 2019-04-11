@@ -145,10 +145,10 @@
 
 <script>
 import WalletAddress from './WalletAddress.vue';
-import * as constants from '../WalletConstants.js';
+import * as constants from '../js/Constants.js';
 
-import {setDraggable, disableMetamask} from '../WalletUtils.js';
-import {searchWalletByAddress, saveNewAddress} from '../WalletAddressRegistry.js';
+import {setDraggable, disableMetamask} from '../js/WalletUtils.js';
+import {searchWalletByAddress, saveNewAddress} from '../js/AddressRegistry.js';
 
 export default {
   components: {

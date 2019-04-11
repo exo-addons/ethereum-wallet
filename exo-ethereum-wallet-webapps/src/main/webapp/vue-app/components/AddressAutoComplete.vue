@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import {searchWallets, searchWalletByAddress, searchWalletByTypeAndId} from '../WalletAddressRegistry.js';
+import {searchWallets, searchWalletByAddress, searchWalletByTypeAndId} from '../js/AddressRegistry.js';
 
 export default {
   props: {

@@ -1,5 +1,5 @@
 import WalletApp from './components/WalletApp.vue';
-import {toFixed} from './WalletUtils.js';
+import {toFixed} from './js/WalletUtils.js';
 import './../css/main.less';
 
 Vue.prototype.isMaximized = window.walletAppMaximize === 'true';

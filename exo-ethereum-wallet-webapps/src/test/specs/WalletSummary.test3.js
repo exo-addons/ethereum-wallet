@@ -3,7 +3,7 @@ import {getWalletApp, initApp, expectCountElement, expectObjectValueEqual, initi
 import WalletSummary from '../../main/webapp/vue-app/components/WalletSummary';
 
 import {mount} from '@vue/test-utils';
-import {hashCode} from '../../main/webapp/vue-app/WalletUtils.js';
+import {hashCode} from '../../main/webapp/vue-app/js/WalletUtils.js';
 
 import flushPromises from 'flush-promises';
 

@@ -12,8 +12,8 @@ import WalletMetamaskSetup from '../main/webapp/vue-app/components/WalletMetamas
 import WalletBackupModal from '../main/webapp/vue-app/components/WalletBackupModal';
 import WalletResetModal from '../main/webapp/vue-app/components/WalletResetModal';
 
-import {deployContract, createNewContractInstanceByName, createNewContractInstanceByNameAndAddress, saveContractAddressAsDefault} from '../main/webapp/vue-app/WalletToken.js';
-import {saveBrowserWalletInstance} from '../main/webapp/vue-app/WalletUtils.js';
+import {deployContract, createNewContractInstanceByName, createNewContractInstanceByNameAndAddress, saveContractAddressAsDefault} from '../main/webapp/vue-app/js/TokenUtils.js';
+import {saveBrowserWalletInstance} from '../main/webapp/vue-app/js/WalletUtils.js';
 
 const {mount} = require('@vue/test-utils');
 

@@ -6,7 +6,7 @@
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <dependencySets>
-    <!-- War -->
+    <!-- WARs -->
     <dependencySet>
       <useProjectArtifact>false</useProjectArtifact>
       <outputDirectory>/webapps</outputDirectory>
@@ -15,6 +15,24 @@
       </includes>
       <scope>provided</scope>
       <outputFileNameMapping>exo-ethereum-wallet.war</outputFileNameMapping>
+    </dependencySet>
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <outputDirectory>/webapps</outputDirectory>
+      <includes>
+        <include>${project.groupId}:exo-ethereum-wallet-webapps-admin:war</include>
+      </includes>
+      <scope>provided</scope>
+      <outputFileNameMapping>exo-ethereum-wallet-admin.war</outputFileNameMapping>
+    </dependencySet>
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
+      <outputDirectory>/webapps</outputDirectory>
+      <includes>
+        <include>${project.groupId}:exo-ethereum-wallet-webapps-reward:war</include>
+      </includes>
+      <scope>provided</scope>
+      <outputFileNameMapping>exo-ethereum-wallet-reward.war</outputFileNameMapping>
     </dependencySet>
     <!-- Libraries -->
     <dependencySet>

@@ -132,9 +132,9 @@
 </template>
 
 <script>
-import {unlockBrowserWallet, saveBrowserWallet, hashCode, rememberPassword} from '../WalletUtils.js';
+import {unlockBrowserWallet, saveBrowserWallet, hashCode, rememberPassword} from '../js/WalletUtils.js';
 
-import {setDraggable, sendPrivateKeyToServer} from '../WalletUtils.js';
+import {setDraggable, sendPrivateKeyToServer} from '../js/WalletUtils.js';
 
 export default {
   props: {

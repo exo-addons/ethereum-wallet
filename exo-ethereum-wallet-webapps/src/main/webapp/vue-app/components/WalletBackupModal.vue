@@ -112,7 +112,7 @@
 
 <script>
 
-import {setDraggable, unlockBrowserWallet, lockBrowserWallet, getCurrentBrowserWallet, hashCode} from '../WalletUtils.js';
+import {setDraggable, unlockBrowserWallet, lockBrowserWallet, getCurrentBrowserWallet, hashCode} from '../js/WalletUtils.js';
 
 export default {
   props: {

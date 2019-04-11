@@ -739,8 +739,8 @@
 import WalletAddress from './WalletAddress.vue';
 import ProfileChip from './ProfileChip.vue';
 
-import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../WalletUtils.js';
-import {loadTransactions} from '../WalletTransactions.js';
+import {getTransactionEtherscanlink, getAddressEtherscanlink, getTokenEtherscanlink} from '../js/WalletUtils.js';
+import {loadTransactions} from '../js/TransactionUtils.js';
 
 export default {
   components: {

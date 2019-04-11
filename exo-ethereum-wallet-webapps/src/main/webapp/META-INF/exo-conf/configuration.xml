@@ -22,6 +22,12 @@
                 <value>
                   <string>exo-ethereum-wallet</string>
                 </value>
+                <value>
+                  <string>exo-ethereum-wallet-admin</string>
+                </value>
+                <value>
+                  <string>exo-ethereum-wallet-reward</string>
+                </value>
               </collection>
             </field>
           </object>

@@ -139,8 +139,8 @@ import WalletReceiveModal from './WalletReceiveModal.vue';
 import WalletRequestFundsModal from './WalletRequestFundsModal.vue';
 import SendFundsModal from './SendFundsModal.vue';
 
-import {loadTransactions} from '../WalletTransactions.js';
-import {refreshWallet} from '../WalletAddressRegistry.js';
+import {loadTransactions} from '../js/TransactionUtils.js';
+import {refreshWallet} from '../js/AddressRegistry.js';
 
 export default {
   components: {

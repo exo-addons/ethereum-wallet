@@ -24,17 +24,47 @@
         xsi:schemaLocation="http://www.gatein.org/xml/ns/gatein_objects_1_6 http://www.gatein.org/xml/ns/gatein_objects_1_6"
         xmlns="http://www.gatein.org/xml/ns/gatein_objects_1_6">
     <page>
-        <name>walletAdministration</name>
-        <title>Wallet administration</title>
-        <access-permissions>*:/platform/rewarding</access-permissions>
-        <edit-permission>manager:/platform/rewarding</edit-permission>
+        <name>walletSettings</name>
+        <title>Wallet settings</title>
+        <access-permissions>*:/platform/administrators</access-permissions>
+        <edit-permission>manager:/platform/administrators</edit-permission>
         <portlet-application>
             <portlet>
-                <application-ref>exo-ethereum-wallet</application-ref>
-                <portlet-ref>EthereumWalletAdmin</portlet-ref>
+                <application-ref>exo-ethereum-wallet-admin</application-ref>
+                <portlet-ref>EthereumWalletAdminSettings</portlet-ref>
             </portlet>
-            <title>Wallet administration</title>
+            <title>Wallet settings</title>
+            <access-permissions>manager:/platform/administrators</access-permissions>
+            <show-info-bar>false</show-info-bar>
+        </portlet-application>
+    </page>
+    <page>
+        <name>walletContracts</name>
+        <title>Wallet settings</title>
+        <access-permissions>*:/platform/rewarding</access-permissions>
+        <edit-permission>manager:/platform/administrators</edit-permission>
+        <portlet-application>
+            <portlet>
+                <application-ref>exo-ethereum-wallet-admin</application-ref>
+                <portlet-ref>EthereumWalletAdminContracts</portlet-ref>
+            </portlet>
+            <title>Wallet settings</title>
             <access-permissions>manager:/platform/rewarding</access-permissions>
+            <show-info-bar>false</show-info-bar>
+        </portlet-application>
+    </page>
+    <page>
+        <name>walletAccounts</name>
+        <title>Wallet accounts administration</title>
+        <access-permissions>*:/platform/administrators</access-permissions>
+        <edit-permission>manager:/platform/administrators</edit-permission>
+        <portlet-application>
+            <portlet>
+                <application-ref>exo-ethereum-wallet-admin</application-ref>
+                <portlet-ref>EthereumWalletAdminWallets</portlet-ref>
+            </portlet>
+            <title>Wallet accounts administration</title>
+            <access-permissions>manager:/platform/administrators</access-permissions>
             <show-info-bar>false</show-info-bar>
         </portlet-application>
     </page>
@@ -42,10 +72,10 @@
         <name>rewardAdministration</name>
         <title>Reward administration</title>
         <access-permissions>*:/platform/rewarding</access-permissions>
-        <edit-permission>manager:/platform/rewarding</edit-permission>
+        <edit-permission>manager:/platform/administrators</edit-permission>
         <portlet-application>
             <portlet>
-                <application-ref>exo-ethereum-wallet</application-ref>
+                <application-ref>exo-ethereum-wallet-reward</application-ref>
                 <portlet-ref>RewardAdmin</portlet-ref>
             </portlet>
             <title>Reward administration</title>

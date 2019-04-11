@@ -64,8 +64,8 @@
 </template>
 
 <script>
-import {saveAddressLabel} from '../WalletAddressRegistry.js';
-import {getAddressEtherscanlink} from '../WalletUtils.js';
+import {saveAddressLabel} from '../js/AddressRegistry.js';
+import {getAddressEtherscanlink} from '../js/WalletUtils.js';
 
 export default {
   props: {

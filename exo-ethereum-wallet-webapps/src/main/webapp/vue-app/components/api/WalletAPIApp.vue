@@ -3,11 +3,11 @@
 </template>
 
 <script>
-import * as constants from '../../WalletConstants.js';
-import {saveTransactionDetails} from '../../WalletTransactions.js';
-import {retrieveContractDetails, sendContractTransaction} from '../../WalletToken.js';
-import {initWeb3, initSettings, watchMetamaskAccount, convertTokenAmountToSend, truncateError, lockBrowserWallet, unlockBrowserWallet, hashCode} from '../../WalletUtils.js';
-import {searchAddress} from '../../WalletAddressRegistry.js';
+import * as constants from '../../js/Constants.js';
+import {saveTransactionDetails} from '../../js/TransactionUtils.js';
+import {retrieveContractDetails, sendContractTransaction} from '../../js/TokenUtils.js';
+import {initWeb3, initSettings, watchMetamaskAccount, convertTokenAmountToSend, truncateError, lockBrowserWallet, unlockBrowserWallet, hashCode} from '../../js/WalletUtils.js';
+import {searchAddress} from '../../js/AddressRegistry.js';
 
 export default {
   data() {

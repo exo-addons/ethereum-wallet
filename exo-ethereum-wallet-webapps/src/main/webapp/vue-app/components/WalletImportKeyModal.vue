@@ -100,7 +100,7 @@
 </template>
 
 <script>
-import {setDraggable, saveBrowserWalletInstance} from '../WalletUtils.js';
+import {setDraggable, saveBrowserWalletInstance} from '../js/WalletUtils.js';
 
 export default {
   props: {
