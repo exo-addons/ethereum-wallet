@@ -289,7 +289,7 @@ export default {
   }),
   computed: {
     viewOnly() {
-      return !this.team || !this.team.id;
+      return this.team && this.team.noTeam;
     }
   },
   watch: {

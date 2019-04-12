@@ -8,7 +8,8 @@
   <property name="autoIncrement" value="true" dbms="mysql,mssql,h2,sybase,db2,hsqldb"/>
   <property name="autoIncrement" value="false" dbms="oracle,postgresql"/>
 
-  <changeSet author="reward" id="1.0.0-1">
+  <changeSet author="reward" id="1.0.0-1" runOnChange="false">
+    <validCheckSum>7:b6e791d36a486b4501fde54aed6a4a8d</validCheckSum>
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="ADDONS_WALLET_GAM_TEAM"/>
@@ -27,13 +28,15 @@
       <column name="TEAM_MEMBER_REWARD" type="DOUBLE"/>
       <column name="TEAM_SPACE_ID" type="BIGINT"/>
       <column name="TEAM_MANAGER_ID" type="BIGINT"/>
+      <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false"/>
     </createTable>
     <modifySql dbms="mysql">
       <append value=" ENGINE=INNODB CHARSET=UTF8 COLLATE utf8_general_ci"/>
     </modifySql>
   </changeSet>
 
-  <changeSet author="reward" id="1.0.0-2">
+  <changeSet author="reward" id="1.0.0-2" runOnChange="false" onValidationFail="MARK_RAN" failOnError="false">
+    <validCheckSum>7:4c22877ac3021d85be104b086fff5ece</validCheckSum>
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="ADDONS_WALLET_GAM_TEAM_MEMBER"/>
@@ -49,7 +52,6 @@
       <column name="TEAM_ID" type="BIGINT">
         <constraints foreignKeyName="FK_WALLET_GAM_01" references="ADDONS_WALLET_GAM_TEAM(TEAM_ID)" nullable="false"/>
       </column>
-      <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false"/>
     </createTable>
     <modifySql dbms="mysql">
       <append value=" ENGINE=INNODB CHARSET=UTF8 COLLATE utf8_general_ci"/>
@@ -65,6 +67,17 @@
 
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_ID" startValue="1"/>
     <createSequence sequenceName="SEQ_WALLET_GAM_TEAM_MEMBER_ID" startValue="1"/>
+  </changeSet>
+
+  <changeSet author="reward" id="1.0.0-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="ADDONS_WALLET_GAM_TEAM" columnName="TEAM_DISABLED"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="ADDONS_WALLET_GAM_TEAM">
+      <column name="TEAM_DISABLED" type="BOOLEAN" defaultValueBoolean="false"/>
+    </addColumn>
   </changeSet>
 
 </databaseChangeLog>

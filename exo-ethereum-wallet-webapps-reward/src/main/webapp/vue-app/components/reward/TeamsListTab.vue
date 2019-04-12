@@ -334,6 +334,9 @@ export default {
         });
     },
     removeTeam(id) {
+      if (id < 1) {
+        console.error("Can't delete team with id", id);
+      }
       removeRewardTeam(id)
         .then((status) => {
           if (status) {

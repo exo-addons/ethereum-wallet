@@ -356,6 +356,7 @@ export default {
                 description: 'Users with no associated pool',
                 rewardType: 'COMPUTED',
                 computedBudget: 0,
+                noTeam: true,
               };
               teams.push(noTeamMembers);
             }
