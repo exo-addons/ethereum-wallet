@@ -41,7 +41,7 @@
       </v-flex>
     </v-container>
     <v-data-table
-      :headers="walletHeaders"
+      :headers="walletTableHeaders"
       :items="filteredWallets"
       :loading="loadingWallets"
       hide-actions>
@@ -50,10 +50,14 @@
           <tr v-show="props.item.displayedWallet">
             <td class="clickable" @click="openAccountDetail(props.item)">
               <v-avatar size="36px">
-                <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                <img
+                  v-if="props.item.avatar"
+                  :src="props.item.avatar"
+                  onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+                <v-icon v-else size="36">fa-cog</v-icon>
               </v-avatar>
             </td>
-            <td class="clickable" @click="openAccountDetail(props.item)">
+            <td class="clickable text-xs-left" @click="openAccountDetail(props.item)">
               <profile-chip
                 :address="props.item.address"
                 :profile-id="props.item.id"
@@ -68,7 +72,10 @@
                 :avatar="props.item.avatar"
                 display-no-address />
             </td>
-            <td class="clickable" @click="openAccountDetail(props.item)">
+            <td
+              v-if="principalContract && principalContract.contractType && principalContract.contractType > 1"
+              class="clickable"
+              @click="openAccountDetail(props.item)">
               {{ props.item.initializationState.toLowerCase() }}
             </td>
             <td class="clickable" @click="openAccountDetail(props.item)">
@@ -82,7 +89,10 @@
                 {{ props.item.address }}
               </span>
             </td>
-            <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
+            <td
+              v-if="principalContract"
+              class="clickable text-xs-center"
+              @click="openAccountDetail(props.item)">
               <v-progress-circular
                 v-if="props.item.loadingBalancePrincipal"
                 :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
@@ -97,22 +107,12 @@
               </span>
               <template v-else-if="props.item.balancePrincipal">
                 {{ toFixed(props.item.balancePrincipal) }} {{ principalContract && principalContract.symbol ? principalContract.symbol : '' }}
-                <v-btn
-                  class="bottomNavigationItem transparent"
-                  title="Send funds"
-                  flat
-                  icon
-                  @click="openSendFundsModal($event, props.item, true)">
-                  <v-icon>
-                    send
-                  </v-icon>
-                </v-btn>
               </template>
               <template v-else>
                 -
               </template>
             </td>
-            <td class="clickable text-xs-right" @click="openAccountDetail(props.item)">
+            <td class="clickable text-xs-center" @click="openAccountDetail(props.item)">
               <v-progress-circular
                 v-if="props.item.loadingBalance"
                 :title="loadingWallets ? 'Loading balance' : 'A transaction is in progress'"
@@ -127,19 +127,9 @@
               </span>
               <template v-else>
                 {{ toFixed(props.item.balance) }} eth
-                <v-btn
-                  class="bottomNavigationItem transparent"
-                  title="Send funds"
-                  flat
-                  icon
-                  @click="openSendFundsModal($event, props.item)">
-                  <v-icon>
-                    send
-                  </v-icon>
-                </v-btn>
               </template>
             </td>
-            <td>
+            <td v-if="isAdmin">
               <v-menu offset-y>
                 <v-btn
                   slot="activator"
@@ -214,56 +204,11 @@
         is-administration
         @back="back()" />
     </v-navigation-drawer>
-
-    <send-funds-modal
-      ref="sendFundsModal"
-      :accounts-details="accountsDetails"
-      :principal-account="principalAccountAddress"
-      :refresh-index="refreshIndex"
-      :network-id="networkId"
-      :wallet-address="walletAddress"
-      :default-message="initialFundsMessage"
-      no-button
-      display-all-accounts
-      @success="refreshBalance"
-      @pending="$emit('pending', $event)"
-      @error="refreshBalance(null, null, $event)" />
-
-    <!-- approve/disapprove account -->
-    <template v-if="canApprouveAccounts">
-      <contract-admin-modal
-        ref="approveAccountModal"
-        :contract-details="principalContract"
-        :wallet-address="walletAddress"
-        method-name="approveAccount"
-        title="Approve account"
-        autocomplete-label="Account"
-        autocomplete-placeholder="Choose a user or space to approve"
-        no-button
-        @sent="$emit('pending', $event)"
-        @success="approvedAccount" />
-      <contract-admin-modal
-        ref="disapproveAccountModal"
-        :contract-details="principalContract"
-        :wallet-address="walletAddress"
-        method-name="disapproveAccount"
-        title="Disapprove account"
-        autocomplete-label="Account"
-        autocomplete-placeholder="Choose a user or space to disapprove"
-        no-button
-        @sent="$emit('pending', $event)"
-        @success="disapprovedAccount" />
-    </template>
   </v-flex>
 </template>
 
 <script>
-import ContractAdminModal from '../common/WalletAdminOperationModal.vue';
-
 export default {
-  components: {
-    ContractAdminModal,
-  },
   props: {
     networkId: {
       type: String,
@@ -325,6 +270,12 @@ export default {
         return null;
       },
     },
+    isAdmin: {
+      type: Boolean,
+      default: function() {
+        return false;
+      },
+    },
   },
   data() {
     return {
@@ -359,7 +310,7 @@ export default {
       walletHeaders: [
         {
           text: '',
-          align: 'left',
+          align: 'center',
           sortable: false,
           value: 'avatar',
         },
@@ -401,6 +352,19 @@ export default {
     };
   },
   computed: {
+    walletTableHeaders() {
+      const walletTableHeaders = this.walletHeaders.slice();
+      if (!this.isAdmin) {
+        walletTableHeaders.splice(walletTableHeaders.length - 1, 1);
+      }
+      if (!this.principalContract) {
+        walletTableHeaders.splice(4, 1);
+      }
+      if (!this.principalContract || this.principalContract.contractType < 2) {
+        walletTableHeaders.splice(2, 1);
+      }
+      return walletTableHeaders;
+    },
     canApprouveAccounts() {
       return this.principalContract && this.principalContract.adminLevel >= 1;
     },

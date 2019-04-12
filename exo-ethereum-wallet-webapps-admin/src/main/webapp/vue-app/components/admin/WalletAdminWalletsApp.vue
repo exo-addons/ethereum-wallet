@@ -41,6 +41,7 @@
               Wallets
             </v-tab>
             <v-tab
+              v-if="isAdmin"
               key="adminAccount"
               href="#adminAccount">
               Admin account
@@ -62,11 +63,13 @@
                 :principal-account-address="principalAccountAddress"
                 :principal-contract="principalContract"
                 :accounts-details="accountsDetails"
+                :is-admin="isAdmin"
                 @pending="pendingTransaction"
                 @wallets-loaded="wallets = $event"
                 @refresh-balance="refreshCurrentWalletBalances" />
             </v-tab-item>
             <v-tab-item
+              v-if="isAdmin"
               id="adminAccount"
               value="adminAccount">
               <admin-account-tab
@@ -110,6 +113,7 @@ export default {
       principalAccountAddress: null,
       accountsDetails: null,
       networkId: null,
+      isAdmin: null,
       addressEtherscanLink: null,
       contracts: [],
       wallets: [],
@@ -137,6 +141,7 @@ export default {
           this.fiatSymbol = window.walletSettings.fiatSymbol || '$';
           this.networkId = window.walletSettings.defaultNetworkId;
           this.walletAddress = window.walletSettings.userPreferences && window.walletSettings.userPreferences.walletAddress;
+          this.isAdmin = window.walletSettings.isAdmin;
           if (window.walletSettings.defaultPrincipalAccount && window.walletSettings.defaultPrincipalAccount.indexOf('0x') === 0) {
             this.principalAccountAddress = window.walletSettings.defaultPrincipalAccount;
           }
