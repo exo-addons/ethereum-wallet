@@ -33,7 +33,7 @@
             </v-card>
           </v-dialog>
 
-          <v-tabs v-model="selectedTab">
+          <v-tabs v-model="selectedTab" grow>
             <v-tabs-slider color="primary" />
             <v-tab
               key="wallets"
@@ -61,11 +61,9 @@
                 :address-etherscan-link="addressEtherscanLink"
                 :principal-account-address="principalAccountAddress"
                 :principal-contract="principalContract"
-                :initial-funds="initialFunds"
                 :accounts-details="accountsDetails"
                 @pending="pendingTransaction"
                 @wallets-loaded="wallets = $event"
-                @loading-wallets-changed="loadingWallets = $event"
                 @refresh-balance="refreshCurrentWalletBalances" />
             </v-tab-item>
             <v-tab-item
@@ -79,7 +77,6 @@
                 :address-etherscan-link="addressEtherscanLink"
                 :principal-account-address="principalAccountAddress"
                 :principal-contract="principalContract"
-                :initial-funds="initialFunds"
                 :accounts-details="accountsDetails" />
             </v-tab-item>
           </v-tabs-items>
@@ -112,13 +109,8 @@ export default {
       principalContract: null,
       principalAccountAddress: null,
       accountsDetails: null,
-      overviewAccounts: null,
-      loadingWallets: false,
       networkId: null,
-      tokenEtherscanLink: null,
       addressEtherscanLink: null,
-      selectedTransactionHash: null,
-      initialFunds: [],
       contracts: [],
       wallets: [],
       anchor: document.URL.indexOf('#') >= 0 ? document.URL.split('#')[1] : null,
@@ -126,7 +118,6 @@ export default {
   },
   created() {
     this.init()
-      .then(() => (this.tokenEtherscanLink = this.walletUtils.getTokenEtherscanlink(this.networkId)))
       .then(() => (this.addressEtherscanLink = this.walletUtils.getAddressEtherscanlink(this.networkId)));
   },
   methods: {
