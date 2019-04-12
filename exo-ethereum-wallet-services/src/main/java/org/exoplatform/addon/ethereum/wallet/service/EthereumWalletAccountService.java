@@ -26,6 +26,8 @@ import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 public class EthereumWalletAccountService implements WalletAccountService {
 
+  private static final String USER_MESSAGE_IN_EXCEPTION               = "User '";
+
   private static final String USER_MESSAGE_PREFIX                     = "User ";
 
   private static final String CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS = "Can't find wallet associated to address ";
@@ -196,17 +198,22 @@ public class EthereumWalletAccountService implements WalletAccountService {
       throw new IllegalStateException("Can't find " + type + " with remote id " + remoteId
           + ". Wallet private key will not be created.");
     }
-    checkIsWalletOwner(wallet, currentUser);
+    checkIsWalletOwner(wallet, currentUser, "save private key of wallet");
     accountStorage.saveWalletPrivateKey(wallet.getTechnicalId(), content);
   }
 
   @Override
   public String getPrivateKeyByTypeAndId(String type, String remoteId, String currentUser) throws IllegalAccessException {
+    if (WalletType.isAdmin(type)) {
+      throw new IllegalAccessException(USER_MESSAGE_IN_EXCEPTION + currentUser
+          + "' is not allowed to access private key of admin '" + remoteId
+          + "'");
+    }
     Wallet wallet = getWalletByTypeAndId(type, remoteId);
     if (wallet == null || wallet.getTechnicalId() < 1) {
       return null;
     }
-    checkIsWalletOwner(wallet, currentUser);
+    checkIsWalletOwner(wallet, currentUser, "get private key of wallet");
     return accountStorage.getWalletPrivateKey(wallet.getTechnicalId());
   }
 
@@ -225,7 +232,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
     if (wallet == null || wallet.getTechnicalId() < 1) {
       return;
     }
-    checkIsWalletOwner(wallet, currentUser);
+    checkIsWalletOwner(wallet, currentUser, "remove private key of wallet");
     accountStorage.removeWalletPrivateKey(wallet.getTechnicalId());
   }
 
@@ -408,7 +415,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
       return;
     }
 
-    checkIsWalletOwner(wallet, currentUser);
+    checkIsWalletOwner(wallet, currentUser, "save wallet");
 
     // Check if wallet is enabled
     if (storedWallet != null && !storedWallet.isEnabled()) {
@@ -502,19 +509,20 @@ public class EthereumWalletAccountService implements WalletAccountService {
     }
   }
 
-  private void checkIsWalletOwner(Wallet wallet, String currentUser) throws IllegalAccessException {
+  private void checkIsWalletOwner(Wallet wallet, String currentUser, String operationMessage) throws IllegalAccessException {
     String remoteId = wallet.getId();
     WalletType type = WalletType.getType(wallet.getType());
     if (type.isSpace()) {
       checkUserIsSpaceManager(remoteId, currentUser, true);
     } else if (type.isAdmin()) {
       if (!isUserAdmin(currentUser)) {
-        throw new IllegalAccessException("User '" + currentUser + "' attempts to access admin wallet");
+        throw new IllegalAccessException(USER_MESSAGE_IN_EXCEPTION + currentUser + "' attempts to " + operationMessage
+            + " of admin");
       }
     } else if (type.isUser()) {
       if (!StringUtils.equals(currentUser, remoteId)) {
-        throw new IllegalAccessException("User '" + currentUser + "' attempts to modify wallet address of user '" + remoteId
-            + "'");
+        throw new IllegalAccessException(USER_MESSAGE_IN_EXCEPTION + currentUser + "' attempts to " + operationMessage
+            + " of user '" + remoteId + "'");
       } else {
         // User is owner
       }

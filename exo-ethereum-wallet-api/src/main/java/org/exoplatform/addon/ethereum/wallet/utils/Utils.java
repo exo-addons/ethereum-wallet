@@ -504,7 +504,7 @@ public class Utils {
     SpaceService spaceService = CommonsUtils.getService(SpaceService.class);
     if (!spaceService.isManager(space, modifier) && !spaceService.isSuperManager(modifier)) {
       if (throwException) {
-        LOG.error("User '{}' attempts to modify wallet address of space '{}'", modifier, space.getDisplayName());
+        LOG.error("User '{}' attempts to access wallet address of space '{}'", modifier, space.getDisplayName());
         throw new IllegalAccessException();
       } else {
         return false;
