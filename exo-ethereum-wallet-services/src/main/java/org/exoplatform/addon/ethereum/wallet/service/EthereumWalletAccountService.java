@@ -250,6 +250,11 @@ public class EthereumWalletAccountService implements WalletAccountService {
   }
 
   @Override
+  public void saveWallet(Wallet wallet) {
+    accountStorage.saveWallet(wallet, false);
+  }
+
+  @Override
   public void saveWalletAddress(Wallet wallet, String currentUser, boolean broadcast) throws IllegalAccessException {
     if (wallet == null) {
       throw new IllegalArgumentException("Wallet is mandatory");
@@ -403,7 +408,8 @@ public class EthereumWalletAccountService implements WalletAccountService {
     }
     Wallet wallet = accountStorage.getWalletByAddress(address);
     if (wallet == null) {
-      throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
+      LOG.info(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
+      return;
     }
     wallet.setInitializationState(initializationState.name());
     accountStorage.saveWallet(wallet, false);

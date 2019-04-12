@@ -121,9 +121,6 @@ export function searchWalletByAddress(address, noCache) {
     })
     .then((item) => {
       if (item && item.name && item.name.length) {
-        if (!item.avatar) {
-          item.avatar = item.type === 'user' ? `/rest/v1/social/users/${item.id}/avatar` : `/rest/v1/social/spaces/${item.id}/avatar`;
-        }
         if (!item.id_type && item.type && item.id) {
           item.id_type = `${item.type}_${item.id}`;
         }
@@ -162,9 +159,6 @@ export function searchUsers(filter, includeCurrentUserInResults) {
           if (item.id && item.id.indexOf('@') === 0) {
             item.id = item.id.substring(1);
             item.id_type = `user_${item.id}`;
-            if (!item.avatar) {
-              item.avatar = item.avatarUrl ? item.avatarUrl : `/rest/v1/social/users/${item.id}/avatar`;
-            }
           }
         });
       } else {

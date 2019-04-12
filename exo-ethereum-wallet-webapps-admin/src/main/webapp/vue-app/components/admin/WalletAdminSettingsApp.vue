@@ -61,7 +61,7 @@
               <general-tab
                 ref="generalTab"
                 :loading="loading"
-                @contracts-loaded="contracts = $event"
+                @principal-contract-loaded="principalContract = $event"
                 @save="saveGlobalSettings" />
             </v-tab-item>
 
@@ -71,7 +71,7 @@
               <initial-funds-tab
                 ref="fundsTab"
                 :loading="loading"
-                :contracts="contracts"
+                :principal-contract="principalContract"
                 @save="saveGlobalSettings" />
             </v-tab-item>
 
@@ -109,7 +109,6 @@ export default {
       loading: false,
       selectedTab: 'general',
       fiatSymbol: '$',
-      contracts: [],
     };
   },
   created() {

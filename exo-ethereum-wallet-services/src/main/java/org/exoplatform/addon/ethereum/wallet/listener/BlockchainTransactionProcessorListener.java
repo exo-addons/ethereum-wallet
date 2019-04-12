@@ -93,7 +93,7 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
       if (transactionReceipt == null) {
         transactionReceipt = getTransactionReceipt(transactionHash);
       }
-      boolean braodcastSavingTransaction = transactionDetail.isPending();
+      boolean broadcastSavingTransaction = transactionDetail.isPending();
       transactionDetail.setPending(false);
       transactionDetail.setSucceeded(transactionReceipt != null && transactionReceipt.isStatusOK());
 
@@ -110,7 +110,7 @@ public class BlockchainTransactionProcessorListener extends Listener<Object, Tra
       // Ensure that all fields are computed correctly
       getTransactionDecoderService().computeContractTransactionDetail(transactionDetail, transactionReceipt);
 
-      getTransactionService().saveTransactionDetail(transactionDetail, braodcastSavingTransaction);
+      getTransactionService().saveTransactionDetail(transactionDetail, broadcastSavingTransaction);
     } finally {
       RequestLifeCycle.end();
     }

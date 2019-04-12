@@ -229,8 +229,8 @@ function loadEtherTransactionProperties(walletAddress, transactionDetails, contr
   return Promise.all(promises).then(() => {
     if (transactionDetails.fromAddress === walletAddress || transactionDetails.toAddress === walletAddress) {
       transactionDetails.isReceiver = walletAddress === transactionDetails.toAddress;
-      transactionDetails.amount = transactionDetails.amount || (transactionDetails.transaction && transactionDetails.transaction.value && parseFloat(window.localWeb3.utils.fromWei(String(transactionDetails.transaction.value), 'ether')));
-      transactionDetails.amountFiat = transactionDetails.amountFiat || (transactionDetails.amount && etherToFiat(transactionDetails.amount));
+      transactionDetails.value = transactionDetails.value || (transactionDetails.transaction && transactionDetails.transaction.value && parseFloat(window.localWeb3.utils.fromWei(String(transactionDetails.transaction.value), 'ether')));
+      transactionDetails.amountFiat = transactionDetails.amountFiat || (transactionDetails.value && etherToFiat(transactionDetails.value));
       transactionDetails.date = transactionDetails.date || (transactionDetails.timestamp && new Date(transactionDetails.timestamp));
       if (transactionDetails.date) {
         transactionDetails.dateFormatted = `${transactionDetails.date.toLocaleDateString(eXo.env.portal.language, {year: 'numeric', month: 'long', day: 'numeric'})} - ${transactionDetails.date.toLocaleTimeString()}`;
@@ -295,9 +295,9 @@ function loadContractTransactionProperties(walletAddress, transactionDetails, co
 
   return Promise.all(promises).then(() => {
     if ((transactionDetails.contractAddress && transactionDetails.contractAddress.toLowerCase()) === walletAddress || transactionDetails.fromAddress === walletAddress || transactionDetails.toAddress === walletAddress || transactionDetails.byAddress === walletAddress) {
-      transactionDetails.amount = transactionDetails.amount || (transactionDetails.transaction && transactionDetails.transaction.value && parseFloat(window.localWeb3.utils.fromWei(String(transactionDetails.transaction.value), 'ether')));
-      transactionDetails.amountFiat = transactionDetails.amountFiat || (transactionDetails.amount && etherToFiat(transactionDetails.amount));
-      transactionDetails.adminIcon = transactionDetails.adminIcon || transactionDetails.amount || (transactionDetails.contractMethodName && transactionDetails.contractMethodName !== 'transfer' && transactionDetails.contractMethodName !== 'transferFrom' && transactionDetails.contractMethodName !== 'approve');
+      transactionDetails.value = transactionDetails.value || (transactionDetails.transaction && transactionDetails.transaction.value && parseFloat(window.localWeb3.utils.fromWei(String(transactionDetails.transaction.value), 'ether')));
+      transactionDetails.amountFiat = transactionDetails.amountFiat || (transactionDetails.value && etherToFiat(transactionDetails.value));
+      transactionDetails.adminIcon = transactionDetails.adminIcon || transactionDetails.value || (transactionDetails.contractMethodName && transactionDetails.contractMethodName !== 'transfer' && transactionDetails.contractMethodName !== 'initializeAccount' && transactionDetails.contractMethodName !== 'transferFrom' && transactionDetails.contractMethodName !== 'approve');
       transactionDetails.isReceiver = !transactionDetails.adminIcon && walletAddress === transactionDetails.toAddress;
       transactionDetails.date = transactionDetails.date || (transactionDetails.timestamp && new Date(transactionDetails.timestamp));
       if (transactionDetails.date) {

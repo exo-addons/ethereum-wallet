@@ -30,8 +30,8 @@ import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2;
-import org.exoplatform.addon.ethereum.wallet.model.ContractDetail;
-import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
+import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -117,6 +117,8 @@ public class EthereumTransactionDecoder {
 
   private EthereumWalletContractService contractService;
 
+  private WalletAccountService          accountService;
+
   private EthereumClientConnector       ethereumClientConnector;
 
   public EthereumTransactionDecoder(EthereumClientConnector ethereumClientConnector,
@@ -189,13 +191,20 @@ public class EthereumTransactionDecoder {
 
   public void computeContractTransactionDetail(TransactionDetail transactionDetail,
                                                TransactionReceipt transactionReceipt) {
-    List<org.web3j.protocol.core.methods.response.Log> logs = transactionReceipt.getLogs();
-    transactionDetail.setSucceeded(transactionReceipt.isStatusOK());
+    List<org.web3j.protocol.core.methods.response.Log> logs = transactionReceipt == null ? null : transactionReceipt.getLogs();
+    transactionDetail.setSucceeded(transactionReceipt != null && transactionReceipt.isStatusOK());
+    if (!transactionDetail.isSucceeded()) {
+      if (StringUtils.equals(transactionDetail.getContractMethodName(), FUNC_INITIALIZEACCOUNT)) {
+        getAccountService().setInitializationStatus(transactionDetail.getTo(), WalletInitializationState.MODIFIED);
+      }
+      return;
+    }
 
+    String contractAddress = transactionReceipt == null ? null : transactionReceipt.getTo();
     ContractDetail contractDetail =
-                                  contractService.getContractDetail(transactionReceipt.getTo(), transactionDetail.getNetworkId());
+                                  contractService.getContractDetail(contractAddress, transactionDetail.getNetworkId());
     if (contractDetail == null) {
-      throw new IllegalStateException("Can't find contract detail");
+      return;
     }
     Integer contractDecimals = contractDetail.getDecimals();
 
@@ -231,6 +240,7 @@ public class EthereumTransactionDecoder {
             transactionDetail.setBy(transactionReceipt.getFrom());
             transactionDetail.setContractMethodName(FUNC_TRANSFERFROM);
           }
+          transactionDetail.setAdminOperation(false);
         } else if (StringUtils.equals(methodName, FUNC_APPROVE)) {
           transactionLogTreated = true;
           EventValues parameters = extractEventParameters(APPROVAL_EVENT, log);
@@ -241,6 +251,7 @@ public class EthereumTransactionDecoder {
           transactionDetail.setTo(parameters.getIndexedValues().get(1).getValue().toString());
           BigInteger amount = (BigInteger) parameters.getNonIndexedValues().get(0).getValue();
           transactionDetail.setContractAmountDecimal(amount, contractDecimals);
+          transactionDetail.setAdminOperation(false);
         } else if (StringUtils.equals(methodName, FUNC_APPROVEACCOUNT)) {
           if (logsSize > 1) {
             // Implicit acccount approval
@@ -348,7 +359,13 @@ public class EthereumTransactionDecoder {
           transactionDetail.setContractAmountDecimal(amount, contractDecimals);
           BigInteger weiAmount = (BigInteger) parameters.getNonIndexedValues().get(1).getValue();
           transactionDetail.setValueDecimal(weiAmount, 18);
-          transactionDetail.setAdminOperation(true);
+          transactionDetail.setAdminOperation(false);
+
+          if (transactionDetail.isSucceeded()) {
+            getAccountService().setInitializationStatus(transactionDetail.getTo(), WalletInitializationState.INITIALIZED);
+          } else {
+            getAccountService().setInitializationStatus(transactionDetail.getTo(), WalletInitializationState.MODIFIED);
+          }
         } else if (StringUtils.equals(methodName, FUNC_REWARD)) {
           transactionLogTreated = true;
           EventValues parameters = extractEventParameters(REWARD_EVENT, log);
@@ -363,7 +380,7 @@ public class EthereumTransactionDecoder {
           // Reward amount
           amount = (BigInteger) parameters.getNonIndexedValues().get(1).getValue();
           transactionDetail.setContractAmountDecimal(amount, contractDecimals);
-          transactionDetail.setAdminOperation(true);
+          transactionDetail.setAdminOperation(false);
         } else if (!transactionLogTreated && (i + 1) == logsSize) {
           LOG.warn("Can't find contract method name of transaction {}", transactionDetail);
         }
@@ -388,6 +405,13 @@ public class EthereumTransactionDecoder {
       indexedValues.add(value);
     }
     return new EventValues(indexedValues, nonIndexedValues);
+  }
+
+  private WalletAccountService getAccountService() {
+    if (accountService == null) {
+      accountService = CommonsUtils.getService(WalletAccountService.class);
+    }
+    return accountService;
   }
 
 }

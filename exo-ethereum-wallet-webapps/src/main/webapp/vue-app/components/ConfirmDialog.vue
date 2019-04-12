@@ -1,9 +1,9 @@
 <template>
   <v-dialog
     v-model="dialog"
+    :width="width"
     attach="#walletDialogsParent"
     content-class="uiPopup"
-    width="290px"
     max-width="100vw"
     @keydown.esc="close">
     <v-card class="elevation-12">
@@ -76,6 +76,12 @@ export default {
       type: Boolean,
       default: function() {
         return false;
+      },
+    },
+    width: {
+      type: String,
+      default: function() {
+        return '290px';
       },
     },
   },

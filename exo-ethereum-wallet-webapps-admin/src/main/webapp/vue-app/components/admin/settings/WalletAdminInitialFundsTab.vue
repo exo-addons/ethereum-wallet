@@ -106,10 +106,10 @@ export default {
         return false;
       },
     },
-    contracts: {
-      type: Array,
+    principalContract: {
+      type: Object,
       default: function() {
-        return [];
+        return null;
       },
     },
   },
@@ -137,7 +137,7 @@ export default {
     };
   },
   watch: {
-    contracts() {
+    principalContract() {
       this.reloadInitialFunds();
     },
     fundsHolderSearchTerm() {
@@ -184,38 +184,22 @@ export default {
       if (!window.walletSettings) {
         return [];
       }
-      this.initialFunds = [];
-      if (!window.walletSettings.initialFunds) {
-        this.initialFunds = [{name: 'ether', address: 'ether', amount: 0}];
 
-        if (this.contracts) {
-          this.contracts.forEach((contract) => {
-            this.initialFunds.push({name: contract.text, address: contract.value, amount: 0});
-          });
-        }
-      } else {
-        // Add newly added contracts
-        this.contracts.forEach((contract) => {
-          if (!contract || contract.value === 'fiat') {
-            return;
-          }
+      const etherInitialFund = window.walletSettings.initialFunds.find((initialFund) => initialFund.address === 'ether');
+      const etherAmount = (etherInitialFund && etherInitialFund.amount) || 0;
+      this.initialFunds = [{
+        name: 'ether',
+        address: 'ether',
+        amount: etherAmount
+      }];
 
-          const contractDetails = window.walletSettings.initialFunds.find((tmpContract) => tmpContract.address === contract.value);
-
-          if (!contractDetails || !contractDetails.address) {
-            window.walletSettings.initialFunds.push({name: contract.text, address: contract.value, amount: 0});
-          } else if (contractDetails.address === 'ether') {
-            contractDetails.name = 'ether';
-          } else {
-            contractDetails.name = contract.text;
-          }
-        });
-
-        window.walletSettings.initialFunds.forEach((contract) => {
-          const contractDetails = this.contracts.find((tmpContract) => tmpContract.value === contract.address);
-          if (contractDetails || contract.address === 'ether') {
-            this.initialFunds.push(contract);
-          }
+      if (this.principalContract && this.principalContract.value && this.principalContract.value.indexOf('0x') === 0) {
+        const tokenInitialFund = window.walletSettings.initialFunds.find((initialFund) => initialFund.address && initialFund.address.toLowerCase() === this.principalContract.value.toLowerCase());
+        const tokenAmount = (tokenInitialFund && tokenInitialFund.amount) || 0;
+        this.initialFunds.push({
+          name: this.principalContract.text,
+          address: this.principalContract.value,
+          amount: tokenAmount
         });
       }
     },

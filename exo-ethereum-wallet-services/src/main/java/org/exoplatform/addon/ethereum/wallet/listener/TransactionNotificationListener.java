@@ -135,7 +135,7 @@ public class TransactionNotificationListener extends Listener<Object, JSONObject
     if (StringUtils.isBlank(transactionDetail.getContractAddress())) {
       ctx.append(SYMBOL_PARAMETER, "ether");
       ctx.append(CONTRACT_ADDRESS_PARAMETER, "");
-      ctx.append(AMOUNT_PARAMETER, transactionDetail.getValue() / Math.pow(10, 18));
+      ctx.append(AMOUNT_PARAMETER, transactionDetail.getValue());
     } else {
       ContractDetail contractDetails = getContractService().getContractDetail(transactionDetail.getContractAddress(),
                                                                               transactionDetail.getNetworkId());

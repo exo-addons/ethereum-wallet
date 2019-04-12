@@ -94,6 +94,13 @@ public class TransactionStorage {
     return fromEntity(transactionEntity);
   }
 
+  @Deprecated
+  public List<TransactionDetail> getEtherTransactions() {
+    List<TransactionEntity> transactions = walletTransactionDAO.getEtherTransactions();
+    return transactions == null ? Collections.emptyList()
+                                : transactions.stream().map(this::fromEntity).collect(Collectors.toList());
+  }
+
   private TransactionDetail fromEntity(TransactionEntity entity) {
     if (entity == null) {
       return null;
@@ -125,28 +132,28 @@ public class TransactionStorage {
     return detail;
   }
 
-  private TransactionEntity toEntity(TransactionDetail transactionDetail) {
-    TransactionEntity transactionEntity = new TransactionEntity();
-    if (transactionDetail.getId() > 0) {
-      transactionEntity.setId(transactionDetail.getId());
+  private TransactionEntity toEntity(TransactionDetail detail) {
+    TransactionEntity entity = new TransactionEntity();
+    if (detail.getId() > 0) {
+      entity.setId(detail.getId());
     }
-    transactionEntity.setNetworkId(transactionDetail.getNetworkId());
-    transactionEntity.setHash(formatTransactionHash(transactionDetail.getHash()));
-    transactionEntity.setFromAddress(StringUtils.lowerCase(transactionDetail.getFrom()));
-    transactionEntity.setToAddress(StringUtils.lowerCase(transactionDetail.getTo()));
-    transactionEntity.setByAddress(StringUtils.lowerCase(transactionDetail.getBy()));
-    transactionEntity.setContractAddress(StringUtils.lowerCase(transactionDetail.getContractAddress()));
-    transactionEntity.setContractAmount(transactionDetail.getContractAmount());
-    transactionEntity.setContractMethodName(transactionDetail.getContractMethodName());
-    transactionEntity.setAdminOperation(transactionDetail.isAdminOperation());
-    transactionEntity.setLabel(transactionDetail.getLabel());
-    transactionEntity.setMessage(transactionDetail.getMessage());
-    transactionEntity.setPending(transactionDetail.isPending());
-    transactionEntity.setSuccess(transactionDetail.isSucceeded());
-    transactionEntity.setValue(transactionDetail.getValue());
-    transactionEntity.setCreatedDate(transactionDetail.getTimestamp());
-    transactionEntity.setIssuerIdentityId(transactionDetail.getIssuerIdentityId());
-    return transactionEntity;
+    entity.setNetworkId(detail.getNetworkId());
+    entity.setHash(formatTransactionHash(detail.getHash()));
+    entity.setFromAddress(StringUtils.lowerCase(detail.getFrom()));
+    entity.setToAddress(StringUtils.lowerCase(detail.getTo()));
+    entity.setByAddress(StringUtils.lowerCase(detail.getBy()));
+    entity.setContractAddress(StringUtils.lowerCase(detail.getContractAddress()));
+    entity.setContractAmount(detail.getContractAmount());
+    entity.setContractMethodName(detail.getContractMethodName());
+    entity.setAdminOperation(detail.isAdminOperation());
+    entity.setLabel(detail.getLabel());
+    entity.setMessage(detail.getMessage());
+    entity.setPending(detail.isPending());
+    entity.setSuccess(detail.isSucceeded());
+    entity.setValue(detail.getValue());
+    entity.setCreatedDate(detail.getTimestamp());
+    entity.setIssuerIdentityId(detail.getIssuerIdentityId());
+    return entity;
   }
 
 }

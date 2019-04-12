@@ -65,6 +65,11 @@ public class EthereumWalletTransactionService implements WalletTransactionServic
   }
 
   @Override
+  public List<TransactionDetail> getEtherTransactions() {
+    return transactionStorage.getEtherTransactions();
+  }
+
+  @Override
   public List<TransactionDetail> getTransactions(long networkId,
                                                  String address,
                                                  String contractAddress,

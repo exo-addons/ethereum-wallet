@@ -115,6 +115,10 @@
   </component>
 
   <component>
+    <type>org.exoplatform.addon.ethereum.wallet.service.migration.MigrationService</type>
+  </component>
+
+  <component>
     <key>org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService</key>
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletTokenTransactionService</type>
   </component>
@@ -175,13 +179,13 @@
     <component-plugin>
       <name>exo.addon.wallet.addressAssociation.new</name>
       <set-method>addListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.InitialFundsRequestListener</type>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.NewWalletListener</type>
       <description>Send initial funds request when a user creates a new wallet</description>
     </component-plugin>
     <component-plugin>
       <name>exo.addon.wallet.addressAssociation.modification</name>
       <set-method>addListener</set-method>
-      <type>org.exoplatform.addon.ethereum.wallet.listener.WalletAddressModifiedListener</type>
+      <type>org.exoplatform.addon.ethereum.wallet.listener.ModifiedWalletListener</type>
       <description>Send initial funds request when a user changes his wallet address</description>
     </component-plugin>
     <component-plugin>

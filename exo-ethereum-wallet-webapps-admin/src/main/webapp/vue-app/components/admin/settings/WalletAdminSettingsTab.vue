@@ -141,7 +141,7 @@ export default {
   },
   watch: {
     accountsList() {
-      this.$emit('contracts-loaded', this.accountsList);
+      this.$emit('principal-contract-loaded', this.selectedPrincipalAccount);
     },
     selectedPrincipalAccount() {
       if (this.selectedPrincipalAccount) {
@@ -228,10 +228,13 @@ export default {
                 this.selectedOverviewAccounts.push(selectedObject);
               }
             });
-            this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
+
+            if(window.walletSettings.defaultPrincipalAccount) {
+              this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
+            }
           });
 
-      } else {
+      } else if(window.walletSettings.defaultPrincipalAccount) {
         this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
       }
     },

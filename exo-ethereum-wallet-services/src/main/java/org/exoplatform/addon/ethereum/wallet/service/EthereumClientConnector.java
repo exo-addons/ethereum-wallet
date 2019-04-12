@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.crypto.Credentials;
@@ -32,7 +31,6 @@ import org.web3j.protocol.core.methods.response.EthBlock.Block;
 import org.web3j.protocol.core.methods.response.EthLog.LogResult;
 import org.web3j.protocol.websocket.*;
 import org.web3j.tx.FastRawTransactionManager;
-import org.web3j.tx.response.Callback;
 import org.web3j.tx.response.QueuingTransactionReceiptProcessor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -46,64 +44,36 @@ import org.exoplatform.services.log.Log;
  */
 public class EthereumClientConnector {
 
-  private static final Log                          LOG                              =
-                                                        ExoLogger.getLogger(EthereumClientConnector.class);
+  private static final int          POOLING_ATTEMPTS                 = 100;
 
-  private static final String                       ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
+  private static final int          POOLING_ATTEMPT_PER_TX           = 12000;
 
-  private Web3j                                     web3j                            = null;
+  private static final Log          LOG                              =
+                                        ExoLogger.getLogger(EthereumClientConnector.class);
 
-  private WebSocketClient                           webSocketClient                  = null;
+  private static final String       ERROR_CLOSING_WEB_SOCKET_MESSAGE = "Error closing web socket";
 
-  private WebSocketService                          web3jService                     = null;
+  private Web3j                     web3j                            = null;
 
-  private GlobalSettings                            globalSettings                   = null;
+  private WebSocketClient           webSocketClient                  = null;
 
-  private FastRawTransactionManager                 contractTransactionManager       = null;
+  private WebSocketService          web3jService                     = null;
 
-  private ScheduledExecutorService                  connectionVerifierExecutor       = null;
+  private GlobalSettings            globalSettings                   = null;
 
-  private int                                       connectionInterruptionCount      = -1;
+  private FastRawTransactionManager contractTransactionManager       = null;
 
-  private boolean                                   connectionInProgress             = false;
+  private ScheduledExecutorService  connectionVerifierExecutor       = null;
 
-  private boolean                                   serviceStopping                  = false;
+  private int                       connectionInterruptionCount      = -1;
 
-  private Map<String, Consumer<TransactionReceipt>> transactionMinedFunctionsMap     = new HashMap<>();
+  private boolean                   connectionInProgress             = false;
 
-  private Map<String, Consumer<Exception>>          transactionErrorFunctionsMap     = new HashMap<>();
-
-  private Callback                                  transactionCallback;
+  private boolean                   serviceStopping                  = false;
 
   public EthereumClientConnector() {
     ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-websocket-connector-%d").build();
     connectionVerifierExecutor = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
-
-    transactionCallback = new Callback() {
-      @Override
-      public void accept(TransactionReceipt transactionReceipt) {
-        if (transactionReceipt == null) {
-          return;
-        }
-        String transactionHash = transactionReceipt.getTransactionHash();
-        if (transactionReceipt.isStatusOK()) {
-          Consumer<TransactionReceipt> successOperation = transactionMinedFunctionsMap.get(transactionHash);
-          if (successOperation != null) {
-            successOperation.accept(transactionReceipt);
-          }
-        } else {
-          Consumer<Exception> errorOperation = transactionErrorFunctionsMap.get(transactionHash);
-          if (errorOperation != null) {
-            errorOperation.accept(new IllegalStateException("Transaction has failed"));
-          }
-        }
-      }
-
-      @Override
-      public void exception(Exception exception) {
-        LOG.error("Error while sending transaction", exception);
-      }
-    };
   }
 
   public void start(GlobalSettings storedSettings) {
@@ -284,36 +254,25 @@ public class EthereumClientConnector {
     return txHashes;
   }
 
-  public void addOnTransactionSuccessOperation(String hash, Consumer<TransactionReceipt> success) {
-    this.transactionMinedFunctionsMap.put(hash, success);
-  }
-
-  public void addOnTransactionErrorOperation(String hash, Consumer<Exception> error) {
-    this.transactionErrorFunctionsMap.put(hash, error);
-  }
-
   public FastRawTransactionManager getContractTransactionManager(Credentials credentials) throws InterruptedException {
     waitConnection();
 
     if (contractTransactionManager == null) {
       QueuingTransactionReceiptProcessor transactionReceiptProcessor = new QueuingTransactionReceiptProcessor(web3j,
-                                                                                                              transactionCallback,
-                                                                                                              0,
-                                                                                                              0);
+                                                                                                              null,
+                                                                                                              POOLING_ATTEMPTS,
+                                                                                                              POOLING_ATTEMPT_PER_TX);
       contractTransactionManager = new FastRawTransactionManager(web3j, credentials, transactionReceiptProcessor);
     }
     return contractTransactionManager;
   }
 
-  public Web3j getWeb3j() {
+  public Web3j getWeb3j() throws InterruptedException {
+    this.waitConnection();
     return web3j;
   }
 
-  private String getWebsocketProviderURL() {
-    return globalSettings == null ? null : globalSettings.getWebsocketProviderURL();
-  }
-
-  private void waitConnection() throws InterruptedException {
+  public void waitConnection() throws InterruptedException {
     if (this.serviceStopping) {
       throw new IllegalStateException("Server is stopping, thus not Web3 request should be emitted");
     }
@@ -321,6 +280,10 @@ public class EthereumClientConnector {
       LOG.info("Wait until Websocket connection to blockchain is established to retrieve information");
       Thread.sleep(5000);
     }
+  }
+
+  private String getWebsocketProviderURL() {
+    return globalSettings == null ? null : globalSettings.getWebsocketProviderURL();
   }
 
   private void closeConnection() {

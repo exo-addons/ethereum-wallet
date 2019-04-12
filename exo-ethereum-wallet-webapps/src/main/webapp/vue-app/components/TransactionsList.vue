@@ -492,7 +492,7 @@
                   </span>
                 </v-list-tile-title>
 
-                <v-list-tile-title v-else-if="item.amount && Number(item.amount) && item.amountFiat">
+                <v-list-tile-title v-else-if="item.value && Number(item.value) && item.amountFiat">
                   <profile-chip
                     v-if="displayFullTransaction"
                     :address="item.fromAddress"
@@ -530,10 +530,10 @@
                 </v-list-tile-sub-title>
               </v-list-tile-content>
 
-              <v-list-tile-content v-if="item.type === 'ether' && item.amount && Number(item.amount)" class="transactionDetailActions">
+              <v-list-tile-content v-if="item.type === 'ether' && item.value && Number(item.value)" class="transactionDetailActions">
                 <v-list-tile-title :class="item.adminIcon ? '' : item.isReceiver ? 'green--text' : 'red--text'">
                   <span>
-                    {{ toFixed(item.amount) }} ETH
+                    {{ toFixed(item.value) }} ether
                   </span>
                 </v-list-tile-title>
                 <v-list-tile-sub-title v-if="item.amountFiat">
@@ -552,10 +552,10 @@
                   </span>
                 </v-list-tile-title>
                 <v-list-tile-title
-                  v-else-if="item.amount && Number(item.amount)"
+                  v-else-if="item.value && Number(item.value)"
                   :class="item.isReceiver ? 'green--text' : 'red--text'">
                   <span>
-                    {{ toFixed(item.amount) }} ether
+                    {{ toFixed(item.value) }} ether
                   </span>
                 </v-list-tile-title>
                 <v-list-tile-sub-title
@@ -609,12 +609,12 @@
                 {{ toFixed(item.amountFiat) }} {{ fiatSymbol }}
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile v-if="Number(item.amount)">
+            <v-list-tile v-if="Number(item.value)">
               <v-list-tile-content>
                 Ether amount
               </v-list-tile-content>
               <v-list-tile-content class="align-end">
-                {{ toFixed(item.amount) }} ether
+                {{ toFixed(item.value) }} ether
               </v-list-tile-content>
             </v-list-tile>
             <v-list-tile v-if="item.contractMethodName === 'reward' && Number(item.value)">

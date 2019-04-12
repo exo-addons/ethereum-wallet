@@ -172,7 +172,7 @@ export default {
     },
   },
   created() {
-    if (this.profileId) {
+    if (this.profileId && (this.profileType === 'user' || this.profileType === 'space')) {
       // TODO disable tiptip because of high CPU usage using its code
       this.initTiptip();
     }

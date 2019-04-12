@@ -103,6 +103,13 @@ public interface WalletAccountService {
   public Wallet getWalletByAddress(String address);
 
   /**
+   * Save wallet to storage
+   * 
+   * @param wallet wallet to save
+   */
+  public void saveWallet(Wallet wallet);
+
+  /**
    * Save wallet address to currentUser or to a space managed by current user
    * 
    * @param wallet {@link Wallet} wallet details to save

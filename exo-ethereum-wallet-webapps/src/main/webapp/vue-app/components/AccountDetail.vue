@@ -95,6 +95,7 @@
       :account="walletAddress"
       :contract-details="contractDetails"
       :fiat-symbol="fiatSymbol"
+      :administration="isAdministration"
       :selected-transaction-hash="selectedTransactionHash"
       :error="error"
       @error="error = $event"

@@ -1,6 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import lombok.Data;
@@ -65,7 +66,7 @@ public class TransactionDetail implements Serializable, Cloneable {
     if (contractAmount == 0) {
       return BigInteger.ZERO;
     }
-    BigInteger amountBI = new BigInteger(String.valueOf(contractAmount));
+    BigInteger amountBI = BigDecimal.valueOf(contractAmount).toBigInteger();
     return amountBI.multiply(BigInteger.valueOf(10).pow(decimals));
   }
 
@@ -73,7 +74,7 @@ public class TransactionDetail implements Serializable, Cloneable {
     if (value == 0) {
       return BigInteger.ZERO;
     }
-    BigInteger amountBI = new BigInteger(String.valueOf(value));
+    BigInteger amountBI = BigDecimal.valueOf(value).toBigInteger();
     return amountBI.multiply(BigInteger.valueOf(10).pow(decimals));
   }
 
@@ -82,14 +83,15 @@ public class TransactionDetail implements Serializable, Cloneable {
       this.contractAmount = 0;
       return;
     }
-    this.contractAmount = amount.divide(BigInteger.valueOf(10).pow(decimals)).doubleValue();
+    this.contractAmount = BigDecimal.valueOf(amount.doubleValue()).divide(BigDecimal.valueOf(10).pow(decimals)).doubleValue();
   }
 
   public void setValueDecimal(BigInteger amount, int decimals) {
     if (amount == null) {
       this.value = 0;
     } else {
-      this.value = amount.divide(BigInteger.valueOf(10).pow(decimals)).doubleValue();
+      this.value = BigDecimal.valueOf(amount.doubleValue()).divide(BigDecimal.valueOf(10).pow(decimals)).doubleValue();
     }
   }
+
 }

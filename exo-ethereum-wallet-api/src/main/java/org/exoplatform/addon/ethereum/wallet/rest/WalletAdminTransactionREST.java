@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
 import org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -37,7 +38,9 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("administrators")
 public class WalletAdminTransactionREST implements ResourceContainer {
 
-  private static final Log              LOG = ExoLogger.getLogger(WalletAdminTransactionREST.class);
+  private static final String           BAD_REQUEST_SENT_TO_SERVER_BY = "Bad request sent to server by '";
+
+  private static final Log              LOG                           = ExoLogger.getLogger(WalletAdminTransactionREST.class);
 
   private WalletTokenTransactionService tokenOperationService;
 
@@ -46,61 +49,41 @@ public class WalletAdminTransactionREST implements ResourceContainer {
   }
 
   /**
-   * Initialize wallet identified by address with token and ether amounts
-   * configured in initial funds
+   * Send transaction to wallet identified by address with possible transaction
+   * types: - initialize - approve - disapprove
    * 
-   * @param address Wallet address to initialize
+   * @param address Wallet address to process
+   * @param action Wallet address to process
    * @return REST response with status
    */
   @POST
-  @Path("initializeWallet")
   @RolesAllowed("administrators")
-  public Response initializeWallet(@FormParam("address") String address) {
+  public Response executeTransactionOnWallet(@FormParam("action") String action, @FormParam("address") String address) {
+    String currentUserId = getCurrentUserId();
     if (StringUtils.isBlank(address)) {
-      LOG.warn("Bad request sent to server with empty address to initialize");
+      LOG.warn(BAD_REQUEST_SENT_TO_SERVER_BY + currentUserId + "' with empty address");
+      return Response.status(400).build();
+    }
+    if (StringUtils.isBlank(action)) {
+      LOG.warn(BAD_REQUEST_SENT_TO_SERVER_BY + currentUserId + "' with empty action");
       return Response.status(400).build();
     }
 
-    String currentUserId = getCurrentUserId();
+    TransactionDetail transactionDetail = null;
     try {
-      tokenOperationService.initialize(address, currentUserId);
-      return Response.ok().build();
+      if (StringUtils.equals(action, "initialize")) {
+        transactionDetail = tokenOperationService.initialize(address, currentUserId);
+      } else if (StringUtils.equals(action, "approve")) {
+        transactionDetail = tokenOperationService.approveAccount(address, currentUserId);
+      } else if (StringUtils.equals(action, "disapprove")) {
+        transactionDetail = tokenOperationService.disapproveAccount(address, currentUserId);
+      } else {
+        LOG.warn(BAD_REQUEST_SENT_TO_SERVER_BY + currentUserId + "' with action: " + action);
+        return Response.status(400).build();
+      }
+      return Response.ok(transactionDetail == null ? "" : transactionDetail.getHash()).build();
     } catch (Exception e) {
-      LOG.warn("Error initializing wallet of {}", address, e);
-      return Response.serverError().build();
-    }
-  }
-
-  /**
-   * Initialize wallet identified by address with token and ether amounts
-   * provided in parameters
-   * 
-   * @param address Wallet address to initialize
-   * @param tokenAmount
-   * @param etherAmount
-   * @param label
-   * @param message
-   * @return REST response with status
-   */
-  @POST
-  @Path("initializeWalletWithSpecificParams")
-  @RolesAllowed("administrators")
-  public Response initializeWallet(@FormParam("address") String address,
-                                   @FormParam("tokenAmount") double tokenAmount,
-                                   @FormParam("etherAmount") double etherAmount,
-                                   @FormParam("label") String label,
-                                   @FormParam("message") String message) {
-    if (StringUtils.isBlank(address)) {
-      LOG.warn("Bad request sent to server with empty address to initialize");
-      return Response.status(400).build();
-    }
-
-    String currentUserId = getCurrentUserId();
-    try {
-      tokenOperationService.initialize(address, tokenAmount, etherAmount, label, message, currentUserId);
-      return Response.ok().build();
-    } catch (Exception e) {
-      LOG.warn("Error initializing wallet of {}", address, e);
+      LOG.warn("Error processing action {} on wallet {}", action, address, e);
       return Response.serverError().build();
     }
   }

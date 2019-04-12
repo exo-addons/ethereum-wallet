@@ -253,7 +253,7 @@ export default {
               hash: hash,
               from: transaction.from,
               to: transaction.to,
-              value: transaction.value,
+              value: this.amount,
               gas: transaction.gas,
               gasPrice: transaction.gasPrice,
               pending: true,

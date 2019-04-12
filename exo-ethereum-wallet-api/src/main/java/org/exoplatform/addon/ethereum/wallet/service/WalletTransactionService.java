@@ -97,4 +97,13 @@ public interface WalletTransactionService {
    */
   public long getPendingTransactionMaxDays();
 
+  /**
+   * Retrieve the list of ether transactions
+   * 
+   * @return list of ether transactions
+   * @deprecated used for migration service only
+   */
+  @Deprecated
+  List<TransactionDetail> getEtherTransactions();
+
 }

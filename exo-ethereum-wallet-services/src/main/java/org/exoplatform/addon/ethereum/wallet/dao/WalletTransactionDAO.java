@@ -117,4 +117,11 @@ public class WalletTransactionDAO extends GenericDAOJPAImpl<TransactionEntity, L
     return resultList == null || resultList.isEmpty() ? null : resultList.get(0);
   }
 
+  @Deprecated
+  public List<TransactionEntity> getEtherTransactions() {
+    TypedQuery<TransactionEntity> query = getEntityManager().createNamedQuery("WalletTransaction.getEtherTransactions",
+                                                                              TransactionEntity.class);
+    return query.getResultList();
+  }
+
 }
