@@ -250,7 +250,7 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
       }
 
       if (contractDetails.contractType > 0) {
-        contractDetails.contractTypeLabel = 'ERT Token';
+        contractDetails.contractTypeLabel = `ERT Token V${contractDetails.contractType}`;
         window.walletContractsDetails[contractDetails.address] = contractDetails;
         window.walletContractsDetails[contractDetails.address.toLowerCase()] = contractDetails;
       } else if (contractDetails.contractType === 0) {

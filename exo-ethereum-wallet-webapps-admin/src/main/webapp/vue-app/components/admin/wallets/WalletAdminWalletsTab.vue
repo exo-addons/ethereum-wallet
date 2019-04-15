@@ -72,11 +72,36 @@
               class="clickable"
               @click="openAccountDetail(props.item)">
               <template v-if="props.item.type === 'user' || props.item.type === 'space'">
-                <v-icon v-if="props.item.initializationState === 'NEW'" color="primary" title="New wallet">fa-hands</v-icon>
-                <v-icon v-else-if="props.item.initializationState === 'MODIFIED'" color="orange" title="Modified wallet">fa-hands</v-icon>
-                <v-icon v-else-if="props.item.initializationState === 'DENIED'" color="orange" title="Denied to access wallet">fa-times-circle</v-icon>
-                <v-icon v-else-if="props.item.initializationState === 'PENDING'" color="primary" title="Initialization in progress">fa-dot-circle</v-icon>
-                <v-icon v-else-if="props.item.initializationState === 'INITIALIZED'" color="green" title="Initialized wallet">fa-check-circle</v-icon>
+                <v-icon
+                  v-if="props.item.initializationState === 'NEW'"
+                  color="primary"
+                  title="New wallet">
+                  fa-hands
+                </v-icon>
+                <v-icon
+                  v-else-if="props.item.initializationState === 'MODIFIED'"
+                  color="orange"
+                  title="Modified wallet">
+                  fa-hands
+                </v-icon>
+                <v-icon
+                  v-else-if="props.item.initializationState === 'DENIED'"
+                  color="orange"
+                  title="Denied to access wallet">
+                  fa-times-circle
+                </v-icon>
+                <v-icon
+                  v-else-if="props.item.initializationState === 'PENDING'"
+                  color="primary"
+                  title="Initialization in progress">
+                  fa-dot-circle
+                </v-icon>
+                <v-icon
+                  v-else-if="props.item.initializationState === 'INITIALIZED'"
+                  color="green"
+                  title="Initialized wallet">
+                  fa-check-circle
+                </v-icon>
               </template>
             </td>
             <td class="clickable" @click="openAccountDetail(props.item)">
