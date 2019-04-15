@@ -66,16 +66,14 @@ public class TransactionDetail implements Serializable, Cloneable {
     if (contractAmount == 0) {
       return BigInteger.ZERO;
     }
-    BigInteger amountBI = BigDecimal.valueOf(contractAmount).toBigInteger();
-    return amountBI.multiply(BigInteger.valueOf(10).pow(decimals));
+    return BigDecimal.valueOf(contractAmount).multiply(BigDecimal.valueOf(10).pow(decimals)).toBigInteger();
   }
 
   public BigInteger getValueDecimal(int decimals) {
     if (value == 0) {
       return BigInteger.ZERO;
     }
-    BigInteger amountBI = BigDecimal.valueOf(value).toBigInteger();
-    return amountBI.multiply(BigInteger.valueOf(10).pow(decimals));
+    return BigDecimal.valueOf(value).multiply(BigDecimal.valueOf(10).pow(decimals)).toBigInteger();
   }
 
   public void setContractAmountDecimal(BigInteger amount, int decimals) {

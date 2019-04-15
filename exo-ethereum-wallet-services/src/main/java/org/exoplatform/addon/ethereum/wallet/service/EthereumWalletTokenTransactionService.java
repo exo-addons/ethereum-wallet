@@ -265,7 +265,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     if (StringUtils.isBlank(receiver)) {
       throw new IllegalArgumentException(RECEIVER_ADDRESS_PARAMETER_IS_MANDATORY);
     }
-    if (amount <= 0) {
+    if (amount < 0) {
       throw new IllegalArgumentException("token amount parameter has to be a positive amount");
     }
 

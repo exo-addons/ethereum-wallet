@@ -55,7 +55,6 @@
               <wallets-tab
                 ref="walletsTab"
                 :network-id="networkId"
-                :wallet-address="walletAddress"
                 :loading="loading"
                 :fiat-symbol="fiatSymbol"
                 :refresh-index="refreshIndex"
@@ -106,9 +105,6 @@ export default {
       selectedTab: 'wallets',
       fiatSymbol: '$',
       refreshIndex: 1,
-      walletAddress: null,
-      walletAddressEtherBalance: null,
-      walletAddressFiatBalance: null,
       principalContract: null,
       principalAccountAddress: null,
       accountsDetails: null,

@@ -33,7 +33,6 @@
         <node>
             <name>walletAdministration</name>
             <label>Wallet</label>
-            <page-reference>group::/platform/rewarding::walletSettings</page-reference>
             <node>
                 <name>walletSettings</name>
                 <label>Settings</label>

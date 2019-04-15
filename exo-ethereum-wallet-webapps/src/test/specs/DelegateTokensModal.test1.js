@@ -111,7 +111,6 @@ describe('DelegateTokensModal.test.js', () => {
           isAdmin: true,
           isPaused: false,
           contractType: 2,
-          contractTypeLabel: 'ERT Token',
           networkId: global.testNetworkId,
           name: global.tokenName,
           title: global.tokenName,

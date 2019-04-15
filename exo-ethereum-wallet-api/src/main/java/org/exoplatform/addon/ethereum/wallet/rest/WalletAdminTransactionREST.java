@@ -17,6 +17,7 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getIdentityByTypeAndId;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -25,10 +26,12 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
+import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
+import org.exoplatform.social.core.identity.model.Identity;
 
 /**
  * This class provide a REST endpoint to manage transactions served by admin
@@ -84,6 +87,39 @@ public class WalletAdminTransactionREST implements ResourceContainer {
       return Response.ok(transactionDetail == null ? "" : transactionDetail.getHash()).build();
     } catch (Exception e) {
       LOG.warn("Error processing action {} on wallet {}", action, address, e);
+      return Response.serverError().build();
+    }
+  }
+
+  @POST
+  @Path("intiialize")
+  @RolesAllowed("administrators")
+  public Response intializeWallet(@FormParam("receiver") String receiver,
+                                  @FormParam("etherAmount") double etherAmount,
+                                  @FormParam("tokenAmount") double tokenAmount,
+                                  @FormParam("transactionLabel") String transactionLabel,
+                                  @FormParam("transactionMessage") String transactionMessage) {
+    String currentUserId = getCurrentUserId();
+    if (StringUtils.isBlank(receiver)) {
+      LOG.warn(BAD_REQUEST_SENT_TO_SERVER_BY + currentUserId + "' with empty address");
+      return Response.status(400).build();
+    }
+
+    try {
+      TransactionDetail transactionDetail = new TransactionDetail();
+      transactionDetail.setTo(receiver);
+      transactionDetail.setContractAmount(tokenAmount);
+      transactionDetail.setValue(etherAmount);
+      transactionDetail.setLabel(transactionLabel);
+      transactionDetail.setMessage(transactionMessage);
+
+      Identity identity = getIdentityByTypeAndId(WalletType.USER, currentUserId);
+      transactionDetail.setIssuerIdentityId(Long.parseLong(identity.getId()));
+
+      transactionDetail = tokenOperationService.initialize(transactionDetail);
+      return Response.ok(transactionDetail == null ? "" : transactionDetail.getHash()).build();
+    } catch (Exception e) {
+      LOG.warn("Error initializing wallet {}", receiver, e);
       return Response.serverError().build();
     }
   }

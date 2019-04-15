@@ -82,7 +82,7 @@
           </v-radio-group>
         </v-flex>
       </v-layout>
-      <v-layout v-if="adminWallet && useAdminWallet">
+      <v-layout v-if="adminWalletExists">
         <v-flex md6 xs12>
           <v-list>
             <v-subheader>Admin account properties</v-subheader>
@@ -104,7 +104,7 @@
             </v-list-tile>
             <v-list-tile>
               <v-list-tile-title>
-                Approval
+                Approved
                 <warning-bubble v-if="adminWallet.level < 4">
                   <template slot="bubble-content">
                     Admin wallet should having admin level 4 and approved on token {{ principalContract.name }}
@@ -250,8 +250,8 @@ export default {
             const loadAdminEtherBalance = this.walletUtils.computeBalance(this.adminWallet.address)
               .then((balanceDetails) => {
                 if (balanceDetails) {
-                  this.$set(this.adminWallet, 'balanceEther', balanceDetails.balance);
-                  this.$set(this.adminWallet, 'balanceFiat', balanceDetails.balanceFiat);
+                  this.$set(this.adminWallet, 'balanceEther', this.walletUtils.toFixed(balanceDetails.balance));
+                  this.$set(this.adminWallet, 'balanceFiat', this.walletUtils.toFixed(balanceDetails.balanceFiat));
                 } else {
                   this.$set(this.adminWallet, 'balanceEther', 0);
                   this.$set(this.adminWallet, 'balanceFiat', 0);

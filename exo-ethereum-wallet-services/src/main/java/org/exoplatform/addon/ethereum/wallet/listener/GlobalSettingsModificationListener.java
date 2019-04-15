@@ -18,6 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.listener;
 
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
 import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
+import org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.listener.*;
 
@@ -26,7 +27,9 @@ import org.exoplatform.services.listener.*;
  */
 @Asynchronous
 public class GlobalSettingsModificationListener extends Listener<Object, GlobalSettings> {
-  private EthereumClientConnector ethereumClientConnector;
+  private EthereumClientConnector       ethereumClientConnector;
+
+  private WalletTokenTransactionService tokenTransactionService;
 
   @Override
   public void onEvent(Event<Object, GlobalSettings> event) throws Exception {
@@ -34,6 +37,14 @@ public class GlobalSettingsModificationListener extends Listener<Object, GlobalS
     if (globalSettings != null) {
       getEthereumClientConnector().changeSettings(globalSettings);
     }
+    getTokenTransactionService().reinit();
+  }
+
+  private WalletTokenTransactionService getTokenTransactionService() {
+    if (tokenTransactionService == null) {
+      tokenTransactionService = CommonsUtils.getService(WalletTokenTransactionService.class);
+    }
+    return tokenTransactionService;
   }
 
   public EthereumClientConnector getEthereumClientConnector() {

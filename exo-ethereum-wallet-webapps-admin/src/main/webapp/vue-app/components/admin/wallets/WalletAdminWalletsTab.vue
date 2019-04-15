@@ -174,34 +174,43 @@
                   <v-list-tile @click="refreshWallet(props.item)">
                     <v-list-tile-title>Refresh</v-list-tile-title>
                   </v-list-tile>
-                  <v-list-tile @click="openAccountDetail(props.item)">
-                    <v-list-tile-title>Display transactions</v-list-tile-title>
-                  </v-list-tile>
+                  
+                  <v-divider />
+
+                  <template v-if="useWalletAdmin">
+                    <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 1 && props.item.initializationState === 'NEW' || props.item.initializationState === 'MODIFIED' || props.item.initializationState === 'DENIED'">
+                      <v-list-tile @click="openAcceptInitializationModal(props.item)">
+                        <v-list-tile-title>Initialize wallet</v-list-tile-title>
+                      </v-list-tile>
+                      <v-list-tile v-if="props.item.initializationState !== 'DENIED'" @click="openDenyInitializationModal(props.item)">
+                        <v-list-tile-title>Reject wallet</v-list-tile-title>
+                      </v-list-tile>
+                      <v-divider />
+                    </template>
+
+                    <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 0 && (props.item.disapproved === true || props.item.disapproved === false)">
+                      <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
+                        <v-list-tile-title>Approve wallet</v-list-tile-title>
+                      </v-list-tile>
+                      <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
+                        <v-list-tile-title>Disapprove wallet</v-list-tile-title>
+                      </v-list-tile>
+                      <v-divider />
+                    </template>
+                  </template>
+
                   <v-list-tile v-if="props.item.enabled" @click="openDisableWalletModal(props.item)">
                     <v-list-tile-title>Disable wallet</v-list-tile-title>
                   </v-list-tile>
                   <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
                     <v-list-tile-title>Enable wallet</v-list-tile-title>
                   </v-list-tile>
+
+                  <v-divider />
+
                   <v-list-tile @click="openRemoveWalletModal(props.item)">
                     <v-list-tile-title>Remove wallet</v-list-tile-title>
                   </v-list-tile>
-                  <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 1 && props.item.initializationState === 'NEW' || props.item.initializationState === 'MODIFIED'">
-                    <v-list-tile @click="openAcceptInitializationModal(props.item)">
-                      <v-list-tile-title>Accept wallet init</v-list-tile-title>
-                    </v-list-tile>
-                    <v-list-tile @click="openDenyInitializationModal(props.item)">
-                      <v-list-tile-title>Reject wallet init</v-list-tile-title>
-                    </v-list-tile>
-                  </template>
-                  <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 0 && (props.item.disapproved === true || props.item.disapproved === false)">
-                    <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
-                      <v-list-tile-title>Approve wallet</v-list-tile-title>
-                    </v-list-tile>
-                    <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
-                      <v-list-tile-title>Disapprove wallet</v-list-tile-title>
-                    </v-list-tile>
-                  </template>
                 </v-list>
               </v-menu>
             </td>
@@ -218,6 +227,10 @@
         Load More
       </v-btn>
     </v-flex>
+
+    <initialize-account-modal
+      ref="initAccountModal"
+      @sent="walletInitialized" />
 
     <!-- The selected account detail -->
     <v-navigation-drawer
@@ -246,7 +259,12 @@
 </template>
 
 <script>
+import InitializeAccountModal from './modals/WalletAdminInitializeAccountModal.vue';
+
 export default {
+  components: {
+    InitializeAccountModal,
+  },
   props: {
     networkId: {
       type: String,
@@ -290,6 +308,7 @@ export default {
       search: null,
       loadingWallets: false,
       appInitialized: false,
+      useWalletAdmin: false,
       displayUsers: true,
       displaySpaces: true,
       displayDisapprovedWallets: true,
@@ -307,7 +326,8 @@ export default {
       error: null,
       wallets: [],
       walletToProcess: null,
-      initialFunds: null,
+      etherAmount: null,
+      tokenAmount: null,
       limit: 10,
       pageSize: 10,
       walletHeaders: [
@@ -418,16 +438,26 @@ export default {
       if(!appInitialized || this.appInitialized) {
         return;
       }
+
       this.appInitialized = this.appInitialized || appInitialized;
       if(this.loadingWallets) {
         return;
       }
-      this.initialFunds = window.walletSettings.initialFunds;
+
+      const initialFunds = window.walletSettings.initialFunds;
+      if (initialFunds && initialFunds.length) {
+        const etherInitialFund = initialFunds.find((initialFund) => initialFund.address === 'ether');
+        this.etherAmount = (etherInitialFund && etherInitialFund.amount) || 0;
+        if (this.principalContract && this.principalContract.address && this.principalContract.address.indexOf('0x') === 0) {
+          const tokenInitialFund = initialFunds.find((initialFund) => initialFund.address && initialFund.address.toLowerCase() === this.principalContract.address.toLowerCase());
+          this.tokenAmount = (tokenInitialFund && tokenInitialFund.amount) || 0;
+        }
+      }
 
       return this.walletUtils.getWallets()
         .then((wallets) => {
-          wallets.forEach(wallet => wallet.approved = {});
           this.wallets = wallets.sort(this.sortByName);
+          this.useWalletAdmin = wallets.find(wallet => wallet && wallet.type && wallet.id && wallet.type.toLowerCase() === 'admin' && wallet.name.toLowerCase() === 'admin');
           // *async* approval retrieval
           this.retrieveWalletsApproval(this.principalContract, this.wallets);
         })
@@ -496,7 +526,6 @@ export default {
       }
       return accountDetails.contract.methods.isApprovedAccount(wallet.address).call()
         .then((approved) => {
-          this.$set(wallet.approved, accountDetails.address, approved ? 'approved' : 'disapproved');
           this.$set(wallet, 'disapproved', !approved);
           this.$forceUpdate();
 
@@ -621,38 +650,16 @@ export default {
         })
         .catch(e => this.error = String(e));
     },
+    walletInitialized(hash) {
+      this.error = null;
+      if (hash) {
+        this.$set(this.walletToProcess, 'pendingTransaction', (this.walletToProcess.pendingTransaction || 0) + 1);
+        this.watchWalletTransaction(this.walletToProcess, hash);
+      }
+    },
     openAcceptInitializationModal(wallet) {
       this.walletToProcess = wallet;
-      this.informationTitle = 'Initialize wallet confirmation';
-      let initialFunds = '';
-      if (this.initialFunds && this.initialFunds.length) {
-        const etherInitialFund = this.initialFunds.find((initialFund) => initialFund.address === 'ether');
-        const etherAmount = (etherInitialFund && etherInitialFund.amount) || 0;
-        if (etherAmount) {
-          initialFunds = `<strong>${etherAmount} ETH</strong>`;
-        }
-        if (this.principalContract && this.principalContract.address && this.principalContract.address.indexOf('0x') === 0) {
-          const tokenInitialFund = this.initialFunds.find((initialFund) => initialFund.address && initialFund.address.toLowerCase() === this.principalContract.address.toLowerCase());
-          const tokenAmount = (tokenInitialFund && tokenInitialFund.amount) || 0;
-          if (tokenAmount) {
-            if (etherAmount) {
-              initialFunds = `${initialFunds  } and `;
-            }
-            initialFunds = `${initialFunds  }<strong>${tokenAmount} ${this.principalContract.symbol}</strong>`;
-          }
-        }
-      }
-
-      if (!initialFunds || !initialFunds.length) {
-        initialFunds = 'No inital funds are configured in settings';
-      }
-
-      this.informationMessage = `Would you like to <strong>initialize</strong> wallet of \
-        ${wallet.type} <strong>${wallet.name}</strong> \
-        with initial funds: ${initialFunds}?`;
-      this.hideConfirmActions = false;
-      this.confirmAction = 'initialize';
-      this.$refs.informationModal.open();
+      this.$refs.initAccountModal.open(wallet, window.walletSettings.initialFundsRequestMessage, this.etherAmount, this.tokenAmount);
     },
     openDenyInitializationModal(wallet) {
       this.walletToProcess = wallet;
