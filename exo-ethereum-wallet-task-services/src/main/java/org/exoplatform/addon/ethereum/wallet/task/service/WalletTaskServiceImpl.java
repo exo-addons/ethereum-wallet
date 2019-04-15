@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.task.service;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getIdentityByTypeAndId;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getIdentityByTypeAndId;
 
 import java.util.Set;
 

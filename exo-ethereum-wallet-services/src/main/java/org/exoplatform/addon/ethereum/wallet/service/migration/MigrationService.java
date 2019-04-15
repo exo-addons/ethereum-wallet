@@ -35,6 +35,8 @@ public class MigrationService implements Startable {
 
   private WalletTokenTransactionService tokenTransactionService;
 
+  private WalletContractService         contractService;
+
   private WalletAccountService          accountService;
 
   private EthereumWalletService         ethereumWalletService;
@@ -49,22 +51,27 @@ public class MigrationService implements Startable {
     migrationExecutorService = Executors.newSingleThreadExecutor(namedThreadFactory);
     // Transactions Queue processing
     migrationExecutorService.execute(() -> {
+      ExoContainerContext.setCurrentContainer(container);
+      boolean hasErrors = false;
+      RequestLifeCycle.begin(this.container);
       GlobalSettings settings = getEthereumWalletService().getSettings();
+      if (settings == null) {
+        return;
+      }
 
       Integer dataVersion = settings.getDataVersion();
       if (dataVersion != null && dataVersion >= GLOBAL_DATA_VERSION) {
         return;
       }
 
-      ExoContainerContext.setCurrentContainer(container);
+      // Migrate ether transactions
       LOG.info("Migrate ether transactions values");
-      boolean hasErrors = false;
-      RequestLifeCycle.begin(this.container);
       try {
         List<TransactionDetail> etherTransactions = getTransactionService().getEtherTransactions();
         if (etherTransactions != null && !etherTransactions.isEmpty()) {
           for (TransactionDetail transactionDetail : etherTransactions) {
-            if (transactionDetail.getValue() > 0) {
+            // If value was set in WEI instead of ether
+            if (transactionDetail.getValue() > 10000L) {
               transactionDetail.setValueDecimal(BigDecimal.valueOf(transactionDetail.getValue()).toBigInteger(),
                                                 ETHER_TO_WEI_DECIMALS);
               getTransactionService().saveTransactionDetail(transactionDetail, false);
@@ -79,30 +86,34 @@ public class MigrationService implements Startable {
       }
       LOG.info("Ether transactions migration finished successfully");
 
-      LOG.info("Migrate wallet initialization flags");
-      RequestLifeCycle.begin(this.container);
-      try {
-        Set<Wallet> listWallets = getAccountService().listWallets();
-        if (listWallets != null && !listWallets.isEmpty()) {
-          for (Wallet wallet : listWallets) {
-            if (wallet == null || StringUtils.isBlank(wallet.getAddress())) {
-              continue;
-            }
-            if (getTokenTransactionService().isApprovedAccount(wallet.getAddress())) {
-              getAccountService().setInitializationStatus(wallet.getAddress(), WalletInitializationState.INITIALIZED);
+      // Migrate wallets initialization flags
+      if (StringUtils.isNotBlank(settings.getDefaultPrincipalAccount())) {
+        LOG.info("Migrate wallet initialization flags");
+        RequestLifeCycle.begin(this.container);
+        try {
+          Set<Wallet> listWallets = getAccountService().listWallets();
+          if (listWallets != null && !listWallets.isEmpty()) {
+            for (Wallet wallet : listWallets) {
+              if (wallet == null || StringUtils.isBlank(wallet.getAddress())
+                  || StringUtils.equals(wallet.getInitializationState(), WalletInitializationState.INITIALIZED.name())) {
+                continue;
+              }
+              if (getTokenTransactionService().isApprovedAccount(wallet.getAddress())) {
+                getAccountService().setInitializationStatus(wallet.getAddress(), WalletInitializationState.INITIALIZED);
+              }
             }
           }
+        } catch (Exception e) {
+          LOG.error("Error while migrating wallet initialization flags", e);
+          hasErrors = true;
+        } finally {
+          RequestLifeCycle.end();
         }
-      } catch (Exception e) {
-        LOG.error("Error while migrating wallet initialization flags", e);
-        hasErrors = true;
-      } finally {
-        RequestLifeCycle.end();
+        LOG.info("Wallet initialization flags migration finished successfully");
       }
-      LOG.info("Wallet initialization flags migration finished successfully");
 
       if (hasErrors) {
-        LOG.info("Ether wallets and transactions migration seems to have some errors, it will be reattempted again next startup");
+        LOG.warn("Ether wallets and transactions migration seems to have some errors, it will be reattempted again next startup");
       } else {
         LOG.info("Ether wallets and transactions migration has finished susccessfully");
         RequestLifeCycle.begin(this.container);
@@ -113,6 +124,7 @@ public class MigrationService implements Startable {
         }
       }
     });
+
   }
 
   @Override
@@ -146,5 +158,12 @@ public class MigrationService implements Startable {
       tokenTransactionService = CommonsUtils.getService(WalletTokenTransactionService.class);
     }
     return tokenTransactionService;
+  }
+
+  public WalletContractService getContractService() {
+    if (contractService == null) {
+      contractService = CommonsUtils.getService(WalletContractService.class);
+    }
+    return contractService;
   }
 }

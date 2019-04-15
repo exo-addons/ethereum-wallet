@@ -50,4 +50,6 @@ public interface WalletTokenTransactionService {
 
   String getContractAddress();
 
+  void reinit();
+
 }

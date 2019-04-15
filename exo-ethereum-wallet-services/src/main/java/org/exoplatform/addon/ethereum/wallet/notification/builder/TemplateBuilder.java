@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.notification.builder;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import java.io.Writer;
 import java.util.Calendar;

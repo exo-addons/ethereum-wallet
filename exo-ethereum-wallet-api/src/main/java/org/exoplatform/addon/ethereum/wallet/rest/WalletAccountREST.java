@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;

@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.service;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import java.util.Collections;
 import java.util.Set;
@@ -170,6 +170,9 @@ public class EthereumWalletAccountService implements WalletAccountService {
     saveWalletAddress(wallet, currentUser, false);
     try {
       accountStorage.saveWalletPrivateKey(identityId, walletJson);
+      getListenerService().broadcast(ADMIN_WALLET_MODIFIED_EVENT,
+                                     wallet.clone(),
+                                     null);
     } catch (Exception e) {
       // Make sure to delete corresponding wallet when the private key isn't
       // saved
@@ -499,7 +502,7 @@ public class EthereumWalletAccountService implements WalletAccountService {
   public Object getAdminWalletKeys() {
     String adminPrivateKey = getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
     if (StringUtils.isBlank(adminPrivateKey)) {
-      throw new IllegalStateException("Admin wallet keys are not stored");
+      return null;
     }
     WalletFile adminWallet = null;
     try {

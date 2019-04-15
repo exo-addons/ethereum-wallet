@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.storage;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.formatTransactionHash;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.formatTransactionHash;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

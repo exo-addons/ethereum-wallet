@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.rest;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getCurrentUserId;
 
 import java.util.List;
 

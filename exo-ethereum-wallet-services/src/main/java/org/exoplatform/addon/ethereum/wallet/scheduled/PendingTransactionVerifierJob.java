@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.scheduled;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.EMPTY_HASH;
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.NEW_TRANSACTION_EVENT;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.EMPTY_HASH;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.NEW_TRANSACTION_EVENT;
 
 import java.time.Duration;
 import java.util.List;

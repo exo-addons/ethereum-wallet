@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.notification.plugin;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import java.util.List;
 

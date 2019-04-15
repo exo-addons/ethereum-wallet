@@ -51,10 +51,10 @@ import org.exoplatform.ws.frameworks.json.impl.*;
 /**
  * Utils class to provide common tools and constants
  */
-public class Utils {
-  private static final Log LOG = ExoLogger.getLogger(Utils.class);
+public class WalletUtils {
+  private static final Log LOG = ExoLogger.getLogger(WalletUtils.class);
 
-  private Utils() {
+  private WalletUtils() {
   }
 
   @SuppressWarnings("all")
@@ -114,7 +114,7 @@ public class Utils {
 
   public static final String                          BIN_PATH_PARAMETER                    = "contract.bin.path";
 
-  public static final int                             GLOBAL_DATA_VERSION                   = 2;
+  public static final int                             GLOBAL_DATA_VERSION                   = 6;
 
   public static final int                             USER_DATA_VERSION                     = 1;
 
@@ -135,6 +135,9 @@ public class Utils {
 
   public static final String                          NEW_ADDRESS_ASSOCIATED_EVENT          =
                                                                                    "exo.addon.wallet.addressAssociation.new";
+
+  public static final String                          ADMIN_WALLET_MODIFIED_EVENT           =
+                                                                                  "exo.addon.wallet.admin.modified";
 
   public static final String                          MODIFY_ADDRESS_ASSOCIATED_EVENT       =
                                                                                       "exo.addon.wallet.addressAssociation.modification";

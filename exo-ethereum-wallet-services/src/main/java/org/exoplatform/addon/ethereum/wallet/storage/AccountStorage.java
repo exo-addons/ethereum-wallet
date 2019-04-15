@@ -1,7 +1,7 @@
 package org.exoplatform.addon.ethereum.wallet.storage;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.computeWalletFromIdentity;
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.getIdentityById;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.computeWalletFromIdentity;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getIdentityById;
 
 import java.util.*;
 import java.util.stream.Collectors;

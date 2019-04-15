@@ -1,6 +1,6 @@
 package org.exoplatform.addon.ethereum.wallet.scheduled;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import java.util.Set;
 

@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.test;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.GLOBAL_DATA_VERSION;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.GLOBAL_DATA_VERSION;
 import static org.junit.Assert.*;
 
 import org.apache.commons.lang3.StringUtils;

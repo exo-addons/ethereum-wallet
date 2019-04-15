@@ -16,7 +16,7 @@
  */
 package org.exoplatform.addon.ethereum.wallet.notification.provider;
 
-import static org.exoplatform.addon.ethereum.wallet.utils.Utils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import org.exoplatform.addon.ethereum.wallet.notification.builder.RequestFundsTemplateBuilder;
 import org.exoplatform.addon.ethereum.wallet.notification.builder.TemplateBuilder;

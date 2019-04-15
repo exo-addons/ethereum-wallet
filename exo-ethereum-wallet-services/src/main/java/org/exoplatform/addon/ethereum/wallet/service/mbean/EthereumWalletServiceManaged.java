@@ -51,12 +51,6 @@ public class EthereumWalletServiceManaged {
     return getAccountService().getWalletsCount();
   }
 
-  @Managed
-  @ManagedDescription("Get ethereum blockchain connection interruption count")
-  public int getConnectionInterruptionCount() {
-    return getClientConnector().getConnectionInterruptionCount();
-  }
-
   public WalletTransactionService getTransactionService() {
     if (transactionService == null) {
       transactionService = CommonsUtils.getService(WalletTransactionService.class);
