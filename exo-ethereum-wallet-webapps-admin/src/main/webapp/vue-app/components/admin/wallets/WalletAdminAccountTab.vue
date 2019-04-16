@@ -112,22 +112,6 @@
             </v-list-tile>
             <v-list-tile>
               <v-list-tile-title>
-                Approved
-                <warning-bubble v-if="adminWallet.level < 4">
-                  <template slot="bubble-content">
-                    Admin wallet should having admin level 4 and approved on token {{ principalContract.name }}
-                  </template>
-                  <template slot="content">
-                    Admin wallet should having admin level 4 and approved on token {{ principalContract.name }}
-                  </template>
-                </warning-bubble>
-              </v-list-tile-title>
-              <v-list-tile-title>
-                {{ adminWallet.approved ? 'Yes' : 'No' }}
-              </v-list-tile-title>
-            </v-list-tile>
-            <v-list-tile>
-              <v-list-tile-title>
                 Token balance
                 <warning-bubble v-if="adminWallet.balanceToken < 100">
                   <template slot="bubble-content">

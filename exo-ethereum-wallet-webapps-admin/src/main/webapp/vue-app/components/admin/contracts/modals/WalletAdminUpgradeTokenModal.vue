@@ -51,6 +51,11 @@
             size="20" />
           <v-spacer />
         </v-card-title>
+        <v-card-title v-show="loading && step" class="pb-0">
+          <v-spacer />
+          <div>Step {{ step }} / 4</div>
+          <v-spacer />
+        </v-card-title>
         <v-card-text class="pt-0">
           <v-form
             ref="form"
@@ -125,6 +130,7 @@ export default {
       fiatSymbol: null,
       gasEstimation: null,
       gasPrice: 0,
+      step: 0,
       warning: null,
       error: null,
     };
@@ -170,16 +176,21 @@ export default {
       this.$nextTick(this.estimateTransactionFee);
     },
     upgradeToken(estimateGas) {
-      let ertTokenV2Address = '0x1111111111111111111111111111111111111111', ertTokenDataV2Address = '0x1111111111111111111111111111111111111111', ertTokenV2TransactionHash, ertTokenDataTransactionHash;
+      const currentUpgradeState = this.getState();
+      let ertTokenV2Address = (estimateGas && '0x1111111111111111111111111111111111111111') || (currentUpgradeState && currentUpgradeState.ertTokenV2Address);
+      let ertTokenDataV2Address = (estimateGas && '0x1111111111111111111111111111111111111111') || (currentUpgradeState && currentUpgradeState.ertTokenDataV2Address);
+      this.step = estimateGas ? 0 : (currentUpgradeState && currentUpgradeState.step) || 1;
 
       let estimatedGas = 0;
+      let ertTokenV2TransactionHash;
+      let ertTokenDataTransactionHash;
 
       this.loading = true;
       return this.tokenUtils.createNewContractInstanceByName('ERTTokenV2')
         .then((ertTokenV2Instance) => {
           if (estimateGas) {
             return this.tokenUtils.estimateContractDeploymentGas(ertTokenV2Instance);
-          } else {
+          } else if (this.step < 2) {
             return this.tokenUtils.deployContract(ertTokenV2Instance, this.walletAddress, 4700000, this.gasPrice, hash => ertTokenV2TransactionHash = hash);
           }
         })
@@ -189,19 +200,24 @@ export default {
           }
           if (estimateGas) {
             estimatedGas += parseInt(data * 1.1);
-            console.log("estimatedGas 1", data);
-          } else if (!data || !data.options || !data.options.address) {
-            throw new Error('Cannot find address of newly deployed address');
-          } else {
-            ertTokenV2Address = data.options.address;
+          } else if (this.step < 2) {
+            if (!data || !data.options || !data.options.address) {
+              throw new Error('Cannot find address of newly deployed address');
+            } else {
+              ertTokenV2Address = data.options.address;
+              this.saveState({
+                ertTokenV2Address: ertTokenV2Address,
+                step: 2,
+              });
+            }
           }
-//TODO                this.saveState();
         })
         .then(() => this.tokenUtils.createNewContractInstanceByName('ERTTokenDataV2', this.contractDetails.address, ertTokenV2Address))
         .then((ertTokenDataV2Instance) => {
           if (estimateGas) {
             return this.tokenUtils.estimateContractDeploymentGas(ertTokenDataV2Instance);
-          } else {
+          } else if (this.step < 3) {
+            this.step = 2;
             return this.tokenUtils.deployContract(ertTokenDataV2Instance, this.walletAddress, 4700000, this.gasPrice, hash => ertTokenDataTransactionHash = hash);
           }
         })
@@ -209,17 +225,23 @@ export default {
           if (error) {
             throw error;
           }
+
           if (estimateGas) {
             estimatedGas += parseInt(data * 1.1);
-            console.log("estimatedGas 2", data);
-          } else if (!data || !data.options || !data.options.address) {
-            throw new Error('Cannot find address of newly deployed address');
-          } else {
-            ertTokenDataV2Address = data.options.address;
+          } else if (this.step < 3) {
+            if (!data || !data.options || !data.options.address) {
+              throw new Error('Cannot find address of newly deployed address');
+            } else {
+              ertTokenDataV2Address = data.options.address;
+              this.saveState({
+                ertTokenV2Address: ertTokenV2Address,
+                ertTokenDataV2Address: ertTokenDataV2Address,
+                step: 3,
+              });
+            }
           }
-//TODO                this.saveState();
         })
-        .then(() => this.contractDetails.contract.methods.upgradeData(2, ertTokenDataV2Address))
+        .then(() => this.step < 4 && this.contractDetails.contract.methods.upgradeData(2, ertTokenDataV2Address))
         .then((operation) => {
           if (estimateGas) {
             return operation.estimateGas({
@@ -227,7 +249,8 @@ export default {
               gas: 4700000,
               gasPrice: this.gasPrice,
             });
-          } else {
+          } else if (this.step < 4) {
+            this.step = 3;
             return operation.send({
               from: this.walletAddress,
               gas: 4700000,
@@ -238,7 +261,12 @@ export default {
         .then((gasEstimation) => {
           if (estimateGas) {
             estimatedGas += parseInt(gasEstimation * 1.1);
-            console.log("estimatedGas 3", gasEstimation);
+          } else if (this.step < 4) {
+            this.saveState({
+              ertTokenV2Address: ertTokenV2Address,
+              ertTokenDataV2Address: ertTokenDataV2Address,
+              step: 4,
+            });
           }
         })
         .then(() => this.contractDetails.contract.methods.upgradeImplementation(this.contractDetails.address, 2, ertTokenV2Address))
@@ -250,6 +278,7 @@ export default {
               gasPrice: this.gasPrice,
             });
           } else {
+            this.step = 4;
             return operation.send({
               from: this.walletAddress,
               gas: 4700000,
@@ -260,11 +289,10 @@ export default {
         .then((gasEstimation) => {
           if (estimateGas) {
             estimatedGas += parseInt(gasEstimation * 1.1);
-            console.log("estimatedGas 4", gasEstimation);
             this.gasEstimation = estimatedGas;
-            console.log("this.gasEstimation", this.gasEstimation);
           } else {
-            this.$emit('success');
+            this.removeState();
+            this.$emit('success', ertTokenV2TransactionHash, this.contractDetails, 'upgrade');
             // TODO add three trasactions in the list
           }
           return true;
@@ -279,6 +307,20 @@ export default {
     },
     estimateTransactionFee() {
       return this.upgradeToken(true);
+    },
+    saveState(state) {
+      window.localStorage.setItem(`exo-wallet-upgrade-v2-${this.contractDetails.address}`, JSON.stringify(state))
+    },
+    getState() {
+      const state = window.localStorage.getItem(`exo-wallet-upgrade-v2-${this.contractDetails.address}`);
+      if (state) {
+        return JSON.parse(state);
+      } else {
+        return null;
+      }
+    },
+    removeState() {
+      window.localStorage.removeItem(`exo-wallet-upgrade-v2-${this.contractDetails.address}`);
     },
     send() {
       this.error = null;

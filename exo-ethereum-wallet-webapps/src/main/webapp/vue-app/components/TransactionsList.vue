@@ -70,7 +70,7 @@
 
                 <v-list-tile-title v-else-if="item.type === 'ether'">
                   <profile-chip
-                    v-if="displayFullTransaction && item.isReceiver"
+                    v-if="displayFullTransaction"
                     :address="item.toAddress"
                     :profile-id="item.toUsername"
                     :profile-technical-id="item.toTechnicalId"
@@ -578,6 +578,21 @@
               </v-list-tile-content>
               <v-list-tile-content class="align-end">
                 <v-icon :color="item.status ? 'success' : 'error'" v-text="item.status ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile v-if="administration && item.issuer">
+              <v-list-tile-content>
+                Issuer
+              </v-list-tile-content>
+              <v-list-tile-content class="align-end">
+                <profile-chip
+                  :address="item.issuer.address"
+                  :profile-id="item.issuer.id"
+                  :profile-technical-id="item.issuer.technicalId"
+                  :space-id="item.issuer.spaceId"
+                  :profile-type="item.issuer.type"
+                  :display-name="item.issuer.name"
+                  :avatar="item.issuer.avatar" />
               </v-list-tile-content>
             </v-list-tile>
 

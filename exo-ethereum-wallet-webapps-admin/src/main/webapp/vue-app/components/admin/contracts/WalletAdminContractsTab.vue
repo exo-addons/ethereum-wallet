@@ -154,7 +154,7 @@ export default {
     fiatSymbol: {
       type: String,
       default: function() {
-        return null;
+        return '$';
       },
     },
     tokenEtherscanLink: {

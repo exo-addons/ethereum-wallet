@@ -547,6 +547,8 @@ export default {
         if(index >= 0) {
           this.approvedWallets.splice(index, 1);
         }
+      } else if(methodName === 'upgrade') {
+        this.tokenUtils.retrieveContractDetails(this.walletAddress, contractDetails, true);
       }
     },
   },

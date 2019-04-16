@@ -15,28 +15,30 @@ public interface WalletTokenTransactionService {
                            String message,
                            String username) throws Exception;// NOSONAR
 
-  TransactionDetail reward(TransactionDetail transactionDetail) throws Exception;// NOSONAR
+  TransactionDetail reward(TransactionDetail transactionDetail, String issuerUsername) throws Exception;// NOSONAR
 
   TransactionDetail transfer(String receiver,
                              double tokenAmount,
                              String label,
                              String message,
-                             String username,
+                             String issuerUsername,
                              boolean enableChecksBeforeSending) throws Exception;// NOSONAR
 
-  TransactionDetail transfer(TransactionDetail transactionDetail, boolean enableChecksBeforeSending) throws Exception;// NOSONAR
+  TransactionDetail transfer(TransactionDetail transactionDetail,
+                             String issuerUsername,
+                             boolean enableChecksBeforeSending) throws Exception;// NOSONAR
 
-  TransactionDetail initialize(String receiver, String username) throws Exception;// NOSONAR
+  TransactionDetail initialize(String receiver, String issuerUsername) throws Exception;// NOSONAR
 
-  TransactionDetail initialize(TransactionDetail transactionDetail) throws Exception;// NOSONAR
+  TransactionDetail initialize(TransactionDetail transactionDetail, String issuerUsername) throws Exception;// NOSONAR
 
-  TransactionDetail disapproveAccount(String receiver, String username) throws Exception;// NOSONAR
+  TransactionDetail disapproveAccount(String receiver, String issuerUsername) throws Exception;// NOSONAR
 
-  TransactionDetail disapproveAccount(TransactionDetail transactionDetail) throws Exception;// NOSONAR
+  TransactionDetail disapproveAccount(TransactionDetail transactionDetail, String issuerUsername) throws Exception;// NOSONAR
 
-  TransactionDetail approveAccount(String receiver, String username) throws Exception;// NOSONAR
+  TransactionDetail approveAccount(String receiver, String issuerUsername) throws Exception;// NOSONAR
 
-  TransactionDetail approveAccount(TransactionDetail transactionDetail) throws Exception;// NOSONAR
+  TransactionDetail approveAccount(TransactionDetail transactionDetail, String issuerUsername) throws Exception;// NOSONAR
 
   BigInteger balanceOf(String address) throws Exception;// NOSONAR
 

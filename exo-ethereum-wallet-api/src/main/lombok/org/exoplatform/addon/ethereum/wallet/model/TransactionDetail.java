@@ -15,7 +15,9 @@ public class TransactionDetail implements Serializable, Cloneable {
 
   private long              id;
 
-  private long              issuerIdentityId;
+  private Wallet            issuer;
+
+  private long              issuerId;
 
   private long              networkId;
 

@@ -71,7 +71,7 @@ public class ModifiedWalletListener extends Listener<Wallet, Wallet> {
         TransactionDetail transactionDetail = new TransactionDetail();
         transactionDetail.setTo(oldAddress);
         transactionDetail.setMessage(message);
-        getTokenTransactionService().disapproveAccount(transactionDetail);
+        getTokenTransactionService().disapproveAccount(transactionDetail, null);
       }
     } finally {
       RequestLifeCycle.end();

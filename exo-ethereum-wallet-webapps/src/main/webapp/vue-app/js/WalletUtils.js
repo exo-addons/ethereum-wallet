@@ -454,6 +454,8 @@ export function getAddressEtherscanlink(networkId) {
         return 'https://etherscan.io/address/';
       case 3:
         return 'https://ropsten.etherscan.io/address/';
+      default:
+        return '#';
     }
   }
   return null;
@@ -466,6 +468,8 @@ export function getTokenEtherscanlink(networkId) {
         return 'https://etherscan.io/token/';
       case 3:
         return 'https://ropsten.etherscan.io/token/';
+      default:
+        return '#';
     }
   }
   return null;
@@ -478,6 +482,8 @@ export function getTransactionEtherscanlink(networkId) {
         return 'https://etherscan.io/tx/';
       case 3:
         return 'https://ropsten.etherscan.io/tx/';
+      default:
+        return '#';
     }
   }
   return null;

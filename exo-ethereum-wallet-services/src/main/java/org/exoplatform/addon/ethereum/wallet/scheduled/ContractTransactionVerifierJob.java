@@ -56,6 +56,11 @@ public class ContractTransactionVerifierJob implements Job {
         LOG.debug("Empty network id on settings, ignore blockchain listening");
         return;
       }
+      String wsURL = settings.getWebsocketProviderURL();
+      if (StringUtils.isBlank(wsURL)) {
+        LOG.debug("Empty Websocket URL, skip contract transaction verification");
+        return;
+      }
       Long networkId = settings.getDefaultNetworkId();
       Set<String> defaultContractsAddresses = getContractService().getDefaultContractsAddresses(networkId);
       if (defaultContractsAddresses == null || defaultContractsAddresses.isEmpty()) {

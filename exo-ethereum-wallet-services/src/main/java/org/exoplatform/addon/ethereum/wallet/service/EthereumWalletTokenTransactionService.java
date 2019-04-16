@@ -19,12 +19,12 @@ import org.web3j.tx.response.EmptyTransactionReceipt;
 
 import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2;
 import org.exoplatform.addon.ethereum.wallet.model.*;
-import org.exoplatform.addon.ethereum.wallet.utils.WalletUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-import org.exoplatform.social.core.identity.model.Identity;
 
 public class EthereumWalletTokenTransactionService implements WalletTokenTransactionService {
+
+  private static final long        DEFAULT_ADMIN_GAS                       = 300000l;
 
   private static final String      NO_CONFIGURED_CONTRACT_ADDRESS          = "No configured contract address";
 
@@ -126,15 +126,14 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   @Override
-  public final TransactionDetail approveAccount(String receiver, String username) throws Exception {
+  public final TransactionDetail approveAccount(String receiver, String issuerUsername) throws Exception {
     TransactionDetail transactionDetail = new TransactionDetail();
     transactionDetail.setTo(receiver);
-    setIssuerId(transactionDetail, username);
-    return approveAccount(transactionDetail);
+    return approveAccount(transactionDetail, issuerUsername);
   }
 
   @Override
-  public final TransactionDetail approveAccount(TransactionDetail transactionDetail) throws Exception {
+  public final TransactionDetail approveAccount(TransactionDetail transactionDetail, String issuerUsername) throws Exception {
     if (transactionDetail == null) {
       throw new IllegalArgumentException(TRANSACTION_DETAIL_IS_MANDATORY);
     }
@@ -142,7 +141,11 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     if (StringUtils.isBlank(receiver)) {
       throw new IllegalArgumentException(RECEIVER_ADDRESS_PARAMETER_IS_MANDATORY);
     }
+
     checkAdminWalletIsValid();
+
+    setIssuer(transactionDetail, issuerUsername);
+
     if (isApprovedAccount(receiver)) {
       LOG.debug("Wallet account {} is already approved", receiver);
       return null;
@@ -171,15 +174,14 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   @Override
-  public final TransactionDetail disapproveAccount(String receiver, String username) throws Exception {
+  public final TransactionDetail disapproveAccount(String receiver, String issuerUsername) throws Exception {
     TransactionDetail transactionDetail = new TransactionDetail();
     transactionDetail.setTo(receiver);
-    setIssuerId(transactionDetail, username);
-    return disapproveAccount(transactionDetail);
+    return disapproveAccount(transactionDetail, issuerUsername);
   }
 
   @Override
-  public final TransactionDetail disapproveAccount(TransactionDetail transactionDetail) throws Exception {
+  public final TransactionDetail disapproveAccount(TransactionDetail transactionDetail, String issuerUsername) throws Exception {
     if (transactionDetail == null) {
       throw new IllegalArgumentException(TRANSACTION_DETAIL_IS_MANDATORY);
     }
@@ -188,6 +190,9 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       throw new IllegalArgumentException(RECEIVER_ADDRESS_PARAMETER_IS_MANDATORY);
     }
     checkAdminWalletIsValid();
+
+    setIssuer(transactionDetail, issuerUsername);
+
     boolean adminAccount = isAdminAccount(receiver);
     boolean approvedAccount = isApprovedAccount(receiver);
     if (adminAccount) {
@@ -222,7 +227,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   @Override
-  public final TransactionDetail initialize(String receiver, String username) throws Exception {
+  public final TransactionDetail initialize(String receiver, String issuerUsername) throws Exception {
     GlobalSettings settings = walletService.getSettings();
     String message = settings.getInitialFundsRequestMessage();
     Map<String, Double> initialFunds = settings.getInitialFunds();
@@ -251,12 +256,11 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     transactionDetail.setContractAmount(tokenAmount);
     transactionDetail.setValue(etherAmount);
 
-    setIssuerId(transactionDetail, username);
-    return initialize(transactionDetail);
+    return initialize(transactionDetail, issuerUsername);
   }
 
   @Override
-  public final TransactionDetail initialize(TransactionDetail transactionDetail) throws Exception {
+  public final TransactionDetail initialize(TransactionDetail transactionDetail, String issuerUsername) throws Exception {
     if (transactionDetail == null) {
       throw new IllegalArgumentException(TRANSACTION_DETAIL_IS_MANDATORY);
     }
@@ -270,6 +274,8 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     }
 
     checkAdminWalletIsValid();
+
+    setIssuer(transactionDetail, issuerUsername);
 
     if (isInitializedAccount(receiver)) {
       throw new IllegalStateException("Wallet {} is already initialized");
@@ -324,19 +330,19 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
                                           double tokenAmount,
                                           String label,
                                           String message,
-                                          String username,
+                                          String issuerUsername,
                                           boolean enableChecksBeforeSending) throws Exception {
     TransactionDetail transactionDetail = new TransactionDetail();
     transactionDetail.setTo(receiver);
     transactionDetail.setLabel(label);
     transactionDetail.setMessage(message);
     transactionDetail.setContractAmount(tokenAmount);
-    setIssuerId(transactionDetail, username);
-    return transfer(transactionDetail, enableChecksBeforeSending);
+    return transfer(transactionDetail, issuerUsername, enableChecksBeforeSending);
   }
 
   @Override
   public final TransactionDetail transfer(TransactionDetail transactionDetail,
+                                          String issuerUsername,
                                           boolean enableChecksBeforeSending) throws Exception {
     if (transactionDetail == null) {
       throw new IllegalArgumentException(TRANSACTION_DETAIL_IS_MANDATORY);
@@ -351,6 +357,9 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     }
 
     checkAdminWalletIsValid();
+
+    setIssuer(transactionDetail, issuerUsername);
+
     if (enableChecksBeforeSending) {
       boolean approvedReceiver = isApprovedAccount(receiver);
       if (!approvedReceiver) {
@@ -396,19 +405,18 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
                                         double rewardAmount,
                                         String label,
                                         String message,
-                                        String username) throws Exception {
+                                        String issuerUsername) throws Exception {
     TransactionDetail transactionDetail = new TransactionDetail();
     transactionDetail.setTo(receiver);
     transactionDetail.setLabel(label);
     transactionDetail.setMessage(message);
     transactionDetail.setContractAmount(rewardAmount);
     transactionDetail.setValue(tokenAmount);
-    setIssuerId(transactionDetail, username);
-    return initialize(transactionDetail);
+    return initialize(transactionDetail, issuerUsername);
   }
 
   @Override
-  public final TransactionDetail reward(TransactionDetail transactionDetail) throws Exception {
+  public final TransactionDetail reward(TransactionDetail transactionDetail, String issuerUsername) throws Exception {
     if (transactionDetail == null) {
       throw new IllegalArgumentException(TRANSACTION_DETAIL_IS_MANDATORY);
     }
@@ -427,6 +435,9 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     }
 
     checkAdminWalletIsValid();
+
+    setIssuer(transactionDetail, issuerUsername);
+
     if (!isApprovedAccount(receiverAddress)) {
       throw new IllegalStateException("Wallet receiver {} is not approved yet, thus no transfer is allowed");
     }
@@ -493,14 +504,13 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     return contractAddress;
   }
 
-  private void setIssuerId(TransactionDetail transactionDetail, String username) {
-    if (StringUtils.isNoneBlank(username)) {
-      Identity identity = WalletUtils.getIdentityByTypeAndId(WalletType.USER, username);
-      if (identity == null) {
-        throw new IllegalStateException("Can't find identity of user with id " + username);
+  private void setIssuer(TransactionDetail transactionDetail, String issuerUsername) {
+    if (StringUtils.isNotBlank(issuerUsername)) {
+      Wallet issuerWallet = accountService.getWalletByTypeAndId(WalletType.USER.name(), issuerUsername);
+      if (issuerWallet == null) {
+        throw new IllegalStateException("Can't find identity of user with id " + issuerUsername);
       }
-      long identityId = Long.parseLong(identity.getId());
-      transactionDetail.setIssuerIdentityId(identityId);
+      transactionDetail.setIssuer(issuerWallet);
     }
   }
 
@@ -588,8 +598,8 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       throw new IllegalStateException("Admin account keys aren't set");
     }
     GlobalSettings settings = walletService.getSettings();
-    ContractGasProvider gasProvider = new StaticGasProvider(new BigInteger(String.valueOf(settings.getMinGasPrice())),
-                                                            new BigInteger(String.valueOf(settings.getDefaultGas())));
+    ContractGasProvider gasProvider = new StaticGasProvider(BigInteger.valueOf(settings.getMinGasPrice()),
+                                                            BigInteger.valueOf(DEFAULT_ADMIN_GAS));
     TransactionManager contractTransactionManager = clientConnector.getTransactionManager(adminCredentials);
     this.ertInstance = ERTTokenV2.load(contractAddress,
                                        clientConnector.getWeb3j(),

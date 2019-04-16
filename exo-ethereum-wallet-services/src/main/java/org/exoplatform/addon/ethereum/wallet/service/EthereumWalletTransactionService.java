@@ -209,6 +209,10 @@ public class EthereumWalletTransactionService implements WalletTransactionServic
     } else if (!displayTransactionsLabel(senderWallet, currentUser)) {
       transactionDetail.setLabel(null);
     }
+    if (transactionDetail.getIssuerId() > 0 && (isUserAdmin(currentUser) || isUserRewardingAdmin(currentUser))) {
+      Wallet issuerWallet = accountService.getWalletByIdentityId(transactionDetail.getIssuerId());
+      transactionDetail.setIssuer(issuerWallet);
+    }
   }
 
   private boolean displayTransactionsLabel(Wallet senderWallet, String currentUserId) {

@@ -3,7 +3,7 @@ module.exports = {
 //    test: {
 //      host: "127.0.0.1",
 //      port: 8545,
-//      network_id: "4452365",
+//      network_id: "4452364",
 //      gas: 7984452,
 //      gasPrice: 2000000000
 //    },

@@ -51,7 +51,7 @@
           </v-stepper-step>
         </v-stepper-header>
         <v-stepper-items>
-          <v-stepper-content step="1">
+          <v-stepper-content step="1" class="deploymentStep">
             <contract-deployment-step
               :network-id="networkId"
               :stored-password="storedPassword"
@@ -77,7 +77,7 @@
                 required />
             </contract-deployment-step>
           </v-stepper-content>
-          <v-stepper-content step="2">
+          <v-stepper-content step="2" class="deploymentStep">
             <contract-deployment-step
               :network-id="networkId"
               :stored-password="storedPassword"
@@ -103,7 +103,7 @@
                 required />
             </contract-deployment-step>
           </v-stepper-content>
-          <v-stepper-content step="3">
+          <v-stepper-content step="3" class="deploymentStep">
             <contract-deployment-step
               :network-id="networkId"
               :stored-password="storedPassword"
@@ -129,7 +129,7 @@
                 required />
             </contract-deployment-step>
           </v-stepper-content>
-          <v-stepper-content step="4">
+          <v-stepper-content step="4" class="deploymentStep">
             <contract-deployment-step
               :network-id="networkId"
               :stored-password="storedPassword"
@@ -154,7 +154,7 @@
                 required />
             </contract-deployment-step>
           </v-stepper-content>
-          <v-stepper-content step="5">
+          <v-stepper-content step="5" class="deploymentStep">
             <contract-deployment-step
               :network-id="networkId"
               :stored-password="storedPassword"
@@ -252,7 +252,7 @@ export default {
     fiatSymbol: {
       type: String,
       default: function() {
-        return null;
+        return '$';
       },
     },
     networkId: {

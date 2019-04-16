@@ -17,7 +17,6 @@
 package org.exoplatform.addon.ethereum.wallet.rest;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getCurrentUserId;
-import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getIdentityByTypeAndId;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -26,12 +25,10 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
-import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
-import org.exoplatform.social.core.identity.model.Identity;
 
 /**
  * This class provide a REST endpoint to manage transactions served by admin
@@ -112,11 +109,7 @@ public class WalletAdminTransactionREST implements ResourceContainer {
       transactionDetail.setValue(etherAmount);
       transactionDetail.setLabel(transactionLabel);
       transactionDetail.setMessage(transactionMessage);
-
-      Identity identity = getIdentityByTypeAndId(WalletType.USER, currentUserId);
-      transactionDetail.setIssuerIdentityId(Long.parseLong(identity.getId()));
-
-      transactionDetail = tokenOperationService.initialize(transactionDetail);
+      transactionDetail = tokenOperationService.initialize(transactionDetail, currentUserId);
       return Response.ok(transactionDetail == null ? "" : transactionDetail.getHash()).build();
     } catch (Exception e) {
       LOG.warn("Error initializing wallet {}", receiver, e);

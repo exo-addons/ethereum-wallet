@@ -176,13 +176,6 @@
                   </v-list-tile>
                   <v-divider />
 
-                  <template v-if="props.item.address && props.item.enabled && !props.item.deletedUser && !props.item.disabledUser && props.item.disapproved === false">
-                    <v-list-tile @click="sendFunds(props.item)">
-                      <v-list-tile-title>Send funds</v-list-tile-title>
-                    </v-list-tile>
-                    <v-divider />
-                  </template>
-
                   <template v-if="props.item.type === 'user' || props.item.type === 'space'">
                     <template v-if="useWalletAdmin">
                       <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 1 && props.item.initializationState === 'NEW' || props.item.initializationState === 'MODIFIED' || props.item.initializationState === 'DENIED'">
@@ -239,18 +232,6 @@
     <initialize-account-modal
       ref="initAccountModal"
       @sent="walletInitialized" />
-
-    <send-funds-modal
-      ref="sendFundsModal"
-      :wallet-address="walletAddress"
-      :network-id="networkId"
-      :principal-account="principalContract && principalContract.address"
-      :accounts-details="accountsDetails"
-      display-all-accounts
-      no-button
-      @success="init"
-      @pending="pendingTransaction = true; $emit('pending', $event)"
-      @error="init" />
 
     <!-- The selected account detail -->
     <v-navigation-drawer

@@ -270,6 +270,12 @@ public class EthereumClientConnector {
       throw new IllegalStateException("Server is stopping, thus no Web3 request should be emitted");
     }
     while (!isConnected()) {
+      if (this.serviceStarted && StringUtils.isBlank(getWebsocketProviderURL())) {
+        throw new IllegalStateException("No websocket connection is configured for ethereum blockchain");
+      }
+      if (this.serviceStopping) {
+        throw new IllegalStateException("Server is stopping, thus no Web3 request should be emitted");
+      }
       LOG.info("Wait until Websocket connection to blockchain is established to retrieve information");
       Thread.sleep(5000);
     }
@@ -280,8 +286,8 @@ public class EthereumClientConnector {
   }
 
   private void resetConnection() {
-    LOG.info("Resetting blockchain connection");
     if (web3j != null) {
+      LOG.info("Resetting blockchain connection");
       try {
         web3j.shutdown();
       } catch (Throwable e) {
