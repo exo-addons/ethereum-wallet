@@ -185,7 +185,7 @@ export default {
         return [];
       }
 
-      const etherInitialFund = window.walletSettings.initialFunds.find((initialFund) => initialFund.address === 'ether');
+      const etherInitialFund = window.walletSettings.initialFunds && window.walletSettings.initialFunds.find((initialFund) => initialFund.address === 'ether');
       const etherAmount = (etherInitialFund && etherInitialFund.amount) || 0;
       this.initialFunds = [{
         name: 'ether',
@@ -194,7 +194,7 @@ export default {
       }];
 
       if (this.principalContract && this.principalContract.value && this.principalContract.value.indexOf('0x') === 0) {
-        const tokenInitialFund = window.walletSettings.initialFunds.find((initialFund) => initialFund.address && initialFund.address.toLowerCase() === this.principalContract.value.toLowerCase());
+        const tokenInitialFund = window.walletSettings.initialFunds && window.walletSettings.initialFunds.find((initialFund) => initialFund.address && initialFund.address.toLowerCase() === this.principalContract.value.toLowerCase());
         const tokenAmount = (tokenInitialFund && tokenInitialFund.amount) || 0;
         this.initialFunds.push({
           name: this.principalContract.text,

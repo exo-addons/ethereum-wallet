@@ -24,11 +24,13 @@
             slot="header"
             :class="item.selected && 'blue lighten-5'"
             two-line
+            ripple
             class="pt-0 pb-0">
             <v-list-tile
               :key="item.hash"
-              class="transactionDetailItem"
-              avatar>
+              class="transactionDetailItem autoHeight"
+              avatar
+              ripple>
               <v-progress-circular
                 v-if="item.pending"
                 indeterminate

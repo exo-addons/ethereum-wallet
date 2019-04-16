@@ -81,7 +81,7 @@
         You are using <code>Admin</code> address in metamask
       </span>
     </div>
-    <div v-else-if="isAdministration && !isPrincipalContractAdmin" class="alert alert-warning">
+    <div v-else-if="isAdministration && principalContractAdminAddress && !isPrincipalContractAdmin" class="alert alert-warning">
       <i class="uiIconWarning"></i> Attention: you are using an account different from<code>Admin</code> account
     </div>
     <div v-else-if="newAddressDetected">

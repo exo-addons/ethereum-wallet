@@ -252,6 +252,11 @@ export default {
               } else {
                 this.canSendToken = true;
               }
+
+              // Async gas estimation if current address is owner of contract
+              if (this.canSendToken && this.contractDetails && this.contractDetails.isOwner) {
+                this.estimateTransactionFee();
+              }
             });
         }
       }
@@ -297,22 +302,25 @@ export default {
     },
     estimateTransactionFee() {
       if (this.contractDetails && !this.contractDetails.isPaused && this.contractDetails.balance && this.contractDetails.sellPrice && this.contractDetails.owner && this.contractDetails.contractType) {
-        const recipient = this.contractDetails.isOwner ? '0x1111111111111111111111111111111111111111' : this.contractDetails.owner;
-        // Estimate gas
-        this.contractDetails.contract.methods
-          .transfer(recipient, String(Math.pow(10, this.contractDetails.decimals ? this.contractDetails.decimals : 0)))
-          .estimateGas({
-            from: this.contractDetails.contract.options.from,
-            gas: window.walletSettings.userPreferences.defaultGas,
-            gasPrice: this.gasPrice,
-          })
-          .then((estimatedGas) => {
-            // Add 10% to ensure that the operation doesn't take more than the estimation
-            this.estimatedGas = estimatedGas * 1.1;
-          })
-          .catch((e) => {
-            console.debug('Error while estimating gas', e);
-          });
+        const recipient = this.contractDetails.isOwner ? this.recipient : this.contractDetails.owner;
+
+        if (recipient) {
+          // Estimate gas
+          this.contractDetails.contract.methods
+            .transfer(recipient, String(Math.pow(10, this.contractDetails.decimals ? this.contractDetails.decimals : 0)))
+            .estimateGas({
+              from: this.contractDetails.contract.options.from,
+              gas: window.walletSettings.userPreferences.defaultGas,
+              gasPrice: this.gasPrice,
+            })
+            .then((estimatedGas) => {
+              // Add 10% to ensure that the operation doesn't take more than the estimation
+              this.estimatedGas = estimatedGas * 1.1;
+            })
+            .catch((e) => {
+              console.debug('Error while estimating gas', e);
+            });
+        }
       }
     },
     sendTokens() {

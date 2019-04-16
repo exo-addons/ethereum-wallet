@@ -55,17 +55,16 @@
               <wallets-tab
                 ref="walletsTab"
                 :network-id="networkId"
+                :wallet-address="walletAddress"
                 :loading="loading"
                 :fiat-symbol="fiatSymbol"
                 :refresh-index="refreshIndex"
                 :address-etherscan-link="addressEtherscanLink"
                 :principal-account-address="principalAccountAddress"
                 :principal-contract="principalContract"
-                :accounts-details="accountsDetails"
                 :is-admin="isAdmin"
                 @pending="pendingTransaction"
-                @wallets-loaded="wallets = $event"
-                @refresh-balance="refreshCurrentWalletBalances" />
+                @wallets-loaded="wallets = $event" />
             </v-tab-item>
             <v-tab-item
               v-if="isAdmin"
@@ -75,11 +74,8 @@
                 ref="adminAccountTab"
                 :network-id="networkId"
                 :loading="loading"
-                :fiat-symbol="fiatSymbol"
-                :address-etherscan-link="addressEtherscanLink"
-                :principal-account-address="principalAccountAddress"
-                :principal-contract="principalContract"
-                :accounts-details="accountsDetails" />
+                :wallet-address="walletAddress"
+                :principal-contract="principalContract" />
             </v-tab-item>
           </v-tabs-items>
         </v-flex>
@@ -104,10 +100,10 @@ export default {
       loading: false,
       selectedTab: 'wallets',
       fiatSymbol: '$',
+      walletAddress: null,
       refreshIndex: 1,
       principalContract: null,
       principalAccountAddress: null,
-      accountsDetails: null,
       networkId: null,
       isAdmin: null,
       addressEtherscanLink: null,
@@ -136,7 +132,7 @@ export default {
           }
           this.fiatSymbol = window.walletSettings.fiatSymbol || '$';
           this.networkId = window.walletSettings.defaultNetworkId;
-          this.walletAddress = window.walletSettings.userPreferences && window.walletSettings.userPreferences.walletAddress;
+          this.walletAddress = (window.walletSettings.userPreferences && window.walletSettings.userPreferences.walletAddress) || window.walletSettings.detectedMetamaskAccount;
           this.isAdmin = window.walletSettings.isAdmin;
           if (window.walletSettings.defaultPrincipalAccount && window.walletSettings.defaultPrincipalAccount.indexOf('0x') === 0) {
             this.principalAccountAddress = window.walletSettings.defaultPrincipalAccount;
@@ -206,18 +202,11 @@ export default {
           }
         }
       }
-      if (this.$refs.walletSummary) {
-        this.$refs.walletSummary.loadPendingTransactions();
-      }
     },
     watchPendingTransaction(transaction, contractDetails) {
-      if (this.$refs.walletSummary) {
-        this.$refs.walletSummary.loadPendingTransactions();
-      }
       const thiss = this;
       this.walletUtils.watchTransactionStatus(transaction.hash, (receipt) => {
         if (receipt && receipt.status) {
-          this.refreshCurrentWalletBalances(contractDetails);
           const wallet = thiss.wallets && thiss.wallets.find((wallet) => wallet && wallet.address && transaction.to && wallet.address.toLowerCase() === transaction.to.toLowerCase());
           if (transaction.contractMethodName === 'transferOwnership') {
             if (contractDetails && contractDetails.isContract && contractDetails.address && transaction.contractAddress && contractDetails.address.toLowerCase() === transaction.contractAddress.toLowerCase()) {

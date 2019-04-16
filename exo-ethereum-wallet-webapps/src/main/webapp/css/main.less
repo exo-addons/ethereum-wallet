@@ -133,8 +133,11 @@
       display: block;
     }
     .transactionDetailItem, .transactionDetailContent {
-      height: 79px;
+      height: auto;
       padding: 4px 0;
+    }
+    .transactionDetailItem > .v-list__tile {
+      height: auto;
     }
     .v-list__tile__title {
       height: 29px;
@@ -614,6 +617,10 @@
   }
   .walletAddressLabelInput {
     width: 100px;
+  }
+
+  .autoHeight {
+    height: auto;
   }
 }
 

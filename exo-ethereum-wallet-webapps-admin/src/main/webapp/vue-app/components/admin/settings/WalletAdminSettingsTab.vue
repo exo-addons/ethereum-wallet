@@ -105,6 +105,12 @@
 <script>
 export default {
   props: {
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
     loading: {
       type: Boolean,
       default: function() {
@@ -207,36 +213,31 @@ export default {
       }
       this.selectedOverviewAccounts = [];
       this.contracts = [];
-
-      if (window.walletSettings.defaultOverviewAccounts) {
-        const promises = [];
-
-        const selectedOverviewAccountsValues = window.walletSettings.defaultOverviewAccounts;
-        selectedOverviewAccountsValues.forEach((selectedValue) => {
+      const promises = [];
+      if (window.walletSettings.defaultContractsToDisplay) {
+        window.walletSettings.defaultContractsToDisplay.forEach((selectedValue) => {
           if (selectedValue && selectedValue.indexOf('0x') === 0) {
             promises.push(this.tokenUtils.getSavedContractDetails(selectedValue, window.walletSettings.defaultNetworkId));
           }
         });
+      }
+      return Promise.all(promises)
+        .then((contracts) => {
+          this.contracts = contracts || [];
 
-        return Promise.all(promises)
-          .then((contracts) => {
-            this.contracts = contracts;
-
-            selectedOverviewAccountsValues.forEach((selectedValue) => {
+          if (window.walletSettings.defaultOverviewAccounts) {
+            window.walletSettings.defaultOverviewAccounts.forEach((selectedValue) => {
               const selectedObject = this.getOverviewAccountObject(selectedValue);
               if (selectedObject) {
                 this.selectedOverviewAccounts.push(selectedObject);
               }
             });
+          }
 
-            if(window.walletSettings.defaultPrincipalAccount) {
-              this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
-            }
-          });
-
-      } else if(window.walletSettings.defaultPrincipalAccount) {
-        this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
-      }
+          if(window.walletSettings.defaultPrincipalAccount) {
+            this.selectedPrincipalAccount = this.getOverviewAccountObject(window.walletSettings.defaultPrincipalAccount);
+          }
+        });
     },
     getOverviewAccountObject(selectedValue) {
       if (selectedValue === 'fiat') {

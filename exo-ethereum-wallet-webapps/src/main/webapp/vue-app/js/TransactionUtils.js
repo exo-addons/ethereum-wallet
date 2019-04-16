@@ -118,7 +118,7 @@ function loadTransactionContractDetails(networkId, account, transactionDetails, 
 
   // If contract address found
   if (transactionDetails.contractAddress) {
-    const cachedContractDetails = window.walletContractsDetails ? Object.values(window.walletContractsDetails).find((details) => details && transactionDetails.contractAddress.toLowerCase() === details.address.toLowerCase()) : null;
+    const cachedContractDetails = window.walletContractsDetails ? Object.values(window.walletContractsDetails).find((details) => details && details.address && transactionDetails.contractAddress.toLowerCase() === details.address.toLowerCase()) : null;
     return (
       cachedContractDetails ||
       getSavedContractDetails(transactionDetails.contractAddress, networkId).then((contractDetails) => {
@@ -392,7 +392,7 @@ function retrieveWalletDetails(transactionDetails, prefix) {
     }
 
     transactionDetails[`${prefix}Address`] = transactionDetails[`${prefix}Address`].toLowerCase();
-    if (transactionDetails[`${prefix}Address`] === window.walletSettings.principalContractAdminAddress.toLowerCase()) {
+    if (window.walletSettings.principalContractAdminAddress && transactionDetails[`${prefix}Address`] === window.walletSettings.principalContractAdminAddress.toLowerCase()) {
       transactionDetails[`${prefix}DisplayName`] = window.walletSettings.principalContractAdminName;
     }
 

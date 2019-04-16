@@ -96,7 +96,6 @@ export function getTokenAccountDetails(address, balance) {
     isDefault: true,
     isContract: true,
     contractType: 2,
-    contractTypeLabel: 'ERT Token',
     networkId: global.testNetworkId,
     address: global.tokenAddress,
     name: global.tokenName,

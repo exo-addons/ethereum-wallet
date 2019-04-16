@@ -39,7 +39,6 @@
               Display
             </v-tab>
             <v-tab
-              v-if="walletAddress"
               key="security"
               href="#security">
               Security
@@ -88,7 +87,6 @@
               </v-card>
             </v-tab-item>
             <v-tab-item
-              v-if="walletAddress"
               id="security"
               value="security">
               <wallet-settings-security-tab

@@ -88,6 +88,14 @@
             <v-subheader>Admin account properties</v-subheader>
             <v-list-tile>
               <v-list-tile-title>
+                Address
+              </v-list-tile-title>
+              <v-list-tile-title>
+                {{ adminWallet.address }}
+              </v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile>
+              <v-list-tile-title>
                 Admin level
                 <warning-bubble v-if="adminWallet.level < 4">
                   <template slot="bubble-content">
@@ -150,6 +158,15 @@
                 {{ adminWallet.balanceEther }} ether / {{ adminWallet.balanceFiat }} {{ symbol }}
               </v-list-tile-title>
             </v-list-tile>
+            <v-list-tile>
+              <v-flex v-if="pendingTransaction">
+                <v-progress-circular
+                  color="primary"
+                  indeterminate
+                  size="20" />
+                Transaction in progress...
+              </v-flex>
+            </v-list-tile>
           </v-list>
         </v-flex>
       </v-layout>
@@ -179,6 +196,12 @@ export default {
         return '$';
       },
     },
+    walletAddress: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
     principalContract: {
       type: Object,
       default: function() {
@@ -194,6 +217,7 @@ export default {
       adminWalletExists: false,
       walletPrivateKey: '',
       walletPrivateKeyShow: false,
+      pendingTransaction: false,
       loading: false,
       creatingWallet: false,
       removingWallet: false,
@@ -202,8 +226,6 @@ export default {
         priv: (v) => (v && (v.length === 66 || v.length === 64)) || 'Exactly 64 or 66 (with "0x") characters are required',
       },
     };
-  },
-  computed: {
   },
   watch: {
     principalContract() {

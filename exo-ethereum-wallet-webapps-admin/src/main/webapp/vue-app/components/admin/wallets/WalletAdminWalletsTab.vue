@@ -163,7 +163,7 @@
                 class="mr-4"
                 indeterminate
                 size="20" />
-              <v-menu v-else-if="isAdmin && (props.item.type === 'user' || props.item.type === 'space')" offset-y>
+              <v-menu v-else-if="isAdmin" offset-y>
                 <v-btn
                   slot="activator"
                   icon
@@ -174,43 +174,51 @@
                   <v-list-tile @click="refreshWallet(props.item)">
                     <v-list-tile-title>Refresh</v-list-tile-title>
                   </v-list-tile>
-                  
                   <v-divider />
 
-                  <template v-if="useWalletAdmin">
-                    <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 1 && props.item.initializationState === 'NEW' || props.item.initializationState === 'MODIFIED' || props.item.initializationState === 'DENIED'">
-                      <v-list-tile @click="openAcceptInitializationModal(props.item)">
-                        <v-list-tile-title>Initialize wallet</v-list-tile-title>
-                      </v-list-tile>
-                      <v-list-tile v-if="props.item.initializationState !== 'DENIED'" @click="openDenyInitializationModal(props.item)">
-                        <v-list-tile-title>Reject wallet</v-list-tile-title>
-                      </v-list-tile>
-                      <v-divider />
-                    </template>
-
-                    <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 0 && (props.item.disapproved === true || props.item.disapproved === false)">
-                      <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
-                        <v-list-tile-title>Approve wallet</v-list-tile-title>
-                      </v-list-tile>
-                      <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
-                        <v-list-tile-title>Disapprove wallet</v-list-tile-title>
-                      </v-list-tile>
-                      <v-divider />
-                    </template>
+                  <template v-if="props.item.address && props.item.enabled && !props.item.deletedUser && !props.item.disabledUser && props.item.disapproved === false">
+                    <v-list-tile @click="sendFunds(props.item)">
+                      <v-list-tile-title>Send funds</v-list-tile-title>
+                    </v-list-tile>
+                    <v-divider />
                   </template>
 
-                  <v-list-tile v-if="props.item.enabled" @click="openDisableWalletModal(props.item)">
-                    <v-list-tile-title>Disable wallet</v-list-tile-title>
-                  </v-list-tile>
-                  <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
-                    <v-list-tile-title>Enable wallet</v-list-tile-title>
-                  </v-list-tile>
-
-                  <v-divider />
-
-                  <v-list-tile @click="openRemoveWalletModal(props.item)">
-                    <v-list-tile-title>Remove wallet</v-list-tile-title>
-                  </v-list-tile>
+                  <template v-if="props.item.type === 'user' || props.item.type === 'space'">
+                    <template v-if="useWalletAdmin">
+                      <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 1 && props.item.initializationState === 'NEW' || props.item.initializationState === 'MODIFIED' || props.item.initializationState === 'DENIED'">
+                        <v-list-tile @click="openAcceptInitializationModal(props.item)">
+                          <v-list-tile-title>Initialize wallet</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile v-if="props.item.initializationState !== 'DENIED'" @click="openDenyInitializationModal(props.item)">
+                          <v-list-tile-title>Reject wallet</v-list-tile-title>
+                        </v-list-tile>
+                        <v-divider />
+                      </template>
+  
+                      <template v-if="principalContract && principalContract.contractType && principalContract.contractType > 0 && (props.item.disapproved === true || props.item.disapproved === false)">
+                        <v-list-tile v-if="props.item.disapproved === true" @click="openApproveModal(props.item)">
+                          <v-list-tile-title>Approve wallet</v-list-tile-title>
+                        </v-list-tile>
+                        <v-list-tile v-else-if="props.item.disapproved === false" @click="openDisapproveModal(props.item)">
+                          <v-list-tile-title>Disapprove wallet</v-list-tile-title>
+                        </v-list-tile>
+                        <v-divider />
+                      </template>
+                    </template>
+  
+                    <v-list-tile v-if="props.item.enabled" @click="openDisableWalletModal(props.item)">
+                      <v-list-tile-title>Disable wallet</v-list-tile-title>
+                    </v-list-tile>
+                    <v-list-tile v-else-if="!props.item.disabledUser && !props.item.deletedUser" @click="enableWallet(props.item, true)">
+                      <v-list-tile-title>Enable wallet</v-list-tile-title>
+                    </v-list-tile>
+  
+                    <v-divider />
+  
+                    <v-list-tile @click="openRemoveWalletModal(props.item)">
+                      <v-list-tile-title>Remove wallet</v-list-tile-title>
+                    </v-list-tile>
+                  </template>
                 </v-list>
               </v-menu>
             </td>
@@ -231,6 +239,18 @@
     <initialize-account-modal
       ref="initAccountModal"
       @sent="walletInitialized" />
+
+    <send-funds-modal
+      ref="sendFundsModal"
+      :wallet-address="walletAddress"
+      :network-id="networkId"
+      :principal-account="principalContract && principalContract.address"
+      :accounts-details="accountsDetails"
+      display-all-accounts
+      no-button
+      @success="init"
+      @pending="pendingTransaction = true; $emit('pending', $event)"
+      @error="init" />
 
     <!-- The selected account detail -->
     <v-navigation-drawer
@@ -279,6 +299,12 @@ export default {
       },
     },
     fiatSymbol: {
+      type: String,
+      default: function() {
+        return null;
+      },
+    },
+    walletAddress: {
       type: String,
       default: function() {
         return null;
@@ -375,6 +401,26 @@ export default {
     };
   },
   computed: {
+    etherAccountDetails() {
+      return {
+        title: 'ether',
+        icon: 'ether',
+        symbol: 'ether',
+        isContract: false,
+        balance: 10, //  Fake balance to not display unsufficient funds
+        address: this.walletAddress,
+      };
+    },
+    accountsDetails() {
+      const accountsDetails = {};
+      if (this.principalContract && this.principalContract.address) {
+        accountsDetails[this.principalContract.address] = this.principalContract;
+      }
+      if (this.walletAddress) {
+        accountsDetails[this.walletAddress] = this.etherAccountDetails;
+      }
+      return accountsDetails;
+    },
     walletTableHeaders() {
       const walletTableHeaders = this.walletHeaders.slice();
       if (!this.isAdmin) {
@@ -759,6 +805,11 @@ export default {
         this.$set(wallet, 'pendingTransaction', (wallet.pendingTransaction || 1) - 1);
         this.refreshWallet(wallet);
       });
+    },
+    sendFunds(wallet) {
+      if (this.$refs.sendFundsModal) {
+        this.$refs.sendFundsModal.prepareSendForm(wallet.id, wallet.type, this.tokenAmount, this.principalContract && this.principalContract.address);
+      }
     },
     proceessAction() {
       if (this.confirmAction === 'approve') {

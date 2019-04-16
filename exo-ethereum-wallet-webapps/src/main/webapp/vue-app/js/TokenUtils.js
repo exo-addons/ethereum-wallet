@@ -30,7 +30,6 @@ export function getContractsDetails(account, netId, onlyDefault, isAdministratio
       const contractDetails = {};
       contractDetails.address = address;
       contractDetails.icon = 'fa-file-contract';
-      contractDetails.isContract = true;
       contractDetails.networkId = netId;
       contractDetails.isDefault = window.walletSettings.defaultContractsToDisplay && window.walletSettings.defaultContractsToDisplay.indexOf(address) > -1;
       contractsDetailsPromises.push(retrieveContractDetails(account, contractDetails, isAdministration));
@@ -60,9 +59,12 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
   return (ignoreSavedDetails ? Promise.resolve(null) : getSavedContractDetails(contractDetails.address, contractDetails.networkId))
     .then((savedDetails) => {
       if (savedDetails) {
+        contractDetails.isContract = true;
+
         if (!savedDetails.hasOwnProperty('contractType')) {
           contractToSave = true;
         }
+
         Object.keys(savedDetails).forEach((key) => {
           contractDetails[key] = savedDetails[key];
         });
@@ -110,9 +112,11 @@ export function retrieveContractDetails(account, contractDetails, isAdministrati
     .catch((e) => {
       contractDetails.decimals = 0;
     })
-    .then(() => contractDetails.contract.methods.balanceOf(account).call())
+    .then(() => account && contractDetails.contract.methods.balanceOf(account).call())
     .then((balance) => {
-      contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+      if (balance) {
+        contractDetails.balance = convertTokenAmountReceived(balance, contractDetails.decimals);
+      }
     })
     .catch((e) => {
       contractDetails.contractType = -1;
