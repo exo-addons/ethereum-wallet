@@ -10,8 +10,9 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.exoplatform.addon.ethereum.wallet.reward.model.RewardMemberDetail;
+import org.exoplatform.addon.ethereum.wallet.reward.model.WalletReward;
 import org.exoplatform.addon.ethereum.wallet.reward.service.RewardService;
+import org.exoplatform.addon.ethereum.wallet.utils.WalletUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -19,7 +20,7 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 /**
  * This class provide a REST endpoint to compute rewards
  */
-@Path("/wallet/api/reward/compute")
+@Path("/wallet/api/reward/")
 @RolesAllowed({ "rewarding", "administrators" })
 public class RewardBudgetREST implements ResourceContainer {
   private static final Log LOG = ExoLogger.getLogger(RewardBudgetREST.class);
@@ -31,21 +32,46 @@ public class RewardBudgetREST implements ResourceContainer {
   }
 
   /**
-   * Compute reward per period
+   * Compute rewards per period
    * 
    * @param identityIds
    * @param periodDateInSeconds
    * @return
    */
-  @POST
-  @Consumes(MediaType.APPLICATION_JSON)
+  @GET
+  @Path("compute")
   @Produces(MediaType.APPLICATION_JSON)
   @RolesAllowed({ "rewarding", "administrators" })
-  public Response computeRewards(Set<Long> identityIds,
-                                 @QueryParam("periodDateInSeconds") long periodDateInSeconds) {
+  public Response computeRewards(@QueryParam("periodDateInSeconds") long periodDateInSeconds) {
     try {
-      Set<RewardMemberDetail> rewards = rewardService.computeReward(identityIds, periodDateInSeconds);
+      Set<WalletReward> rewards = rewardService.computeReward(periodDateInSeconds);
       return Response.ok(rewards).build();
+    } catch (Exception e) {
+      LOG.warn("Error getting computed reward", e);
+      JSONObject object = new JSONObject();
+      try {
+        object.append("error", e.getMessage());
+      } catch (JSONException e1) {
+        // Nothing to do
+      }
+      return Response.status(500).type(MediaType.APPLICATION_JSON).entity(object.toString()).build();
+    }
+  }
+
+  /**
+   * Compute rewards per period
+   * 
+   * @param identityIds
+   * @param periodDateInSeconds
+   * @return
+   */
+  @GET
+  @Path("send")
+  @RolesAllowed({ "rewarding", "administrators" })
+  public Response sendRewards(@QueryParam("periodDateInSeconds") long periodDateInSeconds) {
+    try {
+      rewardService.sendRewards(periodDateInSeconds, WalletUtils.getCurrentUserId());
+      return Response.ok().build();
     } catch (Exception e) {
       LOG.warn("Error getting computed reward", e);
       JSONObject object = new JSONObject();

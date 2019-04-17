@@ -67,44 +67,36 @@
     </v-container>
 
     <v-data-table
-      v-model="selectedIdentitiesList"
       :headers="identitiesHeaders"
       :items="filteredIdentitiesList"
       :loading="loading"
       :sortable="true"
       item-key="address"
       class="elevation-1 mr-3 mb-2"
-      select-all
       disable-initial-sort
       hide-actions>
       <template slot="items" slot-scope="props">
         <tr :active="props.selected">
           <td>
-            <v-checkbox
-              v-if="props.item.address && props.item.enabled && !props.item.deletedUser && !props.item.disabledUser && props.item.tokensToSend && (!props.item.status || props.item.status === 'error')"
-              :input-value="props.selected"
-              hide-details
-              @click="props.selected = !props.selected" />
-          </td>
-          <td>
             <v-avatar size="36px">
-              <img :src="props.item.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
+              <img :src="props.item.wallet.avatar" onerror="this.src = '/eXoSkin/skin/images/system/SpaceAvtDefault.png'">
             </v-avatar>
           </td>
           <td class="text-xs-left">
             <profile-chip
-              :address="props.item.address"
-              :profile-id="props.item.id"
-              :profile-technical-id="props.item.technicalId"
-              :space-id="props.item.spaceId"
-              :profile-type="props.item.type"
-              :display-name="props.item.name"
-              :enabled="props.item.enabled"
+              :address="props.item.wallet.address"
+              :profile-id="props.item.wallet.id"
+              :profile-technical-id="props.item.wallet.technicalId"
+              :space-id="props.item.wallet.spaceId"
+              :profile-type="props.item.wallet.type"
+              :display-name="props.item.wallet.name"
+              :enabled="props.item.wallet.enabled"
               :disabled-in-reward-pool="props.item.disabledPool"
-              :disapproved="props.item.disapproved"
-              :deleted-user="props.item.deletedUser"
-              :disabled-user="props.item.disabledUser"
-              :avatar="props.item.avatar"
+              :disapproved="props.item.wallet.disapproved"
+              :deleted-user="props.item.wallet.deletedUser"
+              :disabled-user="props.item.wallet.disabledUser"
+              :avatar="props.item.wallet.avatar"
+              :initialization-state="props.item.wallet.initializationState"
               display-no-address />
           </td>
           <td class="text-xs-left">
@@ -122,10 +114,10 @@
               -
             </div>
           </td>
-          <td>
+          <td class="text-xs-center">
             <a
-              v-if="props.item.hash"
-              :href="`${transactionEtherscanLink}${props.item.hash}`"
+              v-if="props.item.rewardTransaction && props.item.rewardTransaction.hash"
+              :href="`${transactionEtherscanLink}${props.item.rewardTransaction.hash}`"
               target="_blank"
               title="Open in etherscan">
               Open in etherscan
@@ -133,10 +125,10 @@
               -
             </span>
           </td>
-          <td>
-            <template v-if="!props.item.status">
+          <td class="text-xs-center">
+            <template v-if="!props.item.rewardTransaction || !props.item.rewardTransaction.status">
               <v-icon
-                v-if="!props.item.address"
+                v-if="!props.item.wallet.address"
                 color="warning"
                 title="No address">
                 warning
@@ -152,30 +144,32 @@
               </div>
             </template>
             <v-progress-circular
-              v-else-if="props.item.status === 'pending'"
+              v-else-if="props.item.rewardTransaction.status === 'pending'"
               color="primary"
               indeterminate
               size="20" />
             <v-icon
               v-else
-              :color="props.item.status === 'success' ? 'success' : 'error'"
-              :title="props.item.status === 'success' ? 'Successfully proceeded' : props.item.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
-              v-text="props.item.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
+              :color="props.item.rewardTransaction.status === 'success' ? 'success' : 'error'"
+              :title="props.item.rewardTransaction.status === 'success' ? 'Successfully proceeded' : props.item.rewardTransaction.status === 'pending' ? 'Transaction in progress' : 'Transaction error'"
+              v-text="props.item.rewardTransaction.status === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'" />
           </td>
           <td class="text-xs-center">
-            <v-text-field
-              v-if="props.item.address && props.item.enabled && !props.item.deletedUser && !props.item.disabledUser && (!props.item.status || props.item.status === 'error')"
-              v-model.number="props.item.tokensToSend"
-              type="number"
-              title="Computed amount to send"
-              class="input-text-center" />
-            <template v-else-if="props.item.status === 'success' || props.item.status === 'pending'">
-              <span class="grey--text text--darken-1" title="Amount sent">{{ toFixed(props.item.tokensSent) }} {{ symbol }}</span>
-            </template>
-            <template
-              v-else>
-              -
-            </template>
+            <span
+              v-if="props.item.tokensSent"
+              class="grey--text text--darken-1"
+              title="Amount sent">
+              {{ toFixed(props.item.tokensSent) }} {{ symbol }}
+            </span>
+            <span v-else-if="props.item.tokensToSend" title="Amount to send">
+              {{ toFixed(props.item.tokensToSend) }} {{ symbol }}
+            </span>
+            <span
+              v-else
+              class="grey--text text--darken-1"
+              title="No rewards for selected period">
+              0 {{ symbol }}
+            </span>
           </td>
           <td>
             <v-btn
@@ -190,44 +184,25 @@
         </tr>
       </template>
       <template slot="footer">
-        <td :colspan="identitiesHeaders.length - 1">
+        <td :colspan="identitiesHeaders.length - 2">
           <strong>
             Total
           </strong>
         </td>
-        <td>
+        <td colspan="2">
           <strong>
             {{ totalTokens }} {{ symbol }}
           </strong>
-        </td>
-        <td>
         </td>
       </template>
     </v-data-table>
 
     <v-card-actions>
       <v-spacer />
-      <send-reward-modal
-        :account="walletAddress"
-        :contract-details="contractDetails"
-        :recipients="recipients"
-        :period-type="periodType"
-        :start-date-in-seconds="selectedStartDateInSeconds"
-        :end-date-in-seconds="selectedEndDateInSeconds"
-        :default-transaction-label="defaultRewardLabelTemplate"
-        :default-transaction-message="defaultRewardMessageTemplate"
-        reward-count-field="points"
-        @sent="newPendingTransaction"
-        @error="error = $event" />
+      <v-btn :loading="sendingRewards" @click="sendRewards">Send rewards</v-btn>
       <v-spacer />
     </v-card-actions>
 
-    <reward-detail-modal
-      ref="rewardDetails"
-      :wallet="selectedWallet"
-      :period="periodDatesDisplay"
-      :symbol="symbol"
-      @closed="selectedWallet = null" />
   </v-card>
 </template>
 
@@ -235,7 +210,7 @@
 import SendRewardModal from './modal/SendModal.vue';
 import RewardDetailModal from './modal/RewardDetailModal.vue';
 
-import {getRewardTransactions, getRewardDates} from '../../js/RewardServices.js';
+import {getRewardDates, sendRewards} from '../../js/RewardServices.js';
 
 export default {
   components: {
@@ -243,7 +218,7 @@ export default {
     SendRewardModal,
   },
   props: {
-    wallets: {
+    walletRewards: {
       type: Array,
       default: function() {
         return [];
@@ -302,14 +277,12 @@ export default {
     return {
       search: '',
       displayDisabledUsers: false,
-      defaultRewardLabelTemplate: '{name} is rewarded {amount} {symbol} for period: {startDate} to {endDate}',
-      defaultRewardMessageTemplate: 'You have earned {amount} {symbol} in reward for your {rewardCount} {pluginName} {earned in pool_label} for period: {startDate} to {endDate}',
-      selectedIdentitiesList: [],
       selectedDate: `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`,
       selectedDateMenu: false,
       selectedStartDate: null,
       selectedEndDate: null,
       loading: false,
+      sendingRewards: false,
       selectedWallet: null,
       identitiesHeaders: [
         {
@@ -382,17 +355,8 @@ export default {
     symbol() {
       return this.contractDetails && this.contractDetails.symbol ? this.contractDetails.symbol : '';
     },
-    recipients() {
-      return this.selectedIdentitiesList ? this.selectedIdentitiesList.filter((item) => item.address && item.enabled && !item.deletedUser && !item.disabledUser && item.tokensToSend && (!item.status || item.status === 'error')) : [];
-    },
-    validRecipients() {
-      return this.wallets ? this.wallets.filter((item) => item.address && item.tokensToSend && item.enabled && !item.deletedUser && !item.disabledUser) : [];
-    },
     filteredIdentitiesList() {
-      return this.wallets ? this.wallets.filter((wallet) => (this.displayDisabledUsers || (wallet.enabled && !wallet.deletedUser && !wallet.disabledUser) || wallet.tokensSent || wallet.tokensToSend) && this.filterItemFromList(wallet, this.search)) : [];
-    },
-    selectableRecipients() {
-      return this.validRecipients.filter((item) => !item.status || item.status === 'error');
+      return this.walletRewards ? this.walletRewards.filter((wallet) => (this.displayDisabledUsers || wallet.enabled || wallet.tokensSent || wallet.tokensToSend) && this.filterItemFromList(wallet, this.search)) : [];
     },
     totalTokens() {
       if (this.filteredIdentitiesList) {
@@ -428,88 +392,43 @@ export default {
         })
         .finally(() => this.loading = false);
     },
-    computeTokensToSend() {
-      this.$forceUpdate();
-    },
-    filterItemFromList(wallet, searchText) {
+    filterItemFromList(walletReward, searchText) {
       if (!searchText || !searchText.length) {
         return true;
       }
       searchText = searchText.trim().toLowerCase();
-      const name = wallet.name.toLowerCase();
+      const name = walletReward && walletReward.wallet && walletReward.wallet.name && walletReward.wallet.name.toLowerCase();
       if (name.indexOf(searchText) > -1) {
         return true;
       }
-      const address = wallet.address.toLowerCase();
+      const address = walletReward && walletReward.wallet && walletReward.wallet.address && walletReward.wallet.address.toLowerCase();
       if (address.indexOf(searchText) > -1) {
         return true;
       }
-      if (searchText === '-' && (!wallet.rewardTeams || !wallet.rewardTeams.length)) {
+      if (searchText === '-' && (!walletReward.rewardTeams || !walletReward.rewardTeams.length)) {
         return true;
       }
       const teams =
-        wallet.rewardTeams && wallet.rewardTeams.length
-          ? wallet.rewardTeams
+        walletReward.rewardTeams && walletReward.rewardTeams.length
+          ? walletReward.rewardTeams
               .map((team) => team.name)
               .join(',')
               .toLowerCase()
           : '';
       return teams.indexOf(searchText) > -1;
     },
-    newPendingTransaction(transaction) {
-      if (!transaction || !transaction.to) {
-        return;
-      }
-      this.$emit('pending', transaction);
-      this.refreshWalletTransactionStatus(transaction);
-    },
-    refreshWalletTransactionStatus(transaction) {
-      if (transaction && transaction.to) {
-        const resultWalletIndex = this.selectedIdentitiesList.findIndex((resultWallet) => resultWallet.address && resultWallet.address.toLowerCase() === transaction.to.toLowerCase());
-        const resultWallet = this.selectedIdentitiesList[resultWalletIndex];
-        if (resultWallet) {
-          if(transaction.contractAmount) {
-            this.$set(resultWallet, 'tokensSent', transaction.contractAmount);
-            this.$set(resultWallet, 'hash', transaction.hash);
-            this.$set(resultWallet, 'status', 'pending');
-
-            this.$emit('pending', transaction);
-
-            this.selectedIdentitiesList.splice(resultWalletIndex, 1);
-          }
-          const thiss = this;
-          this.walletUtils.watchTransactionStatus(transaction.hash, (receipt) => {
-            thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
-            this.$emit('success', transaction, receipt);
-          });
-        }
-      } else {
-        this.loading = true;
-        return getRewardTransactions(window.walletSettings.defaultNetworkId, this.periodType, this.selectedStartDateInSeconds).then((resultTransactions) => {
-          if (resultTransactions) {
-            resultTransactions.forEach((resultTransaction) => {
-              if (resultTransaction) {
-                const resultWallet = this.wallets.find((resultWallet) => resultWallet.type === resultTransaction.receiverType && (resultWallet.id === resultTransaction.receiverId || resultWallet.identityId === resultTransaction.receiverIdentityId));
-                if (resultWallet) {
-                  this.$set(resultWallet, 'tokensSent', resultTransaction.tokensAmountSent ? Number(resultTransaction.tokensAmountSent) : 0);
-                  this.$set(resultWallet, 'hash', resultTransaction.hash);
-                  this.$set(resultWallet, 'status', 'pending');
-                  this.$emit('pending', resultTransaction);
-
-                  const thiss = this;
-                  this.walletUtils.watchTransactionStatus(resultTransaction.hash, (receipt) => {
-                    thiss.$set(resultWallet, 'status', receipt && receipt.status ? 'success' : 'error');
-                    this.$emit('success', resultTransaction, receipt);
-                  });
-                } else {
-                  console.warn("Can't find wallet of a sent result token transaction, resultTransaction=", resultTransaction);
-                }
-              }
-            });
-          }
+    sendRewards() {
+      this.sendingRewards = true;
+      sendRewards(this.selectedDateInSeconds)
+        .then(() => {
+          this.$emit('refresh');
         })
-        .finally(() => this.loading = false);
-      }
+        .catch(e => {
+          this.error = String(e);
+        })
+        .finally(() => {
+          this.sendingRewards = false;
+        });
     },
     formatDate(date) {
       if (!date) {

@@ -6,8 +6,6 @@ import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.encodeStri
 import java.io.Serializable;
 
 import org.apache.commons.lang.StringUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import lombok.*;
 import lombok.EqualsAndHashCode.Exclude;
@@ -36,24 +34,29 @@ public class RewardTransaction implements Serializable {
   private String            receiverId;
 
   @Exclude
-  private String            receiverIdentityId;
+  private long              receiverIdentityId;
 
   @Exclude
-  private String            tokensAmountSent;
+  private double            tokensSent;
+
+  @Exclude
+  private String            status;
 
   public static RewardTransaction fromStoredValue(String storedTransactionDetails) {
-    RewardTransaction transactionMessage = new RewardTransaction();
+    RewardTransaction transaction = new RewardTransaction();
     if (StringUtils.isNotBlank(storedTransactionDetails)) {
       String[] transactionDetailsArray = storedTransactionDetails.split(";");
-      transactionMessage.setHash(transactionDetailsArray[0]);
-      transactionMessage.setReceiverType(transactionDetailsArray.length > 1 ? decodeString(transactionDetailsArray[1]) : null);
-      transactionMessage.setReceiverId(transactionDetailsArray.length > 2 ? decodeString(transactionDetailsArray[2]) : null);
-      transactionMessage.setTokensAmountSent(transactionDetailsArray.length > 3 ? decodeString(transactionDetailsArray[3])
-                                                                                : null);
-      transactionMessage.setReceiverIdentityId(transactionDetailsArray.length > 4 ? decodeString(transactionDetailsArray[4])
-                                                                                  : null);
+      transaction.setHash(transactionDetailsArray[0]);
+      transaction.setReceiverType(transactionDetailsArray.length > 1 ? decodeString(transactionDetailsArray[1]) : null);
+      transaction.setReceiverId(transactionDetailsArray.length > 2 ? decodeString(transactionDetailsArray[2]) : null);
+
+      String tokensSentString = transactionDetailsArray.length > 3 ? transactionDetailsArray[3] : null;
+      transaction.setTokensSent(StringUtils.isBlank(tokensSentString) ? 0 : Double.parseDouble(tokensSentString));
+
+      String receiverIdentityId = transactionDetailsArray.length > 4 ? transactionDetailsArray[4] : null;
+      transaction.setReceiverIdentityId(StringUtils.isBlank(receiverIdentityId) ? 0 : Long.parseLong(receiverIdentityId));
     }
-    return transactionMessage;
+    return transaction;
   }
 
   /**
@@ -68,39 +71,7 @@ public class RewardTransaction implements Serializable {
     if (StringUtils.isBlank(receiverId)) {
       throw new IllegalStateException("receiverId is mandatory");
     }
-    return hash + ";" + encodeString(receiverType) + ";" + encodeString(receiverId) + ";" + encodeString(tokensAmountSent) + ";"
-        + receiverIdentityId;
-  }
-
-  public String toJSONString() {
-    return toJSONObject().toString();
-  }
-
-  public JSONObject toJSONObject() {
-    JSONObject jsonObject = new JSONObject();
-    try {
-      if (networkId != null && networkId > 0) {
-        jsonObject.put("networkId", networkId);
-      }
-      if (StringUtils.isNotBlank(hash)) {
-        jsonObject.put("hash", hash);
-      }
-      if (StringUtils.isNotBlank(receiverType)) {
-        jsonObject.put("receiverType", receiverType);
-      }
-      if (StringUtils.isNotBlank(receiverId)) {
-        jsonObject.put("receiverId", receiverId);
-      }
-      if (StringUtils.isNotBlank(receiverIdentityId)) {
-        jsonObject.put("receiverIdentityId", receiverIdentityId);
-      }
-      if (StringUtils.isNotBlank(tokensAmountSent)) {
-        jsonObject.put("tokensAmountSent", tokensAmountSent);
-      }
-    } catch (JSONException e) {
-      throw new IllegalStateException("Error while converting Object to JSON", e);
-    }
-    return jsonObject;
+    return hash + ";" + encodeString(receiverType) + ";" + encodeString(receiverId) + ";" + tokensSent + ";" + receiverIdentityId;
   }
 
   @Override

@@ -430,9 +430,6 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     if (transactionDetail.getValue() <= 0) {
       throw new IllegalArgumentException("tokenamount parameter has to be a positive");
     }
-    if (transactionDetail.getNetworkId() <= 0) {
-      throw new IllegalArgumentException("tokenamount parameter has to be a positive");
-    }
 
     checkAdminWalletIsValid();
 

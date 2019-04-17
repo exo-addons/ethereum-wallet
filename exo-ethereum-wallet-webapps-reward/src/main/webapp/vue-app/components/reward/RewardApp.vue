@@ -80,7 +80,7 @@
             <v-tab-item id="SendRewards">
               <send-rewards-tab
                 ref="sendRewards"
-                :wallets="wallets"
+                :wallet-rewards="walletRewards"
                 :wallet-address="walletAddress"
                 :contract-details="contractDetails"
                 :period-type="rewardSettings.periodType"
@@ -97,7 +97,7 @@
             <v-tab-item id="RewardPools">
               <teams-list-tab
                 ref="rewardTeams"
-                :wallets="wallets"
+                :wallet-rewards="walletRewards"
                 :contract-details="contractDetails"
                 :period="periodDatesDisplay"
                 :eligible-pools-users-count="eligiblePoolsUsersCount"
@@ -152,13 +152,13 @@ export default {
       rewardSettings: {},
       totalRewards: [],
       teams: [],
-      wallets: [],
+      walletRewards: [],
       contracts: [],
     };
   },
   computed: {
     validUsers() {
-      return this.wallets.filter(wallet => wallet.enabled && !wallet.deletedUser && !wallet.disabledUser && (wallet.tokensToSend));
+      return this.walletRewards.filter(wallet => wallet.enabled && wallet.tokensToSend);
     },
     eligiblePoolsUsersCount() {
       return this.validUsers.filter(wallet =>  !wallet.disabledPool && wallet.poolTokensToSend).length;
@@ -167,9 +167,9 @@ export default {
       return this.validUsers.filter(wallet =>  wallet.tokensToSend || wallet.tokensSent).length;
     },
     sentBudget() {
-      if (this.wallets && this.wallets.length) {
+      if (this.walletRewards && this.walletRewards.length) {
         let sentTokens = 0;
-        this.wallets.forEach((wallet) => {
+        this.walletRewards.forEach((wallet) => {
           sentTokens += (Number(wallet.tokensSent) || 0);
         });
         return sentTokens;
@@ -178,9 +178,9 @@ export default {
       }
     },
     totalBudget() {
-      if (this.wallets && this.wallets.length) {
+      if (this.walletRewards && this.walletRewards.length) {
         let totalBudget = 0;
-        this.wallets.forEach((wallet) => {
+        this.walletRewards.forEach((wallet) => {
           totalBudget += (Number(wallet.tokensSent) || Number(wallet.tokensToSend) || 0);
         });
         return totalBudget;
@@ -223,10 +223,6 @@ export default {
           return this.tokenUtils.getContractsDetails(this.walletAddress, this.networkId, true, true);
         })
         .then((contracts) => (this.contracts = contracts ? contracts.filter((contract) => contract.isDefault) : []))
-        .then(() => this.walletUtils.getWallets())
-        .then((wallets) => {
-          this.wallets = wallets ? wallets.filter(wallet => wallet && wallet.address && wallet.enabled && !wallet.deletedUser && !wallet.disabledUser && wallet.type === 'user') : [];
-        })
         .then(() => this.refreshRewardSettings())
         .catch((e) => {
           console.debug('init method - error', e);
@@ -237,19 +233,10 @@ export default {
         });
     },
     refreshRewardSettings() {
-      // Reload all if an error occurred
-      if(this.error) {
-        return this.init();
-      }
       this.loading = true;
       return getRewardSettings()
         .then(settings => {
-          this.rewardSettings = settings;
-
-          if(!this.rewardSettings) {
-            this.rewardSettings = {};
-          }
-
+          this.rewardSettings = settings || {};
           if (this.contracts && this.contracts.length && this.rewardSettings.contractAddress) {
             const contractAddress = this.rewardSettings.contractAddress.toLowerCase();
             this.contractDetails = this.contracts.find(contract  => contract && contract.address && contract.address.toLowerCase() === contractAddress);
@@ -263,8 +250,6 @@ export default {
         .then(() => this.$refs.rewardTeams.refreshTeams())
         .then(() => this.$refs.sendRewards.refreshDates())
         .then(() => this.$nextTick())
-        .then(() => this.$refs.sendRewards.refreshWalletTransactionStatus())
-        .then(() => this.$nextTick())
         .then(() => this.refreshRewards())
         .finally(() => this.loading = false);
     },
@@ -272,49 +257,19 @@ export default {
       this.loading = true;
       this.periodDatesDisplay = this.$refs.sendRewards.periodDatesDisplay;
       const teams = this.$refs.rewardTeams.teams || [];
-
-      // Check enabled/disabled wallets
-      this.wallets.forEach((wallet) => wallet.disabledPool = false);
-      teams.forEach((team) => {
-        if (team.id && team.members) {
-          team.members.forEach((memberObject) => {
-            const wallet = this.wallets.find((wallet) => wallet && wallet.id && wallet.technicalId === memberObject.identityId);
-            if (wallet) {
-              wallet.disabledPool = team.disabled;
-            }
-          });
-        }
-      });
-
       this.duplicatedWallets = [];
-      const identityIds = this.wallets.map(wallet => wallet.technicalId);
-
       if(!this.checkConfigurationConsistency()) {
         return;
       }
 
-      return computeRewards(identityIds, this.$refs.sendRewards.selectedDateInSeconds)
-        .then(rewardDetails => {
-          if(rewardDetails.error) {
-            this.error = (typeof rewardDetails.error === 'object' ? rewardDetails.error[0] : rewardDetails.error);
+      return computeRewards(this.$refs.sendRewards.selectedDateInSeconds)
+        .then(walletRewards => {
+          if(walletRewards.error) {
+            this.error = (typeof walletRewards.error === 'object' ? walletRewards.error[0] : walletRewards.error);
             return;
           }
-
-          const totalRewards = {};
-          if(this.rewardSettings && this.rewardSettings.pluginSettings && this.rewardSettings.pluginSettings.length) {
-            this.rewardSettings.pluginSettings.forEach(pluginSetting => totalRewards[pluginSetting.pluginId] = {pluginId: pluginSetting.pluginId, total: 0})
-          }
-          if (rewardDetails) {
-            rewardDetails.forEach(rewardDetail => totalRewards[rewardDetail.pluginId] && (totalRewards[rewardDetail.pluginId].total += rewardDetail.points));
-          }
-          this.totalRewards = Object.values(totalRewards);
-
-          this.wallets.forEach(wallet => {
-            wallet.rewards = (rewardDetails && rewardDetails.filter(rewardDetail => rewardDetail.identityId === wallet.technicalId)) || [];
-            wallet.tokensToSend = this.toFixed(wallet.rewards.reduce((sum, reward) => sum + reward.amount, 0));
-            wallet.poolTokensToSend = wallet.rewards.filter(reward => reward.poolsUsed).reduce((sum, reward) => sum + reward.amount, 0);
-            delete wallet.rewardTeams;
-          });
+          this.walletRewards = walletRewards;
+          this.computeTotalRewardsByPlugin();
 
           teams.forEach((team) => {
             team.validMembersWallets = [];
@@ -322,28 +277,28 @@ export default {
 
             if (team.id && team.members) {
               team.members.forEach((memberObject) => {
-                const wallet = this.wallets.find((wallet) => wallet && wallet.id && wallet.technicalId === memberObject.identityId);
-                if (wallet) {
-                  if (wallet.rewardTeams && wallet.rewardTeams.length) {
-                    wallet.rewardTeams.push(team);
-                    this.duplicatedWallets.push(wallet);
+                const walletReward = this.walletRewards.find((walletReward) => walletReward.wallet && walletReward.wallet.id && walletReward.wallet.technicalId === memberObject.identityId);
+                if (walletReward) {
+                  if (walletReward.rewardTeams && walletReward.rewardTeams.length) {
+                    walletReward.rewardTeams.push(team);
+                    this.duplicatedWallets.push(walletReward.wallet);
                   } else {
-                    this.$set(wallet, 'rewardTeams', [team]);
+                    this.$set(walletReward, 'rewardTeams', [team]);
                   }
-                  if(!team.disabled && wallet.poolTokensToSend) {
-                    team.validMembersWallets.push(wallet);
+                  if(walletReward.enabled && walletReward.poolTokensToSend) {
+                    team.validMembersWallets.push(walletReward);
                   }
                 }
               });
             }
           });
 
-          const membersWithEmptyTeam = this.wallets.filter((wallet) => !wallet.rewardTeams || !wallet.rewardTeams.length);
+          const membersWithEmptyTeam = this.walletRewards.filter((walletReward) => !walletReward.rewardTeams || !walletReward.rewardTeams.length);
           if (membersWithEmptyTeam && membersWithEmptyTeam.length) {
             const validMembersWallets = [];
-            membersWithEmptyTeam.forEach(wallet => {
-              if(wallet.poolTokensToSend) {
-                validMembersWallets.push(wallet);
+            membersWithEmptyTeam.forEach(walletReward => {
+              if(walletReward.enabled && walletReward.poolTokensToSend) {
+                validMembersWallets.push(walletReward);
               }
             });
 
@@ -360,7 +315,7 @@ export default {
               };
               teams.push(noTeamMembers);
             }
-            noTeamMembers.members = membersWithEmptyTeam;
+            noTeamMembers.members = membersWithEmptyTeam.map(walletReward => walletReward.wallet);
             noTeamMembers.validMembersWallets = validMembersWallets;
           }
 
@@ -370,11 +325,23 @@ export default {
 
           teams.forEach((team) => {
             if (team.validMembersWallets && team.validMembersWallets.length) {
-              team.computedBudget = team.validMembersWallets.reduce((total, wallet) => total += wallet.poolTokensToSend || 0, 0);
+              team.computedBudget = team.validMembersWallets.reduce((total, walletReward) => total += walletReward.poolTokensToSend || 0, 0);
             }
           });
         })
         .finally(() => this.loading = false);
+    },
+    computeTotalRewardsByPlugin() {
+      const totalRewards = {};
+      if(this.rewardSettings && this.rewardSettings.pluginSettings && this.rewardSettings.pluginSettings.length) {
+        this.rewardSettings.pluginSettings.forEach(pluginSetting => totalRewards[pluginSetting.pluginId] = {pluginId: pluginSetting.pluginId, total: 0})
+      }
+      this.walletRewards.forEach(walletReward => {
+        if (walletReward && walletReward.rewards) {
+          walletReward.rewards.forEach(rewardDetail => totalRewards[rewardDetail.pluginId] && (totalRewards[rewardDetail.pluginId].total += rewardDetail.points));
+        }
+      });
+      this.totalRewards = Object.values(totalRewards);
     },
     checkConfigurationConsistency() {
       this.settingWarnings = [];

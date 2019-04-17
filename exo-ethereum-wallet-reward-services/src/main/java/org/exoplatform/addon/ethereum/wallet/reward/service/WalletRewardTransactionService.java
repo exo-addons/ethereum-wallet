@@ -18,17 +18,19 @@ package org.exoplatform.addon.ethereum.wallet.reward.service;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.REWARD_CONTEXT;
 import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.REWARD_SCOPE;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.getIdentityByTypeAndId;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.json.JSONObject;
 
+import org.exoplatform.addon.ethereum.wallet.model.WalletType;
 import org.exoplatform.addon.ethereum.wallet.reward.model.RewardTransaction;
 import org.exoplatform.commons.api.settings.SettingService;
 import org.exoplatform.commons.api.settings.SettingValue;
+import org.exoplatform.social.core.identity.model.Identity;
 
 /**
  * A storage service to save/load reward transactions
@@ -42,20 +44,25 @@ public class WalletRewardTransactionService implements RewardTransactionService 
   }
 
   @Override
-  public List<JSONObject> getRewardTransactions(Long networkId,
-                                                String periodType,
-                                                long startDateInSeconds) {
+  public List<RewardTransaction> getRewardTransactions(Long networkId,
+                                                       String periodType,
+                                                       long startDateInSeconds) {
     String periodTransactionsParamName = getPeriodTransactionsParamName(periodType, startDateInSeconds);
     SettingValue<?> periodTransactionsValue =
                                             settingService.get(REWARD_CONTEXT, REWARD_SCOPE, periodTransactionsParamName);
-
     String periodTransactionsString = periodTransactionsValue == null ? "" : periodTransactionsValue.getValue().toString();
-
     String[] periodTransactionsArray = periodTransactionsString.isEmpty() ? new String[0] : periodTransactionsString.split(",");
     return Arrays.stream(periodTransactionsArray).map(transaction -> {
       RewardTransaction rewardTransaction = RewardTransaction.fromStoredValue(transaction);
+      if (rewardTransaction.getReceiverIdentityId() == 0 && StringUtils.isNotBlank(rewardTransaction.getReceiverId())
+          && StringUtils.isNotBlank(rewardTransaction.getReceiverType())) {
+        Identity receiverIdentity = getIdentityByTypeAndId(WalletType.getType(rewardTransaction.getReceiverType()),
+                                                           rewardTransaction.getReceiverId());
+        long receiverIdentityId = receiverIdentity == null ? 0 : Long.parseLong(receiverIdentity.getId());
+        rewardTransaction.setReceiverIdentityId(receiverIdentityId);
+      }
       rewardTransaction.setNetworkId(networkId);
-      return rewardTransaction.toJSONObject();
+      return rewardTransaction;
     }).collect(Collectors.toList());
   }
 

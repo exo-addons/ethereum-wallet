@@ -544,6 +544,7 @@ export default {
     },
     refreshWallet(wallet) {
       return this.addressRegistry.refreshWallet(wallet)
+        .then(() => this.loadWalletInitialization(this.principalContract, wallet))
         .then(() => this.loadWalletApproval(this.principalContract, wallet))
         .then(() => this.computeBalance(this.principalContract, wallet));
     },
@@ -561,6 +562,24 @@ export default {
           }
         })
         .then((adminLevel) => this.$set(wallet, 'adminLevel', adminLevel || 0));
+    },
+    loadWalletInitialization(accountDetails, wallet) {
+      if(!accountDetails || !accountDetails.contract || !accountDetails.contract || !wallet || !wallet.address) {
+        return Promise.resolve(null);
+      }
+      return accountDetails.contract.methods.isInitializedAccount(wallet.address).call()
+        .then((initialized) => {
+          const oldInitializationState = wallet.initializationState;
+          const newInitializationState = initialized ? 'INITIALIZED' : 'MODIFIED';
+
+          if (!initialized && oldInitializationState === 'INITIALIZED') {
+            this.changeWalletInitializationStatus(wallet, 'MODIFIED');
+            this.$set(wallet, 'initializationState', newInitializationState);
+          } else if(initialized && oldInitializationState !== 'INITIALIZED') {
+            this.changeWalletInitializationStatus(wallet, 'INITIALIZED');
+            this.$set(wallet, 'initializationState', newInitializationState);
+          }
+        });
     },
     computeBalance(accountDetails, wallet, ignoreUpdateLoadingBalanceParam) {
       if(!wallet.address || !wallet.displayedWallet) {

@@ -18,8 +18,6 @@ package org.exoplatform.addon.ethereum.wallet.reward.service;
 
 import java.util.List;
 
-import org.json.JSONObject;
-
 import org.exoplatform.addon.ethereum.wallet.reward.model.RewardTransaction;
 
 /**
@@ -33,9 +31,9 @@ public interface RewardTransactionService {
    * @param startDateInSeconds
    * @return
    */
-  public List<JSONObject> getRewardTransactions(Long networkId,
-                                                String periodType,
-                                                long startDateInSeconds);
+  public List<RewardTransaction> getRewardTransactions(Long networkId,
+                                                       String periodType,
+                                                       long startDateInSeconds);
 
   /**
    * Save reward transaction

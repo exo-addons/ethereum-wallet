@@ -24,6 +24,9 @@
     <template v-else-if="disabledInRewardPool">
       {{ displayName }} <span class="red--text">(Disabled pool)</span>
     </template>
+    <template v-else-if="initializationState !== 'INITIALIZED'">
+      {{ displayName }} <span class="orange--text">(Not initialized)</span>
+    </template>
     <template v-else>
       {{ displayName }}
     </template>
@@ -132,6 +135,12 @@ export default {
       type: Boolean,
       default: function() {
         return false;
+      },
+    },
+    initializationState: {
+      type: String,
+      default: function() {
+        return 'INITIALIZED';
       },
     },
   },

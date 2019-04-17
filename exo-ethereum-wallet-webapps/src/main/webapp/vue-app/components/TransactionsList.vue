@@ -479,6 +479,29 @@
                     :avatar="item.toAvatar" />
                 </v-list-tile-title>
 
+                <v-list-tile-title v-else-if="item.contractMethodName === 'reward'">
+                  <profile-chip
+                    v-if="displayFullTransaction"
+                    :address="item.fromAddress"
+                    :profile-id="item.fromUsername"
+                    :profile-technical-id="item.fromTechnicalId"
+                    :space-id="item.fromSpaceId"
+                    :profile-type="item.fromType"
+                    :display-name="item.fromDisplayName"
+                    :avatar="item.fromAvatar" />
+                  <span>
+                    rewarded
+                  </span>
+                  <profile-chip
+                    :address="item.toAddress"
+                    :profile-id="item.toUsername"
+                    :profile-technical-id="item.toTechnicalId"
+                    :space-id="item.toSpaceId"
+                    :profile-type="item.toType"
+                    :display-name="item.toDisplayName"
+                    :avatar="item.toAvatar" />
+                </v-list-tile-title>
+
                 <v-list-tile-title v-else-if="item.contractMethodName === 'depositFunds'">
                   <profile-chip
                     v-if="displayFullTransaction"

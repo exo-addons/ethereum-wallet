@@ -259,7 +259,7 @@ export default {
         return [];
       },
     },
-    wallets: {
+    walletRewards: {
       type: Array,
       default: function() {
         return [];
@@ -341,9 +341,9 @@ export default {
       if (managerObject) {
         this.managerObject = managerObject;
       } else {
-        const wallet = this.wallets.find((wallet) => wallet.id === this.manager && wallet.type === 'user');
-        if (wallet) {
-          this.managerObject = Object.assign({identityId: wallet.technicalId}, wallet);
+        const walletReward = this.walletRewards.find((walletReward) => walletReward.wallet && walletReward.wallet.id === this.manager && walletReward.wallet.type === 'user');
+        if (walletReward) {
+          this.managerObject = Object.assign({identityId: walletReward.wallet.technicalId}, walletReward.wallet);
         } else {
           this.addressRegistry.searchWalletByTypeAndId(this.manager, 'user').then((userDetails) => {
             if (userDetails) {
@@ -362,9 +362,9 @@ export default {
           if (memberObject) {
             this.membersObjects.push(memberObject);
           } else {
-            const wallet = this.wallets.find((wallet) => wallet.id === memberId && wallet.type === 'user');
-            if (wallet) {
-              this.membersObjects.push(Object.assign({identityId: wallet.technicalId}, wallet));
+            const walletReward = this.walletRewards.find((walletReward) => walletReward.wallet && walletReward.wallet.id === memberId && walletReward.wallet.type === 'user');
+            if (walletReward) {
+              this.membersObjects.push(Object.assign({identityId: walletReward.wallet.technicalId}, walletReward.wallet));
             } else {
               this.addressRegistry.searchWalletByTypeAndId(memberId, 'user').then((userDetails) => {
                 if (userDetails) {

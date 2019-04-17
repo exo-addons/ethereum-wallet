@@ -1,13 +1,16 @@
 package org.exoplatform.addon.ethereum.wallet.reward.rest;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.getCurrentUserId;
+import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.timeFromSeconds;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.exoplatform.addon.ethereum.wallet.reward.model.RewardSettings;
+import org.apache.commons.lang.StringUtils;
+
+import org.exoplatform.addon.ethereum.wallet.reward.model.*;
 import org.exoplatform.addon.ethereum.wallet.reward.service.RewardSettingsService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -66,6 +69,32 @@ public class RewardSettingsREST implements ResourceContainer {
       LOG.warn("Error saving reward settings", e);
       return Response.serverError().build();
     }
+  }
+
+  /**
+   * Retrieves reward perdiod start and end dates
+   * 
+   * @param periodType
+   * @param dateInSeconds
+   * @return
+   */
+  @Path("getDates")
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @RolesAllowed({ "rewarding", "administrators" })
+  public Response getRewardDates(@QueryParam("periodType") String periodType,
+                                 @QueryParam("dateInSeconds") long dateInSeconds) {
+    if (dateInSeconds == 0) {
+      LOG.warn("Bad request sent to server with empty 'dateInSeconds' parameter");
+      return Response.status(400).build();
+    }
+    if (StringUtils.isBlank(periodType)) {
+      LOG.warn("Bad request sent to server with empty 'periodType' parameter");
+      return Response.status(400).build();
+    }
+    RewardPeriodType rewardPeriodType = RewardPeriodType.valueOf(periodType);
+    RewardPeriod rewardPeriod = rewardPeriodType.getPeriodOfTime(timeFromSeconds(dateInSeconds));
+    return Response.ok(rewardPeriod.toString()).build();
   }
 
 }

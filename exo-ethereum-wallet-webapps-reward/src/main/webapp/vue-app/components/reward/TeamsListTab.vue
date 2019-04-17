@@ -22,7 +22,7 @@
       v-show="selectedTeam"
       ref="teamModal"
       :team="selectedTeam"
-      :wallets="wallets"
+      :wallet-rewards="walletRewards"
       @saved="refreshTeams(true)"
       @close="selectedTeam = null" />
     <h3
@@ -238,7 +238,7 @@ export default {
     AddTeamForm,
   },
   props: {
-    wallets: {
+    walletRewards: {
       type: Array,
       default: function() {
         return [];
@@ -276,7 +276,7 @@ export default {
   }),
   computed: {
     poolsBudget() {
-      return this.wallets.reduce((sum, wallet) => sum + wallet.poolTokensToSend, 0)
+      return this.walletRewards.reduce((sum, wallet) => sum + wallet.poolTokensToSend, 0)
     },
     deletePoolMessage() {
       return this.teamToDelete && `Would you like to delete pool <strong>${this.teamToDelete.name}</strong>`;

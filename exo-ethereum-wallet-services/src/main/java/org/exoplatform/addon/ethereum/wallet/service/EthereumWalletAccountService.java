@@ -382,20 +382,21 @@ public class EthereumWalletAccountService implements WalletAccountService {
       throw new IllegalStateException(CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS + address);
     }
 
-    // The only authorized initialization transition allowed to a regular user
-    // is to request
-    // to initialize his wallet when it has been denied by an administrator
-    WalletInitializationState oldInitializationState = WalletInitializationState.valueOf(wallet.getInitializationState());
-    if (!isUserAdmin(currentUser) && !isUserRewardingAdmin(currentUser)
-        && (oldInitializationState != WalletInitializationState.DENIED
-            || initializationState != WalletInitializationState.MODIFIED
-            || !isWalletOwner(wallet, currentUser))) {
-      throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " attempts to change wallet status with address "
-          + address + " to " + initializationState.name());
-    }
-    if (oldInitializationState == WalletInitializationState.INITIALIZED) {
-      throw new IllegalAccessException("Wallet was already marked as initialized, thus the status for address " + address
-          + " can't change to status " + initializationState.name());
+    if (!isUserAdmin(currentUser) && !isUserRewardingAdmin(currentUser)) {
+      // The only authorized initialization transition allowed to a regular user
+      // is to request to initialize his wallet when it has been denied by an
+      // administrator
+      WalletInitializationState oldInitializationState = WalletInitializationState.valueOf(wallet.getInitializationState());
+      if (oldInitializationState != WalletInitializationState.DENIED
+          || initializationState != WalletInitializationState.MODIFIED
+          || !isWalletOwner(wallet, currentUser)) {
+        throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " attempts to change wallet status with address "
+            + address + " to " + initializationState.name());
+      }
+      if (oldInitializationState == WalletInitializationState.INITIALIZED) {
+        throw new IllegalAccessException("Wallet was already marked as initialized, thus the status for address " + address
+            + " can't change to status " + initializationState.name());
+      }
     }
     wallet.setInitializationState(initializationState.name());
     accountStorage.saveWallet(wallet, false);

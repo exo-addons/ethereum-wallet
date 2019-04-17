@@ -49,10 +49,6 @@
   </component>
 
   <component>
-    <type>org.exoplatform.addon.ethereum.wallet.reward.rest.RewardTransactionREST</type>
-  </component>
-
-  <component>
     <type>org.exoplatform.addon.ethereum.wallet.reward.rest.RewardTeamREST</type>
   </component>
 

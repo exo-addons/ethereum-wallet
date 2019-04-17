@@ -61,7 +61,7 @@ export function getRewardTransactions(networkId, periodType, startDateInSeconds)
 export function getRewardDates(date, periodType) {
   // convert from milliseconds to seconds
   date = parseInt(date.getTime() / 1000);
-  return fetch(`/portal/rest/wallet/api/reward/transaction/getDates?dateInSeconds=${date}&periodType=${periodType}`, {
+  return fetch(`/portal/rest/wallet/api/reward/settings/getDates?dateInSeconds=${date}&periodType=${periodType}`, {
     credentials: 'include',
     headers: {
       Accept: 'application/json',
@@ -70,51 +70,25 @@ export function getRewardDates(date, periodType) {
   }).then((resp) => resp && resp.ok && resp.json());
 }
 
-export function saveRewardTransaction(transaction) {
-  return fetch('/portal/rest/wallet/api/reward/transaction/saveRewardTransaction', {
-    method: 'POST',
+export function sendRewards(periodDateInSeconds) {
+  return fetch(`/portal/rest/wallet/api/reward/send?periodDateInSeconds=${periodDateInSeconds}`, {
+    method: 'GET',
     credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(transaction),
   }).then((resp) => {
-    if (resp && resp.ok) {
-      return;
-    } else {
-      throw new Error('Error saving reward transaction');
+    if (!resp || !resp.ok) {
+      throw new Error('Error sending rewards');
     }
   });
 }
 
-export function saveRewardTransactions(transactions) {
-  return fetch('/portal/rest/wallet/api/reward/transaction/saveRewardTransactions', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(transactions),
-  }).then((resp) => {
-    if (resp && resp.ok) {
-      return;
-    } else {
-      throw new Error('Error saving reward transactions');
-    }
-  });
-}
-
-export function computeRewards(identityIds, periodDateInSeconds) {
+export function computeRewards(periodDateInSeconds) {
   return fetch(`/portal/rest/wallet/api/reward/compute?periodDateInSeconds=${periodDateInSeconds}`, {
-    method: 'POST',
+    method: 'GET',
     credentials: 'include',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(identityIds),
   }).then((resp) => {
     if (resp) {
       try {

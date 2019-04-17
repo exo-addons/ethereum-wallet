@@ -176,14 +176,12 @@ export default {
       this.$nextTick(this.estimateTransactionFee);
     },
     upgradeToken(estimateGas) {
-      const currentUpgradeState = this.getState();
+      const currentUpgradeState = this.getUpgradeState();
       let ertTokenV2Address = (estimateGas && '0x1111111111111111111111111111111111111111') || (currentUpgradeState && currentUpgradeState.ertTokenV2Address);
       let ertTokenDataV2Address = (estimateGas && '0x1111111111111111111111111111111111111111') || (currentUpgradeState && currentUpgradeState.ertTokenDataV2Address);
       this.step = estimateGas ? 0 : (currentUpgradeState && currentUpgradeState.step) || 1;
 
       let estimatedGas = 0;
-      let ertTokenV2TransactionHash;
-      let ertTokenDataTransactionHash;
 
       this.loading = true;
       return this.tokenUtils.createNewContractInstanceByName('ERTTokenV2')
@@ -191,7 +189,7 @@ export default {
           if (estimateGas) {
             return this.tokenUtils.estimateContractDeploymentGas(ertTokenV2Instance);
           } else if (this.step < 2) {
-            return this.tokenUtils.deployContract(ertTokenV2Instance, this.walletAddress, 4700000, this.gasPrice, hash => ertTokenV2TransactionHash = hash);
+            return this.tokenUtils.deployContract(ertTokenV2Instance, this.walletAddress, 4700000, this.gasPrice);
           }
         })
         .then((data, error) => {
@@ -205,7 +203,7 @@ export default {
               throw new Error('Cannot find address of newly deployed address');
             } else {
               ertTokenV2Address = data.options.address;
-              this.saveState({
+              this.saveUpgradeState({
                 ertTokenV2Address: ertTokenV2Address,
                 step: 2,
               });
@@ -218,7 +216,7 @@ export default {
             return this.tokenUtils.estimateContractDeploymentGas(ertTokenDataV2Instance);
           } else if (this.step < 3) {
             this.step = 2;
-            return this.tokenUtils.deployContract(ertTokenDataV2Instance, this.walletAddress, 4700000, this.gasPrice, hash => ertTokenDataTransactionHash = hash);
+            return this.tokenUtils.deployContract(ertTokenDataV2Instance, this.walletAddress, 4700000, this.gasPrice);
           }
         })
         .then((data, error) => {
@@ -233,7 +231,7 @@ export default {
               throw new Error('Cannot find address of newly deployed address');
             } else {
               ertTokenDataV2Address = data.options.address;
-              this.saveState({
+              this.saveUpgradeState({
                 ertTokenV2Address: ertTokenV2Address,
                 ertTokenDataV2Address: ertTokenDataV2Address,
                 step: 3,
@@ -262,7 +260,7 @@ export default {
           if (estimateGas) {
             estimatedGas += parseInt(gasEstimation * 1.1);
           } else if (this.step < 4) {
-            this.saveState({
+            this.saveUpgradeState({
               ertTokenV2Address: ertTokenV2Address,
               ertTokenDataV2Address: ertTokenDataV2Address,
               step: 4,
@@ -286,13 +284,13 @@ export default {
             });
           }
         })
-        .then((gasEstimation) => {
+        .then((result) => {
           if (estimateGas) {
-            estimatedGas += parseInt(gasEstimation * 1.1);
+            estimatedGas += parseInt(result * 1.1);
             this.gasEstimation = estimatedGas;
           } else {
-            this.removeState();
-            this.$emit('success', ertTokenV2TransactionHash, this.contractDetails, 'upgrade');
+            this.removeUpgradeState();
+            this.$emit('success', result && result.hash, this.contractDetails, 'upgrade');
             // TODO add three trasactions in the list
           }
           return true;
@@ -308,10 +306,10 @@ export default {
     estimateTransactionFee() {
       return this.upgradeToken(true);
     },
-    saveState(state) {
+    saveUpgradeState(state) {
       window.localStorage.setItem(`exo-wallet-upgrade-v2-${this.contractDetails.address}`, JSON.stringify(state))
     },
-    getState() {
+    getUpgradeState() {
       const state = window.localStorage.getItem(`exo-wallet-upgrade-v2-${this.contractDetails.address}`);
       if (state) {
         return JSON.parse(state);
@@ -319,7 +317,7 @@ export default {
         return null;
       }
     },
-    removeState() {
+    removeUpgradeState() {
       window.localStorage.removeItem(`exo-wallet-upgrade-v2-${this.contractDetails.address}`);
     },
     send() {

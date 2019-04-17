@@ -4,9 +4,11 @@ import java.io.Serializable;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode.Exclude;
+import lombok.ToString;
 
 @Data
-public class RewardMemberDetail implements Serializable {
+@ToString
+public class WalletPluginReward implements Serializable {
 
   private static final long serialVersionUID = 1622627645862974585L;
 

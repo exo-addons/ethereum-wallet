@@ -2,6 +2,7 @@ package org.exoplatform.addon.ethereum.wallet.utils;
 
 import java.lang.reflect.Method;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
 import org.exoplatform.commons.api.settings.data.Context;
@@ -11,18 +12,31 @@ import org.exoplatform.services.security.ConversationState;
 
 public class RewardUtils {
 
-  public static final String  REWARD_SCOPE_NAME        = "ADDONS_REWARD";
+  public static final DateTimeFormatter DATE_FORMATTER             = DateTimeFormatter.ofPattern("d MMM uuuu");
 
-  public static final String  REWARD_CONTEXT_NAME      = "ADDONS_REWARD";
+  public static final String            TRANSACTION_STATUS_PENDING = "pending";
 
-  public static final Context REWARD_CONTEXT           = Context.GLOBAL.id(REWARD_CONTEXT_NAME);
+  public static final String            TRANSACTION_STATUS_SUCCESS = "success";
 
-  public static final Scope   REWARD_SCOPE             =
-                                           Scope.APPLICATION.id(REWARD_SCOPE_NAME);
+  public static final String            TRANSACTION_STATUS_FAILED  = "error";
 
-  public static final String  REWARD_SETTINGS_KEY_NAME = "REWARD_SETTINGS";
+  public static final String            REWARD_SCOPE_NAME          = "ADDONS_REWARD";
+
+  public static final String            REWARD_CONTEXT_NAME        = "ADDONS_REWARD";
+
+  public static final Context           REWARD_CONTEXT             = Context.GLOBAL.id(REWARD_CONTEXT_NAME);
+
+  public static final Scope             REWARD_SCOPE               =
+                                                     Scope.APPLICATION.id(REWARD_SCOPE_NAME);
+
+  public static final String            REWARD_SETTINGS_KEY_NAME   = "REWARD_SETTINGS";
 
   private RewardUtils() {
+  }
+
+  public static String formatTime(long timeInSeconds) {
+    LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(timeInSeconds), TimeZone.getDefault().toZoneId());
+    return dateTime.format(DATE_FORMATTER);
   }
 
   public static LocalDateTime timeFromSeconds(long createdDate) {

@@ -18,7 +18,7 @@ package org.exoplatform.addon.ethereum.wallet.reward.service;
 
 import java.util.Set;
 
-import org.exoplatform.addon.ethereum.wallet.reward.model.RewardMemberDetail;
+import org.exoplatform.addon.ethereum.wallet.reward.model.WalletReward;
 
 /**
  * A storage service to save/load reward settings
@@ -29,10 +29,17 @@ public interface RewardService {
    * Compute rewards swicth configurations for the list of identities passed in
    * parameters
    * 
-   * @param identityIds
    * @param periodDateInSeconds
    * @return
    */
-  public Set<RewardMemberDetail> computeReward(Set<Long> identityIds, long periodDateInSeconds);
+  public Set<WalletReward> computeReward(long periodDateInSeconds);
+
+  /**
+   * Send rewards transactions
+   * 
+   * @param periodDateInSeconds
+   * @param username current username sending rewards
+   */
+  public void sendRewards(long periodDateInSeconds, String username);
 
 }
