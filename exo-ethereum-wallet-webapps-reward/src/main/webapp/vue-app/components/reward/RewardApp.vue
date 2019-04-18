@@ -270,6 +270,14 @@ export default {
           this.walletRewards = walletRewards;
           this.computeTotalRewardsByPlugin();
 
+          this.walletRewards.forEach(walletReward => {
+            if (walletReward && walletReward.rewardTransaction && walletReward.rewardTransaction.hash && walletReward.rewardTransaction.status === 'pending') {
+              this.walletUtils.watchTransactionStatus(walletReward.rewardTransaction.hash, (receipt) => {
+                walletReward.rewardTransaction.status = receipt && receipt.status ? 'success' : 'error';
+              });
+            }
+          });
+
           teams.forEach((team) => {
             team.validMembersWallets = [];
             team.computedBudget = 0;

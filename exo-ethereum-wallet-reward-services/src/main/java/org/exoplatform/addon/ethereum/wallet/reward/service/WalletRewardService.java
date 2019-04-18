@@ -222,7 +222,7 @@ public class WalletRewardService implements RewardService {
     for (Wallet wallet : wallets) {
       WalletReward walletReward = new WalletReward();
       walletReward.setWallet(wallet);
-      walletReward.setEnabled(walletsWithEnabledTeam.contains(wallet.getTechnicalId()));
+      walletReward.setEnabled(enabledIdentityIds.contains(wallet.getTechnicalId()));
 
       Set<WalletPluginReward> rewardDetails = walletRewardsByPlugin.stream()
                                                                    .filter(reward -> reward.getIdentityId() == wallet.getTechnicalId())
@@ -579,7 +579,7 @@ public class WalletRewardService implements RewardService {
                                                                               String.valueOf(walletPluginReward.getPoints()))
                                                                      .replace("{pluginName}",
                                                                               walletPluginReward.getPluginId())
-                                                                     .replace("{earned in pool_label}",
+                                                                     .replace("{earned in pool_label pool}",
                                                                               walletPluginReward.isPoolsUsed()
                                                                                   && StringUtils.isNotBlank(walletReward.getPoolName()) ? ("earned in "
                                                                                       + walletReward.getPoolName()) : "")

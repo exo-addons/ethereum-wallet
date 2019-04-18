@@ -199,7 +199,13 @@
 
     <v-card-actions>
       <v-spacer />
-      <v-btn class="btn btn-primary pl-2 pr-2" :loading="sendingRewards" @click="sendRewards">Send rewards</v-btn>
+      <v-btn
+        :loading="sendingRewards"
+        :disabled="sendingRewardsDisabled"
+        class="btn btn-primary pl-2 pr-2"
+        @click="sendRewards">
+        Send rewards
+      </v-btn>
       <v-spacer />
     </v-card-actions>
 
@@ -338,6 +344,23 @@ export default {
     };
   },
   computed: {
+    sendingRewardsDisabled() {
+      if (!this.walletRewards || !this.walletRewards.length) {
+        return true;
+      }
+      let disabledButton = true;
+      for (const index in this.walletRewards) {
+        const walletReward = this.walletRewards[index];
+        if (walletReward.enabled && walletReward.tokensToSend && (!walletReward.rewardTransaction || !walletReward.rewardTransaction.status || walletReward.rewardTransaction.status === 'error')) {
+          disabledButton = false;
+        }
+        // If any transaction is still pending, then disable sending button
+        if (walletReward.rewardTransaction && walletReward.rewardTransaction.status === 'pending') {
+          return true;
+        }
+      }
+      return disabledButton;
+    },
     periodDatesDisplay() {
       if (this.selectedStartDate && this.selectedEndDate) {
         return `${this.selectedStartDate} to ${this.selectedEndDate}`;
@@ -422,6 +445,7 @@ export default {
       return teams.indexOf(searchText) > -1;
     },
     sendRewards() {
+      this.error = null;
       this.sendingRewards = true;
       sendRewards(this.selectedDateInSeconds)
         .then(() => {
