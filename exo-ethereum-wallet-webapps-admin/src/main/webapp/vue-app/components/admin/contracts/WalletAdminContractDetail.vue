@@ -53,13 +53,28 @@
               <ul>
                 <li>
                   <strong>
-                    Level 1 to 4
-                  </strong>: add/remove approved accounts
+                    Level 2
+                  </strong>: send rewards of wallets
+                </li>
+                <li>
+                  <strong>
+                    Level 3
+                  </strong>: change vesting amount for wallets
+                </li>
+                <li>
+                  <strong>
+                    Level 4
+                  </strong>: approve/disapprove and send initial funds for wallets
                 </li>
                 <li>
                   <strong>
                     Level 5
-                  </strong>: manage approved accounts, set sell price, manage administrators, pause/unpause contract and send ether to contract.
+                  </strong>: set sell price, manage administrators, pause/unpause contract and send ether to contract.
+                </li>
+                <li>
+                  <strong>
+                    Owner
+                  </strong>: Upgrade contract, transfer ownership and send funds to Cauri contract.
                 </li>
               </ul>
             </div>
@@ -79,7 +94,7 @@
 
           <!-- approve/disapprove account -->
           <contract-admin-modal
-            v-if="contractDetails.adminLevel >= 1"
+            v-if="contractDetails.adminLevel >= 4"
             ref="approveAccountModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
@@ -91,7 +106,7 @@
             @success="successTransaction"
             @error="transactionError" />
           <contract-admin-modal
-            v-if="contractDetails.adminLevel >= 1"
+            v-if="contractDetails.adminLevel >= 4"
             ref="disapproveAccountModal"
             :contract-details="contractDetails"
             :wallet-address="walletAddress"
