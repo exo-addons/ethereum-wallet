@@ -34,7 +34,6 @@ public class RewardBudgetREST implements ResourceContainer {
   /**
    * Compute rewards per period
    * 
-   * @param identityIds
    * @param periodDateInSeconds
    * @return
    */
@@ -61,7 +60,6 @@ public class RewardBudgetREST implements ResourceContainer {
   /**
    * Compute rewards per period
    * 
-   * @param identityIds
    * @param periodDateInSeconds
    * @return
    */

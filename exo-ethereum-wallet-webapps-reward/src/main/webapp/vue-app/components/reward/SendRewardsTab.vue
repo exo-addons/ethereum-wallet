@@ -203,11 +203,16 @@
       <v-spacer />
     </v-card-actions>
 
+    <reward-detail-modal
+      ref="rewardDetails"
+      :wallet="selectedWallet"
+      :period="periodDatesDisplay"
+      :symbol="symbol"
+      @closed="selectedWallet = null" />
   </v-card>
 </template>
 
 <script>
-import SendRewardModal from './modal/SendModal.vue';
 import RewardDetailModal from './modal/RewardDetailModal.vue';
 
 import {getRewardDates, sendRewards} from '../../js/RewardServices.js';
@@ -215,7 +220,6 @@ import {getRewardDates, sendRewards} from '../../js/RewardServices.js';
 export default {
   components: {
     RewardDetailModal,
-    SendRewardModal,
   },
   props: {
     walletRewards: {

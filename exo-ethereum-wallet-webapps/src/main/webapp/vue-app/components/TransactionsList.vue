@@ -584,7 +584,13 @@
                   </span>
                 </v-list-tile-title>
                 <v-list-tile-sub-title
-                  v-if="item.amountFiat">
+                  v-if="item.contractMethodName === 'reward'">
+                  <v-list-tile-action-text>
+                    {{ toFixed(item.value) }} {{ item.contractSymbol }}
+                  </v-list-tile-action-text>
+                </v-list-tile-sub-title>
+                <v-list-tile-sub-title
+                  v-else-if="item.amountFiat">
                   <v-list-tile-action-text>
                     {{ toFixed(item.amountFiat) }} {{ fiatSymbol }}
                   </v-list-tile-action-text>
@@ -641,30 +647,34 @@
                 {{ toFixed(item.contractAmount) }} {{ item.contractSymbol }}
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile v-if="Number(item.amountFiat)">
-              <v-list-tile-content>
-                Fiat amount
-              </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ toFixed(item.amountFiat) }} {{ fiatSymbol }}
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile v-if="Number(item.value)">
-              <v-list-tile-content>
-                Ether amount
-              </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ toFixed(item.value) }} ether
-              </v-list-tile-content>
-            </v-list-tile>
-            <v-list-tile v-if="item.contractMethodName === 'reward' && Number(item.value)">
-              <v-list-tile-content>
-                Transferred amount
-              </v-list-tile-content>
-              <v-list-tile-content class="align-end">
-                {{ toFixed(item.value) }} {{ item.contractSymbol }}
-              </v-list-tile-content>
-            </v-list-tile>
+            <template v-if="item.contractMethodName === 'reward'">
+              <v-list-tile v-if="Number(item.value)">
+                <v-list-tile-content>
+                  Transferred amount
+                </v-list-tile-content>
+                <v-list-tile-content class="align-end">
+                  {{ toFixed(item.value) }} {{ item.contractSymbol }}
+                </v-list-tile-content>
+              </v-list-tile>
+            </template>
+            <template v-else>
+              <v-list-tile v-if="Number(item.amountFiat)">
+                <v-list-tile-content>
+                  Fiat amount
+                </v-list-tile-content>
+                <v-list-tile-content class="align-end">
+                  {{ toFixed(item.amountFiat) }} {{ fiatSymbol }}
+                </v-list-tile-content>
+              </v-list-tile>
+              <v-list-tile v-if="Number(item.value)">
+                <v-list-tile-content>
+                  Ether amount
+                </v-list-tile-content>
+                <v-list-tile-content class="align-end">
+                  {{ toFixed(item.value) }} ether
+                </v-list-tile-content>
+              </v-list-tile>
+            </template>
 
             <v-list-tile v-if="item.fromAddress">
               <v-list-tile-content>

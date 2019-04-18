@@ -90,8 +90,7 @@
                 :eligible-users-count="eligibleUsersCount"
                 :total-rewards="totalRewards"
                 @dates-changed="refreshRewardSettings"
-                @pending="pendingTransaction"
-                @success="successTransaction"
+                @refresh="refreshRewards"
                 @error="error = $event" />
             </v-tab-item>
             <v-tab-item id="RewardPools">

@@ -39,7 +39,8 @@ public interface RewardService {
    * 
    * @param periodDateInSeconds
    * @param username current username sending rewards
+   * @throws Exception 
    */
-  public void sendRewards(long periodDateInSeconds, String username);
+  public void sendRewards(long periodDateInSeconds, String username) throws Exception; // NOSONAR
 
 }

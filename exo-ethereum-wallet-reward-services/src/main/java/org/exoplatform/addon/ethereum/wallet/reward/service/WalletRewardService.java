@@ -78,7 +78,7 @@ public class WalletRewardService implements RewardService {
   }
 
   @Override
-  public void sendRewards(long periodDateInSeconds, String username) {
+  public void sendRewards(long periodDateInSeconds, String username) throws Exception {
     Set<WalletReward> rewards = computeReward(periodDateInSeconds);
     if (rewards == null || rewards.isEmpty()) {
       return;
@@ -158,6 +158,7 @@ public class WalletRewardService implements RewardService {
                   walletReward.getWallet().getId(),
                   new Date(periodDateInSeconds * 1000),
                   e);
+        throw e;
       }
     }
   }

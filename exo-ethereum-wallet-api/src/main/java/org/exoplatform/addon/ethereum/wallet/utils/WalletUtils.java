@@ -255,18 +255,29 @@ public class WalletUtils {
     }
   }
 
-  @SuppressWarnings("all")
-  public static String getPermanentLink(Wallet account) {
-    String profileLink = null;
-    try {
-      profileLink = account.getId() == null
-          || account.getType() == null ? account.getName()
-                                       : WalletType.isUser(account.getType()) ? LinkProvider.getProfileLink(account.getId())
-                                                                              : getPermanentLink(getSpace(account.getId()));
-    } catch (Exception e) {
-      LOG.error("Error getting profile link of space", e);
+  public static String getPermanentLink(Wallet wallet) {
+    if (wallet == null) {
+      throw new IllegalArgumentException("Wallet is mandatory");
     }
-    return profileLink;
+    String remoteId = wallet.getId();
+    String walletType = wallet.getType();
+    try {
+      if (StringUtils.isBlank(remoteId) || StringUtils.isBlank(walletType)
+          || (!WalletType.isUser(walletType) && !WalletType.isSpace(walletType))) {
+        return wallet.getName();
+      } else if (WalletType.isUser(walletType)) {
+        return LinkProvider.getProfileLink(remoteId);
+      } else if (WalletType.isSpace(walletType)) {
+        Space space = getSpace(remoteId);
+        if (space == null) {
+          throw new IllegalStateException("Can't find space with id " + remoteId);
+        }
+        return getPermanentLink(space);
+      }
+    } catch (Exception e) {
+      LOG.error("Error getting profile link of {} {}", walletType, remoteId, e);
+    }
+    return StringUtils.isBlank(wallet.getName()) ? wallet.getAddress() : wallet.getName();
   }
 
   public static Identity getIdentityById(long identityId) {
