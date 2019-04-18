@@ -199,7 +199,7 @@
 
     <v-card-actions>
       <v-spacer />
-      <v-btn :loading="sendingRewards" @click="sendRewards">Send rewards</v-btn>
+      <v-btn class="btn btn-primary pl-2 pr-2" :loading="sendingRewards" @click="sendRewards">Send rewards</v-btn>
       <v-spacer />
     </v-card-actions>
 

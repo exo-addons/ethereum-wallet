@@ -143,7 +143,7 @@ public class WalletRewardService implements RewardService {
           rewardTransaction = new RewardTransaction();
         }
         rewardTransaction.setHash(transactionDetail.getHash());
-        rewardTransaction.setNetworkId(transactionDetail.getNetworkId());
+        rewardTransaction.setNetworkId(settings.getDefaultNetworkId());
         rewardTransaction.setPeriodType(periodType.name());
         rewardTransaction.setReceiverId(walletReward.getWallet().getId());
         rewardTransaction.setReceiverType(walletReward.getWallet().getType());
@@ -216,7 +216,7 @@ public class WalletRewardService implements RewardService {
 
     List<RewardTransaction> rewardTransactions = rewardTransactionService.getRewardTransactions(networkId,
                                                                                                 periodType.name(),
-                                                                                                periodDateInSeconds);
+                                                                                                periodOfTime.getStartDateInSeconds());
 
     Set<WalletReward> walletRewards = new HashSet<>();
     for (Wallet wallet : wallets) {
