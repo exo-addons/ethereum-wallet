@@ -2,11 +2,15 @@ package org.exoplatform.addon.ethereum.wallet.service;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
+import java.security.Provider;
+import java.security.Security;
 import java.util.Collections;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.picocontainer.Startable;
 import org.web3j.crypto.*;
 import org.web3j.protocol.ObjectMapperFactory;
 
@@ -24,7 +28,7 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
-public class EthereumWalletAccountService implements WalletAccountService {
+public class EthereumWalletAccountService implements WalletAccountService, Startable {
 
   private static final String USER_MESSAGE_IN_EXCEPTION               = "User '";
 
@@ -569,6 +573,22 @@ public class EthereumWalletAccountService implements WalletAccountService {
       listenerService = CommonsUtils.getService(ListenerService.class);
     }
     return listenerService;
+  }
+
+  @Override
+  public void start() {
+    Provider provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
+    if (provider == null) {
+      LOG.info("No BouncyCastleProvider defined, register new one");
+      provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
+      Security.addProvider(provider);
+    }
+    LOG.info("Start wallet with BouncyCastleProvider version: {}", provider.getVersion());
+  }
+
+  @Override
+  public void stop() {
+    // Nothing to stop
   }
 
 }
