@@ -21,7 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.model.WalletInitializationState;
 import org.exoplatform.addon.ethereum.wallet.service.WalletAccountService;
-import org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService;
+import org.exoplatform.addon.ethereum.wallet.service.WalletTokenAdminService;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.container.*;
 import org.exoplatform.container.component.RequestLifeCycle;
@@ -36,7 +36,7 @@ public class NewWalletListener extends Listener<Wallet, Wallet> {
 
   private WalletAccountService          walletAccountService;
 
-  private WalletTokenTransactionService tokenTransactionService;
+  private WalletTokenAdminService tokenTransactionService;
 
   private ExoContainer                  container;
 
@@ -74,9 +74,9 @@ public class NewWalletListener extends Listener<Wallet, Wallet> {
     return walletAccountService;
   }
 
-  private WalletTokenTransactionService getTokenTransactionService() {
+  private WalletTokenAdminService getTokenTransactionService() {
     if (tokenTransactionService == null) {
-      tokenTransactionService = CommonsUtils.getService(WalletTokenTransactionService.class);
+      tokenTransactionService = CommonsUtils.getService(WalletTokenAdminService.class);
     }
     return tokenTransactionService;
   }

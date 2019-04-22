@@ -33,7 +33,7 @@ public class MigrationService implements Startable {
 
   private WalletTransactionService      transactionService;
 
-  private WalletTokenTransactionService tokenTransactionService;
+  private WalletTokenAdminService tokenTransactionService;
 
   private WalletContractService         contractService;
 
@@ -153,9 +153,9 @@ public class MigrationService implements Startable {
     return transactionService;
   }
 
-  public WalletTokenTransactionService getTokenTransactionService() {
+  public WalletTokenAdminService getTokenTransactionService() {
     if (tokenTransactionService == null) {
-      tokenTransactionService = CommonsUtils.getService(WalletTokenTransactionService.class);
+      tokenTransactionService = CommonsUtils.getService(WalletTokenAdminService.class);
     }
     return tokenTransactionService;
   }

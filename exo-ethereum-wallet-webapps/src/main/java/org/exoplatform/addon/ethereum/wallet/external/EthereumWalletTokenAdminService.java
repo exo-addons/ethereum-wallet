@@ -1,4 +1,6 @@
-package org.exoplatform.addon.ethereum.wallet.service;
+package org.exoplatform.addon.ethereum.wallet.external;
+
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.*;
 
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -6,8 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
+import org.web3j.crypto.*;
+import org.web3j.protocol.ObjectMapperFactory;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.RemoteCall;
@@ -17,55 +19,150 @@ import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.StaticGasProvider;
 import org.web3j.tx.response.EmptyTransactionReceipt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2;
 import org.exoplatform.addon.ethereum.wallet.model.*;
+import org.exoplatform.addon.ethereum.wallet.model.Wallet;
+import org.exoplatform.addon.ethereum.wallet.service.*;
+import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
+import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
-public class EthereumWalletTokenTransactionService implements WalletTokenTransactionService {
+public class EthereumWalletTokenAdminService implements WalletTokenAdminService {
 
-  private static final long        DEFAULT_ADMIN_GAS                       = 300000l;
+  private static final long                     DEFAULT_ADMIN_GAS                       = 300000l;
 
-  private static final String      NO_CONFIGURED_CONTRACT_ADDRESS          = "No configured contract address";
+  private static final String                   NO_CONFIGURED_CONTRACT_ADDRESS          = "No configured contract address";
 
-  private static final String      TRANSACTION_DETAIL_IS_MANDATORY         = "Transaction detail is mandatory";
+  private static final String                   TRANSACTION_DETAIL_IS_MANDATORY         = "Transaction detail is mandatory";
 
-  private static final String      TRANSACTION_HASH_IS_EMPTY               = "Transaction hash is empty for transaction: ";
+  private static final String                   TRANSACTION_HASH_IS_EMPTY               =
+                                                                          "Transaction hash is empty for transaction: ";
 
-  private static final Log         LOG                                     =
-                                       ExoLogger.getLogger(EthereumWalletTokenTransactionService.class);
+  private static final Log                      LOG                                     =
+                                                    ExoLogger.getLogger(EthereumWalletTokenAdminService.class);
 
-  private static final String      RECEIVER_ADDRESS_PARAMETER_IS_MANDATORY = "receiver address parameter is mandatory";
+  private static final String                   RECEIVER_ADDRESS_PARAMETER_IS_MANDATORY =
+                                                                                        "receiver address parameter is mandatory";
 
-  private WalletService            walletService;
+  private ClassLoader                           classLoader;
 
-  private EthereumClientConnector  clientConnector;
+  private ListenerService                       listenerService;
 
-  private WalletAccountService     accountService;
+  private WalletService                         walletService;
 
-  private WalletTransactionService transactionService;
+  private EthereumClientConnectorForTransaction clientConnector;
 
-  private WalletContractService    contractService;
+  private WalletAccountService                  accountService;
 
-  private ERTTokenV2               ertInstance;
+  private AccountStorage                        accountStorage;
 
-  private boolean                  isReadOnlyContract;
+  private WalletTransactionService              transactionService;
 
-  public EthereumWalletTokenTransactionService(EthereumClientConnector ethereumClientConnector,
-                                               WalletService ethereumWalletService,
-                                               WalletAccountService walletAccountService,
-                                               WalletTransactionService transactionService,
-                                               WalletContractService contractService) {
-    this.walletService = ethereumWalletService;
-    this.clientConnector = ethereumClientConnector;
-    this.accountService = walletAccountService;
-    this.transactionService = transactionService;
-    this.contractService = contractService;
+  private WalletContractService                 contractService;
+
+  private ERTTokenV2                            ertInstance;
+
+  private boolean                               isReadOnlyContract;
+
+  public EthereumWalletTokenAdminService(EthereumClientConnectorForTransaction clientConnector, ClassLoader classLoader) {
+    this.classLoader = classLoader;
+    this.clientConnector = clientConnector;
   }
 
   @Override
   public final void reinit() {
     this.ertInstance = null;
+  }
+
+  @Override
+  public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException {
+    Thread currentThread = Thread.currentThread();
+    ClassLoader currentClassLoader = currentThread.getContextClassLoader();
+    currentThread.setContextClassLoader(this.classLoader);
+    try {
+      if (!isUserAdmin(currentUser)) {
+        throw new IllegalAccessException("User " + currentUser + " is not allowed to create admin wallet");
+      }
+
+      Identity identity = getIdentityByTypeAndId(WalletType.ADMIN, WALLET_ADMIN_REMOTE_ID);
+      if (identity == null) {
+        throw new IllegalStateException("Can't find identity of admin wallet");
+      }
+
+      long identityId = Long.parseLong(identity.getId());
+      Wallet wallet = getAccountService().getWalletByIdentityId(identityId);
+      if (wallet != null && wallet.getAddress() != null
+          && getAccountService().getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID) != null) {
+        throw new IllegalStateException("Admin wallet has already an associated wallet, thus can't overwrite it");
+      }
+
+      ECKeyPair ecKeyPair = null;
+      if (StringUtils.isBlank(privateKey)) {
+        try {
+          ecKeyPair = Keys.createEcKeyPair();
+        } catch (Exception e) {
+          throw new IllegalStateException("Error creating new wallet keys pair", e);
+        }
+      } else {
+        if (!WalletUtils.isValidPrivateKey(privateKey)) {
+          throw new IllegalStateException("Private key isn't valid");
+        }
+        ecKeyPair = Credentials.create(privateKey).getEcKeyPair();
+      }
+
+      WalletFile adminWallet = null;
+      try {
+        adminWallet = org.web3j.crypto.Wallet.createLight(accountService.getAdminAccountPassword(), ecKeyPair);
+      } catch (CipherException e) {
+        throw new IllegalStateException("Error creating new wallet", e);
+      }
+
+      String walletJson = null;
+      try {
+        walletJson = toJsonString(adminWallet);
+      } catch (JsonException e) {
+        throw new IllegalStateException("Error converting wallet to JSON object", e);
+      }
+
+      wallet = new Wallet();
+      wallet.setEnabled(true);
+      wallet.setId(WALLET_ADMIN_REMOTE_ID);
+      wallet.setType(WalletType.ADMIN.getId());
+      wallet.setAddress("0x" + adminWallet.getAddress());
+      wallet.setTechnicalId(identityId);
+      wallet.setHasKeyOnServerSide(true);
+
+      getAccountService().saveWalletAddress(wallet, currentUser, false);
+      try {
+        getAccountStorage().saveWalletPrivateKey(identityId, walletJson);
+        getListenerService().broadcast(ADMIN_WALLET_MODIFIED_EVENT,
+                                       wallet.clone(),
+                                       null);
+      } catch (Exception e) {
+        // Make sure to delete corresponding wallet when the private key isn't
+        // saved
+        getAccountService().removeWalletByAddress(wallet.getAddress(), currentUser);
+      }
+    } finally {
+      currentThread.setContextClassLoader(currentClassLoader);
+    }
+  }
+
+  @Override
+  public Wallet getAdminWallet() {
+    return getAccountService().getWalletByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
+  }
+
+  @Override
+  public String getAdminWalletAddress() {
+    Wallet adminWallet = getAdminWallet();
+    return adminWallet == null ? null : adminWallet.getAddress();
   }
 
   @Override
@@ -162,13 +259,13 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       }
       transactionDetail.setNetworkId(getNetworkId());
       transactionDetail.setHash(transactionHash);
-      transactionDetail.setFrom(getAdminAddress());
+      transactionDetail.setFrom(getAdminWalletAddress());
       transactionDetail.setContractAddress(contractAddress);
       transactionDetail.setContractMethodName(ERTTokenV2.FUNC_APPROVEACCOUNT);
       transactionDetail.setTimestamp(System.currentTimeMillis());
       transactionDetail.setAdminOperation(true);
       transactionDetail.setPending(true);
-      transactionService.saveTransactionDetail(transactionDetail, true);
+      getTransactionService().saveTransactionDetail(transactionDetail, true);
       return transactionDetail;
     }
   }
@@ -215,20 +312,20 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       }
       transactionDetail.setNetworkId(getNetworkId());
       transactionDetail.setHash(transactionHash);
-      transactionDetail.setFrom(getAdminAddress());
+      transactionDetail.setFrom(getAdminWalletAddress());
       transactionDetail.setContractAddress(contractAddress);
       transactionDetail.setContractMethodName(ERTTokenV2.FUNC_DISAPPROVEACCOUNT);
       transactionDetail.setTimestamp(System.currentTimeMillis());
       transactionDetail.setAdminOperation(true);
       transactionDetail.setPending(true);
-      transactionService.saveTransactionDetail(transactionDetail, true);
+      getTransactionService().saveTransactionDetail(transactionDetail, true);
       return transactionDetail;
     }
   }
 
   @Override
   public final TransactionDetail initialize(String receiver, String issuerUsername) throws Exception {
-    GlobalSettings settings = walletService.getSettings();
+    GlobalSettings settings = getWalletService().getSettings();
     String message = settings.getInitialFundsRequestMessage();
     Map<String, Double> initialFunds = settings.getInitialFunds();
     double tokenAmount = 0;
@@ -280,14 +377,15 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     if (isInitializedAccount(receiver)) {
       throw new IllegalStateException("Wallet {} is already initialized");
     }
-    String adminWalletAddress = getAdminAddress();
+    String adminWalletAddress = getAdminWalletAddress();
     int decimals = getDecimals();
     BigInteger tokenAmount = transactionDetail.getContractAmountDecimal(decimals);
     BigInteger etherAmount = transactionDetail.getValueDecimal(18);
 
     BigInteger balanceOfAdmin = balanceOf(adminWalletAddress);
     if (balanceOfAdmin == null || balanceOfAdmin.compareTo(tokenAmount) < 0) {
-      throw new IllegalStateException("Wallet admin hasn't enough tokens to initialize " + tokenAmount.longValue() + " tokens to "
+      throw new IllegalStateException("Wallet admin hasn't enough tokens to initialize " + tokenAmount.longValue()
+          + " tokens to "
           + receiver);
     }
 
@@ -310,18 +408,18 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       throw new IllegalStateException(TRANSACTION_HASH_IS_EMPTY + transactionDetail);
     }
 
-    accountService.setInitializationStatus(receiver, WalletInitializationState.PENDING);
+    getAccountService().setInitializationStatus(receiver, WalletInitializationState.PENDING);
 
     transactionDetail.setNetworkId(getNetworkId());
     transactionDetail.setHash(transactionHash);
-    transactionDetail.setFrom(getAdminAddress());
+    transactionDetail.setFrom(getAdminWalletAddress());
     transactionDetail.setContractAddress(contractAddress);
     transactionDetail.setContractMethodName(ERTTokenV2.FUNC_INITIALIZEACCOUNT);
     transactionDetail.setTimestamp(System.currentTimeMillis());
     transactionDetail.setAdminOperation(false);
     transactionDetail.setPending(true);
 
-    transactionService.saveTransactionDetail(transactionDetail, true);
+    getTransactionService().saveTransactionDetail(transactionDetail, true);
     return transactionDetail;
   }
 
@@ -366,7 +464,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
         throw new IllegalStateException("Wallet receiver {} is not approved yet, thus no transfer is allowed");
       }
 
-      String adminWalletAddress = getAdminAddress();
+      String adminWalletAddress = getAdminWalletAddress();
       int decimals = getDecimals();
       BigInteger tokenAmount = transactionDetail.getContractAmountDecimal(decimals);
 
@@ -389,13 +487,13 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     }
     transactionDetail.setNetworkId(getNetworkId());
     transactionDetail.setHash(transactionHash);
-    transactionDetail.setFrom(getAdminAddress());
+    transactionDetail.setFrom(getAdminWalletAddress());
     transactionDetail.setContractAddress(contractAddress);
     transactionDetail.setContractMethodName(ERTTokenV2.FUNC_TRANSFER);
     transactionDetail.setTimestamp(System.currentTimeMillis());
     transactionDetail.setAdminOperation(false);
     transactionDetail.setPending(true);
-    transactionService.saveTransactionDetail(transactionDetail, true);
+    getTransactionService().saveTransactionDetail(transactionDetail, true);
     return transactionDetail;
   }
 
@@ -439,7 +537,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       throw new IllegalStateException("Wallet receiver {} is not approved yet, thus no transfer is allowed");
     }
 
-    String adminWalletAddress = getAdminAddress();
+    String adminWalletAddress = getAdminWalletAddress();
     int decimals = getDecimals();
     BigInteger tokenAmount = transactionDetail.getValueDecimal(decimals);
     BigInteger rewardAmount = transactionDetail.getContractAmountDecimal(decimals);
@@ -465,28 +563,35 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     }
     transactionDetail.setNetworkId(getNetworkId());
     transactionDetail.setHash(transactionHash);
-    transactionDetail.setFrom(getAdminAddress());
+    transactionDetail.setFrom(getAdminWalletAddress());
     transactionDetail.setContractAddress(contractAddress);
     transactionDetail.setContractMethodName(ERTTokenV2.FUNC_REWARD);
     transactionDetail.setTimestamp(System.currentTimeMillis());
     transactionDetail.setAdminOperation(false);
     transactionDetail.setPending(true);
-    transactionService.saveTransactionDetail(transactionDetail, true);
+    getTransactionService().saveTransactionDetail(transactionDetail, true);
     return transactionDetail;
   }
 
   @Override
   public final BigInteger getEtherBalanceOf(String address) throws Exception { // NOSONAR
-    Web3j web3j = clientConnector.getWeb3j();
-    if (web3j == null) {
-      throw new IllegalStateException("Can't get ether balance of " + address + " . Connection is not established.");
+    Thread currentThread = Thread.currentThread();
+    ClassLoader currentClassLoader = currentThread.getContextClassLoader();
+    currentThread.setContextClassLoader(this.classLoader);
+    try {
+      Web3j web3j = getClientConnector().getWeb3j();
+      if (web3j == null) {
+        throw new IllegalStateException("Can't get ether balance of " + address + " . Connection is not established.");
+      }
+      return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
+    } finally {
+      currentThread.setContextClassLoader(currentClassLoader);
     }
-    return web3j.ethGetBalance(address, DefaultBlockParameterName.LATEST).send().getBalance();
   }
 
   @Override
   public String getContractAddress() {
-    GlobalSettings settings = walletService.getSettings();
+    GlobalSettings settings = getWalletService().getSettings();
     if (settings == null || StringUtils.isBlank(settings.getDefaultPrincipalAccount())) {
       throw new IllegalStateException("No principal contract address is configured");
     }
@@ -503,7 +608,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
 
   private void setIssuer(TransactionDetail transactionDetail, String issuerUsername) {
     if (StringUtils.isNotBlank(issuerUsername)) {
-      Wallet issuerWallet = accountService.getWalletByTypeAndId(WalletType.USER.name(), issuerUsername);
+      Wallet issuerWallet = getAccountService().getWalletByTypeAndId(WalletType.USER.name(), issuerUsername);
       if (issuerWallet == null) {
         throw new IllegalStateException("Can't find identity of user with id " + issuerUsername);
       }
@@ -512,7 +617,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   private long getNetworkId() {
-    GlobalSettings settings = walletService.getSettings();
+    GlobalSettings settings = getWalletService().getSettings();
     if (settings.getDefaultNetworkId() == 0) {
       throw new IllegalStateException("No network ID is configured");
     }
@@ -520,7 +625,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   private final void checkAdminWalletIsValid() throws Exception {
-    String adminAddress = getAdminAddress();
+    String adminAddress = getAdminWalletAddress();
     if (adminAddress == null) {
       throw new IllegalStateException("No admin wallet is set");
     }
@@ -530,55 +635,65 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     }
   }
 
-  private String getAdminAddress() {
-    return accountService.getAdminWalletAddress();
-  }
-
   private String executeTokenTransaction(final String contractAddress,
                                          final String methodName,
                                          final Object... arguments) throws Exception { // NOSONAR
+    Thread currentThread = Thread.currentThread();
+    ClassLoader currentClassLoader = currentThread.getContextClassLoader();
+    currentThread.setContextClassLoader(this.classLoader);
+    try {
+      ERTTokenV2 contractInstance = getContractInstance(contractAddress, true);
+      Method methodToInvoke = getMethod(methodName);
+      if (methodToInvoke == null) {
+        throw new IllegalStateException("Can't find method " + methodName + " in Token instance");
+      }
 
-    ERTTokenV2 contractInstance = getContractInstance(contractAddress, true);
-    Method methodToInvoke = getMethod(methodName);
-    if (methodToInvoke == null) {
-      throw new IllegalStateException("Can't find method " + methodName + " in Token instance");
-    }
+      @SuppressWarnings("unchecked")
+      RemoteCall<TransactionReceipt> response =
+                                              (RemoteCall<TransactionReceipt>) methodToInvoke.invoke(contractInstance, arguments);
+      response.observable()
+              .doOnError(error -> LOG.error("Error while sending transaction on contract with address {}, operation: {}, arguments: {}",
+                                            contractAddress,
+                                            methodName,
+                                            arguments,
+                                            error));
 
-    @SuppressWarnings("unchecked")
-    RemoteCall<TransactionReceipt> response = (RemoteCall<TransactionReceipt>) methodToInvoke.invoke(contractInstance, arguments);
-    response.observable()
-            .doOnError(error -> LOG.error("Error while sending transaction on contract with address {}, operation: {}, arguments: {}",
-                                          contractAddress,
-                                          methodName,
-                                          arguments,
-                                          error));
-
-    TransactionReceipt receipt = response.send();
-    if (receipt == null) {
-      throw new IllegalStateException("Transaction receipt is null");
+      TransactionReceipt receipt = response.send();
+      if (receipt == null) {
+        throw new IllegalStateException("Transaction receipt is null");
+      }
+      if (!(receipt instanceof EmptyTransactionReceipt)) {
+        throw new IllegalStateException("Transaction receipt isn't of a known type");
+      }
+      return receipt.getTransactionHash();
+    } finally {
+      currentThread.setContextClassLoader(currentClassLoader);
     }
-    if (!(receipt instanceof EmptyTransactionReceipt)) {
-      throw new IllegalStateException("Transaction receipt isn't of a known type");
-    }
-    return receipt.getTransactionHash();
   }
 
   private Object executeReadOperation(final String contractAddress,
                                       final String methodName,
                                       final Object... arguments) throws Exception {
-    ERTTokenV2 contractInstance = getContractInstance(contractAddress, false);
-    Method methodToInvoke = getMethod(methodName);
-    if (methodToInvoke == null) {
-      throw new IllegalStateException("Can't find method " + methodName + " in Token instance");
+    Thread currentThread = Thread.currentThread();
+    ClassLoader currentClassLoader = currentThread.getContextClassLoader();
+    currentThread.setContextClassLoader(this.classLoader);
+    try {
+      ERTTokenV2 contractInstance = getContractInstance(contractAddress, false);
+      Method methodToInvoke = getMethod(methodName);
+      if (methodToInvoke == null) {
+        throw new IllegalStateException("Can't find method " + methodName + " in Token instance");
+      }
+      RemoteCall<?> response = (RemoteCall<?>) methodToInvoke.invoke(contractInstance, arguments);
+      response.observable()
+              .doOnError(error -> LOG.error("Error while calling method {} on contract with address {}, arguments: {}",
+                                            methodName,
+                                            contractAddress,
+                                            arguments,
+                                            error));
+      return response.send();
+    } finally {
+      currentThread.setContextClassLoader(currentClassLoader);
     }
-    RemoteCall<?> response = (RemoteCall<?>) methodToInvoke.invoke(contractInstance, arguments);
-    response.observable()
-            .doOnError(error -> LOG.error("Error while calling method {} on contract with address {}, arguments: {}",
-                                          methodName,
-                                          contractAddress,
-                                          arguments,
-                                          error));
-    return response.send();
   }
 
   private ERTTokenV2 getContractInstance(final String contractAddress, boolean writeOperation) throws InterruptedException {
@@ -594,12 +709,12 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
     if (adminCredentials == null && writeOperation) {
       throw new IllegalStateException("Admin account keys aren't set");
     }
-    GlobalSettings settings = walletService.getSettings();
+    GlobalSettings settings = getWalletService().getSettings();
     ContractGasProvider gasProvider = new StaticGasProvider(BigInteger.valueOf(settings.getMinGasPrice()),
                                                             BigInteger.valueOf(DEFAULT_ADMIN_GAS));
-    TransactionManager contractTransactionManager = clientConnector.getTransactionManager(adminCredentials);
+    TransactionManager contractTransactionManager = getClientConnector().getTransactionManager(adminCredentials);
     this.ertInstance = ERTTokenV2.load(contractAddress,
-                                       clientConnector.getWeb3j(),
+                                       getClientConnector().getWeb3j(),
                                        contractTransactionManager,
                                        gasProvider);
     this.isReadOnlyContract = adminCredentials == null;
@@ -607,11 +722,30 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   private Credentials getAdminCredentials() {
-    ECKeyPair adminWalletKeys = (ECKeyPair) accountService.getAdminWalletKeys();
+    ECKeyPair adminWalletKeys = (ECKeyPair) getAdminWalletKeys();
     if (adminWalletKeys == null) {
       return null;
     } else {
       return Credentials.create(adminWalletKeys);
+    }
+  }
+
+  private Object getAdminWalletKeys() {
+    String adminPrivateKey = getAccountService().getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
+    if (StringUtils.isBlank(adminPrivateKey)) {
+      return null;
+    }
+    WalletFile adminWallet = null;
+    try {
+      ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+      adminWallet = objectMapper.reader(WalletFile.class).readValue(adminPrivateKey);
+    } catch (Exception e) {
+      throw new IllegalStateException("An error occurred while parsing admin wallet keys", e);
+    }
+    try {
+      return org.web3j.crypto.Wallet.decrypt(accountService.getAdminAccountPassword(), adminWallet);
+    } catch (CipherException e) {
+      throw new IllegalStateException("Can't descrypt stored admin wallet", e);
     }
   }
 
@@ -627,7 +761,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   }
 
   private ContractDetail getPrincipalContractDetail() {
-    GlobalSettings settings = walletService.getSettings();
+    GlobalSettings settings = getWalletService().getSettings();
     if (settings == null) {
       throw new IllegalStateException("Global settings are null");
     }
@@ -640,7 +774,7 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
       throw new IllegalStateException("Global settings principal contract is empty");
     }
 
-    ContractDetail contractDetail = contractService.getContractDetail(contractAddress, networkId);
+    ContractDetail contractDetail = getContractService().getContractDetail(contractAddress, networkId);
     if (contractDetail == null) {
       throw new IllegalStateException("Can't find default contract details");
     }
@@ -650,4 +784,51 @@ public class EthereumWalletTokenTransactionService implements WalletTokenTransac
   private int getDecimals() {
     return getPrincipalContractDetail().getDecimals();
   }
+
+  public WalletContractService getContractService() {
+    if (contractService == null) {
+      contractService = CommonsUtils.getService(WalletContractService.class);
+    }
+    return contractService;
+  }
+
+  public WalletTransactionService getTransactionService() {
+    if (transactionService == null) {
+      transactionService = CommonsUtils.getService(WalletTransactionService.class);
+    }
+    return transactionService;
+  }
+
+  public AccountStorage getAccountStorage() {
+    if (accountStorage == null) {
+      accountStorage = CommonsUtils.getService(AccountStorage.class);
+    }
+    return accountStorage;
+  }
+
+  public WalletAccountService getAccountService() {
+    if (accountService == null) {
+      accountService = CommonsUtils.getService(WalletAccountService.class);
+    }
+    return accountService;
+  }
+
+  public EthereumClientConnectorForTransaction getClientConnector() {
+    return clientConnector;
+  }
+
+  public WalletService getWalletService() {
+    if (walletService == null) {
+      walletService = CommonsUtils.getService(WalletService.class);
+    }
+    return walletService;
+  }
+
+  public ListenerService getListenerService() {
+    if (listenerService == null) {
+      listenerService = CommonsUtils.getService(ListenerService.class);
+    }
+    return listenerService;
+  }
+
 }

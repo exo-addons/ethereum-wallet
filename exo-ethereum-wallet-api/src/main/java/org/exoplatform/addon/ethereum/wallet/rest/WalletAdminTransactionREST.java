@@ -25,7 +25,8 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 
 import org.exoplatform.addon.ethereum.wallet.model.TransactionDetail;
-import org.exoplatform.addon.ethereum.wallet.service.WalletTokenTransactionService;
+import org.exoplatform.addon.ethereum.wallet.service.WalletTokenAdminService;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.rest.resource.ResourceContainer;
@@ -38,15 +39,11 @@ import org.exoplatform.services.rest.resource.ResourceContainer;
 @RolesAllowed("administrators")
 public class WalletAdminTransactionREST implements ResourceContainer {
 
-  private static final String           BAD_REQUEST_SENT_TO_SERVER_BY = "Bad request sent to server by '";
+  private static final String     BAD_REQUEST_SENT_TO_SERVER_BY = "Bad request sent to server by '";
 
-  private static final Log              LOG                           = ExoLogger.getLogger(WalletAdminTransactionREST.class);
+  private static final Log        LOG                           = ExoLogger.getLogger(WalletAdminTransactionREST.class);
 
-  private WalletTokenTransactionService tokenOperationService;
-
-  public WalletAdminTransactionREST(WalletTokenTransactionService tokenOperationService) {
-    this.tokenOperationService = tokenOperationService;
-  }
+  private WalletTokenAdminService tokenTransactionService;
 
   /**
    * Send transaction to wallet identified by address with possible transaction
@@ -72,11 +69,11 @@ public class WalletAdminTransactionREST implements ResourceContainer {
     TransactionDetail transactionDetail = null;
     try {
       if (StringUtils.equals(action, "initialize")) {
-        transactionDetail = tokenOperationService.initialize(address, currentUserId);
+        transactionDetail = getTokenTransactionService().initialize(address, currentUserId);
       } else if (StringUtils.equals(action, "approve")) {
-        transactionDetail = tokenOperationService.approveAccount(address, currentUserId);
+        transactionDetail = getTokenTransactionService().approveAccount(address, currentUserId);
       } else if (StringUtils.equals(action, "disapprove")) {
-        transactionDetail = tokenOperationService.disapproveAccount(address, currentUserId);
+        transactionDetail = getTokenTransactionService().disapproveAccount(address, currentUserId);
       } else {
         LOG.warn(BAD_REQUEST_SENT_TO_SERVER_BY + currentUserId + "' with action: " + action);
         return Response.status(400).build();
@@ -109,12 +106,19 @@ public class WalletAdminTransactionREST implements ResourceContainer {
       transactionDetail.setValue(etherAmount);
       transactionDetail.setLabel(transactionLabel);
       transactionDetail.setMessage(transactionMessage);
-      transactionDetail = tokenOperationService.initialize(transactionDetail, currentUserId);
+      transactionDetail = getTokenTransactionService().initialize(transactionDetail, currentUserId);
       return Response.ok(transactionDetail == null ? "" : transactionDetail.getHash()).build();
     } catch (Exception e) {
       LOG.warn("Error initializing wallet {}", receiver, e);
       return Response.serverError().build();
     }
+  }
+
+  private WalletTokenAdminService getTokenTransactionService() {
+    if (tokenTransactionService == null) {
+      tokenTransactionService = CommonsUtils.getService(WalletTokenAdminService.class);
+    }
+    return tokenTransactionService;
   }
 
 }

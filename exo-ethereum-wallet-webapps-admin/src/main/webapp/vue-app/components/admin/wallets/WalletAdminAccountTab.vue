@@ -229,6 +229,7 @@ export default {
   },
   methods: {
     init() {
+      this.error = null;
       if (!this.principalContract || this.principalContract.contractType < 2) {
         return;
       }
@@ -273,6 +274,7 @@ export default {
         });
     },
     removeAdminWallet() {
+      this.error = null;
       this.removingWallet = true;
       return fetch('/portal/rest/wallet/api/account/removeAdminWallet', {
         method: 'GET',
@@ -290,6 +292,7 @@ export default {
       });
     },
     createAdminWallet(privateKey) {
+      this.error = null;
       this.creatingWallet = true;
       return fetch('/portal/rest/wallet/api/account/createAdminAccount', {
         method: 'POST',

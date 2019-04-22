@@ -221,19 +221,6 @@ public interface WalletAccountService {
    */
   public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException;
 
-  /**
-   * @return Admin wallet object
-   */
-  public Wallet getAdminWallet();
-
-  /**
-   * @return Admin wallet address
-   */
-  public String getAdminWalletAddress();
-
-  /**
-   * @return Admin wallet private key
-   */
-  public Object getAdminWalletKeys();
+  String getAdminAccountPassword();
 
 }

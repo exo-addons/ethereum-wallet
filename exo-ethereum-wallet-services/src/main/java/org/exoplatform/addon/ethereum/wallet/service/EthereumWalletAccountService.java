@@ -11,13 +11,8 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.picocontainer.Startable;
-import org.web3j.crypto.*;
-import org.web3j.protocol.ObjectMapperFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.exoplatform.addon.ethereum.wallet.model.*;
-import org.exoplatform.addon.ethereum.wallet.model.Wallet;
 import org.exoplatform.addon.ethereum.wallet.storage.AccountStorage;
 import org.exoplatform.addon.ethereum.wallet.storage.AddressLabelStorage;
 import org.exoplatform.commons.utils.CommonsUtils;
@@ -26,28 +21,29 @@ import org.exoplatform.services.listener.ListenerService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 public class EthereumWalletAccountService implements WalletAccountService, Startable {
 
-  private static final String USER_MESSAGE_IN_EXCEPTION               = "User '";
+  private static final String     USER_MESSAGE_IN_EXCEPTION               = "User '";
 
-  private static final String USER_MESSAGE_PREFIX                     = "User ";
+  private static final String     USER_MESSAGE_PREFIX                     = "User ";
 
-  private static final String CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS = "Can't find wallet associated to address ";
+  private static final String     CAN_T_FIND_WALLET_ASSOCIATED_TO_ADDRESS = "Can't find wallet associated to address ";
 
-  private static final String ADDRESS_PARAMTER_IS_MANDATORY           = "address paramter is mandatory";
+  private static final String     ADDRESS_PARAMTER_IS_MANDATORY           = "address paramter is mandatory";
 
-  private static final Log    LOG                                     =
-                                  ExoLogger.getLogger(EthereumWalletAccountService.class);
+  private static final Log        LOG                                     =
+                                      ExoLogger.getLogger(EthereumWalletAccountService.class);
 
-  private AccountStorage      accountStorage;
+  private WalletTokenAdminService tokenAdminService;
 
-  private AddressLabelStorage labelStorage;
+  private AccountStorage          accountStorage;
 
-  private ListenerService     listenerService;
+  private AddressLabelStorage     labelStorage;
 
-  private String              adminAccountPassword;
+  private ListenerService         listenerService;
+
+  private String                  adminAccountPassword;
 
   public EthereumWalletAccountService(AccountStorage walletAccountStorage,
                                       AddressLabelStorage labelStorage,
@@ -118,84 +114,6 @@ public class EthereumWalletAccountService implements WalletAccountService, Start
   }
 
   @Override
-  public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException {
-    if (!isUserAdmin(currentUser)) {
-      throw new IllegalAccessException(USER_MESSAGE_PREFIX + currentUser + " is not allowed to create admin wallet");
-    }
-
-    Identity identity = getIdentityByTypeAndId(WalletType.ADMIN, WALLET_ADMIN_REMOTE_ID);
-    if (identity == null) {
-      throw new IllegalStateException("Can't find identity of admin wallet");
-    }
-
-    long identityId = Long.parseLong(identity.getId());
-    Wallet wallet = getWalletByIdentityId(identityId);
-    if (wallet != null && wallet.getAddress() != null
-        && getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID) != null) {
-      throw new IllegalStateException("Admin wallet has already an associated wallet, thus can't overwrite it");
-    }
-
-    ECKeyPair ecKeyPair = null;
-    if (StringUtils.isBlank(privateKey)) {
-      try {
-        ecKeyPair = Keys.createEcKeyPair();
-      } catch (Exception e) {
-        throw new IllegalStateException("Error creating new wallet keys pair", e);
-      }
-    } else {
-      if (!WalletUtils.isValidPrivateKey(privateKey)) {
-        throw new IllegalStateException("Private key isn't valid");
-      }
-      ecKeyPair = Credentials.create(privateKey).getEcKeyPair();
-    }
-
-    WalletFile adminWallet = null;
-    try {
-      adminWallet = org.web3j.crypto.Wallet.createLight(adminAccountPassword, ecKeyPair);
-    } catch (CipherException e) {
-      throw new IllegalStateException("Error creating new wallet", e);
-    }
-
-    String walletJson = null;
-    try {
-      walletJson = toJsonString(adminWallet);
-    } catch (JsonException e) {
-      throw new IllegalStateException("Error converting wallet to JSON object", e);
-    }
-
-    wallet = new Wallet();
-    wallet.setEnabled(true);
-    wallet.setId(WALLET_ADMIN_REMOTE_ID);
-    wallet.setType(WalletType.ADMIN.getId());
-    wallet.setAddress("0x" + adminWallet.getAddress());
-    wallet.setTechnicalId(identityId);
-    wallet.setHasKeyOnServerSide(true);
-
-    saveWalletAddress(wallet, currentUser, false);
-    try {
-      accountStorage.saveWalletPrivateKey(identityId, walletJson);
-      getListenerService().broadcast(ADMIN_WALLET_MODIFIED_EVENT,
-                                     wallet.clone(),
-                                     null);
-    } catch (Exception e) {
-      // Make sure to delete corresponding wallet when the private key isn't
-      // saved
-      removeWalletByAddress(wallet.getAddress(), currentUser);
-    }
-  }
-
-  @Override
-  public Wallet getAdminWallet() {
-    return getWalletByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
-  }
-
-  @Override
-  public String getAdminWalletAddress() {
-    Wallet adminWallet = getAdminWallet();
-    return adminWallet == null ? null : adminWallet.getAddress();
-  }
-
-  @Override
   public void savePrivateKeyByTypeAndId(String type,
                                         String remoteId,
                                         String content,
@@ -254,6 +172,11 @@ public class EthereumWalletAccountService implements WalletAccountService, Start
       computeWalletFromIdentity(wallet, identity);
     }
     return wallet;
+  }
+
+  @Override
+  public void createAdminAccount(String privateKey, String currentUser) throws IllegalAccessException {
+    getTokenAdminService().createAdminAccount(privateKey, currentUser);
   }
 
   @Override
@@ -504,23 +427,9 @@ public class EthereumWalletAccountService implements WalletAccountService, Start
     return labelStorage.getAllLabels();
   }
 
-  public Object getAdminWalletKeys() {
-    String adminPrivateKey = getPrivateKeyByTypeAndId(WalletType.ADMIN.getId(), WALLET_ADMIN_REMOTE_ID);
-    if (StringUtils.isBlank(adminPrivateKey)) {
-      return null;
-    }
-    WalletFile adminWallet = null;
-    try {
-      ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-      adminWallet = objectMapper.reader(WalletFile.class).readValue(adminPrivateKey);
-    } catch (Exception e) {
-      throw new IllegalStateException("An error occurred while parsing admin wallet keys", e);
-    }
-    try {
-      return org.web3j.crypto.Wallet.decrypt(adminAccountPassword, adminWallet);
-    } catch (CipherException e) {
-      throw new IllegalStateException("Can't descrypt stored admin wallet", e);
-    }
+  @Override
+  public String getAdminAccountPassword() {
+    return adminAccountPassword;
   }
 
   private void checkIsWalletOwner(Wallet wallet, String currentUser, String operationMessage) throws IllegalAccessException {
@@ -566,6 +475,13 @@ public class EthereumWalletAccountService implements WalletAccountService, Start
 
   private String generateSecurityPhrase() {
     return RandomStringUtils.random(20, SIMPLE_CHARS);
+  }
+
+  private WalletTokenAdminService getTokenAdminService() {
+    if (tokenAdminService == null) {
+      tokenAdminService = CommonsUtils.getService(WalletTokenAdminService.class);
+    }
+    return tokenAdminService;
   }
 
   private ListenerService getListenerService() {

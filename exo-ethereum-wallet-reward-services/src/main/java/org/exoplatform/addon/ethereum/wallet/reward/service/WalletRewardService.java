@@ -28,6 +28,7 @@ import org.exoplatform.addon.ethereum.wallet.model.*;
 import org.exoplatform.addon.ethereum.wallet.reward.api.RewardPlugin;
 import org.exoplatform.addon.ethereum.wallet.reward.model.*;
 import org.exoplatform.addon.ethereum.wallet.service.*;
+import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -35,42 +36,40 @@ import org.exoplatform.services.log.Log;
  * A storage service to save/load reward settings
  */
 public class WalletRewardService implements RewardService {
-  private static final Log              LOG                             = ExoLogger.getLogger(WalletRewardService.class);
+  private static final Log         LOG                             = ExoLogger.getLogger(WalletRewardService.class);
 
-  private static final String           DEFAULT_REWARD_LABEL_TEMPLATE   =
-                                                                      "{name} is rewarded {amount} {symbol} for period: {startDate} to {endDate}";
+  private static final String      DEFAULT_REWARD_LABEL_TEMPLATE   =
+                                                                 "{name} is rewarded {amount} {symbol} for period: {startDate} to {endDate}";
 
-  private static final String           DEFAULT_REWARD_MESSAGE_TEMPLATE =
-                                                                        "You have earned {amount} {symbol} in reward for your {rewardCount} {pluginName} {earned in pool_label} for period: {startDate} to {endDate}";
+  private static final String      DEFAULT_REWARD_MESSAGE_TEMPLATE =
+                                                                   "You have earned {amount} {symbol} in reward for your {rewardCount} {pluginName} {earned in pool_label} for period: {startDate} to {endDate}";
 
-  private WalletService                 walletService;
+  private WalletService            walletService;
 
-  private WalletAccountService          walletAccountService;
+  private WalletAccountService     walletAccountService;
 
-  private WalletTransactionService      walletTransactionService;
+  private WalletTransactionService walletTransactionService;
 
-  private WalletTokenTransactionService walletTokenTransactionService;
+  private WalletTokenAdminService  walletTokenTransactionService;
 
-  private WalletContractService         walletContractService;
+  private WalletContractService    walletContractService;
 
-  private RewardSettingsService         rewardSettingsService;
+  private RewardSettingsService    rewardSettingsService;
 
-  private RewardTeamService             rewardTeamService;
+  private RewardTeamService        rewardTeamService;
 
-  private RewardTransactionService      rewardTransactionService;
+  private RewardTransactionService rewardTransactionService;
 
   public WalletRewardService(WalletService walletService,
                              WalletAccountService walletAccountService,
                              WalletContractService walletContractService,
                              WalletTransactionService walletTransactionService,
-                             WalletTokenTransactionService walletTokenTransactionService,
                              RewardSettingsService rewardSettingsService,
                              RewardTransactionService rewardTransactionService,
                              RewardTeamService rewardTeamService) {
     this.walletService = walletService;
     this.walletAccountService = walletAccountService;
     this.walletTransactionService = walletTransactionService;
-    this.walletTokenTransactionService = walletTokenTransactionService;
     this.walletContractService = walletContractService;
     this.rewardSettingsService = rewardSettingsService;
     this.rewardTeamService = rewardTeamService;
@@ -137,7 +136,7 @@ public class WalletRewardService implements RewardService {
       String transactionMessage = getTransactionMessage(walletReward, contractDetail, periodOfTime);
       transactionDetail.setMessage(transactionMessage);
       try {
-        transactionDetail = walletTokenTransactionService.reward(transactionDetail, username);
+        transactionDetail = getTokenTransactionService().reward(transactionDetail, username);
         RewardTransaction rewardTransaction = walletReward.getRewardTransaction();
         if (rewardTransaction == null) {
           rewardTransaction = new RewardTransaction();
@@ -618,5 +617,12 @@ public class WalletRewardService implements RewardService {
       rewardMemberDetail.setPoolsUsed(true);
       rewardMemberDetails.add(rewardMemberDetail);
     });
+  }
+
+  private WalletTokenAdminService getTokenTransactionService() {
+    if (walletTokenTransactionService == null) {
+      walletTokenTransactionService = CommonsUtils.getService(WalletTokenAdminService.class);
+    }
+    return walletTokenTransactionService;
   }
 }

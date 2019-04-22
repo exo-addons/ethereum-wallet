@@ -143,14 +143,5 @@
       <scope>provided</scope>
       <outputFileNameMapping>rxjava.jar</outputFileNameMapping>
     </dependencySet>
-    <dependencySet>
-      <useProjectArtifact>false</useProjectArtifact>
-      <outputDirectory>/lib</outputDirectory>
-      <includes>
-        <include>org.bouncycastle:bcprov-ext-jdk15on:jar</include>
-      </includes>
-      <scope>provided</scope>
-      <outputFileNameMapping>bcprov-ext-jdk15on.jar</outputFileNameMapping>
-    </dependencySet>
   </dependencySets>
 </assembly>

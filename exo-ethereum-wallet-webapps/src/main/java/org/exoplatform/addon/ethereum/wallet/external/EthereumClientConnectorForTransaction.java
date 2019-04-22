@@ -14,14 +14,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.addon.ethereum.wallet.service;
+package org.exoplatform.addon.ethereum.wallet.external;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;
 
 import org.apache.commons.lang3.StringUtils;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.crypto.*;
+import org.web3j.protocol.ObjectMapperFactory;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
@@ -29,17 +33,29 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.core.methods.response.EthBlock.Block;
 import org.web3j.protocol.core.methods.response.EthLog.LogResult;
 import org.web3j.protocol.websocket.*;
+import org.web3j.tx.*;
+import org.web3j.tx.gas.StaticGasProvider;
+import org.web3j.tx.response.QueuingTransactionReceiptProcessor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2;
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
+import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
 /**
  * A Web3j connector class to interact with Ethereum Blockchain
  */
-public class EthereumClientConnector {
+public class EthereumClientConnectorForTransaction {
+
+  private static final long        DEFAULT_ADMIN_GAS          = 300000l;
+
+  private static final int         POOLING_ATTEMPTS           = 100;
+
+  private static final int         POOLING_ATTEMPT_PER_TX     = 12000;
 
   private static final Log         LOG                        = ExoLogger.getLogger(EthereumClientConnector.class);
 
@@ -59,7 +75,7 @@ public class EthereumClientConnector {
 
   private boolean                  serviceStopping            = false;
 
-  public EthereumClientConnector() {
+  public EthereumClientConnectorForTransaction() {
     ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-websocket-connector-%d").build();
     connectionVerifierExecutor = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
   }
@@ -199,6 +215,51 @@ public class EthereumClientConnector {
     waitConnection();
     Block block = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
     return block.getNumber().longValue();
+  }
+
+  public TransactionManager getTransactionManager(Credentials credentials) throws InterruptedException {
+    waitConnection();
+
+    if (credentials == null) {
+      return new ReadonlyTransactionManager(getWeb3j(), Address.DEFAULT.toString());
+    } else {
+      QueuingTransactionReceiptProcessor transactionReceiptProcessor = new QueuingTransactionReceiptProcessor(getWeb3j(),
+                                                                                                              null,
+                                                                                                              POOLING_ATTEMPTS,
+                                                                                                              POOLING_ATTEMPT_PER_TX);
+      return new FastRawTransactionManager(getWeb3j(), credentials, transactionReceiptProcessor);
+    }
+  }
+
+  public ERTTokenV2 getContractInstance(GlobalSettings settings,
+                                        final String contractAddress,
+                                        String adminPrivateKey,
+                                        String password,
+                                        boolean writeOperation) throws InterruptedException {
+    Credentials adminCredentials = null;
+    ECKeyPair adminWalletKeys = null;
+    WalletFile adminWallet = null;
+    try {
+      ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
+      adminWallet = objectMapper.reader(WalletFile.class).readValue(adminPrivateKey);
+      adminWalletKeys = org.web3j.crypto.Wallet.decrypt(password, adminWallet);
+    } catch (CipherException e) {
+      throw new IllegalStateException("Can't decrypt stored admin wallet", e);
+    } catch (Exception e) {
+      throw new IllegalStateException("An error occurred while parsing admin wallet keys", e);
+    }
+    if (adminWalletKeys != null) {
+      adminCredentials = Credentials.create(adminWalletKeys);
+    }
+    if (adminCredentials == null && writeOperation) {
+      throw new IllegalStateException("Admin account keys aren't set");
+    }
+    TransactionManager contractTransactionManager = getTransactionManager(adminCredentials);
+    return ERTTokenV2.load(contractAddress,
+                           getWeb3j(),
+                           contractTransactionManager,
+                           new StaticGasProvider(BigInteger.valueOf(settings.getMinGasPrice()),
+                                                 BigInteger.valueOf(DEFAULT_ADMIN_GAS)));
   }
 
   /**
