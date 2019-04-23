@@ -25,7 +25,7 @@
       :wallet-rewards="walletRewards"
       @saved="refreshTeams(true)"
       @close="selectedTeam = null" />
-    <h3
+    <div
       v-show="!selectedTeam"
       id="addTeamButton"
       class="text-xs-left ml-3">
@@ -40,7 +40,7 @@
           add
         </v-icon>
       </v-btn>
-    </h3>
+    </div>
     <h4 v-show="!selectedTeam" class="text-xs-center">
       <span>Eligible pools users: <strong>{{ eligiblePoolsUsersCount }}</strong></span>
     </h4>
