@@ -17,6 +17,8 @@
 package org.exoplatform.addon.ethereum.wallet.utils;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
@@ -588,6 +590,14 @@ public class WalletUtils {
 
   public static final String toJsonString(Object object) throws JsonException {
     return JSON_GENERATOR.createJsonObject(object).toString();
+  }
+
+  public static final BigInteger convertToDecimals(double amount, int decimals) {
+    return BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(10).pow(decimals)).toBigInteger();
+  }
+
+  public static final double convertFromDecimals(BigInteger amount, int decimals) {
+    return BigDecimal.valueOf(amount.doubleValue()).divide(BigDecimal.valueOf(10).pow(decimals)).doubleValue();
   }
 
 }

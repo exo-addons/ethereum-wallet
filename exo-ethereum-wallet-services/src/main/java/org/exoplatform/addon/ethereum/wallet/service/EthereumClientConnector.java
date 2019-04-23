@@ -227,10 +227,12 @@ public class EthereumClientConnector {
     @SuppressWarnings("rawtypes")
     List<LogResult> logs = contractTransactions.getResult();
     Set<String> txHashes = new HashSet<>();
-    for (LogResult<?> logResult : logs) {
-      org.web3j.protocol.core.methods.response.Log contractEventLog =
-                                                                    (org.web3j.protocol.core.methods.response.Log) logResult.get();
-      txHashes.add(contractEventLog.getTransactionHash());
+    if (logs != null && !logs.isEmpty()) {
+      for (LogResult<?> logResult : logs) {
+        org.web3j.protocol.core.methods.response.Log contractEventLog =
+                                                                      (org.web3j.protocol.core.methods.response.Log) logResult.get();
+        txHashes.add(contractEventLog.getTransactionHash());
+      }
     }
     return txHashes;
   }

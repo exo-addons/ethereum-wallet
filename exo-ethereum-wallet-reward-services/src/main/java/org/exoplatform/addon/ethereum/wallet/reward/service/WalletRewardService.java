@@ -17,7 +17,9 @@
 package org.exoplatform.addon.ethereum.wallet.reward.service;
 
 import static org.exoplatform.addon.ethereum.wallet.utils.RewardUtils.*;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.convertFromDecimals;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -82,6 +84,13 @@ public class WalletRewardService implements RewardService {
     if (rewards == null || rewards.isEmpty()) {
       return;
     }
+    String adminWalletAddress = getTokenTransactionService().getAdminWalletAddress();
+    if (StringUtils.isBlank(adminWalletAddress)) {
+      throw new IllegalStateException("No admin wallet is configured");
+    }
+    if (getTokenTransactionService().getAdminLevel(adminWalletAddress) < 4) {
+      throw new IllegalStateException("Configured admin wallet is not configured as admin on token. It must be a Token admin with level 4 at least.");
+    }
 
     Iterator<WalletReward> rewardedWalletsIterator = rewards.iterator();
     while (rewardedWalletsIterator.hasNext()) {
@@ -115,16 +124,34 @@ public class WalletRewardService implements RewardService {
     }
 
     if (rewards.isEmpty()) {
-      throw new IllegalStateException("No rewards to send");
+      throw new IllegalStateException("No rewards to send for selected period");
     }
     GlobalSettings settings = walletService.getSettings();
 
     RewardSettings rewardSettings = rewardSettingsService.getSettings();
+    if (rewardSettings == null) {
+      throw new IllegalStateException("No reward settings is found");
+    }
     RewardPeriodType periodType = rewardSettings.getPeriodType();
     RewardPeriod periodOfTime = periodType.getPeriodOfTime(timeFromSeconds(periodDateInSeconds));
 
-    ContractDetail contractDetail = walletContractService.getContractDetail(settings.getDefaultPrincipalAccount(),
+    String contractAddress = settings.getDefaultPrincipalAccount();
+    if (StringUtils.isBlank(contractAddress) || !contractAddress.startsWith("0x")) {
+      throw new IllegalStateException("No token is configured");
+    }
+    ContractDetail contractDetail = walletContractService.getContractDetail(contractAddress,
                                                                             settings.getDefaultNetworkId());
+    if (contractDetail == null) {
+      throw new IllegalStateException("Token with address " + contractAddress + "wasn't found");
+    }
+
+    BigInteger adminTokenBalance = getTokenTransactionService().balanceOf(adminWalletAddress);
+    double adminBalance = convertFromDecimals(adminTokenBalance, contractDetail.getDecimals());
+
+    double rewardsAmount = rewards.stream().mapToDouble(WalletReward::getTokensToSend).sum();
+    if (rewardsAmount > adminBalance) {
+      throw new IllegalStateException("Admin doesn't have enough funds to send rewards");
+    }
 
     for (WalletReward walletReward : rewards) {
       TransactionDetail transactionDetail = new TransactionDetail();
@@ -135,30 +162,21 @@ public class WalletRewardService implements RewardService {
       transactionDetail.setLabel(transactionLabel);
       String transactionMessage = getTransactionMessage(walletReward, contractDetail, periodOfTime);
       transactionDetail.setMessage(transactionMessage);
-      try {
-        transactionDetail = getTokenTransactionService().reward(transactionDetail, username);
-        RewardTransaction rewardTransaction = walletReward.getRewardTransaction();
-        if (rewardTransaction == null) {
-          rewardTransaction = new RewardTransaction();
-        }
-        rewardTransaction.setHash(transactionDetail.getHash());
-        rewardTransaction.setNetworkId(settings.getDefaultNetworkId());
-        rewardTransaction.setPeriodType(periodType.name());
-        rewardTransaction.setReceiverId(walletReward.getWallet().getId());
-        rewardTransaction.setReceiverType(walletReward.getWallet().getType());
-        rewardTransaction.setReceiverIdentityId(walletReward.getWallet().getTechnicalId());
-        rewardTransaction.setStartDateInSeconds(periodOfTime.getStartDateInSeconds());
-        rewardTransaction.setStatus(TRANSACTION_STATUS_PENDING);
-        rewardTransaction.setTokensSent(walletReward.getTokensToSend());
-        rewardTransactionService.saveRewardTransaction(rewardTransaction);
-      } catch (Exception e) {
-        LOG.error("Error while sending reward transaction for {} '{}' in period {}.",
-                  walletReward.getWallet().getType(),
-                  walletReward.getWallet().getId(),
-                  new Date(periodDateInSeconds * 1000),
-                  e);
-        throw e;
+      transactionDetail = getTokenTransactionService().reward(transactionDetail, username);
+      RewardTransaction rewardTransaction = walletReward.getRewardTransaction();
+      if (rewardTransaction == null) {
+        rewardTransaction = new RewardTransaction();
       }
+      rewardTransaction.setHash(transactionDetail.getHash());
+      rewardTransaction.setNetworkId(settings.getDefaultNetworkId());
+      rewardTransaction.setPeriodType(periodType.name());
+      rewardTransaction.setReceiverId(walletReward.getWallet().getId());
+      rewardTransaction.setReceiverType(walletReward.getWallet().getType());
+      rewardTransaction.setReceiverIdentityId(walletReward.getWallet().getTechnicalId());
+      rewardTransaction.setStartDateInSeconds(periodOfTime.getStartDateInSeconds());
+      rewardTransaction.setStatus(TRANSACTION_STATUS_PENDING);
+      rewardTransaction.setTokensSent(walletReward.getTokensToSend());
+      rewardTransactionService.saveRewardTransaction(rewardTransaction);
     }
   }
 
@@ -581,7 +599,8 @@ public class WalletRewardService implements RewardService {
                                                                      .replace("{earned in pool_label}",
                                                                               walletPluginReward.isPoolsUsed()
                                                                                   && StringUtils.isNotBlank(walletReward.getPoolName()) ? ("earned in '"
-                                                                                      + walletReward.getPoolName() + "' pool") : "")
+                                                                                      + walletReward.getPoolName() + "' pool")
+                                                                                                                                        : "")
                                                                      .replace("{startDate}",
                                                                               formatTime(periodOfTime.getStartDateInSeconds()))
                                                                      .replace("{endDate}",

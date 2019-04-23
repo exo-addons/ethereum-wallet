@@ -1,7 +1,9 @@
 package org.exoplatform.addon.ethereum.wallet.model;
 
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.convertFromDecimals;
+import static org.exoplatform.addon.ethereum.wallet.utils.WalletUtils.convertToDecimals;
+
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import lombok.Data;
@@ -68,14 +70,14 @@ public class TransactionDetail implements Serializable, Cloneable {
     if (contractAmount == 0) {
       return BigInteger.ZERO;
     }
-    return BigDecimal.valueOf(contractAmount).multiply(BigDecimal.valueOf(10).pow(decimals)).toBigInteger();
+    return convertToDecimals(contractAmount, decimals);
   }
 
   public BigInteger getValueDecimal(int decimals) {
     if (value == 0) {
       return BigInteger.ZERO;
     }
-    return BigDecimal.valueOf(value).multiply(BigDecimal.valueOf(10).pow(decimals)).toBigInteger();
+    return convertToDecimals(value, decimals);
   }
 
   public void setContractAmountDecimal(BigInteger amount, int decimals) {
@@ -83,14 +85,14 @@ public class TransactionDetail implements Serializable, Cloneable {
       this.contractAmount = 0;
       return;
     }
-    this.contractAmount = BigDecimal.valueOf(amount.doubleValue()).divide(BigDecimal.valueOf(10).pow(decimals)).doubleValue();
+    this.contractAmount = convertFromDecimals(amount, decimals);
   }
 
   public void setValueDecimal(BigInteger amount, int decimals) {
     if (amount == null) {
       this.value = 0;
     } else {
-      this.value = BigDecimal.valueOf(amount.doubleValue()).divide(BigDecimal.valueOf(10).pow(decimals)).doubleValue();
+      this.value = convertFromDecimals(amount, decimals);
     }
   }
 

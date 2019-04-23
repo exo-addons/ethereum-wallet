@@ -412,7 +412,7 @@ public class EthereumWalletTokenAdminService implements WalletTokenAdminService 
 
     transactionDetail.setNetworkId(getNetworkId());
     transactionDetail.setHash(transactionHash);
-    transactionDetail.setFrom(getAdminWalletAddress());
+    transactionDetail.setFrom(adminWalletAddress);
     transactionDetail.setContractAddress(contractAddress);
     transactionDetail.setContractMethodName(ERTTokenV2.FUNC_INITIALIZEACCOUNT);
     transactionDetail.setTimestamp(System.currentTimeMillis());
@@ -458,13 +458,13 @@ public class EthereumWalletTokenAdminService implements WalletTokenAdminService 
 
     setIssuer(transactionDetail, issuerUsername);
 
+    String adminWalletAddress = getAdminWalletAddress();
     if (enableChecksBeforeSending) {
       boolean approvedReceiver = isApprovedAccount(receiver);
       if (!approvedReceiver) {
         throw new IllegalStateException("Wallet receiver {} is not approved yet, thus no transfer is allowed");
       }
 
-      String adminWalletAddress = getAdminWalletAddress();
       int decimals = getDecimals();
       BigInteger tokenAmount = transactionDetail.getContractAmountDecimal(decimals);
 
@@ -487,7 +487,7 @@ public class EthereumWalletTokenAdminService implements WalletTokenAdminService 
     }
     transactionDetail.setNetworkId(getNetworkId());
     transactionDetail.setHash(transactionHash);
-    transactionDetail.setFrom(getAdminWalletAddress());
+    transactionDetail.setFrom(adminWalletAddress);
     transactionDetail.setContractAddress(contractAddress);
     transactionDetail.setContractMethodName(ERTTokenV2.FUNC_TRANSFER);
     transactionDetail.setTimestamp(System.currentTimeMillis());
@@ -537,16 +537,9 @@ public class EthereumWalletTokenAdminService implements WalletTokenAdminService 
       throw new IllegalStateException("Wallet receiver {} is not approved yet, thus no transfer is allowed");
     }
 
-    String adminWalletAddress = getAdminWalletAddress();
     int decimals = getDecimals();
     BigInteger tokenAmount = transactionDetail.getValueDecimal(decimals);
     BigInteger rewardAmount = transactionDetail.getContractAmountDecimal(decimals);
-
-    BigInteger balanceOfAdmin = balanceOf(adminWalletAddress);
-    if (balanceOfAdmin == null || balanceOfAdmin.compareTo(tokenAmount) < 0) {
-      throw new IllegalStateException("Wallet admin hasn't enough funds to reward " + transactionDetail.getContractAmount()
-          + " Tokens to " + receiverAddress);
-    }
 
     String contractAddress = getContractAddress();
     if (StringUtils.isBlank(contractAddress)) {
