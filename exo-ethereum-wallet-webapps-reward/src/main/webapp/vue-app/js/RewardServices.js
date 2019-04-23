@@ -76,6 +76,19 @@ export function sendRewards(periodDateInSeconds) {
     credentials: 'include',
   }).then((resp) => {
     if (!resp || !resp.ok) {
+      try {
+        if(resp.status === 500) {
+          return resp.json().then(errorResponse => {
+            if (errorResponse && errorResponse.error && errorResponse.error.length) {
+              throw new Error(errorResponse.error[0]);
+            } else {
+              throw new Error('Error sending rewards');
+            }
+          });
+        }
+      } catch(e) {
+        // Ignore exception, not parsable to JSON
+      }
       throw new Error('Error sending rewards');
     }
   });
