@@ -578,10 +578,10 @@ public class WalletRewardService implements RewardService {
                                                                               String.valueOf(walletPluginReward.getPoints()))
                                                                      .replace("{pluginName}",
                                                                               walletPluginReward.getPluginId())
-                                                                     .replace("{earned in pool_label pool}",
+                                                                     .replace("{earned in pool_label}",
                                                                               walletPluginReward.isPoolsUsed()
-                                                                                  && StringUtils.isNotBlank(walletReward.getPoolName()) ? ("earned in "
-                                                                                      + walletReward.getPoolName()) : "")
+                                                                                  && StringUtils.isNotBlank(walletReward.getPoolName()) ? ("earned in '"
+                                                                                      + walletReward.getPoolName() + "' pool") : "")
                                                                      .replace("{startDate}",
                                                                               formatTime(periodOfTime.getStartDateInSeconds()))
                                                                      .replace("{endDate}",
