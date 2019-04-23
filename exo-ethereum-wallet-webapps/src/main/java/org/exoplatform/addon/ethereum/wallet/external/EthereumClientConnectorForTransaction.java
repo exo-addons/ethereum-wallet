@@ -17,32 +17,20 @@
 package org.exoplatform.addon.ethereum.wallet.external;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URI;
-import java.util.*;
 import java.util.concurrent.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.web3j.abi.datatypes.Address;
-import org.web3j.crypto.*;
-import org.web3j.protocol.ObjectMapperFactory;
+import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.DefaultBlockParameterNumber;
-import org.web3j.protocol.core.methods.response.*;
-import org.web3j.protocol.core.methods.response.EthBlock.Block;
-import org.web3j.protocol.core.methods.response.EthLog.LogResult;
 import org.web3j.protocol.websocket.*;
 import org.web3j.tx.*;
-import org.web3j.tx.gas.StaticGasProvider;
 import org.web3j.tx.response.QueuingTransactionReceiptProcessor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import org.exoplatform.addon.ethereum.wallet.contract.ERTTokenV2;
 import org.exoplatform.addon.ethereum.wallet.model.GlobalSettings;
-import org.exoplatform.addon.ethereum.wallet.service.EthereumClientConnector;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -51,13 +39,11 @@ import org.exoplatform.services.log.Log;
  */
 public class EthereumClientConnectorForTransaction {
 
-  private static final long        DEFAULT_ADMIN_GAS          = 300000l;
-
   private static final int         POOLING_ATTEMPTS           = 100;
 
   private static final int         POOLING_ATTEMPT_PER_TX     = 12000;
 
-  private static final Log         LOG                        = ExoLogger.getLogger(EthereumClientConnector.class);
+  private static final Log         LOG                        = ExoLogger.getLogger(EthereumClientConnectorForTransaction.class);
 
   private Web3j                    web3j                      = null;
 
@@ -75,9 +61,12 @@ public class EthereumClientConnectorForTransaction {
 
   private boolean                  serviceStopping            = false;
 
-  public EthereumClientConnectorForTransaction() {
+  private ClassLoader              contextCL;
+
+  public EthereumClientConnectorForTransaction(ClassLoader contextCL) {
     ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Ethereum-websocket-connector-%d").build();
     connectionVerifierExecutor = Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
+    this.contextCL = contextCL;
   }
 
   public void start(GlobalSettings storedSettings) {
@@ -86,12 +75,13 @@ public class EthereumClientConnectorForTransaction {
 
     // Blockchain connection verifier
     connectionVerifierExecutor.scheduleWithFixedDelay(() -> {
+      Thread.currentThread().setContextClassLoader(contextCL);
       try {
         if (!initWeb3Connection()) {
           return;
         }
       } catch (Throwable e) {
-        LOG.warn("Error while checking connection status to Etherreum Websocket endpoint: {}", e.getMessage());
+        LOG.warn("Error while checking connection status to Etherreum Websocket endpoint: {}", e);
         return;
       }
     }, 5, 10, TimeUnit.SECONDS);
@@ -101,78 +91,6 @@ public class EthereumClientConnectorForTransaction {
     this.serviceStopping = true;
     connectionVerifierExecutor.shutdownNow();
     resetConnection();
-  }
-
-  /**
-   * Get transaction by hash
-   * 
-   * @param transactionHash transaction hash to retrieve
-   * @return Web3j Transaction object
-   * @throws InterruptedException when Blockchain request is interrupted
-   */
-  public Transaction getTransaction(String transactionHash) throws InterruptedException {
-    waitConnection();
-    EthTransaction ethTransaction;
-    try {
-      ethTransaction = web3j.ethGetTransactionByHash(transactionHash).send();
-    } catch (IOException e) {
-      LOG.info("Connection interrupted while getting Transaction '{}' information. Reattempt until getting it. Reason: {}",
-               transactionHash,
-               e.getMessage());
-      return getTransaction(transactionHash);
-    }
-    if (ethTransaction != null) {
-      return ethTransaction.getResult();
-    }
-    return null;
-  }
-
-  /**
-   * Get block by hash
-   * 
-   * @param blockHash block hash to retrieve
-   * @return Web3j Block object
-   * @throws InterruptedException when Blockchain request is interrupted
-   */
-  public Block getBlock(String blockHash) throws InterruptedException {
-    waitConnection();
-    EthBlock ethBlock;
-    try {
-      ethBlock = web3j.ethGetBlockByHash(blockHash, false).send();
-    } catch (IOException e) {
-      LOG.info("Connection interrupted while getting Block '{}' information. Reattempt until getting it. Reason: {}",
-               blockHash,
-               e.getMessage());
-      return getBlock(blockHash);
-    }
-    if (ethBlock != null && ethBlock.getResult() != null) {
-      return ethBlock.getResult();
-    }
-    return null;
-  }
-
-  /**
-   * Get transaction receipt by hash
-   * 
-   * @param transactionHash transaction hash to retrieve
-   * @return Web3j Transaction receipt object
-   * @throws InterruptedException when Blockchain request is interrupted
-   */
-  public TransactionReceipt getTransactionReceipt(String transactionHash) throws InterruptedException {
-    waitConnection();
-    EthGetTransactionReceipt ethGetTransactionReceipt;
-    try {
-      ethGetTransactionReceipt = web3j.ethGetTransactionReceipt(transactionHash).send();
-    } catch (IOException e) {
-      LOG.info("Connection interrupted while getting Transaction receipt '{}' information. Reattempt until getting it. Reason: {}",
-               transactionHash,
-               e.getMessage());
-      return getTransactionReceipt(transactionHash);
-    }
-    if (ethGetTransactionReceipt != null) {
-      return ethGetTransactionReceipt.getResult();
-    }
-    return null;
   }
 
   /**
@@ -206,17 +124,6 @@ public class EthereumClientConnectorForTransaction {
     return web3j != null && web3jService != null && webSocketClient != null && webSocketClient.isOpen();
   }
 
-  /**
-   * @return last mined block number from blockchain
-   * @throws InterruptedException
-   * @throws IOException
-   */
-  public long getLastestBlockNumber() throws InterruptedException, IOException {
-    waitConnection();
-    Block block = web3j.ethGetBlockByNumber(DefaultBlockParameterName.LATEST, false).send().getBlock();
-    return block.getNumber().longValue();
-  }
-
   public TransactionManager getTransactionManager(Credentials credentials) throws InterruptedException {
     waitConnection();
 
@@ -231,77 +138,13 @@ public class EthereumClientConnectorForTransaction {
     }
   }
 
-  public ERTTokenV2 getContractInstance(GlobalSettings settings,
-                                        final String contractAddress,
-                                        String adminPrivateKey,
-                                        String password,
-                                        boolean writeOperation) throws InterruptedException {
-    Credentials adminCredentials = null;
-    ECKeyPair adminWalletKeys = null;
-    WalletFile adminWallet = null;
-    try {
-      ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-      adminWallet = objectMapper.reader(WalletFile.class).readValue(adminPrivateKey);
-      adminWalletKeys = org.web3j.crypto.Wallet.decrypt(password, adminWallet);
-    } catch (CipherException e) {
-      throw new IllegalStateException("Can't decrypt stored admin wallet", e);
-    } catch (Exception e) {
-      throw new IllegalStateException("An error occurred while parsing admin wallet keys", e);
-    }
-    if (adminWalletKeys != null) {
-      adminCredentials = Credentials.create(adminWalletKeys);
-    }
-    if (adminCredentials == null && writeOperation) {
-      throw new IllegalStateException("Admin account keys aren't set");
-    }
-    TransactionManager contractTransactionManager = getTransactionManager(adminCredentials);
-    return ERTTokenV2.load(contractAddress,
-                           getWeb3j(),
-                           contractTransactionManager,
-                           new StaticGasProvider(BigInteger.valueOf(settings.getMinGasPrice()),
-                                                 BigInteger.valueOf(DEFAULT_ADMIN_GAS)));
-  }
-
-  /**
-   * Retrieve from blockchain transaction hashes from contract starting from a
-   * block number to a block number
-   * 
-   * @param contractsAddress blockchain contract address
-   * @param fromBlock search starting from this block number
-   * @param toBlock search until this block number
-   * @return a {@link Set} of transaction hashes
-   * @throws IOException if an error happens while getting information from
-   *           blockchain
-   * @throws InterruptedException if an interruption is made while getting
-   *           information from blockchain
-   */
-  public Set<String> getContractTransactions(String contractsAddress,
-                                             long fromBlock,
-                                             long toBlock) throws IOException, InterruptedException {
-    waitConnection();
-    org.web3j.protocol.core.methods.request.EthFilter filter =
-                                                             new org.web3j.protocol.core.methods.request.EthFilter(new DefaultBlockParameterNumber(fromBlock),
-                                                                                                                   new DefaultBlockParameterNumber(toBlock),
-                                                                                                                   contractsAddress);
-    EthLog contractTransactions = web3j.ethGetLogs(filter).send();
-
-    @SuppressWarnings("rawtypes")
-    List<LogResult> logs = contractTransactions.getResult();
-    Set<String> txHashes = new HashSet<>();
-    for (LogResult<?> logResult : logs) {
-      org.web3j.protocol.core.methods.response.Log contractEventLog =
-                                                                    (org.web3j.protocol.core.methods.response.Log) logResult.get();
-      txHashes.add(contractEventLog.getTransactionHash());
-    }
-    return txHashes;
-  }
-
   public Web3j getWeb3j() throws InterruptedException {
     this.waitConnection();
     return web3j;
   }
 
   public void waitConnection() throws InterruptedException {
+    Thread.currentThread().setContextClassLoader(contextCL);
     if (this.serviceStarted && StringUtils.isBlank(getWebsocketProviderURL())) {
       throw new IllegalStateException("No websocket connection is configured for ethereum blockchain");
     }
