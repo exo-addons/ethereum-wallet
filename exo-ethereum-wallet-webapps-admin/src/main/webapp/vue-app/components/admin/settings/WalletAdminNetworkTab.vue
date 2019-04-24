@@ -16,7 +16,7 @@
         v-if="showSpecificNetworkFields"
         v-model="selectedNetwork.value"
         :rules="mandatoryRule"
-        :label="`Ethereum Network ID (current id: ${networkId})`"
+        :label="`Ethereum Network ID ${currentNetworkIdLabel}`"
         type="number"
         name="defaultNetworkId" />
   
@@ -157,6 +157,9 @@ export default {
     };
   },
   computed: {
+    currentNetworkIdLabel() {
+      return this.networkId ? `(current network id: ${this.networkId})` : ''
+    },
     showSpecificNetworkFields() {
       return this.selectedNetwork !== this.networks[0] && this.selectedNetwork !== this.networks[1];
     },

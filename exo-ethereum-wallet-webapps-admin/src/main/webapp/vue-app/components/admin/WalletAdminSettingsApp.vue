@@ -80,6 +80,7 @@
               value="network">
               <network-tab
                 ref="networkTab"
+                :network-id="networkId"
                 :loading="loading"
                 :fiat-symbol="fiatSymbol"
                 @save="saveGlobalSettings" />
