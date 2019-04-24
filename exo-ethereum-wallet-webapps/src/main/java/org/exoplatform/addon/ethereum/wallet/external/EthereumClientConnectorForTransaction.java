@@ -21,12 +21,8 @@ import java.net.URI;
 import java.util.concurrent.*;
 
 import org.apache.commons.lang3.StringUtils;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.websocket.*;
-import org.web3j.tx.*;
-import org.web3j.tx.response.QueuingTransactionReceiptProcessor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -38,10 +34,6 @@ import org.exoplatform.services.log.Log;
  * A Web3j connector class to interact with Ethereum Blockchain
  */
 public class EthereumClientConnectorForTransaction {
-
-  private static final int         POOLING_ATTEMPTS           = 100;
-
-  private static final int         POOLING_ATTEMPT_PER_TX     = 12000;
 
   private static final Log         LOG                        = ExoLogger.getLogger(EthereumClientConnectorForTransaction.class);
 
@@ -122,20 +114,6 @@ public class EthereumClientConnectorForTransaction {
    */
   public boolean isConnected() {
     return web3j != null && web3jService != null && webSocketClient != null && webSocketClient.isOpen();
-  }
-
-  public TransactionManager getTransactionManager(Credentials credentials) throws InterruptedException {
-    waitConnection();
-
-    if (credentials == null) {
-      return new ReadonlyTransactionManager(getWeb3j(), Address.DEFAULT.toString());
-    } else {
-      QueuingTransactionReceiptProcessor transactionReceiptProcessor = new QueuingTransactionReceiptProcessor(getWeb3j(),
-                                                                                                              null,
-                                                                                                              POOLING_ATTEMPTS,
-                                                                                                              POOLING_ATTEMPT_PER_TX);
-      return new FastRawTransactionManager(getWeb3j(), credentials, transactionReceiptProcessor);
-    }
   }
 
   public Web3j getWeb3j() throws InterruptedException {

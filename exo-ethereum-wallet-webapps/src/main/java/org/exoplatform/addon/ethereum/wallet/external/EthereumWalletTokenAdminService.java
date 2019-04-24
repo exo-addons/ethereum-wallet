@@ -8,16 +8,18 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.crypto.*;
 import org.web3j.protocol.ObjectMapperFactory;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.tx.TransactionManager;
+import org.web3j.tx.*;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.StaticGasProvider;
 import org.web3j.tx.response.EmptyTransactionReceipt;
+import org.web3j.tx.response.QueuingTransactionReceiptProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,6 +36,10 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.ws.frameworks.json.impl.JsonException;
 
 public class EthereumWalletTokenAdminService implements WalletTokenAdminService {
+
+  private static final int                      POOLING_ATTEMPTS                        = 100;
+
+  private static final int                      POOLING_ATTEMPT_PER_TX                  = 12000;
 
   private static final long                     DEFAULT_ADMIN_GAS                       = 300000l;
 
@@ -705,13 +711,28 @@ public class EthereumWalletTokenAdminService implements WalletTokenAdminService 
     GlobalSettings settings = getWalletService().getSettings();
     ContractGasProvider gasProvider = new StaticGasProvider(BigInteger.valueOf(settings.getMinGasPrice()),
                                                             BigInteger.valueOf(DEFAULT_ADMIN_GAS));
-    TransactionManager contractTransactionManager = getClientConnector().getTransactionManager(adminCredentials);
+    TransactionManager contractTransactionManager = getTransactionManager(adminCredentials);
     this.ertInstance = ERTTokenV2.load(contractAddress,
                                        getClientConnector().getWeb3j(),
                                        contractTransactionManager,
                                        gasProvider);
     this.isReadOnlyContract = adminCredentials == null;
     return this.ertInstance;
+  }
+
+  private TransactionManager getTransactionManager(Credentials credentials) throws InterruptedException {
+    getClientConnector().waitConnection();
+
+    Web3j web3j = getClientConnector().getWeb3j();
+    if (credentials == null) {
+      return new ReadonlyTransactionManager(web3j, Address.DEFAULT.toString());
+    } else {
+      QueuingTransactionReceiptProcessor transactionReceiptProcessor = new QueuingTransactionReceiptProcessor(web3j,
+                                                                                                              null,
+                                                                                                              POOLING_ATTEMPTS,
+                                                                                                              POOLING_ATTEMPT_PER_TX);
+      return new FastRawTransactionManager(web3j, credentials, transactionReceiptProcessor);
+    }
   }
 
   private Credentials getAdminCredentials() {
