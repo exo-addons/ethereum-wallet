@@ -367,7 +367,7 @@ public class WalletAccountREST implements ResourceContainer {
                e);
       return Response.status(403).build();
     } catch (Exception e) {
-      LOG.error("Unknown error occurred while saving wallet private key: User {} attempts to save wallet private key of address {}",
+      LOG.error("Unknown error occurred while user {} attempts to get wallet private key with address {}",
                 currentUserId,
                 address,
                 e);
