@@ -10,6 +10,7 @@
 
   <changeSet author="reward" id="1.0.0-1" runOnChange="false">
     <validCheckSum>7:b6e791d36a486b4501fde54aed6a4a8d</validCheckSum>
+    <validCheckSum>7:ff477a093e9169fc1a89e113f14b8def</validCheckSum>
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="ADDONS_WALLET_GAM_TEAM"/>
@@ -37,6 +38,7 @@
 
   <changeSet author="reward" id="1.0.0-2" runOnChange="false" onValidationFail="MARK_RAN" failOnError="false">
     <validCheckSum>7:4c22877ac3021d85be104b086fff5ece</validCheckSum>
+    <validCheckSum>7:64aeffaa9b8d94fbe10663101e431b30</validCheckSum>
     <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="ADDONS_WALLET_GAM_TEAM_MEMBER"/>
