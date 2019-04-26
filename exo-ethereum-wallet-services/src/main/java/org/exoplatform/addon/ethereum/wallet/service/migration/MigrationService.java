@@ -21,25 +21,25 @@ import org.exoplatform.services.log.Log;
 
 public class MigrationService implements Startable {
 
-  private static final int              ETHER_TO_WEI_DECIMALS = 18;
+  private static final int         ETHER_TO_WEI_DECIMALS = 18;
 
-  private static final Log              LOG                   = ExoLogger.getLogger(MigrationService.class);
+  private static final Log         LOG                   = ExoLogger.getLogger(MigrationService.class);
 
-  private static final int              GLOBAL_DATA_VERSION   = 6;
+  private static final int         GLOBAL_DATA_VERSION   = 6;
 
-  private ExecutorService               migrationExecutorService;
+  private ExecutorService          migrationExecutorService;
 
-  private PortalContainer               container;
+  private PortalContainer          container;
 
-  private WalletTransactionService      transactionService;
+  private WalletTransactionService transactionService;
 
-  private WalletTokenAdminService tokenTransactionService;
+  private WalletTokenAdminService  tokenTransactionService;
 
-  private WalletContractService         contractService;
+  private WalletContractService    contractService;
 
-  private WalletAccountService          accountService;
+  private WalletAccountService     accountService;
 
-  private EthereumWalletService         ethereumWalletService;
+  private EthereumWalletService    ethereumWalletService;
 
   public MigrationService(PortalContainer container) {
     this.container = container;
@@ -52,6 +52,12 @@ public class MigrationService implements Startable {
     // Transactions Queue processing
     migrationExecutorService.execute(() -> {
       ExoContainerContext.setCurrentContainer(container);
+
+      // Wait until
+      // org.exoplatform.addon.ethereum.wallet.external.ServiceLoaderServlet
+      // injects the component WalletTokenAdminService in container
+      waitServiceLoaderStartup();
+
       boolean hasErrors = false;
       RequestLifeCycle.begin(this.container);
       GlobalSettings settings = getEthereumWalletService().getSettings();
@@ -94,12 +100,13 @@ public class MigrationService implements Startable {
           Set<Wallet> listWallets = getAccountService().listWallets();
           if (listWallets != null && !listWallets.isEmpty()) {
             for (Wallet wallet : listWallets) {
-              if (wallet == null || StringUtils.isBlank(wallet.getAddress())
+              String address = wallet.getAddress();
+              if (wallet == null || StringUtils.isBlank(address)
                   || StringUtils.equals(wallet.getInitializationState(), WalletInitializationState.INITIALIZED.name())) {
                 continue;
               }
-              if (getTokenTransactionService().isApprovedAccount(wallet.getAddress())) {
-                getAccountService().setInitializationStatus(wallet.getAddress(), WalletInitializationState.INITIALIZED);
+              if (getTokenTransactionService().isApprovedAccount(address)) {
+                getAccountService().setInitializationStatus(address, WalletInitializationState.INITIALIZED);
               }
             }
           }
@@ -123,6 +130,7 @@ public class MigrationService implements Startable {
           RequestLifeCycle.end();
         }
       }
+      migrationExecutorService.shutdown();
     });
 
   }
@@ -130,6 +138,18 @@ public class MigrationService implements Startable {
   @Override
   public void stop() {
     migrationExecutorService.shutdown();
+  }
+
+  private void waitServiceLoaderStartup() {
+    int waitCount = 0;
+    while (getTokenTransactionService() == null && waitCount++ < 10) {
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        migrationExecutorService.shutdown();
+        Thread.currentThread().interrupt();
+      }
+    }
   }
 
   private EthereumWalletService getEthereumWalletService() {
@@ -153,14 +173,14 @@ public class MigrationService implements Startable {
     return transactionService;
   }
 
-  public WalletTokenAdminService getTokenTransactionService() {
+  private WalletTokenAdminService getTokenTransactionService() {
     if (tokenTransactionService == null) {
       tokenTransactionService = CommonsUtils.getService(WalletTokenAdminService.class);
     }
     return tokenTransactionService;
   }
 
-  public WalletContractService getContractService() {
+  private WalletContractService getContractService() {
     if (contractService == null) {
       contractService = CommonsUtils.getService(WalletContractService.class);
     }
