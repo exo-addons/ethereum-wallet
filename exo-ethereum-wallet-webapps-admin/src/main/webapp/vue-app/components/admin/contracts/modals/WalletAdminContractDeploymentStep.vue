@@ -134,8 +134,6 @@ export default {
   },
   data() {
     return {
-      tokenParentEtherscanLink: '',
-      transactionParentEtherscanLink: '',
       walletPassword: '',
       walletPasswordShow: false,
       mandatoryRule: [(v) => !!v || 'Field is required'],
@@ -143,15 +141,11 @@ export default {
   },
   computed: {
     tokenEtherscanLink() {
-      return this.contractAddress ? `${this.tokenParentEtherscanLink}${this.contractAddress}` : null;
+      return this.contractAddress ? `${this.walletUtils.getAddressEtherscanlink(this.networkId)}${this.contractAddress}` : null;
     },
     transactionEtherscanLink() {
-      return this.transactionHash ? `${this.transactionParentEtherscanLink}${this.transactionHash}` : null;
+      return this.transactionHash ? `${this.walletUtils.getTransactionEtherscanlink(this.networkId)}${this.transactionHash}` : null;
     },
-  },
-  created() {
-    this.tokenParentEtherscanLink = this.walletUtils.getAddressEtherscanlink(this.networkId);
-    this.transactionParentEtherscanLink = this.walletUtils.getTransactionEtherscanlink(this.networkId);
   },
 };
 </script>
