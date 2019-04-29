@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.exoplatform.addons.wallet</groupId>
     <artifactId>exo-ethereum-wallet</artifactId>
-    <version>2.0.x-SNAPSHOT</version>
+    <version>2.0.0-M02</version>
   </parent>
   <artifactId>exo-ethereum-wallet-task-services</artifactId>
   <name>eXo Add-on:: eXo Ethereum Wallet - eXo Administration Task Services</name>
