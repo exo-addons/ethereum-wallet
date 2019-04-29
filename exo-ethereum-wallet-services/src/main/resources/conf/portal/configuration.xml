@@ -42,9 +42,9 @@
     <type>org.exoplatform.addon.ethereum.wallet.service.EthereumWalletAccountService</type>
     <init-params>
       <value-param>
-        <name>admin.wallet.password</name>
+        <name>admin.wallet.key</name>
         <description>Admin wallet password encryption for first security level</description>
-        <value>${exo.addon.wallet.admin.password:changeThisPassword}</value>
+        <value>${exo.addon.wallet.admin.key:changeThisKey}</value>
       </value-param>
     </init-params>
   </component>

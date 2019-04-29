@@ -109,8 +109,7 @@ public class WalletUtils {
 
   public static final String                          WALLET_BROWSER_PHRASE_NAME            = "WALLET_BROWSER_PHRASE";
 
-  @SuppressWarnings("all")
-  public static final String                          ADMIN_PASSWORD_PARAMETER              = "admin.wallet.password";
+  public static final String                          ADMIN_KEY_PARAMETER                   = "admin.wallet.key";
 
   public static final String                          ABI_PATH_PARAMETER                    = "contract.abi.path";
 

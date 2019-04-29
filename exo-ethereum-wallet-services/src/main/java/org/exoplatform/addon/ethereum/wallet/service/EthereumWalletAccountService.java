@@ -50,9 +50,9 @@ public class EthereumWalletAccountService implements WalletAccountService, Start
                                       InitParams params) {
     this.accountStorage = walletAccountStorage;
     this.labelStorage = labelStorage;
-    if (params != null && params.containsKey(ADMIN_PASSWORD_PARAMETER)
-        && StringUtils.isNotBlank(params.getValueParam(ADMIN_PASSWORD_PARAMETER).getValue())) {
-      this.adminAccountPassword = params.getValueParam(ADMIN_PASSWORD_PARAMETER).getValue();
+    if (params != null && params.containsKey(ADMIN_KEY_PARAMETER)
+        && StringUtils.isNotBlank(params.getValueParam(ADMIN_KEY_PARAMETER).getValue())) {
+      this.adminAccountPassword = params.getValueParam(ADMIN_KEY_PARAMETER).getValue();
     }
   }
 
